@@ -1,0 +1,11 @@
+Karoo GP
+ launched: 2019-09-24_15-43-37
+ dataset: /home/simon/karoo_gp/files/data_MATCH.csv
+
+
+ Tree 69 is the most fit, with expression:
+
+ a + b + c
+
+ Matching fitness score: 10.0
+

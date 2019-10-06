@@ -1,0 +1,19 @@
+Karoo GP
+ launched: 2019-09-24_06-17-37
+ dataset: /home/simon/karoo_gp/files/data_MATCH.csv
+
+ kernel: m
+ precision: 6
+
+ tree depth max: 3
+ min node count: 3
+
+ genetic operator Reproduction: 10
+ genetic operator Point Mutation: 0
+ genetic operator Branch Mutation: 20
+ genetic operator Crossover: 70
+
+ tournament size: 7
+ population: 100
+ number of generations: 10
+

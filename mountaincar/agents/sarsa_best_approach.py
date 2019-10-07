@@ -2,7 +2,8 @@ import numpy as np
 np.random.seed(0)
 import gym
 import matplotlib.pyplot as plt
-
+import sys
+from pathlib import Path, PurePath
 
 import pickle
 
@@ -104,7 +105,7 @@ class SARSALambdaAgent(SARSAAgent):
             self.z = np.zeros_like(self.z)
 
 
-def play_sarsa(env, agent, train=False, render=False):
+def play_sarsa(env, agent, train=False, render=False, save=False):
     episode_reward = 0
     observation = env.reset()
     action = agent.decide(observation)
@@ -121,9 +122,14 @@ def play_sarsa(env, agent, train=False, render=False):
         if train:
             agent.learn(observation, action, reward, observation_next, done, action_next)
         observation, action = observation_next, action_next
+
+    if save == True:
+        with open('./resources/agent.pkl', 'wb') as file:
+            pickle.dump(agent, file)
+
     return episode_reward
 
-def sarsa_best_start(env, episodes, rewardSample_interval, train = False, render = False):
+def sarsa_start_training(env, episodes, rewardSample_interval, train = False, render = False):
     agent = SARSALambdaAgent(env)
     episode_rewards, episode_rewards_preaverage, episode_rewards_average = [], [], []
     for episode in range(episodes):
@@ -135,3 +141,80 @@ def sarsa_best_start(env, episodes, rewardSample_interval, train = False, render
 
             print("SARSA: " + str(episode_reward))
     return episode_rewards, episode_rewards_average
+
+def sarsa_start_frommodel(env, episodes, rewardSample_interval, train = False, render = False):
+    agent = SARSALambdaAgent(env)
+    episode_rewards, episode_rewards_preaverage, episode_rewards_average = [], [], []
+    for episode in range(episodes):
+        episode_reward = play_sarsa(env, agent, train, render)
+        episode_rewards_preaverage.append(episode_reward)  #
+        if episode % rewardSample_interval == 0:
+            episode_rewards.append(episode_reward)
+            episode_rewards_average.append(np.mean(episode_rewards_preaverage[-rewardSample_interval:]))
+
+            print("SARSA: " + str(episode_reward))
+    return episode_rewards, episode_rewards_average
+
+
+# dummy function for exactly this case
+# TODO: Nur gute Dinge zurückgeben?
+def plagih_get_behaviour_samples(env, agent, episodes, train=False, render=False):
+    agent.epsilon = 0
+    plagih_state_actions = []
+
+    for episode in range(episodes):
+
+        episode_reward = 0
+        observation = env.reset()
+        while True:
+            action = agent.decide(observation)
+            plagih_state_actions.append([observation,action]) # plagih
+            observation_next, reward, done, _ = env.step(action)
+            episode_reward += reward
+            if done:
+                print('Adding samples which create this reward: '+str(episode_reward))
+                break
+            action_next = agent.decide(observation_next)
+            observation, action = observation_next, action_next
+
+    return plagih_state_actions # plagih
+
+
+def create_behaviour_samples_file(seed=0):
+    env = gym.make('MountainCar-v0')
+    env.seed(seed)
+    agent = SARSALambdaAgent(env)
+
+    # perform training
+    episodes_training = 75
+    episode_rewards = []
+    for episode in range(episodes_training):
+        episode_reward = play_sarsa(env, agent, train=True)
+        episode_rewards.append(episode_reward)
+
+    # plt.plot(episode_rewards);
+    # plt.show()
+
+    print("Working on trained model now, no training, epsilon=0")
+
+    plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=20, train=False)
+    print(sys.getsizeof(plagih_behaviour_samples))
+    print('Amount of samples: ' + str(len(plagih_behaviour_samples)))
+    env.close()
+
+    samples_file = Path('../samples/MTC_sarsa_samples.p')
+    with open(samples_file, "wb") as fp:  # Pickling
+        pickle.dump(plagih_behaviour_samples, fp)
+
+    # import pickle
+    # with open(samples_file, "rb") as fp:
+    #     plagih_behaviour_samples = pickle.load(fp)
+    # print(plagih_behaviour_samples[:10])
+
+    return
+
+
+if __name__ == "__main__":
+    dothis = input('Please press: create (s)amples, run coming later: ')
+    if dothis == 's':
+        create_behaviour_samples_file()

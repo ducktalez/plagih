@@ -24,7 +24,8 @@ from sympy import sympify
 from datetime import datetime
 from collections import OrderedDict
 
-import karoo_gp_pause as menu
+# import karoo_gp_pause as menu
+import karoo.modules.karoo_gp_pause as menu
 
 # np.random.seed(1000) # for reproducibility
 
@@ -648,7 +649,54 @@ class Base_GP(object):
 	#+++++++++++++++++++++++++++++++++++++++++++++
 	#   Methods to Construct the 1st Generation  |
 	#+++++++++++++++++++++++++++++++++++++++++++++
-	
+
+	# TODO
+	def fx_plagih_init(self, tree_type, tree_depth_base):
+
+		'''
+		This method constructs the initial population of Tree type 'tree_type' and of the size tree_depth_base. The Tree
+		can be Full, Grow, or "Ramped Half/Half" as defined by John Koza.
+
+		Called by: fx_karoo_gp
+
+		Arguments required: tree_type, tree_depth_base
+		'''
+
+		if self.display == 'i':
+			print(
+				'\n\t\033[32m Press \033[36m\033[1m?\033[0;0m\033[32m at any \033[36m\033[1m(pause)\033[0;0m\033[32m, or \033[36m\033[1mENTER\033[0;0m \033[32mto continue the run\033[0;0m');
+			self.fx_karoo_pause_refer()
+
+		if tree_type == 'r':  # Ramped 50/50
+
+			TREE_ID = 1
+			for n in range(1,
+						   int((self.tree_pop_max / 2) / tree_depth_base) + 1):  # split the population into equal parts
+				for depth in range(1, tree_depth_base + 1):  # build 2 Trees at each depth
+					self.fx_init_tree_build(TREE_ID, 'f', depth)  # build a Full Tree
+					self.fx_data_tree_append(self.tree)  # append Tree to the list 'gp.population_a'
+					TREE_ID = TREE_ID + 1
+
+					self.fx_init_tree_build(TREE_ID, 'g', depth)  # build a Grow Tree
+					self.fx_data_tree_append(self.tree)  # append Tree to the list 'gp.population_a'
+					TREE_ID = TREE_ID + 1
+
+			if TREE_ID < self.tree_pop_max:  # eg: split 100 by 2*3 and it will produce only 96 Trees ...
+				for n in range(self.tree_pop_max - TREE_ID + 1):  # ... so we complete the run
+					self.fx_init_tree_build(TREE_ID, 'g', tree_depth_base)
+					self.fx_data_tree_append(self.tree)
+					TREE_ID = TREE_ID + 1
+
+			else:
+				pass
+
+		else:  # Full or Grow
+			for TREE_ID in range(1, self.tree_pop_max + 1):
+				self.fx_init_tree_build(TREE_ID, tree_type, tree_depth_base)  # build the 1st generation of Trees
+				self.fx_data_tree_append(self.tree)
+
+		return
+
 	def fx_init_construct(self, tree_type, tree_depth_base):
 		
 		'''

@@ -300,8 +300,6 @@ class Base_GP(object):
             if mode == 's':
                 menu = 0  # (s)erver mode - termination with completiont of prescribed run
             else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
-                print(
-                    '\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
                 menu = self.fx_karoo_pause()
 
         self.fx_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
@@ -820,47 +818,9 @@ class Base_GP(object):
 
         return
 
-    def fx_init_construct(self, tree_type, tree_depth_base):
+    def plagih_init_construct(self, tree_type, tree_depth_base):
 
-        """
-        This method constructs the initial population of Tree type 'tree_type' and of the size tree_depth_base. The Tree
-        can be Full, Grow, or "Ramped Half/Half" as defined by John Koza.
-
-        Called by: fx_karoo_gp
-
-        Arguments required: tree_type, tree_depth_base
-        """
-
-        if self.display == 'i':
-            print(
-                '\n\t\033[32m Press \033[36m\033[1m?\033[0;0m\033[32m at any \033[36m\033[1m(pause)\033[0;0m\033[32m, or \033[36m\033[1mENTER\033[0;0m \033[32mto continue the run\033[0;0m');
-            self.fx_karoo_pause_refer()
-
-        if tree_type == 'r':  # Ramped 50/50
-
-            TREE_ID = 1
-            for n in range(1,
-                           int((self.tree_pop_max / 2) / tree_depth_base) + 1):  # split the population into equal parts
-                for depth in range(1, tree_depth_base + 1):  # build 2 Trees at each depth
-                    self.fx_init_tree_build(TREE_ID, 'f', depth)  # build a Full Tree
-                    self.fx_data_tree_append(self.tree)  # append Tree to the list 'gp.population_a'
-                    TREE_ID = TREE_ID + 1
-
-                    self.fx_init_tree_build(TREE_ID, 'g', depth)  # build a Grow Tree
-                    self.fx_data_tree_append(self.tree)  # append Tree to the list 'gp.population_a'
-                    TREE_ID = TREE_ID + 1
-
-            if TREE_ID < self.tree_pop_max:  # eg: split 100 by 2*3 and it will produce only 96 Trees ...
-                for n in range(self.tree_pop_max - TREE_ID + 1):  # ... so we complete the run
-                    self.fx_init_tree_build(TREE_ID, 'g', tree_depth_base)
-                    self.fx_data_tree_append(self.tree)
-                    TREE_ID = TREE_ID + 1
-
-            else:
-                pass
-
-        else:  # Full or Grow
-            for TREE_ID in range(1, self.tree_pop_max + 1):
+        for TREE_ID in range(1, self.tree_pop_max + 1):
                 self.fx_init_tree_build(TREE_ID, tree_type, tree_depth_base)  # build the 1st generation of Trees
                 self.fx_data_tree_append(self.tree)
 
@@ -904,19 +864,19 @@ class Base_GP(object):
         Arguments required: TREE_ID, tree_type, tree_depth_base
         """
 
-        self.pop_TREE_ID = TREE_ID  # pos 0: a unique identifier for each tree
-        self.pop_tree_type = tree_type  # pos 1: a global constant based upon the initial user setting
+        self.pop_TREE_ID = TREE_ID      # pos 0: a unique identifier for each tree
+        self.pop_tree_type = tree_type  # pos 1: a global constant based upon the initial user setting # TODO
         self.pop_tree_depth_base = tree_depth_base  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
-        self.pop_NODE_ID = 1  # pos 3: unique identifier for each node; this is the INDEX KEY to this array
-        self.pop_node_depth = 0  # pos 4: depth of each node when committed to the array
-        self.pop_node_type = ''  # pos 5: root, function, or terminal
-        self.pop_node_label = ''  # pos 6: operator [+, -, *, ...] or terminal [a, b, c, ...]
-        self.pop_node_parent = ''  # pos 7: parent node
-        self.pop_node_arity = ''  # pos 8: number of nodes attached to each non-terminal node
-        self.pop_node_c1 = ''  # pos 9: child node 1
-        self.pop_node_c2 = ''  # pos 10: child node 2
-        self.pop_node_c3 = ''  # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
-        self.pop_fitness = ''  # pos 12: fitness score following Tree evaluation
+        self.pop_NODE_ID = 1            # pos 3: unique identifier for each node; this is the INDEX KEY to this array
+        self.pop_node_depth = 0         # pos 4: depth of each node when committed to the array
+        self.pop_node_type = ''         # pos 5: root, function, or terminal
+        self.pop_node_label = ''        # pos 6: operator [+, -, *, ...] or terminal [a, b, c, ...]
+        self.pop_node_parent = ''       # pos 7: parent node
+        self.pop_node_arity = ''        # pos 8: number of nodes attached to each non-terminal node
+        self.pop_node_c1 = ''           # pos 9: child node 1
+        self.pop_node_c2 = ''           # pos 10: child node 2
+        self.pop_node_c3 = ''           # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
+        self.pop_fitness = ''           # pos 12: fitness score following Tree evaluation
 
         self.tree = np.array(
             [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'],
@@ -2069,12 +2029,7 @@ class Base_GP(object):
                 '\n\n\033[33m *** Point Mutation *** \033[0;0m\n\n\033[36m This is the unaltered tourn_winner:\033[0;0m\n',
                 tree)
 
-        if tree[5][node] == 'root':
-            rnd = np.random.randint(0, len(
-                self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
-            tree[6][node] = self.functions[rnd][0]  # replace function (operator)
-
-        elif tree[5][node] == 'func':
+        if (tree[5][node] == 'root' or tree[5][node] == 'func'):
             rnd = np.random.randint(0, len(
                 self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
             tree[6][node] = self.functions[rnd][0]  # replace function (operator)

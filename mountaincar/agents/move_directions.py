@@ -11,6 +11,15 @@ def choose_action(state):
     else:
         return 2
 
+def choose_action2(state):
+    if \
+            state[1] < 0:  # PLAGI
+        return 0
+    elif(True):
+        return 2
+    else:
+        return 1
+
 def move_towards_direction(env, episodes, reward_interval):
 
     reward_list, reward_list_avg = [], []

@@ -49,7 +49,7 @@ An example is given, as follows:
 import os
 import sys; sys.path.append('modules/') # add directory 'modules' to the current path
 import argparse
-import karoo_gp_base_class; gp = karoo_gp_base_class.Base_GP()
+import karoo.modules.karoo_gp_base_class_xai; gp = karoo.modules.karoo_gp_base_class_xai.Base_GP()
 
 os.system('clear')
 print ('\n\033[36m\033[1m')

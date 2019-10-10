@@ -26,15 +26,18 @@ from collections import OrderedDict
 # import karoo_gp_pause as menu
 import karoo.modules.karoo_gp_pause as menu
 
-# np.random.seed(1000) # for reproducibility
-
 import tensorflow as tf
 import ast
 import operator as op
 
+# PLAGI imports
+import pickle
+from pathlib import Path
+
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
+# TODO entsprechende Operatoren fehlen: if a then b und if a then b else c
 operators = {ast.Add: tf.add,  # e.g., a + b
              ast.Sub: tf.subtract,  # e.g., a - b
              ast.Mult: tf.multiply,  # e.g., a * b
@@ -63,6 +66,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
+             'if': tf.cond,  # e.g., if a: b --wie genau geht das?
              }
 
 np.set_printoptions(
@@ -133,11 +137,11 @@ class Base_GP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def plagih_karoo_gp(self, kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
-                    tourn_size, filename, evolve_repro, evolve_point, evolve_branch, evolve_cross, display, precision,
+                    tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point, evolve_branch, evolve_cross, display, precision,
                     swim, mode):
 
         """
-        This method origins from its fx_ version (one method below)
+        This method origins from its fx_ version
         ---
         This method enables the engagement of the entire Karoo GP application. Instead of returning the user to the pause
         menu, this script terminates at the command-line, providing support for bash and chron job execution.
@@ -149,8 +153,6 @@ class Base_GP(object):
 
         ### PART 1 - set global variables to those local values passed from the user script ###
         self.kernel = kernel  # fitness function
-        # tree_type is passed between methods to construct specific trees
-        # tree_depth_base is passed between methods to construct specific trees
         self.tree_depth_max = tree_depth_max  # maximum Tree depth for the entire run; limits bloat
         self.tree_depth_min = tree_depth_min  # minimum number of nodes
         self.tree_pop_max = tree_pop_max  # maximum number of Trees per generation
@@ -167,27 +169,23 @@ class Base_GP(object):
         # mode is engaged at the end of the run, below
 
         ### PART 2 - construct first generation of Trees ###
-        self.fx_data_load(filename)
+        self.plagih_data_load(operators_file, samples_file)
         self.gen_id = 1  # set initial generation ID
-        self.population_a = ['Karoo GP by Kai Staats, Generation ' + str(
+        self.population_a = ['PLAGIH Karoo GP Extension by Simon Fehrer, Generation ' + str(
             self.gen_id)]  # initialise population_a to host the first generation
         self.population_b = ['placeholder']  # initialise population_b to satisfy fx_karoo_pause()
-        self.fx_init_construct(tree_type, tree_depth_base)  # construct the first population of Trees
 
-        if self.kernel == 'p':  # terminate here for Play mode
-            self.fx_display_tree(self.tree)  # print the current Tree
-            self.fx_data_tree_write(self.population_a, 'a')  # save this one Tree to disk
-            sys.exit()
+        self.plagih_init_construct(tree_type, tree_depth_base, origin_tree_file)  # construct the first population of Trees
 
-        elif self.gen_max == 1:  # terminate here if constructing just one generation
+        if self.gen_max == 1:  # terminate here if constructing just one generation
             self.fx_data_tree_write(self.population_a, 'a')  # save this single population to disk
             print('\n We have constructed a single, stochastic population of', self.tree_pop_max,
                   'Trees, and saved to disk')
             sys.exit()
-
         else:
             print('\n We have constructed the first, stochastic population of', self.tree_pop_max, 'Trees')
 
+        # TODO
         ### PART 3 - evaluate first generation of Trees ###
         print('\n Evaluate the first generation of Trees ...')
         self.fx_fitness_gym(self.population_a)  # generate expression, evaluate fitness, compare fitness
@@ -215,91 +213,6 @@ class Base_GP(object):
             else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
                 print(
                     '\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
-                menu = self.fx_karoo_pause()
-
-        self.fx_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
-
-        return
-
-    def fx_karoo_gp(self, kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
-                    tourn_size, filename, evolve_repro, evolve_point, evolve_branch, evolve_cross, display, precision,
-                    swim, mode):
-
-        """
-        This method enables the engagement of the entire Karoo GP application. Instead of returning the user to the pause
-        menu, this script terminates at the command-line, providing support for bash and chron job execution.
-
-        Called by: user script karoo_gp.py
-
-        Arguments required: (see below)
-        """
-
-        ### PART 1 - set global variables to those local values passed from the user script ###
-        self.kernel = kernel  # fitness function
-        # tree_type is passed between methods to construct specific trees
-        # tree_depth_base is passed between methods to construct specific trees
-        self.tree_depth_max = tree_depth_max  # maximum Tree depth for the entire run; limits bloat
-        self.tree_depth_min = tree_depth_min  # minimum number of nodes
-        self.tree_pop_max = tree_pop_max  # maximum number of Trees per generation
-        self.gen_max = gen_max  # maximum number of generations
-        self.tourn_size = tourn_size  # number of Trees selected for each tournament
-        # filename is passed between methods to work with specific populations
-        self.evolve_repro = evolve_repro  # quantity of a population generated through Reproduction
-        self.evolve_point = evolve_point  # quantity of a population generated through Point Mutation
-        self.evolve_branch = evolve_branch  # quantity of a population generated through Branch Mutation
-        self.evolve_cross = evolve_cross  # quantity of a population generated through Crossover
-        self.display = display  # display mode is set to (s)ilent # level of on-screen feedback
-        self.precision = precision  # the number of floating points for the round function in 'fx_fitness_eval'
-        self.swim = swim  # pass along the gene_pool restriction methodology
-        # mode is engaged at the end of the run, below
-
-        ### PART 2 - construct first generation of Trees ###
-        self.fx_data_load(filename)
-        self.gen_id = 1  # set initial generation ID
-        self.population_a = ['Karoo GP by Kai Staats, Generation ' + str(
-            self.gen_id)]  # initialise population_a to host the first generation
-        self.population_b = ['placeholder']  # initialise population_b to satisfy fx_karoo_pause()
-        self.fx_init_construct(tree_type, tree_depth_base)  # construct the first population of Trees
-
-        if self.kernel == 'p':  # terminate here for Play mode
-            self.fx_display_tree(self.tree)  # print the current Tree
-            self.fx_data_tree_write(self.population_a, 'a')  # save this one Tree to disk
-            sys.exit()
-
-        elif self.gen_max == 1:  # terminate here if constructing just one generation
-            self.fx_data_tree_write(self.population_a, 'a')  # save this single population to disk
-            print('\n We have constructed a single, stochastic population of', self.tree_pop_max,
-                  'Trees, and saved to disk')
-            sys.exit()
-
-        else:
-            print('\n We have constructed the first, stochastic population of', self.tree_pop_max, 'Trees')
-
-        ### PART 3 - evaluate first generation of Trees ###
-        print('\n Evaluate the first generation of Trees ...')
-        self.fx_fitness_gym(self.population_a)  # generate expression, evaluate fitness, compare fitness
-        self.fx_data_tree_write(self.population_a, 'a')  # save the first generation of Trees to disk
-
-        ### PART 4 - evolve multiple generations of Trees ###
-        menu = 1
-        while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
-            for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # evolve additional generations of Trees
-
-                print('\n Evolve a population of Trees for Generation', self.gen_id, '...')
-                self.population_b = [
-                    'Karoo GP by Kai Staats - Evolving Generation']  # initialise population_b to host the next generation
-                self.fx_fitness_gene_pool()  # generate the viable gene pool (compares against gp.tree_depth_min)
-                self.fx_nextgen_reproduce()  # method 1 - Reproduction
-                self.fx_nextgen_point_mutate()  # method 2 - Point Mutation
-                self.fx_nextgen_branch_mutate()  # method 3 - Branch Mutation
-                self.fx_nextgen_crossover()  # method 4 - Crossover
-                self.fx_eval_generation()  # evaluate all Trees in a single generation
-                self.population_a = self.fx_evolve_pop_copy(self.population_b,
-                                                            ['Karoo GP by Kai Staats - Generation ' + str(self.gen_id)])
-
-            if mode == 's':
-                menu = 0  # (s)erver mode - termination with completiont of prescribed run
-            else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
                 menu = self.fx_karoo_pause()
 
         self.fx_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
@@ -454,14 +367,15 @@ class Base_GP(object):
     #   Methods to Load and Archive Data         |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def fx_data_load(self, filename):
+    # TODO Funktion übergeben und nicht daten aus system ziehen
+    # TODO test
+    # Worked on!
+    def plagih_data_load(self, operators_file, samples_file):
 
         """
-        The data and function .csv files are loaded according to the fitness function kernel selected by the user. An
-        alternative dataset may be loaded at launch, by appending a command line argument. The data is then split into
-        both TRAINING and TEST segments in order to validate the success of the GP training run. Datasets less than
-        10 rows will not be split, rather copied in full to both TRAINING and TEST as it is assumed you are conducting
-        a system validation run, as with the built-in MATCH kernel and associated dataset.
+        The data and function .csv files are loaded according to the fitness function kernel selected by the user.
+        The data is then split
+        into both TRAINING and TEST segments in order to validate the success of the GP training run.
 
         Called by: fx_karoo_gp
 
@@ -469,72 +383,47 @@ class Base_GP(object):
         """
 
         ### PART 1 - load the associated data set, operators, operands, fitness type, and coefficients ###
-        # full_path = os.path.realpath(__file__); cwd = os.path.dirname(full_path) # for user Marco Cavaglia
-        cwd = os.getcwd()
 
-        data_dict = {'c': cwd + '/files/data_CLASSIFY.csv', 'r': cwd + '/files/data_REGRESS.csv',
-                     'm': cwd + '/files/data_MATCH.csv', 'p': cwd + '/files/data_PLAY.csv'}
+        # Load the 'good' samples file. Is currently in pickle-format.
+        # behaviour_samples[0] has the observations (of any shape) and behaviour_samples[1] has the actions
+        # Both can have any shape (multiple dimensions, discrete
+        # TODO hier unterscheiden, welche distanz genommen werden soll?
+        # TODO pickle und csv files
+        with open(samples_file, "rb") as fp:
+             behaviour_samples = pickle.load(fp)
+        # TODO braucht man nicht, aber trotzdem keine schöne Lösung
+        self.terminals = ['observation_0', 'observation_1', 'action_0']
+        # TODO transponieren vielleicht woanders?
+        behaviour_samples = np.transpose(behaviour_samples)
+        self.class_labels = len(np.unique(behaviour_samples[1]))  # load the user defined true labels for classification or solutions for regression
 
-        if len(sys.argv) == 1:  # load data from the default karoo_gp/files/ directory
-            data_x = np.loadtxt(data_dict[self.kernel], skiprows=1, delimiter=',', dtype=float);
-            data_x = data_x[:, 0:-1]  # load all but the right-most column
-            data_y = np.loadtxt(data_dict[self.kernel], skiprows=1, usecols=(-1,), delimiter=',',
-                                dtype=float)  # load only right-most column (class labels)
-            header = open(data_dict[self.kernel], 'r')  # open file to be read (below)
-            self.dataset = data_dict[self.kernel]  # copy the name only
-
-        elif len(sys.argv) == 2:  # load an external data file
-            data_x = np.loadtxt(sys.argv[1], skiprows=1, delimiter=',', dtype=float);
-            data_x = data_x[:, 0:-1]  # load all but the right-most column
-            data_y = np.loadtxt(sys.argv[1], skiprows=1, usecols=(-1,), delimiter=',',
-                                dtype=float)  # load only right-most column (class labels)
-            header = open(sys.argv[1], 'r')  # open file to be read (below)
-            self.dataset = sys.argv[1]  # copy the name only
-
-        elif len(sys.argv) > 2:  # receive filename and additional arguments from karoo_gp.py via argparse
-            data_x = np.loadtxt(filename, skiprows=1, delimiter=',', dtype=float);
-            data_x = data_x[:, 0:-1]  # load all but the right-most column
-            data_y = np.loadtxt(filename, skiprows=1, usecols=(-1,), delimiter=',',
-                                dtype=float)  # load only right-most column (class labels)
-            header = open(filename, 'r')  # open file to be read (below)
-            self.dataset = filename  # copy the name only
-
+        # TODO Types of fitting the solution: Matching, dist-to-right-decision, euklidian dist, dummydist, tiles?
         fitt_dict = {'c': 'max', 'r': 'min', 'm': 'max', 'p': ''}
         self.fitness_type = fitt_dict[self.kernel]  # load fitness type
 
-        func_dict = {'c': cwd + '/files/operators_CLASSIFY.csv', 'r': cwd + '/files/operators_REGRESS.csv',
-                     'm': cwd + '/files/operators_MATCH.csv', 'p': cwd + '/files/operators_PLAY.csv'}
-        self.functions = np.loadtxt(func_dict[self.kernel], delimiter=',', skiprows=1,
-                                    dtype=str)  # load the user defined functions (operators)
-        self.terminals = header.readline().split(',');
-        self.terminals[-1] = self.terminals[-1].replace('\n', '')  # load the user defined terminals (operands)
-        self.class_labels = len(
-            np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-        # self.coeff = np.loadtxt(cwd + '/files/coefficients.csv', delimiter=',', skiprows=1, dtype = str) # load the user defined coefficients - NOT USED YET
+        self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+
+
 
         ### PART 2 - from the dataset, extract TRAINING and TEST data ###
-        if len(data_x) < 11:  # for small datasets we will not split them into TRAINING and TEST components
-            data_train = np.c_[data_x, data_y]
-            data_test = np.c_[data_x, data_y]
 
-        else:  # if larger than 10, we run the data through the SciKit Learn's 'random split' function
-            x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y,
-                                                                     test_size=0.2)  # 80/20 TRAIN/TEST split
-            data_x, data_y = [], []  # clear from memory
+        # TODO die func kann sicher nicht mit 2d labels umgehen
+        x_train, x_test, y_train, y_test = skcv.train_test_split(behaviour_samples[0], behaviour_samples[1],
+                                                                 test_size=0.2)  # 80/20 TRAIN/TEST split
+        behaviour_samples = [], []  # clear from memory
 
-            data_train = np.c_[
-                x_train, y_train]  # recombine each row of data with its associated class label (right column)
-            x_train, y_train = [], []  # clear from memory
+        data_train = np.c_[x_train, y_train]  # recombine each row of data with its associated class label (right column)
+        x_train, y_train = [], []  # clear from memory
 
-            data_test = np.c_[
-                x_test, y_test]  # recombine each row of data with its associated class label (right column)
-            x_test, y_test = [], []  # clear from memory
+        data_test = np.c_[x_test, y_test]  # recombine each row of data with its associated class label (right column)
+        x_test, y_test = [], []  # clear from memory
 
         self.data_train_cols = len(data_train[0, :])  # qty count
         self.data_train_rows = len(data_train[:, 0])  # qty count
         self.data_test_cols = len(data_test[0, :])  # qty count
         self.data_test_rows = len(data_test[:, 0])  # qty count
 
+        # TODO was passiert hier?
         ### PART 3 - load TRAINING and TEST data for TensorFlow processing - tested 2017 02/02
         self.data_train = data_train  # Store train data for processing in TF
         self.data_test = data_test  # Store test data for processing in TF
@@ -543,8 +432,8 @@ class Base_GP(object):
 
         ### PART 4 - create a unique directory and initialise all .csv files ###
         self.datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        self.path = os.path.join(cwd, 'runs/',
-                                 filename.split('.')[0] + '_' + self.datetime + '/')  # generate a unique directory name
+        cwd = os.getcwd()
+        self.path = os.path.join(cwd, 'runs/' + self.datetime + '/')  # generate a unique directory name
         if not os.path.isdir(self.path): os.makedirs(self.path)  # make a unique directory
 
         self.filename = {}  # a dictionary to hold .csv filenames
@@ -663,14 +552,12 @@ class Base_GP(object):
 
         return
 
-    def fx_data_params_write(self):  # tested 2017 02/13; argument 'app' removed to simplify termination 2019 06/08
+    def fx_data_params_write(self):
 
         """
         Save run-time configuration parameters to disk.
 
         Called by: fx_karoo_gp, fx_karoo_pause
-
-        Arguments required: app
         """
 
         file = open(self.path + 'log_config.txt', 'w')
@@ -772,59 +659,53 @@ class Base_GP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     # TODO
-    def fx_plagih_init(self, tree_type, tree_depth_base):
-
+    def plagih_init_construct(self, tree_type, tree_depth_base, origin_tree_file):
         """
-        This method constructs the initial population of Tree type 'tree_type' and of the size tree_depth_base. The Tree
-        can be Full, Grow, or "Ramped Half/Half" as defined by John Koza.
 
-        Called by: fx_karoo_gp
+        Called by:
 
         Arguments required: tree_type, tree_depth_base
         """
-
         if self.display == 'i':
             print(
                 '\n\t\033[32m Press \033[36m\033[1m?\033[0;0m\033[32m at any \033[36m\033[1m(pause)\033[0;0m\033[32m, or \033[36m\033[1mENTER\033[0;0m \033[32mto continue the run\033[0;0m');
             self.fx_karoo_pause_refer()
 
-        if tree_type == 'r':  # Ramped 50/50
+        tree = self.plagih_load_origin_tree(origin_tree_file)
+        self.fx_data_tree_append(self.tree)
+        # TODO
+        # for TREE_ID in range(1, self.tree_pop_max + 1 - 1):
+        #     self.fx_init_tree_build(TREE_ID, tree_type, tree_depth_base)  # build the 1st generation of Trees
+        #     self.fx_data_tree_append(self.tree)
 
-            TREE_ID = 1
-            for n in range(1,
-                           int((self.tree_pop_max / 2) / tree_depth_base) + 1):  # split the population into equal parts
-                for depth in range(1, tree_depth_base + 1):  # build 2 Trees at each depth
-                    self.fx_init_tree_build(TREE_ID, 'f', depth)  # build a Full Tree
-                    self.fx_data_tree_append(self.tree)  # append Tree to the list 'gp.population_a'
-                    TREE_ID = TREE_ID + 1
+    def plagih_load_origin_tree(self, path):
+        # TODO eventuell origin in self speichern. (self.origin)
+        """
+        This loads the 'origin'. The original program that shall be improved.
 
-                    self.fx_init_tree_build(TREE_ID, 'g', depth)  # build a Grow Tree
-                    self.fx_data_tree_append(self.tree)  # append Tree to the list 'gp.population_a'
-                    TREE_ID = TREE_ID + 1
+        Arguments required: path to csv
 
-            if TREE_ID < self.tree_pop_max:  # eg: split 100 by 2*3 and it will produce only 96 Trees ...
-                for n in range(self.tree_pop_max - TREE_ID + 1):  # ... so we complete the run
-                    self.fx_init_tree_build(TREE_ID, 'g', tree_depth_base)
-                    self.fx_data_tree_append(self.tree)
-                    TREE_ID = TREE_ID + 1
+        returns: tree
+        """
 
-            else:
-                pass
+        with open(path, 'r') as csv_file:
+            target = csv.reader(csv_file, delimiter=',')
 
-        else:  # Full or Grow
-            for TREE_ID in range(1, self.tree_pop_max + 1):
-                self.fx_init_tree_build(TREE_ID, tree_type, tree_depth_base)  # build the 1st generation of Trees
-                self.fx_data_tree_append(self.tree)
+            for row in target:
+                print('row', row)
 
-        return
+                if row == []:
+                    tree = np.array([[]])  # initialise Tree array
+                else:
+                    if tree.shape[1] == 0:  # looks if tree is empty
+                        tree = np.append(tree, [row], axis=1)  # append first row to Tree
+                    else:
+                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
 
-    def plagih_init_construct(self, tree_type, tree_depth_base):
+                if tree.shape[0] == 15:
+                    print(tree)
 
-        for TREE_ID in range(1, self.tree_pop_max + 1):
-                self.fx_init_tree_build(TREE_ID, tree_type, tree_depth_base)  # build the 1st generation of Trees
-                self.fx_data_tree_append(self.tree)
-
-        return
+        return tree
 
     def fx_init_tree_build(self, TREE_ID, tree_type, tree_depth_base):
 
@@ -841,14 +722,14 @@ class Base_GP(object):
         Arguments required: TREE_ID, tree_type, tree_depth_base
         """
 
-        self.fx_init_tree_initialise(TREE_ID, tree_type, tree_depth_base)  # initialise a new Tree
+        self.plagih_init_tree_initialise(TREE_ID, tree_type, tree_depth_base)  # initialise a new Tree
         self.fx_init_root_build()  # build the Root node
         self.fx_init_function_build()  # build the Function nodes
         self.fx_init_terminal_build()  # build the Terminal nodes
 
         return  # each Tree is written to 'gp.tree'
 
-    def fx_init_tree_initialise(self, TREE_ID, tree_type, tree_depth_base):
+    def plagih_init_tree_initialise(self, TREE_ID, tree_type, tree_depth_base):
 
         """
         Assign 13 global variables to the array 'tree'.
@@ -877,10 +758,12 @@ class Base_GP(object):
         self.pop_node_c2 = ''           # pos 10: child node 2
         self.pop_node_c3 = ''           # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
         self.pop_fitness = ''           # pos 12: fitness score following Tree evaluation
+        self.pop_plausibility = ''
+        self.pop_node_modify = ''       # pos 13: plagih dummy value whether this node shall be changed
 
         self.tree = np.array(
             [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'],
-             ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'], ['fitness']])
+             ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'], ['fitness'], ['plausibility'], ['node_modify']])
 
         return
 
@@ -1094,12 +977,8 @@ class Base_GP(object):
         c_buffer = 0
 
         for n in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-
-            if int(self.tree[4][
-                       n]) == self.pop_node_depth - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
-
-                c_buffer = self.pop_NODE_ID + (
-                        parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
+            if int(self.tree[4][n]) == self.pop_node_depth - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
+                c_buffer = self.pop_NODE_ID + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
 
                 if self.pop_node_arity == 0:  # terminal in a Grow Tree
                     self.pop_node_c1 = ''
@@ -1421,8 +1300,11 @@ class Base_GP(object):
 
                     # was breaking with upgrade from Tensorflow 1.1 to 1.3; fixed by Iurii by replacing [] with () as of 20171026
                     # if get_pred_labels: pred_labels = tf.map_fn(self.fx_fitness_labels_map, result, dtype = [tf.int32, tf.string], swap_memory = True)
-                    if get_pred_labels: pred_labels = tf.map_fn(self.fx_fitness_labels_map, result,
-                                                                dtype=(tf.int32, tf.string), swap_memory=True)
+                    if get_pred_labels:
+                        pred_labels = tf.map_fn(self.fx_fitness_labels_map,
+                                                result,
+                                                dtype=(tf.int32, tf.string),
+                                                swap_memory=True)
 
                     skew = (self.class_labels / 2) - 1
 
@@ -1828,11 +1710,8 @@ class Base_GP(object):
         """
 
         for i in range(len(result['result'])):
-            print('\t\033[36m Data row {} predicts value:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i,
-                                                                                                       result['result'][
-                                                                                                           i], result[
-                                                                                                           'solution'][
-                                                                                                           i]))
+            print('\t\033[36m Data row {} predicts value:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.
+                  format(i, result['result'][i], result['solution'][i]))
 
         MSE, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
         print('\n\t Regression fitness score: {}'.format(fitness))
@@ -2811,3 +2690,35 @@ class Base_GP(object):
         print('\t\033[36mTree', tree[0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
 
         return
+
+def PLAGIH_display_one_tree_from_csv(path):
+
+    """
+    Display all or part of a Tree on-screen.
+
+    probably outdated soon :)
+
+    Arguments required: path to csv
+    """
+    population_a = []
+    with open(path, 'r') as csv_file:
+        target = csv.reader(csv_file, delimiter=',')
+
+        for row in target:
+            print('row', row)
+
+            if row == []:
+                tree = np.array([[]])  # initialise Tree array
+            else:
+                if tree.shape[1] == 0:  # looks if tree is empty
+                    tree = np.append(tree, [row], axis=1)  # append first row to Tree
+                else:
+                    tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
+
+            if tree.shape[0] == 15:
+                population_a.append(tree)  # append complete Tree to population list
+
+    population_a.append(tree)  # append complete Tree to population list
+    print(population_a[1])
+
+    return

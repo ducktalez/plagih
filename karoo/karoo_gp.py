@@ -2,6 +2,7 @@ import os
 import sys; sys.path.append('modules/') # add directory 'modules' to the current path
 import argparse
 import karoo.modules.karoo_gp_base_class_xai; gp = karoo.modules.karoo_gp_base_class_xai.Base_GP()
+from pathlib import Path, PurePath
 
 kernel= 'r'    			# [r,c,m]			fitness function: (r)egression, (c)lassification, or (m)atching
 tree_type= 'g'    		# [f,g,r]			Tree type: (f)ull, (g)row, or (r)amped half/half
@@ -19,7 +20,18 @@ evolve_cross= 0.25   	# [0.0...1.0]  		decimal percent of pop generated through 
 #++++++++++++++++++++++++++++++++++++++++++
 #   Conduct the GP run                    |
 #++++++++++++++++++++++++++++++++++++++++++
-kernel='p'
-gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max, tourn_size, filename, evolve_repro, evolve_point, evolve_branch, evolve_cross, display, precision, swim, mode)
+kernel = 'p'
+display = 's'  # display mode is set to (s)ilent
+precision = 6  # number of floating points for the round function in 'fx_fitness_eval'
+swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
+mode = 'db'  # pause at the (d)esktop when complete, awaiting further user interaction; or terminate in (s)erver mode
+
+gen_max= 1
+origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
+samples_file = Path('../mountaincar/karoo_files/behaviour_samples.p')
+operators_file = Path('../mountaincar/karoo_files/operators.csv')
+gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
+                   tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point,
+                   evolve_branch, evolve_cross, display, precision, swim, mode)
 
 

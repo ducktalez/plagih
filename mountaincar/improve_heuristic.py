@@ -3,6 +3,9 @@ import gym
 import matplotlib.pyplot as plt
 from mountaincar.agents.sarsa_best_approach import sarsa_start_training
 from mountaincar.agents.move_directions import move_towards_direction
+from pathlib import Path, PurePath
+import pickle
+
 
 # plagih
 
@@ -17,17 +20,22 @@ from mountaincar.agents.move_directions import move_towards_direction
 # - Non markovian / LSTM possibility?
 # - sample size based on the number experiments? Like, "just make 10 experiments" and use as maximum then.
 
-def get_fitness_samples(agent, sample_size=1000, sample_type="run_experiments"):
-    return
 
+# tree = Path('../samples/behaviour_samples.p')
+# PLAGIH_display_one_tree_from_csv()
 
-
-
-env = gym.make('MountainCar-v0')
-env.seed(1)
-# env = gym.wrappers.Monitor(env, "./records", video_callable=lambda _: True)
-
-env.close()
-
-
+samples_file = Path('karoo_files/behaviour_samples.p')
+with open(samples_file, "rb") as fp:
+    plagih_behaviour_samples = pickle.load(fp)
+test = plagih_behaviour_samples[:10]
+# test = np.transpose(test)
+# if test[0][0] == 'numpy.ndarray':
+try:
+    print(len(test[0][0]))
+except:
+    print('1')
+try:
+    print(len(test[0][1]))
+except:
+    print('1')
 

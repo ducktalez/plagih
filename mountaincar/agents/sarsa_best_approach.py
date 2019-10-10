@@ -177,7 +177,7 @@ def plagih_get_behaviour_samples(env, agent, episodes, train=False, render=False
             action_next = agent.decide(observation_next)
             observation, action = observation_next, action_next
 
-    return plagih_state_actions # plagih
+    return plagih_state_actions
 
 
 def create_behaviour_samples_file(seed=0):
@@ -200,9 +200,10 @@ def create_behaviour_samples_file(seed=0):
     plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=20, train=False)
     print(sys.getsizeof(plagih_behaviour_samples))
     print('Amount of samples: ' + str(len(plagih_behaviour_samples)))
+    env.observation_space
     env.close()
 
-    samples_file = Path('../samples/MTC_sarsa_samples.p')
+    samples_file = Path('../karoo_files/behaviour_samples.p')
     with open(samples_file, "wb") as fp:  # Pickling
         pickle.dump(plagih_behaviour_samples, fp)
 
@@ -215,6 +216,7 @@ def create_behaviour_samples_file(seed=0):
 
 
 if __name__ == "__main__":
-    dothis = input('Please press: create (s)amples, run coming later: ')
-    if dothis == 's':
-        create_behaviour_samples_file()
+    create_behaviour_samples_file()
+    # dothis = input('Please press: create (s)amples, run coming later: ')
+    # if dothis == 's':
+    #     create_behaviour_samples_file()

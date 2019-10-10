@@ -4,12 +4,18 @@ import argparse
 import karoo.modules.karoo_gp_base_class_xai; gp = karoo.modules.karoo_gp_base_class_xai.Base_GP()
 from pathlib import Path, PurePath
 
+# • Generational (g): pauses after each generation is complete
+# • Interactive (i): pauses with the completion of each section (e.g. tournament, gene pool, genetic operators)
+# • DeBug (db): displays the internal workings of the genetic operators
+# • Minimal (m): displays only the multivariate expression of each tree
+# • Silent (s): displays only the summary of each generations
+
 kernel= 'r'    			# [r,c,m]			fitness function: (r)egression, (c)lassification, or (m)atching
 tree_type= 'g'    		# [f,g,r]			Tree type: (f)ull, (g)row, or (r)amped half/half
 tree_depth_base= 3		# [3...10]			maximum Tree depth for initial population
 tree_depth_max= 10		# [3...10]			maximum Tree depth for entire run
 tree_depth_min= 3		# [3 to 2^(bas +1) - 1]	minimum number of nodes
-tree_pop_max= 100    	# [10...1000]		number of trees in each generational population
+tree_pop_max= 20    	# [10...1000]		number of trees in each generational population
 gen_max= 10				# [1...100]			number of generations
 tourn_size= 10			# [7 per 100]		number of trees selected for tournament
 evolve_repro= 0.25   	# [0.0...1.0]  		decimal percent of pop generated through Reproduction
@@ -20,8 +26,8 @@ evolve_cross= 0.25   	# [0.0...1.0]  		decimal percent of pop generated through 
 #++++++++++++++++++++++++++++++++++++++++++
 #   Conduct the GP run                    |
 #++++++++++++++++++++++++++++++++++++++++++
-kernel = 'p'
-display = 's'  # display mode is set to (s)ilent
+kernel = 'c'
+display = 'db'  # display mode is set to (s)ilent
 precision = 6  # number of floating points for the round function in 'fx_fitness_eval'
 swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
 mode = 'db'  # pause at the (d)esktop when complete, awaiting further user interaction; or terminate in (s)erver mode

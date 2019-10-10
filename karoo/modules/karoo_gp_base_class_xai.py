@@ -37,7 +37,6 @@ from pathlib import Path
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-# TODO entsprechende Operatoren fehlen: if a then b und if a then b else c
 operators = {ast.Add: tf.add,  # e.g., a + b
              ast.Sub: tf.subtract,  # e.g., a - b
              ast.Mult: tf.multiply,  # e.g., a * b
@@ -58,15 +57,15 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'square': tf.square,  # e.g., square(a)
              'sqrt': tf.sqrt,  # e.g., sqrt(a)
              'pow': tf.pow,  # e.g., pow(a, b)
-             'log': tf.log,  # e.g., log(a)
-             'log1p': tf.log1p,  # e.g., log1p(a)
+             'log': tf.math.log,  # e.g., log(a)
+             'log1p': tf.math.log1p,  # e.g., log1p(a)
              'cos': tf.cos,  # e.g., cos(a)
              'sin': tf.sin,  # e.g., sin(a)
              'tan': tf.tan,  # e.g., tan(a)
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'if': tf.cond,  # e.g., if a: b --wie genau geht das?
+             'if': tf.cond,  # e.g., if bool(a): b else c
              }
 
 np.set_printoptions(
@@ -158,7 +157,6 @@ class Base_GP(object):
         self.tree_pop_max = tree_pop_max  # maximum number of Trees per generation
         self.gen_max = gen_max  # maximum number of generations
         self.tourn_size = tourn_size  # number of Trees selected for each tournament
-        # filename is passed between methods to work with specific populations
         self.evolve_repro = evolve_repro  # quantity of a population generated through Reproduction
         self.evolve_point = evolve_point  # quantity of a population generated through Point Mutation
         self.evolve_branch = evolve_branch  # quantity of a population generated through Branch Mutation
@@ -391,12 +389,12 @@ class Base_GP(object):
         # TODO pickle und csv files
         with open(samples_file, "rb") as fp:
              behaviour_samples = pickle.load(fp)
-        # TODO braucht man nicht, aber trotzdem keine schöne Lösung
+        # TODO braucht man nicht, aber trotzdem keine schöne Lösung. evtl. einfach zwei spalten?
         self.terminals = ['observation_0', 'observation_1', 'action_0']
         # TODO transponieren vielleicht woanders?
         behaviour_samples = np.transpose(behaviour_samples)
         self.class_labels = len(np.unique(behaviour_samples[1]))  # load the user defined true labels for classification or solutions for regression
-
+        print((self.class_labels / 2) - 1)
         # TODO Types of fitting the solution: Matching, dist-to-right-decision, euklidian dist, dummydist, tiles?
         fitt_dict = {'c': 'max', 'r': 'min', 'm': 'max', 'p': ''}
         self.fitness_type = fitt_dict[self.kernel]  # load fitness type
@@ -672,11 +670,11 @@ class Base_GP(object):
             self.fx_karoo_pause_refer()
 
         tree = self.plagih_load_origin_tree(origin_tree_file)
-        self.fx_data_tree_append(self.tree)
         # TODO
-        # for TREE_ID in range(1, self.tree_pop_max + 1 - 1):
-        #     self.fx_init_tree_build(TREE_ID, tree_type, tree_depth_base)  # build the 1st generation of Trees
-        #     self.fx_data_tree_append(self.tree)
+        for TREE_ID in range(1, self.tree_pop_max + 1 - 1):
+            # self.fx_init_tree_build(TREE_ID, tree_type, tree_depth_base)  # build the 1st generation of Trees
+            # self.fx_data_tree_append(self.tree)
+            self.fx_data_tree_append(tree)
 
     def plagih_load_origin_tree(self, path):
         # TODO eventuell origin in self speichern. (self.origin)
@@ -1031,7 +1029,7 @@ class Base_GP(object):
     #   Methods to Evaluate a Tree               |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def fx_eval_poly(self, tree):
+    def plagih_eval_poly(self, tree):
 
         """
         Evaluate a Tree and generate its multivariate expression (both raw and Sympified).
@@ -1045,13 +1043,13 @@ class Base_GP(object):
         Arguments required: tree
         """
 
-        self.algo_raw = self.fx_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
+        self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
         self.algo_sym = sympify(
             self.algo_raw)  # convert string to a functional expression (the coolest line in Karoo! :)
 
         return
 
-    def fx_eval_label(self, tree, node_id):
+    def plagih_eval_label(self, tree, node_id):
 
         """
         Evaluate all or part of a Tree (starting at node_id) and return a raw mutivariate expression ('algo_raw').
@@ -1060,7 +1058,7 @@ class Base_GP(object):
         partial (branch) Tree contained in 'population'. Pass the starting node for recursion via the local variable
         'node_id' where the local variable 'tree' is a copy of the Tree you desire to evaluate.
 
-        Called by: fx_eval_poly, fx_eval_label (recursively)
+        Called by: plagih_eval_poly, fx_eval_label (recursively)
 
         Arguments required: tree, node_id
         """
@@ -1071,18 +1069,18 @@ class Base_GP(object):
 
         if tree[8, node_id] == '0':  # arity of 0 for the pattern '[term]'
             return '(' + tree[6, node_id] + ')'  # 'node_label' (function or terminal)
-
+        # TODO endrekursiv?
         else:
             if tree[8, node_id] == '1':  # arity of 1 for the explicit pattern 'not [term]'
-                return self.fx_eval_label(tree, tree[9, node_id]) + tree[6, node_id]
+                return self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id]
 
             elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[func] [term] [func]'
-                return self.fx_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.fx_eval_label(tree, tree[
+                return self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[
                     10, node_id])
 
             elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
-                return tree[6, node_id] + self.fx_eval_label(tree, tree[9, node_id]) + ' then ' + self.fx_eval_label(
-                    tree, tree[10, node_id]) + ' else ' + self.fx_eval_label(tree, tree[11, node_id])
+                return tree[6, node_id] + self.plagih_eval_label(tree, tree[9, node_id]) + ' then ' + self.plagih_eval_label(
+                    tree, tree[10, node_id]) + ' else ' + self.plagih_eval_label(tree, tree[11, node_id])
 
     def fx_eval_id(self, tree, node_id):
 
@@ -1181,7 +1179,7 @@ class Base_GP(object):
         for tree_id in range(1, len(population)):
 
             ### PART 1 - GENERATE MULTIVARIATE EXPRESSION FOR EACH TREE ###
-            self.fx_eval_poly(population[tree_id])  # extract the expression
+            self.plagih_eval_poly(population[tree_id])  # extract the expression
             if self.display not in ('s'): print('\t\033[36mTree', population[tree_id][0][1], 'yields (sym):\033[1m',
                                                 self.algo_sym, '\033[0;0m')
 
@@ -1189,7 +1187,7 @@ class Base_GP(object):
             fitness = 0
 
             expr = str(self.algo_sym)  # get sympified expression and process it with TF - tested 2017 02/02
-            result = self.fx_fitness_eval(expr, self.data_train)
+            result = self.plagih_fitness_eval(expr, self.data_train)
             fitness = result['fitness']  # extract fitness score
 
             if self.display == 'i':
@@ -1222,7 +1220,7 @@ class Base_GP(object):
 
         return
 
-    def fx_fitness_eval(self, expr, data, get_pred_labels=False):
+    def plagih_fitness_eval(self, expr, data, get_pred_labels=False):
 
         """
         Computes tree expression using TensorFlow (TF) returning results and fitness scores.
@@ -1282,11 +1280,11 @@ class Base_GP(object):
                     """
                     Creates element-wise fitness computation TensorFlow (TF) sub-graph for CLASSIFY kernel.
                     
-                    This method uses the 'sympified' (SymPy) expression ('algo_sym') created in fx_eval_poly() and the data set 
+                    This method uses the 'sympified' (SymPy) expression ('algo_sym') created in plagih_eval_poly() and the data set 
                     loaded at run-time to evaluate the fitness of the selected kernel.
                     
                     This multiclass classifer compares each row of a given Tree to the known solution, comparing predicted labels 
-                    generated by Karoo GP against the true classs labels. This method is able to work with any number of class 
+                    generated by Karoo GP against the true class labels. This method is able to work with any number of class 
                     labels, from 2 to n. The left-most bin includes -inf. The right-most bin includes +inf. Those inbetween are 
                     by default confined to the spacing of 1.0 each, as defined by:
                     
@@ -1301,7 +1299,7 @@ class Base_GP(object):
                     # was breaking with upgrade from Tensorflow 1.1 to 1.3; fixed by Iurii by replacing [] with () as of 20171026
                     # if get_pred_labels: pred_labels = tf.map_fn(self.fx_fitness_labels_map, result, dtype = [tf.int32, tf.string], swap_memory = True)
                     if get_pred_labels:
-                        pred_labels = tf.map_fn(self.fx_fitness_labels_map,
+                        pred_labels = tf.map_fn(self.plagih_fitness_labels_map,
                                                 result,
                                                 dtype=(tf.int32, tf.string),
                                                 swap_memory=True)

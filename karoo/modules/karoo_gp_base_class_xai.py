@@ -1,8 +1,3 @@
-# Karoo GP Base Class
-# Define the methods and global variables used by Karoo GP
-# by Kai Staats, MSc with TensorFlow support provided by Iurii Milovanov; see LICENSE.md
-# version 2.3 for Python 3.6
-
 """
 A NOTE TO THE NEWBIE, EXPERT, AND BRAVE
 Even if you are highly experienced in Genetic Programming, it is recommended that you review the 'Karoo User Guide' before running 
@@ -19,7 +14,8 @@ import sklearn.model_selection as skcv
 from sympy import sympify, functions
 from datetime import datetime
 # import karoo_gp_pause as menu
-import karoo.modules.karoo_gp_pause as menu
+# TODO import the pause later, maybe
+# import karoo.modules.karoo_gp_pause as menu
 import tensorflow as tf
 import ast
 
@@ -167,18 +163,17 @@ class Base_GP(object):
         self.plagih_init_construct(tree_type, tree_depth_base, origin_tree_file)  # construct the first population of Trees
 
         if self.gen_max == 1:  # terminate here if constructing just one generation
-            self.fx_data_tree_write(self.population_a, 'a')  # save this single population to disk
+            self.plagih_data_tree_write(self.population_a, 'a')  # save this single population to disk
             print('\n We have constructed a single, stochastic population of', self.tree_pop_max,
                   'Trees, and saved to disk')
             sys.exit()
         else:
             print('\n We have constructed the first, stochastic population of', self.tree_pop_max, 'Trees')
 
-        # TODO
         ### PART 3 - evaluate first generation of Trees ###
         print('\n Evaluate the first generation of Trees ...')
         self.plagih_fitness_gym(self.population_a)  # generate expression, evaluate fitness, compare fitness
-        self.fx_data_tree_write(self.population_a, 'a')  # save the first generation of Trees to disk
+        self.plagih_data_tree_write(self.population_a, 'a')  # save the first generation of Trees to disk
 
         ### PART 4 - evolve multiple generations of Trees ###
         menu = 1
@@ -186,25 +181,26 @@ class Base_GP(object):
             for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # evolve additional generations of Trees
 
                 print('\n Evolve a population of Trees for Generation', self.gen_id, '...')
-                self.population_b = [
-                    'Karoo GP by Kai Staats - Evolving Generation']  # initialise population_b to host the next generation
-                self.fx_fitness_gene_pool()  # generate the viable gene pool (compares against gp.tree_depth_min)
-                self.fx_nextgen_reproduce()  # method 1 - Reproduction
-                self.fx_nextgen_point_mutate()  # method 2 - Point Mutation
-                self.fx_nextgen_branch_mutate()  # method 3 - Branch Mutation
+                self.population_b = ['PLAHIG GP by Simon Fehrer - Evolving Generation']  # initialise population_b to host the next generation
+                self.plagih_fitness_gene_pool()  # generate the viable gene pool, aka Paretofront. At least our "origin" should be fit enough ;)
+                # Add the original tree aswell
+                self.plagih_nextgen_reproduce_one()  # method 1 - Reproduction
+                self.plagih_nextgen_point_mutate()  # method 2 - Point Mutation
+                self.plagih_nextgen_branch_mutate()  # method 3 - Branch Mutation
                 self.fx_nextgen_crossover()  # method 4 - Crossover
                 self.fx_eval_generation()  # evaluate all Trees in a single generation
-                self.population_a = self.fx_evolve_pop_copy(self.population_b,
-                                                            ['Karoo GP by Kai Staats - Generation ' + str(self.gen_id)])
+                self.population_a = self.fx_evolve_pop_copy(self.population_b,['Karoo GP by Kai Staats - Generation ' + str(self.gen_id)])
 
-            if mode == 's':
-                menu = 0  # (s)erver mode - termination with completiont of prescribed run
+            # SFEH das war mal da, hat nach dem Durchlaufen ohne Menu abgekackt
+            # if mode == 's':
+            #     menu = 0  # (s)erver mode - termination with completiont of prescribed run
             else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
-                print(
-                    '\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
-                menu = self.fx_karoo_pause()
+                print('\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
+                # menu = self.fx_karoo_pause()
+                # SFEH statt oben steht da jetzt da unten :D
+                menu = 0
 
-        self.fx_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
+        self.plagih_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
 
         return
 
@@ -317,7 +313,7 @@ class Base_GP(object):
             self.fx_data_recover(self.filename['s'])  # NEED TO replace 's' with a user defined filename
 
         elif input_a == 'write':  # write the evolving population_b to disk
-            self.fx_data_tree_write(self.population_b, 'b')
+            self.plagih_data_tree_write(self.population_b, 'b')
             print(
                 '\n\t All current members of the evolving population_b saved to karoo_gp/runs/[date-time]/population_b.csv')
 
@@ -325,11 +321,11 @@ class Base_GP(object):
             self.gen_max = self.gen_max + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
 
         elif input_a == 'quit':
-            self.fx_karoo_terminate()  # archive populations and exit
+            self.plagih_karoo_terminate()  # archive populations and exit
 
         return 1
 
-    def fx_karoo_terminate(self):
+    def plagih_karoo_terminate(self):
         """
         Terminates the evolutionary run (if yet in progress), saves parameters and data to disk, and cleanly returns
         the user to karoo_gp.py and the command line.
@@ -339,10 +335,10 @@ class Base_GP(object):
         Arguments required: none
         """
 
-        self.fx_data_params_write()
+        self.plagih_data_params_write()
         target = open(self.filename['f'], 'w');
         target.close()  # initialize the .csv file for the final population
-        self.fx_data_tree_write(self.population_b, 'f')  # save the final generation of Trees to disk
+        self.plagih_data_tree_write(self.population_b, 'f')  # save the final generation of Trees to disk
         print('\n\t\033[32m Your Trees and runtime parameters are archived in karoo_gp/runs/[date-time]/\033[0;0m')
 
         print('\n\033[3m "It is not the strongest of the species that survive, nor the most intelligent,\033[0;0m')
@@ -401,6 +397,8 @@ class Base_GP(object):
                     data_x.append(row[:num_observations])
                     data_y.append(row[num_observations:])
         csvFile.close()
+
+        self.dataset = samples_file
 
         # TODO das funktioniert nur bei eindimensionalen Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
@@ -538,7 +536,7 @@ class Base_GP(object):
 
         return
 
-    def fx_data_tree_write(self, population, key):
+    def plagih_data_tree_write(self, population, key):
 
         """
         Save population_* to disk.
@@ -560,7 +558,7 @@ class Base_GP(object):
 
         return
 
-    def fx_data_params_write(self):
+    def plagih_data_params_write(self):
 
         """
         Save run-time configuration parameters to disk.
@@ -1042,7 +1040,7 @@ class Base_GP(object):
         to the original variables listed across the top of each column of data.csv. Therefore, we must re-assign
         the respective values for each subsequent row in the data .csv, for each Tree's unique expression.
 
-        Called by: fx_karoo_pause, fx_data_params_write, fx_eval_label, plagih_fitness_gym, fx_fitness_gene_pool, fx_display_tree
+        Called by: fx_karoo_pause, plagih_data_params_write, fx_eval_label, plagih_fitness_gym, fx_fitness_gene_pool, fx_display_tree
 
         Arguments required: tree
         """
@@ -1089,7 +1087,7 @@ class Base_GP(object):
                 return tree[6, node_id] + self.plagih_eval_label(tree, tree[9, node_id]) + ' then ' + self.plagih_eval_label(
                     tree, tree[10, node_id]) + ' else ' + self.plagih_eval_label(tree, tree[11, node_id])
 
-    def fx_eval_id(self, tree, node_id):
+    def plagih_eval_id(self, tree, node_id):
 
         """
         Evaluate all or part of a Tree and return a list of all 'NODE_ID's.
@@ -1100,7 +1098,7 @@ class Base_GP(object):
         Pass the starting node for recursion via the local variable 'node_id' where the local variable 'tree' is a copy
         of the Tree you desire to evaluate.
 
-        Called by: fx_eval_id (recursively), fx_evolve_branch_select
+        Called by: fx_eval_id (recursively), plagih_evolve_branch_select
 
         Arguments required: tree, node_id
         """
@@ -1112,18 +1110,13 @@ class Base_GP(object):
 
         else:
             if tree[8, node_id] == '1':  # arity of 1 for the pattern '[NODE_ID], [NODE_ID]'
-                return tree[3, node_id] + ', ' + self.fx_eval_id(tree, tree[9, node_id])
+                return tree[3, node_id] + ', ' + self.plagih_eval_id(tree, tree[9, node_id])
 
             elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[NODE_ID], [NODE_ID], [NODE_ID]'
-                return tree[3, node_id] + ', ' + self.fx_eval_id(tree, tree[9, node_id]) + ', ' + self.fx_eval_id(tree,
-                                                                                                                  tree[
-                                                                                                                      10, node_id])
+                return tree[3, node_id] + ', ' + self.fx_eval_id(tree, tree[9, node_id]) + ', ' + self.plagih_eval_id(tree,tree[10, node_id])
 
             elif tree[8, node_id] == '3':  # arity of 3 for the pattern '[NODE_ID], [NODE_ID], [NODE_ID], [NODE_ID]'
-                return tree[3, node_id] + ', ' + self.fx_eval_id(tree, tree[9, node_id]) + ', ' + self.fx_eval_id(tree,
-                                                                                                                  tree[
-                                                                                                                      10, node_id]) + ', ' + self.fx_eval_id(
-                    tree, tree[11, node_id])
+                return tree[3, node_id] + ', ' + self.plagih_eval_id(tree, tree[9, node_id]) + ', ' + self.plagih_eval_id(tree,tree[10, node_id]) + ', ' + self.plagih_eval_id(tree, tree[11, node_id])
 
     def fx_eval_generation(self):
 
@@ -1146,7 +1139,7 @@ class Base_GP(object):
             self.population_b[tree_id][0][1] = tree_id
 
         self.plagih_fitness_gym(self.population_b)  # run fx_eval(), fx_fitness(), fx_fitness_store(), and fitness record
-        self.fx_data_tree_write(self.population_b, 'a')  # archive current population as foundation for next generation
+        self.plagih_data_tree_write(self.population_b, 'a')  # archive current population as foundation for next generation
 
         if self.display != 's':
             print('\n Copy gp.population_b to gp.population_a\n')
@@ -1255,7 +1248,7 @@ class Base_GP(object):
                 'pairwise_fitness' - an array of the element-wise results of applying corresponding fitness kernel function
                 'fitness' - aggregated scalar fitness score
 
-        Called by: fx_karoo_pause, fx_data_params_write, fx_fitness_gym
+        Called by: fx_karoo_pause, plagih_data_params_write, fx_fitness_gym
 
         Arguments required: expr, data
         """
@@ -1504,7 +1497,7 @@ class Base_GP(object):
 
         return
 
-    def fx_fitness_tournament(self, tourn_size):
+    def plagih_fitness_tournament(self, tourn_size):
 
         """
         Multiple contenders ('tourn_size') are randomly selected and then compared for their respective fitness, as
@@ -1557,7 +1550,7 @@ class Base_GP(object):
                     tourn_lead = tree_id  # in case there is no variance in this tournament
                 # tourn_test remains unchanged
 
-                # NEED TO add option for parsimony
+                # TODO NEED TO add option for parsimony
                 # if int(self.population_a[tree_id][12][2]) < short_test:
                 # short_test = int(self.population_a[tree_id][12][2]) # set len(algo_raw) of new leader
                 # print ('\t\033[36m with improved parsimony score of:\033[1m', short_test, '\033[0;0m')
@@ -1614,7 +1607,7 @@ class Base_GP(object):
 
         return tourn_winner
 
-    def fx_fitness_gene_pool(self):
+    def plagih_fitness_gene_pool(self):
 
         """
         The gene pool was introduced as means by which advanced users could define additional constraints on the evolved
@@ -1622,6 +1615,7 @@ class Base_GP(object):
         of nodes' parameter (gp.tree_depth_min). This defines the minimum number of nodes (in the context of Karoo, this
         refers to both functions (operators) and terminals (operands)).
 
+        TODO Agent auch zu komplexeren Lösungen drängen! Sowohl einfache als auch komplexe fördern. Paretofront auf beiden Seiten aufbauen
         When the minimum node count is human guided, it can keep the solution from defaulting to a local minimum, as with
         't/t' in the Kepler problem, by forcing a more complex solution. If you find that when engaging the Regression
         kernel you are met with a solution which is too simple (eg: linear instead of non-linear), try increasing the
@@ -1648,26 +1642,11 @@ class Base_GP(object):
             self.plagih_eval_poly(self.population_a[tree_id])  # extract the expression
 
             if self.swim == 'p':  # each tree must have the min number of nodes defined by the user
-                if len(self.population_a[tree_id][
-                           3]) - 1 >= self.tree_depth_min and self.algo_sym != 1:  # check if Tree meets the requirements
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id, 'has >=', self.tree_depth_min,
-                                                  'nodes and is added to the gene pool\033[0;0m')
+                if len(self.population_a[tree_id][3]) - 1 >= self.tree_depth_min and self.algo_sym != 1:  # check if Tree meets the requirements
                     self.gene_pool.append(self.population_a[tree_id][0][1])
-
-            elif self.swim == 'f':  # each tree must contain at least one instance of each feature
-                if len(np.intersect1d([self.population_a[tree_id][6]], [self.terminals])) == len(
-                        self.terminals) - 1:  # check if Tree contains at least one instance of each feature - 2018 04/14 APS, Ohio
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id,
-                                                  'includes at least one of each feature and is added to the gene pool\033[0;0m')
-                    self.gene_pool.append(self.population_a[tree_id][0][1])
-
-        # elif self.swim == '[other]' # use others as a template
 
         if len(self.gene_pool) > 0 and self.display == 'i':
-            print('\n\t The total population of the gene pool is',
-                  len(self.gene_pool))
+            print('\n\t The total population of the gene pool is', len(self.gene_pool))
             self.fx_karoo_pause_refer()  # 2019 06/07
 
         elif len(self.gene_pool) <= 0:  # the evolutionary constraints were too tight, killing off the entire population
@@ -1758,7 +1737,7 @@ class Base_GP(object):
     #   Methods to Construct the next Generation |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def fx_nextgen_reproduce(self):
+    def plagih_nextgen_reproduce_one(self):
 
         """
         Through tournament selection, a single Tree from the prior generation is copied without mutation to the next
@@ -1777,14 +1756,13 @@ class Base_GP(object):
             if self.display == 'i': self.fx_karoo_pause_refer()  # 2019 06/07
 
         for n in range(self.evolve_repro):  # quantity of Trees to be copied without mutation
-            tourn_winner = self.fx_fitness_tournament(
-                self.tourn_size)  # perform tournament selection for each reproduction
+            tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each reproduction
             tourn_winner = self.fx_evolve_fitness_wipe(tourn_winner)  # wipe fitness data
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
         return
 
-    def fx_nextgen_point_mutate(self):
+    def plagih_nextgen_point_mutate(self):
 
         """
         Through tournament selection, a copy of a Tree from the prior generation mutates before being added to the
@@ -1804,14 +1782,13 @@ class Base_GP(object):
             if self.display == 'i': self.fx_karoo_pause_refer()  # 2019 06/07
 
         for n in range(self.evolve_point):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.fx_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
-            tourn_winner, node = self.fx_evolve_point_mutate(
-                tourn_winner)  # perform point mutation; return single point for record keeping
+            tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
+            tourn_winner, node = self.plagih_evolve_point_mutate(tourn_winner)  # perform point mutation; return single point for record keeping
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
         return
 
-    def fx_nextgen_branch_mutate(self):
+    def plagih_nextgen_branch_mutate(self):
 
         """
         Through tournament selection, a copy of a Tree from the prior generation mutates before being added to the
@@ -1833,8 +1810,8 @@ class Base_GP(object):
             if self.display == 'i': self.fx_karoo_pause_refer()  # 2019 06/07
 
         for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.fx_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
-            branch = self.fx_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath
+            tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
+            branch = self.plagih_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath
 
             # TEST & DEBUG: comment the top or bottom to force all Full or all Grow methods
 
@@ -1878,12 +1855,12 @@ class Base_GP(object):
         # for n in range(self.evolve_cross / 2): # Python 2.7
         for n in range(
                 self.evolve_cross // 2):  # quantity of Trees to be generated through Crossover, accounting for 2 children each
-            parent_a = self.fx_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
-            branch_a = self.fx_evolve_branch_select(
+            parent_a = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
+            branch_a = self.plagih_evolve_branch_select(
                 parent_a)  # select branch within 'parent_a', to copy to 'parent_b' and receive a branch from 'parent_b'
 
-            parent_b = self.fx_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
-            branch_b = self.fx_evolve_branch_select(
+            parent_b = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
+            branch_b = self.plagih_evolve_branch_select(
                 parent_b)  # select branch within 'parent_b', to copy to 'parent_a' and receive a branch from 'parent_a'
 
             parent_c = np.copy(parent_a)
@@ -1905,7 +1882,7 @@ class Base_GP(object):
     #   Methods to Evolve a Population           |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def fx_evolve_point_mutate(self, tree):
+    def plagih_evolve_point_mutate(self, tree):
 
         """
         Mutate a single point in any Tree (Grow or Full).
@@ -1944,7 +1921,8 @@ class Base_GP(object):
         if self.display == 'db': print('\n\033[36m This is tourn_winner after node\033[1m', node,
                                        '\033[0;0m\033[36mmutation and updates:\033[0;0m\n',
                                        tree)
-        self.fx_karoo_pause_refer()  # 2019 06/07
+        # SFEH
+        # self.fx_karoo_pause_refer()  # 2019 06/07
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
@@ -2186,7 +2164,7 @@ class Base_GP(object):
 
         return offspring
 
-    def fx_evolve_branch_select(self, tree):
+    def plagih_evolve_branch_select(self, tree):
 
         """
         Select all nodes in the 'tourn_winner' Tree at and below the randomly selected starting point.
@@ -2202,7 +2180,7 @@ class Base_GP(object):
 
         branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
         branch_top = np.random.randint(2, len(tree[3]))  # randomly select a non-root node
-        branch_eval = self.fx_eval_id(tree, branch_top)  # generate tuple of 'branch_top' and subseqent nodes
+        branch_eval = self.plagih_eval_id(tree, branch_top)  # generate tuple of 'branch_top' and subseqent nodes
         branch_symp = sympify(branch_eval)  # convert string into something useful
         branch = np.append(branch, branch_symp)  # append list to array
 
@@ -2687,7 +2665,7 @@ class Base_GP(object):
         """
 
         branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-        branch_eval = self.fx_eval_id(tree, start)  # generate tuple of given 'branch'
+        branch_eval = self.plagih_eval_id(tree, start)  # generate tuple of given 'branch'
         branch_symp = sympify(branch_eval)  # convert string from tuple to list
         branch = np.append(branch, branch_symp)  # append list to array
         ind = ''
@@ -2718,7 +2696,7 @@ class Base_GP(object):
         return
 
 
-def plagih_display_one_tree_from_csv(path):
+def sfeh_plagih_display_one_tree_from_csv(path):
 
     """
     Display all or part of a Tree on-screen.

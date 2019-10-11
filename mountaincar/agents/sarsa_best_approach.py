@@ -1,3 +1,5 @@
+import csv
+
 import numpy as np
 np.random.seed(0)
 import gym
@@ -200,12 +202,29 @@ def create_behaviour_samples_file(seed=0):
     plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=20, train=False)
     print(sys.getsizeof(plagih_behaviour_samples))
     print('Amount of samples: ' + str(len(plagih_behaviour_samples)))
-    env.observation_space
     env.close()
 
-    samples_file = Path('../karoo_files/behaviour_samples.p')
-    with open(samples_file, "wb") as fp:  # Pickling
-        pickle.dump(plagih_behaviour_samples, fp)
+    # samples_file = Path('../karoo_files/behaviour_samples.p')
+    # with open(samples_file, "wb") as fp:  # Pickling
+    #     pickle.dump(plagih_behaviour_samples, fp)
+
+    # pickle-version does make too much trouble for now... need to switch to .csv
+    samples_csv_ready = [['observation0', 'observation1', 'action0']]
+    for sample in plagih_behaviour_samples:
+        row = []
+        print(sample)
+        row.append(sample[0][0])
+        row.append(sample[0][1])
+        row.append(sample[1])
+        samples_csv_ready.append(row[:])
+    print(samples_csv_ready)
+
+    file_csv = Path('../karoo_files/behaviour_samples.csv')
+    with open(file_csv, 'w+', newline='') as csvFile:
+        writer = csv.writer(csvFile)
+        writer.writerows(samples_csv_ready)
+    csvFile.close()
+
 
     # import pickle
     # with open(samples_file, "rb") as fp:

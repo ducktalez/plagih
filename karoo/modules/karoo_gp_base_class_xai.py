@@ -16,7 +16,7 @@ import csv
 import numpy as np
 import sklearn.metrics as skm
 import sklearn.model_selection as skcv
-from sympy import sympify
+from sympy import sympify, functions
 from datetime import datetime
 # import karoo_gp_pause as menu
 import karoo.modules.karoo_gp_pause as menu
@@ -24,7 +24,6 @@ import tensorflow as tf
 import ast
 
 # PLAGI imports
-import pickle
 import copy
 
 ### TensorFlow Imports and Definitions ###
@@ -372,18 +371,39 @@ class Base_GP(object):
 
         ### PART 1 - load the associated data set, operators, operands, fitness type, and coefficients ###
 
-        # Load the 'good' samples file. Is currently in pickle-format.
-        # behaviour_samples[0] has the observations (of any shape) and behaviour_samples[1] has the actions
-        # Both can have any shape (multiple dimensions, discrete
+        # Load the 'good' samples file. first observations then actions.
+        # Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
+        #
+        # Mountaincar .csv first lines (11.12.2019):
+        ######################################
+        # observation0, observation1, action0
+        # -0.5031261704876531, 0.0, 2
+        # ####################################
+
         # TODO hier unterscheiden, welche distanz genommen werden soll?
-        # TODO pickle und csv files
-        with open(samples_file, "rb") as fp:
-             behaviour_samples = pickle.load(fp)
-        # TODO braucht man nicht, aber trotzdem keine schöne Lösung. evtl. einfach zwei spalten?
-        self.terminals = ['observation_0', 'observation_1', 'action_0']
-        # TODO transponieren vielleicht woanders?
-        behaviour_samples = np.transpose(behaviour_samples)
-        self.class_labels = len(np.unique(behaviour_samples[1]))  # load the user defined true labels for classification or solutions for regression
+        # TODO Funktioniert das mit allen Datentypen?
+        with open(samples_file) as csvFile:
+            reader = csv.reader(csvFile, delimiter=',')
+            num_observations = 0
+            data_x, data_y = [], []
+            for i, row in enumerate(reader):
+                if i == 0:
+                    self.terminals = row
+                    for var_name in row:
+                        if var_name.startswith('o'):
+                            num_observations += 1
+                        elif var_name.startswith('a'):
+                            pass
+                        else:
+                            raise print(
+                                'Behaviour samples first line: Variables have to start with "o" or "a" to be recognized')
+                else:
+                    data_x.append(row[:num_observations])
+                    data_y.append(row[num_observations:])
+        csvFile.close()
+
+        # TODO das funktioniert nur bei eindimensionalen Actions
+        self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
         print((self.class_labels / 2) - 1)
         # TODO Types of fitting the solution: Matching, dist-to-right-decision, euklidian dist, dummydist, tiles?
         fitt_dict = {'c': 'max', 'r': 'min', 'm': 'max', 'p': ''}
@@ -395,10 +415,10 @@ class Base_GP(object):
 
         ### PART 2 - from the dataset, extract TRAINING and TEST data ###
 
-        # TODO die func kann sicher nicht mit 2d labels umgehen
-        x_train, x_test, y_train, y_test = skcv.train_test_split(behaviour_samples[0], behaviour_samples[1],
+        # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
+        x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y,
                                                                  test_size=0.2)  # 80/20 TRAIN/TEST split
-        behaviour_samples = [], []  # clear from memory
+        data_x, data_y = [], []  # clear from memory
 
         data_train = np.c_[x_train, y_train]  # recombine each row of data with its associated class label (right column)
         x_train, y_train = [], []  # clear from memory
@@ -1031,7 +1051,7 @@ class Base_GP(object):
         try:    #plagih: try block needed. simpify can not handle if then else.
             self.algo_sym = sympify(self.algo_raw)  # convert string to a functional expression (the coolest line in Karoo! :)
         except:
-            print('Sympify could not reduce the expression')
+            raise print('Sympify could not reduce the expression. Probably unplanned expression in your tree. Open an issue.')
 
         return
 
@@ -1050,9 +1070,9 @@ class Base_GP(object):
         """
 
         # if tree[6, node_id] == 'not': tree[6, node_id] = ', not' # temp until this can be fixed at data_load
-        print('BEEN HERE DONE THAT')
+
         node_id = int(node_id)
-        print('NOW GONE?')
+
 
         if tree[8, node_id] == '0':  # arity of 0 for the pattern '[term]'
             return '(' + tree[6, node_id] + ')'  # 'node_label' (function or terminal)
@@ -1166,8 +1186,7 @@ class Base_GP(object):
 
             ### PART 1 - GENERATE MULTIVARIATE EXPRESSION FOR EACH TREE ###
             self.plagih_eval_poly(population[tree_id])  # extract the expression
-            if self.display not in ('s'): print('\t\033[36mTree', population[tree_id][0][1], 'yields (sym):\033[1m',
-                                                self.algo_sym, '\033[0;0m')
+            # if self.display not in ('s'): print('\t\033[36mTree', population[tree_id][0][1], 'yields (sym):\033[1m',self.algo_sym, '\033[0;0m')
 
             ### PART 2 - EVALUATE FITNESS FOR EACH TREE AGAINST TRAINING DATA ###
             fitness = 0
@@ -1258,7 +1277,8 @@ class Base_GP(object):
                 # 2- Transform string expression into TF operation graph
                 result = self.fx_fitness_expr_parse(expr, tensors)
                 pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
-                solution = tensors['s']  # solution value is assumed to be stored in 's' terminal
+                # TODO currently does only support one label
+                solution = tensors['action0']  # solution value is assumed to be stored in 's' terminal
 
                 # 3- Add fitness computation into TF graph
                 if self.kernel == 'c':  # CLASSIFY kernel

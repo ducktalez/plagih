@@ -156,12 +156,9 @@ class Base_GP(object):
         ### PART 2 - construct first generation of Trees ###
         self.plagih_data_load(operators_file, samples_file)
         self.gen_id = 1  # set initial generation ID
-        self.population_a = ['PLAGIH Karoo GP Extension by Simon Fehrer, Generation ' + str(
-            self.gen_id)]  # initialise population_a to host the first generation
+        self.population_a = ['PLAGIH Karoo GP Extension by Simon Fehrer, Generation ' + str(self.gen_id)]  # initialise population_a to host the first generation
         self.population_b = ['placeholder']  # initialise population_b to satisfy fx_karoo_pause()
-
         self.plagih_init_construct(tree_type, tree_depth_base, origin_tree_file)  # construct the first population of Trees
-
         if self.gen_max == 1:  # terminate here if constructing just one generation
             self.plagih_data_tree_write(self.population_a, 'a')  # save this single population to disk
             print('\n We have constructed a single, stochastic population of', self.tree_pop_max,
@@ -178,8 +175,7 @@ class Base_GP(object):
         ### PART 4 - evolve multiple generations of Trees ###
         menu = 1
         while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
-            for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # evolve additional generations of Trees
-
+            for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # generation 2 to *max generation*
                 print('\n Evolve a population of Trees for Generation', self.gen_id, '...')
                 self.population_b = ['PLAHIG GP by Simon Fehrer - Evolving Generation']  # initialise population_b to host the next generation
                 self.plagih_fitness_gene_pool()  # generate the viable gene pool, aka Paretofront. At least our "origin" should be fit enough ;)
@@ -365,8 +361,6 @@ class Base_GP(object):
         Arguments required: filename (of the dataset)
         """
 
-        ### PART 1 - load the associated data set, operators, operands, fitness type, and coefficients ###
-
         # Load the 'good' samples file. first observations then actions.
         # Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
         #
@@ -378,6 +372,8 @@ class Base_GP(object):
 
         # TODO hier unterscheiden, welche distanz genommen werden soll?
         # TODO Funktioniert das mit allen Datentypen?
+        #
+        # Part 1: Load the dataset
         with open(samples_file) as csvFile:
             reader = csv.reader(csvFile, delimiter=',')
             num_observations = 0
@@ -396,66 +392,52 @@ class Base_GP(object):
                 else:
                     data_x.append(row[:num_observations])
                     data_y.append(row[num_observations:])
-        csvFile.close()
-
+            csvFile.close()
         self.dataset = samples_file
-
-        # TODO das funktioniert nur bei eindimensionalen Actions
+        # TODO das funktioniert nur bei diskreten Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-        print((self.class_labels / 2) - 1)
+
+        # Part 2: Assign fitness type (->is max or min better?)
         # TODO Types of fitting the solution: Matching, dist-to-right-decision, euklidian dist, dummydist, tiles?
-        fitt_dict = {'c': 'max', 'r': 'min', 'm': 'max', 'p': ''}
+        # d = distance? m = match? o = order? t = tiled?
+        fitt_dict = {'c': 'max', 'r': 'min', 'm': 'max'}
         self.fitness_type = fitt_dict[self.kernel]  # load fitness type
 
+        # Part 3: Load the specified functions. (-> [if,3] [+,2] ...)
         self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
 
-
-
-        ### PART 2 - from the dataset, extract TRAINING and TEST data ###
-
+        # Part 4 - from the dataset, extract TRAINING and TEST data ###
         # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
-        x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y,
-                                                                 test_size=0.2)  # 80/20 TRAIN/TEST split
-        data_x, data_y = [], []  # clear from memory
-
+        x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y,test_size=0.2)  # 80/20 TRAIN/TEST split
         data_train = np.c_[x_train, y_train]  # recombine each row of data with its associated class label (right column)
-        x_train, y_train = [], []  # clear from memory
-
         data_test = np.c_[x_test, y_test]  # recombine each row of data with its associated class label (right column)
-        x_test, y_test = [], []  # clear from memory
-
+        data_x, data_y, x_train, y_train, x_test, y_test = [], [], [], [], [], []  # clear from memory
         self.data_train_cols = len(data_train[0, :])  # qty count
         self.data_train_rows = len(data_train[:, 0])  # qty count
         self.data_test_cols = len(data_test[0, :])  # qty count
         self.data_test_rows = len(data_test[:, 0])  # qty count
 
-        # TODO was passiert hier?
-        ### PART 3 - load TRAINING and TEST data for TensorFlow processing - tested 2017 02/02
+        ### PART 5 - load TRAINING and TEST data for TensorFlow processing
         self.data_train = data_train  # Store train data for processing in TF
         self.data_test = data_test  # Store test data for processing in TF
         self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU or GPU); gpu:n = 1st, 2nd, or ... GPU device
         self.tf_device_log = False  # TF device usage logging (for debugging)
 
-        ### PART 4 - create a unique directory and initialise all .csv files ###
+        ### PART 6 - create a unique directory and initialise all .csv files ###
         self.datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         cwd = os.getcwd()
         self.path = os.path.join(cwd, 'runs/' + self.datetime + '/')  # generate a unique directory name
         if not os.path.isdir(self.path): os.makedirs(self.path)  # make a unique directory
-
         self.filename = {}  # a dictionary to hold .csv filenames
-
         self.filename.update({'a': self.path + 'population_a.csv'})
         target = open(self.filename['a'], 'w')
         target.close()  # initialise a .csv file for population 'a' (foundation)
-
         self.filename.update({'b': self.path + 'population_b.csv'})
         target = open(self.filename['b'], 'w')
         target.close()  # initialise a .csv file for population 'b' (evolving)
-
         self.filename.update({'f': self.path + 'population_f.csv'})
         target = open(self.filename['f'], 'w')
         target.close()  # initialise a .csv file for the final population (test)
-
         self.filename.update({'s': self.path + 'population_s.csv'})
         target = open(self.filename['s'], 'w')
         target.close()  # initialise a .csv file to manually load (seed)
@@ -802,7 +784,7 @@ class Base_GP(object):
             print('\n\t\033[31m ERROR! In fx_init_root_build: pop_node_arity =', self.pop_node_arity,
                   '\033[0;0m')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
-
+        # R00t: not needed
         self.pop_node_type = 'root'
 
         self.fx_init_node_commit()
@@ -1295,13 +1277,8 @@ class Base_GP(object):
                     negative and positive result.
                     """
 
-                    # was breaking with upgrade from Tensorflow 1.1 to 1.3; fixed by Iurii by replacing [] with () as of 20171026
-                    # if get_pred_labels: pred_labels = tf.map_fn(self.fx_fitness_labels_map, result, dtype = [tf.int32, tf.string], swap_memory = True)
                     if get_pred_labels:
-                        pred_labels = tf.map_fn(self.plagih_fitness_labels_map,
-                                                result,
-                                                dtype=(tf.int32, tf.string),
-                                                swap_memory=True)
+                        pred_labels = tf.map_fn(self.plagih_fitness_labels_map, result,dtype=(tf.int32, tf.string),swap_memory=True)
 
                     skew = (self.class_labels / 2) - 1
 
@@ -1814,12 +1791,7 @@ class Base_GP(object):
             branch = self.plagih_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath
 
             # TEST & DEBUG: comment the top or bottom to force all Full or all Grow methods
-
-            if tourn_winner[1][1] == 'f':  # perform Full method mutation on 'tourn_winner'
-                tourn_winner = self.fx_evolve_full_mutate(tourn_winner, branch)
-
-            elif tourn_winner[1][1] == 'g':  # perform Grow method mutation on 'tourn_winner'
-                tourn_winner = self.fx_evolve_grow_mutate(tourn_winner, branch)
+            tourn_winner = self.fx_evolve_grow_mutate(tourn_winner, branch)
 
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
@@ -1892,7 +1864,7 @@ class Base_GP(object):
         Arguments required: tree
         """
 
-        node = np.random.randint(1, len(tree[3]))  # randomly select a point in the Tree (including root)
+        node = self.sfeh_plagih_get_mutateable_node(tree)  # randomly select a point in the Tree (including root)
         if self.display == 'i':
             print('\t\033[36m with', tree[5][node], 'node\033[1m', tree[3][node],
                   '\033[0;0m\033[36mchosen for mutation\n\033[0;0m')
@@ -1901,9 +1873,9 @@ class Base_GP(object):
                 '\n\n\033[33m *** Point Mutation *** \033[0;0m\n\n\033[36m This is the unaltered tourn_winner:\033[0;0m\n',
                 tree)
 
+        # R00t: not needed!
         if (tree[5][node] == 'root' or tree[5][node] == 'func'):
-            rnd = np.random.randint(0, len(
-                self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
+            rnd = np.random.randint(0, len(self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
             tree[6][node] = self.functions[rnd][0]  # replace function (operator)
 
         elif tree[5][node] == 'term':
@@ -1926,53 +1898,18 @@ class Base_GP(object):
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def fx_evolve_full_mutate(self, tree, branch):
-
+    def sfeh_plagih_get_mutateable_node(self, tree):
         """
-        Mutate a branch of a Full method Tree.
-
-        The full mutate method is straight-forward. A branch was generated and passed to this method. As the size and
-        shape of the Tree must remain identical, each node is mutated sequentially (copied from the new Tree to replace
-        the old, node for node), where functions remain functions and terminals remain terminals.
-
-        Called by: fx_nextgen_branch_mutate
-
-        Arguments required: tree, branch
+        :param tree: The Tree
+        :return node_id: A node_id to modify in the tree (which is not restricted by node_modify)
         """
+        # TODO TODO # TEST
+        node_n = np.random.randint(1, np.sum(tree[14]))
+        node_id = [tree[3][i] for i,x in enumerate(tree[14]) if n == '1'][node_n] # totally tricky...
+        return node_id
 
-        if self.display == 'db': print(
-            '\n\n\033[33m *** Full Mutation: function to function *** \033[0;0m\n\n\033[36m This is the unaltered tourn_winner:\033[0;0m\n',
-            tree)
-
-        for n in range(len(branch)):
-
-            # 'root' is not made available for Full mutation as this would build an entirely new Tree
-
-            if tree[5][branch[n]] == 'func':
-                if self.display == 'i':
-                    print('\t\033[36m  from\033[1m', tree[5][branch[n]],
-                                              '\033[0;0m\033[36mto\033[1m func \033[0;0m')
-
-                rnd = np.random.randint(0, len(
-                    self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
-                tree[6][branch[n]] = self.functions[rnd][0]  # replace function (operator)
-
-            elif tree[5][branch[n]] == 'term':
-                if self.display == 'i':
-                    print('\t\033[36m  from\033[1m', tree[5][branch[n]],
-                                              '\033[0;0m\033[36mto\033[1m term \033[0;0m')
-
-                rnd = np.random.randint(0, len(
-                    self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
-                tree[6][branch[n]] = self.terminals[rnd]  # replace terminal (variable)
-
-        tree = self.fx_evolve_fitness_wipe(tree)  # wipe fitness data
-
-        if self.display == 'db': print('\n\033[36m This is tourn_winner after nodes\033[1m', branch,
-                                       '\033[0;0m\033[36mwere mutated and updated:\033[0;0m\n',
-                                       tree); self.fx_karoo_pause_refer()  # 2019 06/07
-
-        return tree
+    # SFEH Obsolete
+    # def fx_evolve_full_mutate(self, tree, branch):
 
     def fx_evolve_grow_mutate(self, tree, branch):
 
@@ -2210,9 +2147,8 @@ class Base_GP(object):
         ### PART 1 - insert branch_top from 'gp.tree' into 'tree' ###
 
         branch_top = int(branch[0])
-
-        tree[5][
-            branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
+        # R00t: not needed
+        tree[5][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
         tree[6][branch_top] = self.tree[6][1]  # copy node_label from new tree
         tree[8][branch_top] = self.tree[8][1]  # copy node_arity from new tree
 
@@ -2246,7 +2182,7 @@ class Base_GP(object):
                     if tree[5][j] == 'term':
                         tree = self.fx_evolve_child_link_fix(tree)  # fix all child links
                         tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's
-
+                    # R00t: Maybe exclude root?
                     if tree[5][j] == 'func':
                         c_buffer = self.fx_evolve_c_buffer(tree,
                                                            j)  # generate 'c_buffer' for point of mutation ('branch_top')
@@ -2554,40 +2490,9 @@ class Base_GP(object):
         tree[12][1:] = ''  # wipe fitness data
 
         return tree
+    # SFEH: Obsolete. Dont want to prune solely based on length. Or maybe?
+    # def fx_evolve_tree_prune(self, tree, depth):
 
-    def fx_evolve_tree_prune(self, tree, depth):
-
-        """
-        This method reduces the depth of a Tree. Used with Crossover, the input value 'branch' can be a partial Tree
-        (branch) or a full tree, and it will operate correctly. The input value 'depth' becomes the new maximum depth,
-        where depth is defined as the local maximum + the user defined adjustment.
-
-        Called by: fx_evolve_crossover
-
-        Arguments required: tree, depth
-        """
-
-        nodes = []
-
-        # tested 2015 06/08
-        for n in range(1, len(tree[3])):
-
-            if int(tree[4][n]) == depth and tree[5][n] == 'func':
-                rnd = np.random.randint(0, len(
-                    self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
-                tree[5][n] = 'term'  # mutate type 'func' to 'term'
-                tree[6][n] = self.terminals[rnd]  # replace label
-
-            elif int(tree[4][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
-                nodes.append(n)
-
-            else:
-                pass  # as int(tree[4][n]) < depth and will remain untouched
-
-        tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
-        tree = self.fx_evolve_node_arity_fix(tree)  # fix all node arities
-
-        return tree
 
     def fx_evolve_pop_copy(self, pop_a, title):
 

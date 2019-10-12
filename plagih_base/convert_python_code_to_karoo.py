@@ -54,7 +54,7 @@ op_del = ('\\', '#', 'def')
 # fitness,          1.0,  31,,,
 # node_modify,      0,      1,    0,      0,      1,      0
 
-
+# if,
 def get_karoo_from_python(code):
     return
 
@@ -68,12 +68,36 @@ def split_line_to_exp(line):
         return 'if'
     return
 
+# TREE_ID,0,,,,,
+# tree_type,g,,,,,
+# tree_depth_base,3,,,,,
+# NODE_ID,1,2,3,4,5,6
+# node_depth,0,1,1,1,2,2
+# node_type,ifte,bool,term,term,term,term
+# node_label,if,<,0,2,observation_1,0
+# node_parent,,1,1,1,2,2
+# node_arity,3,2,0,0,0,0
+# node_c1,2,5,,,,
+# node_c2,3,6,,,,
+# node_c3,4,,,,,
+# fitness,1,,,,,
+# distance,0,,,,,
+# node_modify,0,1,0,0,1,0
+def labels_to_tree(labels):
+    tree = []
+    tree.append('TREE_ID',0,)   # Is tree 0, the origin
+    tree.append('tree_type')
+    tree.append('')
+    tree.append('')
+    tree.append('')
 
-code = inspect.getsource(choose_action)
-line = ''
-tmp = [a if a != '\n' else '@' for a in code]
-code = ''.join(tmp)
-print(code)
+test = labels_to_tree(['if','<','0','2','o1','0'])
+
+# code = inspect.getsource(choose_action)
+# line = ''
+# tmp = [a if a != '\n' else '@' for a in code]
+# code = ''.join(tmp)
+# print(code)
 
 # for l in code:
 #     line = line + l
@@ -81,7 +105,7 @@ print(code)
 #         # print('New Line found: ' + line)
 #         #line_to_tree(line)
 #         line = ''
-print(re.findall(r'def', code))
+# print(re.findall(r'def', code))
 
 
 

@@ -36,7 +36,7 @@ swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each T
 mode = 'db'  # pause at the (d)esktop when complete, awaiting further user interaction; or terminate in (s)erver mode
 
 
-gen_max= 5
+gen_max = 5
 origin_tree_file = Path('../mountaincar/karoo_files/test2_tree.csv')
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')

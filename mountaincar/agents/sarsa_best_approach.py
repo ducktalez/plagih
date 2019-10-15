@@ -209,10 +209,9 @@ def create_behaviour_samples_file(seed=0):
     #     pickle.dump(plagih_behaviour_samples, fp)
 
     # pickle-version does make too much trouble for now... need to switch to .csv
-    samples_csv_ready = [['observation0', 'observation1', 'action0']]
+    samples_csv_ready = [['observation0:'+'float', 'observation1:'+'float', 'action0:'+'int']]
     for sample in plagih_behaviour_samples:
         row = []
-        print(sample)
         row.append(sample[0][0])
         row.append(sample[0][1])
         row.append(sample[1])

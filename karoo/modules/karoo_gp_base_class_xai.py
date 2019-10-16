@@ -56,7 +56,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'ifte': tf.where,
+             'ifte': tf.where_v2,
              }
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
@@ -1020,9 +1020,7 @@ class Base_GP(object):
         Arguments required: tree
         """
 
-        # TODO Core feature of Karoo. Observations do not get reduced (keep minimum), actions have to be binded to the if-case
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
-        # self.algo_sym = self.algo_raw # This is done to test not using the block below. Block did not have try-exception aswell.
         try:  # plagih: try block needed. simpify can not handle if then else.
             self.algo_sym = sympify(self.algo_raw)  # convert string to a functional expression (the coolest line in Karoo! :)
         except:
@@ -1036,7 +1034,7 @@ class Base_GP(object):
     def plagih_eval_label(self, tree, node_id):
 
         """
-        Evaluate all or part of a Tree (starting at node_id) and return a raw mutivariate expression ('algo_raw').
+        Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
 
         This method is called once per Tree, but may be called at any time to prepare an expression for any full or
         partial (branch) Tree contained in 'population'. Pass the starting node for recursion via the local variable
@@ -1059,18 +1057,12 @@ class Base_GP(object):
                 return self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id]
 
             elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[func] [term] [func]'
-                return self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[
-                    10, node_id])
+                return self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[10, node_id])
 
-            # Piecewise((b, a),(c, True))
+            # if then else
             elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
-                return 'ifte((' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[10, node_id]) + '), (' + self.plagih_eval_label(tree, tree[
-                    11, node_id]) + '))'
-                # return 'Piecewise((' + self.plagih_eval_label(tree, tree[10, node_id])+ ', ' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + ', True))'
-            # It is weird, but sympify has a very weird conditional term  "ITE(a, b, c)" instead of "if a then b else c"
-            # elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
-            #     return tree[6, node_id] + self.plagih_eval_label(tree, tree[9, node_id]) + ' then ' + self.plagih_eval_label(
-            #         tree, tree[10, node_id]) + ' else ' + self.plagih_eval_label(tree, tree[11, node_id])
+                return 'ifte((' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[10, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + '))'
+
 
     def plagih_eval_id(self, tree, node_id):
 
@@ -1466,6 +1458,7 @@ class Base_GP(object):
         fitness = round(fitness, self.precision)
 
         tree[12][1] = fitness  # store the fitness with each tree
+        # TODO very bad measurement, especially considering variable lengths
         tree[12][2] = len(str(self.algo_raw))  # store the length of the raw algo for parsimony
         # if len(tree[3]) > 4: # if the Tree array is wide enough -- SEE SCRATCHPAD
 
@@ -1502,8 +1495,7 @@ class Base_GP(object):
             tree_id = int(self.gene_pool[rnd])
 
             fitness = float(self.population_a[tree_id][12][1])  # extract the fitness from the array
-            fitness = round(fitness,
-                            self.precision)  # force 'result' and 'solution' to the same number of floating points
+            fitness = round(fitness, self.precision)  # force 'result' and 'solution' to the same number of floating points
 
             if self.fitness_type == 'max':  # if the fitness function is Maximising
 
@@ -1576,8 +1568,7 @@ class Base_GP(object):
             self.population_a[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
 
         if self.display == 'i':
-            print('\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1],
-                  '\033[0;0m')
+            print('\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
 
         return tourn_winner
 

@@ -11,7 +11,8 @@ import csv
 import numpy as np
 import sklearn.metrics as skm
 import sklearn.model_selection as skcv
-from sympy import sympify, functions
+from sympy import sympify
+from sympy.logic.boolalg import ITE, And, Xor, Or
 from datetime import datetime
 import karoo.modules.karoo_gp_pause as menu
 # TODO import the pause later, maybe
@@ -41,6 +42,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              ast.LtE: tf.less_equal,  # e.g., a <= b
              ast.Gt: tf.greater,  # e.g., a > b
              ast.GtE: tf.greater_equal,  # e.g., a >= 1
+             # ast.If: tf.cond,  # e.g., idk
              'abs': tf.abs,  # e.g., abs(a)
              'sign': tf.sign,  # e.g., sign(a)
              'square': tf.square,  # e.g., square(a)
@@ -54,7 +56,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'if': tf.cond,  # e.g., if bool(a): b else c
+             'ifte': tf.where,
              }
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
@@ -270,11 +272,9 @@ class Base_GP(object):
 
         elif input_a == 'eval':  # evaluate a Tree against the TEST data
             self.plagih_eval_poly(self.population_b[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
-            # print ('\n\t\033[36mTree', input_b, 'yields (raw):', self.algo_raw, '\033[0;0m') # print the raw expression
             print('\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')  # print the sympified expression
 
-            result = self.plagih_fitness_eval(str(self.algo_sym), self.data_test,
-                                              get_pred_labels=True)  # might change to algo_raw evaluation
+            result = self.plagih_fitness_eval(str(self.algo_sym), self.data_test, get_pred_labels=True)  # might change to algo_raw evaluation
             if self.kernel == 'c':
                 self.fx_fitness_test_classify(result)  # TF tested 2017 02/02
             elif self.kernel == 'r':
@@ -1022,12 +1022,11 @@ class Base_GP(object):
 
         # TODO Core feature of Karoo. Observations do not get reduced (keep minimum), actions have to be binded to the if-case
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
-        self.algo_sym = self.algo_raw # This is done to test not using the block below. Block did not have try-exception aswell.
-        # try:  # plagih: try block needed. simpify can not handle if then else.
-        #     self.algo_sym = sympify(self.algo_raw)  # convert string to a functional expression (the coolest line in Karoo! :)
-        # except:
-        #     raise print('Sympify could not reduce the expression. Probably unplanned expression in your tree. Open an issue.')
-
+        # self.algo_sym = self.algo_raw # This is done to test not using the block below. Block did not have try-exception aswell.
+        try:  # plagih: try block needed. simpify can not handle if then else.
+            self.algo_sym = sympify(self.algo_raw)  # convert string to a functional expression (the coolest line in Karoo! :)
+        except:
+            raise Exception('Sympify could not reduce the expression. Probably unplanned expression in your tree. Open an issue.')
         return
 
     # def sfeh_plagih_restructure_original(self, tree):
@@ -1063,9 +1062,15 @@ class Base_GP(object):
                 return self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[
                     10, node_id])
 
+            # Piecewise((b, a),(c, True))
             elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
-                return tree[6, node_id] + self.plagih_eval_label(tree, tree[9, node_id]) + ' then ' + self.plagih_eval_label(
-                    tree, tree[10, node_id]) + ' else ' + self.plagih_eval_label(tree, tree[11, node_id])
+                return 'ifte((' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[10, node_id]) + '), (' + self.plagih_eval_label(tree, tree[
+                    11, node_id]) + '))'
+                # return 'Piecewise((' + self.plagih_eval_label(tree, tree[10, node_id])+ ', ' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + ', True))'
+            # It is weird, but sympify has a very weird conditional term  "ITE(a, b, c)" instead of "if a then b else c"
+            # elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
+            #     return tree[6, node_id] + self.plagih_eval_label(tree, tree[9, node_id]) + ' then ' + self.plagih_eval_label(
+            #         tree, tree[10, node_id]) + ' else ' + self.plagih_eval_label(tree, tree[11, node_id])
 
     def plagih_eval_id(self, tree, node_id):
 
@@ -1167,9 +1172,6 @@ class Base_GP(object):
             expr = str(self.algo_sym)  # get sympified expression and process it with TF - tested 2017 02/02
             result = self.plagih_fitness_eval(expr, self.data_train)
             fitness = result['fitness']  # extract fitness score
-
-            if self.display == 'i':
-                print('\t \033[36m with fitness sum:\033[1m', fitness, '\033[0;0m\n')
 
             self.fx_fitness_store(population[tree_id], fitness)  # store Fitness with each Tree
 
@@ -1294,7 +1296,6 @@ class Base_GP(object):
 
                     pairwise_fitness = tf.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
 
-
                 elif self.kernel == 'r':  # REGRESSION kernel
 
                     """
@@ -1304,7 +1305,6 @@ class Base_GP(object):
                     """
 
                     pairwise_fitness = tf.abs(solution - result)
-
 
                 elif self.kernel == 'm':  # MATCH kernel
 
@@ -1846,14 +1846,14 @@ class Base_GP(object):
     def plagih_evolve_point_mutate(self, tree):
 
         """
-        Mutate a single point in any Tree (Grow or Full).
+        Mutate a single mutatable point in any Tree.
 
         Called by: fx_nextgen_point_mutate
 
         Arguments required: tree
         """
 
-        node = self.sfeh_plagih_get_mutateable_node(tree)  # randomly select a point in the Tree (including root)
+        node = self.sfeh_plagih_get_mutatable_node(tree)  # randomly select a point in the Tree (including root)
 
         if tree[5][node] == '':
             print('TREE_ID', str(tree[0][1]))
@@ -1877,7 +1877,7 @@ class Base_GP(object):
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def sfeh_plagih_get_mutateable_node(self, tree):
+    def sfeh_plagih_get_mutatable_node(self, tree):
         num_func = 1
         for i, x in enumerate(tree[5]):
             if x != '' and tree[14][i] == '1':
@@ -2496,83 +2496,9 @@ class Base_GP(object):
     #   Methods to Visualize a Tree              |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def fx_display_tree(self, tree):
+    # def fx_display_tree(self, tree):
 
-        """
-        Display all or part of a Tree on-screen.
 
-        This method displays all sequential node_ids from 'start' node through bottom, within the given tree.
+    # def fx_display_branch(self, tree, start):
 
-        Called by: fx_karoo_gp, fx_karoo_pause
-
-        Arguments required: tree
-        """
-
-        ind = ''
-        print('\n\033[1m\033[36m Tree ID', int(tree[0][1]), '\033[0;0m')
-
-        for depth in range(0,
-                           self.tree_depth_max + 1):  # increment through all possible Tree depths - tested 2016 07/09
-            print('\n', ind, '\033[36m Tree Depth:', depth, 'of', tree[2][1], '\033[0;0m')
-
-            for node in range(1, len(tree[3])):  # increment through all nodes (redundant, I know)
-                if int(tree[4][node]) == depth:
-                    print('')
-                    print(ind, '\033[1m\033[36m NODE:', tree[3][node], '\033[0;0m')
-                    print(ind, '  type:', tree[5][node])
-                    print(ind, '  label:', tree[6][node], '\tparent node:', tree[7][node])
-                    print(ind, '  arity:', tree[8][node], '\tchild node(s):', tree[9][node], tree[10][node],
-                          tree[11][node])
-
-            ind = ind + '\t'
-
-        print('')
-        self.plagih_eval_poly(tree)  # generate the raw and sympified expression for the entire Tree
-        print('\t\033[36mTree', tree[0][1], 'yields (raw):', self.algo_raw, '\033[0;0m')
-        print('\t\033[36mTree', tree[0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
-
-        return
-
-    def fx_display_branch(self, tree, start):
-
-        """
-        Display a Tree branch on-screen.
-
-        This method displays all sequential node_ids from 'start' node through bottom, within the given branch.
-
-        Called by: This method is not used by Karoo GP at this time.
-
-        Arguments required: tree, start
-        """
-
-        branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-        branch_eval = self.plagih_eval_id(tree, start)  # generate tuple of given 'branch'
-        branch_symp = sympify(branch_eval)  # convert string from tuple to list
-        branch = np.append(branch, branch_symp)  # append list to array
-        ind = ''
-
-        # for depth in range(int(tree[4][start]), int(tree[2][1]) + self.tree_depth_max + 1): # increment through all Tree depths - tested 2016 07/09
-        for depth in range(int(tree[4][start]),
-                           self.tree_depth_max + 1):  # increment through all Tree depths - tested 2016 07/09
-            print('\n', ind, '\033[36m Tree Depth:', depth, 'of', tree[2][1], '\033[0;0m')
-
-            for n in range(0, len(branch)):  # increment through all nodes listed in the branch
-                node = branch[n]
-
-                if int(tree[4][node]) == depth:
-                    print('')
-                    print(ind, '\033[1m\033[36m NODE:', node, '\033[0;0m')
-                    print(ind, '  type:', tree[5][node])
-                    print(ind, '  label:', tree[6][node], '\tparent node:', tree[7][node])
-                    print(ind, '  arity:', tree[8][node], '\tchild node(s):', tree[9][node], tree[10][node],
-                          tree[11][node])
-
-            ind = ind + '\t'
-
-        print('')
-        self.plagih_eval_poly(tree)  # generate the raw and sympified expression for the entire Tree
-        print('\t\033[36mTree', tree[0][1], 'yields (raw):', self.algo_raw, '\033[0;0m')
-        print('\t\033[36mTree', tree[0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
-
-        return
 

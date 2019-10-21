@@ -56,7 +56,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'ifte': tf.where_v2,
+             'ifte': tf.compat.v2.where,
              }
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
@@ -129,17 +129,6 @@ class Base_GP(object):
                         tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point, evolve_branch, evolve_cross, display, precision,
                         swim, mode):
 
-        """
-        This method origins from its fx_ version
-        ---
-        This method enables the engagement of the entire Karoo GP application. Instead of returning the user to the pause
-        menu, this script terminates at the command-line, providing support for bash and chron job execution.
-
-        Called by: user script karoo_gp.py
-
-        Arguments required: (see below)
-        """
-
         ### PART 1 - set global variables to those local values passed from the user script ###
         self.kernel = kernel  # fitness function
         self.tree_depth_max = tree_depth_max  # maximum Tree depth for the entire run; limits bloat
@@ -163,8 +152,7 @@ class Base_GP(object):
         self.plagih_init_construct(tree_type, tree_depth_base, origin_tree_file)  # construct the first population of Trees
         if self.gen_max == 1:  # terminate here if constructing just one generation
             self.plagih_data_tree_write(self.population_a, 'a')  # save this single population to disk
-            print('\n We have constructed a single, stochastic population of', self.tree_pop_max,
-                  'Trees, and saved to disk')
+            print('\n We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
             sys.exit()
         else:
             print('\n We have constructed the first, stochastic population of', self.tree_pop_max, 'Trees')
@@ -342,7 +330,6 @@ class Base_GP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     # TODO Funktion übergeben und nicht daten aus system ziehen
-    # TODO test
     # Worked on!
     def plagih_data_load(self, operators_file, samples_file):
 
@@ -679,34 +666,14 @@ class Base_GP(object):
                     tree = np.append(tree, [row], axis=1)  # append first row to Tree ('TREE_ID')
                 else:
                     tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
-            if tree.shape[0] == 15:
+            if tree.shape[0] == 14:
                 pass  # print('Origin Tree is: \n' + str(tree))
             else:
                 raise print("Tree could not be imported correctly from .csv file.")
         self.origin_tree = tree
         return tree
 
-    def fx_init_tree_build(self, TREE_ID, tree_type, tree_depth_base):
-
-        """
-        This method combines 4 sub-methods into a single method for ease of deployment. It is designed to executed
-        within a loop such that an entire population is built. However, it may also be run from the command line,
-        passing a single TREE_ID to the method.
-
-        'tree_type' is either (f)ull or (g)row. Note, however, that when the user selects 'ramped 50/50' at launch,
-        it is still (f) or (g) which are passed to this method.
-
-        Called by: fx_init_construct, fx_evolve_crossover, fx_evolve_grow_mutate
-
-        Arguments required: TREE_ID, tree_type, tree_depth_base
-        """
-
-        self.plagih_init_tree_initialise(TREE_ID, tree_type, tree_depth_base)  # initialise a new Tree
-        self.fx_init_root_build()  # build the Root node
-        self.fx_init_function_build()  # build the Function nodes
-        self.fx_init_terminal_build()  # build the Terminal nodes
-
-        return  # each Tree is written to 'gp.tree'
+    # def fx_init_tree_build(self, TREE_ID, tree_type, tree_depth_base):
 
     def plagih_init_tree_initialise(self, TREE_ID, tree_type, tree_depth_base):
 
@@ -746,200 +713,18 @@ class Base_GP(object):
 
         return
 
-    ### Root Node ###
-
-    def fx_init_root_build(self):
-
-        """
-        Build the Root node for the initial population.
-
-        Called by: fx_init_tree_build
-
-        Arguments required: none
-        """
-
-        self.fx_init_function_select()  # select the operator for root
-
-        if self.pop_node_arity == 1:  # 1 child
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = ''
-            self.pop_node_c3 = ''
-
-        elif self.pop_node_arity == 2:  # 2 children
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = 3
-            self.pop_node_c3 = ''
-
-        elif self.pop_node_arity == 3:  # 3 children
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = 3
-            self.pop_node_c3 = 4
-
-        else:
-            print('\n\t\033[31m ERROR! In fx_init_root_build: pop_node_arity =', self.pop_node_arity,
-                  '\033[0;0m')
-            self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
-        # R00t: not needed
-        self.pop_node_type = 'root'
-
-        self.fx_init_node_commit()
-
-        return
-
-    ### Function Nodes ###
-
-    def fx_init_function_build(self):
-
-        """
-        Build the Function nodes for the intial population.
-
-        Called by: fx_init_tree_build
-
-        Arguments required: none
-        """
-
-        for i in range(1, self.pop_tree_depth_base):  # increment depth, from 1 through 'tree_depth_base' - 1
-
-            self.pop_node_depth = i  # increment 'node_depth'
-
-            parent_arity_sum = 0
-            prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
-            prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
-
-            for j in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
-                    parent_arity_sum = parent_arity_sum + int(
-                        self.tree[8][j])  # sum arities of all parent nodes at the prior depth
-
-                # (do *not* merge these 2 "j" loops or it gets all kinds of messed up)
-
-            for j in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
-
-                    for k in range(1, int(
-                            self.tree[8][j]) + 1):  # increment through each degree of arity for each parent node
-                        self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID' ...
-                        prior_sibling_arity = self.fx_init_function_gen(parent_arity_sum, prior_sibling_arity,
-                                                                        prior_siblings)  # ... generate a Function ndoe
-                        prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
-
-        return
-
-    def fx_init_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
-
-        """
-        Generate a single Function node for the initial population.
-
-        Called by fx_init_function_build
-
-        Arguments required: parent_arity_sum, prior_sibling_arity, prior_siblings
-        """
-
-        if self.pop_tree_type == 'f':  # user defined as (f)ull
-            self.fx_init_function_select()  # retrieve a function
-            self.fx_init_child_link(parent_arity_sum, prior_sibling_arity,
-                                    prior_siblings)  # establish links to children
-
-        elif self.pop_tree_type == 'g':  # user defined as (g)row
-            rnd = np.random.randint(2)
-
-            if rnd == 0:  # randomly selected as Function
-                self.fx_init_function_select()  # retrieve a function
-                self.fx_init_child_link(parent_arity_sum, prior_sibling_arity,
-                                        prior_siblings)  # establish links to children
-
-            elif rnd == 1:  # randomly selected as Terminal
-                self.fx_init_terminal_select()  # retrieve a terminal
-                self.pop_node_c1 = ''
-                self.pop_node_c2 = ''
-                self.pop_node_c3 = ''
-
-        self.fx_init_node_commit()  # commit new node to array
-        prior_sibling_arity = prior_sibling_arity + self.pop_node_arity  # sum the arity of prior siblings
-
-        return prior_sibling_arity
-
-    def fx_init_function_select(self):
-
-        """
-        Define a single Function (operator extracted from the associated functions.csv) for the initial population.
-
-        Called by: fx_init_function_gen, fx_init_root_build
-
-        Arguments required: none
-        """
-
-        self.pop_node_type = 'func'
-        rnd = np.random.randint(0, len(self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
-        self.pop_node_label = self.functions[rnd][0]
-        self.pop_node_arity = int(self.functions[rnd][1])
-
-        return
-
-    ### Terminal Nodes ###
-
-    def fx_init_terminal_build(self):
-
-        """
-        Build the Terminal nodes for the intial population.
-
-        Called by: fx_init_tree_build
-
-        Arguments required: none
-        """
-
-        self.pop_node_depth = self.pop_tree_depth_base  # set the final node_depth (same as 'gp.pop_node_depth' + 1)
-
-        for j in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-
-            if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
-
-                for k in range(1, (
-                        int(self.tree[8][j]) + 1)):  # increment through each degree of arity for each parent node
-                    self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
-                    self.fx_init_terminal_gen()  # ... generate a Terminal node
-
-        return
-
-    def fx_init_terminal_gen(self):
-
-        """
-        Generate a single Terminal node for the initial population.
-
-        Called by: fx_init_terminal_build
-
-        Arguments required: none
-        """
-
-        self.fx_init_terminal_select()  # retrieve a terminal
-        self.pop_node_c1 = ''
-        self.pop_node_c2 = ''
-        self.pop_node_c3 = ''
-
-        self.fx_init_node_commit()  # commit new node to array
-
-        return
-
-    def fx_init_terminal_select(self):
-
-        """
-        Define a single Terminal (variable extracted from the top row of the associated TRAINING data)
-
-        Called by: fx_init_terminal_gen, fx_init_function_gen
-
-        Arguments required: none
-        """
-
-        self.pop_node_type = 'term'
-        rnd = np.random.randint(0, len(self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
-        self.pop_node_label = self.terminals[rnd]
-        self.pop_node_arity = 0
-
-        return
-
-    ### The Lovely Children ###
+    # def fx_init_root_build(self):
+    # def fx_init_function_build(self):
+    # def fx_init_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
+    # def fx_init_function_select(self):
+    # def fx_init_terminal_build(self):
+    # def fx_init_terminal_gen(self):
+    # def fx_init_terminal_select(self):
+
+
+    ###
+    # The Lovely Children
+    # ###
 
     def fx_init_child_link(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
 
@@ -982,28 +767,11 @@ class Base_GP(object):
 
         return
 
-    def fx_init_node_commit(self):
+    # def fx_init_node_commit(self):
 
-        """
-        Commit the values of a new node (root, function, or terminal) to the array 'tree'.
-
-        Called by: fx_init_root_build, fx_init_function_gen, fx_init_terminal_gen
-
-        Arguments required: none
-        """
-
-        self.tree = np.append(self.tree,
-                              [[self.pop_TREE_ID], [self.pop_tree_type], [self.pop_tree_depth_base], [self.pop_NODE_ID],
-                               [self.pop_node_depth], [self.pop_node_type], [self.pop_node_label],
-                               [self.pop_node_parent], [self.pop_node_arity], [self.pop_node_c1], [self.pop_node_c2],
-                               [self.pop_node_c3], [self.pop_fitness]], 1)
-
-        self.pop_NODE_ID = self.pop_NODE_ID + 1
-
-        return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Evaluate a Tree               |
+    #   Methods to Evaluate a Tree                |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def plagih_eval_poly(self, tree):
@@ -1026,10 +794,6 @@ class Base_GP(object):
         except:
             raise Exception('Sympify could not reduce the expression. Probably unplanned expression in your tree. Open an issue.')
         return
-
-    # def sfeh_plagih_restructure_original(self, tree):
-    #     # 1. Get original tree: a + 0 + b
-    #     # 2. get reduced  tree: a +     b
 
     def plagih_eval_label(self, tree, node_id):
 
@@ -1163,9 +927,10 @@ class Base_GP(object):
 
             expr = str(self.algo_sym)  # get sympified expression and process it with TF - tested 2017 02/02
             result = self.plagih_fitness_eval(expr, self.data_train)
+            parsimony = self.sfeh_plagih_tree_parsimony_distance(population[tree_id], parsimony_distance='count_total')  # TODO ändern
             fitness = result['fitness']  # extract fitness score
 
-            self.fx_fitness_store(population[tree_id], fitness)  # store Fitness with each Tree
+            self.plagih_fitness_store(population[tree_id], fitness, parsimony)  # store Fitness and parsimony with each Tree
 
             ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
             if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
@@ -1186,11 +951,34 @@ class Base_GP(object):
 
         # elif self.kernel == '[other]': # use others as a template
 
-        print('\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m',
-              np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
+        print('\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
         if self.display == 'g': self.fx_karoo_pause_refer()  # 2019 06/07
 
         return
+
+    def sfeh_plagih_tree_parsimony_distance(self, tree, parsimony_distance='print'):
+        """
+
+        :param parsimony_distance: compute the chosen distance by the user. Default is the current best distance for mountain car tests.
+        :return: The chosen distance
+        """
+        if parsimony_distance == 'count_total':
+            return int(tree[3][-1:])  # returns the tree size
+        elif parsimony_distance == 'tree_depth':
+            return tree[4][1]     # returns the tree size
+        elif parsimony_distance == 'karoo_primitive':  # sorry guys :^D
+            return len(str(self.algo_raw))
+        elif parsimony_distance == 'print':   # Please inser all of the measurements with example
+            print('No distance chosen. Available parsimony measurements:')
+            print('count_total' + '    : count nodes. Amount of literals in the program. ' + str(tree[3][-1:]))
+            print('tree_depth' + '     : Only use the depth of the tree as measurement.  ' + str(tree[4][1]))
+            print('karoo_primitive' + ': Karoo`s OG parsimony. Do not use it. Weird.     ' + str(len(str(self.algo_raw))))
+            print('Choose wisely. More to come soon.')
+            return
+        else:
+            raise print('Parsimony distance required')
+            return
+
 
     def plagih_fitness_eval(self, expr, data, get_pred_labels=False):
 
@@ -1370,7 +1158,6 @@ class Base_GP(object):
         else:
             return operators[type(ops[0])](x, y)
 
-
     def plagih_fitness_node_parse(self, node, tensors):
 
         """
@@ -1442,7 +1229,7 @@ class Base_GP(object):
 
         return pred_label
 
-    def fx_fitness_store(self, tree, fitness):
+    def plagih_fitness_store(self, tree, fitness, parsimony):
 
         """
         Records the fitness and length of the raw algorithm (multivariate expression) to the Numpy array. Parsimony can
@@ -1458,8 +1245,7 @@ class Base_GP(object):
         fitness = round(fitness, self.precision)
 
         tree[12][1] = fitness  # store the fitness with each tree
-        # TODO very bad measurement, especially considering variable lengths
-        tree[12][2] = len(str(self.algo_raw))  # store the length of the raw algo for parsimony
+        tree[12][2] = parsimony  # store the length of the raw algo for parsimony
         # if len(tree[3]) > 4: # if the Tree array is wide enough -- SEE SCRATCHPAD
 
         return
@@ -1871,7 +1657,7 @@ class Base_GP(object):
     def sfeh_plagih_get_mutatable_node(self, tree):
         num_func = 1
         for i, x in enumerate(tree[5]):
-            if x != '' and tree[14][i] == '1':
+            if x != '' and tree[13][i] == '1':
                 num_func += 1
 
         node_n = np.random.randint(1, num_func)  # choose a random "changeable" FUNCTION number ()
@@ -1879,12 +1665,12 @@ class Base_GP(object):
         # TODO only works for 2-array functions
         num_func = 1
         for i, x in enumerate(tree[5]):
-            if x != '' and tree[14][i] == '1':
+            if x != '' and tree[13][i] == '1':
                 if num_func == node_n:
                     node_id = int(tree[3][i])
                 else:
                     num_func += 1
-        # node_id = int([tree[3][i] for i, x in enumerate(tree[14][1:]) if x == '1' and (tree[5][i+1] == 'func' or tree[5][i+1] == 'root')][node_n])  # get the i-th element that is changeable
+        # node_id = int([tree[3][i] for i, x in enumerate(tree[13][1:]) if x == '1' and (tree[5][i+1] == 'func' or tree[5][i+1] == 'root')][node_n])  # get the i-th element that is changeable
         return node_id
 
     # SFEH Obsolete

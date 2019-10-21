@@ -4,33 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 from pathlib import Path
-from sympy import sympify, Function
-import tensorflow  as tf
+from sympy import sympify
 
-# pickle-version does make too much trouble for now    need to switch to .csv
+import numpy as np
+# import tensorflow as tf
+#
+# x = tf.constant(0, dtype=tf.float32)
+# test = tf.dtypes.cast(x, tf.bool)
+#
+# print(test)
 
-# print(sympify('(1) + (2) + (b)'))
-# print(sympify('1 + 2 + b'))
-
-
-class ifte(Function):
-
-        @classmethod
-        def eval(cls, *_args):
-            if (len(_args) == 3):
-                if _args[0] > 0:
-                    return 1
-                else:
-                    return 2
-
-        def _sympy_(self, a, b, c):
-            if a > 0:
-                return b
-            else:
-                return c
-
-from sympy.core.sympify import converter
-
-
-# Function('ifte')
-print(sympify('ifte(a,b,c'))
+print(sympify('a/0'))

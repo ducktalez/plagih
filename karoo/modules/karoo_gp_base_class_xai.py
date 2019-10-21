@@ -21,7 +21,7 @@ import tensorflow as tf
 import ast
 
 # PLAGI imports
-import copy
+import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 
 ### TensorFlow Imports and Definitions ###
@@ -466,7 +466,7 @@ class Base_GP(object):
                         else:
                             self.tree = np.append(self.tree, [row], axis=0)  # append subsequent rows to Tree
 
-                    if self.tree.shape[0] == 13:
+                    if self.tree.shape[0] == 14:
                         self.population_a.append(self.tree)  # append complete Tree to population list
 
         print('\n', self.population_a)
@@ -666,7 +666,7 @@ class Base_GP(object):
                     tree = np.append(tree, [row], axis=1)  # append first row to Tree ('TREE_ID')
                 else:
                     tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
-            if tree.shape[0] == 14:
+            if tree.shape[0] == 13+1:
                 pass  # print('Origin Tree is: \n' + str(tree))
             else:
                 raise print("Tree could not be imported correctly from .csv file.")
@@ -790,7 +790,12 @@ class Base_GP(object):
 
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
         try:  # plagih: try block needed. simpify can not handle if then else.
-            self.algo_sym = sympify(self.algo_raw)  # convert string to a functional expression (the coolest line in Karoo! :)
+            print(self.algo_raw)
+            x = sympify(self.algo_raw)
+            x = re.sub('zoo', '100000', str(x)) # TODO why ;_;
+            # x = re.sub('False', 'False', x)
+            self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
+            print(x)
         except:
             raise Exception('Sympify could not reduce the expression. Probably unplanned expression in your tree. Open an issue.')
         return
@@ -826,6 +831,7 @@ class Base_GP(object):
             # if then else
             elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
                 return 'ifte((' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[10, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + '))'
+                # return 'Piecewise(('self.plagih_eval_label(tree, tree[10, node_id]) + ', ' self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + ', True))'
 
 
     def plagih_eval_id(self, tree, node_id):
@@ -976,7 +982,7 @@ class Base_GP(object):
             print('Choose wisely. More to come soon.')
             return
         else:
-            raise print('Parsimony distance required')
+            raise print('Parsimony distance not found!')
             return
 
 
@@ -1168,7 +1174,6 @@ class Base_GP(object):
         Arguments required: node, tensors
         """
 
-        # HEREHERE
         if isinstance(node, ast.Name):  # <tensor_name>
             return tensors[node.id]
 
@@ -1182,7 +1187,12 @@ class Base_GP(object):
         elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
             return operators[type(node.op)](self.plagih_fitness_node_parse(node.operand, tensors))
 
-        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x)
+        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) or if(a, b, c)
+            if node.func.id == 'ifte':
+                return operators[node.func.id](
+                        tf.dtypes.cast(self.plagih_fitness_node_parse(node.args[0], tensors), tf.bool),
+                        self.plagih_fitness_node_parse(node.args[1], tensors),
+                        self.plagih_fitness_node_parse(node.args[2], tensors))
             return operators[node.func.id](*[self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])
 
         elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
@@ -1190,6 +1200,12 @@ class Base_GP(object):
 
         elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
             return self.fx_fitness_chain_compare([node.left] + node.comparators, node.ops, tensors)
+
+        elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
+            try:
+                return tf.constant(node.value)
+            except:
+                raise print('Oh no this was not True or False')
 
         else:
             raise TypeError(node)
@@ -1632,12 +1648,10 @@ class Base_GP(object):
 
         node = self.sfeh_plagih_get_mutatable_node(tree)  # randomly select a point in the Tree (including root)
 
-        if tree[5][node] == '':
-            print('TREE_ID', str(tree[0][1]))
-
-        if (tree[5][node] == 'root' or tree[5][node] == 'func'):
+        if (tree[5][node] == 'func'):
             rnd = np.random.randint(0, len(self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
             tree[6][node] = self.functions[rnd][0]  # replace function (operator)
+            print(tree[6][node])
             # Take care of the modify specs
         elif tree[5][node] == 'term':
             rnd = np.random.randint(0, len(self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
@@ -1645,8 +1659,7 @@ class Base_GP(object):
         else:
             raise print('Operator type is not specified for PLAGIH ("term", "func",...)')
 
-        tree = self.fx_evolve_fitness_wipe(tree)  # wipe fitness data
-        # tree = self.sfeh_plagih_wipe_infos(tree)
+        tree = self.plagih_evolve_fitness_wipe(tree)  # wipe fitness data
 
         if self.display == 'db': print('\n\033[36m This is tourn_winner after node\033[1m', node, '\033[0;0m\033[36mmutation and updates:\033[0;0m\n', tree)
         # SFEH
@@ -1659,21 +1672,18 @@ class Base_GP(object):
         for i, x in enumerate(tree[5]):
             if x != '' and tree[13][i] == '1':
                 num_func += 1
-
         node_n = np.random.randint(1, num_func)  # choose a random "changeable" FUNCTION number ()
         # print('Node:', str(node_n), 'in Algo:', str(self.algo_sym), 'Tree:', str(tree))
         # TODO only works for 2-array functions
         num_func = 1
         for i, x in enumerate(tree[5]):
             if x != '' and tree[13][i] == '1':
-                if num_func == node_n:
-                    node_id = int(tree[3][i])
+                if num_func == node_n:  # Is the random node out of all changeable ones found?
+                    return int(tree[3][i])
                 else:
                     num_func += 1
-        # node_id = int([tree[3][i] for i, x in enumerate(tree[13][1:]) if x == '1' and (tree[5][i+1] == 'func' or tree[5][i+1] == 'root')][node_n])  # get the i-th element that is changeable
-        return node_id
 
-    # SFEH Obsolete
+
     # def fx_evolve_full_mutate(self, tree, branch):
 
     def fx_evolve_grow_mutate(self, tree, branch):
@@ -1849,7 +1859,7 @@ class Base_GP(object):
             offspring = self.fx_evolve_tree_prune(offspring,
                                                   self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
 
-        offspring = self.fx_evolve_fitness_wipe(offspring)  # wipe fitness data
+        offspring = self.plagih_evolve_fitness_wipe(offspring)  # wipe fitness data
 
         return offspring
 
@@ -2226,7 +2236,7 @@ class Base_GP(object):
 
         return tree
 
-    def fx_evolve_fitness_wipe(self, tree):
+    def plagih_evolve_fitness_wipe(self, tree):
 
         """
         Remove all fitness data from a given tree.

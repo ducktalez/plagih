@@ -23,6 +23,9 @@ import ast
 # PLAGI imports
 import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
+from karoo.modules.plagih_sympy_extras import Ifte
+
+local_sympy_dict = {'Ifte': Ifte}  # Used to reduce the 'if then else'
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -56,7 +59,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'ifte': tf.compat.v2.where,
+             'ifte': tf.compat.v2.where,  # e. g., ifte(a, b, c)
              }
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
@@ -649,7 +652,6 @@ class Base_GP(object):
             self.plagih_data_tree_append(tree)
 
     def plagih_load_origin_tree(self, path):
-        # TODO eventuell origin in self speichern. (self.origin)
         """
         This loads the 'origin'. The original program that shall be improved.
 
@@ -692,7 +694,7 @@ class Base_GP(object):
         """
 
         self.pop_TREE_ID = TREE_ID  # pos 0: a unique identifier for each tree
-        self.pop_tree_type = tree_type  # pos 1: a global constant based upon the initial user setting # TODO
+        self.pop_tree_type = tree_type  # pos 1: a global constant based upon the initial user setting
         self.pop_tree_depth_base = tree_depth_base  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
         self.pop_NODE_ID = 1  # pos 3: unique identifier for each node; this is the INDEX KEY to this array
         self.pop_node_depth = 0  # pos 4: depth of each node when committed to the array
@@ -791,12 +793,12 @@ class Base_GP(object):
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
         try:  # plagih: try block needed. simpify can not handle if then else.
             print(self.algo_raw)
-            x = sympify(self.algo_raw)
-            x = re.sub('zoo', '100000', str(x)) # TODO why ;_;
+            x = sympify(sympify(self.algo_raw, locals=local_sympy_dict))
+            x = re.sub('zoo', '100000', str(x))  # TODO why ;_;
             # x = re.sub('False', 'False', x)
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
-            print(x)
         except:
+            print('Error in sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
             raise Exception('Sympify could not reduce the expression. Probably unplanned expression in your tree. Open an issue.')
         return
 
@@ -820,7 +822,6 @@ class Base_GP(object):
 
         if tree[8, node_id] == '0':  # arity of 0 for the pattern '[term]'
             return '(' + tree[6, node_id] + ')'  # 'node_label' (function or terminal)
-        # TODO endrekursiv?
         else:
             if tree[8, node_id] == '1':  # arity of 1 for the explicit pattern 'not [term]'
                 return self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id]
@@ -1880,7 +1881,7 @@ class Base_GP(object):
         branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
         branch_top = np.random.randint(2, len(tree[3]))  # randomly select a non-root node
         branch_eval = self.plagih_eval_id(tree, branch_top)  # generate tuple of 'branch_top' and subseqent nodes
-        branch_symp = sympify(branch_eval)  # convert string into something useful
+        branch_symp = sympify(sympify(branch_eval, locals=local_sympy_dict))  # convert string into something useful
         branch = np.append(branch, branch_symp)  # append list to array
 
         branch = np.sort(branch)  # sort nodes in branch for Crossover.
@@ -1946,8 +1947,7 @@ class Base_GP(object):
                         tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's
                     # R00t: Maybe exclude root?
                     if tree[5][j] == 'func':
-                        c_buffer = self.fx_evolve_c_buffer(tree,
-                                                           j)  # generate 'c_buffer' for point of mutation ('branch_top')
+                        c_buffer = self.fx_evolve_c_buffer(tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
                         tree = self.fx_evolve_child_insert(tree, j, c_buffer)  # insert new nodes
                         tree = self.fx_evolve_child_link_fix(tree)  # fix all child links
                         tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's

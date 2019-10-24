@@ -24,7 +24,24 @@ class MyList1(object):
     def _sympy_(self): return Matrix(self)
 
 
+# from sympy import Function
+#
+# class Heyo(Function):
+#     nargs = 3
+#
+#     @classmethod
+#     def eval(cls, a, b, c):
+#         return b if a else c
+#
+#     def _sympy_(self, a, b, c): return eval(self, a, b, c)
+#
+#
+# local_dict= {"MyList1": MyList1, "ifte": Heyo}
+# print(sympify(sympify('Ifte(((observation1)<(0)), ((0)), ((2)))', locals=local_dict)))
+
+
 from sympy import Function
+
 
 class Ifte(Function):
     nargs = 3
@@ -36,9 +53,10 @@ class Ifte(Function):
     def _sympy_(self, a, b, c): return eval(self, a, b, c)
 
 
-local_dict= {"MyList1": MyList1, "ifte": Ifte}
-print(sympify(Ifte('1', '2', '3'), locals=local_dict))
-print(sympify(sympify('ifte(1==1, 2, 3)', locals=local_dict)))
+local_dict = {"ifte": Ifte}
+print(sympify(sympify('Ifte(((observation1)<(0)), ((0)), ((2)))', locals=local_dict)))
+
+# print(sympify(sympify('ifte(((observation1)<(0)), ((0)), ((2)))', locals=local_dict)))
 
 
 # print(sympify('MyList1()'))  # MyList1()

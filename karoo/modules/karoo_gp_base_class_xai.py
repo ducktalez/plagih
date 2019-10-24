@@ -25,7 +25,7 @@ import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 from karoo.modules.plagih_sympy_extras import Ifte
 
-local_sympy_dict = {'Ifte': Ifte}  # Used to reduce the 'if then else'
+local_sympy_dict = {'ifte': Ifte}  # Used to reduce the 'if then else'
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -59,7 +59,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'ifte': tf.compat.v2.where,  # e. g., ifte(a, b, c)
+             'Ifte': tf.compat.v2.where,  # e. g., Ifte(a, b, c)
              }
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
@@ -831,7 +831,7 @@ class Base_GP(object):
 
             # if then else
             elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
-                return 'ifte((' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[10, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + '))'
+                return 'Ifte((' + self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[10, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + '))'
                 # return 'Piecewise(('self.plagih_eval_label(tree, tree[10, node_id]) + ', ' self.plagih_eval_label(tree, tree[9, node_id]) + '), (' + self.plagih_eval_label(tree, tree[11, node_id]) + ', True))'
 
 
@@ -1189,7 +1189,7 @@ class Base_GP(object):
             return operators[type(node.op)](self.plagih_fitness_node_parse(node.operand, tensors))
 
         elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) or if(a, b, c)
-            if node.func.id == 'ifte':
+            if node.func.id == 'Ifte':
                 return operators[node.func.id](
                         tf.dtypes.cast(self.plagih_fitness_node_parse(node.args[0], tensors), tf.bool),
                         self.plagih_fitness_node_parse(node.args[1], tensors),

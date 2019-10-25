@@ -116,7 +116,7 @@ function_types_enum = {
     'f2b': 1,
     'b2b': 2,
     'b2f': 3,
-    'bf2f': 4,
+    'b2f2f': 4,
 }
 
 
@@ -453,7 +453,7 @@ class Base_GP(object):
         # Part 3: Load the specified functions. (-> [if,3] [+,2] ...)
         self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
         # Part 3.5: Split the functions in 5 types
-        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_bf2f = [], [], [], []
+        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_b2f2f = [], [], [], []
         for fun in self.functions:
             if function_types_dict[fun] == 'f2f':
                 self.functions_f2f.append(fun)
@@ -463,8 +463,8 @@ class Base_GP(object):
                 self.functions_b2b.append(fun)
             elif function_types_dict[fun] == 'b2f':
                 self.functions_b2f.append(fun)
-            elif function_types_dict[fun] == 'bf2f':
-                self.functions_bf2f.append(fun)
+            elif function_types_dict[fun] == 'b2f2f':
+                self.functions_b2f2f.append(fun)
         # Part 4 - from the dataset, extract TRAINING and TEST data ###
         # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
         x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=0.2)  # 80/20 TRAIN/TEST split
@@ -1948,9 +1948,35 @@ class Base_GP(object):
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
 
-    def sfeh_plagih_get_function_typeequi(self, function):
-        type = function_types[function]
+    def sfeh_plagih_get_function_typeequi(self, old_function):
+        if function_types_dict[old_function] == 'f2f':
+            return np.random.choice(self.functions_f2f)
+        elif function_types_dict[old_function] == 'f2b':
+            return np.random.choice(self.functions_f2b)
+        elif function_types_dict[old_function] == 'b2b':
+            return np.random.choice(self.functions_b2b)
+        elif function_types_dict[old_function] == 'b2f':
+            return np.random.choice(self.functions_b2f)
+        elif function_types_dict[old_function] == 'b2f2f':
+            return np.random.choice(self.functions_b2f2f)
+        else:
+            raise print("Function was not found in function_types_dict.")
 
+
+    def sfeh_plagih_get_function_outcomeequi(self, old_function):
+        if '2f' in function_types_dict[old_function]:
+            func_2f = []
+            func_2f.append(self.functions_f2f)
+            func_2f.append(self.functions_b2f)
+            func_2f.append(self.functions_b2f2f)
+            return np.random.choice(func_2f)
+        elif '2b' in function_types_dict[old_function]
+            func_2b =[]
+            func_2b.append(self.functions_f2b)
+            func_2b.append(self.functions_b2b)
+            return np.random.choice(func_2b)
+        else:
+            raise print("Function was not found in function_types_dict.")
 
 
     def sfeh_plagih_get_mutatable_node(self, tree, mode=''):

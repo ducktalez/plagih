@@ -1,8 +1,8 @@
 operator, arity
-+,2,num
--,2,num
-*,2,num
-/,2,num
-<,2,bool
->,2,bool
-==,2,bool
++,2,f2f
+-,2,f2f
+*,2,f2f
+/,2,f2f
+<,2,f2b
+>,2,f2b
+==,2,f2b

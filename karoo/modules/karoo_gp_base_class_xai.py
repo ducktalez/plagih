@@ -453,18 +453,19 @@ class Base_GP(object):
         # Part 3: Load the specified functions. (-> [if,3] [+,2] ...)
         self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
         # Part 3.5: Split the functions in 5 types
-        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_b2f2f = [], [], [], []
+        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_b2f2f = [], [], [], [], []
         for fun in self.functions:
-            if function_types_dict[fun] == 'f2f':
-                self.functions_f2f.append(fun)
-            elif function_types_dict[fun] == 'f2b':
-                self.functions_f2b.append(fun)
-            elif function_types_dict[fun] == 'b2b':
-                self.functions_b2b.append(fun)
-            elif function_types_dict[fun] == 'b2f':
-                self.functions_b2f.append(fun)
-            elif function_types_dict[fun] == 'b2f2f':
-                self.functions_b2f2f.append(fun)
+            print(fun[0])
+            if function_types_dict[fun[0]] == 'f2f':
+                self.functions_f2f.append(fun[0])
+            elif 'f2b' == function_types_dict[fun[0]]:
+                self.functions_f2b.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2b':
+                self.functions_b2b.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2f':
+                self.functions_b2f.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2f2f':
+                self.functions_b2f2f.append(fun[0])
         # Part 4 - from the dataset, extract TRAINING and TEST data ###
         # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
         x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=0.2)  # 80/20 TRAIN/TEST split
@@ -1091,7 +1092,6 @@ class Base_GP(object):
 
 
             elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-                print(tree)
                 return '(' + self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
             # Experiment with arity2 = tuple operators
             # elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
@@ -1211,7 +1211,7 @@ class Base_GP(object):
 
             expr = str(self.algo_sym)  # get sympified expression and process it with TF - tested 2017 02/02
             result = self.plagih_fitness_eval(expr, self.data_train)
-            parsimony = self.sfeh_plagih_tree_parsimony_distance(population[tree_id], parsimony_distance='count_total')  # TODO ändern
+            parsimony = self.sfeh_plagih_tree_parsimony_distance(population[tree_id], parsimony_distance='count_nodes')  # TODO ändern
             fitness = result['fitness']  # extract fitness score
 
             self.plagih_fitness_store(population[tree_id], fitness, parsimony)  # store Fitness and parsimony with each Tree
@@ -1247,7 +1247,7 @@ class Base_GP(object):
         :param parsimony_distance: compute the chosen distance by the user. Default is the current best distance for mountain car tests.
         :return: The chosen distance
         """
-        if parsimony_distance == 'num_nodes':
+        if parsimony_distance == 'count_nodes':
             return int(tree[3][-1:])  # returns the tree size
         elif parsimony_distance == 'tree_depth':
             return tree[4][1]     # returns the tree size
@@ -1255,9 +1255,9 @@ class Base_GP(object):
             return len(str(self.algo_raw))
         elif parsimony_distance == 'print':   # Please inser all of the measurements with example
             print('No distance chosen. Available parsimony measurements:')
-            print('num_nodes' + '      : num_nodes nodes. Amount of literals in the program. ' + str(tree[3][-1:]))
-            print('tree_depth' + '     : Only use the depth of the tree as measurement.      ' + str(tree[4][1]))
-            print('karoo_primitive' + ': Karoo`s OG parsimony. Do not use it with PLAGIH.    ' + str(len(str(self.algo_raw))))
+            print('count_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
+            print('tree_depth' + '     : Only use the depth of the tree as measurement.        ' + str(tree[4][1]))
+            print('karoo_primitive' + ': Karoo`s OG parsimony. Do not use it with PLAGIH.      ' + str(len(str(self.algo_raw))))
             print('Choose wisely. More to come soon.')
             return
         else:
@@ -1842,12 +1842,6 @@ class Base_GP(object):
         Arguments required: none
         """
 
-        if self.display != 's':
-            if self.display == 'i':
-                print('')
-            print('  Perform', self.evolve_branch, 'Branch Mutations ...')
-            if self.display == 'i': self.fx_karoo_pause_refer()  # 2019 06/07
-
         for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
             branch = self.plagih_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath
@@ -1929,13 +1923,11 @@ class Base_GP(object):
         node = self.sfeh_plagih_get_mutatable_node(tree)  # randomly select a point in the Tree (including root)
 
         if (tree[5][node] == 'func'):
-            rnd = np.random.randint(0, len(self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
-            tree[6][node] = self.functions[rnd][0]  # replace function (operator)
-            print(tree[6][node])
+            tree[6][node] = self.sfeh_plagih_get_function_typeequi(tree[6][node])
             # Take care of the modify specs
         elif tree[5][node] == 'term':
             rnd = np.random.randint(0, len(self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
-            tree[6][node] = self.terminals[rnd]  # replace terminal (variable)
+            tree[6][node] = self.terminals[rnd]  # replace terminal (variable) # TODO auch zahlen?
         else:
             raise print('Operator type is not specified for PLAGIH ("term", "func",...)')
 
@@ -1946,7 +1938,6 @@ class Base_GP(object):
         # self.fx_karoo_pause_refer()  # 2019 06/07
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
-
 
     def sfeh_plagih_get_function_typeequi(self, old_function):
         if function_types_dict[old_function] == 'f2f':
@@ -1962,7 +1953,6 @@ class Base_GP(object):
         else:
             raise print("Function was not found in function_types_dict.")
 
-
     def sfeh_plagih_get_function_outcomeequi(self, old_function):
         if '2f' in function_types_dict[old_function]:
             func_2f = []
@@ -1977,7 +1967,6 @@ class Base_GP(object):
             return np.random.choice(func_2b)
         else:
             raise print("Function was not found in function_types_dict.")
-
 
     def sfeh_plagih_get_mutatable_node(self, tree, mode=''):
         """
@@ -2051,14 +2040,15 @@ class Base_GP(object):
 
         branch_top = int(branch[0])  # replaces 2 instances, below; tested 2016 07/09
         branch_depth = self.tree_depth_max - int(tree[4][branch_top])  # 'tree_depth_max' - depth at 'branch_top' to set max potential size of new branch - 2016 07/10
-
+        # # SFEH i randomize the tree depth  now...
+        # branch_depth = min(branch_depth, np.random.randint(2, branch_depth))  # I hops this is enough to guarantee tree size
         if branch_depth < 0:  # this has never occured ... yet
             print('\n\t\033[31m ERROR! In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
             # TODO allow numbers here??
-            rnd = np.random.randint(0, len(self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
+            rnd = np.random.randint(0, len(self.terminals) - 1)  # all terminals
             tree[6][branch_top] = self.terminals[rnd]  # replace terminal (variable)
 
         else:  # the point of mutation ('branch_top') chosen is at least one depth from the maximum allowed
@@ -2087,7 +2077,6 @@ class Base_GP(object):
             if type_mod == 'func':  # mutate 'branch_top' to a function (a new 'gp.tree' will be copied, node by node, into 'tourn_winner')
 
                 self.plagih_branch_tree_build('mutant', 'g', branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
-
 
                 tree = self.fx_evolve_branch_insert(tree, branch)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
             # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
@@ -2210,7 +2199,7 @@ class Base_GP(object):
 
         Arguments required: tree, branch
         """
-
+        # TODOTODO HEREHERE SFEHSFEH
         # *_branch_top_copy merged with *_body_copy 2018 04/12
 
         ### PART 1 - insert branch_top from 'gp.tree' into 'tree' ###
@@ -2226,11 +2215,6 @@ class Base_GP(object):
         c_buffer = self.fx_evolve_c_buffer(tree, branch_top)  # generate c_buffer for point of mutation ('branch_top')
         tree = self.fx_evolve_child_insert(tree, branch_top, c_buffer)  # insert a single new node ('branch_top')
         tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's
-
-        if self.display == 'db':
-            print('\n\t ... inserted node 1 of', len(self.tree[3]) - 1)
-            print('\n\033[36m This is the Tree after a new node is inserted:\033[0;0m\n', tree)
-            self.fx_karoo_pause_refer()  # 2019 06/07
 
         ### PART 2 - insert branch_body from 'gp.tree' into 'tree' ###
 

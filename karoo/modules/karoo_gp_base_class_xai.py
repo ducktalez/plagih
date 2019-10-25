@@ -1970,7 +1970,7 @@ class Base_GP(object):
             func_2f.append(self.functions_b2f)
             func_2f.append(self.functions_b2f2f)
             return np.random.choice(func_2f)
-        elif '2b' in function_types_dict[old_function]
+        elif '2b' in function_types_dict[old_function]:
             func_2b =[]
             func_2b.append(self.functions_f2b)
             func_2b.append(self.functions_b2b)

@@ -68,7 +68,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'Ifte': tf.compat.v2.where,  # e. g., Ifte(a, b, c)
              }
 
-function_types = {  # Needs A LOT OF further testing
+function_types_dict = {  # Needs A LOT OF further testing
     '+': 'f2f',
     '-': 'f2f',
     '*': 'f2f',
@@ -110,6 +110,15 @@ function_types = {  # Needs A LOT OF further testing
 
     'ifte': 'bff2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
 }
+
+function_types_enum = {
+    'f2f': 0,
+    'f2b': 1,
+    'b2b': 2,
+    'b2f': 3,
+    'bf2f': 4,
+}
+
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
@@ -443,7 +452,19 @@ class Base_GP(object):
 
         # Part 3: Load the specified functions. (-> [if,3] [+,2] ...)
         self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-
+        # Part 3.5: Split the functions in 5 types
+        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_bf2f = [], [], [], []
+        for fun in self.functions:
+            if function_types_dict[fun] == 'f2f':
+                self.functions_f2f.append(fun)
+            elif function_types_dict[fun] == 'f2b':
+                self.functions_f2b.append(fun)
+            elif function_types_dict[fun] == 'b2b':
+                self.functions_b2b.append(fun)
+            elif function_types_dict[fun] == 'b2f':
+                self.functions_b2f.append(fun)
+            elif function_types_dict[fun] == 'bf2f':
+                self.functions_bf2f.append(fun)
         # Part 4 - from the dataset, extract TRAINING and TEST data ###
         # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
         x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=0.2)  # 80/20 TRAIN/TEST split

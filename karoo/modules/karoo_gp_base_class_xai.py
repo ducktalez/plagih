@@ -1,8 +1,6 @@
 """
-A NOTE TO THE NEWBIE, EXPERT, AND BRAVE
-Even if you are highly experienced in Genetic Programming, it is recommended that you review the 'Karoo User Guide' before running 
-this application. While your computer will not burst into flames nor will the sun collapse into a black hole if you do not, you will 
-likely find more enjoyment of this particular flavour of GP with a little understanding of its intent and design.
+Explaination:
+> 'f2f', 'b2b', etc.: silly. f = float, b = bool. f2b means float to boolean, e. g. '<'
 """
 
 import sys
@@ -23,16 +21,7 @@ import ast
 # PLAGI imports
 import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
-from karoo.modules.plagih_sympy_extras import Ifte, Lesy, Gesy, Eqsy, Sumsy, Difsy, Mulsy, Divsy
-
-local_sympy_dict = {'ifte': Ifte,
-                    'lesy': Lesy,
-                    'gesy': Gesy,
-                    'eqsy': Eqsy,
-                    'sumsy': Sumsy,
-                    'subsy': Difsy,
-                    'mulsy': Mulsy,
-                    'divsy': Divsy,}  # Used to reduce the 'if then else'
+from karoo.modules.plagih_sympy_extras import plagih_sympify
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -69,6 +58,10 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              }
 
 function_types_dict = {  # Needs A LOT OF further testing
+    'float': '2f',  # these three are dummies
+    'int': '2f',    # neede to use the dict for function types aswell
+    'bool': '2b',   # so we can "workarounded" use them
+
     '+': 'f2f',
     '-': 'f2f',
     '*': 'f2f',
@@ -78,7 +71,6 @@ function_types_dict = {  # Needs A LOT OF further testing
     'sign': 'f2f',
     'square': 'f2f',
     'sqrt': 'f2f',
-    'pow': 'f2f',
     'log': 'f2f',
     'log1p': 'f2f',
     'cos': 'f2f',
@@ -108,7 +100,53 @@ function_types_dict = {  # Needs A LOT OF further testing
     'btof_normal': 'b2f',  # False->0, True->1, dummy-function
     'btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
 
-    'ifte': 'bff2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+    'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+}
+
+function_arity_dict = {  # Needs A LOT OF further testing
+    'float': 0,  # these three are dummies
+    'int': 0,    # neede to use the dict for function types aswell
+    'bool': 0,   # so we can "workarounded" use them
+
+    '+': 2,
+    '-': 2,
+    '*': 2,
+    '/': 2,
+    '**': 2,
+    'abs': 1,
+    'sign': 1,
+    'square': 1,
+    'sqrt': 1,
+    'log': 1,
+    'log1p': 1,
+    'cos': 1,
+    'sin': 1,
+    'tan': 1,
+    'acos': 1,
+    'asin': 1,
+    'atan': 1,
+
+    'and': 2,
+    'or': 2,
+    'xor': 2,
+    'nand': 2,
+    'xand': 2,
+    'nor': 2,
+    'xnor': 2,
+    'not': 1,
+    'ITE': 3,
+
+    '==': '2',
+    '!=': '2',
+    '<': '2',
+    '<=': '2',
+    '>': '2',
+    '>=': '2',
+
+    'btof_normal': 1,  # False->0, True->1, dummy-function
+    'btof_extreme': 1,  # False->-1, True->1. Does that make sense?
+
+    'Ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
 }
 
 function_types_enum = {
@@ -116,7 +154,7 @@ function_types_enum = {
     'f2b': 1,
     'b2b': 2,
     'b2f': 3,
-    'b2f2f': 4,
+    'b2f2f': 4,  # Note: we can search for 'b2', 'f2' and '2f'. Tricky naming.
 }
 
 
@@ -210,7 +248,7 @@ class Base_GP(object):
         self.gen_id = 1  # set initial generation ID
         self.population_a = ['PLAGIH Karoo GP Extension by Simon Fehrer, Generation ' + str(self.gen_id)]  # initialise population_a to host the first generation
         self.population_b = ['placeholder']  # initialise population_b to satisfy fx_karoo_pause()
-        self.plagih_init_construct(tree_type, tree_depth_base, origin_tree_file)  # construct the first population of Trees
+        self.plagih_init_construct(origin_tree_file)  # construct the first population of Trees
         if self.gen_max == 1:  # terminate here if constructing just one generation
             self.plagih_data_tree_write(self.population_a, 'a')  # save this single population to disk
             print('\n We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
@@ -415,12 +453,13 @@ class Base_GP(object):
 
         # TODO hier unterscheiden, welche distanz genommen werden soll?
         # TODO Funktioniert das mit allen Datentypen?
-        #
+
         # Part 1: Load the dataset
         with open(samples_file) as csvFile:
             reader = csv.reader(csvFile, delimiter=',')
             num_observations = 0
             data_x, data_y = [], []
+            self.terminals_types = []
             for i, row in enumerate(reader):
                 if i == 0:
                     self.terminals = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
@@ -434,14 +473,25 @@ class Base_GP(object):
                             var_type.append(var_name.split(':', 1)[1])
                         else:
                             raise print('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized')
-                    self.terminals_types = var_name
+                    self.terminals_types = var_type  # deepcopy?
                 else:
                     row_as_data = [locate(var_type[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
                     data_x.append(row_as_data[:num_observations])
                     data_y.append(row_as_data[num_observations:])
             csvFile.close()
         self.dataset = samples_file
-        # TODO das funktioniert nur bei diskreten Actions
+        # Part 1.5: load terminals into specific terminal types
+        self.terminals_bool, self.terminals_float = [], []
+        for i, term_type in enumerate(self.terminals_types):
+            if term_type == 'float' or term_type == 'int':  # sfeh check if this is enough, int
+                self.terminals_float.append(self.terminals[i])
+            elif term_type == 'bool':
+                self.terminals_float.append(self.terminals[i])
+            else:
+                raise print('Nopely sfeh')
+        print('Del', str(self.terminals_float), str(self.terminals_bool))
+
+        # sfeh das funktioniert nur bei diskreten Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
 
         # Part 2: Assign fitness type (->is max or min better?)
@@ -451,21 +501,8 @@ class Base_GP(object):
         self.fitness_type = fitt_dict[self.kernel]  # load fitness type
 
         # Part 3: Load the specified functions. (-> [if,3] [+,2] ...)
-        self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-        # Part 3.5: Split the functions in 5 types
-        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_b2f2f = [], [], [], [], []
-        for fun in self.functions:
-            print(fun[0])
-            if function_types_dict[fun[0]] == 'f2f':
-                self.functions_f2f.append(fun[0])
-            elif 'f2b' == function_types_dict[fun[0]]:
-                self.functions_f2b.append(fun[0])
-            elif function_types_dict[fun[0]] == 'b2b':
-                self.functions_b2b.append(fun[0])
-            elif function_types_dict[fun[0]] == 'b2f':
-                self.functions_b2f.append(fun[0])
-            elif function_types_dict[fun[0]] == 'b2f2f':
-                self.functions_b2f2f.append(fun[0])
+        self.sfeh_create_dtype_function_lists(operators_file)  # Ia a little complex now, outsourced into this function
+
         # Part 4 - from the dataset, extract TRAINING and TEST data ###
         # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
         x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=0.2)  # 80/20 TRAIN/TEST split
@@ -705,7 +742,7 @@ class Base_GP(object):
     #   Methods to Construct the 1st Generation  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def plagih_init_construct(self, tree_type, tree_depth_base, origin_tree_file):
+    def plagih_init_construct(self, origin_tree_file):
         """
         Called by:
         not needed anymore: tree_type, tree_depth_base
@@ -746,28 +783,23 @@ class Base_GP(object):
         self.origin_tree = tree
         return tree
 
-    def plagih_branch_tree_build(self, TREE_ID, tree_type, tree_depth_base):
+    def plagih_new_branch_tree_build(self, TREE_ID, tree_type, func_type, tree_depth):
 
         """
         This method combines 4 sub-methods into a single method for ease of deployment. It is designed to executed
         within a loop such that an entire population is built. However, it may also be run from the command line,
         passing a single TREE_ID to the method.
 
-        'tree_type' is either (f)ull or (g)row. Note, however, that when the user selects 'ramped 50/50' at launch,
-        it is still (f) or (g) which are passed to this method.
-
-
-        Arguments required: TREE_ID, tree_type, tree_depth_base
         """
 
-        self.plagih_init_tree_initialise(TREE_ID, tree_type, tree_depth_base)  # initialise a new Tree
-        self.plagih_branch_root_build()  # build the Root node
-        self.fx_init_function_build()  # build the Function nodes
+        self.plagih_branch_tree_initialise(TREE_ID, tree_depth)  # Create empty tree np-array
+        self.plagih_branch_root_build(func_type)  # insert the first node with either '2b' or '2f'
+        self.plagih_branch_function_build(func_type)  # build all the Function nodes
         self.fx_init_terminal_build()  # build the Terminal nodes
-
+        # TODO set tree_depth_base in tree.
         return  # each Tree is written to 'gp.tree'
 
-    def plagih_init_tree_initialise(self, TREE_ID, tree_type, tree_depth_base):
+    def plagih_branch_tree_initialise(self, TREE_ID, tree_depth):
 
         """
         Assign 13 global variables to the array 'tree'.
@@ -784,8 +816,8 @@ class Base_GP(object):
         """
 
         self.pop_TREE_ID = TREE_ID  # pos 0: a unique identifier for each tree
-        self.pop_tree_type = tree_type  # pos 1: a global constant based upon the initial user setting
-        self.pop_tree_depth_base = tree_depth_base  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
+        self.pop_tree_type = 'g'  # pos 1: a global constant based upon the initial user setting
+        self.pop_tree_depth_base = tree_depth  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
         self.pop_NODE_ID = 1  # pos 3: unique identifier for each node; this is the INDEX KEY to this array
         self.pop_node_depth = 0  # pos 4: depth of each node when committed to the array
         self.pop_node_type = ''  # pos 5: root, function, or terminal
@@ -804,13 +836,13 @@ class Base_GP(object):
 
         return
 
-    def plagih_branch_root_build(self):
+    def plagih_branch_root_build(self, func_dtype):
 
         """
         Build a root node for a branch insert.
         """
 
-        self.plagih_branch_function_select()  # select the operator for root
+        self.plagih_branch_function_select(func_dtype)  # select the operator for root
 
         if self.pop_node_arity == 1:  # 1 child
             self.pop_node_c1 = 2
@@ -830,7 +862,7 @@ class Base_GP(object):
         else:
             print('\n\t\033[31m ERROR! In plagih_branch_root_build: pop_node_arity =', self.pop_node_arity, '\033[0;0m'); self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
-        self.pop_node_type = 'root'
+        self.pop_node_type = 'func'  # used to be r00t, but what is it good for?
 
         self.plagih_branch_node_commit()
 
@@ -838,13 +870,14 @@ class Base_GP(object):
 
         ### Function Nodes ###
 
-    def fx_init_function_build(self):
+    def plagih_branch_function_build(self, root_func_type):
 
         """
         Build the Function nodes for the branch.
         """
-        # SFEH: Allow to create even larger tree?
-        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh, actually NO -1?
+
+        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
+            # sfeh use tree depth
 
             self.pop_node_depth = i  # increment 'node_depth'
 
@@ -852,22 +885,24 @@ class Base_GP(object):
             prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
             prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
 
-            # Look how many nodes have to be on this level
+            # parent_arity_sum = the amount of nodes that have to be on this level
             for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
                 if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
                     parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
 
             # Set for every "free space" a function node (func)
-            for j in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
-                    for k in range(1, int(self.tree[8][j]) + 1):  # increment through each degree of arity for each parent node
+            for j in range(1, len(self.tree[3])):  # increment through all nodes
+                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... to find all levels' parent nodes...
+                    # TODO handle if separately. Only function with two input types.
+                    for k in range(1, int(self.tree[8][j]) + 1):  # ...increment through each degree of arity for each parent node
                         self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID' ...
-                        prior_sibling_arity = self.fx_init_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings)  # ... generate a Function node
+                        func_dtype = function_types_dict[self.tree[6][self.pop_node_parent]]
+                        prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
                         prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
 
         return
 
-    def fx_init_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
+    def plagih_branch_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype):
 
         """
         Generate a single Function node for the initial population.
@@ -877,43 +912,60 @@ class Base_GP(object):
         Arguments required: parent_arity_sum, prior_sibling_arity, prior_siblings
         """
 
-        if self.pop_tree_type == 'f':  # user defined as (f)ull
-            self.plagih_branch_function_select()  # retrieve a function
+        rnd = np.random.randint(2)
+
+        if rnd == 0:  # randomly selected as Function
+            self.plagih_branch_function_select(func_dtype)  # retrieve a function
             self.fx_init_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
 
-        elif self.pop_tree_type == 'g':  # user defined as (g)row
-            rnd = np.random.randint(2)
-
-            if rnd == 0:  # randomly selected as Function
-                self.plagih_branch_function_select()  # retrieve a function
-                self.fx_init_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
-
-            elif rnd == 1:  # randomly selected as Terminal
-                self.fx_init_terminal_select()  # retrieve a terminal
-                self.pop_node_c1 = ''
-                self.pop_node_c2 = ''
-                self.pop_node_c3 = ''
+        elif rnd == 1:  # randomly selected as Terminal
+            self.fx_init_terminal_select()  # retrieve a terminal # TODO variablen erlauben in terminal select
+            self.pop_node_c1 = ''
+            self.pop_node_c2 = ''
+            self.pop_node_c3 = ''
 
         self.plagih_branch_node_commit()  # commit new node to array
         prior_sibling_arity = prior_sibling_arity + self.pop_node_arity  # sum the arity of prior siblings
 
         return prior_sibling_arity
 
-    def plagih_branch_function_select(self):
+    def plagih_branch_function_select(self, func_dtype):
 
         """
-        Define a single Function (operator extracted from the associated functions.csv) for the initial population.
+        Define a single Function for the initial population.
 
         """
 
         self.pop_node_type = 'func'
-        rnd = np.random.randint(0, len(self.functions[:, 0]))  # call the previously loaded .csv which contains all operators
-        self.pop_node_label = self.functions[rnd][0]
-        self.pop_node_arity = int(self.functions[rnd][1])
+        new_function = self.sfeh_plagih_get_function_outcomeequi(func_dtype, mode='plus_arity')
+        self.pop_node_label = new_function[0]
+        self.pop_node_arity = int(new_function[1])
 
         return
 
         ### Terminal Nodes ###
+
+    # Idea: numbers are recognized and adjusted?
+    # Idea: insert numbers as 0-arity functions? -> naah
+
+    def sfeh_get_random_value(self, type='', mode='float0to1'):
+        if type == 'bool':
+            return np.random.choice([True, False])
+        elif type == 'float' or type == 'num':
+            if mode == 'float0to1':
+                return np.random.uniform(-1, 1)
+            elif mode == 'intTotal_10':
+                return np.random.random(-10, 10)
+            elif mode == 'random_optimised':
+                return np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
+                                         5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
+            else:
+                raise print('You did not take care of the kind of numbers you want to have')
+        else:
+            print('Please specify your desired datatype if possible. Trying to return value similar to terminals.')
+            type = np.random.choice(self.terminals_types)
+            return self.sfeh_get_random_value(type=type)
+
 
     def fx_init_terminal_build(self):
 
@@ -973,10 +1025,7 @@ class Base_GP(object):
 
         return
 
-
-    ###
-    # The Lovely Children
-    # ###
+    ### The Lovely Children ###
 
     def fx_init_child_link(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
 
@@ -1057,7 +1106,7 @@ class Base_GP(object):
 
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
         try:  # plagih: try block needed. simpify can not handle if then else.
-            x = sympify(sympify(self.algo_raw, locals=local_sympy_dict))
+            x = plagih_sympify(self.algo_raw)
             x = re.sub('zoo', '100000', str(x))  # TODO why ;_;
             # x = re.sub('False', 'False', x)
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
@@ -1105,7 +1154,6 @@ class Base_GP(object):
             elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
                 return 'Ifte(' + self.plagih_eval_label(tree, tree[9, node_id]) + ', ' + self.plagih_eval_label(tree, tree[10, node_id]) + ', ' + self.plagih_eval_label(tree, tree[11, node_id]) + ')'
 
-
     def plagih_eval_id(self, tree, node_id):
 
         """
@@ -1142,7 +1190,6 @@ class Base_GP(object):
                        + self.plagih_eval_id(tree, tree[9, node_id]) + ', '\
                        + self.plagih_eval_id(tree, tree[10, node_id]) + ', '\
                        + self.plagih_eval_id(tree, tree[11, node_id])
-
 
     def fx_eval_generation(self):
 
@@ -1240,7 +1287,6 @@ class Base_GP(object):
 
         return
 
-
     def sfeh_plagih_tree_parsimony_distance(self, tree, parsimony_distance='print'):
         """
 
@@ -1263,7 +1309,6 @@ class Base_GP(object):
         else:
             raise print('Parsimony distance not found!')
             return
-
 
     def plagih_fitness_eval(self, expr, data, get_pred_labels=False):
 
@@ -1843,11 +1888,10 @@ class Base_GP(object):
         """
 
         for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
-            branch = self.plagih_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath
 
-            # TEST & DEBUG: comment the top or bottom to force all Full or all Grow methods
-            tourn_winner = self.plagih_evolve_grow_mutate(tourn_winner, branch)
+            tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
+            branch_nodes_list = self.plagih_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
+            tourn_winner = self.plagih_evolve_branch_grow_mutate(tourn_winner, branch_nodes_list)
 
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
@@ -1907,7 +1951,7 @@ class Base_GP(object):
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Evolve a Population           |
+    #   Methods to Evolve a Population            |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def plagih_evolve_point_mutate(self, tree):
@@ -1915,15 +1959,13 @@ class Base_GP(object):
         """
         Mutate a single mutatable point in any Tree.
 
-        Called by: fx_nextgen_point_mutate
-
-        Arguments required: tree
         """
 
         node = self.sfeh_plagih_get_mutatable_node(tree)  # randomly select a point in the Tree (including root)
 
         if (tree[5][node] == 'func'):
-            tree[6][node] = self.sfeh_plagih_get_function_typeequi(tree[6][node])
+            node_type = function_types_dict[tree[6][node]]
+            tree[6][node] = self.sfeh_plagih_get_function_typeequi(node_type)
             # Take care of the modify specs
         elif tree[5][node] == 'term':
             rnd = np.random.randint(0, len(self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
@@ -1939,32 +1981,138 @@ class Base_GP(object):
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def sfeh_plagih_get_function_typeequi(self, old_function):
-        if function_types_dict[old_function] == 'f2f':
+    def sfeh_plagih_get_new_tree_size(self, chosen_tree, branch_top, mode='random'):  # sfeh other default
+        """
+        Return the size of the tree to be inserted.
+        Should not be set to maximum to reduce complexity!
+        """
+        branch_depth_upper_bound = self.tree_depth_max - int(chosen_tree[4][branch_top])  # 'tree_depth_max' - depth at 'branch_top' to set max size of new branch
+        if mode == 'maximum':
+            branch_depth = branch_depth_upper_bound
+        elif mode == 'random':
+            branch_depth = max(branch_depth_upper_bound, np.random.randint(0, 1+max(branch_depth_upper_bound, 3)))  # SFEH random depth, I hops this is enough to guarantee tree size
+        else:
+            raise print('sfeh_plagih_get_new_tree_size does not accept this mode: ' + str(mode))
+        return branch_depth
+
+    def sfeh_plagih_get_correct(self, node_label, node_type, mode=''):
+        """
+        Returns either a correct function, variable
+        """
+        if mode == 'return_dtype_only':
+            if node_type == 'term':
+                if 'o' in node_label or 'a' in node_label:
+                    term_position = self.terminals.index(node_label)
+                    return function_types_dict[self.terminals_types[term_position]]
+                elif 'True' in node_label or 'False' in node_label:
+                    return '2b'
+                else:
+                    return '2f'
+            else:
+                return function_types_dict[node_label]
+
+
+        if node_type == 'term':
+            if 'o' in node_label or 'a' in node_label:  # .csv-terminals
+                term_position = self.terminals.index(node_label)    # self.terminals[observation0, observation1, action0] -> 1
+                term_dtype = function_types_dict[self.terminals_types[term_position]]
+                return self.sfeh_plagih_get_terminal(term_dtype)  # self.terminals_types['float','float','int']...get_terminal('bool')
+            elif 'True' in node_label or 'False' in node_label:  # Boolean
+                return self.sfeh_plagih_get_terminal('2b')
+            else:
+                return self.sfeh_plagih_get_terminal('2f')
+        else:
+            return self.sfeh_plagih_get_function_outcomeequi(function_types_dict[node_label])
+
+
+# TODO what should happen, is there are no terminals or functions with the corresponding type within our range?
+
+    def sfeh_plagih_get_terminal(self, function_type):
+        print(function_type)
+        if '2f' in function_type:
+            try:
+                return np.random.choice(self.terminals_float)
+            except ValueError:
+                return self.sfeh_get_random_value(type='float')
+        elif '2b' in function_type:
+            try:
+                return np.random.choice(self.terminals_bool)
+            except ValueError:
+                return self.sfeh_get_random_value(type='bool')
+        else:
+            raise
+
+    def sfeh_plagih_get_function_typeequi(self, function_type):
+        if function_type == 'f2f':
             return np.random.choice(self.functions_f2f)
-        elif function_types_dict[old_function] == 'f2b':
+        elif function_type == 'f2b':
             return np.random.choice(self.functions_f2b)
-        elif function_types_dict[old_function] == 'b2b':
+        elif function_type == 'b2b':
             return np.random.choice(self.functions_b2b)
-        elif function_types_dict[old_function] == 'b2f':
+        elif function_type == 'b2f':
             return np.random.choice(self.functions_b2f)
-        elif function_types_dict[old_function] == 'b2f2f':
-            return np.random.choice(self.functions_b2f2f)
+        elif function_type == 'b2f2f':
+            return np.random.choice(self.functions_b2f2f)  # TODO okay that does not make sense tbh
         else:
             raise print("Function was not found in function_types_dict.")
 
-    def sfeh_plagih_get_function_outcomeequi(self, old_function):
-        if '2f' in function_types_dict[old_function]:
-            func_2f = []
+    def sfeh_create_dtype_function_lists(self, operators_file):
+        self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+        # Part 3.5: Split the functions in 5 types
+        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_b2f2f = [], [], [], [], []
+        for fun in self.functions:
+            if function_types_dict[fun[0]] == 'f2f':
+                self.functions_f2f.append(fun[0])
+            elif 'f2b' == function_types_dict[fun[0]]:
+                self.functions_f2b.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2b':
+                self.functions_b2b.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2f':
+                self.functions_b2f.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2f2f':
+                self.functions_b2f2f.append(fun[0])
+
+        func_2f, func_2b = [], []
+
+        # The Functions that create float (aka number) values
+        if self.functions_f2f:
             func_2f.append(self.functions_f2f)
+        if self.functions_b2f:
             func_2f.append(self.functions_b2f)
+        if self.functions_b2f2f:
             func_2f.append(self.functions_b2f2f)
-            return np.random.choice(func_2f)
-        elif '2b' in function_types_dict[old_function]:
-            func_2b =[]
-            func_2b.append(self.functions_f2b)
+        if func_2f:
+            self.functions_2f = func_2f[:]
+        else:
+            print('No Functions that create numbers were found')
+            self.functions_2f = []
+
+        # The Functions that create boolean values
+        if self.functions_f2b:
+            func_2b = [].append(self.functions_f2b)
+        if self.functions_b2b:
             func_2b.append(self.functions_b2b)
-            return np.random.choice(func_2b)
+        if func_2b:
+            self.functions_2b = func_2b[:]
+        else:
+            print('No Functions that create bool were found')
+            self.functions_2b = []
+
+    def sfeh_plagih_get_function_outcomeequi(self, function_dtype, mode=''):
+        print('get_function_outcomeequi(function_type): ', function_dtype)
+        if '2f' in function_dtype:
+            new_label = np.random.choice(self.functions_2f)
+            if mode == 'plus_arity':
+                return new_label, function_arity_dict[str(new_label)]
+            else:
+                return new_label
+        elif '2b' in function_dtype:
+
+            new_label = np.random.choice(self.functions_2b)
+            if mode == 'plus_arity':
+                return new_label, function_arity_dict[str(new_label)]
+            else:
+                return new_label
         else:
             raise print("Function was not found in function_types_dict.")
 
@@ -1980,7 +2128,6 @@ class Base_GP(object):
             if (tree[13][1] == '1'):  # If root is modifiable, stop it from being changed. It will
                 node_n = np.random.randint(2, num_func)
             else:
-                print('Can not change root anyways.')
                 node_n = np.random.randint(1, num_func)
         else:
             node_n = np.random.randint(1, num_func)  # choose a random "modifiable" FUNCTION
@@ -1998,92 +2145,70 @@ class Base_GP(object):
         """
         Returns a mutatable branch for branch-mutation
         Attention: Must not contain subbranches with unmodyfiable nodes.
+
         """
         # 1. Get number of mutatable nodes first
         return self.sfeh_plagih_get_mutatable_node(tree, mode='no_root')
         # 2. check all nodes if they contain unchangeable subnodes.
         # Not necessary, the tree is assumed to be correct and all
 
-    # def fx_evolve_full_mutate(self, tree, branch):
-
-    def sfeh_plagih_has_mutatable_childs(self, tree, node):
-        """
-        Tells you, whether the node of your choice has only mutatable children
-        If all are mutatable, it returns true.
-        not yet needed
-        """
-
-    def plagih_evolve_grow_mutate(self, tree, branch):
+    def plagih_evolve_branch_grow_mutate(self, chosen_tree, branch_nodes_list):
 
         """
-        Mutate a branch of a Tree.
+        Mutate a branch of one Tree.
 
-        A branch is selected within a given tree.
+        Given: tree, branch_nodes_list
+        >This branch is either
 
-        If the point of mutation ('branch_top') resides at 'tree_depth_max', we do not need to grow a new tree. As the
-        methods for building trees always assume root (node 0) to be a function, we need only mutate this terminal node
-        to another terminal node, and this branch mutate method is complete.
-
-        If the top of that branch is a terminal which does not reside at 'tree_depth_max', then it may either remain a
-        terminal (in which case a new value is randomly assigned) or it may mutate into a function. If it becomes a
-        function, a new branch (mini-tree) is generated to be appended to that nodes current location. The same is true
-        for function-to-function mutation. Either way, the new branch will be only as deep as allowed by the distance
-        from it's branch_top to the bottom of the tree.
-
-        If however a function mutates into a terminal, the entire branch beneath the function is deleted from the array
-        and the entire array is updated, to fix parent/child links, associated arities, and node IDs.
-
-        Called by: fx_nextgen_branch_mutate
-
-        Arguments required: tree, branch
         """
 
-        branch_top = int(branch[0])  # replaces 2 instances, below; tested 2016 07/09
-        branch_depth = self.tree_depth_max - int(tree[4][branch_top])  # 'tree_depth_max' - depth at 'branch_top' to set max potential size of new branch - 2016 07/10
-        # # SFEH i randomize the tree depth  now...
-        # branch_depth = min(branch_depth, np.random.randint(2, branch_depth))  # I hops this is enough to guarantee tree size
+        branch_top = int(branch_nodes_list[0])
+        # TODO consider tree size of last tree, # TODO consider random tree size, # TODO consider always maximum tree size, TODO is this already considered by 50:50 func-term?
+        branch_depth = self.sfeh_plagih_get_new_tree_size(chosen_tree, branch_top, mode='maximum')  # sfeh solution to keep tree kind of small
+        old_node_label = chosen_tree[6][branch_nodes_list[0]]  # +,-,*,8,action0 ...
+        old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func, term, ...
+        old_node_dtype = self.sfeh_plagih_get_correct(old_node_label, old_node_type, mode='return_dtype_only')  # exception-safe: '2f', 'f2b', ...
+        print(old_node_dtype, old_node_type, old_node_label)
         if branch_depth < 0:  # this has never occured ... yet
             print('\n\t\033[31m ERROR! In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
             # TODO allow numbers here??
-            rnd = np.random.randint(0, len(self.terminals) - 1)  # all terminals
-            tree[6][branch_top] = self.terminals[rnd]  # replace terminal (variable)
+            # TODO think about maximum level... which is the terminal level?
+            print('That is not supposed to happen lelel')
+            chosen_tree[6][branch_top] = self.sfeh_plagih_get_terminal(old_node_label)
 
-        else:  # the point of mutation ('branch_top') chosen is at least one depth from the maximum allowed
-            # type_mod = '[func or term]' # TEST & DEBUG: force to 'func' or 'term' and comment the next 3 lines
-            # SFEH ist immer die Wahrscheinlichkeit 1/2
+        else:
+            # SFEH ist immer die Wahrscheinlichkeit 1/2. Entweder terminal oder full size?
             rnd = np.random.randint(2)
             if rnd == 0:
                 type_mod = 'func'  # randomly selected as Function
             elif rnd == 1:
                 type_mod = 'term'  # randomly selected as Terminal
             else:
-                raise print('operator type not yet defined. only func and term found probably...')
+                raise print('lol we just did not roll 1 or 0, hows that possible')
 
             if type_mod == 'term':  # mutate 'branch_top' to a terminal and delete all nodes beneath (no subsequent nodes are added to this branch)
 
                 # TODO allow random values that are no terminals??
-                rnd = np.random.randint(0, len(self.terminals) - 1)  # choose one terminal
-                tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
-                tree[6][branch_top] = self.terminals[rnd]  # replace label
 
-                tree = np.delete(tree, branch[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-                tree = self.fx_evolve_node_arity_fix(tree)  # fix all node arities (term)
-                tree = self.fx_evolve_child_link_fix(tree)  # fix all child links (func)
-                tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's
+                chosen_tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
+                chosen_tree[6][branch_top] = self.sfeh_plagih_get_correct(old_node_label, old_node_type)  # replace label
+
+                chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+                chosen_tree = self.fx_evolve_node_arity_fix(chosen_tree)  # fix all node arities (term)
+                chosen_tree = self.fx_evolve_child_link_fix(chosen_tree)  # fix all child links (func)
+                chosen_tree = self.fx_evolve_node_renum(chosen_tree)  # renumber all 'NODE_ID's
 
             if type_mod == 'func':  # mutate 'branch_top' to a function (a new 'gp.tree' will be copied, node by node, into 'tourn_winner')
-
-                self.plagih_branch_tree_build('mutant', 'g', branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
-
-                tree = self.fx_evolve_branch_insert(tree, branch)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
+                self.plagih_new_branch_tree_build('mutant', 'g', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
+                chosen_tree = self.plagih_evolve_branch_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
             # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
 
-        tree = self.plagih_evolve_fitness_wipe(tree)  # wipe fitness data
+        chosen_tree = self.plagih_evolve_fitness_wipe(chosen_tree)  # wipe fitness data
 
-        return tree
+        return chosen_tree
 
     def fx_evolve_crossover(self, parent, branch_x, offspring, branch_y):
 
@@ -2149,10 +2274,9 @@ class Base_GP(object):
                     branch_y, ':\033[0;0m\n', offspring)
                 self.fx_karoo_pause_refer()  # 2019 06/07
 
-            offspring = self.fx_evolve_branch_insert(offspring,
-                                                     branch_y)  # insert new 'branch_y' at point of mutation 'branch_top' in tourn_winner 'offspring'
-            offspring = self.fx_evolve_tree_prune(offspring,
-                                                  self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
+            offspring = self.plagih_evolve_branch_insert(offspring,
+                                                         branch_y)  # insert new 'branch_y' at point of mutation 'branch_top' in tourn_winner 'offspring'
+            offspring = self.fx_evolve_tree_prune(offspring, self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
 
         offspring = self.plagih_evolve_fitness_wipe(offspring)  # wipe fitness data
 
@@ -2172,49 +2296,38 @@ class Base_GP(object):
 
         branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
         branch_top = self.sfeh_plagih_get_mutatable_branch(tree)  # returns mutatable node (except root node)
-        print('branch_top: ' + str(branch_top))
         branch_eval = self.plagih_eval_id(tree, branch_top)  # generate tuple of 'branch_top' and subsequent nodes
-        print('This is branch_eval: ' + str(branch_eval))
-        branch_symp = sympify(sympify(branch_eval, locals=local_sympy_dict))  # convert string into something useful
-        print('This is branch_symp: ' + str(branch_symp))
+        branch_symp = sympify(branch_eval)  # convert string into something useful
         branch = np.append(branch, branch_symp)  # append list to array
-
         branch = np.sort(branch)  # sort nodes in branch for Crossover.
-
-        if self.display == 'i':
-            print('\t \033[36mwith nodes\033[1m', branch, '\033[0;0m\033[36mchosen for mutation\033[0;0m')
 
         return branch
 
-    def fx_evolve_branch_insert(self, tree, branch):
+    def plagih_evolve_branch_insert(self, winner_tree, branch_nodes):
 
         """
-        This method enables the insertion of Tree in place of a branch. It works with 3 inputs: local 'tree' is being
+        This method enables the insertion of insert_tree in place of a branch (which is a node_id). It works with 3 inputs: local 'tree' is being
         modified; local 'branch' is a section of 'tree' which will be removed; and the global 'gp.tree' (recycling this
         variable from initial population generation) is the new Tree to be insertd into 'tree', replacing 'branch'.
 
         The end result is a Tree with a mutated branch. Pretty cool, huh?
-
-        Called by: fx_evolve_grow_mutate, fx_evolve_grow_crossover
-
-        Arguments required: tree, branch
         """
         # TODOTODO HEREHERE SFEHSFEH
         # *_branch_top_copy merged with *_body_copy 2018 04/12
 
         ### PART 1 - insert branch_top from 'gp.tree' into 'tree' ###
 
-        branch_top = int(branch[0])
+        branch_top = int(branch_nodes[0])
         # R00t: not needed
-        tree[5][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
-        tree[6][branch_top] = self.tree[6][1]  # copy node_label from new tree
-        tree[8][branch_top] = self.tree[8][1]  # copy node_arity from new tree
+        winner_tree[5][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
+        winner_tree[6][branch_top] = self.tree[6][1]  # copy node_label from new tree
+        winner_tree[8][branch_top] = self.tree[8][1]  # copy node_arity from new tree
 
-        tree = np.delete(tree, branch[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+        winner_tree = np.delete(winner_tree, branch_nodes[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
 
-        c_buffer = self.fx_evolve_c_buffer(tree, branch_top)  # generate c_buffer for point of mutation ('branch_top')
-        tree = self.fx_evolve_child_insert(tree, branch_top, c_buffer)  # insert a single new node ('branch_top')
-        tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's
+        c_buffer = self.fx_evolve_c_buffer(winner_tree, branch_top)  # generate c_buffer for point of mutation ('branch_top')
+        winner_tree = self.fx_evolve_child_insert(winner_tree, branch_top, c_buffer)  # insert a single new node ('branch_top')
+        winner_tree = self.fx_evolve_node_renum(winner_tree)  # renumber all 'NODE_ID's
 
         ### PART 2 - insert branch_body from 'gp.tree' into 'tree' ###
 
@@ -2223,33 +2336,28 @@ class Base_GP(object):
         while node_count < len(
                 self.tree[3]):  # increment through all nodes in the new Tree ('gp.tree'), starting with node 2
 
-            for j in range(1, len(tree[3])):  # increment through all nodes in tourn_winner ('tree')
+            for j in range(1, len(winner_tree[3])):  # increment through all nodes in tourn_winner ('tree')
 
                 if self.display == 'db': print('\tScanning tourn_winner node_id:', j)
 
-                if tree[5][j] == '':
-                    tree[5][j] = self.tree[5][node_count]  # copy 'node_type' from branch to tree
-                    tree[6][j] = self.tree[6][node_count]  # copy 'node_label' from branch to tree
-                    tree[8][j] = self.tree[8][node_count]  # copy 'node_arity' from branch to tree
+                if winner_tree[5][j] == '':
+                    winner_tree[5][j] = self.tree[5][node_count]  # copy 'node_type' from branch to tree
+                    winner_tree[6][j] = self.tree[6][node_count]  # copy 'node_label' from branch to tree
+                    winner_tree[8][j] = self.tree[8][node_count]  # copy 'node_arity' from branch to tree
 
-                    if tree[5][j] == 'term':
-                        tree = self.fx_evolve_child_link_fix(tree)  # fix all child links
-                        tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's
+                    if winner_tree[5][j] == 'term':
+                        winner_tree = self.fx_evolve_child_link_fix(winner_tree)  # fix all child links
+                        winner_tree = self.fx_evolve_node_renum(winner_tree)  # renumber all 'NODE_ID's
                     # R00t: Maybe exclude root?
-                    if tree[5][j] == 'func':
-                        c_buffer = self.fx_evolve_c_buffer(tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
-                        tree = self.fx_evolve_child_insert(tree, j, c_buffer)  # insert new nodes
-                        tree = self.fx_evolve_child_link_fix(tree)  # fix all child links
-                        tree = self.fx_evolve_node_renum(tree)  # renumber all 'NODE_ID's
-
-                    if self.display == 'db':
-                        print('\n\t ... inserted node', node_count, 'of', len(self.tree[3]) - 1)
-                        print('\n\033[36m This is the Tree after a new node is inserted:\033[0;0m\n', tree)
-                        self.fx_karoo_pause_refer()  # 2019 06/07
+                    if winner_tree[5][j] == 'func':
+                        c_buffer = self.fx_evolve_c_buffer(winner_tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
+                        winner_tree = self.fx_evolve_child_insert(winner_tree, j, c_buffer)  # insert new nodes
+                        winner_tree = self.fx_evolve_child_link_fix(winner_tree)  # fix all child links
+                        winner_tree = self.fx_evolve_node_renum(winner_tree)  # renumber all 'NODE_ID's
 
                     node_count = node_count + 1  # exit loop when 'node_count' reaches the number of columns in the array 'gp.tree'
 
-        return tree
+        return winner_tree
 
     def fx_evolve_branch_copy(self, tree, branch):
 
@@ -2383,9 +2491,6 @@ class Base_GP(object):
 
         This is required anytime the size of the array 'gp.tree' has been modified, as with both Grow and Full mutation.
 
-        Called by: fx_evolve_grow_mutate, fx_evolve_crossover, fx_evolve_branch_body_copy, fx_evolve_branch_copy
-
-        Arguments required: tree
         """
 
         for node in range(1, len(tree[3])):
@@ -2492,9 +2597,6 @@ class Base_GP(object):
         This is required after a function has been replaced by a terminal, as may occur with both Grow mutation and
         Crossover.
 
-        Called by: fx_evolve_grow_mutate, fx_evolve_tree_prune
-
-        Arguments required: tree
         """
 
         # tested 2015 05/31
@@ -2516,9 +2618,6 @@ class Base_GP(object):
         This is required after a new generation is evolved as the NODE_ID numbers are carried forward from the previous
         generation but are no longer in order.
 
-        Called by: fx_evolve_grow_mutate, fx_evolve_crossover, fx_evolve_branch_insert, fx_evolve_branch_copy
-
-        Arguments required: tree
         """
 
         for n in range(1, len(tree[3])):
@@ -2534,9 +2633,6 @@ class Base_GP(object):
         This is required after a new generation is evolved as the fitness of the same Tree prior to its mutation will
         no longer apply.
 
-        Called by: fx_nextgen_reproduce, fx_nextgen_point_mutate, fx_nextgen_full_mutate, fx_nextgen_grow_mutate, fx_nextgen_crossover
-
-        Arguments required: tree
         """
 
         tree[12][1:] = ''  # wipe fitness data
@@ -2545,7 +2641,38 @@ class Base_GP(object):
 
 
     # SFEH: Obsolete. Dont want to prune solely based on length. Or maybe?
-    # def fx_evolve_tree_prune(self, tree, depth):
+    def fx_evolve_tree_prune(self, tree, depth):
+
+        '''
+        This method reduces the depth of a Tree. Used with Crossover, the input value 'branch' can be a partial Tree
+        (branch) or a full tree, and it will operate correctly. The input value 'depth' becomes the new maximum depth,
+        where depth is defined as the local maximum + the user defined adjustment.
+
+        Called by: fx_evolve_crossover
+
+        Arguments required: tree, depth
+        '''
+
+        nodes = []
+
+        # tested 2015 06/08
+        for n in range(1, len(tree[3])):
+
+            if int(tree[4][n]) == depth and tree[5][n] == 'func':
+                rnd = np.random.randint(0, len(self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
+                tree[5][n] = 'term'  # mutate type 'func' to 'term'
+                tree[6][n] = self.terminals[rnd]  # replace label
+
+            elif int(tree[4][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
+                nodes.append(n)
+
+            else:
+                pass  # as int(tree[4][n]) < depth and will remain untouched
+
+        tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
+        tree = self.fx_evolve_node_arity_fix(tree)  # fix all node arities
+
+        return tree
 
     def fx_evolve_pop_copy(self, pop_a, title):
 

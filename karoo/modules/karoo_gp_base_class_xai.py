@@ -60,7 +60,7 @@ operators = {ast.Add: tf.add,  # e.g., a + b
 function_types_dict = {  # Needs A LOT OF further testing
     'float': '2f',  # these three are dummies
     'int': '2f',    # neede to use the dict for function types aswell
-    'bool': '2b',   # so we can "workarounded" use them
+    'bool': '2f',   # so we can "workarounded" use them
 
     '+': 'f2f',
     '-': 'f2f',
@@ -136,12 +136,12 @@ function_arity_dict = {  # Needs A LOT OF further testing
     'not': 1,
     'ITE': 3,
 
-    '==': '2',
-    '!=': '2',
-    '<': '2',
-    '<=': '2',
-    '>': '2',
-    '>=': '2',
+    '==': 2,
+    '!=': 2,
+    '<': 2,
+    '<=': 2,
+    '>': 2,
+    '>=': 2,
 
     'btof_normal': 1,  # False->0, True->1, dummy-function
     'btof_extreme': 1,  # False->-1, True->1. Does that make sense?
@@ -470,6 +470,8 @@ class Base_GP(object):
                             var_type.append(var_name.split(':', 1)[1])
                         elif var_name.startswith('a'):
                             # TODO wie mit dieser Art Terminal umgehen? Ist kein Input
+                            # TODO this caused a major error
+                            pass
                             var_type.append(var_name.split(':', 1)[1])
                         else:
                             raise print('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized')
@@ -482,18 +484,18 @@ class Base_GP(object):
         self.dataset = samples_file
         # Part 1.5: load terminals into specific terminal types
         self.terminals_bool, self.terminals_float = [], []
-        for i, term_type in enumerate(self.terminals_types):
+        # sfeh this is a workaround. rework all of this please
+        for i, term_type in enumerate(self.terminals_types):  # TODO get all of the actions out, not only one
             if term_type == 'float' or term_type == 'int':  # sfeh check if this is enough, int
                 self.terminals_float.append(self.terminals[i])
             elif term_type == 'bool':
                 self.terminals_float.append(self.terminals[i])
             else:
                 raise print('Nopely sfeh')
-        print('Del', str(self.terminals_float), str(self.terminals_bool))
 
         # sfeh das funktioniert nur bei diskreten Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-
+        print('terminals and class_labels:', self.terminals, self.class_labels)
         # Part 2: Assign fitness type (->is max or min better?)
         # TODO Types of fitting the solution: Matching, dist-to-right-decision, euklidian dist, dummydist, tiles?
         # d = distance? m = match? o = order? t = tiled?
@@ -540,6 +542,49 @@ class Base_GP(object):
         target.close()  # initialise a .csv file to manually load (seed)
 
         return
+
+
+    def sfeh_create_dtype_function_lists(self, operators_file):
+        self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+        # Part 3.5: Split the functions in 5 types
+        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_b2f2f = [], [], [], [], []
+        for fun in self.functions:
+            if function_types_dict[fun[0]] == 'f2f':
+                self.functions_f2f.append(fun[0])
+            elif 'f2b' == function_types_dict[fun[0]]:
+                self.functions_f2b.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2b':
+                self.functions_b2b.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2f':
+                self.functions_b2f.append(fun[0])
+            elif function_types_dict[fun[0]] == 'b2f2f':
+                self.functions_b2f2f.append(fun[0])
+
+        func_2f, func_2b = [], []
+
+        # The Functions that create float (aka number) values
+        if self.functions_f2f:
+            func_2f.extend(self.functions_f2f)
+        if self.functions_b2f:
+            func_2f.extend(self.functions_b2f)
+        if self.functions_b2f2f:
+            func_2f.extend(self.functions_b2f2f)
+        if func_2f:
+            self.functions_2f = func_2f[:]
+        else:
+            print('No Functions that create numbers were found')
+            self.functions_2f = []
+
+        # The Functions that create boolean values
+        if self.functions_f2b:
+            func_2b.extend(self.functions_f2b)
+        if self.functions_b2b:
+            func_2b.extend(self.functions_b2b)
+        if func_2b:
+            self.functions_2b = func_2b[:]
+        else:
+            print('No Functions that create bool were found')
+            self.functions_2b = []
 
     def fx_data_recover(self, population):
 
@@ -783,18 +828,20 @@ class Base_GP(object):
         self.origin_tree = tree
         return tree
 
-    def plagih_new_branch_tree_build(self, TREE_ID, tree_type, func_type, tree_depth):
+    def plagih_new_branch_tree_build(self, TREE_ID, tree_type, old_node_type, tree_depth):
 
         """
         This method combines 4 sub-methods into a single method for ease of deployment. It is designed to executed
         within a loop such that an entire population is built. However, it may also be run from the command line,
         passing a single TREE_ID to the method.
 
+        if terminal: 2f
+        if func:    f2f
         """
 
         self.plagih_branch_tree_initialise(TREE_ID, tree_depth)  # Create empty tree np-array
-        self.plagih_branch_root_build(func_type)  # insert the first node with either '2b' or '2f'
-        self.plagih_branch_function_build(func_type)  # build all the Function nodes
+        self.plagih_branch_root_build(old_node_type)  # insert the first node with either '_2b' or '_2f'
+        self.plagih_branch_function_build(old_node_type)  # build all the Function nodes
         self.fx_init_terminal_build()  # build the Terminal nodes
         # TODO set tree_depth_base in tree.
         return  # each Tree is written to 'gp.tree'
@@ -885,24 +932,33 @@ class Base_GP(object):
             prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
             prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
 
-            # parent_arity_sum = the amount of nodes that have to be on this level
+            # parent_arity_sum = amount of nodes (that have to be on this level)
             for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
                 if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
                     parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
 
             # Set for every "free space" a function node (func)
             for j in range(1, len(self.tree[3])):  # increment through all nodes
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... to find all levels' parent nodes...
-                    # TODO handle if separately. Only function with two input types.
-                    for k in range(1, int(self.tree[8][j]) + 1):  # ...increment through each degree of arity for each parent node
-                        self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID' ...
-                        func_dtype = function_types_dict[self.tree[6][self.pop_node_parent]]
-                        prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
+                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
+                    if self.tree[6][j] == 'Ifte':
+                        print('Found ifte :3')
+                        prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                        prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                        prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                    else:
+                        for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
+                            self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
+                            parent_func_dtype = function_types_dict[self.tree[6][self.pop_node_parent]]  # find parents node
+                            func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
+                            prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
+                            prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
 
         return
 
-    def plagih_branch_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype):
+    def plagih_branch_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, parent_func_dtype):
 
         """
         Generate a single Function node for the initial population.
@@ -915,7 +971,7 @@ class Base_GP(object):
         rnd = np.random.randint(2)
 
         if rnd == 0:  # randomly selected as Function
-            self.plagih_branch_function_select(func_dtype)  # retrieve a function
+            self.plagih_branch_function_select(parent_func_dtype)  # retrieve a function
             self.fx_init_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
 
         elif rnd == 1:  # randomly selected as Terminal
@@ -945,7 +1001,7 @@ class Base_GP(object):
 
         ### Terminal Nodes ###
 
-    # Idea: numbers are recognized and adjusted?
+    # Idea: values are recognized and adjusted (+0.3, e.g.)?
     # Idea: insert numbers as 0-arity functions? -> naah
 
     def sfeh_get_random_value(self, type='', mode='float0to1'):
@@ -964,6 +1020,7 @@ class Base_GP(object):
         else:
             print('Please specify your desired datatype if possible. Trying to return value similar to terminals.')
             type = np.random.choice(self.terminals_types)
+            print('only floats here:', type)
             return self.sfeh_get_random_value(type=type)
 
 
@@ -1357,13 +1414,16 @@ class Base_GP(object):
                 tensors = {}
                 for i in range(len(self.terminals)):
                     var = self.terminals[i]
-                    tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
+                    if '2f' in self.sfeh_plagih_get_dtype(var, 'term'):
+                        tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
+                    else:  # '2b'
+                        tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
 
                 # 2- Transform string expression into TF operation graph
                 result = self.plagih_fitness_expr_parse(expr, tensors)
                 pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
                 # TODO currently does only support one label
-                solution = tensors['action0']  # solution value is assumed to be stored in 's' terminal
+                solution = tensors['action0']  # solution value is assumed to be stored in this terminal
 
                 # 3- Add fitness computation into TF graph
                 if self.kernel == 'c':  # CLASSIFY kernel
@@ -1450,7 +1510,7 @@ class Base_GP(object):
 
         Arguments required: expr, tensors
         """
-
+        print('Current expr:', expr)
         tree = ast.parse(expr, mode='eval').body
 
         return self.plagih_fitness_node_parse(tree, tensors)
@@ -1483,10 +1543,12 @@ class Base_GP(object):
 
         x = self.plagih_fitness_node_parse(comparators[0], tensors)
         y = self.plagih_fitness_node_parse(comparators[1], tensors)
+        print('comparators:', comparators, 'ops:',  ops)
         if len(comparators) > 2:
             return tf.logical_and(operators[type(ops[0])](x, y), self.fx_fitness_chain_compare(comparators[1:], ops[1:], tensors))
         else:
             return operators[type(ops[0])](x, y)
+        # sfeh idea: note: we have to convert all values to the action space if not discrete
 
     def plagih_fitness_node_parse(self, node, tensors):
 
@@ -1822,6 +1884,26 @@ class Base_GP(object):
         print('\n\tMatching fitness score: {}'.format(result['fitness']))
 
         return
+    def fx_fitness_test_match(self, result):
+
+        """
+        Print the accuracy for a MATCH kernel run against the test data.
+
+        Called by: fx_karoo_pause
+
+        Arguments required: result
+        """
+
+        for i in range(len(result['result'])):
+            print('\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i,
+                                                                                                       result['result'][
+                                                                                                           i], result[
+                                                                                                           'solution'][
+                                                                                                           i]))
+
+        print('\n\tMatching fitness score: {}'.format(result['fitness']))
+
+        return
 
     # def fx_fitness_test_[other](self, result): # use others as a template
 
@@ -1888,11 +1970,9 @@ class Base_GP(object):
         """
 
         for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
-
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
             branch_nodes_list = self.plagih_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.plagih_evolve_branch_grow_mutate(tourn_winner, branch_nodes_list)
-
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
         return
@@ -1995,54 +2075,67 @@ class Base_GP(object):
             raise print('sfeh_plagih_get_new_tree_size does not accept this mode: ' + str(mode))
         return branch_depth
 
-    def sfeh_plagih_get_correct(self, node_label, node_type, mode=''):
-        """
-        Returns either a correct function, variable
-        """
-        if mode == 'return_dtype_only':
-            if node_type == 'term':
-                if 'o' in node_label or 'a' in node_label:
-                    term_position = self.terminals.index(node_label)
-                    return function_types_dict[self.terminals_types[term_position]]
-                elif 'True' in node_label or 'False' in node_label:
-                    return '2b'
-                else:
-                    return '2f'
-            else:
-                return function_types_dict[node_label]
-
-
-        if node_type == 'term':
-            if 'o' in node_label or 'a' in node_label:  # .csv-terminals
-                term_position = self.terminals.index(node_label)    # self.terminals[observation0, observation1, action0] -> 1
-                term_dtype = function_types_dict[self.terminals_types[term_position]]
-                return self.sfeh_plagih_get_terminal(term_dtype)  # self.terminals_types['float','float','int']...get_terminal('bool')
-            elif 'True' in node_label or 'False' in node_label:  # Boolean
-                return self.sfeh_plagih_get_terminal('2b')
-            else:
-                return self.sfeh_plagih_get_terminal('2f')
-        else:
-            return self.sfeh_plagih_get_function_outcomeequi(function_types_dict[node_label])
-
-
 # TODO what should happen, is there are no terminals or functions with the corresponding type within our range?
 
-    def sfeh_plagih_get_terminal(self, function_type):
-        print(function_type)
-        if '2f' in function_type:
+    def sfeh_plagih_get_dtype(self, node_label, node_type):
+        """
+        node_types are: 'term' or 'func'
+        """
+
+        if node_type == 'term':
+            if 'True' in node_label or 'False' in node_label:
+                return '2b'
+            elif 'o' in node_label or 'a' in node_label:
+                term_position = self.terminals.index(node_label)
+                return function_types_dict[self.terminals_types[term_position]]
+            else:  # only 'float' left
+                return '2f'
+        elif node_type == 'func':
+            print('function is dtype:', function_types_dict[node_label], node_label)
+            return function_types_dict[node_label]
+        else:
+            raise print('OHNO')
+
+        # if node_type == 'term':
+        #     if 'True' in node_label or 'False' in node_label:  # Boolean
+        #         return self.sfeh_plagih_get_terminal('2b')
+        #     elif 'o' in node_label or 'a' in node_label:  # .csv-terminals
+        #         term_position = self.terminals.index(node_label)    # self.terminals[observation0, observation1, action0] -> 1
+        #         term_dtype = function_types_dict[self.terminals_types[term_position]]
+        #         return self.sfeh_plagih_get_terminal(term_dtype)  # self.terminals_types['float','float','int']...get_terminal('bool')
+        #     else:
+        #         return self.sfeh_plagih_get_terminal('2f')
+        # else:
+        #     return self.sfeh_plagih_get_function_outcomeequi(function_types_dict[node_label])
+
+    def sfeh_plagih_get_terminal(self, node_dtype):
+        """
+        function: f2b -> 2f needed
+        terminal:  2f -> 2f needed
+        --> check if it is function, aka _2f
+        --> check if it is terminal, aka f2
+        """
+        print('get term for function:', node_dtype)
+        if node_dtype == '2f' or 'f2' in node_dtype:
             try:
                 return np.random.choice(self.terminals_float)
             except ValueError:
+                print('Had to make up a float terminal')
                 return self.sfeh_get_random_value(type='float')
-        elif '2b' in function_type:
+        elif node_dtype == '2b' or 'b2' in node_dtype:
             try:
                 return np.random.choice(self.terminals_bool)
             except ValueError:
+                print('Had to make up a bool terminal')
                 return self.sfeh_get_random_value(type='bool')
         else:
-            raise
+            raise print('Probably, you have to check if your "function" is actually a terminal', node_dtype)
 
     def sfeh_plagih_get_function_typeequi(self, function_type):
+        """
+        This only accepts functions as inputs. (point mutation)
+        No need to handle terminals
+        """
         if function_type == 'f2f':
             return np.random.choice(self.functions_f2f)
         elif function_type == 'f2b':
@@ -2056,52 +2149,17 @@ class Base_GP(object):
         else:
             raise print("Function was not found in function_types_dict.")
 
-    def sfeh_create_dtype_function_lists(self, operators_file):
-        self.functions = np.loadtxt(operators_file, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-        # Part 3.5: Split the functions in 5 types
-        self.functions_f2f, self.functions_f2b, self.functions_b2b, self.functions_b2f, self.functions_b2f2f = [], [], [], [], []
-        for fun in self.functions:
-            if function_types_dict[fun[0]] == 'f2f':
-                self.functions_f2f.append(fun[0])
-            elif 'f2b' == function_types_dict[fun[0]]:
-                self.functions_f2b.append(fun[0])
-            elif function_types_dict[fun[0]] == 'b2b':
-                self.functions_b2b.append(fun[0])
-            elif function_types_dict[fun[0]] == 'b2f':
-                self.functions_b2f.append(fun[0])
-            elif function_types_dict[fun[0]] == 'b2f2f':
-                self.functions_b2f2f.append(fun[0])
-
-        func_2f, func_2b = [], []
-
-        # The Functions that create float (aka number) values
-        if self.functions_f2f:
-            func_2f.append(self.functions_f2f)
-        if self.functions_b2f:
-            func_2f.append(self.functions_b2f)
-        if self.functions_b2f2f:
-            func_2f.append(self.functions_b2f2f)
-        if func_2f:
-            self.functions_2f = func_2f[:]
-        else:
-            print('No Functions that create numbers were found')
-            self.functions_2f = []
-
-        # The Functions that create boolean values
-        if self.functions_f2b:
-            func_2b = [].append(self.functions_f2b)
-        if self.functions_b2b:
-            func_2b.append(self.functions_b2b)
-        if func_2b:
-            self.functions_2b = func_2b[:]
-        else:
-            print('No Functions that create bool were found')
-            self.functions_2b = []
-
     def sfeh_plagih_get_function_outcomeequi(self, function_dtype, mode=''):
-        print('get_function_outcomeequi(function_type): ', function_dtype)
+        """
+        This fills in a function that fits the type of the function/terminal before.
+        '2f' -> '_2f'
+        'f2f'-> '_2f'
+        > ->
+        """
+        print('Have to find function for:', function_dtype)
         if '2f' in function_dtype:
             new_label = np.random.choice(self.functions_2f)
+            print('And we chose:', new_label)
             if mode == 'plus_arity':
                 return new_label, function_arity_dict[str(new_label)]
             else:
@@ -2109,6 +2167,7 @@ class Base_GP(object):
         elif '2b' in function_dtype:
 
             new_label = np.random.choice(self.functions_2b)
+            print('And we chose:', new_label)
             if mode == 'plus_arity':
                 return new_label, function_arity_dict[str(new_label)]
             else:
@@ -2165,9 +2224,10 @@ class Base_GP(object):
         branch_top = int(branch_nodes_list[0])
         # TODO consider tree size of last tree, # TODO consider random tree size, # TODO consider always maximum tree size, TODO is this already considered by 50:50 func-term?
         branch_depth = self.sfeh_plagih_get_new_tree_size(chosen_tree, branch_top, mode='maximum')  # sfeh solution to keep tree kind of small
+        print('branch_top and _depth:', branch_top, branch_depth)
         old_node_label = chosen_tree[6][branch_nodes_list[0]]  # +,-,*,8,action0 ...
         old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func, term, ...
-        old_node_dtype = self.sfeh_plagih_get_correct(old_node_label, old_node_type, mode='return_dtype_only')  # exception-safe: '2f', 'f2b', ...
+        old_node_dtype = self.sfeh_plagih_get_dtype(old_node_label, old_node_type)  # exception-safe: '2f', 'f2b', ...
         print(old_node_dtype, old_node_type, old_node_label)
         if branch_depth < 0:  # this has never occured ... yet
             print('\n\t\033[31m ERROR! In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
@@ -2194,7 +2254,9 @@ class Base_GP(object):
                 # TODO allow random values that are no terminals??
 
                 chosen_tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
-                chosen_tree[6][branch_top] = self.sfeh_plagih_get_correct(old_node_label, old_node_type)  # replace label
+                term_type = self.sfeh_plagih_get_dtype(old_node_label, old_node_type)  # replace label
+                print('term_type:', term_type, self.sfeh_plagih_get_dtype(old_node_label, old_node_type))  # is '2f'
+                chosen_tree[6][branch_top] = self.sfeh_plagih_get_terminal(term_type)  # wants to get 'f2'
 
                 chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
                 chosen_tree = self.fx_evolve_node_arity_fix(chosen_tree)  # fix all node arities (term)

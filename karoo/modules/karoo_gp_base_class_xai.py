@@ -1510,7 +1510,7 @@ class Base_GP(object):
 
         Arguments required: expr, tensors
         """
-        print('Current expr:', expr)
+        # print('Current expr:', expr)
         tree = ast.parse(expr, mode='eval').body
 
         return self.plagih_fitness_node_parse(tree, tensors)
@@ -1543,7 +1543,7 @@ class Base_GP(object):
 
         x = self.plagih_fitness_node_parse(comparators[0], tensors)
         y = self.plagih_fitness_node_parse(comparators[1], tensors)
-        print('comparators:', comparators, 'ops:',  ops)
+
         if len(comparators) > 2:
             return tf.logical_and(operators[type(ops[0])](x, y), self.fx_fitness_chain_compare(comparators[1:], ops[1:], tensors))
         else:
@@ -1931,7 +1931,7 @@ class Base_GP(object):
 
         for n in range(self.evolve_repro):  # quantity of Trees to be copied without mutation
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each reproduction
-            tourn_winner = self.fx_evolve_fitness_wipe(tourn_winner)  # wipe fitness data
+            tourn_winner = self.plagih_evolve_fitness_wipe(tourn_winner)  # wipe fitness data
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
         return
@@ -2159,15 +2159,12 @@ class Base_GP(object):
         print('Have to find function for:', function_dtype)
         if '2f' in function_dtype:
             new_label = np.random.choice(self.functions_2f)
-            print('And we chose:', new_label)
             if mode == 'plus_arity':
                 return new_label, function_arity_dict[str(new_label)]
             else:
                 return new_label
         elif '2b' in function_dtype:
-
             new_label = np.random.choice(self.functions_2b)
-            print('And we chose:', new_label)
             if mode == 'plus_arity':
                 return new_label, function_arity_dict[str(new_label)]
             else:

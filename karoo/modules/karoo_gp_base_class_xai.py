@@ -10,10 +10,9 @@ import numpy as np
 import sklearn.metrics as skm
 import sklearn.model_selection as skcv
 from sympy import sympify
-from sympy.logic.boolalg import ITE, And, Xor, Or
 from datetime import datetime
 import karoo.modules.karoo_gp_pause as menu
-# TODO import the pause later, maybe
+# sfeh import the pause later, maybe
 # import karoo.modules.karoo_gp_pause as menu
 import tensorflow as tf
 import ast
@@ -54,7 +53,9 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'Ifte': tf.compat.v2.where,  # e. g., Ifte(a, b, c)
+             'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
+             'min': tf.math.minimum,  # min is apparently a string
+             'max': tf.math.maximum,  # e.g. min(a, b)
              }
 
 function_types_dict = {  # Needs A LOT OF further testing
@@ -79,6 +80,8 @@ function_types_dict = {  # Needs A LOT OF further testing
     'acos': 'f2f',
     'asin': 'f2f',
     'atan': 'f2f',
+    'min': 'f2f',
+    'max': 'f2f',
 
     'and': 'b2b',
     'or': 'b2b',
@@ -149,17 +152,20 @@ function_arity_dict = {  # Needs A LOT OF further testing
     'Ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
 }
 
-function_types_enum = {
-    'f2f': 0,
-    'f2b': 1,
-    'b2b': 2,
-    'b2f': 3,
-    'b2f2f': 4,  # Note: we can search for 'b2', 'f2' and '2f'. Tricky naming.
-}
-
-
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
+class BColors:  # sfeh can be deleted
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+# print bcolors.WARNING + "Warning: No active frommets remain. Continue?"
+#       + bcolors.ENDC
 
 class Base_GP(object):
     """
@@ -428,8 +434,6 @@ class Base_GP(object):
     #   Methods to Load and Archive Data         |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    # TODO Funktion übergeben und nicht daten aus system ziehen
-    # Worked on!
     def plagih_data_load(self, operators_file, samples_file):
 
         """
@@ -470,7 +474,6 @@ class Base_GP(object):
                             var_type.append(var_name.split(':', 1)[1])
                         elif var_name.startswith('a'):
                             # TODO wie mit dieser Art Terminal umgehen? Ist kein Input
-                            # TODO this caused a major error
                             pass
                             var_type.append(var_name.split(':', 1)[1])
                         else:
@@ -993,7 +996,7 @@ class Base_GP(object):
         """
 
         self.pop_node_type = 'func'
-        new_function = self.sfeh_plagih_get_function_outcomeequi(func_dtype, mode='plus_arity')
+        new_function = self.sfeh_dtype_get_func4any(func_dtype, mode='plus_arity')
         self.pop_node_label = new_function[0]
         self.pop_node_arity = int(new_function[1])
 
@@ -1011,11 +1014,12 @@ class Base_GP(object):
             if mode == 'float0to1':
                 return np.random.uniform(-1, 1)
             elif mode == 'intTotal_10':
-                return np.random.random(-10, 10)
+                return np.random.random_integers(-10, 10)
             elif mode == 'random_optimised':
                 return np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
                                          5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
             else:
+                # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
                 raise print('You did not take care of the kind of numbers you want to have')
         else:
             print('Please specify your desired datatype if possible. Trying to return value similar to terminals.')
@@ -1222,9 +1226,6 @@ class Base_GP(object):
         Pass the starting node for recursion via the local variable 'node_id' where the local variable 'tree' is a copy
         of the Tree you desire to evaluate.
 
-        Called by: fx_eval_id (recursively), plagih_evolve_branch_select
-
-        Arguments required: tree, node_id
         """
 
         node_id = int(node_id)
@@ -1365,7 +1366,6 @@ class Base_GP(object):
             return
         else:
             raise print('Parsimony distance not found!')
-            return
 
     def plagih_fitness_eval(self, expr, data, get_pred_labels=False):
 
@@ -1753,8 +1753,7 @@ class Base_GP(object):
                     raise print('\n\t\033[31m ERROR! In fx_fitness_tournament: fitness =', fitness, 'and tourn_test =',
                                 tourn_test, '\033[0;0m')
 
-        tourn_winner = np.copy(
-            self.population_a[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
+        tourn_winner = np.copy(self.population_a[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
 
         if self.display == 'i':
             print('\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
@@ -1884,26 +1883,6 @@ class Base_GP(object):
         print('\n\tMatching fitness score: {}'.format(result['fitness']))
 
         return
-    def fx_fitness_test_match(self, result):
-
-        """
-        Print the accuracy for a MATCH kernel run against the test data.
-
-        Called by: fx_karoo_pause
-
-        Arguments required: result
-        """
-
-        for i in range(len(result['result'])):
-            print('\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i,
-                                                                                                       result['result'][
-                                                                                                           i], result[
-                                                                                                           'solution'][
-                                                                                                           i]))
-
-        print('\n\tMatching fitness score: {}'.format(result['fitness']))
-
-        return
 
     # def fx_fitness_test_[other](self, result): # use others as a template
 
@@ -1977,7 +1956,7 @@ class Base_GP(object):
 
         return
 
-    def fx_nextgen_crossover(self):
+    def fx_nextgen_crossover(self, mode='replace_same_types'):
 
         """
         Through tournament selection, two trees are selected as parents to produce two offspring. Within each parent
@@ -1993,40 +1972,33 @@ class Base_GP(object):
 
         For those who like to watch, select 'db' (debug mode) at the launch of Karoo GP or at any (pause).
 
-        Called by: fx_karoo_gp
-
-        Arguments required: none
         """
 
-        if self.display != 's':
-            if self.display == 'i':
-                print('')
-            print('  Perform', self.evolve_cross, 'Crossovers ...')
-            if self.display == 'i': self.fx_karoo_pause_refer()  # 2019 06/07
-
-        # for n in range(self.evolve_cross / 2): # Python 2.7
-        for n in range(
-                self.evolve_cross // 2):  # quantity of Trees to be generated through Crossover, accounting for 2 children each
+        for n in range(self.evolve_cross // 2):  # quantity of Trees to be generated through Crossover, accounting for 2 children each
             parent_a = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
-            branch_a = self.plagih_evolve_branch_select(
-                parent_a)  # select branch within 'parent_a', to copy to 'parent_b' and receive a branch from 'parent_b'
+            branch_a = self.plagih_evolve_branch_select(parent_a)  # select branch within 'parent_a', to copy to 'parent_b' and receive a branch from 'parent_b'
 
             parent_b = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
-            branch_b = self.plagih_evolve_branch_select(
-                parent_b)  # select branch within 'parent_b', to copy to 'parent_a' and receive a branch from 'parent_a'
+            branch_b = self.plagih_evolve_branch_select(parent_b)  # select branch within 'parent_b', to copy to 'parent_a' and receive a branch from 'parent_a'
 
             parent_c = np.copy(parent_a)
-            branch_c = np.copy(
-                branch_a)  # else the Crossover mods affect the parent Trees, due to how Python manages '='
+            branch_c = np.copy(branch_a)  # else the Crossover mods affect the parent Trees, due to copied references
             parent_d = np.copy(parent_b)
-            branch_d = np.copy(
-                branch_b)  # else the Crossover mods affect the parent Trees, due to how Python manages '='
+            branch_d = np.copy(branch_b)  # else the Crossover mods affect the parent Trees, due to how Python manages '='
 
-            offspring_1 = self.fx_evolve_crossover(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
-            self.population_b.append(offspring_1)  # append the 1st child to next generation of Trees
+            if mode == 'replace_same_types':
+                # Look for the closest node that can be swapped here
+                # TODO what to do if this is not possible?
+                offspring_1 = self.plagih_evolve_crossover(parent_a, branch_a, parent_b, branch_b, mode='replace_same_types')  # perform Crossover
+                self.population_b.append(offspring_1)  # append the 1st child to next generation of Trees
+                offspring_2 = self.plagih_evolve_crossover(parent_d, branch_d, parent_c, branch_c, mode='replace_same_types')  # perform Crossover
+                self.population_b.append(offspring_2)  # append the 2nd child to next generation of Trees
 
-            offspring_2 = self.fx_evolve_crossover(parent_d, branch_d, parent_c, branch_c)  # perform Crossover
-            self.population_b.append(offspring_2)  # append the 2nd child to next generation of Trees
+            elif mode == 'replace_interface_node':
+                # Replace the changed node (if necessary)
+                raise print('Not yet implemented.')
+            else:
+                raise print('Crossover method is not specified')
 
         return
 
@@ -2045,7 +2017,7 @@ class Base_GP(object):
 
         if (tree[5][node] == 'func'):
             node_type = function_types_dict[tree[6][node]]
-            tree[6][node] = self.sfeh_plagih_get_function_typeequi(node_type)
+            tree[6][node] = self.sfeh_dtype_get_func4func(node_type)
             # Take care of the modify specs
         elif tree[5][node] == 'term':
             rnd = np.random.randint(0, len(self.terminals) - 1)  # call the previously loaded .csv which contains all terminals
@@ -2055,11 +2027,15 @@ class Base_GP(object):
 
         tree = self.plagih_evolve_fitness_wipe(tree)  # wipe fitness data
 
+        # self.plagih_print('db', '\n\033[36m This is tourn_winner after node\033[1m {} \033[0;0m\033[36mmutation and updates:\033[0;0m\n {}'.format(node, tree))
         if self.display == 'db': print('\n\033[36m This is tourn_winner after node\033[1m', node, '\033[0;0m\033[36mmutation and updates:\033[0;0m\n', tree)
         # SFEH
         # self.fx_karoo_pause_refer()  # 2019 06/07
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
+
+    def plagih_print(self, verbosity, test):
+        return
 
     def sfeh_plagih_get_new_tree_size(self, chosen_tree, branch_top, mode='random'):  # sfeh other default
         """
@@ -2079,59 +2055,64 @@ class Base_GP(object):
 
     def sfeh_plagih_get_dtype(self, node_label, node_type):
         """
-        node_types are: 'term' or 'func'
+        return: 'term' or 'func'
         """
 
         if node_type == 'term':
             if 'True' in node_label or 'False' in node_label:
                 return '2b'
-            elif 'o' in node_label or 'a' in node_label:
+            elif 'observation' in node_label or 'action' in node_label:
                 term_position = self.terminals.index(node_label)
                 return function_types_dict[self.terminals_types[term_position]]
             else:  # only 'float' left
                 return '2f'
         elif node_type == 'func':
-            print('function is dtype:', function_types_dict[node_label], node_label)
             return function_types_dict[node_label]
         else:
             raise print('OHNO')
 
-        # if node_type == 'term':
-        #     if 'True' in node_label or 'False' in node_label:  # Boolean
-        #         return self.sfeh_plagih_get_terminal('2b')
-        #     elif 'o' in node_label or 'a' in node_label:  # .csv-terminals
-        #         term_position = self.terminals.index(node_label)    # self.terminals[observation0, observation1, action0] -> 1
-        #         term_dtype = function_types_dict[self.terminals_types[term_position]]
-        #         return self.sfeh_plagih_get_terminal(term_dtype)  # self.terminals_types['float','float','int']...get_terminal('bool')
-        #     else:
-        #         return self.sfeh_plagih_get_terminal('2f')
-        # else:
-        #     return self.sfeh_plagih_get_function_outcomeequi(function_types_dict[node_label])
+    def sfeh_label_get_dtype_solve(self, node_label):
+        """
+        returns dtype for a terminal
+        """
 
-    def sfeh_plagih_get_terminal(self, node_dtype):
+        node_type = self.sfeh_label_get_type(node_label)
+        return self.sfeh_plagih_get_dtype(node_label, node_type)
+
+    def sfeh_label_get_type(self, node_label):
+        """
+        return terminal or function according to the label
+        """
+
+        if node_label in function_types_dict:
+            return 'func'
+        else:
+            return 'term'
+
+    def sfeh_dtype_get_term4any(self, node_dtype):
         """
         function: f2b -> 2f needed
         terminal:  2f -> 2f needed
         --> check if it is function, aka _2f
         --> check if it is terminal, aka f2
         """
-        print('get term for function:', node_dtype)
+
         if node_dtype == '2f' or 'f2' in node_dtype:
             try:
                 return np.random.choice(self.terminals_float)
             except ValueError:
-                print('Had to make up a float terminal')
+                print('Warning: Had to make up a float terminal')
                 return self.sfeh_get_random_value(type='float')
         elif node_dtype == '2b' or 'b2' in node_dtype:
             try:
                 return np.random.choice(self.terminals_bool)
             except ValueError:
-                print('Had to make up a bool terminal')
+                print('Warning: Had to make up a bool terminal')
                 return self.sfeh_get_random_value(type='bool')
         else:
             raise print('Probably, you have to check if your "function" is actually a terminal', node_dtype)
 
-    def sfeh_plagih_get_function_typeequi(self, function_type):
+    def sfeh_dtype_get_func4func(self, function_type):
         """
         This only accepts functions as inputs. (point mutation)
         No need to handle terminals
@@ -2145,18 +2126,17 @@ class Base_GP(object):
         elif function_type == 'b2f':
             return np.random.choice(self.functions_b2f)
         elif function_type == 'b2f2f':
-            return np.random.choice(self.functions_b2f2f)  # TODO okay that does not make sense tbh
+            return np.random.choice(self.functions_b2f2f)  # sfeh okay that does not make sense tbh
         else:
             raise print("Function was not found in function_types_dict.")
 
-    def sfeh_plagih_get_function_outcomeequi(self, function_dtype, mode=''):
+    def sfeh_dtype_get_func4any(self, function_dtype, mode=''):
         """
         This fills in a function that fits the type of the function/terminal before.
-        '2f' -> '_2f'
-        'f2f'-> '_2f'
+        terminal  '2f' -> '_2f'
+        function 'f2f' -> '_2f'
         > ->
         """
-        print('Have to find function for:', function_dtype)
         if '2f' in function_dtype:
             new_label = np.random.choice(self.functions_2f)
             if mode == 'plus_arity':
@@ -2170,7 +2150,30 @@ class Base_GP(object):
             else:
                 return new_label
         else:
-            raise print("Function was not found in function_types_dict.")
+            raise print('Warning: Function was not found in function_types_dict.')
+
+    def sfeh_crossover_get_partner_node_id(self, function_label, partner_tree, partner_branch_id, mode='same_type'):
+        """
+        Gets a node_id in the partner tree, that can be applied
+        """
+
+        node_dtype = self.sfeh_plagih_get_dtype(function_label, self.sfeh_label_get_type(function_label))
+        node_options = []
+        # TODO check if the tree is large enough?
+        if mode == 'same_type':  # only return a node with the same function type
+            for i, label in enumerate(partner_tree[6][1:]):
+                if self.sfeh_label_get_dtype_solve(label) == node_dtype:
+                    node_options.append(i+1)  # +1, we skipped the first element
+
+            if node_options:  # Found at least one!
+                np.random.shuffle(node_options)  # otherwise, the first closest element is always taken (-> smallest)
+                return min(node_options, key=lambda x: abs(x-partner_branch_id))  # return closest node
+            else:
+                return 0  # No matching node found :(
+        elif mode == 'random':
+            print('mode: Do the same as in the upper function, but choose randomly?')
+        else:
+            raise print('mode: Not today')
 
     def sfeh_plagih_get_mutatable_node(self, tree, mode=''):
         """
@@ -2221,11 +2224,11 @@ class Base_GP(object):
         branch_top = int(branch_nodes_list[0])
         # TODO consider tree size of last tree, # TODO consider random tree size, # TODO consider always maximum tree size, TODO is this already considered by 50:50 func-term?
         branch_depth = self.sfeh_plagih_get_new_tree_size(chosen_tree, branch_top, mode='maximum')  # sfeh solution to keep tree kind of small
-        print('branch_top and _depth:', branch_top, branch_depth)
+
         old_node_label = chosen_tree[6][branch_nodes_list[0]]  # +,-,*,8,action0 ...
         old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func, term, ...
         old_node_dtype = self.sfeh_plagih_get_dtype(old_node_label, old_node_type)  # exception-safe: '2f', 'f2b', ...
-        print(old_node_dtype, old_node_type, old_node_label)
+
         if branch_depth < 0:  # this has never occured ... yet
             print('\n\t\033[31m ERROR! In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
@@ -2234,7 +2237,7 @@ class Base_GP(object):
             # TODO allow numbers here??
             # TODO think about maximum level... which is the terminal level?
             print('That is not supposed to happen lelel')
-            chosen_tree[6][branch_top] = self.sfeh_plagih_get_terminal(old_node_label)
+            chosen_tree[6][branch_top] = self.sfeh_dtype_get_term4any(old_node_label)
 
         else:
             # SFEH ist immer die Wahrscheinlichkeit 1/2. Entweder terminal oder full size?
@@ -2252,8 +2255,7 @@ class Base_GP(object):
 
                 chosen_tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
                 term_type = self.sfeh_plagih_get_dtype(old_node_label, old_node_type)  # replace label
-                print('term_type:', term_type, self.sfeh_plagih_get_dtype(old_node_label, old_node_type))  # is '2f'
-                chosen_tree[6][branch_top] = self.sfeh_plagih_get_terminal(term_type)  # wants to get 'f2'
+                chosen_tree[6][branch_top] = self.sfeh_dtype_get_term4any(term_type)  # wants to get 'f2'
 
                 chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
                 chosen_tree = self.fx_evolve_node_arity_fix(chosen_tree)  # fix all node arities (term)
@@ -2269,92 +2271,60 @@ class Base_GP(object):
 
         return chosen_tree
 
-    def fx_evolve_crossover(self, parent, branch_x, offspring, branch_y):
+    def plagih_evolve_crossover(self, parent_x, branch_x, parent_y, branch_y, mode='replace_same_types'):
 
         """
-        Refer to the method fx_nextgen_crossover() for a full description of the genetic operator Crossover.
+        Perform a crossover between nodes that are crossoverable in terms of function types
 
-        This method is called twice to produce 2 offspring per pair of parent Trees. Note that in the method
-        'karoo_fx_crossover' the parent/branch relationships are swapped from the first run to the second, such that
-        this method receives swapped components to produce the alternative offspring. Therefore 'parent_b' is first
-        passed to 'offspring' which will receive 'branch_a'. With the second run, 'parent_a' is passed to 'offspring' which
-        will receive 'branch_b'.
-
-        Called by: fx_nextgen_crossover
-
-        Arguments required: parent, branch_x, offspring, branch_y (parents_a / _b, branch_a / _b from fx_nextgen_crossover()
         """
 
         crossover = int(branch_x[0])  # pointer to the top of the 1st parent branch passed from fx_nextgen_crossover()
-        branch_top = int(branch_y[0])  # pointer to the top of the 2nd parent branch passed from fx_nextgen_crossover()
 
-        if self.display == 'db':print('\n\n\033[33m *** Crossover *** \033[0;0m')
+        # Prepare
+        if mode == 'replace_same_types':  # Choose closest fitting node, if not exists- return original
+            new_branch_root = self.sfeh_crossover_get_partner_node_id(parent_x[6][branch_x[0]], parent_y, branch_y[0])
+            if new_branch_root > 0:
+                branch_y = self.plagih_evolve_branch_select(parent_y, node=new_branch_root)
+                branch_y_top = int(branch_y[0])  # pointer to the top of the 2nd parent branch passed from fx_nextgen_crossover()
+            else:
+                return parent_x
+        else:
+            raise print('Did not implement crossover method here')
+
 
         if len(branch_x) == 1:  # if the branch from the parent contains only one node (terminal)
 
-            if self.display == 'i':
-                print('\t\033[36m  terminal crossover from \033[1mparent', parent[0][1],'\033[0;0m\033[36mto \033[1moffspring', offspring[0][1],'\033[0;0m\033[36mat node\033[1m', branch_top, '\033[0;0m')
+            parent_y[6][branch_y_top] = parent_x[6][crossover]  # replace label with that of a particular node in 'branch_x'
+            parent_y[5][branch_y_top] = 'term'  # replace type
+            parent_y[8][branch_y_top] = 0  # set terminal arity
 
-            if self.display == 'db':
-                print('\n\033[36m In a copy of one parent:\033[0;0m\n', offspring, '\n\033[36m ... we remove nodes\033[1m', branch_y, '\033[0;0m\033[36mand replace node\033[1m', branch_top, '\033[0;0m\033[36mwith a terminal from branch_x\033[0;0m')
-                self.fx_karoo_pause_refer()  # 2019 06/07
-
-            offspring[5][branch_top] = 'term'  # replace type
-            offspring[6][branch_top] = parent[6][crossover]  # replace label with that of a particular node in 'branch_x'
-            offspring[8][branch_top] = 0  # set terminal arity
-
-            offspring = np.delete(offspring, branch_y[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-            offspring = self.fx_evolve_child_link_fix(offspring)  # fix all child links
-            offspring = self.fx_evolve_node_renum(offspring)  # renumber all 'NODE_ID's
-
-            if self.display == 'db': print('\n\033[36m This is the resulting offspring:\033[0;0m\n',
-                                           offspring); self.fx_karoo_pause_refer()  # 2019 06/07
+            parent_y = np.delete(parent_y, branch_y[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+            parent_y = self.fx_evolve_child_link_fix(parent_y)  # fix all child links
+            parent_y = self.fx_evolve_node_renum(parent_y)  # renumber all 'NODE_ID's
 
         else:  # we are working with a branch from 'parent' >= depth 1 (min 3 nodes)
 
-            if self.display == 'i':
-                print('\t\033[36m  branch crossover from \033[1mparent', parent[0][1],
-                      '\033[0;0m\033[36mto \033[1moffspring', offspring[0][1],
-                      '\033[0;0m\033[36mat node\033[1m', branch_top, '\033[0;0m')
+            self.tree = self.fx_evolve_branch_copy(parent_x, branch_x)  # generate stand-alone 'gp.tree' with properties of 'branch_x'
 
-            # self.fx_init_tree_build('test', 'f', 2) # TEST & DEBUG: disable the next 'self.tree ...' line
-            self.tree = self.fx_evolve_branch_copy(parent,
-                                                   branch_x)  # generate stand-alone 'gp.tree' with properties of 'branch_x'
+            parent_y = self.plagih_evolve_branch_insert(parent_y, branch_y)  # insert new 'branch_y' at point of mutation 'branch_top' in tourn_winner 'offspring'
+            parent_y = self.fx_evolve_tree_prune(parent_y, self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
 
-            if self.display == 'db':
-                print('\n\033[36m From one parent:\033[0;0m\n', parent)
-                print('\n\033[36m ... we copy branch_x\033[1m', branch_x,
-                      '\033[0;0m\033[36mas a new, sub-tree:\033[0;0m\n', self.tree)
-                self.fx_karoo_pause_refer()  # 2019 06/07
+        parent_y = self.plagih_evolve_fitness_wipe(parent_y)  # wipe fitness data
 
-            if self.display == 'db':
-                print(
-                    '\n\033[36m ... and insert it into a copy of the second parent in place of the selected branch\033[1m',
-                    branch_y, ':\033[0;0m\n', offspring)
-                self.fx_karoo_pause_refer()  # 2019 06/07
+        return parent_y
 
-            offspring = self.plagih_evolve_branch_insert(offspring,
-                                                         branch_y)  # insert new 'branch_y' at point of mutation 'branch_top' in tourn_winner 'offspring'
-            offspring = self.fx_evolve_tree_prune(offspring, self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
-
-        offspring = self.plagih_evolve_fitness_wipe(offspring)  # wipe fitness data
-
-        return offspring
-
-    def plagih_evolve_branch_select(self, tree):
+    def plagih_evolve_branch_select(self, tree, node=0):
 
         """
-        Select all nodes in the 'tourn_winner' Tree at and below the randomly selected starting point.
+        Branch_mutate: chooses a branch to mutate
 
-        While Grow mutation uses this method to select a region of the 'tourn_winner' to delete, Crossover uses this
-        method to select a region of the 'tourn_winner' which is then converted to a stand-alone tree. As such, it is
-        imperative that the nodes be in the correct order, else all kinds of bad things happen.
-
-        Arguments required: tree
         """
 
         branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-        branch_top = self.sfeh_plagih_get_mutatable_branch(tree)  # returns mutatable node (except root node)
+        if node > 0:  # Crossover: Option to specify own starting node
+            branch_top = node
+        else:
+            branch_top = self.sfeh_plagih_get_mutatable_branch(tree)  # returns mutatable node (except root node)
         branch_eval = self.plagih_eval_id(tree, branch_top)  # generate tuple of 'branch_top' and subsequent nodes
         branch_symp = sympify(branch_eval)  # convert string into something useful
         branch = np.append(branch, branch_symp)  # append list to array
@@ -2423,16 +2393,12 @@ class Base_GP(object):
         """
         This method prepares a stand-alone Tree as a copy of the given branch.
 
-        Called by: fx_evolve_crossover
-
-        Arguments required: tree, branch
         """
 
         new_tree = np.array(
             [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'],
-             ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'], ['fitness']])
+             ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'], ['fitness'], ['node_modify']])
 
-        # tested 2015 06/08
         for n in range(len(branch)):
             node = branch[n]
             branch_top = int(branch[0])
@@ -2452,11 +2418,12 @@ class Base_GP(object):
             node_c2 = ''
             node_c3 = ''
             fitness = ''
+            node_modify = '1'  # sfeh Test this
 
             new_tree = np.append(new_tree,
                                  [[TREE_ID], [tree_type], [tree_depth_base], [NODE_ID], [node_depth], [node_type],
                                   [node_label], [node_parent], [node_arity], [node_c1], [node_c2], [node_c3],
-                                  [fitness], [], []], 1)
+                                  [fitness], [node_modify]], 1)
 
         new_tree = self.fx_evolve_node_renum(new_tree)
         new_tree = self.fx_evolve_child_link_fix(new_tree)

@@ -2055,7 +2055,8 @@ class Base_GP(object):
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def plagih_print(self, verbosity, ):
+    def plagih_print(self, verbosity, test):
+        return
 
     def sfeh_plagih_get_new_tree_size(self, chosen_tree, branch_top, mode='random'):  # sfeh other default
         """

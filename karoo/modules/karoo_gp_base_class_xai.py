@@ -1014,11 +1014,12 @@ class Base_GP(object):
             if mode == 'float0to1':
                 return np.random.uniform(-1, 1)
             elif mode == 'intTotal_10':
-                return np.random.random(-10, 10)
+                return np.random.random_integers(-10, 10)
             elif mode == 'random_optimised':
                 return np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
                                          5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
             else:
+                # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
                 raise print('You did not take care of the kind of numbers you want to have')
         else:
             print('Please specify your desired datatype if possible. Trying to return value similar to terminals.')
@@ -1365,7 +1366,6 @@ class Base_GP(object):
             return
         else:
             raise print('Parsimony distance not found!')
-            return
 
     def plagih_fitness_eval(self, expr, data, get_pred_labels=False):
 
@@ -1753,8 +1753,7 @@ class Base_GP(object):
                     raise print('\n\t\033[31m ERROR! In fx_fitness_tournament: fitness =', fitness, 'and tourn_test =',
                                 tourn_test, '\033[0;0m')
 
-        tourn_winner = np.copy(
-            self.population_a[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
+        tourn_winner = np.copy(self.population_a[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
 
         if self.display == 'i':
             print('\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
@@ -1864,26 +1863,6 @@ class Base_GP(object):
 
         return
 
-    def fx_fitness_test_match(self, result):
-
-        """
-        Print the accuracy for a MATCH kernel run against the test data.
-
-        Called by: fx_karoo_pause
-
-        Arguments required: result
-        """
-
-        for i in range(len(result['result'])):
-            print('\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i,
-                                                                                                       result['result'][
-                                                                                                           i], result[
-                                                                                                           'solution'][
-                                                                                                           i]))
-
-        print('\n\tMatching fitness score: {}'.format(result['fitness']))
-
-        return
     def fx_fitness_test_match(self, result):
 
         """

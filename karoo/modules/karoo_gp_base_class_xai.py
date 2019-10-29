@@ -10,10 +10,9 @@ import numpy as np
 import sklearn.metrics as skm
 import sklearn.model_selection as skcv
 from sympy import sympify
-from sympy.logic.boolalg import ITE, And, Xor, Or
 from datetime import datetime
 import karoo.modules.karoo_gp_pause as menu
-# TODO import the pause later, maybe
+# sfeh import the pause later, maybe
 # import karoo.modules.karoo_gp_pause as menu
 import tensorflow as tf
 import ast
@@ -155,6 +154,18 @@ function_arity_dict = {  # Needs A LOT OF further testing
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
+class BColors:  # sfeh can be deleted
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+# print bcolors.WARNING + "Warning: No active frommets remain. Continue?"
+#       + bcolors.ENDC
 
 class Base_GP(object):
     """
@@ -423,8 +434,6 @@ class Base_GP(object):
     #   Methods to Load and Archive Data         |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    # TODO Funktion übergeben und nicht daten aus system ziehen
-    # Worked on!
     def plagih_data_load(self, operators_file, samples_file):
 
         """
@@ -465,7 +474,6 @@ class Base_GP(object):
                             var_type.append(var_name.split(':', 1)[1])
                         elif var_name.startswith('a'):
                             # TODO wie mit dieser Art Terminal umgehen? Ist kein Input
-                            # TODO this caused a major error
                             pass
                             var_type.append(var_name.split(':', 1)[1])
                         else:
@@ -2040,11 +2048,14 @@ class Base_GP(object):
 
         tree = self.plagih_evolve_fitness_wipe(tree)  # wipe fitness data
 
+        self.plagih_print('db', '\n\033[36m This is tourn_winner after node\033[1m {} \033[0;0m\033[36mmutation and updates:\033[0;0m\n {}'.format(node, tree))
         if self.display == 'db': print('\n\033[36m This is tourn_winner after node\033[1m', node, '\033[0;0m\033[36mmutation and updates:\033[0;0m\n', tree)
         # SFEH
         # self.fx_karoo_pause_refer()  # 2019 06/07
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
+
+    def plagih_print(self, verbosity, ):
 
     def sfeh_plagih_get_new_tree_size(self, chosen_tree, branch_top, mode='random'):  # sfeh other default
         """

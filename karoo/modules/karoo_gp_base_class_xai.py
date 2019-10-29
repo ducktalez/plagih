@@ -2048,7 +2048,7 @@ class Base_GP(object):
 
         tree = self.plagih_evolve_fitness_wipe(tree)  # wipe fitness data
 
-        self.plagih_print('db', '\n\033[36m This is tourn_winner after node\033[1m {} \033[0;0m\033[36mmutation and updates:\033[0;0m\n {}'.format(node, tree))
+        # self.plagih_print('db', '\n\033[36m This is tourn_winner after node\033[1m {} \033[0;0m\033[36mmutation and updates:\033[0;0m\n {}'.format(node, tree))
         if self.display == 'db': print('\n\033[36m This is tourn_winner after node\033[1m', node, '\033[0;0m\033[36mmutation and updates:\033[0;0m\n', tree)
         # SFEH
         # self.fx_karoo_pause_refer()  # 2019 06/07

@@ -26,23 +26,22 @@ evolve_repro = int(evolve_repro*tree_pop_max)
 evolve_point = int(evolve_point*tree_pop_max)
 evolve_branch = int(evolve_branch*tree_pop_max)
 evolve_cross = int(evolve_cross*tree_pop_max)
+
 #++++++++++++++++++++++++++++++++++++++++++
 #   Conduct the GP run                    |
 #++++++++++++++++++++++++++++++++++++++++++
+
 kernel = 'r'
 display = 's'  # display mode is set to (s)ilent
 precision = 6  # number of floating points for the round function in 'fx_fitness_eval'
 swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
 mode = 'db'  # pause at the (d)esktop when complete, awaiting further user interaction; or terminate in (s)erver mode
 
-
 gen_max = 5
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
-
 origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')
-# origin_tree_file = Path('../mountaincar/karoo_files/test2_tree.csv')
-# operators_file = Path('../mountaincar/karoo_files/operators_pairs.csv')
+
 
 gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
                    tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point,

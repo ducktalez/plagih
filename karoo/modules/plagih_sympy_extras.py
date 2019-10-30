@@ -32,29 +32,8 @@ class Ifte(Function):
     def _sympy_(self, a, b, c): return eval(self, a, b, c)
 
 
-class Min(Function):
-    nargs = 2
 
-    @classmethod
-    def eval(cls, a, b):
-        return min(a, b)
-
-    def _sympy_(self, a, b): return eval(self, a, b)
-
-
-class Max(Function):
-    nargs = 2
-
-    @classmethod
-    def eval(cls, a, b):
-        return max(a, b)
-
-    def _sympy_(self, a, b): return eval(self, a, b)
-
-
-local_sympy_dict = {'ifte': Ifte,
-                    'min': Min,
-                    'max': Max, }
+local_sympy_dict = {'ifte': Ifte}
 
 """
 It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139

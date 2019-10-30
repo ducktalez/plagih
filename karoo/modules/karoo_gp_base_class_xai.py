@@ -54,8 +54,8 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
              'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
-             'min': tf.math.minimum,  # min is apparently a string
-             'max': tf.math.maximum,  # e.g. min(a, b)
+             'Min': tf.math.minimum,  # min is apparently a string
+             'Max': tf.math.maximum,  # e.g. min(a, b)
              }
 
 function_types_dict = {  # Needs A LOT OF further testing
@@ -80,8 +80,8 @@ function_types_dict = {  # Needs A LOT OF further testing
     'acos': 'f2f',
     'asin': 'f2f',
     'atan': 'f2f',
-    'min': 'f2f',
-    'max': 'f2f',
+    'Min': 'f2f',
+    'Max': 'f2f',
 
     'and': 'b2b',
     'or': 'b2b',
@@ -106,6 +106,8 @@ function_types_dict = {  # Needs A LOT OF further testing
     'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
 }
 
+non_inline_functions = ['Min', 'Max']  # There is probably an actual way to call 'non_inline_functions'
+
 function_arity_dict = {  # Needs A LOT OF further testing
     'float': 0,  # these three are dummies
     'int': 0,    # neede to use the dict for function types aswell
@@ -128,6 +130,8 @@ function_arity_dict = {  # Needs A LOT OF further testing
     'acos': 1,
     'asin': 1,
     'atan': 1,
+    'Min': 2,
+    'Max': 2,
 
     'and': 2,
     'or': 2,
@@ -944,7 +948,6 @@ class Base_GP(object):
             for j in range(1, len(self.tree[3])):  # increment through all nodes
                 if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
                     if self.tree[6][j] == 'Ifte':
-                        print('Found ifte :3')
                         prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
                         prior_sibling_arity = self.plagih_branch_function_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
@@ -1168,6 +1171,7 @@ class Base_GP(object):
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
         try:  # plagih: try block needed. simpify can not handle if then else.
             x = plagih_sympify(self.algo_raw)
+            # print('RAW: ', self.algo_raw, 'sympifyed: ', self.algo_sym)
             x = re.sub('zoo', '100000', str(x))  # TODO why ;_;
             # x = re.sub('False', 'False', x)
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
@@ -1200,20 +1204,16 @@ class Base_GP(object):
             if tree[8, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
                 return '(' + self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + ')'
 
-
             elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-                return '(' + self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
-            # Experiment with arity2 = tuple operators
-            # elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-            #     try:
-            #         return tree[6, node_id] + '(' + self.plagih_eval_label(tree, tree[9, node_id]) + ', ' + self.plagih_eval_label(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
-            #     except:
-            #         raise
-
+                # This if case is for 2-ary ops that can not be inline. like Min(a, b)
+                if tree[6, node_id] in non_inline_functions:
+                    return '(' + tree[6, node_id] + '(' + self.plagih_eval_label(tree, tree[9, node_id]) + ', ' + self.plagih_eval_label(tree, tree[10, node_id]) + '))'
+                else:
+                    return '(' + self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
 
             # if then else
-            elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'if [term] then [term] else [term]'
-                return 'Ifte(' + self.plagih_eval_label(tree, tree[9, node_id]) + ', ' + self.plagih_eval_label(tree, tree[10, node_id]) + ', ' + self.plagih_eval_label(tree, tree[11, node_id]) + ')'
+            elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+                return '(Ifte(' + self.plagih_eval_label(tree, tree[9, node_id]) + ', ' + self.plagih_eval_label(tree, tree[10, node_id]) + ', ' + self.plagih_eval_label(tree, tree[11, node_id]) + '))'
 
     def plagih_eval_id(self, tree, node_id):
 
@@ -1355,13 +1355,13 @@ class Base_GP(object):
             return int(tree[3][-1:])  # returns the tree size
         elif parsimony_distance == 'tree_depth':
             return tree[4][1]     # returns the tree size
-        elif parsimony_distance == 'karoo_primitive':  # sorry guys :^D
+        elif parsimony_distance == 'karoo_original':  # not usable with long variable names
             return len(str(self.algo_raw))
         elif parsimony_distance == 'print':   # Please inser all of the measurements with example
             print('No distance chosen. Available parsimony measurements:')
             print('count_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
             print('tree_depth' + '     : Only use the depth of the tree as measurement.        ' + str(tree[4][1]))
-            print('karoo_primitive' + ': Karoo`s OG parsimony. Do not use it with PLAGIH.      ' + str(len(str(self.algo_raw))))
+            print('karoo_original' + ' : Karoo`s OG parsimony. Do not use it with PLAGIH.      ' + str(len(str(self.algo_raw))))
             print('Choose wisely. More to come soon.')
             return
         else:
@@ -1510,7 +1510,7 @@ class Base_GP(object):
 
         Arguments required: expr, tensors
         """
-        # print('Current expr:', expr)
+        print('Current expr:', expr)  # importantprint
         tree = ast.parse(expr, mode='eval').body
 
         return self.plagih_fitness_node_parse(tree, tensors)
@@ -1575,11 +1575,13 @@ class Base_GP(object):
 
         elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) or if(a, b, c)
             if node.func.id == 'Ifte':
-                # TODO print
                 return operators[node.func.id](
                         tf.dtypes.cast(self.plagih_fitness_node_parse(node.args[0], tensors), tf.bool),
                         self.plagih_fitness_node_parse(node.args[1], tensors),
                         self.plagih_fitness_node_parse(node.args[2], tensors))
+
+            if node.func.id in ['Min', 'Max']:  # Goddamn. yeah, min and max need the same type, apparently. TODO?
+                return operators[node.func.id](*[tf.dtypes.cast(self.plagih_fitness_node_parse(arg, tensors), tf.float32) for arg in node.args])
             return operators[node.func.id](*[self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])
 
         elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
@@ -1666,10 +1668,6 @@ class Base_GP(object):
 
         Stronger boundary parameters (a reduced gap between the min and max number of nodes) may invoke more compact
         solutions, but also runs the risk of elitism, even total population die-off where a healthy population once existed.
-
-        Called by: fx_nextgen_reproduce, fx_nextgen_point_mutate, fx_nextgen_branch_mutate, fx_nextgen_crossover
-
-        Arguments required: tourn_size
         """
 
         tourn_test = 0

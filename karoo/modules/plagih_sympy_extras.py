@@ -11,7 +11,7 @@ Use:
     from karoo.modules.plagih_sympy_extras import plagih_sympify
 2. Use function
     plagih_sympify('ifte(True, b, c)')
-    plagih_sympify('Min(a, b)')
+    plagih_sympify('Min(a, b)') ATTENTION
 
 Also, please do not ask me about when to use Ifte() and ifte(), it somehow works.
 """
@@ -32,8 +32,22 @@ class Ifte(Function):
     def _sympy_(self, a, b, c): return eval(self, a, b, c)
 
 
+class Mini(Function):
+    """
+    plagih_sympify('Ifte(a, b, c)')
+    """
+    nargs = 2
 
-local_sympy_dict = {'ifte': Ifte}
+    @classmethod
+    def eval(cls, a, b):
+
+        return a if a < b else b
+
+    def _sympy_(self, a, b): return eval(self, a, b)
+
+
+local_sympy_dict = {'ifte': Ifte,
+                    'mini': Mini}
 
 """
 It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139

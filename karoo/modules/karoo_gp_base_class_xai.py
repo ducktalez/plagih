@@ -287,6 +287,7 @@ class Base_GP(object):
         menu = 1
         while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
             for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # generation 2 to *max generation*
+
                 print('\n Evolve a population of Trees for Generation', self.gen_id, '...')
                 self.population_b = ['PLAHIG GP by Simon Fehrer - Evolving Generation']  # initialise population_b to host the next generation
                 self.plagih_fitness_gene_pool()  # generate the viable gene pool, aka Paretofront? At least our "origin" should be fit enough ;)
@@ -1227,9 +1228,12 @@ class Base_GP(object):
         try:  # plagih: try block needed. simpify can not handle if then else.
             x = plagih_sympify(self.algo_raw)
             # print('RAW: ', self.algo_raw, 'sympifyed: ', self.algo_sym)
-            x = re.sub('zoo', '100000', str(x))  # TODO why ;_;
+            x = re.sub('zoo', '1000', str(x))  # TODO why ;_;
             # x = re.sub('False', 'False', x)
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
+            if 'nan' in self.algo_sym:  # Happens when 0/0 occurs. This tree is worth nothing anyways
+                print('We had a "nan"')
+                self.algo_sym = 0  # "nan" workaround
         except:
             raise Exception('Error in sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
         # todotodo
@@ -1837,12 +1841,10 @@ class Base_GP(object):
     def plagih_fitness_gene_pool(self):
 
         """
-        The gene pool was introduced as means by which advanced users could define additional constraints on the evolved
-        functions, in an effort to guide the evolutionary process. The first constraint introduced is the 'mininum number
+        The first constraint introduced is the 'mininum number
         of nodes' parameter (gp.tree_depth_min). This defines the minimum number of nodes (in the context of Karoo, this
         refers to both functions (operators) and terminals (operands)).
 
-        TODO Agent auch zu komplexeren Lösungen drängen! Sowohl einfache als auch komplexe fördern. Paretofront auf beiden Seiten aufbauen
         When the minimum node count is human guided, it can keep the solution from defaulting to a local minimum, as with
         't/t' in the Kepler problem, by forcing a more complex solution. If you find that when engaging the Regression
         kernel you are met with a solution which is too simple (eg: linear instead of non-linear), try increasing the
@@ -1853,25 +1855,14 @@ class Base_GP(object):
         At this time, the gene pool does *not* limit the number of times any given Tree may be selected for reproduction or
         mutation nor does it take into account parsimony (seeking the simplest multivariate expression).
 
-        This method is automatically invoked with every Tournament Selection - fx_fitness_tournament().
-
-        Called by: fx_karoo_gp
-
-        Arguments required: none
         """
 
         self.gene_pool = []
-        if self.display == 'i':
-            print('\n Prepare a viable gene pool ...')
-            self.fx_karoo_pause_refer()  # 2019 06/07
 
-        for tree_id in range(1, len(self.population_a)):
-
+        for tree_id in range(1, len(self.population_a)):  # Every tree
             self.plagih_eval_poly(self.population_a[tree_id])  # extract the expression
-
-            if self.swim == 'p':  # each tree must have the min number of nodes defined by the user
-                if len(self.population_a[tree_id][3]) - 1 >= self.tree_depth_min and self.algo_sym != 1:  # check if Tree meets the requirements
-                    self.gene_pool.append(self.population_a[tree_id][0][1])
+            if self.algo_sym != 1:  # check if Tree meets the requirements
+                self.gene_pool.append(self.population_a[tree_id][0][1])
 
         if len(self.gene_pool) > 0 and self.display == 'i':
             print('\n\t The total population of the gene pool is', len(self.gene_pool))
@@ -1884,6 +1875,10 @@ class Base_GP(object):
             self.fx_karoo_pause_refer()  # 2019 06/07
 
         return
+
+
+    
+
 
     def fx_fitness_test_classify(self, result):
 

@@ -15,7 +15,7 @@ tree_type= 'g'    		# [f,g,r]			Tree type: (f)ull, (g)row, or (r)amped half/half
 tree_depth_base = 3		# [3...10]			maximum Tree depth for initial population
 tree_depth_max = 10		# [3...10]			maximum Tree depth for entire run
 tree_depth_min = 3		# [3 to 2^(bas +1) - 1]	minimum number of nodes
-tree_pop_max = 20    	# [10...1000]		number of trees in each generational population
+tree_pop_max = 50    	# [10...1000]		number of trees in each generational population
 gen_max = 10			# [1...100]			number of generations
 tourn_size = 10			# [7 per 100]		number of trees selected for tournament
 evolve_repro = 0.1   	# [0.0...1.0]  		decimal percent of pop generated through Reproduction
@@ -45,9 +45,9 @@ tree_pop_max = 50
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
 origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')
-
+display = 'sep'
 # origin_tree_file = Path('../mountaincar/karoo_files/test_tree2.csv')
-gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_pop_max, gen_max,
+gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
                    tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point,
                    evolve_branch, evolve_cross, display, precision, swim, mode)
 

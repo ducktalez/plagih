@@ -45,7 +45,7 @@ tree_pop_max = 50
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
 origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')
-display = 'sep'
+display = 'sen'
 # origin_tree_file = Path('../mountaincar/karoo_files/test_tree2.csv')
 gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
                    tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point,

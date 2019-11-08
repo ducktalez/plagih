@@ -114,8 +114,8 @@ function_types_dict = {  # Needs A LOT OF further testing
 
     'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
 }
-# Storytime:
-# sympify can reduce an expression to 'Min(a, b, c)', but tensorflow and our framework does not like this
+    # Storytime:
+    # sympify can reduce an expression to 'Min(a, b, c)', but tensorflow and our framework does not like this
 non_inline_multielem_functions = ['Min', 'Max']  # There is probably an actual way to call 'non_inline_functions'
 
 non_inline_functions = ['Min', 'Max', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
@@ -284,7 +284,7 @@ class Base_GP(object):
                 self.plagih_nextgen_reproduce_one()  # method 1 - Reproduction
                 self.plagih_nextgen_point_mutate()  # method 2 - Point Mutation
                 self.plagih_nextgen_branch_mutate()  # method 3 - Branch Mutation
-                self.fx_nextgen_crossover()  # method 4 - Crossover
+                self.plagih_nextgen_crossover()  # method 4 - Crossover
                 self.fx_eval_generation()  # evaluate all Trees in a single generation
                 self.population_a = self.fx_evolve_pop_copy(self.population_b, ['Karoo GP by Kai Staats - Generation ' + str(self.gen_id)])
 
@@ -654,7 +654,7 @@ class Base_GP(object):
                         else:
                             self.tree = np.append(self.tree, [row], axis=0)  # append subsequent rows to Tree
 
-                    if self.tree.shape[0] == 14:
+                    if self.tree.shape[0] == 14+1:  # (current tree rows + row 0
                         self.population_a.append(self.tree)  # append complete Tree to population list
 
         print('\n', self.population_a)
@@ -704,12 +704,13 @@ class Base_GP(object):
 
         with open(self.filename[key], 'a') as csv_file:
             target = csv.writer(csv_file, delimiter=',')
-            if self.gen_id != 1: target.writerows([''])  # empty row before each generation
-            target.writerows([['Karoo GP by Kai Staats', 'Generation:', str(self.gen_id)]])
+            if self.gen_id != 1:
+                target.writerows([''])  # empty row before each generation
+            target.writerows([['Karoo GP by Kai Staats, improved by Simon Fehrer', 'Generation:', str(self.gen_id)]])
 
             for tree in range(1, len(population)):
                 target.writerows([''])  # empty row before each Tree
-                for row in range(0, 13):  # increment through each row in the array Tree
+                for row in range(0, 14+1):  # increment through each row in the array Tree (+ row 0)
                     target.writerows([population[tree][row]])
 
         return
@@ -857,7 +858,7 @@ class Base_GP(object):
                     tree = np.append(tree, [row], axis=1)  # append first row to Tree ('TREE_ID')
                 else:
                     tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
-            if tree.shape[0] == 13+1:
+            if tree.shape[0] == 14+1:  # (+ row 0)
                 pass  # print('Origin Tree is: \n' + str(tree))
             else:
                 raise print("Tree could not be imported correctly from .csv file.")
@@ -878,16 +879,16 @@ class Base_GP(object):
         self.plagih_branch_tree_initialise(TREE_ID, tree_depth, last_modification)  # Create empty tree np-array
         self.plagih_branch_root_build(old_node_type)  # insert the first node with either '_2b' or '_2f'
         self.plagih_branch_function_build(old_node_type)  # build all the Function nodes
-        self.fx_init_terminal_build()  # build the Terminal nodes
+        self.plagih_init_terminal_build()  # build the Terminal nodes
         # TODO set tree_depth_base in tree.
         return  # each Tree is written to 'gp.tree'
 
     def plagih_branch_tree_initialise(self, TREE_ID, tree_depth, last_modification):
 
         """
-        Assign 13 global variables to the array 'tree'.
+        Assign 15 (14+1) global variables to the array 'tree'.
 
-        Build the array 'tree' with 13 rows and initally, just 1 column of labels. This array will grow horizontally as
+        Build the array 'tree' with 15 rows and initally, just 1 column of labels. This array will grow horizontally as
         each new node is appended. The values of this array are stored as string characters, numbers forced to integers at
         the point of execution.
 
@@ -911,7 +912,8 @@ class Base_GP(object):
         self.pop_node_c2 = ''  # pos 10: child node 2
         self.pop_node_c3 = ''  # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
         self.pop_fitness = ''  # pos 12: fitness score following Tree evaluation
-        self.node_modify = ''  # pos 13: dummy value whether this node is allowed to be modified
+        self.pop_node_modify = ''  # pos 13: dummy value whether this node is allowed to be modified
+        self.pop_parsimony = ''  # pos 14: separate line for the latest distance to origin
 
         self.tree = np.array(
             [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'], ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'],
@@ -994,21 +996,21 @@ class Base_GP(object):
 
         return
 
-    def plagih_branch_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, parent_func_dtype):
+    def plagih_branch_function_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, node_dtype):
 
         """
         Generate a single Function node for the initial population.
 
         """
 
-        rnd = np.random.randint(2)
+        # TODO TODOTODO HEREHERE
 
-        if rnd == 0:  # randomly selected as Function
-            self.plagih_branch_function_select(parent_func_dtype)  # retrieve a function
+        if np.random.choice('func', 'term') == 'func':  # randomly selected as Function
+            self.plagih_branch_function_select(node_dtype)  # retrieve a function, input-reverse the parent-function (f2b -> we need 2f input)
             self.fx_init_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
-
-        elif rnd == 1:  # randomly selected as Terminal
-            self.fx_init_terminal_select()  # retrieve a terminal # TODO variablen erlauben in terminal select
+        else:
+            # self.fx_init_terminal_select() was here
+            self.sfeh_dtype_get_term4any(node_dtype)  # get a terminal
             self.pop_node_c1 = ''
             self.pop_node_c2 = ''
             self.pop_node_c3 = ''
@@ -1029,14 +1031,15 @@ class Base_GP(object):
         new_function = self.sfeh_dtype_get_func4any(func_dtype)
         self.pop_node_label = new_function[0]
         self.pop_node_arity = int(new_function[1])
+        self.pop_node_modify = 1
         # print('SFEHs:', func_dtype, self.pop_node_label)
 
         return
 
         ### Terminal Nodes ###
 
-    # Idea: values are recognized and adjusted (+0.3, e.g.)?
-    # Idea: insert numbers as 0-arity functions? -> naah
+        # Idea: values are recognized and adjusted (+0.3, e.g.)?
+        # Idea: insert numbers as 0-arity functions? -> naah
 
     def sfeh_get_random_constant(self, term_type='', mode='float0to1'):
         if term_type == 'bool':
@@ -1082,13 +1085,10 @@ class Base_GP(object):
 
         return constant
 
-
-    def fx_init_terminal_build(self):
+    def plagih_init_terminal_build(self):
 
         """
-        Build the Terminal nodes for the intial population.
-
-        Called by: fx_init_tree_build
+        Build the Terminal nodes for the tree.
 
         Arguments required: none
         """
@@ -1101,11 +1101,11 @@ class Base_GP(object):
 
                 for k in range(1, (int(self.tree[8][j]) + 1)):  # increment through each degree of arity for each parent node
                     self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
-                    self.fx_init_terminal_gen()  # ... generate a Terminal node
+                    self.plagih_init_terminal_gen()  # ... generate a Terminal node
 
         return
 
-    def fx_init_terminal_gen(self):
+    def plagih_init_terminal_gen(self):
 
         """
         Generate a single Terminal node for the initial population.
@@ -1220,20 +1220,25 @@ class Base_GP(object):
         Arguments required: tree
         """
 
+        num_failed_sympys = 0
+
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
         try:  # plagih: try block needed. simpify can not handle if then else.
             x = plagih_sympify(self.algo_raw)
-            # print('RAW: ', self.algo_raw, 'sympifyed: ', self.algo_sym)
-            x = re.sub('zoo', '1000', str(x))  # TODO why ;_;
-            # x = re.sub('False', 'False', x)
+            if 'zoo' in x:
+                x = re.sub('zoo', '1000', str(x))  # TODO why ;_;
+                num_failed_sympys = num_failed_sympys + 1
+
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
             if 'nan' in self.algo_sym:  # Happens when 0/0 occurs. This tree is worth nothing anyways
-                print('We had a "nan"')
+                self.plprint('w', 'We had a "nan"')
                 self.algo_sym = 0  # "nan" workaround
+                num_failed_sympys = num_failed_sympys + 1
         except:
             self.plprint('e', 'Error in sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
             self.algo_sym = 0
-        # todo.
+            self.plprint('w', 'We had a "nan" which lead to an Exception')
+            # todo.
         return
 
     def plagih_eval_label(self, tree, node_id):
@@ -1319,7 +1324,7 @@ class Base_GP(object):
         self.plprint('n', 'Evaluate all Trees in Generation', self.gen_id)
         self.plprint('p', 'Want to adjust anything?')
 
-        for tree_id in range(1, len(self.population_b)):  # renumber all Trees in given population - merged fx_evolve_tree_renum 2018 04/12
+        for tree_id in range(1, len(self.population_b)):  # renumber all Trees in given population
             self.population_b[tree_id][0][1] = tree_id
 
         self.plagih_fitness_gym(self.population_b)  # run fx_eval(), fx_fitness(), fx_fitness_store(), and fitness record
@@ -1733,7 +1738,7 @@ class Base_GP(object):
         fitness = round(fitness, self.precision)
 
         tree[12][1] = fitness  # store the fitness with each tree
-        tree[12][2] = parsimony  # store the length of the raw algo for parsimony
+        tree[14][1] = parsimony  # store the length of the raw algo for parsimony
         # if len(tree[3]) > 4: # if the Tree array is wide enough -- SEE SCRATCHPAD
 
         return
@@ -1774,7 +1779,7 @@ class Base_GP(object):
                               'and leads\033[0;0m')
                     tourn_lead = tree_id  # set 'TREE_ID' for the new leader
                     tourn_test = fitness  # set 'fitness' of the new leader
-                # short_test = int(self.population_a[tree_id][12][2]) # set len(algo_raw) of new leader
+                # short_test = int(self.population_a[tree_id][14][1]) # set len(algo_raw) of new leader
 
                 elif fitness == tourn_test:  # if the current Tree's 'fitness' is equal to the priors'
                     if self.display == 'i':
@@ -1784,8 +1789,8 @@ class Base_GP(object):
                 # tourn_test remains unchanged
 
                 # TODO NEED TO add option for parsimony
-                # if int(self.population_a[tree_id][12][2]) < short_test:
-                # short_test = int(self.population_a[tree_id][12][2]) # set len(algo_raw) of new leader
+                # if int(self.population_a[tree_id][14][1]) < short_test:
+                # short_test = int(self.population_a[tree_id][14][1]) # set len(algo_raw) of new leader
                 # print ('\t\033[36m with improved parsimony score of:\033[1m', short_test, '\033[0;0m')
 
                 elif fitness < tourn_test:  # if the current Tree's 'fitness' is less than the priors'
@@ -1875,10 +1880,6 @@ class Base_GP(object):
             self.fx_karoo_pause_refer()  # 2019 06/07
 
         return
-
-
-
-
 
     def fx_fitness_test_classify(self, result):
 
@@ -2017,7 +2018,7 @@ class Base_GP(object):
 
         return
 
-    def fx_nextgen_crossover(self, mode='replace_same_types'):
+    def plagih_nextgen_crossover(self, mode='replace_same_types'):
 
         """
         Through tournament selection, two trees are selected as parents to produce two offspring. Within each parent
@@ -2118,7 +2119,7 @@ class Base_GP(object):
             raise print('sfeh_plagih_get_new_tree_size does not accept this mode: ' + str(mode))
         return branch_depth
 
-# TODO what should happen, is there are no terminals or functions with the corresponding type within our range?
+        # TODO what should happen, is there are no terminals or functions with the corresponding type within our range?
 
     def sfeh_plagih_get_dtype(self, node_label, node_type):
         """
@@ -2322,11 +2323,10 @@ class Base_GP(object):
         old_node_label = chosen_tree[6][branch_nodes_list[0]]  # +,-,*,8,action0 ...
         old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func, term, ...
         old_node_dtype = self.sfeh_plagih_get_dtype(old_node_label, old_node_type)  # exception-safe: '2f', 'f2b', ...
-        # print('old_node _label, _type, _dtype', old_node_label, old_node_type, old_node_dtype)
 
         # 3. check if we are on a too-low level to branch mutate...
         if branch_depth < 0:  # this has never occured ... yet
-            print('\n\t\033[31m ERROR! In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
+            self.plprint('e', 'In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
@@ -2438,13 +2438,10 @@ class Base_GP(object):
 
         The end result is a Tree with a mutated branch. Pretty cool, huh?
         """
-        # TODOTODO HEREHERE SFEHSFEH
-        # *_branch_top_copy merged with *_body_copy 2018 04/12
 
         ### PART 1 - insert branch_top from 'gp.tree' into 'tree' ###
 
         branch_top = int(branch_nodes[0])
-        # R00t: not needed
         winner_tree[5][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
         winner_tree[6][branch_top] = self.tree[6][1]  # copy node_label from new tree
         winner_tree[8][branch_top] = self.tree[8][1]  # copy node_arity from new tree
@@ -2695,7 +2692,6 @@ class Base_GP(object):
 
         ### THIS METHOD MAY NOT BE REQUIRED AS SORTING 'branch' SEEMS TO HAVE FIXED 'parent_id' ###
 
-        # tested 2015 06/05
         for node in range(1, len(tree[3])):
 
             if tree[9][node] != '':
@@ -2722,7 +2718,6 @@ class Base_GP(object):
 
         """
 
-        # tested 2015 05/31
         for n in range(1, len(tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
 
             if tree[5][n] == 'term':  # check for discrepency
@@ -2758,16 +2753,16 @@ class Base_GP(object):
 
         """
 
-        # save information about how good stuff was in the tree
-        # sfeh this is not nicely done, using tree areas we should not be using
+        # save information about how good last changes were
         for i in range(min(self.tree_depth_min, 5), 2, -1):  # 3-5 fields saved
-            tree[0][i] = tree[0][i-1]  # The last parsimony (TODO) # TREE_ID,1,a,b,c -> TREE_ID,1,a,a,b
             tree[1][i] = tree[1][i-1]  # The last modifications
             tree[12][i] = tree[12][i-1]# The last fitness
+            tree[14][i] = tree[14][i-1]  # The last parsimony (TODO) # TREE_ID,1,a,b,c -> TREE_ID,1,a,a,b
 
+        # What needs to be assigned later
         tree[0][1] = ''  # -> TREE_ID,1,,a,b
-
-        tree[12][1:] = ''  # wipe fitness data
+        tree[12][1] = ''  # wipe fitness data
+        tree[14][1] = ''  # wipe parsimony data
 
         return tree
 
@@ -2787,11 +2782,10 @@ class Base_GP(object):
 
         nodes = []
 
-        # tested 2015 06/08
         for n in range(1, len(tree[3])):
 
             if int(tree[4][n]) == depth and tree[5][n] == 'func':
-                rnd = np.random.randint(0, len(self.terminals))  # call the previously loaded .csv which contains all terminals
+                rnd = np.random.randint(0, len(self.terminals))  # all observations
                 tree[5][n] = 'term'  # mutate type 'func' to 'term'
                 tree[6][n] = self.terminals[rnd]  # replace label
 
@@ -2888,7 +2882,9 @@ class Base_GP(object):
             elif verbosity == 'p':  # pause
                 message_style = '\033[35mPause(TODO): '  # Magenta
             elif verbosity == 'f':  # function
-                message_style = '\033[33mFun: '  # Yellow
+                message_style = '\033[35mPause(TODO): '  # Magenta
+            elif verbosity == 'w':  # warning
+                message_style = '\033[93mFun: '  # Warning-yellow
             else:
                 print('Error. Display-mode ', verbosity, 'not known.')
 

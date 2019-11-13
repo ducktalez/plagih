@@ -1,8 +1,0 @@
-operator, arity
-sumsy,2,num
-subsy,2,num
-mulsy,2,num
-divsy,2,num
-lesy,2,bool
-gesy,2,bool
-eqsy,2,bool

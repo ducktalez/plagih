@@ -869,8 +869,9 @@ class Base_GP(object):
                 raise print("Tree could not be imported correctly from .csv file.")
         self.origin_tree = tree
         self.plagih_eval_poly(self.origin_tree)
-        self.algo_origin = np.copy(self.algo_sym)
-
+        self.origin_algo = np.copy(self.algo_sym)
+        expr = str(self.algo_sym)
+        self.origin_fitness = self.plagih_fitness_eval(expr, self.data_test, get_pred_labels=True)
 
         return tree
 
@@ -1330,12 +1331,12 @@ class Base_GP(object):
 
             if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
                 self.printpl('w', 'We had a "nan"')
-                self.algo_sym = self.algo_origin  # "nan" workaround
+                self.algo_sym = self.origin_algo  # "nan" workaround
 
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
         except:
             self.printpl('e', 'In sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
-            self.algo_sym = self.algo_origin
+            self.algo_sym = self.origin_algo
             self.printpl('w', 'We had a "nan" which lead to an Exception')
             # todo.
         return
@@ -1469,7 +1470,6 @@ class Base_GP(object):
 
             ### PART 2 - EVALUATE FITNESS FOR EACH TREE AGAINST TRAINING DATA ###
             fitness = 0
-
             expr = str(self.algo_sym)  # get sympified expression and process it with TF
             result = self.plagih_fitness_eval(expr, self.data_train)
             parsimony = self.sfeh_plagih_tree_parsimony_distance(population[tree_id], parsimony_distance='total_simplified')
@@ -1940,7 +1940,7 @@ class Base_GP(object):
         Create the gene pool
         """
 
-        self.printpl('n', 'Gene Pool for Generation:', self.gen_id , '...')
+        self.printpl('n', 'Gene Pool for Generation:', self.gen_id, '...')
 
         self.gene_pool = []
 
@@ -1956,14 +1956,10 @@ class Base_GP(object):
             if self.algo_sym != 1:  # check if Tree meets the requirements
                 self.gene_pool.append(self.population_a[tree_id][0][1])
 
-        if len(self.gene_pool) > 0 and self.display == 'i':
-            print('\n\t The total population of the gene pool is', len(self.gene_pool))
-            self.fx_karoo_pause_refer()  # 2019 06/07
-
-        elif len(self.gene_pool) <= 0:  # the evolutionary constraints were too tight, killing off the entire population
-            # self.gen_id = self.gen_id - 1 # revert the increment of the 'gen_id'
-            # self.gen_max = self.gen_id # catch the unused "cont" values in the fx_karoo_pause() method
-            print("\n\t\033[31m\033[3m 'They're dead Jim. They're all dead!'\033[0;0m There are no Trees in the gene pool. You should archive your population and (q)uit.")
+        if len(self.gene_pool) > 0:
+            self.printpl('p', 'The total population of the gene pool is', len(self.gene_pool))
+        else:  # the evolutionary constraints were too tight, killing off the entire population
+            self.printpl('p', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.fx_karoo_pause_refer()  # 2019 06/07
 
         return

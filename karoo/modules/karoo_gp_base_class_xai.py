@@ -262,10 +262,10 @@ class Base_GP(object):
         self.plagih_init_construct(origin_tree_file)  # construct the first population of Trees
         if self.gen_max == 1:  # terminate here if constructing just one generation
             self.plagih_data_tree_write(self.population_a, 'a')  # save this single population to disk
-            self.printpl('i', '\n We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
+            self.printpl('g', '\n We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
             sys.exit()
         else:
-            print('\n We have constructed the first, stochastic population of', self.tree_pop_max, 'Trees')
+            self.printpl('g', '\n We have constructed the first, stochastic population of', self.tree_pop_max, 'Trees')
 
         ### PART 3 - evaluate first generation of Trees ###
         self.printpl('g', '\n Evaluate the first generation of Trees ...')
@@ -992,9 +992,8 @@ class Base_GP(object):
         # Find no-modifyables in Origin
         non_modifiable_nodes = []
         if self.origin_tree[13][1] == '0':  # check is modifiable nodes are specified
-            non_modifiable_nodes.append(self.plagih_get_nomodify_nodes(1, chosen_tree, 1))
+            non_modifiable_nodes.extend(self.plagih_get_nomodify_nodes(1, chosen_tree, 1))
 
-        print('non_modifiable_nodes', non_modifiable_nodes)
         for non_modifiable in non_modifiable_nodes:
             chosen_tree[13][non_modifiable] = 0
 
@@ -1004,18 +1003,17 @@ class Base_GP(object):
         """
         Returns a list of nodes that are not supposed to be modified
         """
-        print(self.origin_tree[13][origin_node] == '0')
+
         if self.origin_tree[13][origin_node] == '0':
-            non_modifiables = chosen_tree[3][chosen_node]
+            non_modifiables = []
+            non_modifiables.append(int(chosen_tree[3][chosen_node]))
             for child in [9, 10, 11]:
                 if self.origin_tree[child][origin_node] != '':
-                    # next origin node check for...
-                    next_origin_node = self.origin_tree[child][origin_node]
-                    next_chosen_node = chosen_tree[child][chosen_node]
+                    next_origin_node = int(self.origin_tree[child][origin_node])
+                    next_chosen_node = int(chosen_tree[child][chosen_node])
                     tmp = self.plagih_get_nomodify_nodes(next_origin_node, chosen_tree, next_chosen_node)
                     if tmp is not None:
-                        non_modifiables.append(tmp)
-
+                        non_modifiables.extend(tmp)
             return non_modifiables
         else:
             return
@@ -2157,9 +2155,9 @@ class Base_GP(object):
             elif mode == 'replace_interface_node':
                 # Replace the changed node (if necessary)
                 # TODO
-                raise print('Not yet implemented.')
+                raise self.printpl('e', 'Not yet implemented.')
             else:
-                raise print('Crossover method is not specified')
+                raise self.printpl('e', 'Crossover method is not specified')
 
         return
 
@@ -2185,15 +2183,12 @@ class Base_GP(object):
         elif tree[5][node] == 'term':
             tree[6][node] = self.sfeh_dtype_get_term4node(node_type)  # 3 -> '2f' -> 5
         else:
-            raise print('Operator type is not specified for PLAGIH ("term", "func",...)')
+            raise self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
 
         # 3. calculate new fitness of the tree
         tree = self.plagih_evolve_fitness_wipe(tree)  # wipe fitness data
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
-
-    def plagih_print(self, verbosity, test):
-        return
 
     def sfeh_plagih_get_new_tree_size(self, chosen_tree, branch_top, mode='random'):  # sfeh other default
         """
@@ -2211,7 +2206,7 @@ class Base_GP(object):
         elif mode == 'random':
             branch_depth = max(branch_depth_upper_bound, np.random.randint(0, 1+max(branch_depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
         else:
-            raise print('sfeh_plagih_get_new_tree_size does not accept this mode: ' + str(mode))
+            raise self.printpl('e', 'sfeh_plagih_get_new_tree_size does not accept this mode: ' + str(mode))
         return branch_depth
 
         # TODO what should happen, is there are no terminals or functions with the corresponding type within our range?
@@ -2235,7 +2230,7 @@ class Base_GP(object):
         elif node_type == 'func':
             return function_types_dict[node_label]
         else:
-            raise print('OHNO')
+            raise self.printpl('e', 'This node_type is not known', node_type)
 
     def sfeh_label_get_dtype_solve(self, node_label):
         """
@@ -2278,7 +2273,7 @@ class Base_GP(object):
             terminals_correct = self.terminals_bool
             the_type = 'bool'
         else:
-            raise print('Probably, you have to check if your "function" is actually a terminal:', node_dtype)
+            raise self.printpl('e', 'Probably, you have to check if your "function" is actually a terminal:', node_dtype)
 
         try:
             if np.random.choice(['var', 'const']) == 'var':  # our choice is variable
@@ -2308,7 +2303,7 @@ class Base_GP(object):
             elif function_type == 'b2f2f':
                 return np.random.choice(self.functions_array[4][arity])  # sfeh okay that does not make sense tbh
             else:
-                raise print("Function was not found in function_types_dict.")
+                raise self.printpl('e', 'Function was not found in function_types_dict', function_type)
 
         if function_type == 'f2f':
             return np.random.choice(self.functions_f2f)
@@ -2321,7 +2316,7 @@ class Base_GP(object):
         elif function_type == 'b2f2f':
             return np.random.choice(self.functions_b2f2f)  # sfeh okay that does not make sense tbh
         else:
-            raise print("Function was not found in function_types_dict.")
+            raise self.printpl('e', 'Function was not found in function_types_dict', function_type)
 
     def sfeh_dtype_get_func4any(self, function_dtype):
         """
@@ -2338,7 +2333,7 @@ class Base_GP(object):
             new_label = np.random.choice(self.functions_2b)
             return new_label, function_arity_dict[str(new_label)]
         else:
-            raise print('Warning: Function was not found in function_types_dict.')
+            raise self.printpl('e', 'Warning: Function was not found in function_types_dict', function_dtype)
 
     def sfeh_crossover_get_partner_node_id(self, function_label, partner_tree, partner_branch_id, mode='same_type'):
         """
@@ -2359,9 +2354,9 @@ class Base_GP(object):
             else:
                 return 0  # No matching node found :(
         elif mode == 'random':
-            print('mode: Do the same as in the upper function, but choose randomly?')
+            self.printpl('TODO', 'mode: Do the same as in the upper function, but choose randomly?')
         else:
-            raise print('mode: Not today')
+            raise self.printpl('e', 'Mode not found', mode)
 
     def sfeh_get_mutatable_node_id(self, tree, mode=''):
         """
@@ -2453,11 +2448,7 @@ class Base_GP(object):
 
         # 6 Fill the correct meta-data into the tree (and wipe the old fitness)
         chosen_tree = self.plagih_evolve_fitness_wipe(chosen_tree)  # wipe fitness data
-        print('ONE')
-        print(chosen_tree)
         chosen_tree = self.plagih_set_modify_nodes(chosen_tree)
-        print('TWO')
-        print(chosen_tree)
 
         return chosen_tree
 
@@ -2479,7 +2470,7 @@ class Base_GP(object):
             else:
                 return parent_x
         else:
-            raise print('Did not implement crossover method here')
+            raise self.printpl('e', 'Did not implement crossover method here')
 
 
         if len(branch_x) == 1:  # if the branch from the parent contains only one node (terminal)
@@ -2759,8 +2750,7 @@ class Base_GP(object):
             tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
 
         else:
-            print('\n\t\033[31m ERROR! In fx_evolve_child_insert: node', node,
-                  'arity > 3\033[0;0m')
+            print('\n\t\033[31m ERROR! In fx_evolve_child_insert: node', node, 'arity > 3\033[0;0m')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         return tree
@@ -2969,7 +2959,7 @@ class Base_GP(object):
             elif verbosity == 'e':
                 message_style = '\033[31mERROR: '  # red
             elif verbosity == 'n':
-                message_style = '\033[32mNextGen: '  # green
+                message_style = '\033[32mGeneration: '  # green
             elif verbosity == 'v':  # verbose
                 message_style = '\033[37mVerbose: '  # white
             elif verbosity == 'p':  # pause

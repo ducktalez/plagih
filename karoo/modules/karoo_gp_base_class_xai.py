@@ -279,7 +279,8 @@ class Base_GP(object):
 
                 self.printpl('g', '\n Evolve a population of Trees for Generation', self.gen_id, '...')
                 self.population_b = ['Karoo GP - Evolving Generation']  # initialise population_b to host the next generation
-                self.plagih_fitness_gene_pool()  # generate the viable gene pool, aka Paretofront? At least our "origin" should be fit enough ;)
+                self.plagih_fitness_gene_pool()  # generate the viable gene pool
+                self.sfeh_fitness_olymp()
                 # Add the original tree aswell
                 self.plagih_nextgen_reproduce_one()  # method 1 - Reproduction
                 self.plagih_nextgen_point_mutate()  # method 2 - Point Mutation
@@ -1936,25 +1937,19 @@ class Base_GP(object):
     def plagih_fitness_gene_pool(self):
 
         """
-        The first constraint introduced is the 'mininum number
-        of nodes' parameter (gp.tree_depth_min). This defines the minimum number of nodes (in the context of Karoo, this
-        refers to both functions (operators) and terminals (operands)).
-
-        When the minimum node count is human guided, it can keep the solution from defaulting to a local minimum, as with
-        't/t' in the Kepler problem, by forcing a more complex solution. If you find that when engaging the Regression
-        kernel you are met with a solution which is too simple (eg: linear instead of non-linear), try increasing the
-        minimum number of nodes (with the launch of Karoo, or mid-stream by way of the pause menu).
-
-        With additional or alternative constraints, you may customize how the next generation is selected.
-
-        At this time, the gene pool does *not* limit the number of times any given Tree may be selected for reproduction or
-        mutation nor does it take into account parsimony (seeking the simplest multivariate expression).
-
+        Create the gene pool
         """
 
-        self.printpl('n', 'Gene Pool for Generation:',self.gen_id ,'...')
+        self.printpl('n', 'Gene Pool for Generation:', self.gen_id , '...')
 
         self.gene_pool = []
+
+        # Create a rule when a contestant can come into the gene pool
+        #  - When its better than original threshold
+        #  - epsilon-threshold, which is auto initialised in the first generation?
+        #  - when there was an improvement from the last change
+        # Add good ones to the gene pool
+        # Add the BEST ones to the olymp
 
         for tree_id in range(1, len(self.population_a)):  # Every tree
             self.plagih_eval_poly(self.population_a[tree_id])  # extract the expression
@@ -1972,6 +1967,15 @@ class Base_GP(object):
             self.fx_karoo_pause_refer()  # 2019 06/07
 
         return
+
+    def sfeh_fitness_olymp(self):
+        """
+        The olymp is where the godlike contestants reside.
+        In each generation, the olymp searches for new god contestants
+        """
+        print('TODO')
+        return
+
 
     def fx_fitness_test_classify(self, result):
 
@@ -2064,7 +2068,7 @@ class Base_GP(object):
 
         for n in range(self.evolve_repro):  # quantity of Trees to be copied without mutation
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each reproduction
-            tourn_winner = self.plagih_evolve_fitness_wipe(tourn_winner)  # wipe fitness data
+            tourn_winner = self.plagih_evolve_fitness_wipe_enrich(tourn_winner)  # wipe fitness data
             tourn_winner[1][1] = 'r'
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
@@ -2081,7 +2085,8 @@ class Base_GP(object):
         for n in range(self.evolve_point):  # quantity of Trees to be generated through mutation
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # get a tournament winner
             tourn_winner, node = self.plagih_evolve_point_mutate(tourn_winner)  # point mutation; return single point for record keeping
-            tourn_winner[1][1] = 'p'
+            tourn_winner = self.plagih_evolve_fitness_wipe_enrich(tourn_winner, modification='p')  # wipe fitness data
+
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
         return
@@ -2186,7 +2191,7 @@ class Base_GP(object):
             raise self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
 
         # 3. calculate new fitness of the tree
-        tree = self.plagih_evolve_fitness_wipe(tree)  # wipe fitness data
+        tree = self.plagih_evolve_fitness_wipe_enrich(tree)  # wipe fitness data
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
@@ -2208,8 +2213,6 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'sfeh_plagih_get_new_tree_size does not accept this mode: ' + str(mode))
         return branch_depth
-
-        # TODO what should happen, is there are no terminals or functions with the corresponding type within our range?
 
     def sfeh_plagih_get_dtype(self, node_label, node_type):
         """
@@ -2410,7 +2413,7 @@ class Base_GP(object):
 
         # 1. How far can we build down?
         branch_top = int(branch_nodes_list[0])
-        branch_depth = self.sfeh_plagih_get_new_tree_size(chosen_tree, branch_top, mode='maximum')  # sfeh solution to keep tree kind of small
+        branch_depth = self.sfeh_plagih_get_new_tree_size(chosen_tree, branch_top)  # sfeh solution to keep tree kind of small, dont forget the mode
 
         # 2. Get the old-node's information
         old_node_label = chosen_tree[6][branch_nodes_list[0]]  # <,        +,-,*,8,action0 ...
@@ -2424,7 +2427,7 @@ class Base_GP(object):
 
         elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
             # 50:50 decision in function below if constant or variable
-            self.printpl('w', 'Is this supposed to happen? old_node_label:', old_node_label)
+            self.printpl('v', 'Ended in the lowest depth with old label', old_node_label)
             chosen_tree[6][branch_top] = self.sfeh_dtype_get_term4node(old_node_dtype)
 
         # 4. We can now mutate the branch!
@@ -2447,7 +2450,7 @@ class Base_GP(object):
             # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
 
         # 6 Fill the correct meta-data into the tree (and wipe the old fitness)
-        chosen_tree = self.plagih_evolve_fitness_wipe(chosen_tree)  # wipe fitness data
+        chosen_tree = self.plagih_evolve_fitness_wipe_enrich(chosen_tree)  # wipe fitness data
         chosen_tree = self.plagih_set_modify_nodes(chosen_tree)
 
         return chosen_tree
@@ -2490,7 +2493,7 @@ class Base_GP(object):
             parent_y = self.plagih_evolve_branch_insert(parent_y, branch_y)  # insert new 'branch_y' at point of mutation 'branch_top' in tourn_winner 'offspring'
             parent_y = self.fx_evolve_tree_prune(parent_y, self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
 
-        parent_y = self.plagih_evolve_fitness_wipe(parent_y)  # wipe fitness data
+        parent_y = self.plagih_evolve_fitness_wipe_enrich(parent_y)  # wipe fitness data
 
         return parent_y
 
@@ -2826,7 +2829,7 @@ class Base_GP(object):
 
         return tree
 
-    def plagih_evolve_fitness_wipe(self, tree):
+    def plagih_evolve_fitness_wipe_enrich(self, tree, modification=''):
 
         """
         Remove all fitness data from a given tree.
@@ -2837,13 +2840,14 @@ class Base_GP(object):
         """
 
         # save information about how good last changes were
-        for i in range(min(self.tree_depth_min, 5), 2, -1):  # 3-5 fields saved
-            tree[1][i] = tree[1][i-1]  # The last modifications
-            tree[12][i] = tree[12][i-1]# The last fitness
+        for i in range(min(self.tree_depth_min, 5), 2, -1):  # 5,4,3,2
+            tree[1][i] = tree[1][i-1]    # The last modifications
+            tree[12][i] = tree[12][i-1]  # The last fitness
             tree[14][i] = tree[14][i-1]  # The last parsimony (TODO) # TREE_ID,1,a,b,c -> TREE_ID,1,a,a,b
 
         # What needs to be assigned later
-        tree[0][1] = ''  # -> TREE_ID,1,,a,b
+        tree[0][1] = ''  # -> TREE_ID,,
+        tree[1][1] = modification  # wipe last modification data
         tree[12][1] = ''  # wipe fitness data
         tree[14][1] = ''  # wipe parsimony data
 

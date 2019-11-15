@@ -30,6 +30,8 @@ import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 from karoo.modules.plagih_sympy_extras import plagih_sympify
 from pprint import pprint
+import matplotlib.pyplot as plt
+import scipy.stats as st
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -236,29 +238,56 @@ class Base_GP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def plagih_karoo_gp(self, kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
-                        tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point, evolve_branch, evolve_cross, display, precision,
-                        swim, mode, gene_pool_threshold, parsimony_min_max):
+                        tourn_size, operators_file, samples_file, origin_tree_file, evolve_distribution, display, precision,
+                        swim, mode, gene_pool_threshold, parsimony_min_max, monitor):
 
-        ### PART 1 - set global variables to those local values passed from the user script ###
+        # 1. set global variables to those local values passed from the user script
         self.kernel = kernel  # fitness function
         self.tree_depth_max = tree_depth_max  # maximum Tree depth for the entire run; limits bloat
         self.tree_depth_min = tree_depth_min  # minimum number of nodes
         self.tree_pop_max = tree_pop_max  # maximum number of Trees per generation
         self.gen_max = gen_max  # maximum number of generations
         self.tourn_size = tourn_size  # number of Trees selected for each tournament
-        self.evolve_repro = evolve_repro  # quantity of a population generated through Reproduction
-        self.evolve_point = evolve_point  # quantity of a population generated through Point Mutation
-        self.evolve_branch = evolve_branch  # quantity of a population generated through Branch Mutation
-        self.evolve_cross = evolve_cross  # quantity of a population generated through Crossover
+        self.evolve_repro = evolve_distribution[0]  # quantity of a population generated through Reproduction
+        self.evolve_point = evolve_distribution[1]  # quantity of a population generated through Point Mutation
+        self.evolve_branch = evolve_distribution[2]  # quantity of a population generated through Branch Mutation
+        self.evolve_cross = evolve_distribution[3]  # quantity of a population generated through Crossover
+        self.evolve_missing = evolve_distribution[4]  # fill up the generation with candidates
+        # TODO use these for something
+        if self.evolve_missing > 0:
+            exit()
         self.display = display  # display mode is set to (s)ilent # level of on-screen feedback
         self.precision = precision  # the number of floating points for the round function in 'fx_fitness_eval'
         self.swim = swim  # pass along the gene_pool restriction methodology
         self.gene_pool_threshold = gene_pool_threshold
         self.parsimony_min_max = parsimony_min_max
+        self.monitor = monitor
 
-        ### PART 2 - construct first generation of Trees ###
+        # Load Operators and Dataset into self-variables
         self.plagih_data_load(operators_file, samples_file)
+
+        # Construct the first Generation
+        self.sfeh_main_generation_first(origin_tree_file)
+
+        # Continue with all further generations
+        menu = 1
+        while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
+            self.sfeh_main_generation_new()
+
+        self.plagih_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
+
+        return
+
+    def sfeh_main_generation_first(self, origin_tree_file):
+        """
+        Everything that needs to be done for the first generation
+        - Extracts "origin Tree" from file
+        - Creates all other trees: origin tree + branch mutation
+        - Evaluate the first Generation
+        - Monitoring initialisation and monitoring
+        """
         self.gen_id = 1  # set initial generation ID
+        self.sfeh_main_generation_parameters()
         self.population_a = ['PLAGIH Karoo GP Extension by Simon Fehrer, Generation ' + str(self.gen_id)]  # initialise population_a to host the first generation
         self.population_b = ['placeholder']  # initialise population_b to satisfy fx_karoo_pause()
         self.plagih_init_construct(origin_tree_file)  # construct the first population of Trees
@@ -274,33 +303,71 @@ class Base_GP(object):
         self.plagih_fitness_gym(self.population_a)  # generate expression, evaluate fitness, compare fitness
         self.plagih_data_tree_write(self.population_a, 'a')  # save the first generation of Trees to disk
 
-        ### PART 4 - evolve multiple generations of Trees ###
-        menu = 1
-        while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
-            for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # generation 2 to *max generation*
+        self.sfeh_monitor(mode='init')
+        self.sfeh_monitor()
 
-                self.printpl('g', '\n Evolve a population of Trees for Generation', self.gen_id, '...')
-                self.population_b = ['Karoo GP - Evolving Generation']  # initialise population_b to host the next generation
-                self.plagih_fitness_gene_pool()  # generate the viable gene pool
-                self.sfeh_fitness_olymp()
-                # Add the original tree aswell
-                self.plagih_nextgen_reproduce_one()  # method 1 - Reproduction
-                self.plagih_nextgen_point_mutate()  # method 2 - Point Mutation
-                self.plagih_nextgen_branch_mutate()  # method 3 - Branch Mutation
-                self.plagih_nextgen_crossover()  # method 4 - Crossover
-                self.plagih_eval_generation()  # evaluate all Trees in a single generation
-                self.population_a = self.fx_evolve_pop_copy(self.population_b, ['Karoo GP Generation ' + str(self.gen_id)])
+    def sfeh_main_generation_new(self):
+        """
+        Creates all new Generations.
+        - adjust parameters for this generation (parsimony threshold)
+        - Create a gene pool (kick out too complex candidates)
+        """
+        for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # generation 2 to *max generation*
+            self.sfeh_main_generation_parameters()
+            self.printpl('g', '\n Evolve a population of Trees for Generation', self.gen_id, '...')
+            self.population_b = ['Karoo GP - Evolving Generation']  # initialise population_b to host the next generation
+            self.plagih_fitness_gene_pool()  # generate the viable gene pool
+            self.sfeh_fitness_olymp()
+            # Add the original tree aswell
+            self.plagih_nextgen_reproduce()  # method 1 - Reproduction
+            self.plagih_nextgen_mutate_point()  # method 2 - Point Mutation
+            self.plagih_nextgen_mutate_branch()  # method 3 - Branch Mutation
+            self.plagih_nextgen_crossover()  # method 4 - Crossover
+            self.plagih_eval_generation()  # evaluate all Trees in a single generation
+            self.population_a = self.fx_evolve_pop_copy(self.population_b, ['Karoo GP Generation ' + str(self.gen_id)])
+            self.sfeh_monitor()
+        # SFEH das war mal da, hat nach dem Durchlaufen ohne Menu abgekackt
+        # if mode == 's':
+        #     menu = 0  # (s)erver mode - termination with completiont of prescribed run
+        else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
+            print('\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
+            # menu = self.fx_karoo_pause()
+            # SFEH statt oben steht da jetzt da unten :D
+            menu = 0
 
-            # SFEH das war mal da, hat nach dem Durchlaufen ohne Menu abgekackt
-            # if mode == 's':
-            #     menu = 0  # (s)erver mode - termination with completiont of prescribed run
-            else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
-                print('\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
-                # menu = self.fx_karoo_pause()
-                # SFEH statt oben steht da jetzt da unten :D
-                menu = 0
+    def sfeh_monitor(self, mode=''):
+        """
+        monitors everything
 
-        self.plagih_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
+        Helper:
+        # plot_end(self, y, mode='', plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='')
+        """
+        # Init is here to safe memory
+
+        if 's' in self.monitor:
+            if mode == '':
+                if self.monitor_failed_sympys_amount:
+                    self.plot_failed_sympys_amount.append(self.monitor_failed_sympys_amount)
+            elif mode == 'init':
+                self.plot_failed_sympys_amount = []
+            elif mode == 'show':
+                if self.plot_failed_sympys_amount:
+                    self.plot_end('s', plt_title='Sympify zoo and nan', plt_y_label='Amount')
+
+        return
+
+
+    def sfeh_main_generation_parameters(self):
+        """
+        Sets the parameters for this generation
+        - Lineary increase threshold for parsimony
+        """
+
+        self.monitor_failed_sympys_amount = 0  # monitoring
+
+        # adjust parsimony threshold lineary
+        gen_done_percentage = self.gen_id / self.gen_max
+        self.parsimony_min_max[0] = int(gen_done_percentage * self.parsimony_min_max[1])
 
         return
 
@@ -427,13 +494,13 @@ class Base_GP(object):
 
         Arguments required: none
         """
-
+        self.sfeh_monitor(mode='show')
         self.plagih_data_params_write()
         target = open(self.filename['f'], 'w')
         target.close()  # initialize the .csv file for the final population
         self.plagih_data_tree_write(self.population_b, 'f')  # save the final generation of Trees to disk
-        print('\n\t\033[32m Your Trees and runtime parameters are archived in karoo_gp/runs/[date-time]/\033[0;0m')
 
+        print('\n\t\033[32m Your Trees and runtime parameters are archived in karoo_gp/runs/[date-time]/\033[0;0m')
         print('\n\033[3m "It is not the strongest of the species that survive, nor the most intelligent,\033[0;0m')
         print('\033[3m  but the one most responsive to change."\033[0;0m --Charles Darwin\n')
         print('\033[3m Congrats!\033[0;0m Your Karoo GP run is complete.\n')
@@ -723,7 +790,6 @@ class Base_GP(object):
         """
         Save run-time configuration parameters to disk.
 
-        Called by: fx_karoo_gp, fx_karoo_pause
         """
 
         file = open(self.path + 'log_config.txt', 'w')
@@ -842,7 +908,7 @@ class Base_GP(object):
             # self.fx_data_tree_append(self.tree)
 
             tree = origin_tree.copy()  # is this necessary? probably.
-            branch_nodes_list = self.plagih_evolve_branch_select(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
+            branch_nodes_list = self.plagih_evolve_get_branch(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
             tree = self.plagih_evolve_branch_mutate(tree, branch_nodes_list)  # tree with new branch
 
             tree[0][1] = TREE_ID
@@ -871,7 +937,7 @@ class Base_GP(object):
                 raise print("Tree could not be imported correctly from .csv file.")
         self.origin_tree = tree
         self.plagih_eval_poly(self.origin_tree)
-        self.origin_algo = np.copy(self.algo_sym)
+        # self.origin_algo = np.copy(self.algo_sym)
         expr = str(self.algo_sym)
         self.origin_fitness = self.plagih_fitness_eval(expr, self.data_test, get_pred_labels=True)
 
@@ -1319,26 +1385,25 @@ class Base_GP(object):
         Arguments required: tree
         """
 
-        self.num_failed_sympys = 0
         self.algo_raw = self.plagih_eval_label(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
         try:  # plagih: try block needed. simpify can not handle if then else.
             x = plagih_sympify(self.algo_raw)
             strx = str(x)
 
             if 'zoo' in strx or 'nan' in strx:
-                self.num_failed_sympys = self.num_failed_sympys + 1
+                self.monitor_failed_sympys_amount = self.monitor_failed_sympys_amount + 1
 
             if 'zoo' in strx:
                 x = re.sub('zoo', '10', strx)  # TODO how to handle zoo?
 
             if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
                 self.printpl('w', 'We had a "nan"')
-                self.algo_sym = self.origin_algo  # "nan" workaround
+                self.algo_sym = plagih_sympify(1)  # "nan" workaround
 
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
         except:
             self.printpl('e', 'In sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
-            self.algo_sym = self.origin_algo
+            self.algo_sym = 1
             self.printpl('w', 'We had a "nan" which lead to an Exception')
             # todo.
         return
@@ -1950,10 +2015,21 @@ class Base_GP(object):
 
         """
         Create the gene pool
+        - Add a candidate if its parsimony is within the threshold
+
+        # TODO find rules that automatically stop plagih from finding solutions that are too complex? adjust the nextgen functions (mutate, ...)?
+        Ideas:
+        # Create a rule when a candidate can come into the gene pool
+        #  - When its better than original threshold
+        #  - epsilon-threshold, which is auto initialised in the first generation?
+        #  - when there was an improvement from the last change
+        # Add good ones to the gene pool
+        # Add the BEST ones to the olymp
+        # TODO stop equal candidates from being in the gene pool multiple times?
+
         """
 
         self.printpl('n', 'Gene Pool for Generation:', self.gen_id, '...')
-
         self.gene_pool = []
 
         # Create a rule when a contestant can come into the gene pool
@@ -1965,11 +2041,8 @@ class Base_GP(object):
 
         for tree_id in range(1, len(self.population_a)):  # Every tree
             self.plagih_eval_poly(self.population_a[tree_id])  # extract the expression
-            # TODO can we ignore false trees with less computation?
-            if self.algo_sym != 1:  # check if Tree meets the requirements
-
-                if self.parsimony_min_max[0] > self.population_a[tree_id][14][1]:
-                    self.gene_pool.append(self.population_a[tree_id][0][1])
+            if self.algo_sym != 1 and self.parsimony_min_max[0] > int(self.population_a[tree_id][14][1]):  # dummy exit and parsimony condition
+                self.gene_pool.append(self.population_a[tree_id][0][1])
 
         if len(self.gene_pool) > 0:
             self.printpl('p', 'The total population of the gene pool is', len(self.gene_pool))
@@ -2067,7 +2140,7 @@ class Base_GP(object):
     #   Methods to Construct the next Generation |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def plagih_nextgen_reproduce_one(self):
+    def plagih_nextgen_reproduce(self):
 
         """
         Through tournament selection, a single Tree from the prior generation is copied without mutation to the next
@@ -2085,7 +2158,7 @@ class Base_GP(object):
 
         return
 
-    def plagih_nextgen_point_mutate(self):
+    def plagih_nextgen_mutate_point(self):
 
         """
         One point (terminal or function) gets mutated.
@@ -2102,7 +2175,7 @@ class Base_GP(object):
 
         return
 
-    def plagih_nextgen_branch_mutate(self):
+    def plagih_nextgen_mutate_branch(self):
 
         """
         Mutates a whole tree branch.
@@ -2118,7 +2191,7 @@ class Base_GP(object):
 
         for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
-            branch_nodes_list = self.plagih_evolve_branch_select(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_list = self.plagih_evolve_get_branch(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.plagih_evolve_branch_mutate(tourn_winner, branch_nodes_list)
             tourn_winner[1][1] = 'b'
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
@@ -2128,32 +2201,29 @@ class Base_GP(object):
     def plagih_nextgen_crossover(self, mode='replace_same_types'):
 
         """
-        Through tournament selection, two trees are selected as parents to produce two offspring. Within each parent
-        Tree a branch is selected. Parent A is copied, with its selected branch deleted. Parent B's branch is then
-        copied to the former location of Parent A's branch and inserted (grafted). The size and shape of the child
-        Tree may be smaller or larger than either of the parents, but may not exceed 'tree_depth_max' as defined
-        by the user.
-
-        This process combines genetic code from two parent Trees, both of which were chosen by the tournament process
-        as having a higher fitness than the average population. Therefore, there is a chance their offspring will
-        provide an improvement in total fitness. In most GP applications, Crossover is the most commonly applied
-        evolutionary operator (~70-80%).
-
-        For those who like to watch, select 'db' (debug mode) at the launch of Karoo GP or at any (pause).
+        - select two candidates
+        - select swappable branches for the parents
+        - delete parent_a branch and insert parent_b branch (which tactic?)
 
         """
         self.printpl('n', 'Crossover...')
 
         for n in range(self.evolve_cross // 2):  # quantity of Trees to be generated through Crossover, accounting for 2 children each
+
+            # 1. Select two parents and their branches
             parent_a = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
-            branch_a = self.plagih_evolve_branch_select(parent_a)  # select branch within 'parent_a', to copy to 'parent_b' and receive a branch from 'parent_b'
-
             parent_b = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
-            branch_b = self.plagih_evolve_branch_select(parent_b)  # select branch within 'parent_b', to copy to 'parent_a' and receive a branch from 'parent_a'
 
+            # 2. Copy parents
             parent_c = np.copy(parent_a)
-            branch_c = np.copy(branch_a)  # else the Crossover mods affect the parent Trees, due to copied references
             parent_d = np.copy(parent_b)
+
+            branch_a, branch_b = self.sfeh_evolve_crossover_get_swap_branches(parent_a, parent_b)
+
+            # branch_a = self.plagih_evolve_get_branch(parent_a)  # select branch within 'parent_a', to copy to 'parent_b' and receive a branch from 'parent_b'
+            # branch_b = self.plagih_evolve_get_branch(parent_b)  # select branch within 'parent_b', to copy to 'parent_a' and receive a branch from 'parent_a'
+
+            branch_c = np.copy(branch_a)  # else the Crossover mods affect the parent Trees, due to copied references
             branch_d = np.copy(branch_b)  # else the Crossover mods affect the parent Trees, due to how Python manages '='
 
             if mode == 'replace_same_types':
@@ -2188,7 +2258,7 @@ class Base_GP(object):
         """
 
         # 1. choose a node
-        node = self.sfeh_get_mutatable_node_id(tree)  # randomly select a point in the Tree (including root)
+        node = self.sfeh_get_mutatable_node_id(tree, mode='mutate_point')  # randomly select a point in the Tree (including root)
         node_type = self.sfeh_label_get_dtype_solve(tree[6][node])  # '>' -> 'f2b'
 
         # 2. perform point mutation on that specific node
@@ -2351,7 +2421,7 @@ class Base_GP(object):
 
     def sfeh_crossover_get_partner_node_id(self, function_label, partner_tree, partner_branch_id, mode='same_type'):
         """
-        Gets a node_id in the partner tree, that can be applied
+        -> Crossover: Returns a node_id in the partner tree, that can be swapped
         """
 
         node_dtype = self.sfeh_plagih_get_dtype(function_label, self.sfeh_label_get_nodetype(function_label))
@@ -2375,6 +2445,10 @@ class Base_GP(object):
     def sfeh_get_mutatable_node_id(self, tree, mode=''):
         """
         Returns a mutatable node for point-mutation
+        - count modifiable nodes
+        - select a madifiable node
+        - return modifiable node
+        -> no_root handles
         """
         num_nodes = 1
 
@@ -2382,13 +2456,16 @@ class Base_GP(object):
         for i, x in enumerate(tree[5]):
             if x != '' and tree[13][i] == '1':
                 num_nodes += 1
-        if mode == 'no_root':  # For branch mutation. If root is changed, it is a new tree.
+
+        if mode == 'no_root' or mode == 'mutate_branch' or mode == 'crossover':  # For branch mutation. If root is changed, it is a new tree.
             if tree[13][1] == '1':
                 node_n = np.random.randint(2, num_nodes)
             else:
                 node_n = np.random.randint(1, num_nodes)
-        else:
+        elif mode == 'point_mutate':
             node_n = np.random.randint(1, num_nodes)  # choose a random "modifiable" FUNCTION
+        else:
+            self.printpl('e', 'This mode is not known', mode)
         # TODO only works for 2-array functions
 
         # 2: return the node's number
@@ -2399,17 +2476,6 @@ class Base_GP(object):
                     return int(tree[3][i])
                 else:
                     num_nodes += 1
-
-    def sfeh_plagih_get_mutatable_branch(self, tree):
-        """
-        Returns a mutatable branch for branch-mutation
-        Attention: Must not contain subbranches with unmodyfiable nodes.
-
-        """
-        # 1. Get number of mutatable nodes first
-        return self.sfeh_get_mutatable_node_id(tree, mode='no_root')
-        # 2. check all nodes if they contain unchangeable subnodes.
-        # Not necessary, the tree is assumed to be correct and all
 
     def plagih_evolve_branch_mutate(self, chosen_tree, branch_nodes_list):
 
@@ -2466,6 +2532,52 @@ class Base_GP(object):
 
         return chosen_tree
 
+    def sfeh_evolve_crossover_get_swap_branches(self, parent_a, parent_b, mode ='replace_same_types'):
+        """
+        Returns two branches that can be replaced
+
+        - Try swapping based on dtype
+            - Choose a random node in tree a
+            - Has b an equal dtype-node?
+            -> yes: swap them, RETURN
+        - Try swapping with the other dtype
+            - Choose a random node in tree a of different dtype
+            - Has b an equal dtype-node?
+            -> yes: swap them, RETURN
+        - No matching dtypes. Force conversion.
+            - Choose a random node in tree a
+            - Choose a random node in tree b
+            - Convert parent_b's node to parent_a's node
+        """
+
+        if mode == 'replace_same_types':
+            # choose random node, check i
+            tmp = self.sfeh_get_mutatable_node_id(parent_a, mode='crossover')
+            if self.sfeh_crossover_partner_branch_exists(parent_b, tmp):
+
+            branch_a = self.plagih_evolve_get_branch()
+            branch_b = 2
+            return branch_a, branch_b
+
+        # # Prepare
+
+        #     new_branch_root = self.sfeh_crossover_get_partner_node_id(parent_x[6][branch_x[0]], parent_y, branch_y[0])
+        #     if new_branch_root > 0:
+        #         branch_y = self.plagih_evolve_branch_select(parent_y, node=new_branch_root)
+        #         branch_y_top = int(branch_y[0])  # pointer to the top of the 2nd parent branch passed from fx_nextgen_crossover()
+        #     else:
+        #         return parent_x
+
+        else:
+            raise self.printpl('e', 'Did not implement crossover method here')
+            return
+
+        return branch_a, branch_b
+
+    def sfeh_crossover_partner_branch_exists(self):
+
+        return
+
     def plagih_evolve_crossover(self, parent_x, branch_x, parent_y, branch_y, mode='replace_same_types'):
 
         """
@@ -2479,7 +2591,7 @@ class Base_GP(object):
         if mode == 'replace_same_types':  # Choose closest fitting node, if not exists- return original
             new_branch_root = self.sfeh_crossover_get_partner_node_id(parent_x[6][branch_x[0]], parent_y, branch_y[0])
             if new_branch_root > 0:
-                branch_y = self.plagih_evolve_branch_select(parent_y, node=new_branch_root)
+                branch_y = self.plagih_evolve_get_branch(parent_y, node=new_branch_root)
                 branch_y_top = int(branch_y[0])  # pointer to the top of the 2nd parent branch passed from fx_nextgen_crossover()
             else:
                 return parent_x
@@ -2508,10 +2620,10 @@ class Base_GP(object):
 
         return parent_y
 
-    def plagih_evolve_branch_select(self, tree, node=0):
+    def plagih_evolve_get_branch(self, tree, node=0):
 
         """
-        Branch_mutate: chooses a branch to mutate
+        Branch_mutate: chooses a mutatable branch to mutate
 
         """
         # 1. branch_top = a valid node
@@ -2519,7 +2631,7 @@ class Base_GP(object):
         if node > 0:  # Crossover: Option to specify own starting node
             branch_top = node
         else:
-            branch_top = self.sfeh_plagih_get_mutatable_branch(tree)  # "2" returns mutable node (except root node)
+            branch_top = self.sfeh_get_mutatable_node_id(tree, mode='mutate_branch')  # "2" returns mutable node (except root node)
 
         # 2. Also return all child nodes
         branch_eval = self.plagih_eval_id(tree, branch_top)  # generate tuple of 'branch_top' and subsequent nodes
@@ -2924,7 +3036,7 @@ class Base_GP(object):
     #   Methods to display output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def printpl(self, verbosity, *args):
+    def printpl(self, verbosity, *args):  # plagih naming
         """
         Gets a verbosity (e.g. 'i')
 
@@ -2987,6 +3099,96 @@ class Base_GP(object):
                 print('Error. Display-mode ', verbosity, 'not known.')
 
             print(message_style + ' '.join(map(str, args))+'\033[39m')
+        return
+
+    def plotpl(self):  # plagih naming
+        plt.plot([1, 2, 3, 4, 7, 8, 8, 8])
+        plt.ylabel('some numbers')
+        plt.show()
+
+    def plot_end(self, y_name, mode='', plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label=''):
+        # insert artificial data
+
+        if y_name == 's':  # there must be a better sulotion
+            y = self.monitor_failed_sympys_amount
+        else:
+            self.printpl('e', 'Monitoring this is not available', y_name)
+
+        # if variance
+        if mode == 'variance':
+            self.printpl('e', 'variance not available', y_name)
+            means = np.mean(y, axis=0)
+            stds = np.std(y, axis=0)
+            n = means.size
+
+        x = np.arange(len(y))
+        plt.plot(x, y, label=plt_curve_label)
+
+        if plt_x_label and plt_y_label:
+            plt.xlabel(plt_x_label)
+            plt.ylabel(plt_y_label)
+
+        if plt_title:
+            plt.title(plt_title)
+
+        # plt.legend()
+        # plt.yscale('linear')
+        # plt.ylim(-200, -50)
+        # plt.savefig('save.jpg')
+        # plt.show()
+        # plt.close()
+        plt.show()
+        plt.close()
+        return
+
+    def plot_live(self):
+        many_values = np.array([[6, 5, 4, 5, 6, 5, 4, 5, 5, 6, 5, 8, 5, 5, 5, 5, 5, 5, 4, 5, 6, 5],
+                                [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 8, 9, 8, 7],
+                                [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 8, 9, 8, 7],
+                                [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 7, 8, 9, 0],
+                                [2, 3, 4, 5, 4, 3, 2, 3, 8, 9, 8, 7, 6, 5, 6, 7, 8, 9, 0, 9, 8, 7],
+                                [2, 3, 4, 5, 4, 5, 6, 7, 8, 9, 7, 6, 5, 4, 3, 4, 5, 6, 7, 8, 7, 1],
+                                [8, 7, 6, 5, 6, 7, 8, 9, 0, 9, 8, 7, 6, 3, 4, 5, 6, 7, 8, 7, 6, 1]])
+
+        means = np.mean(many_values, axis=0)
+        stds = np.std(many_values, axis=0)
+        n = means.size
+
+        # helpers
+        epsilon = 0.1
+        num_plays = np.shape(many_values)[1]
+
+        ### start episode loop
+        # compute upper/lower confidence bounds
+        ci = 0.95
+        e = 6  # if e%200 == 0:, the current episode we are in. aka the last one for us
+        test_stat = st.t.ppf((ci + 1) / 2, e)
+        lower_bound = means - test_stat * stds / np.sqrt(e)
+        upper_bound = means + test_stat * stds / np.sqrt(e)
+
+        # clear plot frame
+        plt.clf()
+
+        # plot average reward
+        plt.plot(means, color='blue', label="epsilon=%.2f" % epsilon)
+
+        # plot upper/lower confidence bound
+        x = np.arange(0, num_plays, 1)
+        plt.fill_between(x=x, y1=lower_bound, y2=upper_bound, color='blue', alpha=0.2, label="CI %.2f" % ci)
+
+        plt.grid()
+        # plt.ylim(0, 2)  # limit y axis
+        plt.title('Avg. Reward per step in experiment {}: {}'.format(e, sum(means) / num_plays))
+        plt.ylabel("Reward per step")
+        plt.xlabel("Play")
+        plt.legend()
+        plt.show()
+        plt.pause(0.1)
+        ### end episode loop
+
+        ## disable interactive plotting => otherwise window terminates
+        plt.ioff()
+        plt.show()
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++

@@ -39,16 +39,18 @@ mode = 'db'  # pause at the (d)esktop when complete, awaiting further user inter
 
 
 
-tourn_size = 3
+tourn_size = 4
 gen_max = 20
 tree_pop_max = 50
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
 origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')
 display = 'ewsniv'  # ewsnfivp
+gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
+parsimony_min_max = (15, 50)
 # origin_tree_file = Path('../mountaincar/karoo_files/test_tree2.csv')
 gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
                    tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point,
-                   evolve_branch, evolve_cross, display, precision, swim, mode)
+                   evolve_branch, evolve_cross, display, precision, swim, mode, gene_pool_threshold, parsimony_min_max)
 
 

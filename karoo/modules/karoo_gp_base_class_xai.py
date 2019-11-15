@@ -237,7 +237,7 @@ class Base_GP(object):
 
     def plagih_karoo_gp(self, kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
                         tourn_size, operators_file, samples_file, origin_tree_file, evolve_repro, evolve_point, evolve_branch, evolve_cross, display, precision,
-                        swim, mode):
+                        swim, mode, gene_pool_threshold, parsimony_min_max):
 
         ### PART 1 - set global variables to those local values passed from the user script ###
         self.kernel = kernel  # fitness function
@@ -253,6 +253,8 @@ class Base_GP(object):
         self.display = display  # display mode is set to (s)ilent # level of on-screen feedback
         self.precision = precision  # the number of floating points for the round function in 'fx_fitness_eval'
         self.swim = swim  # pass along the gene_pool restriction methodology
+        self.gene_pool_threshold = gene_pool_threshold
+        self.parsimony_min_max = parsimony_min_max
 
         ### PART 2 - construct first generation of Trees ###
         self.plagih_data_load(operators_file, samples_file)
@@ -1472,7 +1474,7 @@ class Base_GP(object):
             fitness = 0
             expr = str(self.algo_sym)  # get sympified expression and process it with TF
             result = self.plagih_fitness_eval(expr, self.data_train)
-            parsimony = self.sfeh_plagih_tree_parsimony_distance(population[tree_id], parsimony_distance='total_simplified')
+            parsimony = self.sfeh_plagih_tree_parsimony_distance(population[tree_id])
             fitness = result['fitness']  # extract fitness score
 
             self.plagih_fitness_store(population[tree_id], fitness, parsimony)  # store Fitness and parsimony with each Tree
@@ -1505,19 +1507,29 @@ class Base_GP(object):
     def sfeh_treedist_rel_ari(self, tree):
         """
         This distance penalizes non-original functions with its arity
+        - ignore node[0] [description]
+        - look within the subtree if the original function is on origin spot
         """
-        for i, node in enumerate(tree[8]):
-            distance = 0
+
+        # If the new tree is actually less complex than the original one, just return 1
+        if len(tree[6]) < len(self.origin_tree[6]):
+            return 0
+
+        distance = 0
+
+        # iterate over every node in the new tree
+        for i, arity in enumerate(tree[8]):
             if i == 0:  # skip node 0. the description
                 continue
-            try:
-                if self.origin_tree[6][i] == node:
-                    continue
-            except:
-                distance = distance + tree[8][i]
+            elif i < len(self.origin_tree[6]):  # Make sure we stay within the tree index. <= does not work
+                if self.origin_tree[6][i] != tree[6][i]:  # is it different from the origin?
+                    distance = distance + int(arity)  # add the nodes arity. double-punishes large trees
+            else:
+                distance = distance + int(arity)
+
         return distance
 
-    def sfeh_plagih_tree_parsimony_distance(self, tree, parsimony_distance='total_simplified'):
+    def sfeh_plagih_tree_parsimony_distance(self, tree, parsimony_distance='rel_ari_1'):
         """
 
         :param tree: The tree
@@ -1543,7 +1555,7 @@ class Base_GP(object):
             return
         else:
             print('Parsimony distance not specified! Use default.')
-            self.sfeh_plagih_tree_parsimony_distance(tree, parsimony_distance='total_simplified')
+            self.sfeh_plagih_tree_parsimony_distance(tree)
 
     def plagih_fitness_eval(self, expr, data, get_pred_labels=False):
 
@@ -1698,7 +1710,7 @@ class Base_GP(object):
 
         Arguments required: expr, tensors
         """
-        # print('Current expr:', expr)  # importantprint
+        print('Current expr:', expr)  # importantprint
         tree = ast.parse(expr, mode='eval').body
 
         return self.plagih_fitness_node_parse(tree, tensors)
@@ -1953,8 +1965,11 @@ class Base_GP(object):
 
         for tree_id in range(1, len(self.population_a)):  # Every tree
             self.plagih_eval_poly(self.population_a[tree_id])  # extract the expression
+            # TODO can we ignore false trees with less computation?
             if self.algo_sym != 1:  # check if Tree meets the requirements
-                self.gene_pool.append(self.population_a[tree_id][0][1])
+
+                if self.parsimony_min_max[0] > self.population_a[tree_id][14][1]:
+                    self.gene_pool.append(self.population_a[tree_id][0][1])
 
         if len(self.gene_pool) > 0:
             self.printpl('p', 'The total population of the gene pool is', len(self.gene_pool))
@@ -1969,7 +1984,7 @@ class Base_GP(object):
         The olymp is where the godlike contestants reside.
         In each generation, the olymp searches for new god contestants
         """
-        print('TODO')
+        self.printpl('t', 'TODO Olymp for candidates')
         return
 
 

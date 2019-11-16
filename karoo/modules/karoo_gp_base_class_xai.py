@@ -111,6 +111,7 @@ function_types_dict = {  # Needs A LOT OF further testing
     '>': 'f2b',
     '>=': 'f2b',
 
+    'ftob':'f2b',
     'btof_normal': 'b2f',  # False->0, True->1, dummy-function
     'btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
 
@@ -163,8 +164,8 @@ function_arity_dict = {  # Needs A LOT OF further testing
     '<=': 2,
     '>': 2,
     '>=': 2,
-
-    'btof_normal': 1,  # False->0, True->1, dummy-function
+    'ftob': '1',
+    'btof': 1,  # False->0, True->1, dummy-function
     'btof_extreme': 1,  # False->-1, True->1. Does that make sense?
 
     'Ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
@@ -910,6 +911,9 @@ class Base_GP(object):
             tree = origin_tree.copy()  # is this necessary? probably.
             branch_nodes_list = self.plagih_evolve_get_branch(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
             tree = self.plagih_evolve_branch_mutate(tree, branch_nodes_list)  # tree with new branch
+            # 6 Fill the correct meta-data into the tree (and wipe the old fitness)
+            tree = self.plagih_evolve_fitness_wipe_enrich(tree, modification='i')  # wipe fitness data
+            tree = self.plagih_set_modify_nodes(tree)
 
             tree[0][1] = TREE_ID
             self.plagih_data_tree_append(tree)
@@ -1053,7 +1057,7 @@ class Base_GP(object):
 
     def plagih_set_modify_nodes(self, chosen_tree):
         """
-        Sets all the non-modifyable nodes back to non.modifyable
+        Sets all the origin core nodes back to non-modifyable
         """
         # Set all nodes to be modifiable (=1)
         for i, tmp in enumerate(chosen_tree[13][1:]):
@@ -1669,14 +1673,14 @@ class Base_GP(object):
                 tensors = {}
                 for i in range(len(self.terminals)):
                     var = self.terminals[i]
-                    if '2f' in self.sfeh_plagih_get_dtype(var, 'term'):
+                    if '2f' in self.sfeh_dtype_get_dtype4node(var, 'term'):
                         tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
                     else:  # '2b'
                         tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
 
                 for i in range(len(self.actions)):
                     var = self.actions[i]
-                    if '2f' in self.sfeh_plagih_get_dtype(var, 'term'):
+                    if '2f' in self.sfeh_dtype_get_dtype4node(var, 'term'):
                         tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
                     else:  # '2b'
                         tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
@@ -1775,7 +1779,7 @@ class Base_GP(object):
 
         Arguments required: expr, tensors
         """
-        print('Current expr:', expr)  # importantprint
+        # print('Current expr:', expr)  # importantprint
         tree = ast.parse(expr, mode='eval').body
 
         return self.plagih_fitness_node_parse(tree, tensors)
@@ -2152,7 +2156,7 @@ class Base_GP(object):
 
         for n in range(self.evolve_repro):  # quantity of Trees to be copied without mutation
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each reproduction
-            tourn_winner = self.plagih_evolve_fitness_wipe_enrich(tourn_winner)  # wipe fitness data
+            tourn_winner = self.plagih_evolve_fitness_wipe_enrich(tourn_winner, modification='r')  # wipe fitness data
             tourn_winner[1][1] = 'r'
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
@@ -2170,9 +2174,7 @@ class Base_GP(object):
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # get a tournament winner
             tourn_winner, node = self.plagih_evolve_point_mutate(tourn_winner)  # point mutation; return single point for record keeping
             tourn_winner = self.plagih_evolve_fitness_wipe_enrich(tourn_winner, modification='p')  # wipe fitness data
-
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
-
         return
 
     def plagih_nextgen_mutate_branch(self):
@@ -2193,7 +2195,8 @@ class Base_GP(object):
             tourn_winner = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
             branch_nodes_list = self.plagih_evolve_get_branch(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.plagih_evolve_branch_mutate(tourn_winner, branch_nodes_list)
-            tourn_winner[1][1] = 'b'
+            tourn_winner = self.plagih_evolve_fitness_wipe_enrich(tourn_winner, modification='b')  # wipe fitness data
+            tourn_winner = self.plagih_set_modify_nodes(tourn_winner)
             self.population_b.append(tourn_winner)  # append array to next generation population of Trees
 
         return
@@ -2218,32 +2221,24 @@ class Base_GP(object):
             parent_c = np.copy(parent_a)
             parent_d = np.copy(parent_b)
 
-            branch_a, branch_b = self.sfeh_evolve_crossover_get_swap_branches(parent_a, parent_b)
-
-            # branch_a = self.plagih_evolve_get_branch(parent_a)  # select branch within 'parent_a', to copy to 'parent_b' and receive a branch from 'parent_b'
-            # branch_b = self.plagih_evolve_get_branch(parent_b)  # select branch within 'parent_b', to copy to 'parent_a' and receive a branch from 'parent_a'
+            branch_a, convert_a = self.sfeh_evolve_crossover_get_swap_branches(parent_a, parent_b)
+            branch_b, convert_b = self.sfeh_evolve_crossover_get_swap_branches(parent_a, parent_b)
 
             branch_c = np.copy(branch_a)  # else the Crossover mods affect the parent Trees, due to copied references
             branch_d = np.copy(branch_b)  # else the Crossover mods affect the parent Trees, due to how Python manages '='
-
-            if mode == 'replace_same_types':
-                # Look for the closest node that can be swapped here
-                # TODO what to do if this is not possible?
-                offspring_1 = self.plagih_evolve_crossover(parent_a, branch_a, parent_b, branch_b, mode='replace_same_types')  # perform Crossover
-                offspring_1[1][1] = 'c'
-                offspring_2 = self.plagih_evolve_crossover(parent_d, branch_d, parent_c, branch_c, mode='replace_same_types')  # perform Crossover
-                offspring_2[1][1] = 'c'
-                offspring_1 = self.plagih_set_modify_nodes(offspring_1)
-                offspring_2 = self.plagih_set_modify_nodes(offspring_2)
-                self.population_b.append(offspring_1)  # append the 1st child to next generation of Trees
-                self.population_b.append(offspring_2)  # append the 2nd child to next generation of Trees
-
-            elif mode == 'replace_interface_node':
-                # Replace the changed node (if necessary)
-                # TODO
-                raise self.printpl('e', 'Not yet implemented.')
+            if convert_a or convert_b:
+                # TODO herehere
+                raise self.printpl('e', 'TODO: Apply forced conversion')
             else:
-                raise self.printpl('e', 'Crossover method is not specified')
+                offspring_1 = self.plagih_evolve_crossover(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
+                offspring_2 = self.plagih_evolve_crossover(parent_d, branch_d, parent_c, branch_c)  # perform Crossover
+
+            offspring_1 = self.plagih_evolve_fitness_wipe_enrich(offspring_1, modification='c')  # wipe fitness data
+            offspring_2 = self.plagih_evolve_fitness_wipe_enrich(offspring_2, modification='c')  # wipe fitness data
+            offspring_1 = self.plagih_set_modify_nodes(offspring_1)
+            offspring_2 = self.plagih_set_modify_nodes(offspring_2)
+            self.population_b.append(offspring_1)  # append the 1st child to next generation of Trees
+            self.population_b.append(offspring_2)  # append the 2nd child to next generation of Trees
 
         return
 
@@ -2259,7 +2254,7 @@ class Base_GP(object):
 
         # 1. choose a node
         node = self.sfeh_get_mutatable_node_id(tree, mode='mutate_point')  # randomly select a point in the Tree (including root)
-        node_type = self.sfeh_label_get_dtype_solve(tree[6][node])  # '>' -> 'f2b'
+        node_type = self.sfeh_dtype_get_dtype4label(tree[6][node])  # '>' -> 'f2b'
 
         # 2. perform point mutation on that specific node
         if tree[5][node] == 'func':
@@ -2270,9 +2265,6 @@ class Base_GP(object):
             tree[6][node] = self.sfeh_dtype_get_term4node(node_type)  # 3 -> '2f' -> 5
         else:
             raise self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
-
-        # 3. calculate new fitness of the tree
-        tree = self.plagih_evolve_fitness_wipe_enrich(tree)  # wipe fitness data
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
@@ -2295,7 +2287,7 @@ class Base_GP(object):
             raise self.printpl('e', 'sfeh_plagih_get_new_tree_size does not accept this mode: ' + str(mode))
         return branch_depth
 
-    def sfeh_plagih_get_dtype(self, node_label, node_type):
+    def sfeh_dtype_get_dtype4node(self, node_label, node_type):
         """
         return: 'term' or 'func'
         """
@@ -2316,15 +2308,15 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'This node_type is not known', node_type)
 
-    def sfeh_label_get_dtype_solve(self, node_label):
+    def sfeh_dtype_get_dtype4label(self, node_label):
         """
         returns dtype for a terminal
         """
 
-        node_type = self.sfeh_label_get_nodetype(node_label)
-        return self.sfeh_plagih_get_dtype(node_label, node_type)
+        node_type = self.sfeh_get_nodetype4label(node_label)
+        return self.sfeh_dtype_get_dtype4node(node_label, node_type)
 
-    def sfeh_label_get_nodetype(self, node_label):
+    def sfeh_get_nodetype4label(self, node_label):
         """
         return terminal or function according to the label
         """
@@ -2424,12 +2416,12 @@ class Base_GP(object):
         -> Crossover: Returns a node_id in the partner tree, that can be swapped
         """
 
-        node_dtype = self.sfeh_plagih_get_dtype(function_label, self.sfeh_label_get_nodetype(function_label))
+        node_dtype = self.sfeh_dtype_get_dtype4node(function_label, self.sfeh_get_nodetype4label(function_label))
         node_options = []
         # TODO check if the tree is large enough?
         if mode == 'same_type':  # only return a node with the same function type
             for i, label in enumerate(partner_tree[6][1:]):
-                if self.sfeh_label_get_dtype_solve(label) == node_dtype:
+                if self.sfeh_dtype_get_dtype4label(label) == node_dtype:
                     node_options.append(i+1)  # +1, we skipped the first element
 
             if node_options:  # Found at least one!
@@ -2442,40 +2434,36 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'Mode not found', mode)
 
-    def sfeh_get_mutatable_node_id(self, tree, mode=''):
+    def sfeh_get_mutatable_node_id(self, tree, mode='', dtype=''):
         """
         Returns a mutatable node for point-mutation
-        - count modifiable nodes
-        - select a madifiable node
-        - return modifiable node
         -> no_root handles
         """
-        num_nodes = 1
-
-        # 1: count the modifiable nodes and choose a random one
-        for i, x in enumerate(tree[5]):
-            if x != '' and tree[13][i] == '1':
-                num_nodes += 1
-
-        if mode == 'no_root' or mode == 'mutate_branch' or mode == 'crossover':  # For branch mutation. If root is changed, it is a new tree.
-            if tree[13][1] == '1':
-                node_n = np.random.randint(2, num_nodes)
-            else:
-                node_n = np.random.randint(1, num_nodes)
-        elif mode == 'point_mutate':
-            node_n = np.random.randint(1, num_nodes)  # choose a random "modifiable" FUNCTION
-        else:
-            self.printpl('e', 'This mode is not known', mode)
         # TODO only works for 2-array functions
 
-        # 2: return the node's number
-        num_nodes = 1
-        for i, x in enumerate(tree[5]):
-            if x != '' and tree[13][i] == '1':
-                if num_nodes == node_n:  # Is the random node out of all changeable ones found?
-                    return int(tree[3][i])
-                else:
-                    num_nodes += 1
+        node_ids = []
+
+        # 1. Build up a list with nodes
+        if 'same_type' in mode:
+            for i, x in enumerate(tree[5]):
+                # TODO make this faster
+                if x != '' and tree[13][i] == '1':
+                    if self.sfeh_dtype_get_dtype4label(tree[6][i]) == dtype:
+                        node_ids.append(int(tree[3][i]))
+        else:
+            for i, x in enumerate(tree[5]):
+                if x != '' and tree[13][i] == '1':
+                    node_ids.append(int(tree[3][i]))
+
+        # 2. Kick out root if it is there?
+        if 'no_root' in mode:  # delete root node
+            node_ids = [x for x in node_ids if x != 1]
+
+        # 3: return the node. Not safe, could be try-except block.
+        # eg: all nodes are not modifiable
+        # eg. all nodes are not of correct type
+        node_id = np.random.choice(node_ids)
+        return node_id
 
     def plagih_evolve_branch_mutate(self, chosen_tree, branch_nodes_list):
 
@@ -2495,7 +2483,7 @@ class Base_GP(object):
         # 2. Get the old-node's information
         old_node_label = chosen_tree[6][branch_nodes_list[0]]  # <,        +,-,*,8,action0 ...
         old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func,     term, ...
-        old_node_dtype = self.sfeh_plagih_get_dtype(old_node_label, old_node_type)  # '2f', 'f2b', ...
+        old_node_dtype = self.sfeh_dtype_get_dtype4node(old_node_label, old_node_type)  # '2f', 'f2b', ...
 
         # 3. check if we are on a too-low level to branch mutate...
         if branch_depth < 0:  # this has never occured ... yet
@@ -2513,10 +2501,10 @@ class Base_GP(object):
             if np.random.choice(['func', 'term']) == 'term':  # mutate 'branch_top' to a terminal and delete all nodes beneath (no subsequent nodes are added to this branch)
                 # 5.1 We insert a terminal here
                 chosen_tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
-                term_type = self.sfeh_plagih_get_dtype(old_node_label, old_node_type)
+                term_type = self.sfeh_dtype_get_dtype4node(old_node_label, old_node_type)
                 chosen_tree[6][branch_top] = self.sfeh_dtype_get_term4node(term_type)  # replace with a correct label
                 chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-                chosen_tree = self.fx_evolve_node_arity_fix(chosen_tree)  # fix all node arities (term)
+                chosen_tree = self.plagih_evolve_node_arity_fix(chosen_tree)  # fix all node arities (term)
                 chosen_tree = self.fx_evolve_child_link_fix(chosen_tree)  # fix all child links (func)
                 chosen_tree = self.fx_evolve_node_renum(chosen_tree)  # renumber all 'NODE_ID's
             else:
@@ -2526,13 +2514,10 @@ class Base_GP(object):
                 chosen_tree = self.plagih_evolve_branch_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
             # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
 
-        # 6 Fill the correct meta-data into the tree (and wipe the old fitness)
-        chosen_tree = self.plagih_evolve_fitness_wipe_enrich(chosen_tree)  # wipe fitness data
-        chosen_tree = self.plagih_set_modify_nodes(chosen_tree)
 
         return chosen_tree
 
-    def sfeh_evolve_crossover_get_swap_branches(self, parent_a, parent_b, mode ='replace_same_types'):
+    def sfeh_evolve_crossover_get_swap_branches(self, parent_a, parent_b, mode='replace_same_types'):
         """
         Returns two branches that can be replaced
 
@@ -2548,90 +2533,105 @@ class Base_GP(object):
             - Choose a random node in tree a
             - Choose a random node in tree b
             - Convert parent_b's node to parent_a's node
+        -> only returns convert_a if we need to force a conversion
         """
+        a_convert, b_convert = '', ''
 
+        # 1. swappable nodes exist?
         if mode == 'replace_same_types':
-            # choose random node, check i
-            tmp = self.sfeh_get_mutatable_node_id(parent_a, mode='crossover')
-            if self.sfeh_crossover_partner_branch_exists(parent_b, tmp):
+            a_node = self.sfeh_get_mutatable_node_id(parent_a, mode='crossover_no_root')
+            a_dtype = self.sfeh_dtype_get_dtype4label(parent_a[6][a_node])
+            try:  # swapping with random dtype
+                b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_same_type', dtype=a_dtype)
+            except:  # no matching dtypes. maybe the other one?
+                mode='force_conversion'  # better luck next time
 
-            branch_a = self.plagih_evolve_get_branch()
-            branch_b = 2
-            return branch_a, branch_b
+        # obsolete?
+        if mode == 'try_dtype':
+            if '2f' in a_dtype:
+                a_dtype = '2b'
+            elif '2b' in a_dtype:
+                a_dtype = '2f'
+            else:
+                raise self.printpl('e','dtype should be either 2f or 2b, it is', a_dtype)
+            try:  # swapping with other dtype
+                a_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_same_type', dtype=a_dtype)
+                b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_same_type', dtype=a_dtype)
+            except:  # no matching dtypes. maybe the other one?
+                mode = 'force_conversion'
 
-        # # Prepare
+        if mode == 'force_conversion':
+            a_node = self.sfeh_get_mutatable_node_id(parent_a, mode='crossover_no_root')
+            b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_no_root')
+            a_dtype = self.sfeh_dtype_get_dtype4label(parent_a[6][a_node])
+            b_dtype = self.sfeh_dtype_get_dtype4label(parent_b[6][b_node])
+            if a_dtype != b_dtype:
+                self.printpl('w', 'Crossover: Forcing conversion between', a_node, b_node)
+                a_convert = self.sfeh_convert_dtypes_get_dummylabel(a_dtype, b_dtype)
+                b_convert = self.sfeh_convert_dtypes_get_dummylabel(b_dtype, a_dtype)
 
-        #     new_branch_root = self.sfeh_crossover_get_partner_node_id(parent_x[6][branch_x[0]], parent_y, branch_y[0])
-        #     if new_branch_root > 0:
-        #         branch_y = self.plagih_evolve_branch_select(parent_y, node=new_branch_root)
-        #         branch_y_top = int(branch_y[0])  # pointer to the top of the 2nd parent branch passed from fx_nextgen_crossover()
-        #     else:
-        #         return parent_x
+        # TODO check if tree is too large
+        # TODO add try-except-case with point mutation (same arity, swapping dtype)
 
+        b_branch = self.plagih_evolve_get_branch(parent_b, node=b_node)
+        a_branch = self.plagih_evolve_get_branch(parent_a, node=a_node)
+
+        return a_branch, a_convert
+
+    def sfeh_convert_dtypes_get_dummylabel(self, a_dtype, b_dtype):
+        """
+        convert a-to-b dummy
+        """
+        if '2b' in a_dtype and '2f' in b_dtype:
+            return 'btof'
+        if '2f' in a_dtype and '2b' in b_dtype:
+            return 'ftob'
         else:
-            raise self.printpl('e', 'Did not implement crossover method here')
-            return
-
-        return branch_a, branch_b
-
-    def sfeh_crossover_partner_branch_exists(self):
+            raise self.printpl('e', 'One of those two cases should happen', a_dtype, b_dtype)
 
         return
 
-    def plagih_evolve_crossover(self, parent_x, branch_x, parent_y, branch_y, mode='replace_same_types'):
+    def plagih_evolve_crossover(self, parent_x, branch_x, parent_y, branch_y):
 
         """
-        Perform a crossover between nodes that are crossoverable in terms of function types
+        Perform a crossover between nodes that are crossoverable in terms of function txpes
 
         """
 
-        crossover = int(branch_x[0])  # pointer to the top of the 1st parent branch passed from fx_nextgen_crossover()
+        y_root = int(branch_y[0])
+        x_root = int(branch_x[0])
 
-        # Prepare
-        if mode == 'replace_same_types':  # Choose closest fitting node, if not exists- return original
-            new_branch_root = self.sfeh_crossover_get_partner_node_id(parent_x[6][branch_x[0]], parent_y, branch_y[0])
-            if new_branch_root > 0:
-                branch_y = self.plagih_evolve_get_branch(parent_y, node=new_branch_root)
-                branch_y_top = int(branch_y[0])  # pointer to the top of the 2nd parent branch passed from fx_nextgen_crossover()
-            else:
-                return parent_x
-        else:
-            raise self.printpl('e', 'Did not implement crossover method here')
+        if len(branch_y) == 1:  # if the branch from the incoming parent contains only one node (terminal)
 
+            parent_x[6][x_root] = parent_y[6][y_root]  # replace label with that of a particular node in 'branch_y'
+            parent_x[5][x_root] = 'term'  # replace type
+            parent_x[8][x_root] = 0  # set terminal arity
 
-        if len(branch_x) == 1:  # if the branch from the parent contains only one node (terminal)
-
-            parent_y[6][branch_y_top] = parent_x[6][crossover]  # replace label with that of a particular node in 'branch_x'
-            parent_y[5][branch_y_top] = 'term'  # replace type
-            parent_y[8][branch_y_top] = 0  # set terminal arity
-
-            parent_y = np.delete(parent_y, branch_y[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-            parent_y = self.fx_evolve_child_link_fix(parent_y)  # fix all child links
-            parent_y = self.fx_evolve_node_renum(parent_y)  # renumber all 'NODE_ID's
+            parent_x = np.delete(parent_x, branch_x[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+            parent_x = self.fx_evolve_child_link_fix(parent_x)  # fix all child links
+            parent_x = self.fx_evolve_node_renum(parent_x)  # renumber all 'NODE_ID's
 
         else:  # we are working with a branch from 'parent' >= depth 1 (min 3 nodes)
 
-            self.tree = self.fx_evolve_branch_copy(parent_x, branch_x)  # generate stand-alone 'gp.tree' with properties of 'branch_x'
+            self.tree = self.plagih_evolve_branch_copy(parent_y, branch_y)  # generate stand-alone 'gp.tree' with properties of 'branch_y'
+            parent_x = self.plagih_evolve_branch_insert(parent_x, branch_x)  # insert new 'branch_x' at point of mutation 'branch_top' in tourn_winner 'offspring'
+            parent_x = self.plagih_evolve_tree_prune(parent_x, self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
 
-            parent_y = self.plagih_evolve_branch_insert(parent_y, branch_y)  # insert new 'branch_y' at point of mutation 'branch_top' in tourn_winner 'offspring'
-            parent_y = self.fx_evolve_tree_prune(parent_y, self.tree_depth_max)  # prune to the max Tree depth + adjustment - tested 2016 07/10
-
-        parent_y = self.plagih_evolve_fitness_wipe_enrich(parent_y)  # wipe fitness data
-
-        return parent_y
+        return parent_x
 
     def plagih_evolve_get_branch(self, tree, node=0):
 
         """
         Branch_mutate: chooses a mutatable branch to mutate
-
+        - choose a starting node
+        - return all childnodes as list
         """
         # 1. branch_top = a valid node
         branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
         if node > 0:  # Crossover: Option to specify own starting node
             branch_top = node
         else:
-            branch_top = self.sfeh_get_mutatable_node_id(tree, mode='mutate_branch')  # "2" returns mutable node (except root node)
+            branch_top = self.sfeh_get_mutatable_node_id(tree, mode='mutate_branch_no_root')  # "2" returns mutable node (except root node)
 
         # 2. Also return all child nodes
         branch_eval = self.plagih_eval_id(tree, branch_top)  # generate tuple of 'branch_top' and subsequent nodes
@@ -2690,7 +2690,7 @@ class Base_GP(object):
 
         return winner_tree
 
-    def fx_evolve_branch_copy(self, tree, branch):
+    def plagih_evolve_branch_copy(self, tree, branch):
 
         """
         This method prepares a stand-alone Tree as a copy of the given branch.
@@ -2704,14 +2704,11 @@ class Base_GP(object):
         for n in range(len(branch)):
             node = branch[n]
             branch_top = int(branch[0])
-
             TREE_ID = 'copy'
             tree_type = tree[1][1]
-            tree_depth_base = int(tree[4][branch[-1]]) - int(
-                tree[4][branch_top])  # subtract depth of 'branch_top' from the last in 'branch'
+            tree_depth_base = int(tree[4][branch[-1]]) - int(tree[4][branch_top])  # subtract depth of 'branch_top' from the last in 'branch'
             NODE_ID = tree[3][node]
-            node_depth = int(tree[4][node]) - int(
-                tree[4][branch_top])  # subtract the depth of 'branch_top' from the current node depth
+            node_depth = int(tree[4][node]) - int(tree[4][branch_top])  # subtract the depth of 'branch_top' from the current node depth
             node_type = tree[5][node]
             node_label = tree[6][node]
             node_parent = ''  # updated by fx_evolve_parent_link_fix(), below
@@ -2916,7 +2913,7 @@ class Base_GP(object):
 
         return tree
 
-    def fx_evolve_node_arity_fix(self, tree):
+    def plagih_evolve_node_arity_fix(self, tree):
 
         """
         In a given Tree, fix 'node_arity' for all nodes labeled 'term' but with arity 2.
@@ -2977,8 +2974,7 @@ class Base_GP(object):
         return tree
 
 
-    # SFEH: Obsolete. Dont want to prune solely based on length. Or maybe?
-    def fx_evolve_tree_prune(self, tree, depth):
+    def plagih_evolve_tree_prune(self, tree, depth):
 
         '''
         This method reduces the depth of a Tree. Used with Crossover, the input value 'branch' can be a partial Tree
@@ -2995,9 +2991,8 @@ class Base_GP(object):
         for n in range(1, len(tree[3])):
 
             if int(tree[4][n]) == depth and tree[5][n] == 'func':
-                rnd = np.random.randint(0, len(self.terminals))  # all observations
                 tree[5][n] = 'term'  # mutate type 'func' to 'term'
-                tree[6][n] = self.terminals[rnd]  # replace label
+                tree[6][n] = self.sfeh_dtype_get_term4node(tree[6][n])  # replace label
 
             elif int(tree[4][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
                 nodes.append(n)
@@ -3006,7 +3001,7 @@ class Base_GP(object):
                 pass  # as int(tree[4][n]) < depth and will remain untouched
 
         tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
-        tree = self.fx_evolve_node_arity_fix(tree)  # fix all node arities
+        tree = self.plagih_evolve_node_arity_fix(tree)  # fix all node arities
 
         return tree
 

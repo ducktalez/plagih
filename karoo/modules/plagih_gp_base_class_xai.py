@@ -19,7 +19,7 @@ import sklearn.metrics as skm
 import sklearn.model_selection as skcv
 from sympy import sympify, count_ops
 from datetime import datetime
-import karoo.modules.karoo_gp_pause as menu
+import karoo.modules.plagih_gp_pause as menu
 # sfeh import the pause later, maybe
 # import karoo.modules.karoo_gp_pause as menu
 import tensorflow as tf
@@ -67,6 +67,9 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
              'Min': tf.math.reduce_min,  # do not use tf.math.minimum,  # min is apparently a string
              'Max': tf.math.reduce_max,  # e.g. min(a, b)
+             # Note: These need separate handling for their conversion type
+             # 'ftob': tf.dtypes.cast,
+             # 'ftob': tf.dtypes.cast,
              }
 
 function_types_dict = {  # Needs A LOT OF further testing
@@ -111,8 +114,8 @@ function_types_dict = {  # Needs A LOT OF further testing
     '>': 'f2b',
     '>=': 'f2b',
 
-    'ftob':'f2b',
-    'btof_normal': 'b2f',  # False->0, True->1, dummy-function
+    'ftob': 'f2b',
+    'btof': 'b2f',  # False->0, True->1, dummy-function
     'btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
 
     'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
@@ -257,8 +260,8 @@ class Base_GP(object):
         # TODO use these for something
         if self.evolve_missing > 0:
             exit()
-        self.display = display  # display mode is set to (s)ilent # level of on-screen feedback
-        self.precision = precision  # the number of floating points for the round function in 'fx_fitness_eval'
+        self.display = display
+        self.precision = precision  # the number of floating points for the round function
         self.swim = swim  # pass along the gene_pool restriction methodology
         self.gene_pool_threshold = gene_pool_threshold
         self.parsimony_min_max = parsimony_min_max
@@ -271,9 +274,7 @@ class Base_GP(object):
         self.sfeh_main_generation_first(origin_tree_file)
 
         # Continue with all further generations
-        menu = 1
-        while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
-            self.sfeh_main_generation_new()
+        self.sfeh_main_generation_new_repeat()
 
         self.plagih_karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
 
@@ -307,34 +308,36 @@ class Base_GP(object):
         self.sfeh_monitor(mode='init')
         self.sfeh_monitor()
 
-    def sfeh_main_generation_new(self):
+    def sfeh_main_generation_new_repeat(self):
         """
         Creates all new Generations.
         - adjust parameters for this generation (parsimony threshold)
         - Create a gene pool (kick out too complex candidates)
         """
-        for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # generation 2 to *max generation*
-            self.sfeh_main_generation_parameters()
-            self.printpl('g', '\n Evolve a population of Trees for Generation', self.gen_id, '...')
-            self.population_b = ['Karoo GP - Evolving Generation']  # initialise population_b to host the next generation
-            self.plagih_fitness_gene_pool()  # generate the viable gene pool
-            self.sfeh_fitness_olymp()
-            # Add the original tree aswell
-            self.plagih_nextgen_reproduce()  # method 1 - Reproduction
-            self.plagih_nextgen_mutate_point()  # method 2 - Point Mutation
-            self.plagih_nextgen_mutate_branch()  # method 3 - Branch Mutation
-            self.plagih_nextgen_crossover()  # method 4 - Crossover
-            self.plagih_eval_generation()  # evaluate all Trees in a single generation
-            self.population_a = self.fx_evolve_pop_copy(self.population_b, ['Karoo GP Generation ' + str(self.gen_id)])
-            self.sfeh_monitor()
-        # SFEH das war mal da, hat nach dem Durchlaufen ohne Menu abgekackt
-        # if mode == 's':
-        #     menu = 0  # (s)erver mode - termination with completiont of prescribed run
-        else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
-            print('\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
-            # menu = self.fx_karoo_pause()
-            # SFEH statt oben steht da jetzt da unten :D
-            menu = 0
+        menu = 1
+        while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
+            for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # generation 2 to *max generation*
+                self.sfeh_main_generation_parameters()
+                self.printpl('g', '\n Evolve a population of Trees for Generation', self.gen_id, '...')
+                self.population_b = ['Karoo GP - Evolving Generation']  # initialise population_b to host the next generation
+                self.plagih_fitness_gene_pool()  # generate the viable gene pool
+                self.sfeh_fitness_olymp()
+                # Add the original tree aswell
+                self.plagih_nextgen_reproduce()  # method 1 - Reproduction
+                self.plagih_nextgen_mutate_point()  # method 2 - Point Mutation
+                self.plagih_nextgen_mutate_branch()  # method 3 - Branch Mutation
+                self.plagih_nextgen_crossover()  # method 4 - Crossover
+                self.plagih_eval_generation()  # evaluate all Trees in a single generation
+                self.population_a = self.fx_evolve_pop_copy(self.population_b, ['Karoo GP Generation ' + str(self.gen_id)])
+                self.sfeh_monitor()
+            # SFEH das war mal da, hat nach dem Durchlaufen ohne Menu abgekackt
+            # if mode == 's':
+            #     menu = 0  # (s)erver mode - termination with completiont of prescribed run
+            else:  # (d)esktop mode - user is given an option to quit, review, and/or modify parameters; 'add' generations continues the run
+                print('\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
+                # menu = self.fx_karoo_pause()
+                # SFEH statt oben steht da jetzt da unten :D
+                menu = 0
 
     def sfeh_monitor(self, mode=''):
         """
@@ -353,7 +356,13 @@ class Base_GP(object):
                 self.plot_failed_sympys_amount = []
             elif mode == 'show':
                 if self.plot_failed_sympys_amount:
-                    self.plot_end('s', plt_title='Sympify zoo and nan', plt_y_label='Amount')
+                    try:
+                        self.plot_end('s', plt_title='Sympify zoo and nan', plt_y_label='Amount')
+                    except:
+                        self.printpl('e', 'plotting did not work for sympify')
+
+        # Average Tree size, parsimony
+        #
 
         return
 
@@ -554,7 +563,6 @@ class Base_GP(object):
 
         # sfeh das funktioniert nur bei diskreten Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-        print('terminals and class_labels:', self.terminals, self.class_labels)
 
         return data_x, data_y
 
@@ -897,6 +905,7 @@ class Base_GP(object):
         Arguments required: origin_tree_file
         """
 
+        #TODO branch mutation in ALL subtrees? if more options are available
         self.printpl('n', 'Initial population...')
 
         origin_tree = self.plagih_load_origin_tree(origin_tree_file)
@@ -1496,6 +1505,7 @@ class Base_GP(object):
         self.printpl('p', 'Want to adjust anything?')
 
         for tree_id in range(1, len(self.population_b)):  # renumber all Trees in given population
+            self.printpl('vv', 'Evaluating Tree', tree_id)
             self.population_b[tree_id][0][1] = tree_id
 
         self.plagih_fitness_gym(self.population_b)  # run fx_eval(), fx_fitness(), fx_fitness_store(), and fitness record
@@ -1568,7 +1578,7 @@ class Base_GP(object):
             else:
                 raise self.printpl('e', 'No peoper kernel was selected', self.kernel)
 
-        print('\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
+        self.printpl('', '\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
         if self.display == 'g': self.fx_karoo_pause_refer()
 
         return
@@ -1616,14 +1626,14 @@ class Base_GP(object):
         elif parsimony_distance == 'rel_ari_1':  # Does this work?
             return self.sfeh_treedist_rel_ari(tree)
         elif parsimony_distance == 'print':   # Please inser all of the measurements with example
-            print('No distance chosen. Available parsimony measurements:')
-            print('count_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
-            print('tree_depth' + '     : Only use the depth of the tree as measurement.        ' + str(tree[4][1]))
-            print('karoo_original' + ' : Karoo`s OG parsimony. Do not use it with PLAGIH.      ' + str(len(str(self.algo_raw))))
-            print('Choose wisely. More to come soon.')
+            self.printpl('i', 'No distance chosen. Available parsimony measurements:')
+            self.printpl('i', 'pcount_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
+            self.printpl('i', 'tree_depth' + '     : Only use the depth of the tree as measurement.        ' + str(tree[4][1]))
+            self.printpl('i', 'karoo_original' + ' : Karoo`s OG parsimony. Do not use it with PLAGIH.      ' + str(len(str(self.algo_raw))))
+            self.printpl('i', 'Choose wisely. More to come soon.')
             return
         else:
-            print('Parsimony distance not specified! Use default.')
+            self.printpl('i', 'Parsimony distance not specified! Use default.')
             self.sfeh_plagih_tree_parsimony_distance(tree)
 
     def plagih_fitness_eval(self, expr, data, get_pred_labels=False):
@@ -1733,7 +1743,7 @@ class Base_GP(object):
                     rule32 = tf.less_equal(result, solution - skew)
                     rule33 = tf.logical_and(rule31, rule32)
 
-                    pairwise_fitness = tf.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
+                    pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
 
                 elif self.kernel == 'r':  # REGRESSION kernel
 
@@ -1751,9 +1761,9 @@ class Base_GP(object):
                     This is used for demonstration purposes only.
                     """
 
-                    # pairwise_fitness = tf.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+                    # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
                     RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float value lies within a range of values
-                    pairwise_fitness = tf.cast(tf.less_equal(tf.abs(solution - result), ATOL + RTOL * tf.abs(result)),
+                    pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - result), ATOL + RTOL * tf.abs(result)),
                                                tf.int32)
 
                 # elif self.kernel == '[other]': # use others as a template
@@ -1794,7 +1804,7 @@ class Base_GP(object):
         Arguments required: values, operation, tensors
         """
 
-        x = tf.cast(self.plagih_fitness_node_parse(values[0], tensors), tf.bool)
+        x = tf.dtypes.cast(self.plagih_fitness_node_parse(values[0], tensors), tf.bool)
         if len(values) > 1:
             return operation(x, self.fx_fitness_chain_bool(values[1:], operation, tensors))
         else:
@@ -1842,15 +1852,23 @@ class Base_GP(object):
         elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
             return operators[type(node.op)](self.plagih_fitness_node_parse(node.operand, tensors))
 
-        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) or if(a, b, c)
+        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or ftob(a)
             if node.func.id == 'Ifte':
                 return operators[node.func.id](
                         tf.dtypes.cast(self.plagih_fitness_node_parse(node.args[0], tensors), tf.bool),
                         self.plagih_fitness_node_parse(node.args[1], tensors),
                         self.plagih_fitness_node_parse(node.args[2], tensors))
 
-            if node.func.id in non_inline_multielem_functions:  # Min, Max Goddamn. yeah, min and max need the same type, apparently. TODO?
+            if node.func.id in non_inline_multielem_functions:  # Min, Max Goddamn. yeah, min and max need the same type, apparently. TODO? Does this work now?
+                print([self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])
                 return operators[node.func.id]([self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
+
+            if node.func.id == 'ftob':
+                self.printpl('i', 'float was converted to bool in tensorflow')
+                return tf.dtypes.cast(*[self.plagih_fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.bool)
+            elif node.func.id == 'btof':
+                return tf.dtypes.cast(*[self.plagih_fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.float32)
+
             return operators[node.func.id](*[self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])
 
         elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
@@ -1860,11 +1878,14 @@ class Base_GP(object):
             return self.fx_fitness_chain_compare([node.left] + node.comparators, node.ops, tensors)
 
         elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
+            if type(node.value) is not type(True):
+                self.printpl('e', 'This True/False name constant is something else', node.value)
+                raise
             try:
                 return tf.constant(node.value)
             except:
-                raise self.printpl('e', 'Oh no this was not True or False')
-
+                self.printpl('e', 'Oh no this was not True or False')
+                raise
         else:
             raise TypeError(node)
 
@@ -2122,19 +2143,13 @@ class Base_GP(object):
         """
         Print the accuracy for a MATCH kernel run against the test data.
 
-        Called by: fx_karoo_pause
-
         Arguments required: result
         """
 
         for i in range(len(result['result'])):
-            print('\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i,
-                                                                                                       result['result'][
-                                                                                                           i], result[
-                                                                                                           'solution'][
-                                                                                                           i]))
+            self.printpl('', '\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i,  result['result'][i], result['solution'][i]))
 
-        print('\n\tMatching fitness score: {}'.format(result['fitness']))
+        self.printpl('', 'Matching fitness score: {}'.format(result['fitness']))
 
         return
 
@@ -2204,41 +2219,33 @@ class Base_GP(object):
     def plagih_nextgen_crossover(self, mode='replace_same_types'):
 
         """
-        - select two candidates
-        - select swappable branches for the parents
+        TODO now, partners do not exchange their branches, just parent a takes a branch of parent_b
+        - select parent a and b
+        - select swappable branche for parent_a from parent_b
+            - select a node in a (and crossover here, no matter what)
         - delete parent_a branch and insert parent_b branch (which tactic?)
 
         """
         self.printpl('n', 'Crossover...')
 
-        for n in range(self.evolve_cross // 2):  # quantity of Trees to be generated through Crossover, accounting for 2 children each
+        for n in range(self.evolve_cross):  # quantity of Trees to be generated through Crossover, (now not accounting for 2 children each, changed)
 
             # 1. Select two parents and their branches
             parent_a = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
             parent_b = self.plagih_fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
 
-            # 2. Copy parents
-            parent_c = np.copy(parent_a)
-            parent_d = np.copy(parent_b)
+            # 2. Get the branches for parent a that can be exchanged
+            branch_a, branch_b, convert_a = self.sfeh_evolve_crossover_get_swap_branches(parent_a, parent_b)
 
-            branch_a, convert_a = self.sfeh_evolve_crossover_get_swap_branches(parent_a, parent_b)
-            branch_b, convert_b = self.sfeh_evolve_crossover_get_swap_branches(parent_a, parent_b)
-
-            branch_c = np.copy(branch_a)  # else the Crossover mods affect the parent Trees, due to copied references
-            branch_d = np.copy(branch_b)  # else the Crossover mods affect the parent Trees, due to how Python manages '='
-            if convert_a or convert_b:
-                # TODO herehere
-                raise self.printpl('e', 'TODO: Apply forced conversion')
+            if convert_a:
+                self.printpl('i', 'Forced conversion is needed between two trees.')
+                offspring = self.plagih_evolve_crossover(parent_a, branch_a, parent_b, branch_b, converter=convert_a)  # perform Crossover
             else:
-                offspring_1 = self.plagih_evolve_crossover(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
-                offspring_2 = self.plagih_evolve_crossover(parent_d, branch_d, parent_c, branch_c)  # perform Crossover
+                offspring = self.plagih_evolve_crossover(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
 
-            offspring_1 = self.plagih_evolve_fitness_wipe_enrich(offspring_1, modification='c')  # wipe fitness data
-            offspring_2 = self.plagih_evolve_fitness_wipe_enrich(offspring_2, modification='c')  # wipe fitness data
-            offspring_1 = self.plagih_set_modify_nodes(offspring_1)
-            offspring_2 = self.plagih_set_modify_nodes(offspring_2)
-            self.population_b.append(offspring_1)  # append the 1st child to next generation of Trees
-            self.population_b.append(offspring_2)  # append the 2nd child to next generation of Trees
+            offspring = self.plagih_evolve_fitness_wipe_enrich(offspring, modification='c')  # wipe fitness data
+            offspring = self.plagih_set_modify_nodes(offspring)
+            self.population_b.append(offspring)  # append the 1st child to next generation of Trees
 
         return
 
@@ -2254,15 +2261,15 @@ class Base_GP(object):
 
         # 1. choose a node
         node = self.sfeh_get_mutatable_node_id(tree, mode='mutate_point')  # randomly select a point in the Tree (including root)
-        node_type = self.sfeh_dtype_get_dtype4label(tree[6][node])  # '>' -> 'f2b'
+        node_dtype = self.sfeh_dtype_get_dtype4label(tree[6][node])  # '>' -> 'f2b'
 
         # 2. perform point mutation on that specific node
         if tree[5][node] == 'func':
             func_arity = int(tree[8][node])
-            tree[6][node] = self.sfeh_dtype_get_func4func(node_type, arity=func_arity)  # Function is same type, same arity
+            tree[6][node] = self.sfeh_dtype_get_func4func(node_dtype, arity=func_arity)  # Function is same type, same arity
             # Take care of the modify specs
         elif tree[5][node] == 'term':
-            tree[6][node] = self.sfeh_dtype_get_term4node(node_type)  # 3 -> '2f' -> 5
+            tree[6][node] = self.sfeh_dtype_get_term4node(node_dtype)  # 3 -> '2f' -> 5
         else:
             raise self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
 
@@ -2291,7 +2298,7 @@ class Base_GP(object):
         """
         return: 'term' or 'func'
         """
-        self.printpl('f', 'sfeh_plagih_get_dtype')
+        self.printpl('f', 'sfeh_dtype_get_dtype4node')
         if node_type == 'term':
             if 'True' in node_label or 'False' in node_label:
                 return '2b'
@@ -2310,11 +2317,15 @@ class Base_GP(object):
 
     def sfeh_dtype_get_dtype4label(self, node_label):
         """
-        returns dtype for a terminal
+        returns dtype for a label
         """
 
         node_type = self.sfeh_get_nodetype4label(node_label)
-        return self.sfeh_dtype_get_dtype4node(node_label, node_type)
+        node_dtype = self.sfeh_dtype_get_dtype4node(node_label, node_type)
+        return node_dtype
+
+    def sfeh_dtype_outcome_equi_test(self, a_dtype, b_dtype):
+        return a_dtype in b_dtype or b_dtype in a_dtype
 
     def sfeh_get_nodetype4label(self, node_label):
         """
@@ -2349,7 +2360,8 @@ class Base_GP(object):
             terminals_correct = self.terminals_bool
             the_type = 'bool'
         else:
-            raise self.printpl('e', 'Probably, you have to check if your "function" is actually a terminal:', node_dtype)
+            self.printpl('e', 'Probably, you have to check if your "function" is actually a terminal. dtype', node_dtype)
+            raise
 
         try:
             if np.random.choice(['var', 'const']) == 'var':  # our choice is variable
@@ -2434,7 +2446,7 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'Mode not found', mode)
 
-    def sfeh_get_mutatable_node_id(self, tree, mode='', dtype=''):
+    def sfeh_get_mutatable_node_id(self, tree, mode='', same_dtype=''):
         """
         Returns a mutatable node for point-mutation
         -> no_root handles
@@ -2444,15 +2456,16 @@ class Base_GP(object):
         node_ids = []
 
         # 1. Build up a list with nodes
-        if 'same_type' in mode:
-            for i, x in enumerate(tree[5]):
-                # TODO make this faster
-                if x != '' and tree[13][i] == '1':
-                    if self.sfeh_dtype_get_dtype4label(tree[6][i]) == dtype:
+        if same_dtype:
+            for i, label in enumerate(tree[6]):
+                if tree[13][i] == '1':  # also skips node 0
+                    # TODO make this faster
+                    node_dtype = self.sfeh_dtype_get_dtype4label(tree[6][i])
+                    if self.sfeh_dtype_outcome_equi_test(node_dtype, same_dtype):
                         node_ids.append(int(tree[3][i]))
         else:
             for i, x in enumerate(tree[5]):
-                if x != '' and tree[13][i] == '1':
+                if tree[13][i] == '1':
                     node_ids.append(int(tree[3][i]))
 
         # 2. Kick out root if it is there?
@@ -2519,7 +2532,7 @@ class Base_GP(object):
 
     def sfeh_evolve_crossover_get_swap_branches(self, parent_a, parent_b, mode='replace_same_types'):
         """
-        Returns two branches that can be replaced
+        Returns two branches (node ids) that can be replaced and a converter (if needed)
 
         - Try swapping based on dtype
             - Choose a random node in tree a
@@ -2542,9 +2555,10 @@ class Base_GP(object):
             a_node = self.sfeh_get_mutatable_node_id(parent_a, mode='crossover_no_root')
             a_dtype = self.sfeh_dtype_get_dtype4label(parent_a[6][a_node])
             try:  # swapping with random dtype
-                b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_same_type', dtype=a_dtype)
+                b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover', same_dtype=a_dtype)
             except:  # no matching dtypes. maybe the other one?
-                mode='force_conversion'  # better luck next time
+                mode = 'try_dtype'  # better luck next time
+                # TODO directly force_conversion?
 
         # obsolete?
         if mode == 'try_dtype':
@@ -2553,30 +2567,31 @@ class Base_GP(object):
             elif '2b' in a_dtype:
                 a_dtype = '2f'
             else:
-                raise self.printpl('e','dtype should be either 2f or 2b, it is', a_dtype)
+                raise self.printpl('e', 'dtype should be either 2f or 2b, it is', a_dtype)
             try:  # swapping with other dtype
-                a_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_same_type', dtype=a_dtype)
-                b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_same_type', dtype=a_dtype)
+                a_node = self.sfeh_get_mutatable_node_id(parent_a, mode='crossover_no_root', same_dtype=a_dtype)  # now
+                b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover', same_dtype=a_dtype)  # also a_dtype
             except:  # no matching dtypes. maybe the other one?
                 mode = 'force_conversion'
 
         if mode == 'force_conversion':
             a_node = self.sfeh_get_mutatable_node_id(parent_a, mode='crossover_no_root')
-            b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover_no_root')
+            b_node = self.sfeh_get_mutatable_node_id(parent_b, mode='crossover')
             a_dtype = self.sfeh_dtype_get_dtype4label(parent_a[6][a_node])
             b_dtype = self.sfeh_dtype_get_dtype4label(parent_b[6][b_node])
-            if a_dtype != b_dtype:
-                self.printpl('w', 'Crossover: Forcing conversion between', a_node, b_node)
+            # check if the two labels are compartibel
+            if self.sfeh_dtype_outcome_equi_test(a_dtype, b_dtype):
+                self.printpl('w', 'Crossover: Forcing conversion between', parent_a[6][a_node], parent_b[6][b_node])
                 a_convert = self.sfeh_convert_dtypes_get_dummylabel(a_dtype, b_dtype)
-                b_convert = self.sfeh_convert_dtypes_get_dummylabel(b_dtype, a_dtype)
+                # b_convert = self.sfeh_convert_dtypes_get_dummylabel(b_dtype, a_dtype)
 
         # TODO check if tree is too large
         # TODO add try-except-case with point mutation (same arity, swapping dtype)
 
-        b_branch = self.plagih_evolve_get_branch(parent_b, node=b_node)
         a_branch = self.plagih_evolve_get_branch(parent_a, node=a_node)
+        b_branch = self.plagih_evolve_get_branch(parent_b, node=b_node)
 
-        return a_branch, a_convert
+        return a_branch, b_branch, a_convert
 
     def sfeh_convert_dtypes_get_dummylabel(self, a_dtype, b_dtype):
         """
@@ -2587,16 +2602,18 @@ class Base_GP(object):
         if '2f' in a_dtype and '2b' in b_dtype:
             return 'ftob'
         else:
-            raise self.printpl('e', 'One of those two cases should happen', a_dtype, b_dtype)
-
+            self.printpl('e', 'One of those two cases should happen', a_dtype, b_dtype)
+            raise
         return
 
-    def plagih_evolve_crossover(self, parent_x, branch_x, parent_y, branch_y):
+    def plagih_evolve_crossover(self, parent_x, branch_x, parent_y, branch_y, converter=0):
 
         """
         Perform a crossover between nodes that are crossoverable in terms of function txpes
-
+        get: parent a, b and their branches
+        return: puts branch_y into parent_x
         """
+        # TODO converter is not used yet
 
         y_root = int(branch_y[0])
         x_root = int(branch_x[0])
@@ -2622,8 +2639,8 @@ class Base_GP(object):
     def plagih_evolve_get_branch(self, tree, node=0):
 
         """
-        Branch_mutate: chooses a mutatable branch to mutate
-        - choose a starting node
+        chooses a mutatable branch to mutate
+        - specify a starting node
         - return all childnodes as list
         """
         # 1. branch_top = a valid node
@@ -2805,7 +2822,7 @@ class Base_GP(object):
                 tree[11][node] = c_buffer + 2
 
             else:
-                print('\n\t\033[31m ERROR! In fx_evolve_child_link: node', node, 'has arity', tree[8][node])
+                self.printpl('', '\n\t\033[31m ERROR! In fx_evolve_child_link: node', node, 'has arity', tree[8][node])
                 self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         return tree
@@ -2836,7 +2853,7 @@ class Base_GP(object):
         """
 
         if int(tree[8][node]) == 0:  # if arity = 0
-            print('\n\t\033[31m ERROR! In fx_evolve_child_insert: node', node, 'has arity 0\033[0;0m')
+            self.printpl('e', 'In fx_evolve_child_insert: node', node, 'has arity 0')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         elif int(tree[8][node]) == 1:  # if arity = 1
@@ -2873,7 +2890,7 @@ class Base_GP(object):
             tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
 
         else:
-            print('\n\t\033[31m ERROR! In fx_evolve_child_insert: node', node, 'arity > 3\033[0;0m')
+            self.printpl('e', 'In fx_evolve_child_insert: node', node, 'arity > 3')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         return tree
@@ -2981,8 +2998,6 @@ class Base_GP(object):
         (branch) or a full tree, and it will operate correctly. The input value 'depth' becomes the new maximum depth,
         where depth is defined as the local maximum + the user defined adjustment.
 
-        Called by: fx_evolve_crossover
-
         Arguments required: tree, depth
         '''
 
@@ -2992,7 +3007,8 @@ class Base_GP(object):
 
             if int(tree[4][n]) == depth and tree[5][n] == 'func':
                 tree[5][n] = 'term'  # mutate type 'func' to 'term'
-                tree[6][n] = self.sfeh_dtype_get_term4node(tree[6][n])  # replace label
+                node_dtype = self.sfeh_dtype_get_dtype4label(tree[6][n])
+                tree[6][n] = self.sfeh_dtype_get_term4node(node_dtype)  # replace label
 
             elif int(tree[4][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
                 nodes.append(n)
@@ -3091,7 +3107,7 @@ class Base_GP(object):
             elif verbosity == 'w':  # warning
                 message_style = '\033[93mWarning: '  # Warning-yellow
             else:
-                print('Error. Display-mode ', verbosity, 'not known.')
+                self.printpl('e', 'Display-mode', verbosity, 'not known.')
 
             print(message_style + ' '.join(map(str, args))+'\033[39m')
         return
@@ -3104,8 +3120,9 @@ class Base_GP(object):
     def plot_end(self, y_name, mode='', plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label=''):
         # insert artificial data
 
+        # self.plot_end('s', plt_title='Sympify zoo and nan', plt_y_label='Amount')
         if y_name == 's':  # there must be a better sulotion
-            y = self.monitor_failed_sympys_amount
+            y = self.plot_failed_sympys_amount
         else:
             self.printpl('e', 'Monitoring this is not available', y_name)
 

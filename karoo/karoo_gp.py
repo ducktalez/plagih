@@ -1,5 +1,5 @@
 import sys; sys.path.append('modules/') # add directory 'modules' to the current path
-import karoo.modules.karoo_gp_base_class_xai; gp = karoo.modules.karoo_gp_base_class_xai.Base_GP()
+import karoo.modules.plagih_gp_base_class_xai; gp = karoo.modules.plagih_gp_base_class_xai.Base_GP()
 from pathlib import Path
 
 # • Generational (g): pauses after each generation is complete

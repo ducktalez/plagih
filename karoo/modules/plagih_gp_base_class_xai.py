@@ -1789,7 +1789,7 @@ class Base_GP(object):
 
         Arguments required: expr, tensors
         """
-        # print('Current expr:', expr)  # importantprint
+        print('Current expr:', expr)  # importantprint
         tree = ast.parse(expr, mode='eval').body
 
         return self.plagih_fitness_node_parse(tree, tensors)
@@ -1860,7 +1860,7 @@ class Base_GP(object):
                         self.plagih_fitness_node_parse(node.args[2], tensors))
 
             if node.func.id in non_inline_multielem_functions:  # Min, Max Goddamn. yeah, min and max need the same type, apparently. TODO? Does this work now?
-                print([self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])
+                print('Here', [self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])
                 return operators[node.func.id]([self.plagih_fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
 
             if node.func.id == 'ftob':
@@ -3107,6 +3107,7 @@ class Base_GP(object):
             elif verbosity == 'w':  # warning
                 message_style = '\033[93mWarning: '  # Warning-yellow
             else:
+                # Just show it
                 self.printpl('e', 'Display-mode', verbosity, 'not known.')
 
             print(message_style + ' '.join(map(str, args))+'\033[39m')

@@ -32,9 +32,49 @@ class Ifte(Function):
     def _sympy_(self, a, b, c): return eval(self, a, b, c)
 
 
+class Ftob(Function):
+    """
+    Dummy function to convert Float to boolean
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+
+        return True if a > 0 else False
+
+    def _sympy_(self, a): return eval(self, a)
+
+class Btof(Function):
+    """
+    Dummy function to convert Boolean to Float
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+        return 1 if a else 0
+
+    def _sympy_(self, a): return eval(self, a)
+
+
 class Mini(Function):
     """
-    plagih_sympify('Ifte(a, b, c)')
+    obsolete, currently not needed.
+    """
+    nargs = 2
+
+    @classmethod
+    def eval(cls, a, b):
+
+        return a if a < b else b
+
+    def _sympy_(self, a, b): return eval(self, a, b)
+
+
+class Maxi(Function):
+    """
+    obsolete, currently not needed.
     """
     nargs = 2
 
@@ -47,7 +87,10 @@ class Mini(Function):
 
 
 local_sympy_dict = {'ifte': Ifte,
-                    'mini': Mini}
+                    'ftob': Ftob,
+                    'btof': Btof,
+                    'mini': Mini,
+                    'maxi': Maxi}
 
 """
 It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139

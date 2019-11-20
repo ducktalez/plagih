@@ -4,5 +4,4 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 
-print(plagih_sympify('Min(0, 1)'))
-
+print(plagih_sympify('atan(1)'))

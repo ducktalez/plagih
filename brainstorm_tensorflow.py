@@ -13,7 +13,7 @@ def fx_fitness_chain_bool(values, operation, tensors):
     Arguments required: values, operation, tensors
     """
 
-    x = tf.dtypes.cast(self.plagih_fitness_node_parse(values[0], tensors), tf.bool)
+    x = tf.dtypes.cast(plagih_fitness_node_parse(values[0], tensors), tf.bool)
     if len(values) > 1:
         return operation(x, fx_fitness_chain_bool(values[1:], operation, tensors))
     else:
@@ -64,10 +64,13 @@ def plagih_fitness_node_parse(node, tensors):
                 plagih_fitness_node_parse(node.args[1], tensors),
                 plagih_fitness_node_parse(node.args[2], tensors))
 
-        if node.func.id in non_inline_multielem_functions:  # Min, Max Goddamn. yeah, min and max need the same type, apparently. TODO? Does this work now?
+        if node.func.id in non_inline_multielem_functions:
             print('Here', [plagih_fitness_node_parse(arg, tensors) for arg in node.args])
-            return operators[node.func.id]([plagih_fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
-
+            try:
+                return operators[node.func.id]([plagih_fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
+            except:
+                print('Failed in:', node)
+                return
         if node.func.id == 'ftob':
             return tf.dtypes.cast(*[plagih_fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.bool)
         elif node.func.id == 'btof':
@@ -93,14 +96,14 @@ def plagih_fitness_node_parse(node, tensors):
     else:
         raise TypeError(node)
 
-
-expr = plagih_sympify('Ifte(Min(-a - 0.83, a + Min(a, Min(0.07, -2*a - 0.04)/Min(2, -0.13*a - 0.21))) < 0, 0, 2)')
-print('Expression:')
-print(expr)
-
-tree = ast.parse(expr, mode='eval').body
-print('Tree:')
-print(tree)
+expr_str1 = 'Ifte(Min(-a - 0.83, a + Min(a, Min(0.07, -2*a - 0.04)/Min(2, -0.13*a - 0.21))) < 0, 0, 2)'
+expr_str2 = 'Ifte(Min(observation1/Min(0.3068444595227484, Min(0.0778174339856423, observation1) + Min(-observation1 - 0.0713143621790016*observation1/observation0, observation1 + 0.20315205368473466)), observation1*(observation0 - Min(observation1, observation1**2))*Min(-0.05513040972364425, observation0)) < observation0/(observation0 - (0.09226845066608202 + 0.9064094311162174/(2*observation0 + observation1))/observation0), 0, 2)'
+expr_str = expr_str2
+# Here [<tf.Tensor 'Const_4:0' shape=(1670,) dtype=float32>, <tf.Tensor 'Const_1:0' shape=(1670,) dtype=float32>]
+# Here [<tf.Tensor 'Sub:0' shape=(1670,) dtype=float32>, <tf.Tensor 'Add:0' shape=(1670,) dtype=float32>]
+# Here [<tf.Tensor 'Const_3:0' shape=(1670,) dtype=float32>, <tf.Tensor 'Add_2:0' shape=() dtype=float32>]
+# Here [<tf.Tensor 'Const_11:0' shape=(1670,) dtype=float32>, <tf.Tensor 'Const_1:0' shape=(1670,) dtype=float32>]
+# Here [<tf.Tensor 'Sub_2:0' shape=(1670,) dtype=float32>, <tf.Tensor 'Add_3:0' shape=(1670,) dtype=float32>]'
 
 # Examples for one terminal tensor set
 tensors = {}
@@ -108,7 +111,17 @@ tensors['observation0'] = tf.constant(0.5, dtype=tf.float32)
 tensors['observation1'] = tf.constant(0.8, dtype=tf.float32)
 tensors['action0'] = tf.constant(2, dtype=tf.float32)
 
-plagih_fitness_node_parse(tree, tensors)
+expr = plagih_sympify(expr_str)
+expr_str = str(expr)
+print('Expression:')
+print(expr)
 
-print(min_1)
+tree = ast.parse(str(expr), mode='eval').body
+print('Tree:')
+print(tree)
+
+
+solution = plagih_fitness_node_parse(tree, tensors)
+
+print(solution)
 

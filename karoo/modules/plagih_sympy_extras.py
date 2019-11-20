@@ -72,10 +72,25 @@ class Mini(Function):
     def _sympy_(self, a, b): return eval(self, a, b)
 
 
+class Maxi(Function):
+    """
+    obsolete, currently not needed.
+    """
+    nargs = 2
+
+    @classmethod
+    def eval(cls, a, b):
+
+        return a if a < b else b
+
+    def _sympy_(self, a, b): return eval(self, a, b)
+
+
 local_sympy_dict = {'ifte': Ifte,
                     'ftob': Ftob,
                     'btof': Btof,
-                    'mini': Mini}
+                    'mini': Mini,
+                    'maxi': Maxi}
 
 """
 It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139

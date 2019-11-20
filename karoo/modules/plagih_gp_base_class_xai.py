@@ -67,6 +67,8 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
              'Min': tf.math.reduce_min,  # do not use tf.math.minimum,  # min is apparently a string
              'Max': tf.math.reduce_max,  # e.g. min(a, b)
+             'Mini': tf.math.minimum,  # if reduce_min does not work...
+             'Maxi': tf.math.maximum,
              # Note: These need separate handling for their conversion type
              # 'ftob': tf.dtypes.cast,
              # 'ftob': tf.dtypes.cast,
@@ -94,17 +96,15 @@ function_types_dict = {  # Needs A LOT OF further testing
     'acos': 'f2f',
     'asin': 'f2f',
     'atan': 'f2f',
-    'Min': 'f2f',
-    'Max': 'f2f',
 
-    'and': 'b2b',
-    'or': 'b2b',
-    'xor': 'b2b',
-    'nand': 'b2b',
-    'xand': 'b2b',
-    'nor': 'b2b',
-    'xnor': 'b2b',
-    'not': 'b2b',
+    'And': 'b2b',
+    'Or': 'b2b',
+    'Xor': 'b2b',
+    'Nand': 'b2b',
+    'Xand': 'b2b',
+    'Nor': 'b2b',
+    'Xnor': 'b2b',
+    'Not': 'b2b',
     'ITE': 'b2b',
 
     '==': 'f2b',
@@ -119,12 +119,17 @@ function_types_dict = {  # Needs A LOT OF further testing
     'btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
 
     'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+    'Min': 'f2f',
+    'Max': 'f2f',
+    'Mini': 'f2f',
+    'Maxi': 'f2f',
 }
     # Storytime:
     # sympify can reduce an expression to 'Min(a, b, c)', but tensorflow and our framework does not like this
 non_inline_multielem_functions = ['Min', 'Max']  # There is probably an actual way to call 'non_inline_functions'
 
-non_inline_functions = ['Min', 'Max', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
+non_inline_functions = ['Min', 'Max', 'Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
+inline_functions = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
 
 function_arity_dict = {  # Needs A LOT OF further testing
     'float': 0,  # these three are dummies
@@ -148,17 +153,15 @@ function_arity_dict = {  # Needs A LOT OF further testing
     'acos': 1,
     'asin': 1,
     'atan': 1,
-    'Min': 2,
-    'Max': 2,
 
-    'and': 2,
-    'or': 2,
-    'xor': 2,
-    'nand': 2,
-    'xand': 2,
-    'nor': 2,
-    'xnor': 2,
-    'not': 1,
+    'And': 2,
+    'Or': 2,
+    'Xor': 2,
+    'Nand': 2,
+    'Xand': 2,
+    'Nor': 2,
+    'Xnor': 2,
+    'Not': 1,
     'ITE': 3,
 
     '==': 2,
@@ -172,6 +175,10 @@ function_arity_dict = {  # Needs A LOT OF further testing
     'btof_extreme': 1,  # False->-1, True->1. Does that make sense?
 
     'Ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+    'Min': 2,
+    'Max': 2,
+    'Mini': 2,
+    'Maxi': 2,
 }
 
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
@@ -559,7 +566,8 @@ class Base_GP(object):
             elif term_type == 'bool':
                 self.terminals_bool.append(self.terminals[i])
             else:
-                raise print('Nopely sfeh')
+                self.printpl('e', 'term_type is neither float or bool:', term_type)
+                raise
 
         # sfeh das funktioniert nur bei diskreten Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
@@ -781,7 +789,7 @@ class Base_GP(object):
         Arguments required: population, key
         """
 
-        with open(self.filename[key], 'a') as csv_file:
+        with open(self.filename[key], 'a', newline='') as csv_file:
             target = csv.writer(csv_file, delimiter=',')
             if self.gen_id != 1:
                 target.writerows([''])  # empty row before each generation
@@ -1447,7 +1455,7 @@ class Base_GP(object):
 
             elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
                 # This if case is for 2-ary ops that can not be inline. like Min(a, b)
-                if tree[6, node_id] in non_inline_functions:
+                if tree[6, node_id] not in inline_functions:  # in non_inline_functions:
                     return '(' + tree[6, node_id] + '(' + self.plagih_eval_label(tree, tree[9, node_id]) + ', ' + self.plagih_eval_label(tree, tree[10, node_id]) + '))'
                 else:
                     return '(' + self.plagih_eval_label(tree, tree[9, node_id]) + tree[6, node_id] + self.plagih_eval_label(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte

@@ -53,13 +53,15 @@ tree_pop_max = 50
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
 origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')
-display = 'ewsniv'  # ewsnfivp
+display = 'gewsnivt'  #
 gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
 parsimony_min_max = [15, 50]
-monitor = 'sf'  # sf. s = sympify errors, f = generation fitness
+monitor = {'verbosity': 'g',  # every generation
+           'gen_fitness_avg': 'y',
+           'sympify_errors': 'y',}
 
 # origin_tree_file = Path('../mountaincar/karoo_files/test_tree2.csv')
-gp.plagih_karoo_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
+gp.plagih_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
                    tourn_size, operators_file, samples_file, origin_tree_file, evolve_distribution, display,
                    precision, swim, mode, gene_pool_threshold, parsimony_min_max, monitor)
 

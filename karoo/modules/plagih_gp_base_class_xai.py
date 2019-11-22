@@ -266,7 +266,6 @@ class Base_GP(object):
         self.evolve_branch = evolve_distribution[2]  # quantity of a population generated through Branch Mutation
         self.evolve_cross = evolve_distribution[3]  # quantity of a population generated through Crossover
         self.evolve_missing = evolve_distribution[4]  # fill up the generation with candidates
-        # TODO use these for something
         if self.evolve_missing > 0:
             exit()
         self.display = display
@@ -275,21 +274,19 @@ class Base_GP(object):
         self.gene_pool_threshold = gene_pool_threshold
         self.parsimony_min_max = parsimony_min_max
         self.monitor = monitor
+        fitt_dict = {'c': 'max', 'r': 'min', 'm': 'max'}
+        self.fitness_type = fitt_dict[self.kernel]  # load fitness type
 
-        # Load Operators and Dataset into self-variables
-        self.data_load(operators_file, samples_file)
-
-        # Construct the first Generation
-        self.main_gen_first(origin_tree_file)
-
-        # Continue with all further generations
-        self.main_generation_new_repeat()
-
-        self.karoo_terminate()  # archive populations and return to karoo_gp.py for a clean exit
+        # 2. Perform genetic programming
+        self.main_data_load(operators_file, samples_file, origin_tree_file)
+        self.main_directories_create()
+        self.main_gen_first()
+        self.main_generation_new_repeat()   # (main loop)
+        self.main_terminate()  # archive populations and return to karoo_gp.py for a clean exit
 
         return
 
-    def main_gen_first(self, origin_tree_file_path):
+    def main_gen_first(self):
         """
         Everything that needs to be done for the first generation
         - Extracts "origin Tree" from file
@@ -304,10 +301,7 @@ class Base_GP(object):
         self.population_a = ['PLAGIH Karoo GP Extension by Simon Fehrer, Generation ' + str(self.gen_id)]  # initialise population_a to host the first generation
         self.population_b = ['placeholder']  # initialise population_b to satisfy fx_karoo_pause()
 
-        # 1.1 First Generation needs a Load an initial tree
-        self.data_load_origin_tree(origin_tree_file_path)  # construct the first population of Trees
-
-        self.gen_first_create()
+        self.pop_first_create()
 
         # if self.gen_max == 1:  # terminate here if constructing just one generation
         #     self.data_tree_write(self.population_a, 'a')  # save this single population to disk
@@ -318,7 +312,6 @@ class Base_GP(object):
         self.fitness_gym(self.population_a)  # generate expression, evaluate fitness, compare fitness
         self.data_tree_write(self.population_a, 'a')  # save the first generation of Trees to disk
 
-        self.monitor_performance(mode='init')
         self.monitor_performance(mode='collect')
 
     def main_generation_new_repeat(self):
@@ -389,7 +382,7 @@ class Base_GP(object):
 
         return
 
-    def karoo_terminate(self):
+    def main_terminate(self):
         """
         Terminates the evolutionary run (if yet in progress), saves parameters and data to disk, and cleanly returns
         the user to karoo_gp.py and the command line.
@@ -414,79 +407,16 @@ class Base_GP(object):
     #   Methods to Load and Archive Data         |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def data_load(self, operators_file, samples_file):
+    def main_data_load(self, operators_file, samples_file, origin_tree_file_path):
 
         """
-        The data and function .csv files are loaded according to the fitness function kernel selected by the user.
-        The data is then split
-        into both TRAINING and TEST segments in order to validate the success of the GP training run.
+        Loads all user input and prepares
 
-        Called by: fx_karoo_gp
-
-        Arguments required: filename (of the dataset)
         """
 
-        # Load the 'good' samples file. first observations then actions.
-        # Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
-        #
-        # Mountaincar .csv first lines (11.12.2019):
-        ######################################
-        # observation0, observation1, action0
-        # -0.5031261704876531, 0.0, 2
-        # ####################################
-
-        # TODO hier unterscheiden, welche distanz genommen werden soll?
-        # TODO Funktioniert das mit allen Datentypen?
-
-        # Part 1: Load the dataset
-
-        data_x, data_y = self.data_load_dataset(samples_file)
-
-
-        # Part 2: Assign fitness type
-        # TODO Types of fitting the solution: Matching, dist-to-right-decision, euklidian dist, dummydist, tiles?
-        # Ideas: d = distance? m = match? o = order? t = tiled?
-        fitt_dict = {'c': 'max', 'r': 'min', 'm': 'max'}
-        self.fitness_type = fitt_dict[self.kernel]  # load fitness type
-
-        # Part 3: Load the specified functions. (-> [if,3] [+,2] ...)
+        self.data_load_dataset(samples_file)
         self.data_load_operators(operators_file)  # Ia a little complex now, outsourced into this function
-
-        # Part 4 - from the dataset, extract TRAINING and TEST data ###
-        # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
-        x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=0.2)  # 80/20 TRAIN/TEST split
-        data_train = np.c_[x_train, y_train]  # recombine each row of data with its associated class label (right column)
-        data_test = np.c_[x_test, y_test]  # recombine each row of data with its associated class label (right column)
-        data_x, data_y, x_train, y_train, x_test, y_test = [], [], [], [], [], []  # clear from memory
-        self.data_train_cols = len(data_train[0, :])  # qty count
-        self.data_train_rows = len(data_train[:, 0])  # qty count
-        self.data_test_cols = len(data_test[0, :])  # qty count
-        self.data_test_rows = len(data_test[:, 0])  # qty count
-
-        ### PART 5 - load TRAINING and TEST data for TensorFlow processing
-        self.data_train = data_train  # Store train data for processing in TF
-        self.data_test = data_test  # Store test data for processing in TF
-        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU or GPU); gpu:n = 1st, 2nd, or ... GPU device
-        self.tf_device_log = False  # TF device usage logging (for debugging)
-
-        ### PART 6 - create a unique directory and initialise all .csv files ###
-        self.datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        cwd = os.getcwd()
-        self.path = os.path.join(cwd, 'runs/' + self.datetime + '/')  # generate a unique directory name
-        if not os.path.isdir(self.path): os.makedirs(self.path)  # make a unique directory
-        self.filename = {}  # a dictionary to hold .csv filenames
-        self.filename.update({'a': self.path + 'population_a.csv'})
-        target = open(self.filename['a'], 'w')
-        target.close()  # initialise a .csv file for population 'a' (foundation)
-        self.filename.update({'b': self.path + 'population_b.csv'})
-        target = open(self.filename['b'], 'w')
-        target.close()  # initialise a .csv file for population 'b' (evolving)
-        self.filename.update({'f': self.path + 'population_f.csv'})
-        target = open(self.filename['f'], 'w')
-        target.close()  # initialise a .csv file for the final population (test)
-        self.filename.update({'s': self.path + 'population_s.csv'})
-        target = open(self.filename['s'], 'w')
-        target.close()  # initialise a .csv file to manually load (seed)
+        self.data_load_origin_tree(origin_tree_file_path)  # construct the first population of Trees
 
         return
 
@@ -528,15 +458,33 @@ class Base_GP(object):
         return
 
     def data_load_dataset(self, samples_file):
+
+        """
+        loads the goal-data from .csv file
+        """
+        # Load the 'good' samples file. first observations then actions.
+        # Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
+        #
+        # Mountaincar .csv first lines (11.12.2019):
+        ######################################
+        # observation0:float, observation1_float, action0:float
+        # -0.5031261704876531, 0.0, 2
+        # ####################################
+
+        # TODO hier unterscheiden, welche distanz genommen werden soll?
+        # TODO Funktioniert das mit allen Datentypen?
+
+        num_observations, num_actions = 0, 0
+        var_types = []
+        self.terminals, self.terminal_types = [], []
+        self.actions, self.action_types = [], []
+
+        # 1. File einlesen
         with open(samples_file) as csvFile:
             reader = csv.reader(csvFile, delimiter=',')
-            num_observations = 0
-            data_x, data_y = [], []
-            var_types = []
-            self.terminals, self.terminal_types = [], []
-            self.actions, self.action_types = [], []
+
             for i, row in enumerate(reader):
-                if i == 0:
+                if i == 0:  # variable identifiers
                     # all_variables = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
                     for var_name in row:
                         var_types.append(var_name.split(':', 1)[1])
@@ -545,10 +493,14 @@ class Base_GP(object):
                             self.terminals.append(var_name.rsplit(':', 1)[0])
                             self.terminal_types.append(var_name.split(':', 1)[1])
                         elif var_name.startswith('a'):  # found an action
-                            self.actions.append(var_name.split(':', 1)[0])
-                            self.action_types.append(var_name.split(':', 1)[1])
+                            num_actions += 1
+                            self.actions.append(var_name.split(':', 1)[0])  # action0
+                            self.action_types.append(var_name.split(':', 1)[1])  # float
+                            print('actions:', self.actions)
                         else:
                             raise print('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized')
+
+                    data_x, data_y = [], []
 
                 else:  # convert every 'string' element to its datatype
                     row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
@@ -573,7 +525,24 @@ class Base_GP(object):
         # sfeh das funktioniert nur bei diskreten Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
 
-        return data_x, data_y
+        # Part 4 - from the dataset, extract TRAINING and TEST data ###
+        # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
+        x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=0.2)  # 80/20 TRAIN/TEST split
+        data_train = np.c_[x_train, y_train]  # recombine each row of data with its associated class label (right column)
+        data_test = np.c_[x_test, y_test]  # recombine each row of data with its associated class label (right column)
+        data_x, data_y, x_train, y_train, x_test, y_test = [], [], [], [], [], []  # clear from memory
+        self.data_train_cols = len(data_train[0, :])  # qty count
+        self.data_train_rows = len(data_train[:, 0])  # qty count
+        self.data_test_cols = len(data_test[0, :])  # qty count
+        self.data_test_rows = len(data_test[:, 0])  # qty count
+
+        ### PART 5 - load TRAINING and TEST data for TensorFlow processing
+        self.data_train = data_train  # Store train data for processing in TF
+        self.data_test = data_test  # Store test data for processing in TF
+        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU or GPU); gpu:n = 1st, 2nd, or ... GPU device
+        self.tf_device_log = False  # TF device usage logging (for debugging)
+
+        return
 
     def data_load_operators(self, operators_file_path):
         """
@@ -633,6 +602,33 @@ class Base_GP(object):
         else:
             print('No Functions that create bool were found')
             self.functions_2b = []
+
+    def main_directories_create(self):
+        """
+        Create all files that will be saved after all
+        """
+
+        self.datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        cwd = os.getcwd()
+        self.path = os.path.join(cwd, 'runs/' + self.datetime + '/')  # generate a unique directory name
+        if not os.path.isdir(self.path):
+            os.makedirs(self.path)  # make a unique directory
+        self.filename = {}  # a dictionary to hold .csv filenames
+        self.filename.update({'a': self.path + 'population_a.csv'})
+        target = open(self.filename['a'], 'w')
+        target.close()  # initialise a .csv file for population 'a' (foundation)
+        self.filename.update({'b': self.path + 'population_b.csv'})
+        target = open(self.filename['b'], 'w')
+        target.close()  # initialise a .csv file for population 'b' (evolving)
+        self.filename.update({'f': self.path + 'population_f.csv'})
+        target = open(self.filename['f'], 'w')
+        target.close()  # initialise a .csv file for the final population (test)
+        self.filename.update({'s': self.path + 'population_s.csv'})
+        target = open(self.filename['s'], 'w')
+        target.close()  # initialise a .csv file to manually load (seed)
+
+        self.monitor_performance(mode='init')
+
 
     def data_tree_write(self, population, key):
 
@@ -726,8 +722,7 @@ class Base_GP(object):
 
             # test the most fit Tree and write to the .txt log
             self.tree_algo_expr_sympify(self.population_b[int(fittest_tree)])  # generate the raw and sympified expression for the given Tree using SymPy
-            expr = str(self.algo_sym)  # get simplified expression and process it by TF - tested 2017 02/02
-            result = self.expr_fitness_eval(expr, self.data_test, get_pred_labels=True)
+            result = self.expr_fitness_eval(str(self.algo_sym), self.data_test, get_pred_labels=True)
 
             file.write('\n\t Origin fitness score: {}'.format(self.origin_fitness))
 
@@ -819,7 +814,7 @@ class Base_GP(object):
     #   Methods to Construct the 1st Generation  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def gen_first_create(self):
+    def pop_first_create(self):
         """
         Constructs the first generation
         - loads the origin-tree from file
@@ -1282,13 +1277,14 @@ class Base_GP(object):
                                          5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
             else:
                 # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
-                raise print('You did not take care of the kind of numbers you want to have')
+                self.printpl('e', 'You did not take care of the kind of numbers you want to have')
+                raise
         elif term_type == 'int':
             # TODO give more opportunities, similar to random floats
             return np.random.random_integers(-10, 10)
         else:
-            print('Please specify your desired datatype if possible. Trying to return value similar to terminals.')
-            print('This term type should not occur, I guess', term_type)
+            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return value similar to terminals.')
+            self.printpl('e', 'This term type should not occur, I guess', term_type)
             term_type = np.random.choice(self.terminal_types)
             return self.tree_get_constant4type(term_type=term_type)
 
@@ -1382,8 +1378,7 @@ class Base_GP(object):
                     self.pop_node_c3 = c_buffer + 2
 
                 else:
-                    print('\n\t\033[31m ERROR! In fx_init_child_link: pop_node_arity =', self.pop_node_arity,
-                          '\033[0;0m')
+                    self.printpl('o', '\n\t\033[31m ERROR! In fx_init_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
                     self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         return
@@ -1534,7 +1529,7 @@ class Base_GP(object):
             self.printpl('vv', 'Evaluating Tree', tree_id)
             self.population_b[tree_id][0][1] = tree_id
 
-        self.fitness_gym(self.population_b)  # run fx_eval(), fx_fitness(), fx_fitness_store(), and fitness record
+        self.fitness_gym(self.population_b)
         self.data_tree_write(self.population_b, 'a')  # archive current population as foundation for next generation
 
         self.printpl('v', 'Copy gp.population_b to gp.population_a')
@@ -1683,7 +1678,6 @@ class Base_GP(object):
             return self.hashtable_fitness[expr_hash]
 
         # 2. calculate the fitness and store it in the hash table
-        expr_sym = str(self.algo_sym)
         result = self.expr_fitness_eval(expr_sym, self.data_train)
         fitness = result['fitness']  # extract fitness score
         self.hashtable_fitness[expr_hash] = fitness
@@ -1702,12 +1696,8 @@ class Base_GP(object):
             'self.tf_device_log' - controls device placement logging (debug only).
 
         Args:
-            'expr' - a string containing math expression to be computed on the data. Variable names should match corresponding
-            terminal names in 'self.terminals'.
-
-            'data' - an 'n by m' matrix of the data points containing n observations and m features per observation.
-            Variable order should match corresponding order of terminals in 'self.terminals'.
-
+            'expr' - a string expression to be computed on the data. Variable names should match 'self.terminals' names.
+            'data' - an 'n by m' matrix of the data points containing n observations like 'self.terminals'.
             'get_pred_labels' - a boolean flag which controls whether the predicted labels should be extracted from the
             evolved results. This applies only to the CLASSIFY kernel and defaults to 'False'.
 
@@ -1719,9 +1709,6 @@ class Base_GP(object):
                 'pairwise_fitness' - an array of the element-wise results of applying corresponding fitness kernel function
                 'fitness' - aggregated scalar fitness score
 
-        Called by: fx_karoo_pause, data_params_write, fx_fitness_gym
-
-        Arguments required: expr, data
         """
 
         # Initialize TensorFlow session
@@ -1732,37 +1719,39 @@ class Base_GP(object):
         with tf.compat.v1.Session(config=config) as sess:
             with sess.graph.device(self.tf_device):
 
-                # 1 - Load data into TF vectors
+                # 1. data (observations, actions) to tensors
                 tensors = {}
-                for i in range(len(self.terminals)):
+
+                num_terminals = len(self.terminals)
+                num_actions = len(self.actions)
+
+                for i in range(num_terminals):
                     var = self.terminals[i]
                     if '2f' in self.dtype_get_dtype4node(var, 'term'):
                         tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
                     else:  # '2b'
                         tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
 
-                for i in range(len(self.actions)):
+                for i in range(num_actions):
                     var = self.actions[i]
                     if '2f' in self.dtype_get_dtype4node(var, 'term'):
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
+                        tensors[var] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data into vectors
                     else:  # '2b'
+                        self.printpl('t', 'Currently no kernel available for boolean fitness')
                         tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
 
                 # 2- Transform string expression into TF operation graph
-                result = self.fitness_expr_parse(expr, tensors)
+                tf_result = self.fitness_expr_parse(expr, tensors)
                 pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
+
                 # TODO currently does only support one label
                 solution = tensors['action0']  # solution value is assumed to be stored in this terminal
-
                 # 3- Add fitness computation into TF graph
                 if self.kernel == 'c':  # CLASSIFY kernel
 
                     """
                     Creates element-wise fitness computation TensorFlow (TF) sub-graph for CLASSIFY kernel.
-                    
-                    This method uses the 'sympified' (SymPy) expression ('algo_sym') created in eval_poly() and the data set 
-                    loaded at run-time to evaluate the fitness of the selected kernel.
-                    
+                    - tree-label vs. true label
                     This multiclass classifer compares each row of a given Tree to the known solution, comparing predicted labels 
                     generated by Karoo GP against the true class labels. This method is able to work with any number of class 
                     labels, from 2 to n. The left-most bin includes -inf. The right-most bin includes +inf. Those inbetween are 
@@ -1780,20 +1769,20 @@ class Base_GP(object):
                         self.printpl('e', 'TODO multidimensional input. To be done, there is no solution yet.')
 
                     if get_pred_labels:
-                        pred_labels = tf.map_fn(self.fitness_labels_map, result, dtype=(tf.int32, tf.string), swap_memory=True)
+                        pred_labels = tf.map_fn(self.fitness_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
 
                     skew = (self.class_labels / 2) - 1
 
                     rule11 = tf.equal(solution, 0)
-                    rule12 = tf.less_equal(result, 0 - skew)
+                    rule12 = tf.less_equal(tf_result, 0 - skew)
                     rule13 = tf.logical_and(rule11, rule12)
 
                     rule21 = tf.equal(solution, self.class_labels - 1)
-                    rule22 = tf.greater(result, solution - 1 - skew)
+                    rule22 = tf.greater(tf_result, solution - 1 - skew)
                     rule23 = tf.logical_and(rule21, rule22)
 
-                    rule31 = tf.less(solution - 1 - skew, result)
-                    rule32 = tf.less_equal(result, solution - skew)
+                    rule31 = tf.less(solution - 1 - skew, tf_result)
+                    rule32 = tf.less_equal(tf_result, solution - skew)
                     rule33 = tf.logical_and(rule31, rule32)
 
                     pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
@@ -1806,7 +1795,7 @@ class Base_GP(object):
                     integrating a more sophisticated kernel.
                     """
 
-                    pairwise_fitness = tf.abs(solution - result)
+                    pairwise_fitness = tf.abs(solution - tf_result)
 
                 elif self.kernel == 'm':  # MATCH kernel
 
@@ -1816,8 +1805,7 @@ class Base_GP(object):
 
                     # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
                     RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float value lies within a range of values
-                    pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - result), ATOL + RTOL * tf.abs(result)),
-                                               tf.int32)
+                    pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
 
                 # elif self.kernel == '[other]': # use others as a template
 
@@ -1827,10 +1815,10 @@ class Base_GP(object):
                 fitness = tf.reduce_sum(pairwise_fitness)
 
                 # Process TF graph and collect the results
-                result, pred_labels, solution, fitness, pairwise_fitness = sess.run(
-                    [result, pred_labels, solution, fitness, pairwise_fitness])
+                tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
+                print('Result:', tf_result, 'Fitness:', fitness)
 
-        return {'result': result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),
+        return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),
                 'pairwise_fitness': pairwise_fitness}
 
     def fitness_expr_parse(self, expr, tensors):
@@ -1838,9 +1826,6 @@ class Base_GP(object):
         """
         Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
 
-        Called by: fx_fitness_eval
-
-        Arguments required: expr, tensors
         """
         # print('Current expr:', expr)  # importantprint
         tree = ast.parse(expr, mode='eval').body
@@ -1913,7 +1898,7 @@ class Base_GP(object):
                         self.fitness_node_parse(node.args[2], tensors))
 
             if node.func.id in non_inline_multielem_functions:  # Min, Max Goddamn. yeah, min and max need the same type, apparently. TODO? Does this work now?
-                print('Here', [self.fitness_node_parse(arg, tensors) for arg in node.args])
+                self.printpl('e', [self.fitness_node_parse(arg, tensors) for arg in node.args])
                 return operators[node.func.id]([self.fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
 
             if node.func.id == 'ftob':
@@ -3252,7 +3237,7 @@ class Base_GP(object):
             self.gen_max = self.gen_max + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
 
         elif input_a == 'quit':
-            self.karoo_terminate()  # archive populations and exit
+            self.main_terminate()  # archive populations and exit
 
         return 1
 

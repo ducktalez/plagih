@@ -230,7 +230,7 @@ class Base_GP(object):
 
         ### Global variables used for evolutionary management ###
         self.population_a			the root generation from which Trees are chosen for mutation and reproduction
-        self.population_b			the generation constructed from gp.population_a (recyled)
+        self.population_new			the generation constructed from gp.population_a (recyled)
         self.gene_pool				once-per-generation assessment of trees that meet min and max boundary conditions
         self.gen_id					simple n + 1 increment
         self.fitness_type			set in fx_data_load() as either a minimising or maximising function
@@ -280,13 +280,13 @@ class Base_GP(object):
         # 2. Perform genetic programming
         self.main_data_load(operators_file, samples_file, origin_tree_file)
         self.main_directories_create()
-        self.main_gen_first()
-        self.main_generation_new_repeat()   # (main loop)
+        self.main_generation_first()
+        self.main_generation_loop()   # (main loop)
         self.main_terminate()  # archive populations and return to karoo_gp.py for a clean exit
 
         return
 
-    def main_gen_first(self):
+    def main_generation_first(self):
         """
         Everything that needs to be done for the first generation
         - Extracts "origin Tree" from file
@@ -295,26 +295,17 @@ class Base_GP(object):
         - Monitoring initialisation and monitoring
         """
 
-        # 1.  set parameters for the generation
-        self.gen_id = 1  # set initial generation ID
+        self.gen_id = 1  # set initial generation ID    # first gen only
+        self.monitor_performance(mode='init')           # first gen only
+
         self.gen_prepare_parameters()
-        self.population_a = ['PLAGIH Karoo GP Extension by Simon Fehrer, Generation ' + str(self.gen_id)]  # initialise population_a to host the first generation
-        self.population_b = ['placeholder']  # initialise population_b to satisfy fx_karoo_pause()
+        self.gen_first_create()
+        self.gen_finalize()
 
-        self.pop_first_create()
+        self.gen_archive(self.population_a, 'a')        # first gen only
 
-        # if self.gen_max == 1:  # terminate here if constructing just one generation
-        #     self.data_tree_write(self.population_a, 'a')  # save this single population to disk
-        #     sys.exit()
 
-        ### PART 3 - evaluate first generation of Trees ###
-        self.printpl('g', 'Evaluate the first generation of Trees ...')
-        self.fitness_gym(self.population_a)  # generate expression, evaluate fitness, compare fitness
-        self.data_tree_write(self.population_a, 'a')  # save the first generation of Trees to disk
-
-        self.monitor_performance(mode='update')
-
-    def main_generation_new_repeat(self):
+    def main_generation_loop(self):
         """
         Creates all new Generations.
         - adjust parameters for this generation (parsimony threshold)
@@ -323,25 +314,22 @@ class Base_GP(object):
         menu = 1
         while menu != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
             for self.gen_id in range(self.gen_id + 1, self.gen_max + 1):  # generation 2 to *max generation*
-                self.gen_prepare_parameters()
-                self.printpl('g', 'Evolve a population of Trees for Generation', self.gen_id, '...')
-                self.population_b = ['Karoo GP - Evolving Generation']  # initialise population_b to host the next generation
-                
-                self.fitness_gene_pool()  # generate the viable gene pool
-                self.fitness_olymp()
 
-                #    Genetic programming on the old population
+                # 1. set parameters for the generation
+                self.gen_prepare_parameters()
+
+                # 2. Create new generation (from last genepool)
                 self.pop_reproduce()  # method 1 - Reproduction
                 self.pop_mutate_point()  # method 2 - Point Mutation
                 self.pop_mutate_branch()  # method 3 - Branch Mutation
                 self.pop_crossover()  # method 4 - Crossover
 
-                self.pop_eval()  # evaluate all Trees in a single generation
-                self.population_a = self.fx_evolve_pop_copy(self.population_b, ['Karoo GP Generation ' + str(self.gen_id)])
+                self.gen_finalize()
+
                 self.monitor_performance(mode='update')
 
             else:
-                self.printpl('o', '\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
+                self.printpl('p', '\n\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
                 menu = 0
 
     def monitor_pop_fitness(self):
@@ -359,6 +347,8 @@ class Base_GP(object):
             if mode == 'update':  # save value to final list and reset counter
                 average_fitness = self.gen_fitness_eval  # TODo
                 self.var_pop_fitness_avg.append(average_fitness)
+            elif mode == 'reset':
+                pass
             elif mode == 'show':  # show the plot
                 pass
             elif mode == 'init':  # initialize the variables (saves memory)
@@ -373,6 +363,8 @@ class Base_GP(object):
             if mode == 'update':
                 if self.monitor_failed_sympys_amount:
                     self.plot_failed_sympys_amount.append(self.monitor_failed_sympys_amount)
+            elif mode == 'reset':
+                self.monitor_failed_sympys_amount = 0
             elif mode == 'init':
                 self.plot_failed_sympys_amount = []
             elif mode == 'show':
@@ -413,7 +405,7 @@ class Base_GP(object):
         self.data_params_write()
         target = open(self.filename['f'], 'w')
         target.close()  # initialize the .csv file for the final population
-        self.data_tree_write(self.population_b, 'f')  # save the final generation of Trees to disk
+        self.gen_archive(self.population_new, 'f')  # save the final generation of Trees to disk
 
         print('\n\t\033[32m Your Trees and runtime parameters are archived in karoo_gp/runs/[date-time]/\033[0;0m')
         print('\n\033[3m "It is not the strongest of the species that survive, nor the most intelligent,\033[0;0m')
@@ -468,7 +460,7 @@ class Base_GP(object):
 
         # As we need it quite often, safe the origin tree's data
         self.origin_tree = tree
-        self.tree_algo_expr_sympify(self.origin_tree)
+        self.tree_expr_sympify(self.origin_tree)
 
         self.hashtable_fitness = {}
         self.origin_fitness = self.tree_fitness(self.origin_tree)
@@ -637,7 +629,7 @@ class Base_GP(object):
         self.filename.update({'a': self.path + 'population_a.csv'})
         target = open(self.filename['a'], 'w')
         target.close()  # initialise a .csv file for population 'a' (foundation)
-        self.filename.update({'b': self.path + 'population_b.csv'})
+        self.filename.update({'b': self.path + 'population_new.csv'})
         target = open(self.filename['b'], 'w')
         target.close()  # initialise a .csv file for population 'b' (evolving)
         self.filename.update({'f': self.path + 'population_f.csv'})
@@ -650,14 +642,11 @@ class Base_GP(object):
         self.monitor_performance(mode='init')
 
 
-    def data_tree_write(self, population, key):
+    def gen_archive(self, population, key):
 
         """
         Save population_* to disk.
 
-        Called by: fx_karoo_gp, fx_eval_generation
-
-        Arguments required: population, key
         """
 
         with open(self.filename[key], 'a', newline='') as csv_file:
@@ -716,9 +705,9 @@ class Base_GP(object):
             fittest_tree = 0
 
             # revised method, re-evaluating all Trees from stored fitness score
-            for tree_id in range(1, len(self.population_b)):
+            for tree_id in range(1, len(self.population_new)):
 
-                fitness = float(self.population_b[tree_id][12][1])
+                fitness = float(self.population_new[tree_id][12][1])
 
                 if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
                     if fitness >= fitness_best:  # find the Tree with Maximum fitness score
@@ -741,7 +730,7 @@ class Base_GP(object):
             # print ('fitness_best:', fitness_best, 'fittest_tree:', fittest_tree)
 
             # test the most fit Tree and write to the .txt log
-            self.tree_algo_expr_sympify(self.population_b[int(fittest_tree)])  # generate the raw and sympified expression for the given Tree using SymPy
+            self.tree_expr_sympify(self.population_new[int(fittest_tree)])  # generate the raw and sympified expression for the given Tree using SymPy
             result = self.expr_fitness_eval(str(self.algo_sym), self.data_test, get_pred_labels=True)
 
             file.write('\n\t Origin fitness score: {}'.format(self.origin_fitness))
@@ -834,7 +823,7 @@ class Base_GP(object):
     #   Methods to Construct the 1st Generation  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def pop_first_create(self):
+    def gen_first_create(self):
         """
         Constructs the first generation
         - loads the origin-tree from file
@@ -846,33 +835,26 @@ class Base_GP(object):
         self.printpl('g', 'Initial population...')
 
         self.origin_tree[0][1] = 1
-        self.pop_first_tree_append(self.origin_tree)
+        self.population_new.append(self.origin_tree)
 
         for TREE_ID in range(2, self.tree_pop_max + 1 - 1):
 
-            tree = self.origin_tree.copy()  # is this necessary? probably.
+            # Copy reference tree
+            tree = self.origin_tree.copy()
+
+            # vary this tree with branch mutation
             branch_nodes_list = self.tree_branch_get(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
             tree = self.pop_mutate_branch_evolve(tree, branch_nodes_list)  # tree with new branch
-            # 6 Fill the correct meta-data into the tree (and wipe the old fitness)
+
+            # Fill the correct meta-data into the tree (and wipe the old fitness)
             tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
             tree = self.tree_store_set_modify_nodes(tree)
-
             tree[0][1] = TREE_ID
-            self.pop_first_tree_append(tree)
+
+            self.population_new.append(tree)
 
         self.printpl('g', '\n We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
 
-    def pop_first_tree_append(self, tree):
-
-        """
-        Append Tree array to the foundation Population.
-
-        """
-
-        self.data_tree_clean(tree)  # clean 'tree' prior to storing
-        self.population_a.append(tree)  # append 'tree' to population list
-
-        return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to Construct the 1st Generation  |
@@ -932,14 +914,15 @@ class Base_GP(object):
     def gen_prepare_parameters(self):
         """
         Sets the parameters for this generation
+        - reset population_new
         - Lineary increase threshold for parsimony
         """
+        self.printpl('g', 'Preparing to evolve Generation', self.gen_id, '...')
 
-        self.monitor_failed_sympys_amount = 0  # monitoring
+        self.population_new = ['Karoo GP - Evolving Generation']  # initialise population_new to host the next generation
+        self.parsimony_min_max[0] = int(self.gen_id / self.gen_max * self.parsimony_min_max[1])
 
-        # adjust parsimony threshold lineary
-        gen_done_percentage = self.gen_id / self.gen_max
-        self.parsimony_min_max[0] = int(gen_done_percentage * self.parsimony_min_max[1])
+        self.monitor_performance(mode='reset')
 
         return
 
@@ -1005,6 +988,11 @@ class Base_GP(object):
         b_branch = self.tree_branch_get(parent_b, node=b_node)
 
         return a_branch, b_branch, a_convert
+
+    def tree_usability_get(self):
+        """
+        usability = fitness * ln( parsimony ) ?
+        """
 
     def pop_crossover_insert(self, parent_x, branch_x, parent_y, branch_y, converter=0):
 
@@ -1398,7 +1386,7 @@ class Base_GP(object):
                     self.pop_node_c3 = c_buffer + 2
 
                 else:
-                    self.printpl('o', '\n\t\033[31m ERROR! In fx_init_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
+                    self.printpl('e', '\n\t\033[31m ERROR! In fx_init_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
                     self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         return
@@ -1425,18 +1413,14 @@ class Base_GP(object):
     #   Methods to Evaluate a Tree                |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def tree_algo_expr_sympify(self, tree):
+    def tree_expr_sympify(self, tree):
 
         """
-        Evaluate a Tree and generate its multivariate expression (both raw and Sympified).
-
-        We need to extract the variables from the expression. However, these variables are no longer correlated
-        to the original variables listed across the top of each column of data.csv. Therefore, we must re-assign
-        the respective values for each subsequent row in the data .csv, for each Tree's unique expression.
-
-        Called by: fx_karoo_pause, data_params_write, fx_eval_label, fitness_gym, fx_fitness_gene_pool, fx_display_tree
-
-        Arguments required: tree
+        Gets the sympifyed expression
+        Changes:
+        -> self.algo_sym
+        -------
+        -> self.monitor_failed_sympys_amount
         """
 
         self.algo_raw = self.tree_expr_raw(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
@@ -1445,7 +1429,7 @@ class Base_GP(object):
             strx = str(x)
 
             if 'zoo' in strx or 'nan' in strx:
-                self.monitor_failed_sympys_amount = self.monitor_failed_sympys_amount + 1
+                self.monitor_failed_sympys_amount += 1
 
             if 'zoo' in strx:
                 x = re.sub('zoo', '10', strx)  # TODO how to handle zoo?
@@ -1453,8 +1437,8 @@ class Base_GP(object):
             if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
                 self.printpl('w', 'We had a "nan"')
                 self.algo_sym == sympy_dummy  # "nan" workaround
-
-            self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
+            else:
+                self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
         except:
             self.printpl('e', 'In sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
             self.algo_sym = 1
@@ -1531,98 +1515,125 @@ class Base_GP(object):
                        + self.tree_node_get_childlist(tree, tree[10, node_id]) + ', ' \
                        + self.tree_node_get_childlist(tree, tree[11, node_id])
 
-    def pop_eval(self):
+    def gen_finalize(self):
 
         """
-        This method invokes the evaluation of an entire generation of Trees. It automatically evaluates population_b
-        before invoking the copy of _b to _a.
+        From raw population_new to new population_a
+        - Gene_pool with tree's parsimony (and store info in the tree)
+        -
 
-        Called by: fx_karoo_gp
-
-        Arguments required: none
         """
 
-        self.printpl('g', 'Evaluate all Trees in Generation', self.gen_id)
-        self.printpl('p', 'Want to adjust anything?')
-
-        for tree_id in range(1, len(self.population_b)):  # renumber all Trees in given population
-            self.printpl('vv', 'Evaluating Tree', tree_id)
-            self.population_b[tree_id][0][1] = tree_id
-
-        self.fitness_gym(self.population_b)
-        self.data_tree_write(self.population_b, 'a')  # archive current population as foundation for next generation
-
-        self.printpl('v', 'Copy gp.population_b to gp.population_a')
+        self.pop_enum_trees()
+        self.pop_genepool_parsimony()   # creates gene_pool: [1,2,6,8,14,20]
+        self.pop_genepool_fitness()     # computes fitness for genepool-trees
+        # self.population_a = self.pop_copy(self.population_new, ['Karoo GP Generation ' + str(self.gen_id)])
+        self.population_a = self.pop_copy_genepool(self.population_new)
+        self.gen_archive(self.population_new, 'b')
+        self.monitor_performance(mode='update')
 
         return
+
+    def pop_enum_trees(self):
+        """
+        outsourced enumeration of trees in a population
+        """
+        for tree_id in range(1, len(self.population_new)):  #
+            self.population_new[tree_id][0][1] = tree_id
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to Train and Test a Tree         |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def fitness_gym(self, population):
+    # def pop_eval_fitness(self, population):
+    #
+    #     """
+    #
+    #     - iterates over all trees in the population
+    #         -
+    #     """
+    #
+    #     fitness_best = 0
+    #     self.fittest_dict = {}
+    #
+    #     for tree_id in range(1, len(population)):
+    #
+    #         self.tree_expr_sympify(population[tree_id])  # extract the expression
+    #         expr = str(self.algo_sym)  # get sympified expression and process it with TF
+    #
+    #         result = self.expr_fitness_eval(expr, self.data_train)
+    #         parsimony = self.tree_parsimony(population[tree_id])
+    #         fitness = result['fitness']  # extract fitness score
+    #
+    #         self.tree_store_fitness(population[tree_id], fitness)  # store Fitness and parsimony with each Tree
+    #
+    #         ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
+    #         if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
+    #             if fitness >= fitness_best:  # find the Tree with Maximum fitness score
+    #                 fitness_best = fitness  # set best fitness score
+    #                 self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if fitness >= prior
+    #
+    #         elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
+    #             if fitness_best == 0: fitness_best = fitness  # set the baseline first time through
+    #             if fitness <= fitness_best:  # find the Tree with Minimum fitness score
+    #                 fitness_best = fitness  # set best fitness score
+    #                 self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if fitness <= prior
+    #
+    #         elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
+    #             if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
+    #                 fitness_best = fitness  # set best fitness score
+    #                 self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if all rows match
+    #
+    #         else:
+    #             raise self.printpl('e', 'No proper kernel was selected', self.kernel)
+    #
+    #     self.printpl('p', '\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
+    #
+    #     return
 
+    def pop_genepool_fitness(self):
         """
-        Part 1 evaluates each expression against the data, line for line. This is the most time consuming and
-        computationally expensive part of genetic programming. When GPUs are available, the performance can increase
-        by many orders of magnitude for datasets measured in millions of data.
-
-        Part 2 evaluates every Tree in each generation to determine which have the best, overall fitness score. This
-        could be the highest or lowest depending upon if the fitness function is maximising (higher is better) or
-        minimising (lower is better). The total fitness score is then saved with each Tree in the external .csv file.
-
-        Part 3 compares the fitness of each Tree to the prior best fit in order to track those that improve with each
-        comparison. For matching functions, all the Trees will have the same fitness score, but they may present more
-        than one solution. For minimisation and maximisation functions, the final Tree should present the best overall
-        fitness for that generation. It is important to note that Part 3 does *not* in any way influence the Tournament
-        Selection which is a stand-alone process.
-
-        Called by: fx_karoo_gp, fx_eval_generations
-
-        Arguments required: population
+        Compute the fitness for every tree
         """
 
-        fitness_best = 0
         self.fittest_dict = {}
 
-        for tree_id in range(1, len(population)):
+        for tree_id in self.gene_pool:
 
-            ### PART 1 - GENERATE MULTIVARIATE EXPRESSION FOR EACH TREE ###
-            self.tree_algo_expr_sympify(population[tree_id])  # extract the expression
+            self.tree_expr_sympify(self.population_new[tree_id])
+            fitness = self.tree_fitness(self.population_new[tree_id])
+            self.tree_store_fitness(self.population_new[tree_id], fitness)  # store Fitness and parsimony with each Tree
 
-            ### PART 2 - EVALUATE FITNESS FOR EACH TREE AGAINST TRAINING DATA ###
-            fitness = 0
-            expr = str(self.algo_sym)  # get sympified expression and process it with TF
-            result = self.expr_fitness_eval(expr, self.data_train)
-            parsimony = self.tree_parsimony_distance(population[tree_id])
-            fitness = result['fitness']  # extract fitness score
-
-            self.fitness_store(population[tree_id], fitness, parsimony)  # store Fitness and parsimony with each Tree
-
-            ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
-            if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
-                if fitness >= fitness_best:  # find the Tree with Maximum fitness score
-                    fitness_best = fitness  # set best fitness score
-                    self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if fitness >= prior
-
-            elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
-                if fitness_best == 0: fitness_best = fitness  # set the baseline first time through
-                if fitness <= fitness_best:  # find the Tree with Minimum fitness score
-                    fitness_best = fitness  # set best fitness score
-                    self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if fitness <= prior
-
-            elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
-                if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
-                    fitness_best = fitness  # set best fitness score
-                    self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if all rows match
-
-            else:
-                raise self.printpl('e', 'No peoper kernel was selected', self.kernel)
-
-        self.printpl('o', '\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
-        self.printpl('p', 'Pausing')
+        self.printpl('p', '\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
 
         return
+
+    def compare_genepool_fitness(self, tree_id, fitness, fitness_best):
+        """
+        idk
+        :return:
+        TODO
+        """
+
+        ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
+        if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
+            if fitness >= fitness_best:  # find the Tree with Maximum fitness score
+                fitness_best = fitness  # set best fitness score
+                self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if fitness >= prior
+
+        elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
+            if fitness_best == 0: fitness_best = fitness  # set the baseline first time through
+            if fitness <= fitness_best:  # find the Tree with Minimum fitness score
+                fitness_best = fitness  # set best fitness score
+                self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if fitness <= prior
+
+        elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
+            if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
+                fitness_best = fitness  # set best fitness score
+                self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if all rows match
+
+        else:
+            raise self.printpl('e', 'No proper kernel was selected', self.kernel)
 
     def sfeh_treedist_rel_ari(self, tree):
         """
@@ -1649,7 +1660,7 @@ class Base_GP(object):
 
         return distance
 
-    def tree_parsimony_distance(self, tree, parsimony_distance='rel_ari_1'):
+    def tree_parsimony(self, tree, parsimony_distance='rel_ari_1'):
         """
 
         :param tree: The tree
@@ -1675,7 +1686,7 @@ class Base_GP(object):
             return
         else:
             self.printpl('i', 'Parsimony distance not specified! Use default.')
-            self.tree_parsimony_distance(tree)
+            self.tree_parsimony(tree)
 
     def pop_tree_exists(self):
         return
@@ -1706,11 +1717,10 @@ class Base_GP(object):
     def expr_fitness_eval(self, expr, data, get_pred_labels=False):
 
         """
-        Computes tree expression using TensorFlow (TF) returning results and fitness scores.
-
-        This method orchestrates most of the TF routines by parsing input string 'expression' and converting it into a TF
-        operation graph which is then processed in an isolated TF session to compute the results and corresponding fitness
-        values.
+        computes gp-tree results and fitness scores.
+        - Computes tree expression using TensorFlow (TF)
+        - parsing input string 'expression' and converting it into a TF operation graph
+        - processing tf graph in an isolated TF session (results and corresponding fitness)
 
             'self.tf_device' - controls which device will be used for computations (CPU or GPU).
             'self.tf_device_log' - controls device placement logging (debug only).
@@ -1723,11 +1733,11 @@ class Base_GP(object):
 
         Returns:
             A dict mapping keys to the following outputs:
-                'result' - an array of the results of applying given expression to the data
-                'pred_labels' - an array of the predicted labels extracted from the results; defined only for CLASSIFY kernel, else None
-                'solution' - an array of the solution values extracted from the data (variable 's' in the dataset)
-                'pairwise_fitness' - an array of the element-wise results of applying corresponding fitness kernel function
-                'fitness' - aggregated scalar fitness score
+                'result'            - an array of the results of applying given expression to the data
+                'pred_labels'       - an array of the predicted labels extracted from the results; defined only for CLASSIFY kernel, else None
+                'solution'          - an array of the solution values extracted from the data (variable 's' in the dataset)
+                'pairwise_fitness'  - an array of the element-wise results of applying corresponding fitness kernel function
+                'fitness'           - aggregated scalar fitness score
 
         """
 
@@ -1982,47 +1992,21 @@ class Base_GP(object):
 
         return pred_label
 
-    def fitness_store(self, tree, fitness, parsimony):
+    def pop_selection_tournament(self, tourn_size):
 
         """
-        Records the fitness and length of the raw algorithm (multivariate expression) to the Numpy array. Parsimony can
-        be used to apply pressure to the evolutionary process to select from a set of trees with the same fitness function
-        the one(s) with the simplest (shortest) multivariate expression.
-
-        Called by: fx_fitness_gym
-
-        Arguments required: tree, fitness
-        """
-
-        fitness = float(fitness)
-        fitness = round(fitness, self.precision)
-
-        tree[12][1] = fitness  # store the fitness with each tree
-        tree[14][1] = parsimony  # store the length of the raw algo for parsimony
-        # if len(tree[3]) > 4: # if the Tree array is wide enough -- SEE SCRATCHPAD
-
-        return
-
-    def fitness_tournament(self, tourn_size):
-
-        """
-        Multiple contenders ('tourn_size') are randomly selected and then compared for their respective fitness, as
-        determined in fx_fitness_gym(). The tournament is engaged to select a single Tree for each invocation of the
-        genetic operators: reproduction, mutation (point, branch), and crossover (sexual reproduction).
-
-        The original Tournament Selection drew directly from the foundation generation (gp.generation_a). However,
-        with the introduction of a minimum number of nodes as defined by the user ('gp.tree_depth_min'),
-        'gp.gene_pool' limits the Trees to those which meet all criteria.
-
-        Stronger boundary parameters (a reduced gap between the min and max number of nodes) may invoke more compact
-        solutions, but also runs the risk of elitism, even total population die-off where a healthy population once existed.
+        gp-selection. takes a number of trees (usually 3) and returns the best one (winner)
+        Needs:
+            - population a
+            - genepool a
         """
 
         tourn_test = 0
         # short_test = 0 # an incomplete parsimony test (seeking shortest solution)
 
         for n in range(tourn_size):
-            # tree_id = np.random.randint(1, self.tree_pop_max + 1) # former method of selection from the unfiltered population
+
+            # 1. choose a random gene_pool tree from population_a
             rnd = np.random.randint(len(self.gene_pool))  # select one Tree at random from the gene pool
             tree_id = int(self.gene_pool[rnd])
 
@@ -2034,8 +2018,7 @@ class Base_GP(object):
                 # first time through, 'tourn_test' will be initialised below
 
                 if fitness > tourn_test:  # if the current Tree's 'fitness' is greater than the priors'
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and leads\033[0;0m')
+                    self.printpl_c('i', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and leads\033[0;0m')
                     tourn_lead = tree_id  # set 'TREE_ID' for the new leader
                     tourn_test = fitness  # set 'fitness' of the new leader
                 # short_test = int(self.population_a[tree_id][14][1]) # set len(algo_raw) of new leader
@@ -2094,7 +2077,7 @@ class Base_GP(object):
 
         return tourn_winner
 
-    def fitness_gene_pool(self):
+    def pop_genepool_parsimony(self, population):
 
         """
         Create the gene pool
@@ -2111,20 +2094,29 @@ class Base_GP(object):
         # TODO stop equal candidates from being in the gene pool multiple times?
 
         """
-
+        """
+        select a genepool from population_new
+        """
         self.printpl('g', 'Gene Pool for Generation:', self.gen_id, '...')
+
+        # Empty old gene_pool first
         self.gene_pool = []
 
-        for tree_id in range(1, len(self.population_a)):  # Every tree
-            self.tree_algo_expr_sympify(self.population_a[tree_id])  # extract the expression
-            if self.algo_sym != 1 and self.parsimony_min_max[0] > int(self.population_a[tree_id][14][1]):  # dummy exit and parsimony condition
-                self.gene_pool.append(self.population_a[tree_id][0][1])
+        for tree_id in range(1, len(population)):  # Every tree
+
+            # Get genepool requirements. Only criteria: parsominy
+            tree = population[tree_id]
+            parsimony = self.tree_parsimony(population[tree_id])
+
+            # Requirement
+            if parsimony < self.parsimony_min_max[0]:  # Can this tree go in the gene_pool?
+                self.tree_store_parsimony(tree, parsimony)
+                self.gene_pool.append(tree[0][1])
 
         if len(self.gene_pool) > 0:
             self.printpl('p', 'The total population of the gene pool is', len(self.gene_pool))
         else:  # the evolutionary constraints were too tight, killing off the entire population
-            self.printpl('p', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
-            self.fx_karoo_pause_refer()  # 2019 06/07
+            self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
 
         return
 
@@ -2195,9 +2187,9 @@ class Base_GP(object):
             """
 
             for i in range(len(result['result'])):
-                self.printpl('o', '\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i, result['result'][i], result['solution'][i]))
+                self.printpl('vv', '\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i, result['result'][i], result['solution'][i]))
 
-            self.printpl('o', 'Matching fitness score: {}'.format(result['fitness']))
+            self.printpl('v', 'Matching fitness score: {}'.format(result['fitness']))
 
             return
         else:
@@ -2219,10 +2211,10 @@ class Base_GP(object):
         self.printpl('g', 'Reproduce One...')
 
         for n in range(self.evolve_repro):  # quantity of Trees to be copied without mutation
-            tourn_winner = self.fitness_tournament(self.tourn_size)  # perform tournament selection for each reproduction
+            tourn_winner = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each reproduction
             tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='r')  # wipe fitness data
             tourn_winner[1][1] = 'r'
-            self.population_b.append(tourn_winner)  # append array to next generation population of Trees
+            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
 
         return
 
@@ -2235,10 +2227,10 @@ class Base_GP(object):
         self.printpl('g', 'Point Mutation...')
 
         for n in range(self.evolve_point):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.fitness_tournament(self.tourn_size)  # get a tournament winner
+            tourn_winner = self.pop_selection_tournament(self.tourn_size)  # get a tournament winner
             tourn_winner, node = self.pop_mutate_point_evolve(tourn_winner)  # point mutation; return single point for record keeping
             tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='p')  # wipe fitness data
-            self.population_b.append(tourn_winner)  # append array to next generation population of Trees
+            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
         return
 
     def pop_mutate_branch(self):
@@ -2256,12 +2248,12 @@ class Base_GP(object):
         self.printpl('g', 'Branch Mutation...')
 
         for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.fitness_tournament(self.tourn_size)  # perform tournament selection for each mutation
+            tourn_winner = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
             branch_nodes_list = self.tree_branch_get(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.pop_mutate_branch_evolve(tourn_winner, branch_nodes_list)
             tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='b')  # wipe fitness data
             tourn_winner = self.tree_store_set_modify_nodes(tourn_winner)
-            self.population_b.append(tourn_winner)  # append array to next generation population of Trees
+            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
 
         return
 
@@ -2280,8 +2272,8 @@ class Base_GP(object):
         for n in range(self.evolve_cross):  # quantity of Trees to be generated through Crossover, (now not accounting for 2 children each, changed)
 
             # 1. Select two parents and their branches
-            parent_a = self.fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
-            parent_b = self.fitness_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
+            parent_a = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
+            parent_b = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
 
             # 2. Get the branches for parent a that can be exchanged
             branch_a, branch_b, convert_a = self.pop_crossover_get_swap_branches(parent_a, parent_b)
@@ -2292,9 +2284,9 @@ class Base_GP(object):
             else:
                 offspring = self.pop_crossover_insert(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
 
-            offspring = self.tree_store_meta_lastgen(offspring, modification='c')  # wipe fitness data
+            offspring = self.tree_store_meta_lastgen(offspring, modification='c')
             offspring = self.tree_store_set_modify_nodes(offspring)
-            self.population_b.append(offspring)  # append the 1st child to next generation of Trees
+            self.population_new.append(offspring)  # append the 1st child to next generation of Trees
 
         return
 
@@ -2615,7 +2607,7 @@ class Base_GP(object):
                 tree[11][node] = c_buffer + 2
 
             else:
-                self.printpl('o', '\n\t\033[31m ERROR! In fx_evolve_child_link: node', node, 'has arity', tree[8][node])
+                self.printpl('e', '\n\t\033[31m ERROR! In fx_evolve_child_link: node', node, 'has arity', tree[8][node])
                 self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         return tree
@@ -2759,22 +2751,25 @@ class Base_GP(object):
 
         return tree
 
-    def tree_store_parsimony(self, tree, parsimony):
-        """
-        Store the parsimony within the tree np-array
-        """
-        tree[14][1] = parsimony
-
-    def tree_store_fitness(self, tree, fitness):
+    def tree_store_fitness(self, tree, fitness, parsimony):
 
         """
-        Store the parsimony within the tree np-array
+        Store the fitness within the tree np-array
+
         """
 
         fitness = float(fitness)
         fitness = round(fitness, self.precision)
 
         tree[12][1] = fitness  # store the fitness with each tree
+
+        return
+
+    def tree_store_parsimony(self, tree, parsimony):
+        """
+        Store the parsimony within the tree np-array
+        """
+        tree[14][1] = parsimony
 
     def tree_store_meta_lastgen(self, tree, modification=''):
 
@@ -2793,8 +2788,8 @@ class Base_GP(object):
             tree[14][i] = tree[14][i-1]  # The last parsimony (TODO) # TREE_ID,1,a,b,c -> TREE_ID,1,a,a,b
 
         # What needs to be assigned later
-        tree[0][1] = ''  # -> TREE_ID,,
         tree[1][1] = modification  # wipe last modification data
+        tree[0][1] = ''  # -> TREE_ID,,
         tree[12][1] = ''  # wipe fitness data
         tree[14][1] = ''  # wipe parsimony data
 
@@ -2830,27 +2825,31 @@ class Base_GP(object):
 
         return tree
 
-    def fx_evolve_pop_copy(self, pop_a, title):
+    def pop_copy(self, pop_a, title):
 
         """
         Copy one population to another.
-
-        Simply copying a list of arrays generates a pointer to the original list. Therefore we must append each array
-        to a new, empty array and then build a list of those new arrays.
-
-        Called by: fx_karoo_gp
-
-        Arguments required: pop_a, title
         """
-
-        pop_b = [title]  # an empty list stores a copy of the prior generation
+        pop_new = [title]  # an empty list stores a copy of the prior generation
 
         for tree in range(1, len(pop_a)):  # increment through each Tree in the current population
-
             tree_copy = np.copy(pop_a[tree])  # copy each array in the current population
-            pop_b.append(tree_copy)  # add each copied Tree to the new population list
+            pop_new.append(tree_copy)  # add each copied Tree to the new population list
 
-        return pop_b
+        return pop_new
+
+    def pop_copy_genepool(self, pop_x, title):
+
+        """
+        Copy one population to another.
+        """
+        pop_y = ['Genepool-Population in Generation ' + str(self.gen_id)]  # empty list
+
+        for tree in self.gene_pool:  # increment through each Tree in the current population
+            tree_copy = np.copy(pop_x[tree])  # copy each array in the current population
+            pop_y.append(tree_copy)  # add each copied Tree to the new population list
+
+        return pop_y
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to receive correct dtypes (f2b,.) |
@@ -2993,10 +2992,14 @@ class Base_GP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def printpl_c(self, message_type, *args):
-        self.printpl(message_type, *args)
+        """
+        Customizable print function
+        """
+        return self.printpl(message_type, *args)
 
 
-    def printpl(self, message_type, *args):  # plagih naming
+    def printpl(self, message_type, *args, custom=False):  # plagih naming
+
         """
         Gets a verbosity (e.g. 'i')
 
@@ -3062,9 +3065,6 @@ class Base_GP(object):
             elif message_type == 'f':  # function
                 message_style = '\033[35m'
                 message_pretxt = 'Func: '  # Magenta
-            elif message_type == 'o':  # original Karoo message. Has its own format.
-                message_style = ''
-                message_pretxt = ''  # Do nothing
             else:
                 # Just show it
                 self.printpl('e', 'Display-mode', message_type, 'not known.')
@@ -3084,7 +3084,7 @@ class Base_GP(object):
         if y_name == 's':  # there must be a better sulotion
             y = self.plot_failed_sympys_amount
         else:
-            self.printpl('e', 'Monitoring this is not available', y_name)
+            self.printpl('e', 'Monitoring, this is not available', y_name)
 
         # if variance
         if mode == 'variance':
@@ -3210,7 +3210,7 @@ class Base_GP(object):
                      'evolve_cross': self.evolve_cross,
                      'fittest_dict': self.fittest_dict,
                      'pop_a_len': len(self.population_a),
-                     'pop_b_len': len(self.population_b),
+                     'pop_new_len': len(self.population_new),
                      'path': self.path}
 
         menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
@@ -3232,8 +3232,8 @@ class Base_GP(object):
             return 2  # breaks out of the fx_karoo_gp() or fx_karoo_pause_refer() loop
 
         elif input_a == 'eval':  # evaluate a Tree against the TEST data
-            self.tree_algo_expr_sympify(self.population_b[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
-            print('\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')  # print the sympified expression
+            self.tree_expr_sympify(self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
+            self.printpl('i', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')  # print the sympified expression
 
             result = self.expr_fitness_eval(str(self.algo_sym), self.data_test, get_pred_labels=True)  # might change to algo_raw evaluation
             self.fx_fitness_test(result)  # TF tested 2017 02/02
@@ -3243,27 +3243,27 @@ class Base_GP(object):
         elif input_a == 'print_a':  # print a Tree from population_a
             self.fx_display_tree(self.population_a[input_b])
 
-        elif input_a == 'print_b':  # print a Tree from population_b
-            self.fx_display_tree(self.population_b[input_b])
+        elif input_a == 'print_new':  # print a Tree from population_new
+            self.fx_display_tree(self.population_new[input_b])
 
         elif input_a == 'pop_a':  # list all Trees in population_a
             print('')
             for tree_id in range(1, len(self.population_a)):
-                self.tree_algo_expr_sympify(self.population_a[tree_id])  # extract the expression
-                print('\t\033[36m Tree', self.population_a[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
+                self.tree_expr_sympify(self.population_a[tree_id])  # extract the expression
+                self.printpl('i', '\t\033[36m Tree', self.population_a[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
 
-        elif input_a == 'pop_b':  # list all Trees in population_b
+        elif input_a == 'pop_new':  # list all Trees in population_new
             print('')
-            for tree_id in range(1, len(self.population_b)):
-                self.tree_algo_expr_sympify(self.population_b[tree_id])  # extract the expression
-                print('\t\033[36m Tree', self.population_b[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
+            for tree_id in range(1, len(self.population_new)):
+                self.tree_expr_sympify(self.population_new[tree_id])  # extract the expression
+                print('\t\033[36m Tree', self.population_new[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
 
         elif input_a == 'load':  # load population_s to replace population_a
             self.fx_data_recover(self.filename['s'])  # NEED TO replace 's' with a user defined filename
 
-        elif input_a == 'write':  # write the evolving population_b to disk
-            self.data_tree_write(self.population_b, 'b')
-            print('\n\t All current members of the evolving population_b saved to karoo_gp/runs/[date-time]/population_b.csv')
+        elif input_a == 'write':  # write the evolving population_new to disk
+            self.gen_archive(self.population_new, 'b')
+            print('\n\t All current members of the evolving population_new saved to karoo_gp/runs/[date-time]/population_new.csv')
 
         elif input_a == 'add':  # check for added generations, then exit fx_karoo_pause and continue the run
             self.gen_max = self.gen_max + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05

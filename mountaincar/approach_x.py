@@ -17,7 +17,8 @@ def mtc_approach_start(approach):
     episodes_sarsa = episodes
 
     # episode_rewards2, rewards2_avg = sarsa_start_training(env, episodes_sarsa, rewardSample_interval, train=True, render=False)
-    episode_rewards1, rewards1_avg = approach(env, episodes_ez, rewardSample_interval)
+    # TODO ansatz synamisch übergeben (als funktion übergeben)
+    episode_rewards1, rewards1_avg = improved_v1(env, episodes_ez, rewardSample_interval)
 
     plt.plot(rewardSample_interval * (np.arange(len(episode_rewards1)) + 1), episode_rewards1, label=str(approach))
     plt.legend()
@@ -37,26 +38,17 @@ def mtc_approach_start(approach):
     plt.ylabel('Average Reward')
     plt.title('Average Reward vs Episodes')
     plt.ylim(-200, -50)
-    plt.savefig('MTC-'+str(approach)+'-'+str(episodes)+'-'++str(rewardSample_interval)+'-average.jpg')
+    plt.savefig('MTC-'+str(approach)+'-'+str(episodes)+'-'+str(rewardSample_interval)+'-average.jpg')
     plt.show()
 
     plt.close()
+    env.close()
 
 # agent.epsilon = 0.
 # episodes = 100
 # episode_rewards = [play_sarsa(env, agent, train=False, render=False) for _ in range(episodes)]
 # print('average award = {} / {} = {}'.format(
 #         sum(episode_rewards), len(episode_rewards), np.mean(episode_rewards)))
-
-
-
-
-
-
-
-
-
-
 
 # Creates the plot which displays current position/speed and the corresponding action
 
@@ -81,7 +73,4 @@ def mtc_approach_start(approach):
 # with open('./resources/agent.pkl', 'wb') as file:
 #     pickle.dump(agent, file)
 
-env.close()
-
-
-
+mtc_approach_start('improved_v1')

@@ -53,9 +53,16 @@ tree_pop_max = 50
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
 origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')
-display = 'gewsnivt'  #
+# display = 'gewsivto'  #
 gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
 parsimony_min_max = [15, 50]
+display = {'generation_steps': 'y',
+           'errors': 'y',
+           'warnings': 'y',
+           'verbosity_lvl': '3',
+           'function': 'n',
+           'custom': 'y',
+           }
 monitor = {'verbosity': 'g',  # every generation
            'gen_fitness_avg': 'y',
            'sympify_errors': 'y',}

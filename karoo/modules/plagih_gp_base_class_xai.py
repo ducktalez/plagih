@@ -374,9 +374,9 @@ class Base_GP(object):
                     try:
                         self.plot_end('s', plt_title='Sympify zoo and nan', plt_y_label='Amount')
                     except:
-                        self.printpl('e', 'plotting did not work for sympify')
+                        self.printpl('error', 'plotting did not work for sympify')
             else:
-                self.printpl('e', 'Display-mode not known or empty:', mode)
+                self.printpl('error', 'Display-mode not known or empty:', mode)
 
         # Average Tree size, parsimony
 
@@ -476,6 +476,7 @@ class Base_GP(object):
 
         num_observations, num_actions = 0, 0
         var_types = []
+        # TODO Terminal types as dictionary? would be much prettier.
         self.terminals, self.terminal_types = [], []
         self.actions, self.action_types = [], []
 
@@ -503,6 +504,7 @@ class Base_GP(object):
                     data_x, data_y = [], []
 
                 else:  # convert every 'string' element to its datatype
+                    # TODO var_types ist genau dasselbe wie self.terminal , oder? eines ersetzen?
                     row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
                     data_x.append(row_as_data[:num_observations])
                     data_y.append(row_as_data[num_observations:])
@@ -519,7 +521,7 @@ class Base_GP(object):
             elif term_type == 'bool':
                 self.terminals_bool.append(self.terminals[i])
             else:
-                self.printpl('e', 'term_type is neither float or bool:', term_type)
+                self.printpl('error', 'term_type is neither float or bool:', term_type)
                 raise
 
         # sfeh das funktioniert nur bei diskreten Actions
@@ -879,7 +881,7 @@ class Base_GP(object):
 
         # 3. check if we are on a too-low level to branch mutate...
         if branch_depth < 0:  # this has never occured ... yet
-            self.printpl('e', 'In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
+            self.printpl('error', 'In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
@@ -960,7 +962,7 @@ class Base_GP(object):
             elif '2b' in a_dtype:
                 a_dtype = '2f'
             else:
-                raise self.printpl('e', 'dtype should be either 2f or 2b, it is', a_dtype)
+                raise self.printpl('error', 'dtype should be either 2f or 2b, it is', a_dtype)
             try:  # swapping with other dtype
                 a_node = self.tree_get_mutatable_node_id(parent_a, mode='crossover_no_root', same_dtype=a_dtype)  # now
                 b_node = self.tree_get_mutatable_node_id(parent_b, mode='crossover', same_dtype=a_dtype)  # also a_dtype
@@ -1277,14 +1279,14 @@ class Base_GP(object):
                                          5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
             else:
                 # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
-                self.printpl('e', 'You did not take care of the kind of numbers you want to have')
+                self.printpl('error', 'You did not take care of the kind of numbers you want to have')
                 raise
         elif term_type == 'int':
             # TODO give more opportunities, similar to random floats
             return np.random.random_integers(-10, 10)
         else:
             self.printpl('w', 'Please specify your desired datatype if possible. Trying to return value similar to terminals.')
-            self.printpl('e', 'This term type should not occur, I guess', term_type)
+            self.printpl('error', 'This term type should not occur, I guess', term_type)
             term_type = np.random.choice(self.terminal_types)
             return self.tree_get_constant4type(term_type=term_type)
 
@@ -1436,7 +1438,7 @@ class Base_GP(object):
 
             self.algo_sym = x  # convert string to a functional expression (the coolest line in Karoo! :)
         except:
-            self.printpl('e', 'In sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
+            self.printpl('error', 'In sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
             self.algo_sym = 1
             self.printpl('w', 'We had a "nan" which lead to an Exception')
             # todo.
@@ -1597,10 +1599,10 @@ class Base_GP(object):
                     self.fittest_dict.update({tree_id: self.algo_sym})  # add to dictionary if all rows match
 
             else:
-                raise self.printpl('e', 'No peoper kernel was selected', self.kernel)
+                raise self.printpl('error', 'No peoper kernel was selected', self.kernel)
 
         self.printpl('o', '\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
-        if self.display == 'g': self.fx_karoo_pause_refer()
+        self.printpl('p', 'Pausing')
 
         return
 
@@ -1766,7 +1768,7 @@ class Base_GP(object):
                     """
 
                     if len(self.actions) > 1:
-                        self.printpl('e', 'TODO multidimensional input. To be done, there is no solution yet.')
+                        self.printpl('error', 'TODO multidimensional input. To be done, there is no solution yet.')
 
                     if get_pred_labels:
                         pred_labels = tf.map_fn(self.fitness_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
@@ -1898,7 +1900,7 @@ class Base_GP(object):
                         self.fitness_node_parse(node.args[2], tensors))
 
             if node.func.id in non_inline_multielem_functions:  # Min, Max Goddamn. yeah, min and max need the same type, apparently. TODO? Does this work now?
-                self.printpl('e', [self.fitness_node_parse(arg, tensors) for arg in node.args])
+                self.printpl('error', [self.fitness_node_parse(arg, tensors) for arg in node.args])
                 return operators[node.func.id]([self.fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
 
             if node.func.id == 'ftob':
@@ -1917,12 +1919,12 @@ class Base_GP(object):
 
         elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
             if type(node.value) is not type(True):
-                self.printpl('e', 'This True/False name constant is something else', node.value)
+                self.printpl('error', 'This True/False name constant is something else', node.value)
                 raise
             try:
                 return tf.constant(node.value)
             except:
-                self.printpl('e', 'Oh no this was not True or False')
+                self.printpl('error', 'Oh no this was not True or False')
                 raise
         else:
             raise TypeError(node)
@@ -2065,7 +2067,7 @@ class Base_GP(object):
                 # tourn_test remains unchanged
 
                 else:
-                    self.printpl('e', 'fitness', self.population_a[tree_id])
+                    self.printpl('error', 'fitness', self.population_a[tree_id])
                     raise print('\n\033[31m ERROR! In fx_fitness_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
 
         tourn_winner = np.copy(self.population_a[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
@@ -2181,7 +2183,7 @@ class Base_GP(object):
 
             return
         else:
-            self.printpl('e', 'This fitness test is not available:')
+            self.printpl('error', 'This fitness test is not available:')
 
         return
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -2324,7 +2326,7 @@ class Base_GP(object):
         elif mode == 'random':
             self.printpl('TODO', 'mode: Do the same as in the upper function, but choose randomly?')
         else:
-            raise self.printpl('e', 'Mode not found', mode)
+            raise self.printpl('error', 'Mode not found', mode)
 
     def pop_mutate_point_evolve(self, tree, mode='random'):
 
@@ -2344,7 +2346,7 @@ class Base_GP(object):
         elif tree[5][node] == 'term':
             tree[6][node] = self.dtype_get_term4dtype(node_dtype)  # 3 -> '2f' -> 5
         else:
-            raise self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
+            raise self.printpl('error', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
@@ -2364,7 +2366,7 @@ class Base_GP(object):
         elif mode == 'random':
             branch_depth = max(branch_depth_upper_bound, np.random.randint(0, 1+max(branch_depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
         else:
-            raise self.printpl('e', 'sfeh_get_new_tree_size does not accept this mode: ' + str(mode))
+            raise self.printpl('error', 'sfeh_get_new_tree_size does not accept this mode: ' + str(mode))
         return branch_depth
 
     def evolve_get_nodetype4label(self, node_label):
@@ -2626,7 +2628,7 @@ class Base_GP(object):
         """
 
         if int(tree[8][node]) == 0:  # if arity = 0
-            self.printpl('e', 'In fx_evolve_child_insert: node', node, 'has arity 0')
+            self.printpl('error', 'In fx_evolve_child_insert: node', node, 'has arity 0')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         elif int(tree[8][node]) == 1:  # if arity = 1
@@ -2663,7 +2665,7 @@ class Base_GP(object):
             tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
 
         else:
-            self.printpl('e', 'In fx_evolve_child_insert: node', node, 'arity > 3')
+            self.printpl('error', 'In fx_evolve_child_insert: node', node, 'arity > 3')
             self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
         return tree
@@ -2854,7 +2856,7 @@ class Base_GP(object):
             elif function_type == 'b2f2f':
                 return np.random.choice(self.functions_array[4][arity])  # sfeh okay that does not make sense tbh
             else:
-                raise self.printpl('e', 'Function was not found in function_types_dict', function_type)
+                raise self.printpl('error', 'Function was not found in function_types_dict', function_type)
 
         if function_type == 'f2f':
             return np.random.choice(self.functions_f2f)
@@ -2867,7 +2869,7 @@ class Base_GP(object):
         elif function_type == 'b2f2f':
             return np.random.choice(self.functions_b2f2f)  # sfeh okay that does not make sense tbh
         else:
-            raise self.printpl('e', 'Function was not found in function_types_dict', function_type)
+            raise self.printpl('error', 'Function was not found in function_types_dict', function_type)
 
     def dtype_get_func4any(self, function_dtype):
         """
@@ -2884,7 +2886,7 @@ class Base_GP(object):
             new_label = np.random.choice(self.functions_2b)
             return new_label, function_arity_dict[str(new_label)]
         else:
-            raise self.printpl('e', 'Warning: Function was not found in function_types_dict', function_dtype)
+            raise self.printpl('error', 'Warning: Function was not found in function_types_dict', function_dtype)
 
     def dtype_get_dtype4node(self, node_label, node_type):
         """
@@ -2905,7 +2907,7 @@ class Base_GP(object):
         elif node_type == 'func':
             return function_dtypes_dict[node_label]
         else:
-            raise self.printpl('e', 'This node_type is not known', node_type)
+            raise self.printpl('error', 'This node_type is not known', node_type)
 
     def dtype_get_dtype4label(self, node_label):
         """
@@ -2942,7 +2944,7 @@ class Base_GP(object):
             terminals_correct = self.terminals_bool
             the_type = 'bool'
         else:
-            self.printpl('e', 'Probably, you have to check if your "function" is actually a terminal. dtype', node_dtype)
+            self.printpl('error', 'Probably, you have to check if your "function" is actually a terminal. dtype', node_dtype)
             raise
 
         try:
@@ -2964,7 +2966,7 @@ class Base_GP(object):
         if '2f' in a_dtype and '2b' in b_dtype:
             return 'ftob'
         else:
-            self.printpl('e', 'One of those two cases should happen', a_dtype, b_dtype)
+            self.printpl('error', 'One of those two cases should happen', a_dtype, b_dtype)
             raise
         return
 
@@ -2972,7 +2974,7 @@ class Base_GP(object):
     #   Methods to display output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def printpl(self, verbosity, *args):  # plagih naming
+    def printpl(self, message_type, *args):  # plagih naming
         """
         Gets a verbosity (e.g. 'i')
 
@@ -3015,27 +3017,27 @@ class Base_GP(object):
             UNDERLINE = '\033[4m'
         """
 
-        if verbosity in self.display:
+        if message_type in self.display:
             message_style = '\033[39m'  # default color
-            if verbosity == 'i':
+            if message_type == 'i':
                 message_style = '\033[36mInfo: '  # cyan
-            elif verbosity == 'e':
+            elif message_type == 'e':
                 message_style = '\033[31mERROR: '  # red
-            elif verbosity == 'g':
-                message_style = '\033[32mGeneration: '  # green
-            elif verbosity == 'v':  # verbose
-                message_style = '\033[37mVerbose: '  # white
-            elif verbosity == 'p':  # pause
-                message_style = '\033[33mPause(TODO): '  # Yellow
-            elif verbosity == 'f':  # function
-                message_style = '\033[35mFunc: '  # Magenta
-            elif verbosity == 'w':  # warning
+            elif message_type == 'w':  # warning
                 message_style = '\033[93mWarning: '  # Warning-yellow
-            elif verbosity == 'o':  # original Karoo message. Has its own format.
+            elif message_type == 'g':
+                message_style = '\033[32mGeneration: '  # green
+            elif message_type == 'v':  # verbose
+                message_style = '\033[37mVerbose: '  # white
+            elif message_type == 'p':  # pause
+                message_style = '\033[33mPause(TODO): '  # Yellow
+            elif message_type == 'f':  # function
+                message_style = '\033[35mFunc: '  # Magenta
+            elif message_type == 'o':  # original Karoo message. Has its own format.
                 message_style = ''  # Do nothing
             else:
                 # Just show it
-                self.printpl('e', 'Display-mode', verbosity, 'not known.')
+                self.printpl('error', 'Display-mode', message_type, 'not known.')
 
             print(message_style + ' '.join(map(str, args))+'\033[39m')
         return
@@ -3052,11 +3054,11 @@ class Base_GP(object):
         if y_name == 's':  # there must be a better sulotion
             y = self.plot_failed_sympys_amount
         else:
-            self.printpl('e', 'Monitoring this is not available', y_name)
+            self.printpl('error', 'Monitoring this is not available', y_name)
 
         # if variance
         if mode == 'variance':
-            self.printpl('e', 'variance not available', y_name)
+            self.printpl('error', 'variance not available', y_name)
             means = np.mean(y, axis=0)
             stds = np.std(y, axis=0)
             n = means.size
@@ -3224,7 +3226,7 @@ class Base_GP(object):
             print('')
             for tree_id in range(1, len(self.population_b)):
                 self.tree_algo_expr_sympify(self.population_b[tree_id])  # extract the expression
-                print('\t\033[36m Tree', self.population_b[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym,'\033[0;0m')
+                print('\t\033[36m Tree', self.population_b[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
 
         elif input_a == 'load':  # load population_s to replace population_a
             self.fx_data_recover(self.filename['s'])  # NEED TO replace 's' with a user defined filename

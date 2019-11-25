@@ -53,19 +53,22 @@ tree_pop_max = 50
 samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
 origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
 operators_file = Path('../mountaincar/karoo_files/operators.csv')
-# display = 'gewsivto'  #
+display = 'gewsivto'  #
 gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
 parsimony_min_max = [15, 50]
-display = {'generation_steps': 'y',
-           'errors': 'y',
-           'warnings': 'y',
-           'verbosity_lvl': '3',
-           'function': 'n',
-           'custom': 'y',
-           }
-monitor = {'verbosity': 'g',  # every generation
+# display = {'generation': 2,
+#            'errors': 1,
+#            'warnings': 1,
+#            'verbosity': 3,    # 0-6, 3 standard, similar to priotity 1-5 in other systems
+#            'function': 0,         # tell in which function we are currently (=very verbose)
+#            'info': 1, # is verbosity lvl 2??
+#            'custom': 1,           # custom formatting
+#            'todo': 1,             # not yet implemented
+#            }
+monitor = {'verbosity': 'end',  # every generation
            'gen_fitness_avg': 'y',
-           'sympify_errors': 'y',}
+           'sympify_errors': 'y',
+           }
 
 # origin_tree_file = Path('../mountaincar/karoo_files/test_tree2.csv')
 gp.plagih_gp(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,

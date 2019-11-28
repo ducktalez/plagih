@@ -269,10 +269,10 @@ class Base_GP(object):
         self.monitor_performance(mode='init')           # first gen only
 
         self.gen_prepare_parameters()
-        self.gen_first_create()
-        self.gen_finalize()
+        self.gen_first_create()     # creates pop_num of trees
+        self.gen_finalize()         # kicks some trees out
 
-        self.gen_archive(self.population_a, 'a')        # first gen only
+        self.gen_archive(self.population_genepool, '1_first')        # first gen only
 
 
     def main_generation_loop(self):
@@ -315,7 +315,7 @@ class Base_GP(object):
 
         if self.monitor['gen_fitness_avg'] == 'y':
             if mode == 'update':  # save value to final list and reset counter
-                average_fitness = self.gen_fitness_eval  # TODo
+                average_fitness = self.monitor_gen_fitness_eval()  # TODo
                 self.var_pop_fitness_avg.append(average_fitness)
             elif mode == 'reset':
                 pass
@@ -361,6 +361,16 @@ class Base_GP(object):
         #         self.printpl('e', 'Display-mode not known or empty:', mode)
 
         return
+
+    def monitor_gen_fitness_eval(self):
+        """
+
+        :return:
+        """
+        tmp_sum = 0
+        for tree_id in self.gene_pool:
+            tmp_sum += float(self.population_new[tree_id][12][1])
+        return tmp_sum / len(self.gene_pool)
 
     def main_terminate(self):
         """
@@ -477,7 +487,7 @@ class Base_GP(object):
                             num_actions += 1
                             self.actions.append(var_name.split(':', 1)[0])  # action0
                             self.action_types.append(var_name.split(':', 1)[1])  # float
-                            print('actions:', self.actions)
+                            # print('actions:', self.actions)
                         else:
                             raise print('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized')
 
@@ -596,12 +606,12 @@ class Base_GP(object):
         if not os.path.isdir(self.path):
             os.makedirs(self.path)  # make a unique directory
         self.filename = {}  # a dictionary to hold .csv filenames
-        self.filename.update({'a': self.path + 'population_a.csv'})
-        target = open(self.filename['a'], 'w')
+        self.filename.update({'1_first': self.path + 'population_1_first.csv'})
+        target = open(self.filename['1_first'], 'w')
         target.close()  # initialise a .csv file for population 'a' (foundation)
-        self.filename.update({'b': self.path + 'population_new.csv'})
-        target = open(self.filename['b'], 'w')
-        target.close()  # initialise a .csv file for population 'b' (evolving)
+        self.filename.update({'new': self.path + 'population_new.csv'})
+        target = open(self.filename['new'], 'w')
+        target.close()  # initialise a .csv file for population 'new' (evolving)
         self.filename.update({'f': self.path + 'population_f.csv'})
         target = open(self.filename['f'], 'w')
         target.close()  # initialise a .csv file for the final population (test)
@@ -750,7 +760,7 @@ class Base_GP(object):
 
         """
         This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
-        replaces population_a in the karoo_gp/runs/[date-time]/ directory.
+        replaces population_genepool in the karoo_gp/runs/[date-time]/ directory.
 
         Called by: fx_karoo_pause
 
@@ -769,7 +779,7 @@ class Base_GP(object):
                     pass  # skip first empty row
 
                 elif n == 2:
-                    self.population_a = [row]  # write header to population_a
+                    self.population_genepool = [row]  # write header to population_genepool
 
                 else:
                     if row == []:
@@ -783,9 +793,9 @@ class Base_GP(object):
                             self.tree = np.append(self.tree, [row], axis=0)  # append subsequent rows to Tree
 
                     if self.tree.shape[0] == 14+1:  # (current tree rows + row 0
-                        self.population_a.append(self.tree)  # append complete Tree to population list
+                        self.population_genepool.append(self.tree)  # append complete Tree to population list
 
-        print('\n', self.population_a)
+        print('\n', self.population_genepool)
 
         return
 
@@ -877,7 +887,6 @@ class Base_GP(object):
                 self.evolve_branch_new_tree_build('mutant', 'b', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
                 chosen_tree = self.evolve_branch_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
             # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
-
 
         return chosen_tree
 
@@ -1490,18 +1499,19 @@ class Base_GP(object):
     def gen_finalize(self):
 
         """
-        From raw population_new to new population_a
+        From raw population_new to new population_genepool
         - Gene_pool with tree's parsimony (and store info in the tree)
         -
 
         """
 
-        self.pop_enum_trees()
-        self.pop_genepool_parsimony()   # creates gene_pool: [1,2,6,8,14,20]
-        self.pop_genepool_fitness()     # computes fitness for genepool-trees
-        # self.population_a = self.pop_copy(self.population_new, ['Karoo GP Generation ' + str(self.gen_id)])
-        self.population_a = self.pop_copy_genepool(self.population_new)
-        self.gen_archive(self.population_new, 'b')
+        self.pop_enum_trees()           # pop +tree_id
+        self.pop_genepool_parsimony()   # gene +parsimony, self.gene_pool: [1,2,6,8,14,20]
+        self.pop_genepool_fitness()     # gene +fitness
+        # self.population_genepool = self.pop_copy(self.population_new, ['Karoo GP Generation ' + str(self.gen_id)])
+        self.population_genepool = self.pop_copy_genepool(self.population_new)
+        self.printpl('i', 'Monitor-> self.gene_pool_size:', self.gene_pool_size)
+        self.gen_archive(self.population_new, 'new')
         self.monitor_performance(mode='update')
 
         return
@@ -1571,7 +1581,6 @@ class Base_GP(object):
         self.fittest_dict = {}
 
         for tree_id in self.gene_pool:
-
             self.tree_expr_sympify(self.population_new[tree_id])
             fitness = self.tree_fitness(self.population_new[tree_id])
             self.tree_store_fitness(self.population_new[tree_id], fitness)  # store Fitness and parsimony with each Tree
@@ -1978,11 +1987,16 @@ class Base_GP(object):
 
         for n in range(tourn_size):
 
-            # 1. choose a random gene_pool tree from population_a
-            rnd = np.random.randint(len(self.gene_pool))  # select one Tree at random from the gene pool
-            tree_id = int(self.gene_pool[rnd])
+            # 1. choose a random gene_pool tree from population_genepool
+            # old code, now population_genepool has a complete genepool
+            # rnd = np.random.randint(len(self.gene_pool))  # select one Tree at random from the gene pool
+            # tree_id = int(self.gene_pool[rnd])
 
-            fitness = float(self.population_a[tree_id][12][1])  # extract the fitness from the array
+            # select one Tree at random from the gene pool
+            tree_id = 1 + np.random.randint(self.gene_pool_size)
+            # print('Genepool-size', self.gene_pool_size, tree_id)
+
+            fitness = float(self.population_genepool[tree_id][12][1])  # extract the fitness from the array
             fitness = round(fitness, self.precision)  # force 'result' and 'solution' to the same number of floating points
 
             if self.fitness_type == 'max':  # if the fitness function is maximising
@@ -1990,10 +2004,10 @@ class Base_GP(object):
                 # first time through, 'tourn_test' will be initialised below
 
                 if fitness > tourn_test:  # if the current Tree's 'fitness' is greater than the priors'
-                    self.printpl_c('i', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and leads\033[0;0m')
+                    self.printpl('i', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and leads\033[0;0m')
                     tourn_lead = tree_id  # set 'TREE_ID' for the new leader
                     tourn_test = fitness  # set 'fitness' of the new leader
-                # short_test = int(self.population_a[tree_id][14][1]) # set len(algo_raw) of new leader
+                # short_test = int(self.population_genepool[tree_id][14][1]) # set len(algo_raw) of new leader
 
                 elif fitness == tourn_test:  # if the current Tree's 'fitness' is equal to the priors'
                     if self.display == 'i':
@@ -2002,8 +2016,8 @@ class Base_GP(object):
                 # tourn_test remains unchanged
 
                 # TODO NEED TO add option for parsimony
-                # if int(self.population_a[tree_id][14][1]) < short_test:
-                # short_test = int(self.population_a[tree_id][14][1]) # set len(algo_raw) of new leader
+                # if int(self.population_genepool[tree_id][14][1]) < short_test:
+                # short_test = int(self.population_genepool[tree_id][14][1]) # set len(algo_raw) of new leader
                 # print ('\t\033[36m with improved parsimony score of:\033[1m', short_test, '\033[0;0m')
 
                 elif fitness < tourn_test:  # if the current Tree's 'fitness' is less than the priors'
@@ -2040,19 +2054,20 @@ class Base_GP(object):
                 # tourn_test remains unchanged
 
                 else:
-                    self.printpl('e', 'fitness', self.population_a[tree_id])
+                    self.printpl('e', 'fitness', self.population_genepool[tree_id])
                     raise print('\n\033[31m ERROR! In fx_fitness_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
 
-        tourn_winner = np.copy(self.population_a[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
+        tourn_winner = np.copy(self.population_genepool[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
 
         if self.display == 'i': print('\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
 
         return tourn_winner
 
-    def pop_genepool_parsimony(self, population):
+    def pop_genepool_parsimony(self):
 
         """
         Create the gene pool
+        -> self.gene_pool
         - Add a candidate if its parsimony is within the threshold
 
         # TODO find rules that automatically stop plagih from finding solutions that are too complex? adjust the nextgen functions (mutate, ...)?
@@ -2073,17 +2088,18 @@ class Base_GP(object):
 
         # Empty old gene_pool first
         self.gene_pool = []
-
-        for tree_id in range(1, len(population)):  # Every tree
+        self.gene_pool_size = 0
+        for tree_id in range(1, len(self.population_new)):  # Every tree
 
             # Get genepool requirements. Only criteria: parsominy
-            tree = population[tree_id]
-            parsimony = self.tree_parsimony(population[tree_id])
+            tree = self.population_new[tree_id]
+            parsimony = self.tree_parsimony(self.population_new[tree_id])
 
             # Requirement
             if parsimony < self.parsimony_min_max[0]:  # Can this tree go in the gene_pool?
+                self.gene_pool_size += 1
                 self.tree_store_parsimony(tree, parsimony)
-                self.gene_pool.append(tree[0][1])
+                self.gene_pool.append(int(tree[0][1]))
 
         if len(self.gene_pool) > 0:
             self.printpl('p', 'The total population of the gene pool is', len(self.gene_pool))
@@ -2723,7 +2739,7 @@ class Base_GP(object):
 
         return tree
 
-    def tree_store_fitness(self, tree, fitness, parsimony):
+    def tree_store_fitness(self, tree, fitness):
 
         """
         Store the fitness within the tree np-array
@@ -2797,23 +2813,23 @@ class Base_GP(object):
 
         return tree
 
-    def pop_copy(self, pop_a, title):
+    def pop_copy(self, population_x, title):
 
         """
         Copy one population to another.
         """
-        pop_new = [title]  # an empty list stores a copy of the prior generation
+        popolation_y = [title]  # an empty list stores a copy of the prior generation
 
-        for tree in range(1, len(pop_a)):  # increment through each Tree in the current population
-            tree_copy = np.copy(pop_a[tree])  # copy each array in the current population
-            pop_new.append(tree_copy)  # add each copied Tree to the new population list
+        for tree in range(1, len(population_x)):  # increment through each Tree in the current population
+            tree_copy = np.copy(population_x[tree])  # copy each array in the current population
+            popolation_y.append(tree_copy)  # add each copied Tree to the new population list
 
-        return pop_new
+        return popolation_y
 
-    def pop_copy_genepool(self, pop_x, title):
+    def pop_copy_genepool(self, pop_x):
 
         """
-        Copy one population to another.
+        Copy the genepool.
         """
         pop_y = ['Genepool-Population in Generation ' + str(self.gen_id)]  # empty list
 
@@ -3183,7 +3199,7 @@ class Base_GP(object):
                      'evolve_branch': self.evolve_branch,
                      'evolve_cross': self.evolve_cross,
                      'fittest_dict': self.fittest_dict,
-                     'pop_a_len': len(self.population_a),
+                     'pop_last_len': len(self.population_genepool),
                      'pop_new_len': len(self.population_new),
                      'path': self.path}
 
@@ -3214,17 +3230,17 @@ class Base_GP(object):
 
         # elif self.kernel == '[other]': # use others as a template
 
-        elif input_a == 'print_a':  # print a Tree from population_a
-            self.fx_display_tree(self.population_a[input_b])
+        elif input_a == 'print_last':  # print a Tree from population_genepool
+            self.fx_display_tree(self.population_genepool[input_b])
 
         elif input_a == 'print_new':  # print a Tree from population_new
             self.fx_display_tree(self.population_new[input_b])
 
-        elif input_a == 'pop_a':  # list all Trees in population_a
+        elif input_a == 'pop_last':  # list all Trees in population_genepool
             print('')
-            for tree_id in range(1, len(self.population_a)):
-                self.tree_expr_sympify(self.population_a[tree_id])  # extract the expression
-                self.printpl('i', '\t\033[36m Tree', self.population_a[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
+            for tree_id in range(1, len(self.population_genepool)):
+                self.tree_expr_sympify(self.population_genepool[tree_id])  # extract the expression
+                self.printpl('i', '\t\033[36m Tree', self.population_genepool[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
 
         elif input_a == 'pop_new':  # list all Trees in population_new
             print('')
@@ -3232,11 +3248,11 @@ class Base_GP(object):
                 self.tree_expr_sympify(self.population_new[tree_id])  # extract the expression
                 print('\t\033[36m Tree', self.population_new[tree_id][0][1], 'yields (sym):\033[1m', self.algo_sym, '\033[0;0m')
 
-        elif input_a == 'load':  # load population_s to replace population_a
+        elif input_a == 'load':  # load population_s to replace population_genepool
             self.fx_data_recover(self.filename['s'])  # NEED TO replace 's' with a user defined filename
 
         elif input_a == 'write':  # write the evolving population_new to disk
-            self.gen_archive(self.population_new, 'b')
+            self.gen_archive(self.population_new, 'new')
             print('\n\t All current members of the evolving population_new saved to karoo_gp/runs/[date-time]/population_new.csv')
 
         elif input_a == 'add':  # check for added generations, then exit fx_karoo_pause and continue the run

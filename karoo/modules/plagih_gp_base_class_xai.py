@@ -64,14 +64,14 @@ operators = {ast.Add: tf.add,  # e.g., a + b
              'acos': tf.acos,  # e.g., acos(a)
              'asin': tf.asin,  # e.g., asin(a)
              'atan': tf.atan,  # e.g., atan(a)
-             'ifte': tf.compat.v2.where,  # e.g., ifte(a, b, c)
+             'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
              'Min': tf.math.reduce_min,  # do not use tf.math.minimum,  # min is apparently a string
              'Max': tf.math.reduce_max,  # e.g. min(a, b)
-             'mini': tf.math.minimum,  # if reduce_min does not work...
-             'maxi': tf.math.maximum,
+             'Mini': tf.math.minimum,  # if reduce_min does not work...
+             'Maxi': tf.math.maximum,
              # Note: These need separate handling for their conversion type
-             # 'ftob': tf.dtypes.cast,
-             # 'ftob': tf.dtypes.cast,
+             # 'Ftob': tf.dtypes.cast,
+             # 'Ftob': tf.dtypes.cast,
              }
 
 function_dtypes_dict = {  # Needs A LOT OF further testing
@@ -114,21 +114,21 @@ function_dtypes_dict = {  # Needs A LOT OF further testing
     '>': 'f2b',
     '>=': 'f2b',
 
-    'ftob': 'f2b',
-    'btof': 'b2f',  # False->0, True->1, dummy-function
-    'btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
+    'Ftob': 'f2b',
+    'Btof': 'b2f',  # False->0, True->1, dummy-function
+    'Btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
 
-    'ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+    'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
     'Min': 'f2f',
     'Max': 'f2f',
-    'mini': 'f2f',
-    'maxi': 'f2f',
+    'Mini': 'f2f',
+    'Maxi': 'f2f',
 }
     # Storytime:
     # plagih_sympify can reduce an expression to 'Min(a, b, c)', but tensorflow and our framework does not like this
 non_inline_multielem_functions = ['Min', 'Max']  # There is probably an actual way to call 'non_inline_functions'
 
-non_inline_functions = ['Min', 'Max', 'mini', 'maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
+non_inline_functions = ['Min', 'Max', 'Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
 inline_functions = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
 
 function_arity_dict = {  # Needs A LOT OF further testing
@@ -170,15 +170,15 @@ function_arity_dict = {  # Needs A LOT OF further testing
     '<=': 2,
     '>': 2,
     '>=': 2,
-    'ftob': '1',
-    'btof': 1,  # False->0, True->1, dummy-function
-    'btof_extreme': 1,  # False->-1, True->1. Does that make sense?
+    'Ftob': 1,
+    'Btof': 1,  # False->0, True->1, dummy-function
+    'Btof_extreme': 1,  # False->-1, True->1. Does that make sense?
 
-    'ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+    'Ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
     'Min': 2,
     'Max': 2,
-    'mini': 2,
-    'maxi': 2,
+    'Mini': 2,
+    'Maxi': 2,
 }
 
 sympy_dummy = plagih_sympify(1)
@@ -1143,7 +1143,7 @@ class Base_GP(object):
             # Set for every "free space" a function node (func)
             for j in range(1, len(self.tree[3])):  # increment through all nodes
                 if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
-                    if self.tree[6][j] == 'ifte':
+                    if self.tree[6][j] == 'Ifte':
                         prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
                         prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
@@ -1182,7 +1182,7 @@ class Base_GP(object):
             # Set for every "free space" a function node (func)
             for j in range(1, len(self.tree[3])):  # increment through all nodes
                 if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
-                    if self.tree[6][j] == 'ifte':
+                    if self.tree[6][j] == 'Ifte':
                         prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
                         prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
@@ -1450,8 +1450,8 @@ class Base_GP(object):
                     return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[6, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
 
             # if then else
-            elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'ifte(a, b, c)'
-                return '(ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
+            elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+                return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
 
     def tree_node_get_childlist(self, tree, node_id):
 
@@ -1892,8 +1892,8 @@ class Base_GP(object):
         elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
             return operators[type(node.op)](self.fitness_node_parse(node.operand, tensors))
 
-        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or ftob(a)
-            if node.func.id == 'ifte':
+        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
+            if node.func.id == 'Ifte':
                 return operators[node.func.id](
                         tf.dtypes.cast(self.fitness_node_parse(node.args[0], tensors), tf.bool),
                         self.fitness_node_parse(node.args[1], tensors),
@@ -1903,10 +1903,10 @@ class Base_GP(object):
                 self.printpl('e', [self.fitness_node_parse(arg, tensors) for arg in node.args])
                 return operators[node.func.id]([self.fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
 
-            if node.func.id == 'ftob':
+            if node.func.id == 'Ftob':
                 self.printpl('i', 'float was converted to bool in tensorflow')
                 return tf.dtypes.cast(*[self.fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.bool)
-            elif node.func.id == 'btof':
+            elif node.func.id == 'Btof':
                 return tf.dtypes.cast(*[self.fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.float32)
 
             return operators[node.func.id](*[self.fitness_node_parse(arg, tensors) for arg in node.args])
@@ -2953,9 +2953,9 @@ class Base_GP(object):
         convert a-to-b dummy
         """
         if '2b' in a_dtype and '2f' in b_dtype:
-            return 'btof'
+            return 'Btof'
         if '2f' in a_dtype and '2b' in b_dtype:
-            return 'ftob'
+            return 'Ftob'
         else:
             self.printpl('e', 'One of those two cases should happen', a_dtype, b_dtype)
             raise

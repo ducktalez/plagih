@@ -102,11 +102,11 @@ class Btof(Function):
         return eval(self, a)
 
 
-local_sympy_dict = {'ifte': Ifte,
-                    'ftob': Ftob,
-                    'btof': Btof,
-                    'mini': Mini,
-                    'maxi': Maxi}
+local_sympy_dict = {'Ifte': Ifte,
+                    'Ftob': Ftob,
+                    'Btof': Btof,
+                    'Mini': Mini,
+                    'Maxi': Maxi}
 
 def plagih_sympify(function_string):
     """

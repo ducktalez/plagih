@@ -65,34 +65,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     return
 
 
-test_expr = 'ifte((observation1 < 1.249 * mini(mini(observation1, 0.522), -0.0238) - 0.186 + 1.24 * ' \
-            'mini(observation1 + mini(observation1, 0.481) + 0.494, -0.790) / observation1), 0, 2)'
-test_expr2 = 'ifte((observation1<0), 0, 2)'
-
-# print(plagih_sympify('(ifte(True, 0, 1))'))
-# print(plagih_sympify('(ifte(False, 0, 1))'))
-# print(plagih_sympify('a == (a<b)'))
-# print(plagih_sympify('a+a+b'))
-# print(plagih_sympify('(ifte((a<2), 0, 2))'))
-# print(plagih_sympify('(ifte((a<2), mini(a, 2), 2))'))
-# print(plagih_sympify('mini(a, 2)'))
-# print(plagih_sympify('maxi(a, 2)'))
-# print(plagih_sympify('ftob(x)'))
-# print(plagih_sympify('ftob(2)'))
-
-from sympy import *
-
-expr = plagih_sympify(test_expr)
-expr2 = plagih_sympify(test_expr2)
-observation1 = symbols('observation1')
 # start_plagih(run='expr_manual_fitness_test', manual_expr=str(expr))
 # start_plagih(run='expr_manual_fitness_test', manual_expr=str(expr2))
 
-for x in range(-200, 200):
-    val = (1/100)*x
-    expr = plagih_sympify(test_expr)
-    expr = expr.subs(observation1, val)
-    expr = plagih_sympify(expr)
-    print(val, expr)
-
-# start_plagih()
+start_plagih()

@@ -10,8 +10,6 @@ Use:
 1. Import function only
     from karoo.modules.plagih_sympy_extras import plagih_sympify
 2. Use function
-    plagih_sympify('ifte(True, b, c)')
-    plagih_sympify('Min(a, b)') ATTENTION
 
 Also, please do not ask me about when to use Ifte() and ifte(), it somehow works.
 """
@@ -21,41 +19,19 @@ from sympy import Function, sympify
 
 class Ifte(Function):
     """
-    plagih_sympify('Ifte(a, b, c)')
+    plagih_sympify('ifte(a, b, c)')
     """
     nargs = 3
 
     @classmethod
     def eval(cls, a, b, c):
-        return b if a else c
+        if a == True or a == False:  # you can not believe how long it took me to figure out why this is needed
+            return b if a else c  # search for 'gotcha' in https://docs.sympy.org/latest/_modules/sympy/core/relational.html
+        else:
+            return
 
-    def _sympy_(self, a, b, c): return eval(self, a, b, c)
-
-
-class Ftob(Function):
-    """
-    Dummy function to convert Float to boolean
-    """
-    nargs = 1
-
-    @classmethod
-    def eval(cls, a):
-
-        return True if a > 0 else False
-
-    def _sympy_(self, a): return eval(self, a)
-
-class Btof(Function):
-    """
-    Dummy function to convert Boolean to Float
-    """
-    nargs = 1
-
-    @classmethod
-    def eval(cls, a):
-        return 1 if a else 0
-
-    def _sympy_(self, a): return eval(self, a)
+    def _sympy_(self, a, b, c):
+        return eval(self, a, b, c)  # don't know why c is unexpected. works though.
 
 
 class Mini(Function):
@@ -66,10 +42,13 @@ class Mini(Function):
 
     @classmethod
     def eval(cls, a, b):
+        if (a < b) == True or (a < b) == False:
+            return a if a < b else b
+        else:
+            return
 
-        return a if a < b else b
-
-    def _sympy_(self, a, b): return eval(self, a, b)
+    def _sympy_(self, a, b):
+        return eval(self, a, b)
 
 
 class Maxi(Function):
@@ -80,10 +59,47 @@ class Maxi(Function):
 
     @classmethod
     def eval(cls, a, b):
+        if (a < b) == True or (a < b) == False:
+            return a if a > b else b
+        else:
+            return
 
-        return a if a < b else b
+    def _sympy_(self, a, b):
+        return eval(self, a, b)
 
-    def _sympy_(self, a, b): return eval(self, a, b)
+
+class Ftob(Function):
+    """
+    Dummy function to convert Float to boolean
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+        if (a>0) == True or (a>0) == False:
+            return True if a > 0 else False
+        else:
+            return
+
+    def _sympy_(self, a):
+        return eval(self, a)
+
+
+class Btof(Function):
+    """
+    Dummy function to convert Boolean to Float
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+        if a == True or a == False:
+            return 1 if a else 0
+        else:
+            return
+
+    def _sympy_(self, a):
+        return eval(self, a)
 
 
 local_sympy_dict = {'ifte': Ifte,
@@ -92,9 +108,9 @@ local_sympy_dict = {'ifte': Ifte,
                     'mini': Mini,
                     'maxi': Maxi}
 
-"""
-It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139
-Or this issue: https://github.com/sympy/sympy/issues/17785
-"""
 def plagih_sympify(function_string):
+    """
+    It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139
+    Or this issue: https://github.com/sympy/sympy/issues/17785
+    """
     return sympify(sympify(function_string, locals=local_sympy_dict))

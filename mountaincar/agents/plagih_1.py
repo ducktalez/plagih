@@ -7,9 +7,8 @@ import matplotlib.pyplot as plt
 
 # TODO divide by zero- what should happen?
 
-
 def choose_action(state):
-    if state[1] < 1.249707159116757 * min(min(state[1], 0.5221824578829628), -0.0238622135678297) - 0.18682569636205436 + 1.249707159116757 * min(state[1] + min(state[1], 0.4814895922935718) + 0.49481152602372247, -0.7901782162226243) / state[1]:
+    if state[1] < state[1]*min(state[1], 0.7008215584020565):
         return 0
     else:
         return 2

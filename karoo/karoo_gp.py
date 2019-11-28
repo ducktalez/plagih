@@ -41,7 +41,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
     origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
     operators_file = Path('../mountaincar/karoo_files/operators.csv')
-    display = 'gewsivto'  #
+    display = 'gewsivtop'  #
     gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
     parsimony_min_max = [15, 50]
 

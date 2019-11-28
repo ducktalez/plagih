@@ -443,7 +443,7 @@ class Base_GP(object):
         self.tree_expr_sympify(self.origin_tree)
 
         self.hashtable_fitness = {}
-        self.origin_fitness = self.tree_fitness(self.origin_tree)
+        self.origin_fitness = self.tree_fitness()
 
         return
 
@@ -517,9 +517,15 @@ class Base_GP(object):
         # sfeh das funktioniert nur bei diskreten Actions
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
 
+        self.load_dataset_split(data_x, data_y, test_size=0.2)
+
+        return
+
+    def load_dataset_split(self, data_x, data_y, test_size):
+
         # Part 4 - from the dataset, extract TRAINING and TEST data ###
         # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
-        x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=0.2)  # 80/20 TRAIN/TEST split
+        x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST split
         data_train = np.c_[x_train, y_train]  # recombine each row of data with its associated class label (right column)
         data_test = np.c_[x_test, y_test]  # recombine each row of data with its associated class label (right column)
         data_x, data_y, x_train, y_train, x_test, y_test = [], [], [], [], [], []  # clear from memory
@@ -534,7 +540,9 @@ class Base_GP(object):
         self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU or GPU); gpu:n = 1st, 2nd, or ... GPU device
         self.tf_device_log = False  # TF device usage logging (for debugging)
 
-        return
+        # TODO what to do with test data?
+        if True:
+            self.data_test = self.data_train
 
     def data_load_operators(self, operators_file_path):
         """
@@ -713,7 +721,10 @@ class Base_GP(object):
             self.tree_expr_sympify(self.population_new[int(fittest_tree)])  # generate the raw and sympified expression for the given Tree using SymPy
             result = self.expr_fitness_eval(str(self.algo_sym), self.data_test, get_pred_labels=True)
 
-            file.write('\n\t Origin fitness score: {}'.format(self.origin_fitness))
+            self.tree_expr_sympify(self.origin_tree)
+            origin_fitness_test = self.expr_fitness_eval(str(self.algo_sym), self.data_test)['fitness']
+            file.write('\n\t Origin fitness score: {}'.format(origin_fitness_test))
+            # TODO, apparently did not work
 
             file.write('\n\n Tree ' + str(fittest_tree) + ' is the most fit, with expression:')
             file.write('\n\n ' + str(self.algo_sym))
@@ -1508,11 +1519,22 @@ class Base_GP(object):
         self.pop_enum_trees()           # pop +tree_id
         self.pop_genepool_parsimony()   # gene +parsimony, self.gene_pool: [1,2,6,8,14,20]
         self.pop_genepool_fitness()     # gene +fitness
+        self.pop_pareto_front()
+
         # self.population_genepool = self.pop_copy(self.population_new, ['Karoo GP Generation ' + str(self.gen_id)])
         self.population_genepool = self.pop_copy_genepool(self.population_new)
         self.printpl('i', 'Monitor-> self.gene_pool_size:', self.gene_pool_size)
         self.gen_archive(self.population_new, 'new')
         self.monitor_performance(mode='update')
+
+        return
+
+    def pop_pareto_front(self):
+        """
+        Builds up the pareto front
+        - always keep best-of candidates in a list
+        TODO
+        """
 
         return
 
@@ -1576,14 +1598,20 @@ class Base_GP(object):
     def pop_genepool_fitness(self):
         """
         Compute the fitness for every tree
+        TODO does this work?
         """
-
-        self.fittest_dict = {}
+        fittest_dict = {}
 
         for tree_id in self.gene_pool:
             self.tree_expr_sympify(self.population_new[tree_id])
-            fitness = self.tree_fitness(self.population_new[tree_id])
+            fitness = self.tree_fitness()
             self.tree_store_fitness(self.population_new[tree_id], fitness)  # store Fitness and parsimony with each Tree
+            if self.fitness_type == 'max':
+                if fitness > self.origin_fitness:
+                    self.fittest_dict.update({tree_id: self.algo_sym})
+            else:
+                if fitness < self.origin_fitness:
+                    self.fittest_dict.update({tree_id: self.algo_sym})
 
         self.printpl('p', '\n\033[36m ', len(list(self.fittest_dict.keys())), 'trees\033[1m', np.sort(list(self.fittest_dict.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
 
@@ -1672,7 +1700,7 @@ class Base_GP(object):
     def pop_tree_exists(self):
         return
 
-    def tree_fitness(self, tree):
+    def tree_fitness(self):
         """
         returns the fitness of a tree
         - first check in the hashtable
@@ -1684,16 +1712,15 @@ class Base_GP(object):
             return self.fitness_bad_dummy
 
         # 1. Try to get the fitness from hashtable
-        expr_sym = str(self.algo_sym)
-        expr_hash = hash(expr_sym)
+        expr_sym_str = str(self.algo_sym)
+        expr_hash = hash(expr_sym_str)
         if expr_hash in self.hashtable_fitness:
             return self.hashtable_fitness[expr_hash]
-
-        # 2. calculate the fitness and store it in the hash table
-        result = self.expr_fitness_eval(expr_sym, self.data_train)
-        fitness = result['fitness']  # extract fitness score
-        self.hashtable_fitness[expr_hash] = fitness
-        return fitness
+        else:
+            # 2. calculate the fitness and store it in the hash table
+            fitness = self.expr_fitness_eval(expr_sym_str, self.data_train)['fitness']
+            self.hashtable_fitness[expr_hash] = fitness
+            return fitness
 
     def expr_fitness_eval(self, expr, data, get_pred_labels=False):
 
@@ -1745,11 +1772,14 @@ class Base_GP(object):
 
                 for i in range(num_actions):
                     var = self.actions[i]
-                    if '2f' in self.dtype_get_dtype4node(var, 'term'):
+                    action_dtype = self.dtype_get_dtype4node(var, 'term')
+                    if '2f' in action_dtype:
                         tensors[var] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data into vectors
-                    else:  # '2b'
+                    elif '2b' in action_dtype:  # '2b'
                         self.printpl('t', 'Currently no kernel available for boolean fitness')
                         tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
+                    else:
+                        self.printpl('e', 'Kernel not known for:', var, 'which is', action_dtype)
 
                 # 2- Transform string expression into TF operation graph
                 tf_result = self.fitness_expr_parse(expr, tensors)
@@ -1908,7 +1938,7 @@ class Base_GP(object):
                         self.fitness_node_parse(node.args[1], tensors),
                         self.fitness_node_parse(node.args[2], tensors))
 
-            if node.func.id in non_inline_multielem_functions:  # Min, Max Goddamn. yeah, min and max need the same type, apparently. TODO? Does this work now?
+            if node.func.id in non_inline_multielem_functions:  # Min, Max are now Mini and Maxi. These only accept two inputs.
                 self.printpl('e', [self.fitness_node_parse(arg, tensors) for arg in node.args])
                 return operators[node.func.id]([self.fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
 
@@ -2004,30 +2034,23 @@ class Base_GP(object):
                 # first time through, 'tourn_test' will be initialised below
 
                 if fitness > tourn_test:  # if the current Tree's 'fitness' is greater than the priors'
-                    self.printpl('i', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and leads\033[0;0m')
+                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and leads\033[0;0m')
                     tourn_lead = tree_id  # set 'TREE_ID' for the new leader
                     tourn_test = fitness  # set 'fitness' of the new leader
                 # short_test = int(self.population_genepool[tree_id][14][1]) # set len(algo_raw) of new leader
 
                 elif fitness == tourn_test:  # if the current Tree's 'fitness' is equal to the priors'
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id, 'has fitness', fitness, '=', tourn_test, 'and leads\033[0;0m')
+                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '=', tourn_test, 'and leads\033[0;0m')
                     tourn_lead = tree_id  # in case there is no variance in this tournament
                 # tourn_test remains unchanged
 
-                # TODO NEED TO add option for parsimony
-                # if int(self.population_genepool[tree_id][14][1]) < short_test:
-                # short_test = int(self.population_genepool[tree_id][14][1]) # set len(algo_raw) of new leader
-                # print ('\t\033[36m with improved parsimony score of:\033[1m', short_test, '\033[0;0m')
-
                 elif fitness < tourn_test:  # if the current Tree's 'fitness' is less than the priors'
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id, 'has fitness', fitness, '<', tourn_test,'and is ignored\033[0;0m')
-                # tourn_lead remains unchanged
-                # tourn_test remains unchanged
+                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '<', tourn_test,'and is ignored\033[0;0m')
+                    # tourn_lead remains unchanged
+                    # tourn_test remains unchanged
 
                 else:
-                    print('\n\t\033[31m ERROR! In fx_fitness_tournament: fitness =', fitness, 'and tourn_test =',tourn_test,'\033[0;0m')
+                    self.printpl('e', '\n\t\033[31m pop_selection_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
                     self.fx_karoo_pause()  # consider special instructions for this (pause) - 2019 06/08
 
             elif self.fitness_type == 'min':  # if the fitness function is minimising
@@ -2036,30 +2059,26 @@ class Base_GP(object):
                     tourn_test = fitness
 
                 if fitness < tourn_test:  # if the current Tree's 'fitness' is less than the priors'
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id, 'has fitness', fitness, '<', tourn_test, 'and leads\033[0;0m')
+                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '<', tourn_test, 'and leads\033[0;0m')
                     tourn_lead = tree_id  # set 'TREE_ID' for the new leader
                     tourn_test = fitness  # set 'fitness' of the new leader
 
                 elif fitness == tourn_test:  # if the current Tree's 'fitness' is equal to the priors'
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id, 'has fitness', fitness, '=', tourn_test, 'and leads\033[0;0m')
+                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '=', tourn_test, 'and leads\033[0;0m')
                     tourn_lead = tree_id  # in case there is no variance in this tournament
                 # tourn_test remains unchanged
 
                 elif fitness > tourn_test:  # if the current Tree's 'fitness' is greater than the priors'
-                    if self.display == 'i':
-                        print('\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and is ignored\033[0;0m')
-                # tourn_lead remains unchanged
-                # tourn_test remains unchanged
-
+                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and is ignored\033[0;0m')
+                    # tourn_lead remains unchanged
+                    # tourn_test remains unchanged
                 else:
-                    self.printpl('e', 'fitness', self.population_genepool[tree_id])
-                    raise print('\n\033[31m ERROR! In fx_fitness_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
+                    self.printpl('gg', 'fitness', self.population_genepool[tree_id])
+                    raise print('\n\033[31m pop_selection_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
 
         tourn_winner = np.copy(self.population_genepool[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
 
-        if self.display == 'i': print('\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
+        self.printpl('ii', '\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
 
         return tourn_winner
 
@@ -3264,6 +3283,6 @@ class Base_GP(object):
         return 1
 
     def manual_expr_fitness(self, expr):
-        result = self.expr_fitness_eval(expr, self.data_train)
-        print('Your algos fitness:', result['fitness'])
+        fitness = self.expr_fitness_eval(expr, self.data_train)['fitness']
+        print('Your algos fitness:', fitness)
         return

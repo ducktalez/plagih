@@ -758,7 +758,7 @@ class Base_GP(object):
 
         """
         This method aesthetically cleans the Tree array, removing redundant data.
-        TODO this is unnecessary
+        TODO this is unnecessary (it actually is)
         """
 
         # tree[0][2:] = ''  # A little clean-up to make things look pretty :)
@@ -2537,6 +2537,7 @@ class Base_GP(object):
         new_tree = self.tree_node_renum(new_tree)
         new_tree = self.fx_evolve_child_link_fix(new_tree)
         new_tree = self.fx_evolve_parent_link_fix(new_tree)
+
         new_tree = self.data_tree_clean(new_tree)
 
         return new_tree

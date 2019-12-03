@@ -1,0 +1,28 @@
+"""
+This defines a tree that stores a program within it.
+Not yet quite in use
+"""
+import numpy as np
+
+class PlagihTree:
+    def __init__(self):
+        tree_nodes = np.array([[]])
+
+        TR_nID = 3
+        TR_ndepth = 4
+        TR_ntype = 5
+        TR_nlabel = 6
+        TR_nparent = 7
+        TR_narity = 8
+        TR_nc1 = 9
+        TR_nc2 = 10
+        TR_nc3 = 11
+        TR_nmodify = 13
+
+        TR_ID = 0
+        TR_type = 1
+        TR_depth = 2
+        TR_fitness = 12
+        TR_parsimony = 14
+
+        TR_num_lines = 15

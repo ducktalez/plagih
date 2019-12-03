@@ -1,4 +1,4 @@
-from karoo.modules.plagih_sympy_extras import plagih_sympify
+from plagih.modules.plagih_sympy_extras import plagih_sympify
 import re
 import matplotlib.pyplot as plt
 import numpy as np

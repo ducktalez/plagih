@@ -1,5 +1,5 @@
-from karoo.modules.plagih_sympy_extras import plagih_sympify
-from karoo.modules.plagih_gp_base_class_xai import operators, non_inline_multielem_functions
+from plagih.modules.plagih_sympy_extras import plagih_sympify
+from plagih.modules.plagih_gp_base_class_xai import operators, non_inline_multielem_functions
 import tensorflow as tf
 import ast
 

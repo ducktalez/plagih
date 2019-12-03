@@ -8,7 +8,7 @@ This has currently only Ifte(a, b, c), which makes 'if then else' as if was a th
 
 Use:
 1. Import function only
-    from karoo.modules.plagih_sympy_extras import plagih_sympify
+    from plagih.modules.plagih_sympy_extras import plagih_sympify
 2. Use function
 
 Also, please do not ask me about when to use Ifte() and ifte(), it somehow works.

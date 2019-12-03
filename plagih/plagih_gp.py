@@ -1,7 +1,7 @@
 import sys; sys.path.append('modules/') # add directory 'modules' to the current path
-import karoo.modules.plagih_gp_base_class_xai as plagih
+import plagih.modules.plagih_gp_base_class_xai as plagih
 from pathlib import Path
-from karoo.modules.plagih_sympy_extras import plagih_sympify
+from plagih.modules.plagih_sympy_extras import plagih_sympify
 
 
 def start_plagih(run='plagih_gp_run', manual_expr=''):
@@ -48,6 +48,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     monitor = {'verbosity': 'end',      # every [generation] or at the [end]
                'gen_fitness_avg': 'y',
                'sympify_errors': 'y',
+               'genepool_size': 'y'
                }
 
     gp = plagih.Base_GP(kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,

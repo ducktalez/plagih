@@ -809,9 +809,6 @@ class Base_GP(object):
         This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
         replaces population_genepool in the karoo_gp/runs/[date-time]/ directory.
 
-        Called by: fx_karoo_pause
-
-        Arguments required: population (filename['s'])
         """
 
         with open(population, 'rb') as csv_file:
@@ -875,17 +872,17 @@ class Base_GP(object):
 
             # Fill the correct meta-data into the tree (and wipe the old fitness)
             tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
-            tree = self.tree_store_set_modify_nodes(tree)
+            tree = self.tree_modifyable_nodes_set(tree)
             tree[0][1] = TREE_ID
 
             self.population_new.append(tree)
 
         self.printpl('gg', '\n We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
 
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to Construct the 1st Generation  |
     # +++++++++++++++++++++++++++++++++++++++++++++
+
     def pop_mutate_branch_evolve(self, chosen_tree, branch_nodes_list):
 
         """
@@ -899,7 +896,7 @@ class Base_GP(object):
 
         # 1. How far can we build down?
         branch_top = int(branch_nodes_list[0])
-        branch_depth = self.pop_branch_depth_get(chosen_tree, branch_top)  # sfeh solution to keep tree kind of small, dont forget the mode
+        branch_depth = self.pop_branch_depth_get(chosen_tree, branch_top, len(branch_nodes_list))  # sfeh solution to keep tree kind of small, dont forget the mode
 
         # 2. Get the old-node's information
         old_node_label = chosen_tree[TR_nlabel][branch_nodes_list[0]]  # <,        +,-,*,8,action0 ...
@@ -944,9 +941,11 @@ class Base_GP(object):
         - Lineary increase threshold for parsimony
         """
         self.printpl('g', 'Preparing to evolve Generation', self.gen_id, '...')
-
         self.population_new = ['Karoo GP - Evolving Generation']  # initialise population_new to host the next generation
-        self.parsimony_min_max[0] = int(self.gen_id / self.gen_max * self.parsimony_min_max[1])
+
+        full_parsimony_factor = 2  # working with the maximum parsimony for at least some generations
+        gen_relation = min((full_parsimony_factor*self.gen_id) / self.gen_max, 1)
+        self.parsimony_min_max[0] = int(gen_relation * self.parsimony_min_max[1])
 
         self.monitor_performance(mode='reset')
 
@@ -1013,11 +1012,6 @@ class Base_GP(object):
 
         return a_branch, b_branch, a_convert
 
-    def tree_usability_get(self):
-        """
-        usability = fitness * ln( parsimony ) ?
-        """
-
     def pop_crossover_insert(self, parent_x, branch_x, parent_y, branch_y, converter=0):
 
         """
@@ -1061,7 +1055,7 @@ class Base_GP(object):
         self.branch_tree_initialise(TREE_ID, tree_depth, last_modification)  # Create empty tree np-array
         self.branch_root_build(old_node_type)  # insert the first node with either '_2b' or '_2f'
         self.branch_function_build_full()  # build all the Function nodes
-        self.init_terminal_build()  # build the Terminal nodes
+        self.branch_terminal_build()  # build the Terminal nodes
         # TODO set tree_depth_base in tree.
         return  # each Tree is written to 'gp.tree'
 
@@ -1136,43 +1130,6 @@ class Base_GP(object):
         return
 
         ### Function Nodes ###
-
-    def tree_store_set_modify_nodes(self, chosen_tree):
-        """
-        Sets all the origin core nodes back to non-modifyable
-        """
-        # Set all nodes to be modifiable (=1)
-        for i, tmp in enumerate(chosen_tree[13][1:]):
-            chosen_tree[13][i + 1] = 1
-
-        # Find no-modifyables in Origin
-        non_modifiable_nodes = []
-        if self.origin_tree[13][1] == '0':  # check is modifiable nodes are specified
-            non_modifiable_nodes.extend(self.tree_nomodify_nodes_get(1, chosen_tree, 1))
-
-        for non_modifiable in non_modifiable_nodes:
-            chosen_tree[13][non_modifiable] = 0
-
-        return chosen_tree
-
-    def tree_nomodify_nodes_get(self, origin_node, chosen_tree, chosen_node):
-        """
-        Returns a list of nodes that are not supposed to be modified
-        """
-
-        if self.origin_tree[13][origin_node] == '0':
-            non_modifiables = []
-            non_modifiables.append(int(chosen_tree[3][chosen_node]))
-            for child in [9, 10, 11]:
-                if self.origin_tree[child][origin_node] != '':
-                    next_origin_node = int(self.origin_tree[child][origin_node])
-                    next_chosen_node = int(chosen_tree[child][chosen_node])
-                    tmp = self.tree_nomodify_nodes_get(next_origin_node, chosen_tree, next_chosen_node)
-                    if tmp is not None:
-                        non_modifiables.extend(tmp)
-            return non_modifiables
-        else:
-            return
 
     def branch_function_build_full(self):
 
@@ -1262,7 +1219,7 @@ class Base_GP(object):
 
         if np.random.choice(['func', 'term']) == 'func':  # randomly selected as Function
             self.branch_function_select(node_dtype)  # retrieve a function, input-reverse the parent-function (f2b -> we need 2f input)
-            self.fx_init_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
+            self.branch_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
         else:
             self.branch_terminal_select(node_dtype) #  was here
             self.pop_node_c1 = ''
@@ -1273,6 +1230,43 @@ class Base_GP(object):
         prior_sibling_arity = prior_sibling_arity + self.pop_node_arity  # sum the arity of prior siblings
 
         return prior_sibling_arity
+
+    def tree_modifyable_nodes_set(self, chosen_tree):
+        """
+        Sets all the origin core nodes back to non-modifyable
+        """
+        # Set all nodes to be modifiable (=1)
+        for i, tmp in enumerate(chosen_tree[13][1:]):
+            chosen_tree[13][i + 1] = 1
+
+        # Find no-modifyables in Origin
+        non_modifiable_nodes = []
+        if self.origin_tree[13][1] == '0':  # check is modifiable nodes are specified
+            non_modifiable_nodes.extend(self.tree_nomodifyable_nodes_get(1, chosen_tree, 1))
+
+        for non_modifiable in non_modifiable_nodes:
+            chosen_tree[13][non_modifiable] = 0
+
+        return chosen_tree
+
+    def tree_nomodifyable_nodes_get(self, origin_node, chosen_tree, chosen_node):
+        """
+        Returns a list of nodes that are not supposed to be modified
+        """
+
+        if self.origin_tree[13][origin_node] == '0':
+            non_modifiables = []
+            non_modifiables.append(int(chosen_tree[3][chosen_node]))
+            for child in [9, 10, 11]:
+                if self.origin_tree[child][origin_node] != '':
+                    next_origin_node = int(self.origin_tree[child][origin_node])
+                    next_chosen_node = int(chosen_tree[child][chosen_node])
+                    tmp = self.tree_nomodifyable_nodes_get(next_origin_node, chosen_tree, next_chosen_node)
+                    if tmp is not None:
+                        non_modifiables.extend(tmp)
+            return non_modifiables
+        else:
+            return
 
     def branch_function_select(self, func_dtype):
 
@@ -1295,36 +1289,11 @@ class Base_GP(object):
         # Idea: values are recognized and adjusted (+0.3, e.g.)?
         # Idea: insert numbers as 0-arity functions? -> naah
 
-    def tree_get_constant4type(self, term_type='', mode='float-1to1'):
-        if term_type == 'bool':
-            return np.random.choice([True, False])
-        elif term_type == 'float':
-            if mode == 'float-1to1':
-                return np.random.uniform(-1, 1)
-            elif mode == 'intTotal_10':
-                return np.random.random_integers(-10, 10)
-            elif mode == 'random_optimised':
-                return np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
-                                         5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
-            else:
-                # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
-                self.printpl('e', 'You did not take care of the kind of numbers you want to have')
-                raise
-        elif term_type == 'int':
-            # TODO give more opportunities, similar to random floats
-            return np.random.random_integers(-10, 10)
-        else:
-            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return value similar to terminals.')
-            self.printpl('e', 'This term type should not occur, I guess', term_type)
-            term_type = np.random.choice(self.terminal_types)
-            return self.tree_get_constant4type(term_type=term_type)
-
-    def init_terminal_build(self):
+    def branch_terminal_build(self):
 
         """
         Build the Terminal nodes for the tree.
 
-        Arguments required: none
         """
 
         self.pop_node_depth = self.pop_tree_depth_base  # set the final node_depth (same as 'gp.pop_node_depth' + 1)
@@ -1333,21 +1302,18 @@ class Base_GP(object):
             if int(self.tree[4][j]) == self.pop_node_depth - 1:  # this node is a parent
                 for k in range(1, (int(self.tree[8][j]) + 1)):  # increment through each degree of arity for each parent node
                     self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
-                    self.init_terminal_gen(function_dtypes_dict[self.tree[TR_nlabel][j]])  # ... generate a Terminal node
+                    self.branch_terminal_gen(function_dtypes_dict[self.tree[TR_nlabel][j]])  # ... generate a Terminal node
 
         return
 
-    def init_terminal_gen(self, terminal_dtype):
+    def branch_terminal_gen(self, terminal_dtype):
 
         """
-        Generate a single Terminal node for the initial population.
+        Generate a single Terminal node.
 
-        Called by: fx_init_terminal_build
-
-        Arguments required: none
         """
+
         self.branch_terminal_select(terminal_dtype)
-        # self.fx_init_terminal_select()  # retrieve a terminal
         self.pop_node_c1 = ''
         self.pop_node_c2 = ''
         self.pop_node_c3 = ''
@@ -1361,9 +1327,6 @@ class Base_GP(object):
         """
         Define a single Terminal (variable extracted from the top row of the associated TRAINING data)
 
-        Called by: fx_init_terminal_gen, fx_init_function_gen
-
-        Arguments required: none
         """
 
         self.pop_node_type = 'term'
@@ -1372,9 +1335,7 @@ class Base_GP(object):
 
         return
 
-    ### The Lovely Children ###
-
-    def fx_init_child_link(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
+    def branch_child_link(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
 
         """
         Link each parent node to its children in the intial population.
@@ -1431,6 +1392,36 @@ class Base_GP(object):
 
         return
 
+    def tree_get_constant4type(self, term_type='', mode='float-1to1', range=[]):
+        """
+        Get
+        """
+        if range:
+            
+            return np.random.uniform(range[0], range[1])
+
+        if term_type == 'bool':
+            return np.random.choice([True, False])
+        elif term_type == 'float':
+            if mode == 'float-1to1':
+                return np.random.uniform(-1, 1)
+            elif mode == 'intTotal_10':
+                return np.random.random_integers(-10, 10)
+            elif mode == 'random_optimised':
+                return np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
+                                         5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
+            else:
+                # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
+                self.printpl('e', 'You did not take care of the kind of numbers you want to have')
+                raise
+        elif term_type == 'int':
+            # TODO give more opportunities, similar to random floats
+            return np.random.random_integers(-10, 10)
+        else:
+            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return value similar to terminals.')
+            self.printpl('e', 'This term type should not occur, I guess', term_type)
+            term_type = np.random.choice(self.terminal_types)
+            return self.tree_get_constant4type(term_type=term_type)
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to Evaluate a Tree                |
@@ -1481,9 +1472,6 @@ class Base_GP(object):
         partial (branch) Tree contained in 'population'. Pass the starting node for recursion via the local variable
         'node_id' where the local variable 'tree' is a copy of the Tree you desire to evaluate.
 
-        Called by: eval_poly, fx_eval_label (recursively)
-
-        Arguments required: tree, node_id
         """
 
         node_id = int(node_id)
@@ -1659,7 +1647,7 @@ class Base_GP(object):
             raise self.printpl('e', 'No proper kernel was selected', self.kernel)
         return fitness_best
 
-    def sfeh_treedist_rel_ari(self, tree):
+    def treedist_rel_ari(self, tree):
         """
         This distance penalizes non-original functions with its arity
         - ignore node[0] [description]
@@ -1684,12 +1672,21 @@ class Base_GP(object):
 
         return distance
 
+    def treedist_num_changes(self, tree):
+        """
+        The 'coolest' distance, where
+        - the amount of changes that have to be applied to the origin to equality are counted
+        """
+        # TODO distanzfunktion für Anzahl der Änderungen schreiben
+        og_expr = self.tree_expr_sympify(self.origin_tree)
+        changed_expr = self.tree_expr_sympify()
+        return
+
+
     def tree_parsimony(self, tree, parsimony_distance='rel_ari_1'):
         """
+        parsimony_distance: compute the chosen distance by the user. Default is best historic distance
 
-        :param tree: The tree
-        :param parsimony_distance: compute the chosen distance by the user. Default is best historic distance
-        :return: The chosen distance
         """
         if parsimony_distance == 'total_count_nodes':
             return int(tree[3][-1:])  # returns the tree size
@@ -1701,7 +1698,7 @@ class Base_GP(object):
             algo_sym = self.tree_expr_sympify(tree)
             return count_ops(algo_sym)
         elif parsimony_distance == 'rel_ari_1':  # Does this work?
-            return self.sfeh_treedist_rel_ari(tree)
+            return self.treedist_rel_ari(tree)
         elif parsimony_distance == 'print':   # Please inser all of the measurements with example
             self.printpl('i', 'No distance chosen. Available parsimony measurements:')
             self.printpl('i', 'pcount_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
@@ -1751,23 +1748,23 @@ class Base_GP(object):
             'self.tf_device_log' - controls device placement logging (debug only).
 
         Args:
-            'expr' - a string expression to be computed on the data. Variable names should match 'self.terminals' names.
+            'expr' - a string expression to be computed on the data. Variable -> 'self.terminals'
             'data' - an 'n by m' matrix of the data points containing n observations like 'self.terminals'.
-            'get_pred_labels' - a boolean flag which controls whether the predicted labels should be extracted from the
-            evolved results. This applies only to the CLASSIFY kernel and defaults to 'False'.
+            'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be
+            extracted from the evolved results.
 
         Returns:
             A dict mapping keys to the following outputs:
-                'result'            - an array of the results of applying given expression to the data
-                'pred_labels'       - an array of the predicted labels extracted from the results; defined only for CLASSIFY kernel, else None
-                'solution'          - an array of the solution values extracted from the data (variable 's' in the dataset)
-                'pairwise_fitness'  - an array of the element-wise results of applying corresponding fitness kernel function
+                'result'            - array of the results of applying given expression to the data
+                'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
+                'solution'          - array of the solution values extracted from the data (variable 's' in the dataset)
+                'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
                 'fitness'           - aggregated scalar fitness score
 
         """
 
         # Initialize TensorFlow session
-        tf.compat.v1.reset_default_graph()  # Reset TF internal state and cache (after previous processing). sfeh: updated as recommended by tensorflow
+        tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
         config = tf.compat.v1.ConfigProto(log_device_placement=self.tf_device_log, allow_soft_placement=True)
         config.gpu_options.allow_growth = True
 
@@ -1898,9 +1895,6 @@ class Base_GP(object):
         """
         Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
 
-        Called by: fitness_node_parse
-
-        Arguments required: values, operation, tensors
         """
 
         x = tf.dtypes.cast(self.fitness_node_parse(values[0], tensors), tf.bool)
@@ -1933,9 +1927,6 @@ class Base_GP(object):
         """
         Recursively transforms parsed expression tree into TensorFlow (TF) graph.
 
-        Called by: fx_fitness_expr_parse, fx_fitness_chain_bool, fx_fitness_chain_compare
-
-        Arguments required: node, tensors
         """
 
         if isinstance(node, ast.Name):  # <tensor_name>
@@ -2280,7 +2271,7 @@ class Base_GP(object):
             branch_nodes_list = self.tree_branch_get(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.pop_mutate_branch_evolve(tourn_winner, branch_nodes_list)
             tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='b')  # wipe fitness data
-            tourn_winner = self.tree_store_set_modify_nodes(tourn_winner)
+            tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
 
         return
@@ -2313,7 +2304,7 @@ class Base_GP(object):
                 offspring = self.pop_crossover_insert(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
 
             offspring = self.tree_store_meta_lastgen(offspring, modification='c')
-            offspring = self.tree_store_set_modify_nodes(offspring)
+            offspring = self.tree_modifyable_nodes_set(offspring)
             self.population_new.append(offspring)  # append the 1st child to next generation of Trees
 
         return
@@ -2388,7 +2379,7 @@ class Base_GP(object):
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def pop_branch_depth_get(self, chosen_tree, branch_top, mode='random'):  # sfeh other default
+    def pop_branch_depth_get(self, chosen_tree, branch_top, amount_replaced_nodes, mode='random'):  # sfeh other default
         """
         Return the size of the tree to be inserted.
         Should not be set to maximum to reduce complexity!

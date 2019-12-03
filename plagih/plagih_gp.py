@@ -43,7 +43,8 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     operators_file = Path('../mountaincar/karoo_files/operators.csv')
     display = 'gewsivtop'  #
     gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
-    parsimony_min_max = [15, 50]
+    parsimony_min_max = [15, 100]
+    # gen_with_max_parsimony = int(gen_max/2)
 
     monitor = {'verbosity': 'end',      # every [generation] or at the [end]
                'gen_fitness_avg': 'y',

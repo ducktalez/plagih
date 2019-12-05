@@ -19,6 +19,17 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     evolve_branch = 0.4     # [0.0...1.0]  		decimal percent of pop generated through Branch Mutation
     evolve_cross = 0.25  	# [0.0...1.0]  		decimal percent of pop generated through Crossover
 
+    precision = 6       # number of floating points for the round function in 'fx_fitness_eval'
+    swim = 'p'          # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
+    mode = 'db'         # pause at the (d)esktop when complete, awaiting further user interaction; or terminate in (s)erver mode
+    samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
+    origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
+    operators_file = Path('../mountaincar/karoo_files/operators.csv')
+    display = 'gewsivtop'  #
+    gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
+    parsimony_min_max = [15, 100]
+    # gen_with_max_parsimony = int(gen_max/2)
+
     evolve_repro = int(evolve_repro*tree_pop_max)
     evolve_point = int(evolve_point*tree_pop_max)
     evolve_branch = int(evolve_branch*tree_pop_max)
@@ -34,17 +45,6 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
         print('Missing', tree_pop_max-evolve_total, 'will be random o')
         evolve_missing = evolve_missing + tree_pop_max-evolve_total
     evolve_distribution = [evolve_repro, evolve_point, evolve_branch, evolve_cross, evolve_missing]
-
-    precision = 6       # number of floating points for the round function in 'fx_fitness_eval'
-    swim = 'p'          # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-    mode = 'db'         # pause at the (d)esktop when complete, awaiting further user interaction; or terminate in (s)erver mode
-    samples_file = Path('../mountaincar/karoo_files/behaviour_samples.csv')
-    origin_tree_file = Path('../mountaincar/karoo_files/test_tree.csv')
-    operators_file = Path('../mountaincar/karoo_files/operators.csv')
-    display = 'gewsivtop'  #
-    gene_pool_threshold = 0.5  # this amount of percent a tree needs to fulfill to be in the gene pool
-    parsimony_min_max = [15, 100]
-    # gen_with_max_parsimony = int(gen_max/2)
 
     monitor = {'verbosity': 'end',      # every [generation] or at the [end]
                'gen_fitness_avg': 'y',

@@ -21,7 +21,7 @@ from sympy import sympify, count_ops
 from datetime import datetime
 import plagih.modules.plagih_gp_pause as menu
 # sfeh import the pause later, maybe
-# import plagih.modules.karoo_gp_pause as menu
+# import plagih.modules.plagih_gp_pause as menu
 import tensorflow as tf
 import ast
 import pickle
@@ -143,10 +143,10 @@ function_dtypes_dict = {  # Needs A LOT OF further testing
     'Maxi': 'f2f',
 }
 
-non_inline_multielem_functions = ['Min', 'Max']  # Currently not in use
+non_inline_multielem_functions = []  # = ['Min', 'Max']  # Currently not in use
 
-non_inline_functions = ['Min', 'Max', 'Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
-inline_functions = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
+non_inline_functions = ['Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
+inline_functions = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']  # 'Min', 'Max',
 
 function_arity_dict = {  # Needs A LOT OF further testing
     'float': 0,  # these three are dummies
@@ -192,8 +192,8 @@ function_arity_dict = {  # Needs A LOT OF further testing
     'Btof_extreme': 1,  # False->-1, True->1. Does that make sense?
 
     'Ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
-    'Min': 2,
-    'Max': 2,
+    # 'Min': 2,
+    # 'Max': 2,
     'Mini': 2,
     'Maxi': 2,
 }
@@ -353,9 +353,6 @@ class Base_GP(object):
         Terminates the evolutionary run (if yet in progress), saves parameters and data to disk, and cleanly returns
         the user to plagih_gp.py and the command line.
 
-        Called by: fx_karoo_gp() and fx_karoo_pause_refer()
-
-        Arguments required: none
         """
         self.data_save_config()
         self.data_save_conclusion()
@@ -364,10 +361,10 @@ class Base_GP(object):
         target.close()  # initialize the .csv file for the final population
         self.data_save_population(self.population_new, 'f')  # save the final generation of Trees to disk
 
-        self.printpl('i', '\n\t\033[32m Your Trees and runtime parameters are archived in karoo_gp/runs/[date-time]/\033[0;0m')
+        self.printpl('i', '\n\t\033[32m Your Trees and runtime parameters are archived in plagih_gp/runs/[date-time]/\033[0;0m')
         self.printpl('i', '\n\033[3m "It is not the strongest of the species that survive, nor the most intelligent,\033[0;0m')
         self.printpl('i', '\033[3m  but the one most responsive to change."\033[0;0m --Charles Darwin\n')
-        self.printpl('i', '\033[3m Congrats!\033[0;0m Your Karoo GP run is complete.\n')
+        self.printpl('i', '\033[3m Congrats!\033[0;0m Your Plagih GP run is complete.\n')
 
         self.monitor_performance(mode='show')
 
@@ -762,7 +759,7 @@ class Base_GP(object):
             target = csv.writer(csv_file, delimiter=',')
             if self.gen_id != 1:
                 target.writerows([''])  # empty row before each generation
-            target.writerows([['Karoo GP by Kai Staats, improved by Simon Fehrer', 'Generation:', str(self.gen_id)]])
+            target.writerows([['Plagih GP by Kai Staats, improved by Simon Fehrer', 'Generation:', str(self.gen_id)]])
 
             for tree in range(1, len(population)):
                 target.writerows([''])  # empty row before each Tree
@@ -778,7 +775,7 @@ class Base_GP(object):
         """
 
         file = open(self.path + 'results.txt', 'w')
-        file.write('Karoo GP')
+        file.write('Plagih GP')
         file.write('\n launched: ' + str(self.datetime))
         file.write('\n dataset: ' + str(self.dataset))
         file.write('\n')
@@ -911,7 +908,7 @@ class Base_GP(object):
 
             # vary this tree with branch mutation
             branch_nodes_list = self.tree_branch_get(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
-            tree = self.gp_evolve_subtree_create(tree, branch_nodes_list)  # tree with new branch
+            tree = self.evolve_subtree(tree, branch_nodes_list)  # tree with new branch
 
             # Fill the correct meta-data into the tree (and wipe the old fitness)
             tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
@@ -970,7 +967,7 @@ class Base_GP(object):
 
                 else:
                     self.printpl('e', '\n\t\033[31m pop_selection_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
-                    self.fx_karoo_pause()  # consider special instructions for this (pause)
+                    self.plagih_pause()  # consider special instructions for this (pause)
 
             elif self.fitness_type == 'min':  # if the fitness function is minimising
 
@@ -1141,7 +1138,7 @@ class Base_GP(object):
         for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
             tourn_winner = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
             branch_nodes_list = self.tree_branch_get(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
-            tourn_winner = self.gp_evolve_subtree_create(tourn_winner, branch_nodes_list)
+            tourn_winner = self.evolve_subtree(tourn_winner, branch_nodes_list)
             tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='b')  # wipe fitness data
             tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
@@ -1177,9 +1174,6 @@ class Base_GP(object):
 
         Use of the debug (db) interface mode enables the user to watch the genetic operations as they work on the Trees.
 
-        Called by: fx_init_tree_build
-
-        Arguments required: TREE_ID, tree_type, tree_depth_base
         """
 
         self.pop_TREE_ID = TREE_ID  # pos 0: a unique identifier for each tree
@@ -1261,18 +1255,18 @@ class Base_GP(object):
             for j in range(1, len(self.tree[3])):  # increment through all nodes
                 if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
                     if self.tree[TR_nlabel][j] == 'Ifte':
-                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
+                        prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
                     else:
                         for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
                             self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
                             parent_func_dtype = function_dtypes_dict[self.tree[TR_nlabel][self.pop_node_parent]]  # find parents node
                             func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
-                            prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
+                            prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
                             prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
 
         return
@@ -1301,7 +1295,7 @@ class Base_GP(object):
 
         """
 
-        self.tree_build_subtree_terminal_select(terminal_dtype)
+        self.evolve_subtree_terminal_select(terminal_dtype)
         self.pop_node_c1 = ''
         self.pop_node_c2 = ''
         self.pop_node_c3 = ''
@@ -1364,9 +1358,9 @@ class Base_GP(object):
             node_depth = int(tree[4][node]) - int(tree[4][branch_top])  # subtract the depth of 'branch_top' from the current node depth
             node_type = tree[5][node]
             node_label = tree[TR_nlabel][node]
-            node_parent = ''  # updated by fx_evolve_parent_link_fix(), below
+            node_parent = ''  # updated by evolve_parent_link_fix(), below
             node_arity = tree[8][node]
-            node_c1 = ''  # updated by fx_evolve_child_link_fix(), below
+            node_c1 = ''  # updated by evolve_child_link_fix(), below
             node_c2 = ''
             node_c3 = ''
             fitness = ''
@@ -1379,8 +1373,8 @@ class Base_GP(object):
                                   [fitness], [node_modify], [parsimony]], 1)
 
         new_tree = self.tree_node_renum(new_tree)
-        new_tree = self.fx_evolve_child_link_fix(new_tree)
-        new_tree = self.fx_evolve_parent_link_fix(new_tree)
+        new_tree = self.evolve_fix_link_child(new_tree)
+        new_tree = self.evolve_fix_link_parent(new_tree)
 
         # new_tree = self.data_tree_clean(new_tree)
 
@@ -1421,7 +1415,7 @@ class Base_GP(object):
         -> Crossover: Returns a node_id in the partner tree, that can be swapped
         """
 
-        node_dtype = self.dtype_node_get_dtype(function_label, self.gp_evolve_nodetype4label_get(function_label))
+        node_dtype = self.dtype_node_get_dtype(function_label, self.evolve_label_get_terminal(function_label))
         node_options = []
         # TODO check if the tree is large enough?
         if mode == 'same_type':  # only return a node with the same function type
@@ -1518,18 +1512,18 @@ class Base_GP(object):
             parent_x[8][x_root] = 0  # set terminal arity
 
             parent_x = np.delete(parent_x, branch_x[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-            parent_x = self.fx_evolve_child_link_fix(parent_x)  # fix all child links
+            parent_x = self.evolve_fix_link_child(parent_x)  # fix all child links
             parent_x = self.tree_node_renum(parent_x)  # renumber all 'NODE_ID's
 
         else:  # we are working with a branch from 'parent' >= depth 1 (min 3 nodes)
 
             self.tree = self.gp_crossover_tree_branch_copy(parent_y, branch_y)  # generate stand-alone 'gp.tree' with properties of 'branch_y'
-            parent_x = self.gp_evolve_subtree_insert(parent_x, branch_x)  # insert new 'branch_x' at point of mutation 'branch_top' in tourn_winner 'offspring'
+            parent_x = self.evolve_subtree_insert(parent_x, branch_x)  # insert new 'branch_x' at point of mutation 'branch_top' in tourn_winner 'offspring'
             parent_x = self.gp_crossover_tree_prune(parent_x, self.tree_depth_max)  # prune to the max Tree depth + adjustment
 
         return parent_x
 
-    def gp_evolve_subtree_create(self, chosen_tree, branch_nodes_list):
+    def evolve_subtree(self, chosen_tree, branch_nodes_list):
 
         """
         Given: Tree and a node list
@@ -1542,7 +1536,7 @@ class Base_GP(object):
 
         # 1. How far can we build down?
         branch_top = int(branch_nodes_list[0])
-        branch_depth = self.gp_evolve_subtree_depth_get(chosen_tree, branch_top, len(branch_nodes_list))  # sfeh solution to keep tree kind of small, dont forget the mode
+        branch_depth = self.evolve_subtree_depth_get(chosen_tree, branch_top, len(branch_nodes_list))  # sfeh solution to keep tree kind of small, dont forget the mode
 
         # 2. Get the old-node's information
         old_node_label = chosen_tree[TR_nlabel][branch_nodes_list[0]]  # <,        +,-,*,8,action0 ...
@@ -1551,8 +1545,8 @@ class Base_GP(object):
 
         # 3. check if we are on a too-low level to branch mutate...
         if branch_depth < 0:  # this has never occured ... yet
-            self.printpl('e', 'In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
-            self.fx_karoo_pause()
+            self.printpl('e', 'In evolve_grow_mutate: branch_depth', branch_depth, '< 0')
+            self.plagih_pause()
 
         elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
             # 50:50 decision in function below if constant or variable
@@ -1569,21 +1563,40 @@ class Base_GP(object):
                 chosen_tree[TR_nlabel][branch_top] = self.dtype_dtype_get_term(term_type)  # replace with a correct label
                 chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
                 chosen_tree = self.tree_node_arity_fix(chosen_tree)  # fix all node arities (term)
-                chosen_tree = self.fx_evolve_child_link_fix(chosen_tree)  # fix all child links (func)
+                chosen_tree = self.evolve_fix_link_child(chosen_tree)  # fix all child links (func)
                 chosen_tree = self.tree_node_renum(chosen_tree)  # renumber all 'NODE_ID's
             else:
                 # 5.2 We insert a function here
                 # self.branch_new_tree_build('mutant', 'b', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
                 self.gp_mutate_branch_new_tree_build('mutant', 'b', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
-                chosen_tree = self.gp_evolve_subtree_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
+                chosen_tree = self.evolve_subtree_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
             # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
 
         return chosen_tree
 
-    def gp_evolve_subtree_node_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, node_dtype):
+    def evolve_subtree_depth_get(self, chosen_tree, branch_top, amount_replaced_nodes, mode='random'):  # sfeh other default
+        """
+        Return the size of the tree to be inserted.
+        Should not be set to maximum to reduce complexity!
+        """
+
+        # TODO consider tree size of last tree, # TODO consider random tree size, # TODO consider always maximum tree size, TODO is this already considered by 50:50 func-term?
+
+        branch_depth_upper_bound = self.tree_depth_max - int(chosen_tree[4][branch_top])  # 'tree_depth_max' - depth at 'branch_top' to set max size of new branch
+        if mode == 'maximum':
+            branch_depth = branch_depth_upper_bound
+        elif mode == 'base_depth':
+            branch_depth = min(branch_depth_upper_bound, self.pop_tree_depth_base)
+        elif mode == 'random':
+            branch_depth = max(branch_depth_upper_bound, np.random.randint(0, 1+max(branch_depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
+        else:
+            raise self.printpl('e', 'sfeh_get_new_tree_size does not accept this mode: ' + str(mode))
+        return branch_depth
+
+    def evolve_subtree_node_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, node_dtype):
 
         """
-        Generate a single Function node for ...
+        Generate a single label (func or term) for
         -- parent_arity_sum
         -- prior_sibling_arity
         -- prior_siblings
@@ -1593,9 +1606,9 @@ class Base_GP(object):
 
         if np.random.choice(['func', 'term']) == 'func':  # randomly selected as Function
             self.dtype_function_select(node_dtype)  # retrieve a function, input-reverse the parent-function (f2b -> we need 2f input)
-            self.tree_build_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
+            self.evolve_child_link_two(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
         else:
-            self.tree_build_subtree_terminal_select(node_dtype) #  was here
+            self.evolve_subtree_terminal_select(node_dtype)  # was here
             self.pop_node_c1 = ''
             self.pop_node_c2 = ''
             self.pop_node_c3 = ''
@@ -1604,6 +1617,208 @@ class Base_GP(object):
         prior_sibling_arity = prior_sibling_arity + self.pop_node_arity  # sum the arity of prior siblings
 
         return prior_sibling_arity
+
+    def evolve_subtree_terminal_select(self, node_dtype):
+
+        """
+        Define a single Terminal (variable extracted from the top row of the associated TRAINING data)
+
+        """
+
+        self.pop_node_type = 'term'
+        self.pop_node_label = self.dtype_dtype_get_term(node_dtype)  # get a terminal
+        self.pop_node_arity = 0
+
+        return
+
+    def evolve_subtree_insert(self, winner_tree, branch_nodes):
+
+        """
+        This method enables the insertion of insert_tree in place of a branch (which is a node_id). It works with 3 inputs: local 'tree' is being
+        modified; local 'branch' is a section of 'tree' which will be removed; and the global 'gp.tree' (recycling this
+        variable from initial population generation) is the new Tree to be inserted into 'tree', replacing 'branch'.
+
+        branch_nodes = [5,6,8,9] node that are changed
+
+        The end result is a Tree with a mutated branch. Pretty cool, huh?
+        """
+
+        ### PART 1 - insert branch_top from 'gp.tree' into 'tree' ###
+        branch_top = int(branch_nodes[0])
+        winner_tree[5][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
+        winner_tree[TR_nlabel][branch_top] = self.tree[TR_nlabel][1]  # copy node_label from new tree
+        winner_tree[8][branch_top] = self.tree[8][1]  # copy node_arity from new tree
+        winner_tree = np.delete(winner_tree, branch_nodes[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+
+        c_buffer = self.evolve_c_buffer(winner_tree, branch_top)  # generate c_buffer for point of mutation ('branch_top')
+        winner_tree = self.evolve_subtree_child_insert(winner_tree, branch_top, c_buffer)  # insert a single new node ('branch_top')
+        winner_tree = self.tree_node_renum(winner_tree)  # renumber all 'NODE_ID's
+
+        ### PART 2 - insert branch_body from 'gp.tree' into 'tree' ###
+        node_count = 2  # set node count for 'gp.tree' to 2 as the new root has already replaced 'branch_top' (above)
+
+        while node_count < len(self.tree[3]):  # increment through all nodes in the new Tree ('gp.tree'), starting with node 2
+
+            for j in range(1, len(winner_tree[3])):  # increment through all nodes in tourn_winner ('tree')
+
+                if winner_tree[5][j] == '':
+                    winner_tree[5][j] = self.tree[5][node_count]  # copy 'node_type' from branch to tree
+                    winner_tree[TR_nlabel][j] = self.tree[TR_nlabel][node_count]  # copy 'node_label' from branch to tree
+                    winner_tree[8][j] = self.tree[8][node_count]  # copy 'node_arity' from branch to tree
+
+                    if winner_tree[5][j] == 'term':
+                        winner_tree = self.evolve_fix_link_child(winner_tree)  # fix all child links
+                        winner_tree = self.tree_node_renum(winner_tree)  # renumber all 'NODE_ID's
+
+                    if winner_tree[5][j] == 'func':
+                        c_buffer = self.evolve_c_buffer(winner_tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
+                        winner_tree = self.evolve_subtree_child_insert(winner_tree, j, c_buffer)  # insert new nodes
+                        winner_tree = self.evolve_fix_link_child(winner_tree)  # fix all child links
+                        winner_tree = self.tree_node_renum(winner_tree)  # renumber all 'NODE_ID's
+
+                    node_count = node_count + 1  # exit loop when 'node_count' reaches the number of columns in the array 'gp.tree'
+
+        return winner_tree
+
+    def evolve_subtree_child_insert(self, tree, node, c_buffer):
+
+        """
+        Insert child node into the copy of a parent Tree.
+
+        """
+
+        if int(tree[8][node]) == 0:  # if arity = 0
+            self.printpl('e', 'In evolve_child_insert: node', node, 'has arity 0')
+            self.plagih_pause()  # consider special instructions for this (pause)
+
+        elif int(tree[8][node]) == 1:  # if arity = 1
+            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
+            tree[3][c_buffer] = c_buffer  # node ID
+            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
+            tree[7][c_buffer] = int(tree[3][node])  # parent ID
+
+        elif int(tree[8][node]) == 2:  # if arity = 2
+            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
+            tree[3][c_buffer] = c_buffer  # node ID
+            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
+            tree[7][c_buffer] = int(tree[3][node])  # parent ID
+
+            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
+            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
+            tree[4][c_buffer + 1] = int(tree[4][node]) + 1  # node_depth
+            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
+
+        elif int(tree[8][node]) == 3:  # if arity = 3
+            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
+            tree[3][c_buffer] = c_buffer  # node ID
+            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
+            tree[7][c_buffer] = int(tree[3][node])  # parent ID
+
+            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
+            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
+            tree[4][c_buffer + 1] = int(tree[4][node]) + 1  # node_depth
+            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
+
+            tree = np.insert(tree, c_buffer + 2, '', axis=1)  # insert node for 'node_c3'
+            tree[3][c_buffer + 2] = c_buffer + 2  # node ID
+            tree[4][c_buffer + 2] = int(tree[4][node]) + 1  # node_depth
+            tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
+
+        else:
+            self.printpl('e', 'In evolve_child_insert: node', node, 'arity > 3')
+            self.plagih_pause()  # consider special instructions for this (pause)
+
+        return tree
+
+    def evolve_child_link(self, tree, node, c_buffer):
+
+        """
+        Link each parent node to its children.
+
+        """
+
+        if int(tree[3][node]) == 1:
+            # SFEH Root can only be ignored, if root was not changed
+            c_buffer = c_buffer + 1  # if root (node 1) is passed through this method
+
+        if tree[8][node] != '':
+
+            if int(tree[8][node]) == 0:  # if arity = 0
+                tree[9][node] = ''
+                tree[10][node] = ''
+                tree[11][node] = ''
+
+            elif int(tree[8][node]) == 1:  # if arity = 1
+                tree[9][node] = c_buffer
+                tree[10][node] = ''
+                tree[11][node] = ''
+
+            elif int(tree[8][node]) == 2:  # if arity = 2
+                tree[9][node] = c_buffer
+                tree[10][node] = c_buffer + 1
+                tree[11][node] = ''
+
+            elif int(tree[8][node]) == 3:  # if arity = 3
+                tree[9][node] = c_buffer
+                tree[10][node] = c_buffer + 1
+                tree[11][node] = c_buffer + 2
+
+            else:
+                self.printpl('e', '\n\t\033[31m ERROR! In evolve_child_link: node', node, 'has arity', tree[8][node])
+                self.plagih_pause()  # consider special instructions for this (pause)
+
+        return tree
+
+    def evolve_child_link_two(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
+
+        """
+        Link each parent node to its children in the intial population.
+
+        """
+
+        for n in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
+            if int(self.tree[4][n]) == self.pop_node_depth - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
+                c_buffer = self.pop_NODE_ID + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
+
+                if self.pop_node_arity == 0:  # terminal in a Grow Tree
+                    self.pop_node_c1 = ''
+                    self.pop_node_c2 = ''
+                    self.pop_node_c3 = ''
+
+                elif self.pop_node_arity == 1:  # 1 child
+                    self.pop_node_c1 = c_buffer
+                    self.pop_node_c2 = ''
+                    self.pop_node_c3 = ''
+
+                elif self.pop_node_arity == 2:  # 2 children
+                    self.pop_node_c1 = c_buffer
+                    self.pop_node_c2 = c_buffer + 1
+                    self.pop_node_c3 = ''
+
+                elif self.pop_node_arity == 3:  # 3 children
+                    self.pop_node_c1 = c_buffer
+                    self.pop_node_c2 = c_buffer + 1
+                    self.pop_node_c3 = c_buffer + 2
+
+                else:
+                    self.printpl('e', '\n\t\033[31m ERROR! In tree_build_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
+                    self.plagih_pause()  # consider special instructions for this (pause)
+
+        return
+
+    def tree_build_node_commit(self):
+
+        """
+        Commit the values of a new node (root, function, or terminal) to the array 'tree'.
+        TODO
+        """
+
+        self.tree = np.append(self.tree, [[self.pop_TREE_ID], [self.pop_tree_type], [self.pop_tree_depth_base], [self.pop_NODE_ID], [self.pop_node_depth], [self.pop_node_type], [self.pop_node_label],
+                                          [self.pop_node_parent], [self.pop_node_arity], [self.pop_node_c1], [self.pop_node_c2], [self.pop_node_c3], [self.pop_fitness], [1], [self.pop_parsimony]], 1)
+
+        self.pop_NODE_ID = self.pop_NODE_ID + 1
+
+        return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Work with trees                           |
@@ -1772,70 +1987,6 @@ class Base_GP(object):
                        + self.tree_node_get_childlist(tree, tree[10, node_id]) + ', ' \
                        + self.tree_node_get_childlist(tree, tree[11, node_id])
 
-    def tree_build_subtree_terminal_select(self, node_dtype):
-
-        """
-        Define a single Terminal (variable extracted from the top row of the associated TRAINING data)
-
-        """
-
-        self.pop_node_type = 'term'
-        self.pop_node_label = self.dtype_dtype_get_term(node_dtype)  # get a terminal
-        self.pop_node_arity = 0
-
-        return
-
-    def tree_build_child_link(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
-
-        """
-        Link each parent node to its children in the intial population.
-
-        """
-
-        for n in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-            if int(self.tree[4][n]) == self.pop_node_depth - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
-                c_buffer = self.pop_NODE_ID + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
-
-                if self.pop_node_arity == 0:  # terminal in a Grow Tree
-                    self.pop_node_c1 = ''
-                    self.pop_node_c2 = ''
-                    self.pop_node_c3 = ''
-
-                elif self.pop_node_arity == 1:  # 1 child
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = ''
-                    self.pop_node_c3 = ''
-
-                elif self.pop_node_arity == 2:  # 2 children
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = c_buffer + 1
-                    self.pop_node_c3 = ''
-
-                elif self.pop_node_arity == 3:  # 3 children
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = c_buffer + 1
-                    self.pop_node_c3 = c_buffer + 2
-
-                else:
-                    self.printpl('e', '\n\t\033[31m ERROR! In tree_build_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
-                    self.fx_karoo_pause()  # consider special instructions for this (pause)
-
-        return
-
-    def tree_build_node_commit(self):
-
-        """
-        Commit the values of a new node (root, function, or terminal) to the array 'tree'.
-        TODO
-        """
-
-        self.tree = np.append(self.tree, [[self.pop_TREE_ID], [self.pop_tree_type], [self.pop_tree_depth_base], [self.pop_NODE_ID], [self.pop_node_depth], [self.pop_node_type], [self.pop_node_label],
-                                          [self.pop_node_parent], [self.pop_node_arity], [self.pop_node_c1], [self.pop_node_c2], [self.pop_node_c3], [self.pop_fitness], [1], [self.pop_parsimony]], 1)
-
-        self.pop_NODE_ID = self.pop_NODE_ID + 1
-
-        return
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to use in generation loop         |
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1847,7 +1998,7 @@ class Base_GP(object):
         - Lineary increase threshold for parsimony
         """
         self.printpl('g', 'Preparing to evolve Generation', self.gen_id, '...')
-        self.population_new = ['Karoo GP - Evolving Generation']  # initialise population_new to host the next generation
+        self.population_new = ['Plagih GP - Evolving Generation']  # initialise population_new to host the next generation
 
         full_parsimony_factor = 2  # working with the maximum parsimony for at least some generations
         gen_relation = min((full_parsimony_factor * self.gen_id) / self.gen_max, 1)
@@ -1871,7 +2022,7 @@ class Base_GP(object):
         self.pop_genepool_fitness()     # gene +fitness
         self.pop_pareto_front()
 
-        # self.population_genepool = self.pop_copy(self.population_new, ['Karoo GP Generation ' + str(self.gen_id)])
+        # self.population_genepool = self.pop_copy(self.population_new, ['Plagih GP Generation ' + str(self.gen_id)])
         self.population_genepool = self.pop_copy_genepool(self.population_new)
         self.data_save_population(self.population_new, 'new')
         self.monitor_performance(mode='update')
@@ -1995,7 +2146,7 @@ class Base_GP(object):
                 harmonic mean of Precision and Recall (F1) = 2(P x R) / (P + R)
 
             From scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
-                y_pred = result, the predicted labels generated by Karoo GP
+                y_pred = result, the predicted labels generated by Plagih GP
                 y_true = solution, the true labels associated with the data
 
             """
@@ -2051,26 +2202,7 @@ class Base_GP(object):
     #   Methods to Evolve a Population            |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def gp_evolve_subtree_depth_get(self, chosen_tree, branch_top, amount_replaced_nodes, mode='random'):  # sfeh other default
-        """
-        Return the size of the tree to be inserted.
-        Should not be set to maximum to reduce complexity!
-        """
-
-        # TODO consider tree size of last tree, # TODO consider random tree size, # TODO consider always maximum tree size, TODO is this already considered by 50:50 func-term?
-
-        branch_depth_upper_bound = self.tree_depth_max - int(chosen_tree[4][branch_top])  # 'tree_depth_max' - depth at 'branch_top' to set max size of new branch
-        if mode == 'maximum':
-            branch_depth = branch_depth_upper_bound
-        elif mode == 'base_depth':
-            branch_depth = min(branch_depth_upper_bound, self.pop_tree_depth_base)
-        elif mode == 'random':
-            branch_depth = max(branch_depth_upper_bound, np.random.randint(0, 1+max(branch_depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
-        else:
-            raise self.printpl('e', 'sfeh_get_new_tree_size does not accept this mode: ' + str(mode))
-        return branch_depth
-
-    def gp_evolve_nodetype4label_get(self, node_label):
+    def evolve_label_get_terminal(self, node_label):
         """
         return terminal or function according to the label
         """
@@ -2080,7 +2212,7 @@ class Base_GP(object):
         else:
             return 'term'
 
-    def parsimony_treedist_rel_ari(self, tree):
+    def tree_parsimony_relari(self, tree):
         """
         This distance penalizes non-original functions with its arity
         - ignore node[0] [description]
@@ -2105,9 +2237,9 @@ class Base_GP(object):
 
         return distance
 
-    def parsimony_treedist_num_changes(self, tree):
+    def tree_parsimony_ted(self, tree):
         """
-        The 'coolest' distance, where
+        The Tree Edit distance (TED) ('coolest' distance)
         - the amount of changes that have to be applied to the origin to equality are counted
         """
         # TODO distanzfunktion für Anzahl der Änderungen schreiben
@@ -2115,56 +2247,7 @@ class Base_GP(object):
         changed_expr = self.tree_expr_sympify()
         return
 
-    def gp_evolve_subtree_insert(self, winner_tree, branch_nodes):
-
-        """
-        This method enables the insertion of insert_tree in place of a branch (which is a node_id). It works with 3 inputs: local 'tree' is being
-        modified; local 'branch' is a section of 'tree' which will be removed; and the global 'gp.tree' (recycling this
-        variable from initial population generation) is the new Tree to be inserted into 'tree', replacing 'branch'.
-
-        branch_nodes = [5,6,8,9] node that are changed
-
-        The end result is a Tree with a mutated branch. Pretty cool, huh?
-        """
-
-        ### PART 1 - insert branch_top from 'gp.tree' into 'tree' ###
-        branch_top = int(branch_nodes[0])
-        winner_tree[5][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
-        winner_tree[TR_nlabel][branch_top] = self.tree[TR_nlabel][1]  # copy node_label from new tree
-        winner_tree[8][branch_top] = self.tree[8][1]  # copy node_arity from new tree
-        winner_tree = np.delete(winner_tree, branch_nodes[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-
-        c_buffer = self.fx_evolve_c_buffer(winner_tree, branch_top)  # generate c_buffer for point of mutation ('branch_top')
-        winner_tree = self.fx_evolve_child_insert(winner_tree, branch_top, c_buffer)  # insert a single new node ('branch_top')
-        winner_tree = self.tree_node_renum(winner_tree)  # renumber all 'NODE_ID's
-
-        ### PART 2 - insert branch_body from 'gp.tree' into 'tree' ###
-        node_count = 2  # set node count for 'gp.tree' to 2 as the new root has already replaced 'branch_top' (above)
-
-        while node_count < len(self.tree[3]):  # increment through all nodes in the new Tree ('gp.tree'), starting with node 2
-
-            for j in range(1, len(winner_tree[3])):  # increment through all nodes in tourn_winner ('tree')
-
-                if winner_tree[5][j] == '':
-                    winner_tree[5][j] = self.tree[5][node_count]  # copy 'node_type' from branch to tree
-                    winner_tree[TR_nlabel][j] = self.tree[TR_nlabel][node_count]  # copy 'node_label' from branch to tree
-                    winner_tree[8][j] = self.tree[8][node_count]  # copy 'node_arity' from branch to tree
-
-                    if winner_tree[5][j] == 'term':
-                        winner_tree = self.fx_evolve_child_link_fix(winner_tree)  # fix all child links
-                        winner_tree = self.tree_node_renum(winner_tree)  # renumber all 'NODE_ID's
-
-                    if winner_tree[5][j] == 'func':
-                        c_buffer = self.fx_evolve_c_buffer(winner_tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
-                        winner_tree = self.fx_evolve_child_insert(winner_tree, j, c_buffer)  # insert new nodes
-                        winner_tree = self.fx_evolve_child_link_fix(winner_tree)  # fix all child links
-                        winner_tree = self.tree_node_renum(winner_tree)  # renumber all 'NODE_ID's
-
-                    node_count = node_count + 1  # exit loop when 'node_count' reaches the number of columns in the array 'gp.tree'
-
-        return winner_tree
-
-    def fx_evolve_c_buffer(self, tree, node):
+    def evolve_c_buffer(self, tree, node):
 
         """
         This method serves the very important function of determining the links from parent to child for any given
@@ -2175,7 +2258,7 @@ class Base_GP(object):
         This method is currently called from the evolution methods, but will soon (I hope) be called from the first
         generation Tree generation methods (above) such that the same method may be used repeatedly.
 
-        Called by: fx_evolve_child_link_fix, fx_evolve_banch_top_copy, fx_evolve_branch_body_copy
+        Called by: evolve_child_link_fix, evolve_banch_top_copy, evolve_branch_body_copy
 
         Arguments required: tree, node
         """
@@ -2200,49 +2283,7 @@ class Base_GP(object):
 
         return c_buffer
 
-    def fx_evolve_child_link(self, tree, node, c_buffer):
-
-        """
-        Link each parent node to its children.
-
-        Called by: fx_evolve_child_link_fix
-
-        Arguments required: tree, node, c_buffer
-        """
-
-        if int(tree[3][node]) == 1:
-            # SFEH Root can only be ignored, if root was not changed
-            c_buffer = c_buffer + 1  # if root (node 1) is passed through this method
-
-        if tree[8][node] != '':
-
-            if int(tree[8][node]) == 0:  # if arity = 0
-                tree[9][node] = ''
-                tree[10][node] = ''
-                tree[11][node] = ''
-
-            elif int(tree[8][node]) == 1:  # if arity = 1
-                tree[9][node] = c_buffer
-                tree[10][node] = ''
-                tree[11][node] = ''
-
-            elif int(tree[8][node]) == 2:  # if arity = 2
-                tree[9][node] = c_buffer
-                tree[10][node] = c_buffer + 1
-                tree[11][node] = ''
-
-            elif int(tree[8][node]) == 3:  # if arity = 3
-                tree[9][node] = c_buffer
-                tree[10][node] = c_buffer + 1
-                tree[11][node] = c_buffer + 2
-
-            else:
-                self.printpl('e', '\n\t\033[31m ERROR! In fx_evolve_child_link: node', node, 'has arity', tree[8][node])
-                self.fx_karoo_pause()  # consider special instructions for this (pause)
-
-        return tree
-
-    def fx_evolve_child_link_fix(self, tree):
+    def evolve_fix_link_child(self, tree):
 
         """
         In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
@@ -2252,65 +2293,12 @@ class Base_GP(object):
         """
 
         for node in range(1, len(tree[3])):
-            c_buffer = self.fx_evolve_c_buffer(tree, node)  # generate c_buffer for each node
-            tree = self.fx_evolve_child_link(tree, node, c_buffer)  # update child links for each node
+            c_buffer = self.evolve_c_buffer(tree, node)  # generate c_buffer for each node
+            tree = self.evolve_child_link(tree, node, c_buffer)  # update child links for each node
 
         return tree
 
-    def fx_evolve_child_insert(self, tree, node, c_buffer):
-
-        """
-        Insert child node into the copy of a parent Tree.
-
-        Called by: fx_evolve_branch_insert
-
-        Arguments required: tree, node, c_buffer
-        """
-
-        if int(tree[8][node]) == 0:  # if arity = 0
-            self.printpl('e', 'In fx_evolve_child_insert: node', node, 'has arity 0')
-            self.fx_karoo_pause()  # consider special instructions for this (pause)
-
-        elif int(tree[8][node]) == 1:  # if arity = 1
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-        elif int(tree[8][node]) == 2:  # if arity = 2
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
-            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[4][c_buffer + 1] = int(tree[4][node]) + 1  # node_depth
-            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
-
-        elif int(tree[8][node]) == 3:  # if arity = 3
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
-            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[4][c_buffer + 1] = int(tree[4][node]) + 1  # node_depth
-            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 2, '', axis=1)  # insert node for 'node_c3'
-            tree[3][c_buffer + 2] = c_buffer + 2  # node ID
-            tree[4][c_buffer + 2] = int(tree[4][node]) + 1  # node_depth
-            tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
-
-        else:
-            self.printpl('e', 'In fx_evolve_child_insert: node', node, 'arity > 3')
-            self.fx_karoo_pause()  # consider special instructions for this (pause)
-
-        return tree
-
-    def fx_evolve_parent_link_fix(self, tree):
+    def evolve_fix_link_parent(self, tree):
 
         """
         In a given Tree, fix 'parent_id' for all nodes.
@@ -2322,7 +2310,7 @@ class Base_GP(object):
         of whack and the expression will work perfectly. This is maintained for the sole purpose of granting the user
         a friendly, makes-sense interface which can be read in both directions.
 
-        Called by: fx_evolve_branch_copy
+        Called by: evolve_branch_copy
 
         Arguments required: tree
         """
@@ -2414,7 +2402,7 @@ class Base_GP(object):
             algo_sym = self.tree_expr_sympify(tree)
             return count_ops(algo_sym)
         elif parsimony_distance == 'rel_ari_1':  # Does this work?
-            return self.parsimony_treedist_rel_ari(tree)
+            return self.tree_parsimony_relari(tree)
         elif parsimony_distance == 'print':   # Please inser all of the measurements with example
             self.printpl('i', 'No distance chosen. Available parsimony measurements:')
             self.printpl('i', 'pcount_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
@@ -2605,7 +2593,7 @@ class Base_GP(object):
                     Creates element-wise fitness computation TensorFlow (TF) sub-graph for CLASSIFY kernel.
                     - tree-label vs. true label
                     This multiclass classifer compares each row of a given Tree to the known solution, comparing predicted labels 
-                    generated by Karoo GP against the true class labels. This method is able to work with any number of class 
+                    generated by plagih GP against the true class labels. This method is able to work with any number of class 
                     labels, from 2 to n. The left-most bin includes -inf. The right-most bin includes +inf. Those inbetween are 
                     by default confined to the spacing of 1.0 each, as defined by:
 
@@ -2708,15 +2696,16 @@ class Base_GP(object):
             return operators[type(node.op)](self.tf_expr_graph(node.operand, tensors))
 
         elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
+            # special case: If-then-else
             if node.func.id == 'Ifte':
                 return operators[node.func.id](
                     tf.dtypes.cast(self.tf_expr_graph(node.args[0], tensors), tf.bool),
                     self.tf_expr_graph(node.args[1], tensors),
                     self.tf_expr_graph(node.args[2], tensors))
-
-            if node.func.id in non_inline_multielem_functions:  # Min, Max are now Mini and Maxi. These only accept two inputs.
-                self.printpl('e', [self.tf_expr_graph(arg, tensors) for arg in node.args])
-                return operators[node.func.id]([self.tf_expr_graph(arg, tensors) for arg in node.args])  # the star '*' makes the difference
+            # special case: Min and Max accept 2 or more arguments. Many errors. Therefore not in use anymore.
+            # if node.func.id in non_inline_multielem_functions:  # Min, Max are now Mini and Maxi. These only accept two inputs.
+            #     # self.printpl('e', [self.tf_expr_graph(arg, tensors) for arg in node.args])
+            #     return operators[node.func.id]([self.tf_expr_graph(arg, tensors) for arg in node.args])  # the star '*' makes the difference
 
             if node.func.id == 'Ftob':
                 self.printpl('i', 'float was converted to bool in tensorflow')
@@ -2724,6 +2713,7 @@ class Base_GP(object):
             elif node.func.id == 'Btof':
                 return tf.dtypes.cast(*[self.tf_expr_graph(arg, tensors) for arg in node.args], dtype=tf.float32)
 
+            # The actual handling. The '*' inserts all the arguments (in this case 2) into the function.
             return operators[node.func.id](*[self.tf_expr_graph(arg, tensors) for arg in node.args])
 
         elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
@@ -2791,7 +2781,7 @@ class Base_GP(object):
             elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
             else: fitness = 0 # no class match
 
-        Called by: fx_fitness_eval
+        Called by: fitness_eval
 
         Arguments required: result
         """
@@ -2893,7 +2883,7 @@ class Base_GP(object):
         returns dtype for a label
         """
 
-        node_type = self.gp_evolve_nodetype4label_get(node_label)
+        node_type = self.evolve_label_get_terminal(node_label)
         node_dtype = self.dtype_node_get_dtype(node_label, node_type)
         return node_dtype
 
@@ -2976,7 +2966,7 @@ class Base_GP(object):
     #   Methods to display output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def printpl(self, message_type, *args, custom=False):  # plagih naming
+    def printpl(self, message_type, *args):  # plagih naming
 
         """
         Gets a verbosity (e.g. 'i')
@@ -2986,7 +2976,7 @@ class Base_GP(object):
             Info (i): informations. (need further specification)
             NextGen (n): Prints infos about the current mutation process
 
-        Display modes: (Just a reminder from original Karoo)
+        Display modes: (Just a reminder from original plagih)
             Generational (g): pauses after each generation is complete
             Interactive (i): pauses with the completion of each section (e.g. tournament, gene pool, genetic operators)
             DeBug (db): displays the internal workings of the genetic operators
@@ -3137,30 +3127,28 @@ class Base_GP(object):
         plt.show()
         return
 
-    def fx_karoo_pause_refer(self):
+    def plagih_pause_refer(self):
 
         """
         Enables (g)eneration, (i)nteractive, and (d)e(b)ug display modes to offer the (pause) menu at each prompt.
 
-        See fx_karoo_pause() for an explanation of the value being passed.
+        See plagih_pause() for an explanation of the value being passed.
 
-        Called by: the functions called by PART 4 of fx_karoo_gp()
+        Called by: the functions called by PART 4 of plagih_gp()
 
         Arguments required: none
         """
 
         menu = 1
         while menu == 1:
-            menu = self.fx_karoo_pause()
+            menu = self.plagih_pause()
 
         return
 
-    def fx_karoo_pause(self):
+    def plagih_pause(self):
 
         """
         Pause the program execution and engage the user, providing a number of options.
-
-        Called by: fx_karoo_pause_refer
 
         Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
         within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
@@ -3203,7 +3191,7 @@ class Base_GP(object):
 
         ### PART 3 - execute the user queries returned from menu.pause ###
         if input_a == 'esc':
-            return 2  # breaks out of the fx_karoo_gp() or fx_karoo_pause_refer() loop
+            return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
 
         elif input_a == 'eval':  # evaluate a Tree against the TEST data
             # algo_sym = self.tree_expr_sympify(self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
@@ -3216,10 +3204,10 @@ class Base_GP(object):
         # elif self.kernel == '[other]': # use others as a template
 
         elif input_a == 'print_last':  # print a Tree from population_genepool
-            self.fx_display_tree(self.population_genepool[input_b])
+            self.display_tree(self.population_genepool[input_b])
 
         elif input_a == 'print_new':  # print a Tree from population_new
-            self.fx_display_tree(self.population_new[input_b])
+            self.display_tree(self.population_new[input_b])
 
         elif input_a == 'pop_last':  # list all Trees in population_genepool
             print('')
@@ -3238,9 +3226,9 @@ class Base_GP(object):
 
         elif input_a == 'write':  # write the evolving population_new to disk
             self.data_save_population(self.population_new, 'new')
-            print('\n\t All current members of the evolving population_new saved to karoo_gp/runs/[date-time]/population_new.csv')
+            print('\n\t All current members of the evolving population_new saved to plagih_gp/runs/[date-time]/population_new.csv')
 
-        elif input_a == 'add':  # check for added generations, then exit fx_karoo_pause and continue the run
+        elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
             self.gen_max = self.gen_max + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
 
         elif input_a == 'quit':
@@ -3248,74 +3236,74 @@ class Base_GP(object):
 
         return 1
 
-    def obsolete_compare_genepool_fitness(self, tree_id, fitness, fitness_best):
-        """
-        obsolete?
-        """
-        algo_sym = self.tree_expr_sympify(self.population_new[tree_id])
-
-        ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
-        if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
-            if fitness >= fitness_best:  # find the Tree with maximum fitness score
-                fitness_best = fitness  # set best fitness score
-                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness >= prior
-
-        elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
-            if fitness_best == 0:
-                fitness_best = fitness  # set the baseline first time through
-            if fitness <= fitness_best:  # find the Tree with minimum fitness score
-                fitness_best = fitness  # set best fitness score
-                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness <= prior
-
-        elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
-            if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
-                fitness_best = fitness  # set best fitness score
-                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if all rows match
-
-        else:
-            raise self.printpl('e', 'No proper kernel was selected', self.kernel)
-        return fitness_best
-
     def manual_expr_fitness(self, expr):
         fitness = self.tf_eval(expr, self.data_train)['fitness']
         print('Your algos fitness:', fitness)
         return
 
-    def obsolete_mutate_branch_function_build_grow(self):
+    # def obsolete_compare_genepool_fitness(self, tree_id, fitness, fitness_best):
+    #     """
+    #     obsolete?
+    #     """
+    #     algo_sym = self.tree_expr_sympify(self.population_new[tree_id])
+    #
+    #     ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
+    #     if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
+    #         if fitness >= fitness_best:  # find the Tree with maximum fitness score
+    #             fitness_best = fitness  # set best fitness score
+    #             self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness >= prior
+    #
+    #     elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
+    #         if fitness_best == 0:
+    #             fitness_best = fitness  # set the baseline first time through
+    #         if fitness <= fitness_best:  # find the Tree with minimum fitness score
+    #             fitness_best = fitness  # set best fitness score
+    #             self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness <= prior
+    #
+    #     elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
+    #         if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
+    #             fitness_best = fitness  # set best fitness score
+    #             self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if all rows match
+    #
+    #     else:
+    #         raise self.printpl('e', 'No proper kernel was selected', self.kernel)
+    #     return fitness_best
 
-        """
-        Build the branch full depth
-        Builds
-        """
-
-        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
-
-            self.pop_node_depth = i  # increment 'node_depth'
-            parent_arity_sum = 0
-            prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
-            prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
-
-            # parent_arity_sum = amount of nodes (that have to be on this level)
-            for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
-                    parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
-
-            # Set for every "free space" a function node (func)
-            for j in range(1, len(self.tree[3])):  # increment through all nodes
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
-                    if self.tree[TR_nlabel][j] == 'Ifte':
-                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                    else:
-                        for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
-                            self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
-                            parent_func_dtype = function_dtypes_dict[self.tree[TR_nlabel][self.pop_node_parent]]  # find parents node
-                            func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
-                            prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
-                            prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
-
-        return
+    # def obsolete_mutate_branch_function_build_grow(self):
+    #
+    #     """
+    #     Build the branch full depth
+    #     Builds
+    #     """
+    #
+    #     for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
+    #
+    #         self.pop_node_depth = i  # increment 'node_depth'
+    #         parent_arity_sum = 0
+    #         prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
+    #         prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
+    #
+    #         # parent_arity_sum = amount of nodes (that have to be on this level)
+    #         for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
+    #             if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
+    #                 parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
+    #
+    #         # Set for every "free space" a function node (func)
+    #         for j in range(1, len(self.tree[3])):  # increment through all nodes
+    #             if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
+    #                 if self.tree[TR_nlabel][j] == 'Ifte':
+    #                     prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
+    #                     prior_siblings = prior_siblings + 1
+    #                     prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+    #                     prior_siblings = prior_siblings + 1
+    #                     prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+    #                     prior_siblings = prior_siblings + 1
+    #                 else:
+    #                     for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
+    #                         self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
+    #                         parent_func_dtype = function_dtypes_dict[self.tree[TR_nlabel][self.pop_node_parent]]  # find parents node
+    #                         func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
+    #                         prior_sibling_arity = self.evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
+    #                         prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
+    #
+    #     return

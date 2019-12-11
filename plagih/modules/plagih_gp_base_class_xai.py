@@ -142,9 +142,8 @@ function_dtypes_dict = {  # Needs A LOT OF further testing
     'Mini': 'f2f',
     'Maxi': 'f2f',
 }
-    # Storytime:
-    # plagih_sympify can reduce an expression to 'Min(a, b, c)', but tensorflow and our framework does not like this
-non_inline_multielem_functions = ['Min', 'Max']  # There is probably an actual way to call 'non_inline_functions'
+
+non_inline_multielem_functions = ['Min', 'Max']  # Currently not in use
 
 non_inline_functions = ['Min', 'Max', 'Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
 inline_functions = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
@@ -206,21 +205,7 @@ np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters b
 
 class Base_GP(object):
     """
-    This Base_BP class contains all methods for Karoo GP. Method names are differentiated from global variable names
-    (defined below) by the prefix 'fx_' followed by an object and action, as in fx_display_tree(), with a few
-    expections, such as fx_fitness_gene_pool().
 
-    The method categories (denoted by +++ banners +++) are as follows:
-        fx_karoo_					Methods to Run Karoo GP
-        fx_data_					Methods to Load and Archive Data
-        fx_init_					Methods to Construct the 1st Generation
-        fx_eval_					Methods to Evaluate a Tree
-        fx_fitness_					Methods to Train and Test a Tree for Fitness
-        fx_nextgen_					Methods to Construct the next Generation
-        fx_evolve_					Methods to Evolve a Population
-        fx_display_					Methods to Visualize a Tree
-
-    Error checks are quickly located by searching for 'ERROR!'
     """
 
     def __init__(self, kernel, tree_type, tree_depth_base, tree_depth_max, tree_depth_min, tree_pop_max, gen_max,
@@ -263,7 +248,7 @@ class Base_GP(object):
         else:
             self.fitness_bad_dummy = float("inf")
 
-        self.main_data_load(operators_file, samples_file, origin_tree_file)
+        self.data_load(operators_file, samples_file, origin_tree_file)
 
         return
 
@@ -275,6 +260,40 @@ class Base_GP(object):
         self.main_generation_first()
         self.main_generation_loop()   # (main loop)
         self.main_terminate()  # archive populations and return to plagih_gp.py for a clean exit
+
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    #   Most important functions                  |
+    # +++++++++++++++++++++++++++++++++++++++++++++
+
+    def main_directories_create(self):
+        """
+        Create all files that will be saved after all
+        """
+
+        self.datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        cwd = os.getcwd()
+        self.path = os.path.join(cwd, 'runs/' + self.datetime + '/')  # generate a unique directory name
+        if not os.path.isdir(self.path):
+            os.makedirs(self.path)  # make a unique directory
+        self.filename = {}  # a dictionary to hold .csv filenames
+
+        self.filename.update({'1_first': self.path + 'population_1_first.csv'})
+        target = open(self.filename['1_first'], 'w')
+        target.close()  # initialise a .csv file for population 'a' (foundation)
+
+        self.filename.update({'new': self.path + 'population_new.csv'})
+        target = open(self.filename['new'], 'w')
+        target.close()  # initialise a .csv file for population 'new' (evolving)
+
+        self.filename.update({'f': self.path + 'population_f.csv'})
+        target = open(self.filename['f'], 'w')
+        target.close()  # initialise a .csv file for the final population (test)
+
+        self.filename.update({'s': self.path + 'population_s.csv'})
+        target = open(self.filename['s'], 'w')
+        target.close()  # initialise a .csv file to manually load (seed)
+
+        self.monitor_performance(mode='init')
 
     def main_generation_first(self, population_backup_file='', paretofront_backup_file=''):
         """
@@ -289,53 +308,18 @@ class Base_GP(object):
         self.monitor_performance(mode='init')           # first gen only
 
         self.gen_prepare_parameters()
-        self.gen_first_create()     # creates pop_num of trees
+        self.gp_first_create()     # creates pop_num of trees
 
         # Special case: load Data
         try:
             if paretofront_backup_file:
                 # load
-                self.load_backup_population(population_backup_file)
+                self.data_load_backup_population(population_backup_file)
         except:
             self.printpl('e', 'Could not load data')
         self.gen_finalize()
 
-        self.gen_archive(self.population_genepool, '1_first')        # first gen only
-
-    def load_backup_population(self, population_backup_file):
-        """
-        Loads a saved population from an earlier run
-        - Load from a .csv File (TODO)
-        - check, if it is compartible with tree_origin (TODO)
-        """
-        with open(population_backup_file, 'rb') as csv_file:
-            target = csv.reader(csv_file, delimiter=',')
-            n = 0  # track row count
-
-            for row in target:
-
-                n = n + 1
-                if n == 1:
-                    pass  # skip first empty row
-
-                elif n == 2:
-                    self.population_genepool = [row]  # write header to population_genepool
-
-                else:
-                    if row == []:
-                        self.tree = np.array([[]])  # initialise Tree array
-
-                    else:
-                        if self.tree.shape[1] == 0:
-                            self.tree = np.append(self.tree, [row], axis=1)  # append first row to Tree
-
-                        else:
-                            self.tree = np.append(self.tree, [row], axis=0)  # append subsequent rows to Tree
-
-                    if self.tree.shape[0] == 14+1:  # (current tree rows + row 0
-                        self.population_genepool.append(self.tree)  # append complete Tree to population list
-
-        print('\n', self.population_genepool)
+        self.data_save_population(self.population_genepool, '1_first')        # first gen only
 
     def main_generation_loop(self):
         """
@@ -351,10 +335,10 @@ class Base_GP(object):
                 self.gen_prepare_parameters()
 
                 # 2. Create new generation (from last genepool)
-                self.pop_reproduce()  # method 1 - Reproduction
-                self.pop_mutate_point()  # method 2 - Point Mutation
-                self.pop_mutate_branch()  # method 3 - Branch Mutation
-                self.pop_crossover()  # method 4 - Crossover
+                self.gp_reproduce()  # method 1 - Reproduction
+                self.gp_mutate_point()  # method 2 - Point Mutation
+                self.gp_mutate_branch()  # method 3 - Branch Mutation
+                self.gp_crossover()  # method 4 - Crossover
 
                 self.gen_finalize()
 
@@ -373,12 +357,12 @@ class Base_GP(object):
 
         Arguments required: none
         """
-        self.write_config()
-        self.write_outcome()
-        self.write_paretofront()
+        self.data_save_config()
+        self.data_save_conclusion()
+        self.data_save_paretofront()
         target = open(self.filename['f'], 'w')
         target.close()  # initialize the .csv file for the final population
-        self.gen_archive(self.population_new, 'f')  # save the final generation of Trees to disk
+        self.data_save_population(self.population_new, 'f')  # save the final generation of Trees to disk
 
         self.printpl('i', '\n\t\033[32m Your Trees and runtime parameters are archived in karoo_gp/runs/[date-time]/\033[0;0m')
         self.printpl('i', '\n\033[3m "It is not the strongest of the species that survive, nor the most intelligent,\033[0;0m')
@@ -390,7 +374,7 @@ class Base_GP(object):
         sys.exit()
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods for displaying information        |
+    #   Monitoring                                |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def monitor_pop_fitness(self):
@@ -464,10 +448,10 @@ class Base_GP(object):
         return tmp_sum / len(self.gene_pool)
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Load and Archive Data         |
+    #   Load and Archive Data                     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def main_data_load(self, operators_file, samples_file, origin_tree_file_path):
+    def data_load(self, operators_file, samples_file, origin_tree_file_path):
 
         """
         Loads all user input and prepares
@@ -673,190 +657,47 @@ class Base_GP(object):
             print('No Functions that create bool were found')
             self.functions_2b = []
 
-    def main_directories_create(self):
-        """
-        Create all files that will be saved after all
-        """
+    def data_load_backup_population(self, population_backup_file):
+                """
+                Loads a saved population from an earlier run
+                - Load from a .csv File (TODO)
+                - check, if it is compartible with tree_origin (TODO)
+                """
+                with open(population_backup_file, 'rb') as csv_file:
+                    target = csv.reader(csv_file, delimiter=',')
+                    n = 0  # track row count
 
-        self.datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        cwd = os.getcwd()
-        self.path = os.path.join(cwd, 'runs/' + self.datetime + '/')  # generate a unique directory name
-        if not os.path.isdir(self.path):
-            os.makedirs(self.path)  # make a unique directory
-        self.filename = {}  # a dictionary to hold .csv filenames
+                    for row in target:
 
-        self.filename.update({'1_first': self.path + 'population_1_first.csv'})
-        target = open(self.filename['1_first'], 'w')
-        target.close()  # initialise a .csv file for population 'a' (foundation)
+                        n = n + 1
+                        if n == 1:
+                            pass  # skip first empty row
 
-        self.filename.update({'new': self.path + 'population_new.csv'})
-        target = open(self.filename['new'], 'w')
-        target.close()  # initialise a .csv file for population 'new' (evolving)
+                        elif n == 2:
+                            self.population_genepool = [row]  # write header to population_genepool
 
-        self.filename.update({'f': self.path + 'population_f.csv'})
-        target = open(self.filename['f'], 'w')
-        target.close()  # initialise a .csv file for the final population (test)
+                        else:
+                            if row == []:
+                                self.tree = np.array([[]])  # initialise Tree array
 
-        self.filename.update({'s': self.path + 'population_s.csv'})
-        target = open(self.filename['s'], 'w')
-        target.close()  # initialise a .csv file to manually load (seed)
+                            else:
+                                if self.tree.shape[1] == 0:
+                                    self.tree = np.append(self.tree, [row], axis=1)  # append first row to Tree
 
-        self.monitor_performance(mode='init')
+                                else:
+                                    self.tree = np.append(self.tree, [row], axis=0)  # append subsequent rows to Tree
 
-    def gen_archive(self, population, key):
+                            if self.tree.shape[0] == 14 + 1:  # (current tree rows + row 0
+                                self.population_genepool.append(self.tree)  # append complete Tree to population list
 
-        """
-        Save population_* to disk.
+                print('\n', self.population_genepool)
 
-        """
-
-        with open(self.filename[key], 'a', newline='') as csv_file:
-            target = csv.writer(csv_file, delimiter=',')
-            if self.gen_id != 1:
-                target.writerows([''])  # empty row before each generation
-            target.writerows([['Karoo GP by Kai Staats, improved by Simon Fehrer', 'Generation:', str(self.gen_id)]])
-
-            for tree in range(1, len(population)):
-                target.writerows([''])  # empty row before each Tree
-                for row in range(0, 14+1):  # increment through each row in the array Tree (+ row 0)
-                    target.writerows([population[tree][row]])
-
-        return
-
-    def write_outcome(self):
-
-        """
-
-        """
-
-        file = open(self.path + 'results.txt', 'w')
-        file.write('Karoo GP')
-        file.write('\n launched: ' + str(self.datetime))
-        file.write('\n dataset: ' + str(self.dataset))
-        file.write('\n')
-
-        if len(self.origin_dominators) > 0:
-
-            fitness_best = 0
-            fittest_tree = 0
-
-            # revised method, re-evaluating all Trees from stored fitness score
-            # for tree_id in range(1, len(self.population_new)):
-            for tree_id in self.gene_pool:
-
-                fitness = float(self.population_new[tree_id][12][1])
-
-                if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
-                    if fitness >= fitness_best:  # find the Tree with maximum fitness score
-                        fitness_best = fitness
-                        fittest_tree = tree_id  # set best fitness Tree
-
-                elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
-                    if fitness_best == 0:
-                        fitness_best = fitness  # set the baseline first time through
-                    if fitness <= fitness_best:  # find the Tree with minimum fitness score
-                        fitness_best = fitness
-                        fittest_tree = tree_id  # set best fitness Tree
-
-                elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
-                    if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
-                        fitness_best = fitness
-                        fittest_tree = tree_id  # set best fitness Tree
-
-            # test the most fit Tree and write to the .txt log
-            algo_sym = self.tree_expr_sympify(self.population_new[int(fittest_tree)])  # generate the raw and sympified expression for the given Tree using SymPy
-            result = self.expr_fitness_eval(str(algo_sym), self.data_test, get_pred_labels=True)
-
-            algo_sym = self.tree_expr_sympify(self.origin_tree)
-            origin_fitness_test = self.expr_fitness_eval(str(algo_sym), self.data_test)['fitness']
-
-            file.write('\n\t Origin fitness score: {}'.format(origin_fitness_test))
-            file.write('\n\n Tree ' + str(fittest_tree) + ' is the most fit, with expression:')
-            file.write('\n\n ' + str(algo_sym))
-
-            if self.kernel == 'c':
-                file.write('\n\n Classification fitness score: {}'.format(result['fitness']))
-                file.write('\n\n Precision-Recall report:\n {}'.format(
-                    skm.classification_report(result['solution'], result['pred_labels'][0])))
-                file.write('\n Confusion matrix:\n {}'.format(
-                    skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
-
-            elif self.kernel == 'r':
-                MSE, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
-                file.write('\n\n Regression fitness score: {}'.format(fitness))
-                file.write('\n Mean Squared Error: {}'.format(MSE))
-
-            elif self.kernel == 'm':
-                file.write('\n\n Matching fitness score: {}'.format(result['fitness']))
-
-        else:
-            file.write('\n\n No solution was better than the origin... your species has gone extinct!')
-
-        file.write('\n\n')
-        file.close()
-
-        return
-
-    def write_config(self):
-        """
-        write the parameters to a file
-        """
-
-        file = open(self.path + 'config.txt', 'w')
-        file.write('Plagih GP')
-        file.write('\n launched: ' + str(self.datetime))
-        file.write('\n dataset: ' + str(self.dataset))
-        file.write('\n')
-        file.write('\n kernel: ' + str(self.kernel))
-        file.write('\n precision: ' + str(self.precision))
-        file.write('\n')
-        file.write('\n tree depth max: ' + str(self.tree_depth_max))
-        file.write('\n min node count: ' + str(self.tree_depth_min))
-        file.write('\n')
-        file.write('\n genetic operator Reproduction: ' + str(self.evolve_repro))
-        file.write('\n genetic operator Point Mutation: ' + str(self.evolve_point))
-        file.write('\n genetic operator Branch Mutation: ' + str(self.evolve_branch))
-        file.write('\n genetic operator Crossover: ' + str(self.evolve_cross))
-        file.write('\n')
-        file.write('\n tournament size: ' + str(self.tourn_size))
-        file.write('\n population: ' + str(self.tree_pop_max))
-        file.write('\n number of generations: ' + str(self.gen_id))
-        file.write('\n\n')
-        file.close()
-
-    def write_paretofront(self):
-        """
-        Save all the pareto efficient candidates to file
-        """
-        file = open(self.path + 'paretofront.txt', 'w')
-
-        for key in self.pareto_parsimony_to_fitness:
-            value = self.pareto_parsimony_to_fitness[key]
-            tmp_hash = self.pareto_parsimony_to_hash[key]
-            algo = self.best_trees[tmp_hash]
-            file.write('\nParsimony: ' + str(key) + ' ' + str(value) + ' ' + str(algo))
-
-        file.close()
-
-    def data_tree_clean(self, tree):
-
-        """
-        This method aesthetically cleans the Tree array, removing redundant data.
-        TODO this is unnecessary (it actually is)
-        """
-
-        # tree[0][2:] = ''  # A little clean-up to make things look pretty :)
-        # tree[1][2:] = ''  # Ignore the man behind the curtain!
-        # tree[2][2:] = ''  # Yes, I am a bit OCD ... but you *know* you appreciate clean arrays.
-
-        return tree
-
-    def backup_save(self):
+    def data_pickle_save(self):
         """
         save all data every few rounds to restore them
-        - save the pareto front (TODO)
-        - save the last generation (TODO)
-        - Save important meta-data: current generation (TODO)
+        - save the pareto front (done)
+        - save the last generation (done)
+        - Save important meta-data: current generation (done)
         """
         run_data = {'gen_id': self.gen_id,
                     'parsimony_front_fitness': '',
@@ -865,9 +706,9 @@ class Base_GP(object):
                     'best_trees': self.best_trees,
                     'population_new': self.population_new
                     }
-        pickle.dump(run_data, open(self.path+'Gen-'+str(self.gen_id)+'-backup.p', 'wb'))
+        pickle.dump(run_data, open(self.path + 'Gen-' + str(self.gen_id) + '-backup.p', 'wb'))
 
-    def data_recover(self, samples_file, operators_file, origin_tree_file_path, paretofront_file):
+    def data_pickle_recover(self, samples_file, operators_file, origin_tree_file_path, paretofront_file):
 
         """
         Restarts a run 'midway' by mainly loading the already found pareto-front
@@ -910,11 +751,146 @@ class Base_GP(object):
 
         return
 
+    def data_save_population(self, population, key):
+
+        """
+        Save population_* to disk.
+
+        """
+
+        with open(self.filename[key], 'a', newline='') as csv_file:
+            target = csv.writer(csv_file, delimiter=',')
+            if self.gen_id != 1:
+                target.writerows([''])  # empty row before each generation
+            target.writerows([['Karoo GP by Kai Staats, improved by Simon Fehrer', 'Generation:', str(self.gen_id)]])
+
+            for tree in range(1, len(population)):
+                target.writerows([''])  # empty row before each Tree
+                for row in range(0, 14+1):  # increment through each row in the array Tree (+ row 0)
+                    target.writerows([population[tree][row]])
+
+        return
+
+    def data_save_conclusion(self):
+
+        """
+        write the performance of the gp to disc
+        """
+
+        file = open(self.path + 'results.txt', 'w')
+        file.write('Karoo GP')
+        file.write('\n launched: ' + str(self.datetime))
+        file.write('\n dataset: ' + str(self.dataset))
+        file.write('\n')
+
+        if len(self.origin_dominators) > 0:
+
+            fitness_best = 0
+            fittest_tree = 0
+
+            # revised method, re-evaluating all Trees from stored fitness score
+            # for tree_id in range(1, len(self.population_new)):
+            for tree_id in self.gene_pool:
+
+                fitness = float(self.population_new[tree_id][12][1])
+
+                if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
+                    if fitness >= fitness_best:  # find the Tree with maximum fitness score
+                        fitness_best = fitness
+                        fittest_tree = tree_id  # set best fitness Tree
+
+                elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
+                    if fitness_best == 0:
+                        fitness_best = fitness  # set the baseline first time through
+                    if fitness <= fitness_best:  # find the Tree with minimum fitness score
+                        fitness_best = fitness
+                        fittest_tree = tree_id  # set best fitness Tree
+
+                elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
+                    if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
+                        fitness_best = fitness
+                        fittest_tree = tree_id  # set best fitness Tree
+
+            # test the most fit Tree and write to the .txt log
+            algo_sym = self.tree_expr_sympify(self.population_new[int(fittest_tree)])  # generate the raw and sympified expression for the given Tree using SymPy
+            result = self.tf_eval(str(algo_sym), self.data_test, get_pred_labels=True)
+
+            algo_sym = self.tree_expr_sympify(self.origin_tree)
+            origin_fitness_test = self.tf_eval(str(algo_sym), self.data_test)['fitness']
+
+            file.write('\n\t Origin fitness score: {}'.format(origin_fitness_test))
+            file.write('\n\n Tree ' + str(fittest_tree) + ' is the most fit, with expression:')
+            file.write('\n\n ' + str(algo_sym))
+
+            if self.kernel == 'c':
+                file.write('\n\n Classification fitness score: {}'.format(result['fitness']))
+                file.write('\n\n Precision-Recall report:\n {}'.format(
+                    skm.classification_report(result['solution'], result['pred_labels'][0])))
+                file.write('\n Confusion matrix:\n {}'.format(
+                    skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
+
+            elif self.kernel == 'r':
+                MSE, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
+                file.write('\n\n Regression fitness score: {}'.format(fitness))
+                file.write('\n Mean Squared Error: {}'.format(MSE))
+
+            elif self.kernel == 'm':
+                file.write('\n\n Matching fitness score: {}'.format(result['fitness']))
+
+        else:
+            file.write('\n\n No solution was better than the origin... your species has gone extinct!')
+
+        file.write('\n\n')
+        file.close()
+
+        return
+
+    def data_save_config(self):
+        """
+        write the parameters to a file
+        """
+
+        file = open(self.path + 'config.txt', 'w')
+        file.write('Plagih GP')
+        file.write('\n launched: ' + str(self.datetime))
+        file.write('\n dataset: ' + str(self.dataset))
+        file.write('\n')
+        file.write('\n kernel: ' + str(self.kernel))
+        file.write('\n precision: ' + str(self.precision))
+        file.write('\n')
+        file.write('\n tree depth max: ' + str(self.tree_depth_max))
+        file.write('\n min node count: ' + str(self.tree_depth_min))
+        file.write('\n')
+        file.write('\n genetic operator Reproduction: ' + str(self.evolve_repro))
+        file.write('\n genetic operator Point Mutation: ' + str(self.evolve_point))
+        file.write('\n genetic operator Branch Mutation: ' + str(self.evolve_branch))
+        file.write('\n genetic operator Crossover: ' + str(self.evolve_cross))
+        file.write('\n')
+        file.write('\n tournament size: ' + str(self.tourn_size))
+        file.write('\n population: ' + str(self.tree_pop_max))
+        file.write('\n number of generations: ' + str(self.gen_id))
+        file.write('\n\n')
+        file.close()
+
+    def data_save_paretofront(self):
+        """
+        Save all the pareto efficient candidates to file
+        """
+        file = open(self.path + 'paretofront.txt', 'w')
+
+        for key in self.pareto_parsimony_to_fitness:
+            value = self.pareto_parsimony_to_fitness[key]
+            tmp_hash = self.pareto_parsimony_to_hash[key]
+            algo = self.best_trees[tmp_hash]
+            file.write('\nParsimony: ' + str(key) + ' ' + str(value) + ' ' + str(algo))
+
+        file.close()
+
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Construct the 1st Generation  |
+    #   Perform the 3 genetic prog. operations    |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def gen_first_create(self):
+    def gp_first_create(self):
         """
         Constructs the first generation
         - loads the origin-tree from file
@@ -935,7 +911,7 @@ class Base_GP(object):
 
             # vary this tree with branch mutation
             branch_nodes_list = self.tree_branch_get(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
-            tree = self.pop_mutate_branch_evolve(tree, branch_nodes_list)  # tree with new branch
+            tree = self.gp_evolve_subtree_create(tree, branch_nodes_list)  # tree with new branch
 
             # Fill the correct meta-data into the tree (and wipe the old fitness)
             tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
@@ -946,1148 +922,13 @@ class Base_GP(object):
 
         self.printpl('gg', '\n We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
 
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Construct the 1st Generation  |
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def pop_mutate_branch_evolve(self, chosen_tree, branch_nodes_list):
-
-        """
-        Given: Tree and a node list
-
-        Mutate a branch of one Tree and return it.
-        The 'grow' method is used, 'full' does not exist in my world.
-
-        returns: new tree
-        """
-
-        # 1. How far can we build down?
-        branch_top = int(branch_nodes_list[0])
-        branch_depth = self.pop_branch_depth_get(chosen_tree, branch_top, len(branch_nodes_list))  # sfeh solution to keep tree kind of small, dont forget the mode
-
-        # 2. Get the old-node's information
-        old_node_label = chosen_tree[TR_nlabel][branch_nodes_list[0]]  # <,        +,-,*,8,action0 ...
-        old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func,     term, ...
-        old_node_dtype = self.dtype_get_dtype4node(old_node_label, old_node_type)  # '2f', 'f2b', ...
-
-        # 3. check if we are on a too-low level to branch mutate...
-        if branch_depth < 0:  # this has never occured ... yet
-            self.printpl('e', 'In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
-            self.fx_karoo_pause()
-
-        elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
-            # 50:50 decision in function below if constant or variable
-            self.printpl('v', 'Ended in the lowest depth with old label', old_node_label)
-            chosen_tree[TR_nlabel][branch_top] = self.dtype_get_term4dtype(old_node_dtype)
-
-        # 4. We can now mutate the branch!
-        else:
-            # 5. 50:50 terminal or function
-            if np.random.choice(['func', 'term']) == 'term':  # mutate 'branch_top' to a terminal and delete all nodes beneath (no subsequent nodes are added to this branch)
-                # 5.1 We insert a terminal here
-                chosen_tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
-                term_type = self.dtype_get_dtype4node(old_node_label, old_node_type)
-                chosen_tree[TR_nlabel][branch_top] = self.dtype_get_term4dtype(term_type)  # replace with a correct label
-                chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-                chosen_tree = self.tree_node_arity_fix(chosen_tree)  # fix all node arities (term)
-                chosen_tree = self.fx_evolve_child_link_fix(chosen_tree)  # fix all child links (func)
-                chosen_tree = self.tree_node_renum(chosen_tree)  # renumber all 'NODE_ID's
-            else:
-                # 5.2 We insert a function here
-                # self.branch_new_tree_build('mutant', 'b', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
-                self.mutate_branch_new_tree_build('mutant', 'b', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
-                chosen_tree = self.evolve_branch_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
-            # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
-
-        return chosen_tree
-
-    def gen_prepare_parameters(self):
-        """
-        Sets the parameters for this generation
-        - reset population_new
-        - Lineary increase threshold for parsimony
-        """
-        self.printpl('g', 'Preparing to evolve Generation', self.gen_id, '...')
-        self.population_new = ['Karoo GP - Evolving Generation']  # initialise population_new to host the next generation
-
-        full_parsimony_factor = 2  # working with the maximum parsimony for at least some generations
-        gen_relation = min((full_parsimony_factor*self.gen_id) / self.gen_max, 1)
-        self.parsimony_min_max[0] = int(gen_relation * self.parsimony_min_max[1])
-
-        self.monitor_performance(mode='reset')
-
-        return
-
-    def pop_crossover_get_swap_branches(self, parent_a, parent_b, mode='replace_same_types'):
-        """
-        Returns two branches (node ids) that can be replaced and a converter (if needed)
-
-        - Try swapping based on dtype
-            - Choose a random node in tree a
-            - Has b an equal dtype-node?
-            -> yes: swap them, RETURN
-        - Try swapping with the other dtype
-            - Choose a random node in tree a of different dtype
-            - Has b an equal dtype-node?
-            -> yes: swap them, RETURN
-        - No matching dtypes. Force conversion.
-            - Choose a random node in tree a
-            - Choose a random node in tree b
-            - Convert parent_b's node to parent_a's node
-        -> only returns convert_a if we need to force a conversion
-        """
-        a_convert, b_convert = '', ''
-
-        # 1. swappable nodes exist?
-        if mode == 'replace_same_types':
-            a_node = self.tree_get_mutatable_node_id(parent_a, mode='crossover_no_root')
-            a_dtype = self.dtype_get_dtype4label(parent_a[TR_nlabel][a_node])
-            try:  # swapping with random dtype
-                b_node = self.tree_get_mutatable_node_id(parent_b, mode='crossover', same_dtype=a_dtype)
-            except:  # no matching dtypes. maybe the other one?
-                mode = 'try_dtype'  # better luck next time
-                # TODO directly force_conversion?
-
-        if mode == 'try_dtype':
-            if '2f' in a_dtype:
-                a_dtype = '2b'
-            elif '2b' in a_dtype:
-                a_dtype = '2f'
-            else:
-                raise self.printpl('e', 'dtype should be either 2f or 2b, it is', a_dtype)
-            try:  # swapping with other dtype
-                a_node = self.tree_get_mutatable_node_id(parent_a, mode='crossover_no_root', same_dtype=a_dtype)  # now
-                b_node = self.tree_get_mutatable_node_id(parent_b, mode='crossover', same_dtype=a_dtype)  # also a_dtype
-            except:  # no matching dtypes. maybe the other one?
-                mode = 'force_conversion'
-
-        if mode == 'force_conversion':
-            a_node = self.tree_get_mutatable_node_id(parent_a, mode='crossover_no_root')
-            b_node = self.tree_get_mutatable_node_id(parent_b, mode='crossover')
-            a_dtype = self.dtype_get_dtype4label(parent_a[TR_nlabel][a_node])
-            b_dtype = self.dtype_get_dtype4label(parent_b[TR_nlabel][b_node])
-            # check if the two labels are compartibel
-            if self.dtype_outcome_equi_test(a_dtype, b_dtype):
-                self.printpl('w', 'Crossover: Forcing conversion between', parent_a[TR_nlabel][a_node], parent_b[TR_nlabel][b_node])
-                a_convert = self.dtype_convert_dtypes_get_dummylabel(a_dtype, b_dtype)
-                # b_convert = self.sfeh_convert_dtypes_get_dummylabel(b_dtype, a_dtype)
-
-        # TODO add try-except-case with point mutation (same arity, swapping dtype)
-
-        a_branch = self.tree_branch_get(parent_a, node=a_node)
-        b_branch = self.tree_branch_get(parent_b, node=b_node)
-
-        return a_branch, b_branch, a_convert
-
-    def pop_crossover_insert(self, parent_x, branch_x, parent_y, branch_y, converter=0):
-
-        """
-        Perform a crossover between nodes that are crossoverable in terms of function txpes
-        get: parent a, b and their branches
-        return: puts branch_y into parent_x
-        """
-
-        y_root = int(branch_y[0])
-        x_root = int(branch_x[0])
-
-        if len(branch_y) == 1:  # if the branch from the incoming parent contains only one node (terminal)
-
-            parent_x[TR_nlabel][x_root] = parent_y[TR_nlabel][y_root]  # replace label with that of a particular node in 'branch_y'
-            parent_x[5][x_root] = 'term'  # replace type
-            parent_x[8][x_root] = 0  # set terminal arity
-
-            parent_x = np.delete(parent_x, branch_x[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-            parent_x = self.fx_evolve_child_link_fix(parent_x)  # fix all child links
-            parent_x = self.tree_node_renum(parent_x)  # renumber all 'NODE_ID's
-
-        else:  # we are working with a branch from 'parent' >= depth 1 (min 3 nodes)
-
-            self.tree = self.tree_branch_copy(parent_y, branch_y)  # generate stand-alone 'gp.tree' with properties of 'branch_y'
-            parent_x = self.evolve_branch_insert(parent_x, branch_x)  # insert new 'branch_x' at point of mutation 'branch_top' in tourn_winner 'offspring'
-            parent_x = self.evolve_tree_prune(parent_x, self.tree_depth_max)  # prune to the max Tree depth + adjustment
-
-        return parent_x
-
-    def mutate_branch_new_tree_build(self, TREE_ID, last_modification, old_node_type, tree_depth):
-
-        """
-        This method combines 4 sub-methods into a single method for ease of deployment. It is designed to executed
-        within a loop such that an entire population is built. However, it may also be run from the command line,
-        passing a single TREE_ID to the method.
-
-        if terminal: 2f
-        if func:    f2f
-        """
-
-        self.branch_tree_initialise(TREE_ID, tree_depth, last_modification)  # Create empty tree np-array
-        self.branch_root_build(old_node_type)  # insert the first node with either '_2b' or '_2f'
-        self.branch_function_build_full()  # build all the Function nodes
-        self.evolve_branch_terminal_build()  # build the Terminal nodes
-        # TODO set tree_depth_base in tree.
-        return  # each Tree is written to 'gp.tree'
-
-    def branch_tree_initialise(self, TREE_ID, tree_depth, last_modification):
-
-        """
-        Assign 15 (14+1) global variables to the array 'tree'.
-
-        Build the array 'tree' with 15 rows and initally, just 1 column of labels. This array will grow horizontally as
-        each new node is appended. The values of this array are stored as string characters, numbers forced to integers at
-        the point of execution.
-
-        Use of the debug (db) interface mode enables the user to watch the genetic operations as they work on the Trees.
-
-        Called by: fx_init_tree_build
-
-        Arguments required: TREE_ID, tree_type, tree_depth_base
-        """
-
-        self.pop_TREE_ID = TREE_ID  # pos 0: a unique identifier for each tree
-        self.pop_tree_type = last_modification  # pos 1: a global constant based upon the initial user setting
-        self.pop_tree_depth_base = tree_depth  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
-        self.pop_NODE_ID = 1  # pos 3: unique identifier for each node; this is the INDEX KEY to this array
-        self.pop_node_depth = 0  # pos 4: depth of each node when committed to the array
-        self.pop_node_type = ''  # pos 5: root, function, or terminal
-        self.pop_node_label = ''  # pos TR_nlabel: operator [+, -, *, ...] or terminal [a, b, c, ...]
-        self.pop_node_parent = ''  # pos 7: parent node
-        self.pop_node_arity = ''  # pos 8: number of nodes attached to each non-terminal node
-        self.pop_node_c1 = ''  # pos 9: child node 1
-        self.pop_node_c2 = ''  # pos 10: child node 2
-        self.pop_node_c3 = ''  # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
-        self.pop_fitness = ''  # pos 12: fitness score following Tree evaluation
-        self.pop_node_modify = ''  # pos 13: dummy value whether this node is allowed to be modified
-        self.pop_parsimony = ''  # pos 14: separate line for the latest distance to origin
-
-        self.tree = np.array(
-            [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'], ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'],
-             ['fitness'], ['node_modify'], ['parsimony']])
-
-        return
-
-    def branch_root_build(self, old_node_type):
-
-        """
-        Build a root node for a branch insert.
-        """
-        # eg b2f2f
-        self.evolve_function_select(old_node_type)  # select the operator for root
-
-        if self.pop_node_arity == 1:  # 1 child
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = ''
-            self.pop_node_c3 = ''
-
-        elif self.pop_node_arity == 2:  # 2 children
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = 3
-            self.pop_node_c3 = ''
-
-        elif self.pop_node_arity == 3:  # 3 children
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = 3
-            self.pop_node_c3 = 4
-
-        else:
-            self.printpl('p', '\n\t\033[31m ERROR! In branch_root_build: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
-
-        self.pop_node_type = 'func'  # used to be r00t, but what is it good for?
-
-        self.branch_node_commit()
-
-        return
-
-        ### Function Nodes ###
-
-    def branch_function_build_full(self):
-
-        """
-        Build the branch full depth
-        Builds
-        """
-
-        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
-
-            self.pop_node_depth = i  # increment 'node_depth'
-            parent_arity_sum = 0
-            prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
-            prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
-
-            # parent_arity_sum = amount of nodes (that have to be on this level)
-            for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
-                    parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
-
-            # Set for every "free space" a function node (func)
-            for j in range(1, len(self.tree[3])):  # increment through all nodes
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
-                    if self.tree[TR_nlabel][j] == 'Ifte':
-                        prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                    else:
-                        for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
-                            self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
-                            parent_func_dtype = function_dtypes_dict[self.tree[TR_nlabel][self.pop_node_parent]]  # find parents node
-                            func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
-                            prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
-                            prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
-
-        return
-
-    def branch_function_build_grow(self):
-
-        """
-        Build the branch full depth
-        Builds
-        """
-
-        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
-
-            self.pop_node_depth = i  # increment 'node_depth'
-            parent_arity_sum = 0
-            prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
-            prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
-
-            # parent_arity_sum = amount of nodes (that have to be on this level)
-            for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
-                    parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
-
-            # Set for every "free space" a function node (func)
-            for j in range(1, len(self.tree[3])):  # increment through all nodes
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
-                    if self.tree[TR_nlabel][j] == 'Ifte':
-                        prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                        prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
-                        prior_siblings = prior_siblings + 1
-                    else:
-                        for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
-                            self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
-                            parent_func_dtype = function_dtypes_dict[self.tree[TR_nlabel][self.pop_node_parent]]  # find parents node
-                            func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
-                            prior_sibling_arity = self.branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
-                            prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
-
-        return
-
-    def branch_node_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, node_dtype):
-
-        """
-        (parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')
-        Generate a single Function node for the initial population.
-
-        """
-
-        if np.random.choice(['func', 'term']) == 'func':  # randomly selected as Function
-            self.evolve_function_select(node_dtype)  # retrieve a function, input-reverse the parent-function (f2b -> we need 2f input)
-            self.branch_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
-        else:
-            self.branch_terminal_select(node_dtype) #  was here
-            self.pop_node_c1 = ''
-            self.pop_node_c2 = ''
-            self.pop_node_c3 = ''
-
-        self.branch_node_commit()  # commit new node to array
-        prior_sibling_arity = prior_sibling_arity + self.pop_node_arity  # sum the arity of prior siblings
-
-        return prior_sibling_arity
-
-    def tree_modifyable_nodes_set(self, chosen_tree):
-        """
-        Sets all the origin core nodes back to non-modifyable
-        """
-        # Set all nodes to be modifiable (=1)
-        for i, tmp in enumerate(chosen_tree[13][1:]):
-            chosen_tree[13][i + 1] = 1
-
-        # Find no-modifyables in Origin
-        non_modifiable_nodes = []
-        if self.origin_tree[13][1] == '0':  # check is modifiable nodes are specified
-            non_modifiable_nodes.extend(self.tree_nomodifyable_nodes_get(1, chosen_tree, 1))
-
-        for non_modifiable in non_modifiable_nodes:
-            chosen_tree[13][non_modifiable] = 0
-
-        return chosen_tree
-
-    def tree_nomodifyable_nodes_get(self, origin_node, chosen_tree, chosen_node):
-        """
-        Returns a list of nodes that are not supposed to be modified
-        """
-
-        if self.origin_tree[13][origin_node] == '0':
-            non_modifiables = []
-            non_modifiables.append(int(chosen_tree[3][chosen_node]))
-            for child in [9, 10, 11]:
-                if self.origin_tree[child][origin_node] != '':
-                    next_origin_node = int(self.origin_tree[child][origin_node])
-                    next_chosen_node = int(chosen_tree[child][chosen_node])
-                    tmp = self.tree_nomodifyable_nodes_get(next_origin_node, chosen_tree, next_chosen_node)
-                    if tmp is not None:
-                        non_modifiables.extend(tmp)
-            return non_modifiables
-        else:
-            return
-
-    def evolve_function_select(self, func_dtype):
-
-        """
-        Returns a function with the same outcome
-
-        """
-
-        self.pop_node_type = 'func'
-        new_function = self.dtype_get_func4any(func_dtype)
-        self.pop_node_label = new_function[0]
-        self.pop_node_arity = int(new_function[1])
-        self.pop_node_modify = 1
-        # print('SFEHs:', func_dtype, self.pop_node_label)
-
-        return
-
-        ### Terminal Nodes ###
-
-        # Idea: values are recognized and adjusted (+0.3, e.g.)?
-        # Idea: insert numbers as 0-arity functions? -> naah
-
-    def evolve_branch_terminal_build(self):
-
-        """
-        Build the Terminal nodes for the tree.
-
-        """
-
-        self.pop_node_depth = self.pop_tree_depth_base  # set the final node_depth (same as 'gp.pop_node_depth' + 1)
-
-        for j in range(1, len(self.tree[3])):  # go through all nodes
-            if int(self.tree[4][j]) == self.pop_node_depth - 1:  # this node is a parent
-                for k in range(1, (int(self.tree[8][j]) + 1)):  # increment through each degree of arity for each parent node
-                    self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
-                    self.branch_terminal_gen(function_dtypes_dict[self.tree[TR_nlabel][j]])  # ... generate a Terminal node
-
-        return
-
-    def branch_terminal_gen(self, terminal_dtype):
-
-        """
-        Generate a single Terminal node.
-
-        """
-
-        self.branch_terminal_select(terminal_dtype)
-        self.pop_node_c1 = ''
-        self.pop_node_c2 = ''
-        self.pop_node_c3 = ''
-
-        self.branch_node_commit()  # commit new node to array
-
-        return
-
-    def branch_terminal_select(self, node_dtype):
-
-        """
-        Define a single Terminal (variable extracted from the top row of the associated TRAINING data)
-
-        """
-
-        self.pop_node_type = 'term'
-        self.pop_node_label = self.dtype_get_term4dtype(node_dtype)  # get a terminal
-        self.pop_node_arity = 0
-
-        return
-
-    def branch_child_link(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
-
-        """
-        Link each parent node to its children in the intial population.
-
-        Called by: fx_init_function_gen
-
-        Arguments required: parent_arity_sum, prior_sibling_arity, prior_siblings
-        """
-
-        for n in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-            if int(self.tree[4][n]) == self.pop_node_depth - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
-                c_buffer = self.pop_NODE_ID + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
-
-                if self.pop_node_arity == 0:  # terminal in a Grow Tree
-                    self.pop_node_c1 = ''
-                    self.pop_node_c2 = ''
-                    self.pop_node_c3 = ''
-
-                elif self.pop_node_arity == 1:  # 1 child
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = ''
-                    self.pop_node_c3 = ''
-
-                elif self.pop_node_arity == 2:  # 2 children
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = c_buffer + 1
-                    self.pop_node_c3 = ''
-
-                elif self.pop_node_arity == 3:  # 3 children
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = c_buffer + 1
-                    self.pop_node_c3 = c_buffer + 2
-
-                else:
-                    self.printpl('e', '\n\t\033[31m ERROR! In fx_init_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
-                    self.fx_karoo_pause()  # consider special instructions for this (pause)
-
-        return
-
-    def branch_node_commit(self):
-
-        '''
-        Commit the values of a new node (root, function, or terminal) to the array 'tree'.
-
-        Called by: fx_init_root_build, fx_init_function_gen, fx_init_terminal_gen
-
-        Arguments required: none
-        '''
-
-        self.tree = np.append(self.tree, [[self.pop_TREE_ID], [self.pop_tree_type], [self.pop_tree_depth_base], [self.pop_NODE_ID], [self.pop_node_depth], [self.pop_node_type], [self.pop_node_label],
-                                          [self.pop_node_parent], [self.pop_node_arity], [self.pop_node_c1], [self.pop_node_c2], [self.pop_node_c3], [self.pop_fitness], [1], [self.pop_parsimony]], 1)
-
-        self.pop_NODE_ID = self.pop_NODE_ID + 1
-
-        return
-
-    def tree_get_constant4type(self, term_type='', mode='float-1to1', range=[]):
-        """
-        Get
-        """
-        if range:
-            
-            return np.random.uniform(range[0], range[1])
-
-        if term_type == 'bool':
-            return np.random.choice([True, False])
-        elif term_type == 'float':
-            if mode == 'float-1to1':
-                return np.random.uniform(-1, 1)
-            elif mode == 'intTotal_10':
-                return np.random.random_integers(-10, 10)
-            elif mode == 'random_optimised':
-                return np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
-                                         5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
-            else:
-                # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
-                self.printpl('e', 'You did not take care of the kind of numbers you want to have')
-                raise
-        elif term_type == 'int':
-            # TODO give more opportunities, similar to random floats
-            return np.random.random_integers(-10, 10)
-        else:
-            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return value similar to terminals.')
-            self.printpl('e', 'This term type should not occur, I guess', term_type)
-            term_type = np.random.choice(self.terminal_types)
-            return self.tree_get_constant4type(term_type=term_type)
-
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Evaluate a Tree                |
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def tree_expr_sympify(self, tree):
-
-        """
-        Gets the sympifyed expression
-        Changes:
-        -> algo_sym
-        -------
-        -> self.monitor_failed_sympys_amount
-        """
-
-        self.algo_raw = self.tree_expr_raw(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
-        try:  # plagih: try block needed. simpify can not handle if then else.
-            x = plagih_sympify(self.algo_raw)
-            strx = str(x)
-
-            # if 'zoo' in strx or 'nan' in strx:
-            #     self.monitor_failed_sympys_amount += 1
-
-            if 'zoo' in strx:
-                x = re.sub('zoo', '10', strx)  # TODO how to handle zoo?
-
-            if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
-                self.printpl('w', 'We had a "nan"')
-                # algo_sym = sympy_dummy  # "nan" workaround
-                return sympy_dummy
-            else:
-                # Reduction worked
-                # algo_sym = x
-                return x
-        except:
-            self.printpl('e', 'In sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
-            # algo_sym = sympy_dummy
-            self.printpl('w', 'We had a "nan" which lead to an Exception')
-            # todo.
-            return sympy_dummy
-
-    def tree_expr_raw(self, tree, node_id):
-
-        """
-        Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
-
-        This method is called once per Tree, but may be called at any time to prepare an expression for any full or
-        partial (branch) Tree contained in 'population'. Pass the starting node for recursion via the local variable
-        'node_id' where the local variable 'tree' is a copy of the Tree you desire to evaluate.
-
-        """
-
-        node_id = int(node_id)
-
-        if tree[8, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '(' + tree[TR_nlabel, node_id] + ')'  # 'node_label' (function or terminal)
-        else:
-            if tree[8, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-                return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TR_nlabel, node_id] + ')'
-
-            elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-                # This if case is for 2-ary ops that can not be inline. like Min(a, b)
-                if tree[TR_nlabel, node_id] not in inline_functions:  # in non_inline_functions:
-                    return '(' + tree[TR_nlabel, node_id] + '(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + '))'
-                else:
-                    return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TR_nlabel, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
-
-            # if then else
-            elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-                return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
-
-    def tree_node_get_childlist(self, tree, node_id):
-
-        """
-        Evaluate all or part of a Tree and return a list of all 'NODE_ID's.
-
-        This method generates a list of all 'NODE_ID's from the given Node and below. It is used primarily to generate
-        'branch' for the multi-generational mutation of Trees.
-
-        Pass the starting node for recursion via the local variable 'node_id' where the local variable 'tree' is a copy
-        of the Tree you desire to evaluate.
-
-        """
-
-        node_id = int(node_id)
-
-        if tree[8, node_id] == '0':  # arity of 0 for the pattern '[NODE_ID]'
-            return tree[3, node_id]  # 'NODE_ID'
-
-        else:
-            if tree[8, node_id] == '1':  # arity of 1 for the pattern '[NODE_ID], [NODE_ID]'
-                return tree[3, node_id] + ', '\
-                       + self.tree_node_get_childlist(tree, tree[9, node_id])
-
-            elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[NODE_ID], [NODE_ID], [NODE_ID]'
-                return tree[3, node_id] + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[9, node_id]) + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[10, node_id])
-
-            elif tree[8, node_id] == '3':  # arity of 3 for the pattern '[NODE_ID], [NODE_ID], [NODE_ID], [NODE_ID]'
-                return tree[3, node_id] + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[9, node_id]) + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[10, node_id]) + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[11, node_id])
-
-    def gen_finalize(self):
-
-        """
-        From raw population_new to new population_genepool
-        - Gene_pool with tree's parsimony (and store info in the tree)
-        -
-
-        """
-
-        self.pop_enum_trees()           # pop +tree_id
-        self.pop_genepool_parsimony()   # gene +parsimony, self.gene_pool: [1,2,6,8,14,20]
-        self.pop_genepool_fitness()     # gene +fitness
-        self.pop_pareto_front()
-
-        # self.population_genepool = self.pop_copy(self.population_new, ['Karoo GP Generation ' + str(self.gen_id)])
-        self.population_genepool = self.pop_copy_genepool(self.population_new)
-        self.gen_archive(self.population_new, 'new')
-        self.monitor_performance(mode='update')
-
-        return
-
-    def pop_pareto_front(self):
-        """
-        Builds up the pareto front
-        - iterate over all parsimonys
-            - always check for the best of each parsimony
-        """
-        for candidate in self.gene_pool:
-            tree = self.population_new[candidate]
-            algo_sym_str = str(self.tree_expr_sympify(tree))
-            expr_hash = hash(algo_sym_str)
-
-            tmp_parsim = tree[TR_parsimony][1]
-            tmp_fitness = tree[TR_fitness][1]
-
-            if tmp_parsim in self.pareto_parsimony_to_fitness:
-                cmp_fitness = self.pareto_parsimony_to_fitness[tmp_parsim]
-                if (self.fitness_type == 'max' and tmp_fitness > cmp_fitness) or \
-                        (self.fitness_type == 'min' and tmp_fitness < cmp_fitness):
-
-                    self.printpl('v', 'Found new tree with parsimony', tmp_parsim, 'and fitness', tmp_fitness, 'which dominated old fitness', )
-                    # delete old tree
-                    old_tree_hash = self.pareto_parsimony_to_hash[tmp_parsim]
-                    del self.best_trees[old_tree_hash]
-
-                    # update everything to the new tree
-                    self.best_trees.update({expr_hash: algo_sym_str})
-                    self.pareto_parsimony_to_fitness[tmp_parsim] = tmp_fitness
-                    self.pareto_parsimony_to_hash[tmp_parsim] = expr_hash
-
-                    # sfeh add the best trees to the olymp?
-                else:
-                    return  # not a special tree
-            else:
-                self.best_trees.update({expr_hash: algo_sym_str})
-                self.pareto_parsimony_to_fitness.update({tmp_parsim: tmp_fitness})
-                self.pareto_parsimony_to_hash.update({tmp_parsim: expr_hash})
-
-        return
-
-    def pop_enum_trees(self):
-        """
-        outsourced enumeration of trees in a population
-        """
-        for tree_id in range(1, len(self.population_new)):  #
-            self.population_new[tree_id][0][1] = tree_id
-
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Train and Test a Tree         |
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def pop_genepool_fitness(self):
-        """
-        Compute the fitness for every tree
-        """
-
-        for tree_id in self.gene_pool:
-            algo_sym = self.tree_expr_sympify(self.population_new[tree_id])
-            fitness_train = self.tree_fitness_train(algo_sym)
-            self.tree_store_fitness(self.population_new[tree_id], fitness_train)  # store Fitness and parsimony with each Tree
-
-            if self.fitness_type == 'max':
-                if fitness_train > self.origin_fitness_train:
-                    self.origin_dominators.update({tree_id: algo_sym})
-            else:
-                if fitness_train < self.origin_fitness_train:
-                    self.origin_dominators.update({tree_id: algo_sym})
-
-        self.printpl('p', '\n\033[36m ', len(list(self.origin_dominators.keys())), 'trees\033[1m', np.sort(list(self.origin_dominators.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
-
-        return
-
-    def compare_genepool_fitness(self, tree_id, fitness, fitness_best):
-        """
-        obsolete?
-        """
-        algo_sym = self.tree_expr_sympify(self.population_new[tree_id])
-
-        ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
-        if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
-            if fitness >= fitness_best:  # find the Tree with maximum fitness score
-                fitness_best = fitness  # set best fitness score
-                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness >= prior
-
-        elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
-            if fitness_best == 0:
-                fitness_best = fitness  # set the baseline first time through
-            if fitness <= fitness_best:  # find the Tree with minimum fitness score
-                fitness_best = fitness  # set best fitness score
-                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness <= prior
-
-        elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
-            if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
-                fitness_best = fitness  # set best fitness score
-                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if all rows match
-
-        else:
-            raise self.printpl('e', 'No proper kernel was selected', self.kernel)
-        return fitness_best
-
-    def treedist_rel_ari(self, tree):
-        """
-        This distance penalizes non-original functions with its arity
-        - ignore node[0] [description]
-        - look within the subtree if the original function is on origin spot
-        """
-
-        # If the new tree is actually less complex than the original one, just return 1
-        if len(tree[TR_nlabel]) < len(self.origin_tree[TR_nlabel]):
-            return 0
-
-        distance = 0
-
-        # iterate over every node in the new tree
-        for i, arity in enumerate(tree[8]):
-            if i == 0:  # skip node 0. the description
-                continue
-            elif i < len(self.origin_tree[TR_nlabel]):  # Make sure we stay within the tree index. <= does not work
-                if self.origin_tree[TR_nlabel][i] != tree[TR_nlabel][i]:  # is it different from the origin?
-                    distance = distance + int(arity)  # add the nodes arity. double-punishes large trees
-            else:
-                distance = distance + int(arity)
-
-        return distance
-
-    def treedist_num_changes(self, tree):
-        """
-        The 'coolest' distance, where
-        - the amount of changes that have to be applied to the origin to equality are counted
-        """
-        # TODO distanzfunktion für Anzahl der Änderungen schreiben
-        og_expr = self.tree_expr_sympify(self.origin_tree)
-        changed_expr = self.tree_expr_sympify()
-        return
-
-
-    def tree_parsimony(self, tree, parsimony_distance='rel_ari_1'):
-        """
-        parsimony_distance: compute the chosen distance by the user. Default is best historic distance
-
-        """
-        if parsimony_distance == 'total_count_nodes':
-            return int(tree[3][-1:])  # returns the tree size
-        elif parsimony_distance == 'total_tree_depth':
-            return tree[4][1]     # returns the tree size
-        elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-            return len(str(self.algo_raw))
-        elif parsimony_distance == 'total_simplified':
-            algo_sym = self.tree_expr_sympify(tree)
-            return count_ops(algo_sym)
-        elif parsimony_distance == 'rel_ari_1':  # Does this work?
-            return self.treedist_rel_ari(tree)
-        elif parsimony_distance == 'print':   # Please inser all of the measurements with example
-            self.printpl('i', 'No distance chosen. Available parsimony measurements:')
-            self.printpl('i', 'pcount_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
-            self.printpl('i', 'tree_depth' + '     : Only use the depth of the tree as measurement.        ' + str(tree[4][1]))
-            self.printpl('i', 'karoo_original' + ' : Karoo`s OG parsimony. Do not use it with PLAGIH.      ' + str(len(str(self.algo_raw))))
-            self.printpl('i', 'Choose wisely. More to come soon.')
-            return
-        else:
-            self.printpl('i', 'Parsimony distance not specified! Use default.')
-            self.tree_parsimony(tree)
-
-    def pop_tree_exists(self):
-        return
-
-    def tree_fitness_train(self, algo_sym):
-        """
-        returns the fitness of a tree
-        - kick out dummy
-        - check, if fitness is in hash table
-        - otherwise, compute with tensorflow
-        """
-
-        # If algo_sym is '1' - aka an error occured in sympy
-        if algo_sym == sympy_dummy:
-            return self.fitness_bad_dummy
-
-        # 1. Try to get the fitness from hashtable
-        expr_sym_str = str(algo_sym)
-        expr_hash = hash(expr_sym_str)
-        if expr_hash in self.hashtable_fitness:
-            return self.hashtable_fitness[expr_hash]
-
-        # 2. calculate the fitness and store it in the hash table
-        fitness = self.expr_fitness_eval(expr_sym_str, self.data_train)['fitness']
-        self.hashtable_fitness[expr_hash] = fitness
-        return fitness
-
-    def expr_fitness_eval(self, expr, data, get_pred_labels=False):
-
-        """
-        computes gp-tree results and fitness scores.
-        - Computes tree expression using TensorFlow (TF)
-        - parsing input string 'expression' and converting it into a TF operation graph
-        - processing tf graph in an isolated TF session (results and corresponding fitness)
-
-            'self.tf_device' - controls which device will be used for computations (CPU or GPU).
-            'self.tf_device_log' - controls device placement logging (debug only).
-
-        Args:
-            'expr' - a string expression to be computed on the data. Variable -> 'self.terminals'
-            'data' - an 'n by m' matrix of the data points containing n observations like 'self.terminals'.
-            'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be
-            extracted from the evolved results.
-
-        Returns:
-            A dict mapping keys to the following outputs:
-                'result'            - array of the results of applying given expression to the data
-                'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
-                'solution'          - array of the solution values extracted from the data (variable 's' in the dataset)
-                'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
-                'fitness'           - aggregated scalar fitness score
-
-        """
-
-        # Initialize TensorFlow session
-        tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
-        config = tf.compat.v1.ConfigProto(log_device_placement=self.tf_device_log, allow_soft_placement=True)
-        config.gpu_options.allow_growth = True
-
-        with tf.compat.v1.Session(config=config) as sess:
-            with sess.graph.device(self.tf_device):
-
-                # 1. data (observations, actions) to tensors
-                tensors = {}
-
-                num_terminals = len(self.terminals)
-                num_actions = len(self.actions)
-
-                for i in range(num_terminals):
-                    var = self.terminals[i]
-                    if '2f' in self.dtype_get_dtype4node(var, 'term'):
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
-                    else:  # '2b'
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
-
-                for i in range(num_actions):
-                    var = self.actions[i]
-                    action_dtype = self.dtype_get_dtype4node(var, 'term')
-                    if '2f' in action_dtype:
-                        tensors[var] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data into vectors
-                    elif '2b' in action_dtype:  # '2b'
-                        self.printpl('t', 'Currently no kernel available for boolean fitness')
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
-                    else:
-                        self.printpl('e', 'Kernel not known for:', var, 'which is', action_dtype)
-
-                # 2- Transform string expression into TF operation graph
-                tf_result = self.fitness_expr_parse(expr, tensors)
-                pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
-
-                # TODO currently does only support one label
-                solution = tensors['action0']  # solution value is assumed to be stored in this terminal
-                # 3- Add fitness computation into TF graph
-                if self.kernel == 'c':  # CLASSIFY kernel
-
-                    """
-                    Creates element-wise fitness computation TensorFlow (TF) sub-graph for CLASSIFY kernel.
-                    - tree-label vs. true label
-                    This multiclass classifer compares each row of a given Tree to the known solution, comparing predicted labels 
-                    generated by Karoo GP against the true class labels. This method is able to work with any number of class 
-                    labels, from 2 to n. The left-most bin includes -inf. The right-most bin includes +inf. Those inbetween are 
-                    by default confined to the spacing of 1.0 each, as defined by:
-                    
-                        (solution - 1) < result <= solution
-                    
-                    The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
-                    origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
-                    side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
-                    negative and positive result.
-                    """
-
-                    if len(self.actions) > 1:
-                        self.printpl('e', 'TODO multidimensional input. To be done, there is no solution yet.')
-
-                    if get_pred_labels:
-                        pred_labels = tf.map_fn(self.fitness_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
-
-                    skew = (self.class_labels / 2) - 1
-
-                    rule11 = tf.equal(solution, 0)
-                    rule12 = tf.less_equal(tf_result, 0 - skew)
-                    rule13 = tf.logical_and(rule11, rule12)
-
-                    rule21 = tf.equal(solution, self.class_labels - 1)
-                    rule22 = tf.greater(tf_result, solution - 1 - skew)
-                    rule23 = tf.logical_and(rule21, rule22)
-
-                    rule31 = tf.less(solution - 1 - skew, tf_result)
-                    rule32 = tf.less_equal(tf_result, solution - skew)
-                    rule33 = tf.logical_and(rule31, rule32)
-
-                    pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
-
-                elif self.kernel == 'r':  # REGRESSION kernel
-
-                    """
-                    A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
-                    that you raise the minimum node count to keep it from converging on the value of '1'. Consider writing or 
-                    integrating a more sophisticated kernel.
-                    """
-
-                    pairwise_fitness = tf.abs(solution - tf_result)
-
-                elif self.kernel == 'm':  # MATCH kernel
-
-                    """
-                    This is used for demonstration purposes only.
-                    """
-
-                    # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-                    RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float value lies within a range of values
-                    pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
-
-                # elif self.kernel == '[other]': # use others as a template
-
-                else:
-                    raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
-
-                fitness = tf.reduce_sum(pairwise_fitness)
-
-                # Process TF graph and collect the results
-                tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
-                # print('Result:', tf_result, 'Fitness:', fitness)
-
-                # maybe this is better?
-                relative_fitness = fitness / len(data)
-
-        return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
-                'pairwise_fitness': pairwise_fitness, 'old_fitness': float(fitness)}
-
-    def fitness_expr_parse(self, expr, tensors):
-
-        """
-        Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
-
-        """
-        # print('Current expr:', expr)  # importantprint
-        tree = ast.parse(expr, mode='eval').body
-
-        return self.fitness_node_parse(tree, tensors)
-
-    def fx_fitness_chain_bool(self, values, operation, tensors):
-
-        """
-        Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
-
-        """
-
-        x = tf.dtypes.cast(self.fitness_node_parse(values[0], tensors), tf.bool)
-        if len(values) > 1:
-            return operation(x, self.fx_fitness_chain_bool(values[1:], operation, tensors))
-        else:
-            return x
-
-    def fx_fitness_chain_compare(self, comparators, ops, tensors):
-
-        """
-        Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
-
-        Called by: fitness_node_parse
-
-        Arguments required: comparators, ops, tensors
-        """
-
-        x = self.fitness_node_parse(comparators[0], tensors)
-        y = self.fitness_node_parse(comparators[1], tensors)
-
-        if len(comparators) > 2:
-            return tf.logical_and(operators[type(ops[0])](x, y), self.fx_fitness_chain_compare(comparators[1:], ops[1:], tensors))
-        else:
-            return operators[type(ops[0])](x, y)
-        # sfeh idea: note: we have to convert all values to the action space if not discrete
-
-    def fitness_node_parse(self, node, tensors):
-
-        """
-        Recursively transforms parsed expression tree into TensorFlow (TF) graph.
-
-        """
-
-        if isinstance(node, ast.Name):  # <tensor_name>
-            return tensors[node.id]
-
-        elif isinstance(node, ast.Num):  # <number>
-            shape = tensors[list(tensors.keys())[0]].get_shape()
-            return tf.constant(node.n, shape=shape, dtype=tf.float32)
-
-        elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
-            return operators[type(node.op)](self.fitness_node_parse(node.left, tensors), self.fitness_node_parse(node.right, tensors))
-
-        elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-            return operators[type(node.op)](self.fitness_node_parse(node.operand, tensors))
-
-        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
-            if node.func.id == 'Ifte':
-                return operators[node.func.id](
-                        tf.dtypes.cast(self.fitness_node_parse(node.args[0], tensors), tf.bool),
-                        self.fitness_node_parse(node.args[1], tensors),
-                        self.fitness_node_parse(node.args[2], tensors))
-
-            if node.func.id in non_inline_multielem_functions:  # Min, Max are now Mini and Maxi. These only accept two inputs.
-                self.printpl('e', [self.fitness_node_parse(arg, tensors) for arg in node.args])
-                return operators[node.func.id]([self.fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
-
-            if node.func.id == 'Ftob':
-                self.printpl('i', 'float was converted to bool in tensorflow')
-                return tf.dtypes.cast(*[self.fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.bool)
-            elif node.func.id == 'Btof':
-                return tf.dtypes.cast(*[self.fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.float32)
-
-            return operators[node.func.id](*[self.fitness_node_parse(arg, tensors) for arg in node.args])
-
-        elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-            return self.fx_fitness_chain_bool(node.values, operators[type(node.op)], tensors)
-
-        elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-            return self.fx_fitness_chain_compare([node.left] + node.comparators, node.ops, tensors)
-
-        elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-            if type(node.value) is not type(True):
-                self.printpl('e', 'This True/False name constant is something else', node.value)
-                raise
-            try:
-                return tf.constant(node.value)
-            except:
-                self.printpl('e', 'Oh no this was not True or False')
-                raise
-        else:
-            raise TypeError(node)
-
-    def fitness_labels_map(self, result):
-
-        """
-        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
-        the quantity of true class labels provided in the data .csv. Outputs an array of tuples containing the predicted
-        labels based upon the result and corresponding boolean condition triggered.
-
-        For comparison, the original (pre-TensorFlow) cod follows:
-
-            skew = (self.class_labels / 2) - 1 # '-1' keeps a binary classification splitting over the origin
-            if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
-            elif solution == self.class_labels - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
-            elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
-            else: fitness = 0 # no class match
-
-        Called by: fx_fitness_eval
-
-        Arguments required: result
-        """
-
-        skew = (self.class_labels / 2) - 1
-        label_rules = {self.class_labels - 1: (
-            tf.constant(self.class_labels - 1), tf.constant(' > {}'.format(self.class_labels - 2 - skew)))}
-
-        for class_label in range(self.class_labels - 2, 0, -1):
-            cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
-            label_rules[class_label] = tf.cond(cond, lambda: (
-                tf.constant(class_label), tf.constant(' <= {}'.format(class_label - skew))),
-                                               lambda: label_rules[class_label + 1])
-
-        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(' <= {}'.format(0 - skew))),
-                             lambda: label_rules[1])
-
-        return pred_label
-
-    def pop_selection_tournament(self, tourn_size):
+    def gp_selection_tournament(self, tourn_size):
 
         """
         gp-selection. takes a number of trees (usually 3) and returns the best one (winner)
-        Needs:
-            - population a
-            - genepool a
+        Uses:
+            self.population a
+            self.genepool a
         """
 
         tourn_test = 0
@@ -2153,14 +994,16 @@ class Base_GP(object):
                 else:
                     self.printpl('gg', 'fitness', self.population_genepool[tree_id])
                     raise print('\n\033[31m pop_selection_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
-
-        tourn_winner = np.copy(self.population_genepool[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
-
-        self.printpl('ii', '\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
+                if tourn_lead:
+                    tourn_winner = np.copy(self.population_genepool[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
+                    self.printpl('ii', '\n\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[0][1], '\033[0;0m')
+                else:
+                    self.printpl('e', 'This line has to be here to stop pycharm from finding a warning in the next line')
+                    raise
 
         return tourn_winner
 
-    def pop_genepool_parsimony(self):
+    def gp_genepool_parsimony(self):
 
         """
         Create the gene pool
@@ -2205,88 +1048,7 @@ class Base_GP(object):
 
         return
 
-    def fitness_olymp(self):
-        """
-        The olymp is where the godlike contestants reside.
-        In each generation, the olymp searches for new god contestants
-        """
-        self.printpl('t', 'TODO Olymp for candidates')
-        return
-
-    def fx_fitness_test(self, result):
-
-        if self.kernel == 'c':
-            """
-            Print the Precision-Recall and Confusion Matrix for a CLASSIFICATION run against the test data.
-
-            From scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
-                Precision (P) = true_pos / true_pos + false_pos
-                Recall (R) = true_pos / true_pos + false_neg
-                harmonic mean of Precision and Recall (F1) = 2(P x R) / (P + R)
-
-            From scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
-                y_pred = result, the predicted labels generated by Karoo GP
-                y_true = solution, the true labels associated with the data
-
-            Called by: fx_karoo_pause
-
-            Arguments required: result
-            """
-            for i in range(len(result['result'])):
-                print(
-                    '\t\033[36m Data row {} predicts class:\033[1m {} ({} True)\033[0;0m\033[36m as {:.2f}{}\033[0;0m'.format(
-                        i, int(result['pred_labels'][0][i]), int(result['solution'][i]), result['result'][i],
-                        result['pred_labels'][1][i]))
-
-            print('\n Fitness score: {}'.format(result['fitness']))
-            print('\n Precision-Recall report:\n', skm.classification_report(result['solution'], result['pred_labels'][0]))
-            print(' Confusion matrix:\n', skm.confusion_matrix(result['solution'], result['pred_labels'][0]))
-
-        elif self.kernel == 'r':
-            """
-            Print the Fitness score and Mean Squared Error for a REGRESSION run against the test data.
-
-            Called by: fx_karoo_pause
-
-            Arguments required: result
-
-            """
-
-            for i in range(len(result['result'])):
-                print('\t\033[36m Data row {} predicts value:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.
-                      format(i, result['result'][i], result['solution'][i]))
-
-            MSE, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
-
-            print('\n\t Origin fitness score: {}'.format(self.origin_fitness_train))
-            print('\n\t Regression fitness score: {}'.format(fitness))
-            print('\t Mean Squared Error: {}'.format(MSE))
-
-            return
-
-        elif self.kernel == 'm':
-
-            """
-            Print the accuracy for a MATCH kernel run against the test data.
-
-            Arguments required: result
-            """
-
-            for i in range(len(result['result'])):
-                self.printpl('vv', '\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i, result['result'][i], result['solution'][i]))
-
-            self.printpl('v', 'Matching fitness score: {}'.format(result['fitness']))
-
-            return
-        else:
-            self.printpl('e', 'This fitness test is not available:')
-
-        return
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Genetic Operators appliable               |
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def pop_reproduce(self):
+    def gp_reproduce(self):
 
         """
         Through tournament selection, a single Tree from the prior generation is copied without mutation to the next
@@ -2297,14 +1059,14 @@ class Base_GP(object):
         self.printpl('gg', 'Reproduce One...')
 
         for n in range(self.evolve_repro):  # quantity of Trees to be copied without mutation
-            tourn_winner = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each reproduction
+            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for each reproduction
             tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='r')  # wipe fitness data
             tourn_winner[1][1] = 'r'
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
 
         return
 
-    def pop_mutate_point(self):
+    def gp_mutate_point(self):
 
         """
         One point (terminal or function) gets mutated.
@@ -2313,70 +1075,35 @@ class Base_GP(object):
         self.printpl('gg', 'Point Mutation...')
 
         for n in range(self.evolve_point):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.pop_selection_tournament(self.tourn_size)  # get a tournament winner
-            tourn_winner, node = self.pop_mutate_point_evolve(tourn_winner)  # point mutation; return single point for record keeping
+            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # get a tournament winner
+            tourn_winner, node = self.gp_mutate_point_evolve(tourn_winner)  # point mutation; return single point for record keeping
             tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='p')  # wipe fitness data
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
         return
 
-    def pop_mutate_branch(self):
+    def gp_mutate_point_evolve(self, tree, mode='random'):
 
         """
-        Mutates a whole tree branch.
-
-        If the evolutionary run is
-        designated as Full, the size and shape of the Tree will remain identical, each node mutated sequentially, where
-        functions remain functions and terminals remain terminals. If the evolutionary run is designated as Grow or
-        Ramped Half/Half, the size and shape of the Tree may grow smaller or larger, but it may not exceed
-        tree_depth_max as defined by the user.
-
+        Mutate a single mutatable point in any Tree.
         """
-        self.printpl('gg', 'Branch Mutation...')
 
-        for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
-            branch_nodes_list = self.tree_branch_get(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
-            tourn_winner = self.pop_mutate_branch_evolve(tourn_winner, branch_nodes_list)
-            tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='b')  # wipe fitness data
-            tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
-            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
+        # 1. choose a node
+        node = self.tree_get_mutatable_node_id(tree, mode='mutate_point')  # randomly select a point in the Tree (including root)
+        node_dtype = self.dtype_label_get_dtype(tree[TR_nlabel][node])  # '>' -> 'f2b'
 
-        return
+        # 2. perform point mutation on that specific node
+        if tree[5][node] == 'func':
+            func_arity = int(tree[8][node])
+            tree[TR_nlabel][node] = self.dtype_func_get_func(node_dtype, arity=func_arity)  # Function is same type, same arity
+            # Take care of the modify specs
+        elif tree[5][node] == 'term':
+            tree[TR_nlabel][node] = self.dtype_dtype_get_term(node_dtype)  # 3 -> '2f' -> 5
+        else:
+            raise self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
 
-    def pop_crossover(self, mode='replace_same_types'):
+        return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-        """
-        TODO now, partners do not exchange their branches, just parent a takes a branch of parent_b
-        - select parent a and b
-        - select swappable branche for parent_a from parent_b
-            - select a node in a (and crossover here, no matter what)
-        - delete parent_a branch and insert parent_b branch (which tactic?)
-
-        """
-        self.printpl('gg', 'Crossover...')
-
-        for n in range(self.evolve_cross):  # quantity of Trees to be generated through Crossover, (now not accounting for 2 children each, changed)
-
-            # 1. Select two parents and their branches
-            parent_a = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
-            parent_b = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
-
-            # 2. Get the branches for parent a that can be exchanged
-            branch_a, branch_b, convert_a = self.pop_crossover_get_swap_branches(parent_a, parent_b)
-
-            if convert_a:
-                self.printpl('i', 'Forced conversion is needed between two trees.')
-                offspring = self.pop_crossover_insert(parent_a, branch_a, parent_b, branch_b, converter=convert_a)  # perform Crossover
-            else:
-                offspring = self.pop_crossover_insert(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
-
-            offspring = self.tree_store_meta_lastgen(offspring, modification='c')
-            offspring = self.tree_modifyable_nodes_set(offspring)
-            self.population_new.append(offspring)  # append the 1st child to next generation of Trees
-
-        return
-
-    def pop_mutate_termfilter(self, constant, term_type='', filter='gaussian_filter'):
+    def gp_mutate_termfilter(self, constant, term_type='', filter='gaussian_filter'):
         """
         When this happens, constants get a a small variance
         """
@@ -2397,21 +1124,309 @@ class Base_GP(object):
 
         return constant
 
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to Evolve a Population            |
-    # +++++++++++++++++++++++++++++++++++++++++++++
+    def gp_mutate_branch(self):
 
-    def pop_crossover_get_partner_node_id(self, function_label, partner_tree, partner_branch_id, mode='same_type'):
+        """
+        Mutates a whole tree branch.
+
+        If the evolutionary run is
+        designated as Full, the size and shape of the Tree will remain identical, each node mutated sequentially, where
+        functions remain functions and terminals remain terminals. If the evolutionary run is designated as Grow or
+        Ramped Half/Half, the size and shape of the Tree may grow smaller or larger, but it may not exceed
+        tree_depth_max as defined by the user.
+
+        """
+        self.printpl('gg', 'Branch Mutation...')
+
+        for n in range(self.evolve_branch):  # quantity of Trees to be generated through mutation
+            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
+            branch_nodes_list = self.tree_branch_get(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
+            tourn_winner = self.gp_evolve_subtree_create(tourn_winner, branch_nodes_list)
+            tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='b')  # wipe fitness data
+            tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
+            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
+
+        return
+
+    def gp_mutate_branch_new_tree_build(self, TREE_ID, last_modification, old_node_type, tree_depth):
+
+        """
+        This method combines 4 sub-methods into a single method for ease of deployment. It is designed to executed
+        within a loop such that an entire population is built. However, it may also be run from the command line,
+        passing a single TREE_ID to the method.
+
+        if terminal: 2f
+        if func:    f2f
+        """
+
+        self.gp_mutate_branch_tree_initialise(TREE_ID, tree_depth, last_modification)  # Create empty tree np-array
+        self.gp_mutate_branch_root_build(old_node_type)  # insert the first node with either '_2b' or '_2f'
+        self.gp_mutate_branch_function_build()  # build all the Function nodes
+        self.gp_mutate_branch_terminal_build()  # build the Terminal nodes
+        # TODO set tree_depth_base in tree.
+        return  # each Tree is written to 'gp.tree'
+
+    def gp_mutate_branch_tree_initialise(self, TREE_ID, tree_depth, last_modification):
+
+        """
+        Assign 15 (14+1) global variables to the array 'tree'.
+
+        Build the array 'tree' with 15 rows and initally, just 1 column of labels. This array will grow horizontally as
+        each new node is appended. The values of this array are stored as string characters, numbers forced to integers at
+        the point of execution.
+
+        Use of the debug (db) interface mode enables the user to watch the genetic operations as they work on the Trees.
+
+        Called by: fx_init_tree_build
+
+        Arguments required: TREE_ID, tree_type, tree_depth_base
+        """
+
+        self.pop_TREE_ID = TREE_ID  # pos 0: a unique identifier for each tree
+        self.pop_tree_type = last_modification  # pos 1: a global constant based upon the initial user setting
+        self.pop_tree_depth_base = tree_depth  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
+        self.pop_NODE_ID = 1  # pos 3: unique identifier for each node; this is the INDEX KEY to this array
+        self.pop_node_depth = 0  # pos 4: depth of each node when committed to the array
+        self.pop_node_type = ''  # pos 5: root, function, or terminal
+        self.pop_node_label = ''  # pos TR_nlabel: operator [+, -, *, ...] or terminal [a, b, c, ...]
+        self.pop_node_parent = ''  # pos 7: parent node
+        self.pop_node_arity = ''  # pos 8: number of nodes attached to each non-terminal node
+        self.pop_node_c1 = ''  # pos 9: child node 1
+        self.pop_node_c2 = ''  # pos 10: child node 2
+        self.pop_node_c3 = ''  # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
+        self.pop_fitness = ''  # pos 12: fitness score following Tree evaluation
+        self.pop_node_modify = ''  # pos 13: dummy value whether this node is allowed to be modified
+        self.pop_parsimony = ''  # pos 14: separate line for the latest distance to origin
+
+        self.tree = np.array(
+            [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'], ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'],
+             ['fitness'], ['node_modify'], ['parsimony']])
+
+        return
+
+    def gp_mutate_branch_root_build(self, old_node_type):
+
+        """
+        Build a root node for a branch insert.
+        """
+        # eg b2f2f
+        self.dtype_function_select(old_node_type)  # select the operator for root
+
+        if self.pop_node_arity == 1:  # 1 child
+            self.pop_node_c1 = 2
+            self.pop_node_c2 = ''
+            self.pop_node_c3 = ''
+
+        elif self.pop_node_arity == 2:  # 2 children
+            self.pop_node_c1 = 2
+            self.pop_node_c2 = 3
+            self.pop_node_c3 = ''
+
+        elif self.pop_node_arity == 3:  # 3 children
+            self.pop_node_c1 = 2
+            self.pop_node_c2 = 3
+            self.pop_node_c3 = 4
+
+        else:
+            self.printpl('p', '\n\t\033[31m ERROR! In branch_root_build: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
+
+        self.pop_node_type = 'func'  # used to be r00t, but what is it good for?
+
+        self.tree_build_node_commit()
+
+        return
+
+        ### Function Nodes ###
+
+    def gp_mutate_branch_function_build(self):
+
+        """
+        Build the branch full depth
+        Builds
+        """
+
+        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
+
+            self.pop_node_depth = i  # increment 'node_depth'
+            parent_arity_sum = 0
+            prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
+            prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
+
+            # parent_arity_sum = amount of nodes (that have to be on this level)
+            for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
+                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
+                    parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
+
+            # Set for every "free space" a function node (func)
+            for j in range(1, len(self.tree[3])):  # increment through all nodes
+                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
+                    if self.tree[TR_nlabel][j] == 'Ifte':
+                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                    else:
+                        for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
+                            self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
+                            parent_func_dtype = function_dtypes_dict[self.tree[TR_nlabel][self.pop_node_parent]]  # find parents node
+                            func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
+                            prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
+                            prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
+
+        return
+
+    def gp_mutate_branch_terminal_build(self):
+
+        """
+        Build the Terminal nodes for the tree.
+
+        """
+
+        self.pop_node_depth = self.pop_tree_depth_base  # set the final node_depth (same as 'gp.pop_node_depth' + 1)
+
+        for j in range(1, len(self.tree[3])):  # go through all nodes
+            if int(self.tree[4][j]) == self.pop_node_depth - 1:  # this node is a parent
+                for k in range(1, (int(self.tree[8][j]) + 1)):  # increment through each degree of arity for each parent node
+                    self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
+                    self.gp_mutate_branch_terminal_gen(function_dtypes_dict[self.tree[TR_nlabel][j]])  # ... generate a Terminal node
+
+        return
+
+    def gp_mutate_branch_terminal_gen(self, terminal_dtype):
+
+        """
+        Generate a single Terminal node.
+
+        """
+
+        self.tree_build_subtree_terminal_select(terminal_dtype)
+        self.pop_node_c1 = ''
+        self.pop_node_c2 = ''
+        self.pop_node_c3 = ''
+
+        self.tree_build_node_commit()  # commit new node to array
+
+        return
+
+    def gp_crossover(self, mode='replace_same_types'):
+
+        """
+        TODO now, partners do not exchange their branches, just parent a takes a branch of parent_b
+        - select parent a and b
+        - select swappable branche for parent_a from parent_b
+            - select a node in a (and crossover here, no matter what)
+        - delete parent_a branch and insert parent_b branch (which tactic?)
+
+        """
+        self.printpl('gg', 'Crossover...')
+
+        for n in range(self.evolve_cross):  # quantity of Trees to be generated through Crossover, (now not accounting for 2 children each, changed)
+
+            # 1. Select two parents and their branches
+            parent_a = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for 'parent_a'
+            parent_b = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for 'parent_b'
+
+            # 2. Get the branches for parent a that can be exchanged
+            branch_a, branch_b, convert_a = self.gp_crossover_get_swap_branches(parent_a, parent_b)
+
+            if convert_a:
+                self.printpl('i', 'Forced conversion is needed between two trees.')
+                offspring = self.gp_crossover_insert(parent_a, branch_a, parent_b, branch_b, converter=convert_a)  # perform Crossover
+            else:
+                offspring = self.gp_crossover_insert(parent_a, branch_a, parent_b, branch_b)  # perform Crossover
+
+            offspring = self.tree_store_meta_lastgen(offspring, modification='c')
+            offspring = self.tree_modifyable_nodes_set(offspring)
+            self.population_new.append(offspring)  # append the 1st child to next generation of Trees
+
+        return
+
+    def gp_crossover_tree_branch_copy(self, tree, branch):
+
+        """
+        This method prepares a stand-alone Tree as a copy of the given branch.
+
+        """
+
+        new_tree = np.array(
+            [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'],
+             ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'], ['fitness'], ['node_modify'], ['parsimony']])
+
+        for n in range(len(branch)):
+            node = branch[n]
+            branch_top = int(branch[0])
+            TREE_ID = 'copy'
+            tree_type = tree[1][1]
+            tree_depth_base = int(tree[4][branch[-1]]) - int(tree[4][branch_top])  # subtract depth of 'branch_top' from the last in 'branch'
+            NODE_ID = tree[3][node]
+            node_depth = int(tree[4][node]) - int(tree[4][branch_top])  # subtract the depth of 'branch_top' from the current node depth
+            node_type = tree[5][node]
+            node_label = tree[TR_nlabel][node]
+            node_parent = ''  # updated by fx_evolve_parent_link_fix(), below
+            node_arity = tree[8][node]
+            node_c1 = ''  # updated by fx_evolve_child_link_fix(), below
+            node_c2 = ''
+            node_c3 = ''
+            fitness = ''
+            node_modify = '1'  # sfeh Test this
+            parsimony = ''
+
+            new_tree = np.append(new_tree,
+                                 [[TREE_ID], [tree_type], [tree_depth_base], [NODE_ID], [node_depth], [node_type],
+                                  [node_label], [node_parent], [node_arity], [node_c1], [node_c2], [node_c3],
+                                  [fitness], [node_modify], [parsimony]], 1)
+
+        new_tree = self.tree_node_renum(new_tree)
+        new_tree = self.fx_evolve_child_link_fix(new_tree)
+        new_tree = self.fx_evolve_parent_link_fix(new_tree)
+
+        # new_tree = self.data_tree_clean(new_tree)
+
+        return new_tree
+
+    def gp_crossover_tree_prune(self, tree, depth):
+
+        '''
+        This method reduces the depth of a Tree. Used with Crossover, the input value 'branch' can be a partial Tree
+        (branch) or a full tree, and it will operate correctly. The input value 'depth' becomes the new maximum depth,
+        where depth is defined as the local maximum + the user defined adjustment.
+
+        Arguments required: tree, depth
+        '''
+
+        nodes = []
+
+        for n in range(1, len(tree[3])):
+
+            if int(tree[4][n]) == depth and tree[5][n] == 'func':
+                tree[5][n] = 'term'  # mutate type 'func' to 'term'
+                node_dtype = self.dtype_label_get_dtype(tree[TR_nlabel][n])
+                tree[TR_nlabel][n] = self.dtype_dtype_get_term(node_dtype)  # replace label
+
+            elif int(tree[4][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
+                nodes.append(n)
+
+            else:
+                pass  # as int(tree[4][n]) < depth and will remain untouched
+
+        tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
+        tree = self.tree_node_arity_fix(tree)  # fix all node arities
+
+        return tree
+
+    def gp_crossover_get_partner_node_id(self, function_label, partner_tree, partner_branch_id, mode='same_type'):
         """
         -> Crossover: Returns a node_id in the partner tree, that can be swapped
         """
 
-        node_dtype = self.dtype_get_dtype4node(function_label, self.evolve_get_nodetype4label(function_label))
+        node_dtype = self.dtype_node_get_dtype(function_label, self.gp_evolve_nodetype4label_get(function_label))
         node_options = []
         # TODO check if the tree is large enough?
         if mode == 'same_type':  # only return a node with the same function type
             for i, label in enumerate(partner_tree[TR_nlabel][1:]):
-                if self.dtype_get_dtype4label(label) == node_dtype:
+                if self.dtype_label_get_dtype(label) == node_dtype:
                     node_options.append(i+1)  # +1, we skipped the first element
 
             if node_options:  # Found at least one!
@@ -2424,29 +1439,619 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'Mode not found', mode)
 
-    def pop_mutate_point_evolve(self, tree, mode='random'):
+    def gp_crossover_get_swap_branches(self, parent_a, parent_b, mode='replace_same_types'):
+        """
+        Returns two branches (node ids) that can be replaced and a converter (if needed)
+
+        - Option1: Try swapping based on dtype
+            - Choose a random node in tree a
+            - Has b an equal dtype-node?
+            -> yes: swap them, RETURN
+        - Option2: Try swapping with the other dtype
+            - Choose a random node in tree a of different dtype
+            - Has b an equal dtype-node?
+            -> yes: swap them, RETURN
+        - Option3: No matching dtypes. Force conversion.
+            - Choose a random node in tree a
+            - Choose a random node in tree b
+            - Convert parent_b's node to parent_a's node
+        -> only returns convert_a if we need to force a conversion
+        """
+        a_convert, b_convert = '', ''
+
+        # 1. swappable nodes exist?
+        if mode == 'replace_same_types':
+            a_node = self.tree_get_mutatable_node_id(parent_a, mode='crossover_no_root')
+            a_dtype = self.dtype_label_get_dtype(parent_a[TR_nlabel][a_node])
+            try:  # swapping with random dtype
+                b_node = self.tree_get_mutatable_node_id(parent_b, mode='crossover', same_dtype=a_dtype)
+            except:  # no matching dtypes. maybe the other one?
+                mode = 'try_dtype'  # better luck next time
+                # TODO directly force_conversion?
+
+        if mode == 'try_dtype':
+            if '2f' in a_dtype:
+                a_dtype = '2b'
+            elif '2b' in a_dtype:
+                a_dtype = '2f'
+            else:
+                raise self.printpl('e', 'dtype should be either 2f or 2b, it is', a_dtype)
+            try:  # swapping with other dtype
+                a_node = self.tree_get_mutatable_node_id(parent_a, mode='crossover_no_root', same_dtype=a_dtype)  # now
+                b_node = self.tree_get_mutatable_node_id(parent_b, mode='crossover', same_dtype=a_dtype)  # also a_dtype
+            except:  # no matching dtypes. maybe the other one?
+                mode = 'force_conversion'
+
+        if mode == 'force_conversion':
+            a_node = self.tree_get_mutatable_node_id(parent_a, mode='crossover_no_root')
+            b_node = self.tree_get_mutatable_node_id(parent_b, mode='crossover')
+            a_dtype = self.dtype_label_get_dtype(parent_a[TR_nlabel][a_node])
+            b_dtype = self.dtype_label_get_dtype(parent_b[TR_nlabel][b_node])
+            # check if the two labels are compartibel
+            if self.dtype_outcome_equi_test(a_dtype, b_dtype):
+                self.printpl('w', 'Crossover: Forcing conversion between', parent_a[TR_nlabel][a_node], parent_b[TR_nlabel][b_node])
+                a_convert = self.dtype_convert_dtypes_get_dummylabel(a_dtype, b_dtype)
+                # b_convert = self.sfeh_convert_dtypes_get_dummylabel(b_dtype, a_dtype)
+
+        # TODO add try-except-case with point mutation (same arity, swapping dtype)
+
+        a_branch = self.tree_branch_get(parent_a, node=a_node)
+        b_branch = self.tree_branch_get(parent_b, node=b_node)
+
+        return a_branch, b_branch, a_convert
+
+    def gp_crossover_insert(self, parent_x, branch_x, parent_y, branch_y, converter=0):
 
         """
-        Mutate a single mutatable point in any Tree.
+        Perform a crossover between nodes that are crossoverable in terms of function txpes
+        get: parent a, b and their branches
+        return: puts branch_y into parent_x
         """
 
-        # 1. choose a node
-        node = self.tree_get_mutatable_node_id(tree, mode='mutate_point')  # randomly select a point in the Tree (including root)
-        node_dtype = self.dtype_get_dtype4label(tree[TR_nlabel][node])  # '>' -> 'f2b'
+        y_root = int(branch_y[0])
+        x_root = int(branch_x[0])
 
-        # 2. perform point mutation on that specific node
-        if tree[5][node] == 'func':
-            func_arity = int(tree[8][node])
-            tree[TR_nlabel][node] = self.dtype_get_func4func(node_dtype, arity=func_arity)  # Function is same type, same arity
-            # Take care of the modify specs
-        elif tree[5][node] == 'term':
-            tree[TR_nlabel][node] = self.dtype_get_term4dtype(node_dtype)  # 3 -> '2f' -> 5
+        if len(branch_y) == 1:  # if the branch from the incoming parent contains only one node (terminal)
+
+            parent_x[TR_nlabel][x_root] = parent_y[TR_nlabel][y_root]  # replace label with that of a particular node in 'branch_y'
+            parent_x[5][x_root] = 'term'  # replace type
+            parent_x[8][x_root] = 0  # set terminal arity
+
+            parent_x = np.delete(parent_x, branch_x[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+            parent_x = self.fx_evolve_child_link_fix(parent_x)  # fix all child links
+            parent_x = self.tree_node_renum(parent_x)  # renumber all 'NODE_ID's
+
+        else:  # we are working with a branch from 'parent' >= depth 1 (min 3 nodes)
+
+            self.tree = self.gp_crossover_tree_branch_copy(parent_y, branch_y)  # generate stand-alone 'gp.tree' with properties of 'branch_y'
+            parent_x = self.gp_evolve_subtree_insert(parent_x, branch_x)  # insert new 'branch_x' at point of mutation 'branch_top' in tourn_winner 'offspring'
+            parent_x = self.gp_crossover_tree_prune(parent_x, self.tree_depth_max)  # prune to the max Tree depth + adjustment
+
+        return parent_x
+
+    def gp_evolve_subtree_create(self, chosen_tree, branch_nodes_list):
+
+        """
+        Given: Tree and a node list
+
+        Mutate a branch of one Tree and return it.
+        The 'grow' method is used, 'full' does not exist in my world.
+
+        returns: new tree
+        """
+
+        # 1. How far can we build down?
+        branch_top = int(branch_nodes_list[0])
+        branch_depth = self.gp_evolve_subtree_depth_get(chosen_tree, branch_top, len(branch_nodes_list))  # sfeh solution to keep tree kind of small, dont forget the mode
+
+        # 2. Get the old-node's information
+        old_node_label = chosen_tree[TR_nlabel][branch_nodes_list[0]]  # <,        +,-,*,8,action0 ...
+        old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func,     term, ...
+        old_node_dtype = self.dtype_node_get_dtype(old_node_label, old_node_type)  # '2f', 'f2b', ...
+
+        # 3. check if we are on a too-low level to branch mutate...
+        if branch_depth < 0:  # this has never occured ... yet
+            self.printpl('e', 'In fx_evolve_grow_mutate: branch_depth', branch_depth, '< 0')
+            self.fx_karoo_pause()
+
+        elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
+            # 50:50 decision in function below if constant or variable
+            self.printpl('v', 'Ended in the lowest depth with old label', old_node_label)
+            chosen_tree[TR_nlabel][branch_top] = self.dtype_dtype_get_term(old_node_dtype)
+
+        # 4. We can now mutate the branch!
         else:
-            raise self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
+            # 5. 50:50 terminal or function
+            if np.random.choice(['func', 'term']) == 'term':  # mutate 'branch_top' to a terminal and delete all nodes beneath (no subsequent nodes are added to this branch)
+                # 5.1 We insert a terminal here
+                chosen_tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
+                term_type = self.dtype_node_get_dtype(old_node_label, old_node_type)
+                chosen_tree[TR_nlabel][branch_top] = self.dtype_dtype_get_term(term_type)  # replace with a correct label
+                chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+                chosen_tree = self.tree_node_arity_fix(chosen_tree)  # fix all node arities (term)
+                chosen_tree = self.fx_evolve_child_link_fix(chosen_tree)  # fix all child links (func)
+                chosen_tree = self.tree_node_renum(chosen_tree)  # renumber all 'NODE_ID's
+            else:
+                # 5.2 We insert a function here
+                # self.branch_new_tree_build('mutant', 'b', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
+                self.gp_mutate_branch_new_tree_build('mutant', 'b', old_node_dtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
+                chosen_tree = self.gp_evolve_subtree_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
+            # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
 
-        return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
+        return chosen_tree
 
-    def pop_branch_depth_get(self, chosen_tree, branch_top, amount_replaced_nodes, mode='random'):  # sfeh other default
+    def gp_evolve_subtree_node_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, node_dtype):
+
+        """
+        Generate a single Function node for ...
+        -- parent_arity_sum
+        -- prior_sibling_arity
+        -- prior_siblings
+        -- '2b')
+
+        """
+
+        if np.random.choice(['func', 'term']) == 'func':  # randomly selected as Function
+            self.dtype_function_select(node_dtype)  # retrieve a function, input-reverse the parent-function (f2b -> we need 2f input)
+            self.tree_build_child_link(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
+        else:
+            self.tree_build_subtree_terminal_select(node_dtype) #  was here
+            self.pop_node_c1 = ''
+            self.pop_node_c2 = ''
+            self.pop_node_c3 = ''
+
+        self.tree_build_node_commit()  # commit new node to array
+        prior_sibling_arity = prior_sibling_arity + self.pop_node_arity  # sum the arity of prior siblings
+
+        return prior_sibling_arity
+
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    #   Work with trees                           |
+    # +++++++++++++++++++++++++++++++++++++++++++++
+
+    def tree_modifyable_nodes_set(self, chosen_tree):
+        """
+        Sets all the origin core nodes back to non-modifyable
+        """
+        # Set all nodes to be modifiable (=1)
+        for i, tmp in enumerate(chosen_tree[13][1:]):
+            chosen_tree[13][i + 1] = 1
+
+        # Find no-modifyables in Origin
+        non_modifiable_nodes = []
+        if self.origin_tree[13][1] == '0':  # check is modifiable nodes are specified
+            non_modifiable_nodes.extend(self.tree_nomodifyable_nodes_get(1, chosen_tree, 1))
+
+        for non_modifiable in non_modifiable_nodes:
+            chosen_tree[13][non_modifiable] = 0
+
+        return chosen_tree
+
+    def tree_nomodifyable_nodes_get(self, origin_node, chosen_tree, chosen_node):
+        """
+        Returns a list of nodes that are not supposed to be modified
+        """
+
+        if self.origin_tree[13][origin_node] == '0':
+            non_modifiables = []
+            non_modifiables.append(int(chosen_tree[3][chosen_node]))
+            for child in [9, 10, 11]:
+                if self.origin_tree[child][origin_node] != '':
+                    next_origin_node = int(self.origin_tree[child][origin_node])
+                    next_chosen_node = int(chosen_tree[child][chosen_node])
+                    tmp = self.tree_nomodifyable_nodes_get(next_origin_node, chosen_tree, next_chosen_node)
+                    if tmp is not None:
+                        non_modifiables.extend(tmp)
+            return non_modifiables
+        else:
+            return
+
+    def tree_build_type_constant_get(self, term_type='', mode='float-1to1', range=[]):
+        """
+        todo random samples
+        Returns a constant that fits into the position
+        -- term_type = 'float'
+        """
+        if range:
+            return np.random.uniform(range[0], range[1])
+
+        if term_type == 'bool':
+            return np.random.choice([True, False])
+        elif term_type == 'float':
+            if mode == 'float-1to1':
+                return np.random.uniform(-1, 1)
+            elif mode == 'intTotal_10':
+                return np.random.random_integers(-10, 10)
+            elif mode == 'random_optimised':
+                return np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
+                                         5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
+            else:
+                # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
+                self.printpl('e', 'You did not take care of the kind of numbers you want to have')
+                raise
+        elif term_type == 'int':
+            # TODO give more opportunities, similar to random floats
+            return np.random.random_integers(-10, 10)
+        else:
+            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return value similar to terminals.')
+            self.printpl('e', 'This term type should not occur, I guess', term_type)
+            term_type = np.random.choice(self.terminal_types)
+            return self.tree_build_type_constant_get(term_type=term_type)
+
+    def tree_expr_sympify(self, tree):
+
+        """
+        returns the sympifyed expression
+        -> self.monitor_failed_sympys_amount
+        """
+
+        self.algo_raw = self.tree_expr_raw(tree, 1)  # pass the root 'node_id', then flatten the Tree to a string
+        try:  # plagih: try block needed. simpify can not handle if then else.
+            x = plagih_sympify(self.algo_raw)
+            strx = str(x)
+
+            # if 'zoo' in strx or 'nan' in strx:
+            #     self.monitor_failed_sympys_amount += 1
+
+            if 'zoo' in strx:
+                x = re.sub('zoo', '10', strx)  # TODO how to handle zoo?
+
+            if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
+                self.printpl('w', 'We had a "nan"')
+                return sympy_dummy
+            else:
+                return x
+        except:
+            self.printpl('e', 'In sympify. Caused by this raw algorithm: ' + str(self.algo_raw))
+            # algo_sym = sympy_dummy
+            self.printpl('w', 'We had a "nan" which lead to an Exception')
+            # todo.
+            return sympy_dummy
+
+    def tree_expr_raw(self, tree, node_id):
+
+        """
+        Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
+
+        This method is called once per Tree, but may be called at any time to prepare an expression for any full or
+        partial (branch) Tree contained in 'population'. Pass the starting node for recursion via the local variable
+        'node_id' where the local variable 'tree' is a copy of the Tree you desire to evaluate.
+
+        """
+
+        node_id = int(node_id)
+
+        if tree[8, node_id] == '0':  # arity of 0 for the pattern '[term]'
+            return '(' + tree[TR_nlabel, node_id] + ')'  # 'node_label' (function or terminal)
+        else:
+            if tree[8, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+                return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TR_nlabel, node_id] + ')'
+
+            elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+                # This if case is for 2-ary ops that can not be inline. like Min(a, b)
+                if tree[TR_nlabel, node_id] not in inline_functions:  # in non_inline_functions:
+                    return '(' + tree[TR_nlabel, node_id] + '(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + '))'
+                else:
+                    return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TR_nlabel, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
+
+            # if then else
+            elif tree[8, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+                return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
+
+    def tree_node_get_childlist(self, tree, node_id):
+
+        """
+        Evaluate all or part of a Tree and return a list of all 'NODE_ID's.
+
+        This method generates a list of all 'NODE_ID's from the given Node and below. It is used primarily to generate
+        'branch' for the multi-generational mutation of Trees.
+
+        Pass the starting node for recursion via the local variable 'node_id' where the local variable 'tree' is a copy
+        of the Tree you desire to evaluate.
+
+        """
+
+        node_id = int(node_id)
+
+        if tree[8, node_id] == '0':  # arity of 0 for the pattern '[NODE_ID]'
+            return tree[3, node_id]  # 'NODE_ID'
+
+        else:
+            if tree[8, node_id] == '1':  # arity of 1 for the pattern '[NODE_ID], [NODE_ID]'
+                return tree[3, node_id] + ', ' \
+                       + self.tree_node_get_childlist(tree, tree[9, node_id])
+
+            elif tree[8, node_id] == '2':  # arity of 2 for the pattern '[NODE_ID], [NODE_ID], [NODE_ID]'
+                return tree[3, node_id] + ', ' \
+                       + self.tree_node_get_childlist(tree, tree[9, node_id]) + ', ' \
+                       + self.tree_node_get_childlist(tree, tree[10, node_id])
+
+            elif tree[8, node_id] == '3':  # arity of 3 for the pattern '[NODE_ID], [NODE_ID], [NODE_ID], [NODE_ID]'
+                return tree[3, node_id] + ', ' \
+                       + self.tree_node_get_childlist(tree, tree[9, node_id]) + ', ' \
+                       + self.tree_node_get_childlist(tree, tree[10, node_id]) + ', ' \
+                       + self.tree_node_get_childlist(tree, tree[11, node_id])
+
+    def tree_build_subtree_terminal_select(self, node_dtype):
+
+        """
+        Define a single Terminal (variable extracted from the top row of the associated TRAINING data)
+
+        """
+
+        self.pop_node_type = 'term'
+        self.pop_node_label = self.dtype_dtype_get_term(node_dtype)  # get a terminal
+        self.pop_node_arity = 0
+
+        return
+
+    def tree_build_child_link(self, parent_arity_sum, prior_sibling_arity, prior_siblings):
+
+        """
+        Link each parent node to its children in the intial population.
+
+        """
+
+        for n in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
+            if int(self.tree[4][n]) == self.pop_node_depth - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
+                c_buffer = self.pop_NODE_ID + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
+
+                if self.pop_node_arity == 0:  # terminal in a Grow Tree
+                    self.pop_node_c1 = ''
+                    self.pop_node_c2 = ''
+                    self.pop_node_c3 = ''
+
+                elif self.pop_node_arity == 1:  # 1 child
+                    self.pop_node_c1 = c_buffer
+                    self.pop_node_c2 = ''
+                    self.pop_node_c3 = ''
+
+                elif self.pop_node_arity == 2:  # 2 children
+                    self.pop_node_c1 = c_buffer
+                    self.pop_node_c2 = c_buffer + 1
+                    self.pop_node_c3 = ''
+
+                elif self.pop_node_arity == 3:  # 3 children
+                    self.pop_node_c1 = c_buffer
+                    self.pop_node_c2 = c_buffer + 1
+                    self.pop_node_c3 = c_buffer + 2
+
+                else:
+                    self.printpl('e', '\n\t\033[31m ERROR! In tree_build_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
+                    self.fx_karoo_pause()  # consider special instructions for this (pause)
+
+        return
+
+    def tree_build_node_commit(self):
+
+        """
+        Commit the values of a new node (root, function, or terminal) to the array 'tree'.
+        TODO
+        """
+
+        self.tree = np.append(self.tree, [[self.pop_TREE_ID], [self.pop_tree_type], [self.pop_tree_depth_base], [self.pop_NODE_ID], [self.pop_node_depth], [self.pop_node_type], [self.pop_node_label],
+                                          [self.pop_node_parent], [self.pop_node_arity], [self.pop_node_c1], [self.pop_node_c2], [self.pop_node_c3], [self.pop_fitness], [1], [self.pop_parsimony]], 1)
+
+        self.pop_NODE_ID = self.pop_NODE_ID + 1
+
+        return
+
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    #   Methods to use in generation loop         |
+    # +++++++++++++++++++++++++++++++++++++++++++++
+
+    def gen_prepare_parameters(self):
+        """
+        Sets the parameters for this generation
+        - reset population_new
+        - Lineary increase threshold for parsimony
+        """
+        self.printpl('g', 'Preparing to evolve Generation', self.gen_id, '...')
+        self.population_new = ['Karoo GP - Evolving Generation']  # initialise population_new to host the next generation
+
+        full_parsimony_factor = 2  # working with the maximum parsimony for at least some generations
+        gen_relation = min((full_parsimony_factor * self.gen_id) / self.gen_max, 1)
+        self.parsimony_min_max[0] = int(gen_relation * self.parsimony_min_max[1])
+
+        self.monitor_performance(mode='reset')
+
+        return
+
+    def gen_finalize(self):
+
+        """
+        From raw population_new to new population_genepool
+        - Gene_pool with tree's parsimony (and store info in the tree)
+        -
+
+        """
+
+        self.pop_enum_trees()           # pop +tree_id
+        self.gp_genepool_parsimony()   # gene +parsimony, self.gene_pool: [1,2,6,8,14,20]
+        self.pop_genepool_fitness()     # gene +fitness
+        self.pop_pareto_front()
+
+        # self.population_genepool = self.pop_copy(self.population_new, ['Karoo GP Generation ' + str(self.gen_id)])
+        self.population_genepool = self.pop_copy_genepool(self.population_new)
+        self.data_save_population(self.population_new, 'new')
+        self.monitor_performance(mode='update')
+
+        return
+
+    def pop_pareto_front(self):
+        """
+        Builds up the pareto front
+        - iterate over all parsimonys
+            - always check for the best of each parsimony
+        """
+        for candidate in self.gene_pool:
+            tree = self.population_new[candidate]
+            algo_sym_str = str(self.tree_expr_sympify(tree))
+            expr_hash = hash(algo_sym_str)
+
+            tmp_parsim = tree[TR_parsimony][1]
+            tmp_fitness = tree[TR_fitness][1]
+
+            if tmp_parsim in self.pareto_parsimony_to_fitness:
+                cmp_fitness = self.pareto_parsimony_to_fitness[tmp_parsim]
+                if (self.fitness_type == 'max' and tmp_fitness > cmp_fitness) or \
+                        (self.fitness_type == 'min' and tmp_fitness < cmp_fitness):
+
+                    self.printpl('v', 'Found new tree with parsimony', tmp_parsim, 'and fitness', tmp_fitness, 'which dominated old fitness', )
+                    # delete old tree
+                    old_tree_hash = self.pareto_parsimony_to_hash[tmp_parsim]
+                    del self.best_trees[old_tree_hash]
+
+                    # update everything to the new tree
+                    self.best_trees.update({expr_hash: algo_sym_str})
+                    self.pareto_parsimony_to_fitness[tmp_parsim] = tmp_fitness
+                    self.pareto_parsimony_to_hash[tmp_parsim] = expr_hash
+
+                    # sfeh add the best trees to the olymp?
+                else:
+                    return  # not a special tree
+            else:
+                self.best_trees.update({expr_hash: algo_sym_str})
+                self.pareto_parsimony_to_fitness.update({tmp_parsim: tmp_fitness})
+                self.pareto_parsimony_to_hash.update({tmp_parsim: expr_hash})
+
+        return
+
+    def pop_enum_trees(self):
+        """
+        outsourced enumeration of trees in a population
+        """
+        for tree_id in range(1, len(self.population_new)):  #
+            self.population_new[tree_id][0][1] = tree_id
+
+    def pop_copy(self, population_x, title):
+
+        """
+        Copy one population to another.
+        """
+        popolation_y = [title]  # an empty list stores a copy of the prior generation
+
+        for tree in range(1, len(population_x)):  # increment through each Tree in the current population
+            tree_copy = np.copy(population_x[tree])  # copy each array in the current population
+            popolation_y.append(tree_copy)  # add each copied Tree to the new population list
+
+        return popolation_y
+
+    def pop_copy_genepool(self, pop_x):
+
+        """
+        Copy the genepool.
+        """
+        pop_y = ['Genepool-Population in Generation ' + str(self.gen_id)]  # empty list
+
+        for tree in self.gene_pool:  # increment through each Tree in the current population
+            tree_copy = np.copy(pop_x[tree])  # copy each array in the current population
+            pop_y.append(tree_copy)  # add each copied Tree to the new population list
+
+        return pop_y
+
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    #   Methods to Train and Test a Tree         |
+    # +++++++++++++++++++++++++++++++++++++++++++++
+
+    def pop_genepool_fitness(self):
+        """
+        Compute the fitness for every tree
+        """
+
+        for tree_id in self.gene_pool:
+            algo_sym = self.tree_expr_sympify(self.population_new[tree_id])
+            fitness_train = self.tree_fitness_train(algo_sym)
+            self.tree_store_fitness(self.population_new[tree_id], fitness_train)  # store Fitness and parsimony with each Tree
+
+            if self.fitness_type == 'max':
+                if fitness_train > self.origin_fitness_train:
+                    self.origin_dominators.update({tree_id: algo_sym})
+            else:
+                if fitness_train < self.origin_fitness_train:
+                    self.origin_dominators.update({tree_id: algo_sym})
+
+        self.printpl('p', '\n\033[36m ', len(list(self.origin_dominators.keys())), 'trees\033[1m', np.sort(list(self.origin_dominators.keys())), '\033[0;0m\033[36moffer the highest fitness scores.\033[0;0m')
+
+        return
+
+    def gen_olymp_update(self):
+        """
+        The olymp is where the godlike contestants reside.
+        In each generation, the olymp searches for new god contestants
+        """
+        self.printpl('t', 'TODO Olymp for candidates')
+        return
+
+    def pause_fitness_test(self, result):
+
+        if self.kernel == 'c':
+            """
+            Print the Precision-Recall and Confusion Matrix for a CLASSIFICATION run against the test data.
+
+            From scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
+                Precision (P) = true_pos / true_pos + false_pos
+                Recall (R) = true_pos / true_pos + false_neg
+                harmonic mean of Precision and Recall (F1) = 2(P x R) / (P + R)
+
+            From scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
+                y_pred = result, the predicted labels generated by Karoo GP
+                y_true = solution, the true labels associated with the data
+
+            """
+            for i in range(len(result['result'])):
+                print('\t\033[36m Data row {} predicts class:\033[1m {} ({} True)\033[0;0m\033[36m as {:.2f}{}\033[0;0m'.format(
+                        i, int(result['pred_labels'][0][i]), int(result['solution'][i]), result['result'][i],
+                        result['pred_labels'][1][i]))
+
+            print('\n Fitness score: {}'.format(result['fitness']))
+            print('\n Precision-Recall report:\n', skm.classification_report(result['solution'], result['pred_labels'][0]))
+            print(' Confusion matrix:\n', skm.confusion_matrix(result['solution'], result['pred_labels'][0]))
+
+        elif self.kernel == 'r':
+            """
+            Print the Fitness score and Mean Squared Error for a REGRESSION run against the test data.
+
+            """
+
+            for i in range(len(result['result'])):
+                print('\t\033[36m Data row {} predicts value:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.
+                      format(i, result['result'][i], result['solution'][i]))
+
+            MSE, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
+
+            print('\n\t Origin fitness score: {}'.format(self.origin_fitness_train))
+            print('\n\t Regression fitness score: {}'.format(fitness))
+            print('\t Mean Squared Error: {}'.format(MSE))
+
+            return
+
+        elif self.kernel == 'm':
+
+            """
+            Print the accuracy for a MATCH kernel run against the test data.
+
+            """
+
+            for i in range(len(result['result'])):
+                self.printpl('vv', '\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i, result['result'][i], result['solution'][i]))
+
+            self.printpl('v', 'Matching fitness score: {}'.format(result['fitness']))
+
+            return
+        else:
+            self.printpl('e', 'This fitness test is not available:')
+
+        return
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    #   Genetic Operators appliable               |
+    # +++++++++++++++++++++++++++++++++++++++++++++
+
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    #   Methods to Evolve a Population            |
+    # +++++++++++++++++++++++++++++++++++++++++++++
+
+    def gp_evolve_subtree_depth_get(self, chosen_tree, branch_top, amount_replaced_nodes, mode='random'):  # sfeh other default
         """
         Return the size of the tree to be inserted.
         Should not be set to maximum to reduce complexity!
@@ -2465,7 +2070,7 @@ class Base_GP(object):
             raise self.printpl('e', 'sfeh_get_new_tree_size does not accept this mode: ' + str(mode))
         return branch_depth
 
-    def evolve_get_nodetype4label(self, node_label):
+    def gp_evolve_nodetype4label_get(self, node_label):
         """
         return terminal or function according to the label
         """
@@ -2475,61 +2080,42 @@ class Base_GP(object):
         else:
             return 'term'
 
-    def tree_get_mutatable_node_id(self, tree, mode='', same_dtype=''):
+    def parsimony_treedist_rel_ari(self, tree):
         """
-        Returns a mutatable node for point-mutation
-        -> no_root handles
+        This distance penalizes non-original functions with its arity
+        - ignore node[0] [description]
+        - look within the subtree if the original function is on origin spot
         """
-        # TODO only works for 2-array functions
 
-        node_ids = []
+        # If the new tree is actually less complex than the original one, just return 1
+        if len(tree[TR_nlabel]) < len(self.origin_tree[TR_nlabel]):
+            return 0
 
-        # 1. Build up a list with nodes
-        if same_dtype:
-            for i, label in enumerate(tree[TR_nlabel]):
-                if tree[13][i] == '1':  # also skips node 0
-                    # TODO make this faster
-                    node_dtype = self.dtype_get_dtype4label(tree[TR_nlabel][i])
-                    if self.dtype_outcome_equi_test(node_dtype, same_dtype):
-                        node_ids.append(int(tree[3][i]))
-        else:
-            for i, x in enumerate(tree[5]):
-                if tree[13][i] == '1':
-                    node_ids.append(int(tree[3][i]))
+        distance = 0
 
-        # 2. Kick out root if it is there?
-        if 'no_root' in mode:  # delete root node
-            node_ids = [x for x in node_ids if x != 1]
+        # iterate over every node in the new tree
+        for i, arity in enumerate(tree[8]):
+            if i == 0:  # skip node 0. the description
+                continue
+            elif i < len(self.origin_tree[TR_nlabel]):  # Make sure we stay within the tree index. <= does not work
+                if self.origin_tree[TR_nlabel][i] != tree[TR_nlabel][i]:  # is it different from the origin?
+                    distance = distance + int(arity)  # add the nodes arity. double-punishes large trees
+            else:
+                distance = distance + int(arity)
 
-        # 3: return the node. Not safe, could be try-except block.
-        # eg: all nodes are not modifiable
-        # eg. all nodes are not of correct type
-        node_id = np.random.choice(node_ids)
-        return node_id
+        return distance
 
-    def tree_branch_get(self, tree, node=0):
-
+    def parsimony_treedist_num_changes(self, tree):
         """
-        chooses a mutatable branch to mutate
-        - specify a starting node
-        - return all childnodes as list
+        The 'coolest' distance, where
+        - the amount of changes that have to be applied to the origin to equality are counted
         """
-        # 1. branch_top = a valid node
-        branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-        if node > 0:  # Crossover: Option to specify own starting node
-            branch_top = node
-        else:
-            branch_top = self.tree_get_mutatable_node_id(tree, mode='mutate_branch_no_root')  # "2" returns mutable node (except root node)
+        # TODO distanzfunktion für Anzahl der Änderungen schreiben
+        og_expr = self.tree_expr_sympify(self.origin_tree)
+        changed_expr = self.tree_expr_sympify()
+        return
 
-        # 2. Also return all child nodes
-        branch_eval = self.tree_node_get_childlist(tree, branch_top)  # generate tuple of 'branch_top' and subsequent nodes
-        branch_symp = sympify(branch_eval)  # convert string into something useful
-        branch = np.append(branch, branch_symp)  # append list to array
-        branch = np.sort(branch)  # sort nodes in branch for Crossover.
-
-        return branch
-
-    def evolve_branch_insert(self, winner_tree, branch_nodes):
+    def gp_evolve_subtree_insert(self, winner_tree, branch_nodes):
 
         """
         This method enables the insertion of insert_tree in place of a branch (which is a node_id). It works with 3 inputs: local 'tree' is being
@@ -2577,49 +2163,6 @@ class Base_GP(object):
                     node_count = node_count + 1  # exit loop when 'node_count' reaches the number of columns in the array 'gp.tree'
 
         return winner_tree
-
-    def tree_branch_copy(self, tree, branch):
-
-        """
-        This method prepares a stand-alone Tree as a copy of the given branch.
-
-        """
-
-        new_tree = np.array(
-            [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'],
-             ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'], ['fitness'], ['node_modify'], ['parsimony']])
-
-        for n in range(len(branch)):
-            node = branch[n]
-            branch_top = int(branch[0])
-            TREE_ID = 'copy'
-            tree_type = tree[1][1]
-            tree_depth_base = int(tree[4][branch[-1]]) - int(tree[4][branch_top])  # subtract depth of 'branch_top' from the last in 'branch'
-            NODE_ID = tree[3][node]
-            node_depth = int(tree[4][node]) - int(tree[4][branch_top])  # subtract the depth of 'branch_top' from the current node depth
-            node_type = tree[5][node]
-            node_label = tree[TR_nlabel][node]
-            node_parent = ''  # updated by fx_evolve_parent_link_fix(), below
-            node_arity = tree[8][node]
-            node_c1 = ''  # updated by fx_evolve_child_link_fix(), below
-            node_c2 = ''
-            node_c3 = ''
-            fitness = ''
-            node_modify = '1'  # sfeh Test this
-            parsimony = ''
-
-            new_tree = np.append(new_tree,
-                                 [[TREE_ID], [tree_type], [tree_depth_base], [NODE_ID], [node_depth], [node_type],
-                                  [node_label], [node_parent], [node_arity], [node_c1], [node_c2], [node_c3],
-                                  [fitness], [node_modify], [parsimony]], 1)
-
-        new_tree = self.tree_node_renum(new_tree)
-        new_tree = self.fx_evolve_child_link_fix(new_tree)
-        new_tree = self.fx_evolve_parent_link_fix(new_tree)
-
-        new_tree = self.data_tree_clean(new_tree)
-
-        return new_tree
 
     def fx_evolve_c_buffer(self, tree, node):
 
@@ -2802,6 +2345,110 @@ class Base_GP(object):
 
         return tree
 
+    def tree_get_mutatable_node_id(self, tree, mode='', same_dtype=''):
+        """
+        Returns a mutatable node for point-mutation
+        -> no_root handles
+        """
+        # TODO only works for 2-array functions
+
+        node_ids = []
+
+        # 1. Build up a list with nodes
+        if same_dtype:
+            for i, label in enumerate(tree[TR_nlabel]):
+                if tree[13][i] == '1':  # also skips node 0
+                    # TODO make this faster
+                    node_dtype = self.dtype_label_get_dtype(tree[TR_nlabel][i])
+                    if self.dtype_outcome_equi_test(node_dtype, same_dtype):
+                        node_ids.append(int(tree[3][i]))
+        else:
+            for i, x in enumerate(tree[5]):
+                if tree[13][i] == '1':
+                    node_ids.append(int(tree[3][i]))
+
+        # 2. Kick out root if it is there?
+        if 'no_root' in mode:  # delete root node
+            node_ids = [x for x in node_ids if x != 1]
+
+        # 3: return the node. Not safe, could be try-except block.
+        # eg: all nodes are not modifiable
+        # eg. all nodes are not of correct type
+        node_id = np.random.choice(node_ids)
+        return node_id
+
+    def tree_branch_get(self, tree, node=0):
+
+        """
+        chooses a mutatable branch to mutate
+        - specify a starting node
+        - return all childnodes as list
+        """
+        # 1. branch_top = a valid node
+        branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
+        if node > 0:  # Crossover: Option to specify own starting node
+            branch_top = node
+        else:
+            branch_top = self.tree_get_mutatable_node_id(tree, mode='mutate_branch_no_root')  # "2" returns mutable node (except root node)
+
+        # 2. Also return all child nodes
+        branch_eval = self.tree_node_get_childlist(tree, branch_top)  # generate tuple of 'branch_top' and subsequent nodes
+        branch_symp = sympify(branch_eval)  # convert string into something useful
+        branch = np.append(branch, branch_symp)  # append list to array
+        branch = np.sort(branch)  # sort nodes in branch for Crossover.
+
+        return branch
+
+    def tree_parsimony(self, tree, parsimony_distance='rel_ari_1'):
+        """
+        parsimony_distance: compute the chosen distance by the user. Default is best historic distance
+
+        """
+        if parsimony_distance == 'total_count_nodes':
+            return int(tree[3][-1:])  # returns the tree size
+        elif parsimony_distance == 'total_tree_depth':
+            return tree[4][1]     # returns the tree size
+        elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
+            return len(str(self.algo_raw))
+        elif parsimony_distance == 'total_simplified':
+            algo_sym = self.tree_expr_sympify(tree)
+            return count_ops(algo_sym)
+        elif parsimony_distance == 'rel_ari_1':  # Does this work?
+            return self.parsimony_treedist_rel_ari(tree)
+        elif parsimony_distance == 'print':   # Please inser all of the measurements with example
+            self.printpl('i', 'No distance chosen. Available parsimony measurements:')
+            self.printpl('i', 'pcount_nodes' + '    : count_nodes. Amount of literals in the program.       ' + str(tree[3][-1:]))
+            self.printpl('i', 'tree_depth' + '     : Only use the depth of the tree as measurement.        ' + str(tree[4][1]))
+            self.printpl('i', 'karoo_original' + ' : Karoo`s OG parsimony. Do not use it with PLAGIH.      ' + str(len(str(self.algo_raw))))
+            self.printpl('i', 'Choose wisely. More to come soon.')
+            return
+        else:
+            self.printpl('i', 'Parsimony distance not specified! Use default.')
+            self.tree_parsimony(tree)
+
+    def tree_fitness_train(self, algo_sym):
+        """
+        returns the fitness of a tree
+        - kick out dummy
+        - check, if fitness is in hash table
+        - otherwise, compute with tensorflow
+        """
+
+        # If algo_sym is '1' - aka an error occured in sympy
+        if algo_sym == sympy_dummy:
+            return self.fitness_bad_dummy
+
+        # 1. Try to get the fitness from hashtable
+        expr_sym_str = str(algo_sym)
+        expr_hash = hash(expr_sym_str)
+        if expr_hash in self.hashtable_fitness:
+            return self.hashtable_fitness[expr_hash]
+
+        # 2. calculate the fitness and store it in the hash table
+        fitness = self.tf_eval(expr_sym_str, self.data_train)['fitness']
+        self.hashtable_fitness[expr_hash] = fitness
+        return fitness
+
     def tree_node_arity_fix(self, tree):
 
         """
@@ -2882,61 +2529,287 @@ class Base_GP(object):
 
         return tree
 
-    def evolve_tree_prune(self, tree, depth):
+    # +++++++++++++++++++++++++++++++++++++++++++++
+    #   Methods to use tensorflow                 |
+    # +++++++++++++++++++++++++++++++++++++++++++++
 
-        '''
-        This method reduces the depth of a Tree. Used with Crossover, the input value 'branch' can be a partial Tree
-        (branch) or a full tree, and it will operate correctly. The input value 'depth' becomes the new maximum depth,
-        where depth is defined as the local maximum + the user defined adjustment.
-
-        Arguments required: tree, depth
-        '''
-
-        nodes = []
-
-        for n in range(1, len(tree[3])):
-
-            if int(tree[4][n]) == depth and tree[5][n] == 'func':
-                tree[5][n] = 'term'  # mutate type 'func' to 'term'
-                node_dtype = self.dtype_get_dtype4label(tree[TR_nlabel][n])
-                tree[TR_nlabel][n] = self.dtype_get_term4dtype(node_dtype)  # replace label
-
-            elif int(tree[4][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
-                nodes.append(n)
-
-            else:
-                pass  # as int(tree[4][n]) < depth and will remain untouched
-
-        tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
-        tree = self.tree_node_arity_fix(tree)  # fix all node arities
-
-        return tree
-
-    def pop_copy(self, population_x, title):
+    def tf_eval(self, expr, data, get_pred_labels=False):
 
         """
-        Copy one population to another.
+        computes gp-tree results and fitness scores.
+        - Computes tree expression using TensorFlow (TF)
+        - parsing input string 'expression' and converting it into a TF operation graph
+        - processing tf graph in an isolated TF session (results and corresponding fitness)
+
+            'self.tf_device' - controls which device will be used for computations (CPU or GPU).
+            'self.tf_device_log' - controls device placement logging (debug only).
+
+        Args:
+            'expr' - a string expression to be computed on the data. Variable -> 'self.terminals'
+            'data' - an 'n by m' matrix of the data points containing n observations like 'self.terminals'.
+            'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be
+            extracted from the evolved results.
+
+        Returns:
+            A dict mapping keys to the following outputs:
+                'result'            - array of the results of applying given expression to the data
+                'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
+                'solution'          - array of the solution values extracted from the data (variable 's' in the dataset)
+                'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
+                'fitness'           - aggregated scalar fitness score
+
         """
-        popolation_y = [title]  # an empty list stores a copy of the prior generation
 
-        for tree in range(1, len(population_x)):  # increment through each Tree in the current population
-            tree_copy = np.copy(population_x[tree])  # copy each array in the current population
-            popolation_y.append(tree_copy)  # add each copied Tree to the new population list
+        # Initialize TensorFlow session
+        tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
+        config = tf.compat.v1.ConfigProto(log_device_placement=self.tf_device_log, allow_soft_placement=True)
+        config.gpu_options.allow_growth = True
 
-        return popolation_y
+        with tf.compat.v1.Session(config=config) as sess:
+            with sess.graph.device(self.tf_device):
 
-    def pop_copy_genepool(self, pop_x):
+                # 1. data (observations, actions) to tensors
+                tensors = {}
+
+                num_terminals = len(self.terminals)
+                num_actions = len(self.actions)
+
+                for i in range(num_terminals):
+                    var = self.terminals[i]
+                    if '2f' in self.dtype_node_get_dtype(var, 'term'):
+                        tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data into vectors
+                    else:  # '2b'
+                        tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
+
+                for i in range(num_actions):
+                    var = self.actions[i]
+                    action_dtype = self.dtype_node_get_dtype(var, 'term')
+                    if '2f' in action_dtype:
+                        tensors[var] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data into vectors
+                    elif '2b' in action_dtype:  # '2b'
+                        self.printpl('t', 'Currently no kernel available for boolean fitness')
+                        tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
+                    else:
+                        self.printpl('e', 'Kernel not known for:', var, 'which is', action_dtype)
+
+                # 2- Transform string expression into TF operation graph
+                tf_result = self.tf_eval_ast_expr(expr, tensors)
+                pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
+
+                # TODO currently does only support one label
+                solution = tensors['action0']  # solution value is assumed to be stored in this terminal
+                # 3- Add fitness computation into TF graph
+                if self.kernel == 'c':  # CLASSIFY kernel
+
+                    """
+                    Creates element-wise fitness computation TensorFlow (TF) sub-graph for CLASSIFY kernel.
+                    - tree-label vs. true label
+                    This multiclass classifer compares each row of a given Tree to the known solution, comparing predicted labels 
+                    generated by Karoo GP against the true class labels. This method is able to work with any number of class 
+                    labels, from 2 to n. The left-most bin includes -inf. The right-most bin includes +inf. Those inbetween are 
+                    by default confined to the spacing of 1.0 each, as defined by:
+
+                        (solution - 1) < result <= solution
+
+                    The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
+                    origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
+                    side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
+                    negative and positive result.
+                    """
+
+                    if len(self.actions) > 1:
+                        self.printpl('e', 'TODO multidimensional input. To be done, there is no solution yet.')
+
+                    if get_pred_labels:
+                        pred_labels = tf.map_fn(self.tf_eval_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
+
+                    skew = (self.class_labels / 2) - 1
+
+                    rule11 = tf.equal(solution, 0)
+                    rule12 = tf.less_equal(tf_result, 0 - skew)
+                    rule13 = tf.logical_and(rule11, rule12)
+
+                    rule21 = tf.equal(solution, self.class_labels - 1)
+                    rule22 = tf.greater(tf_result, solution - 1 - skew)
+                    rule23 = tf.logical_and(rule21, rule22)
+
+                    rule31 = tf.less(solution - 1 - skew, tf_result)
+                    rule32 = tf.less_equal(tf_result, solution - skew)
+                    rule33 = tf.logical_and(rule31, rule32)
+
+                    pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
+
+                elif self.kernel == 'r':  # REGRESSION kernel
+
+                    """
+                    A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
+                    that you raise the minimum node count to keep it from converging on the value of '1'. Consider writing or 
+                    integrating a more sophisticated kernel.
+                    """
+
+                    pairwise_fitness = tf.abs(solution - tf_result)
+
+                elif self.kernel == 'm':  # MATCH kernel
+
+                    """
+                    This is used for demonstration purposes only.
+                    """
+
+                    # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+                    RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float value lies within a range of values
+                    pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
+
+                # elif self.kernel == '[other]': # use others as a template
+
+                else:
+                    raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
+
+                fitness = tf.reduce_sum(pairwise_fitness)
+
+                # Process TF graph and collect the results
+                tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
+                # print('Result:', tf_result, 'Fitness:', fitness)
+
+                # maybe this is better?
+                relative_fitness = fitness / len(data)
+
+        return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
+                'pairwise_fitness': pairwise_fitness, 'old_fitness': float(fitness)}
+
+    def tf_eval_ast_expr(self, expr, tensors):
 
         """
-        Copy the genepool.
+        Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
+
         """
-        pop_y = ['Genepool-Population in Generation ' + str(self.gen_id)]  # empty list
+        # print('Current expr:', expr)  # importantprint
+        tree = ast.parse(expr, mode='eval').body
 
-        for tree in self.gene_pool:  # increment through each Tree in the current population
-            tree_copy = np.copy(pop_x[tree])  # copy each array in the current population
-            pop_y.append(tree_copy)  # add each copied Tree to the new population list
+        return self.tf_expr_graph(tree, tensors)
 
-        return pop_y
+    def tf_expr_graph(self, node, tensors):
+
+        """
+        Recursively transforms parsed expression tree into TensorFlow (TF) graph.
+
+        """
+
+        if isinstance(node, ast.Name):  # <tensor_name>
+            return tensors[node.id]
+
+        elif isinstance(node, ast.Num):  # <number>
+            shape = tensors[list(tensors.keys())[0]].get_shape()
+            return tf.constant(node.n, shape=shape, dtype=tf.float32)
+
+        elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
+            return operators[type(node.op)](self.tf_expr_graph(node.left, tensors), self.tf_expr_graph(node.right, tensors))
+
+        elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
+            return operators[type(node.op)](self.tf_expr_graph(node.operand, tensors))
+
+        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
+            if node.func.id == 'Ifte':
+                return operators[node.func.id](
+                    tf.dtypes.cast(self.tf_expr_graph(node.args[0], tensors), tf.bool),
+                    self.tf_expr_graph(node.args[1], tensors),
+                    self.tf_expr_graph(node.args[2], tensors))
+
+            if node.func.id in non_inline_multielem_functions:  # Min, Max are now Mini and Maxi. These only accept two inputs.
+                self.printpl('e', [self.tf_expr_graph(arg, tensors) for arg in node.args])
+                return operators[node.func.id]([self.tf_expr_graph(arg, tensors) for arg in node.args])  # the star '*' makes the difference
+
+            if node.func.id == 'Ftob':
+                self.printpl('i', 'float was converted to bool in tensorflow')
+                return tf.dtypes.cast(*[self.tf_expr_graph(arg, tensors) for arg in node.args], dtype=tf.bool)
+            elif node.func.id == 'Btof':
+                return tf.dtypes.cast(*[self.tf_expr_graph(arg, tensors) for arg in node.args], dtype=tf.float32)
+
+            return operators[node.func.id](*[self.tf_expr_graph(arg, tensors) for arg in node.args])
+
+        elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
+            return self.tf_eval_chain_bool(node.values, operators[type(node.op)], tensors)
+
+        elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
+            return self.tf_eval_chain_compare([node.left] + node.comparators, node.ops, tensors)
+
+        elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
+            if type(node.value) is not type(True):
+                self.printpl('e', 'This True/False name constant is something else', node.value)
+                raise
+            try:
+                return tf.constant(node.value)
+            except:
+                self.printpl('e', 'Oh no this was not True or False')
+                raise
+        else:
+            raise TypeError(node)
+
+    def tf_eval_chain_bool(self, values, operation, tensors):
+
+        """
+        Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
+
+        """
+
+        x = tf.dtypes.cast(self.tf_expr_graph(values[0], tensors), tf.bool)
+        if len(values) > 1:
+            return operation(x, self.tf_eval_chain_bool(values[1:], operation, tensors))
+        else:
+            return x
+
+    def tf_eval_chain_compare(self, comparators, ops, tensors):
+
+        """
+        Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
+
+        Called by: fitness_node_parse
+
+        Arguments required: comparators, ops, tensors
+        """
+
+        x = self.tf_expr_graph(comparators[0], tensors)
+        y = self.tf_expr_graph(comparators[1], tensors)
+
+        if len(comparators) > 2:
+            return tf.logical_and(operators[type(ops[0])](x, y), self.tf_eval_chain_compare(comparators[1:], ops[1:], tensors))
+        else:
+            return operators[type(ops[0])](x, y)
+        # sfeh idea: note: we have to convert all values to the action space if not discrete
+
+    def tf_eval_classify_labels_map(self, result):
+
+        """
+        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
+        the quantity of true class labels provided in the data .csv. Outputs an array of tuples containing the predicted
+        labels based upon the result and corresponding boolean condition triggered.
+
+        For comparison, the original (pre-TensorFlow) cod follows:
+
+            skew = (self.class_labels / 2) - 1 # '-1' keeps a binary classification splitting over the origin
+            if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
+            elif solution == self.class_labels - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
+            elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
+            else: fitness = 0 # no class match
+
+        Called by: fx_fitness_eval
+
+        Arguments required: result
+        """
+
+        skew = (self.class_labels / 2) - 1
+        label_rules = {self.class_labels - 1: (
+            tf.constant(self.class_labels - 1), tf.constant(' > {}'.format(self.class_labels - 2 - skew)))}
+
+        for class_label in range(self.class_labels - 2, 0, -1):
+            cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
+            label_rules[class_label] = tf.cond(cond, lambda: (
+                tf.constant(class_label), tf.constant(' <= {}'.format(class_label - skew))),
+                                               lambda: label_rules[class_label + 1])
+
+        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(' <= {}'.format(0 - skew))),
+                             lambda: label_rules[1])
+
+        return pred_label
 
     # random TODO replace and with &, see https://docs.sympy.org/latest/_modules/sympy/core/relational.html
 
@@ -2944,7 +2817,7 @@ class Base_GP(object):
     #   Methods to receive correct dtypes (f2b,.) |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def dtype_get_func4func(self, function_type, arity=0):
+    def dtype_func_get_func(self, function_type, arity=0):
         """
         This only accepts functions as inputs. (point mutation)
         No need to handle terminals
@@ -2977,7 +2850,7 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'Function was not found in function_types_dict', function_type)
 
-    def dtype_get_func4any(self, function_dtype):
+    def dtype_dtype_get_func(self, function_dtype):
         """
         This fills in a function that fits the type of the function/terminal before.
         terminal  '2f' -> '_2f', arity
@@ -2994,7 +2867,7 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'Warning: Function was not found in function_types_dict', function_dtype)
 
-    def dtype_get_dtype4node(self, node_label, node_type):
+    def dtype_node_get_dtype(self, node_label, node_type):
         """
         'term' or 'func'
         """
@@ -3015,19 +2888,16 @@ class Base_GP(object):
         else:
             raise self.printpl('e', 'This node_type is not known', node_type)
 
-    def dtype_get_dtype4label(self, node_label):
+    def dtype_label_get_dtype(self, node_label):
         """
         returns dtype for a label
         """
 
-        node_type = self.evolve_get_nodetype4label(node_label)
-        node_dtype = self.dtype_get_dtype4node(node_label, node_type)
+        node_type = self.gp_evolve_nodetype4label_get(node_label)
+        node_dtype = self.dtype_node_get_dtype(node_label, node_type)
         return node_dtype
 
-    def dtype_outcome_equi_test(self, a_dtype, b_dtype):
-        return a_dtype in b_dtype or b_dtype in a_dtype
-
-    def dtype_get_term4dtype(self, node_dtype):
+    def dtype_dtype_get_term(self, node_dtype):
         """
         Returns a terminal that fits to the given type.
 
@@ -3057,11 +2927,17 @@ class Base_GP(object):
             if np.random.choice(['var', 'const']) == 'var':  # our choice is variable
                 if terminals_correct:  # Is there an entry in the list?
                     return np.random.choice(terminals_correct)  # ...so we return one
-            return self.tree_get_constant4type(term_type=the_type)  # otherwise: constant (There are always constants :P)
+            return self.tree_build_type_constant_get(term_type=the_type)  # otherwise: constant (There are always constants :P)
 
         except ValueError:
             self.printpl('w', 'Should not happen. Did not find a terminal. Made up a ' + the_type + ' constant.')
-            return self.tree_get_constant4type(term_type=the_type)
+            return self.tree_build_type_constant_get(term_type=the_type)
+
+    def dtype_outcome_equi_test(self, a_dtype, b_dtype):
+        """
+        Dummy. Returns, whether two dtypes are equal
+        """
+        return a_dtype in b_dtype or b_dtype in a_dtype
 
     def dtype_convert_dtypes_get_dummylabel(self, a_dtype, b_dtype):
         """
@@ -3074,18 +2950,31 @@ class Base_GP(object):
         else:
             self.printpl('e', 'One of those two cases should happen', a_dtype, b_dtype)
             raise
+
+    def dtype_function_select(self, func_dtype):
+
+        """
+        Returns a function with the same outcome
+
+        """
+
+        self.pop_node_type = 'func'
+        new_function = self.dtype_dtype_get_func(func_dtype)
+        self.pop_node_label = new_function[0]
+        self.pop_node_arity = int(new_function[1])
+        self.pop_node_modify = 1
+        # print('SFEHs:', func_dtype, self.pop_node_label)
+
         return
+
+        ### Terminal Nodes ###
+
+        # Idea: values are recognized and adjusted (+0.3, e.g.)?
+        # Idea: insert numbers as 0-arity functions? -> naah
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to display output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def printpl_c(self, message_type, *args):
-        """
-        Customizable print function
-        """
-        return self.printpl(message_type, *args)
-
 
     def printpl(self, message_type, *args, custom=False):  # plagih naming
 
@@ -3156,6 +3045,7 @@ class Base_GP(object):
                 message_pretxt = 'Func: '  # Magenta
             else:
                 # Just show it
+                message_style = ''
                 self.printpl('e', 'Display-mode', message_type, 'not known.')
 
             print(message_style + message_pretxt + ' '.join(map(str, args)) + '\033[39m')
@@ -3320,8 +3210,8 @@ class Base_GP(object):
             algo_sym = self.tree_expr_sympify(self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
             self.printpl('i', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, '\033[0;0m')  # print the sympified expression
 
-            result = self.expr_fitness_eval(str(algo_sym), self.data_test, get_pred_labels=True)  # might change to algo_raw evaluation
-            self.fx_fitness_test(result)  # TF tested 2017 02/02
+            result = self.tf_eval(str(algo_sym), self.data_test, get_pred_labels=True)  # might change to algo_raw evaluation
+            self.pause_fitness_test(result)  # TF tested 2017 02/02
 
         # elif self.kernel == '[other]': # use others as a template
 
@@ -3344,10 +3234,10 @@ class Base_GP(object):
                 print('\t\033[36m Tree', self.population_new[tree_id][0][1], 'yields (sym):\033[1m', algo_sym, '\033[0;0m')
 
         elif input_a == 'load':  # load population_s to replace population_genepool
-            self.data_recover(self.filename['s'])  # NEED TO replace 's' with a user defined filename
+            self.data_pickle_recover(self.filename['s'])  # NEED TO replace 's' with a user defined filename
 
         elif input_a == 'write':  # write the evolving population_new to disk
-            self.gen_archive(self.population_new, 'new')
+            self.data_save_population(self.population_new, 'new')
             print('\n\t All current members of the evolving population_new saved to karoo_gp/runs/[date-time]/population_new.csv')
 
         elif input_a == 'add':  # check for added generations, then exit fx_karoo_pause and continue the run
@@ -3358,7 +3248,74 @@ class Base_GP(object):
 
         return 1
 
+    def obsolete_compare_genepool_fitness(self, tree_id, fitness, fitness_best):
+        """
+        obsolete?
+        """
+        algo_sym = self.tree_expr_sympify(self.population_new[tree_id])
+
+        ### PART 3 - COMPARE FITNESS OF ALL TREES IN CURRENT GENERATION ###
+        if self.kernel == 'c':  # display best fit Trees for the CLASSIFY kernel
+            if fitness >= fitness_best:  # find the Tree with maximum fitness score
+                fitness_best = fitness  # set best fitness score
+                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness >= prior
+
+        elif self.kernel == 'r':  # display best fit Trees for the REGRESSION kernel
+            if fitness_best == 0:
+                fitness_best = fitness  # set the baseline first time through
+            if fitness <= fitness_best:  # find the Tree with minimum fitness score
+                fitness_best = fitness  # set best fitness score
+                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if fitness <= prior
+
+        elif self.kernel == 'm':  # display best fit Trees for the MATCH kernel
+            if fitness == self.data_train_rows:  # find the Tree with a perfect match for all data rows
+                fitness_best = fitness  # set best fitness score
+                self.origin_dominators.update({tree_id: algo_sym})  # add to dictionary if all rows match
+
+        else:
+            raise self.printpl('e', 'No proper kernel was selected', self.kernel)
+        return fitness_best
+
     def manual_expr_fitness(self, expr):
-        fitness = self.expr_fitness_eval(expr, self.data_train)['fitness']
+        fitness = self.tf_eval(expr, self.data_train)['fitness']
         print('Your algos fitness:', fitness)
+        return
+
+    def obsolete_mutate_branch_function_build_grow(self):
+
+        """
+        Build the branch full depth
+        Builds
+        """
+
+        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
+
+            self.pop_node_depth = i  # increment 'node_depth'
+            parent_arity_sum = 0
+            prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
+            prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
+
+            # parent_arity_sum = amount of nodes (that have to be on this level)
+            for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
+                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
+                    parent_arity_sum = parent_arity_sum + int(self.tree[8][j])  # sum arities of all parent nodes at the prior depth
+
+            # Set for every "free space" a function node (func)
+            for j in range(1, len(self.tree[3])):  # increment through all nodes
+                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
+                    if self.tree[TR_nlabel][j] == 'Ifte':
+                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                        prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2f')  # ... generate a Function node
+                        prior_siblings = prior_siblings + 1
+                    else:
+                        for k in range(1, int(self.tree[8][j]) + 1):  # k = 1,2
+                            self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
+                            parent_func_dtype = function_dtypes_dict[self.tree[TR_nlabel][self.pop_node_parent]]  # find parents node
+                            func_dtype = parent_func_dtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
+                            prior_sibling_arity = self.gp_evolve_subtree_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_dtype)  # ... generate a Function node
+                            prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
+
         return

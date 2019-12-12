@@ -31,6 +31,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     gp_ops_distribution_list = [evolve_repro, evolve_point, evolve_branch, evolve_cross, evolve_missing]
 
     config_dict = {
+        'name': '_MTC_tree_012',
         'kernel': 'r',    		    # [r,c,m]			fitness function: (r)egression, (c)lassification, or (m)atching
         'tree_type': 'g', 		    # [f,g,r]			Tree type: (f)ull, (g)row, or (r)amped half/half
         'tree_depth_base': 3,		# [3...10]			maximum Tree depth for initial population
@@ -49,7 +50,8 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
 
     file_dict = {
         'samples_file': Path('../mountaincar/karoo_files/behaviour_samples.csv'),
-        'origin_tree_file': Path('../mountaincar/karoo_files/test_tree.csv'),
+        # 'origin_tree_file': Path('../mountaincar/karoo_files/test_tree.csv'),
+        'origin_tree_file': Path('../mountaincar/karoo_files/test_tree_012.csv'),
         'operators_file': Path('../mountaincar/karoo_files/operators.csv')
     }
 

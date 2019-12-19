@@ -43,7 +43,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
         'precision': 6,             # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',                # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'display': 'gewsivto',      # ewgggsiiiivvvtoppp
+        'display': 'gewsivtott',      # ewgggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'parsimony_min_max': [15, 100],
     }

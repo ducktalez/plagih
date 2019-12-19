@@ -900,7 +900,7 @@ class ExplainableGP(object):
         """
 
         # How many survived in the selection?
-        self.monitoring_dict[self.gen_id] = {'genepool_size': (len(gene_pool_meta_dict))}
+        self.monitoring_dict['genepool_size'] = {self.gen_id: len(gene_pool_meta_dict)}
         if len(gene_pool_meta_dict) > 0:
             self.printpl('i', 'The gene_pool_meta_dict has size:', len(gene_pool_meta_dict))
         else:  # the evolutionary constraints were too tight, killing off the entire population
@@ -908,11 +908,10 @@ class ExplainableGP(object):
 
         # What is the average fitnes in out genepool?
         fitness_train_sum = 0
-        print(gene_pool_meta_dict)
-        for tree_meta in gene_pool_meta_dict:
-            fitness_train_sum += float(tree_meta['fitness_train'])
+        for key, value in gene_pool_meta_dict.items():
+            fitness_train_sum += float(value['fitness_train'])
         average_fitness = fitness_train_sum / len(gene_pool_meta_dict)
-        self.monitoring_dict[self.gen_id]['average_fitness'] = average_fitness
+        self.monitoring_dict['average_fitness'] = {self.gen_id: average_fitness}
         return
 
     def pop_pareto_update(self, gene_pool_meta_dict):
@@ -925,7 +924,7 @@ class ExplainableGP(object):
         for tree_id in gene_pool_meta_dict:
 
             parsim = gene_pool_meta_dict[tree_id]['parsimony']
-            fitness = gene_pool_meta_dict[tree_id]['fitness']
+            fitness = gene_pool_meta_dict[tree_id]['fitness_train']
 
             # 3. is the tree better than the current best in this parsimony level?
             if parsim in self.pareto_front:
@@ -971,7 +970,8 @@ class ExplainableGP(object):
         else:
             algo_sym = sympy_dummy
             fitness_train = self.fitness_dummy_get()
-        tree_meta = {'algo_raw': str(algo_raw_str), 'algo_sym': str(algo_sym), 'parsimony': float(parsimony), 'fitness_train': float(fitness_train)}
+        tree_meta = {'algo_raw': str(algo_raw_str), 'tree_ident': tree_ident, 'algo_sym': str(algo_sym), 'parsimony': float(parsimony), 'fitness_train': float(fitness_train)}
+
         # tree_meta['tree_id'] = tree_id  # did this in the upper function
         return tree_meta
 
@@ -1015,7 +1015,7 @@ class ExplainableGP(object):
         Compute the fitness for every tree
         """
         dominator_count = 0
-        for tree_id in gene_pool_meta_dict:
+        for tree_id, value in gene_pool_meta_dict.items():
             tree = population[tree_id]
             fitness_train = gene_pool_meta_dict[tree_id]['fitness_train']
             tree_ident = gene_pool_meta_dict[tree_id]['tree_ident']

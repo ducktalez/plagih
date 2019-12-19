@@ -33,6 +33,7 @@ from plagih.modules.plagih_sympy_extras import plagih_sympify
 from pprint import pprint
 import matplotlib.pyplot as plt
 import scipy.stats as st
+from plagih.modules.tree_distances.tree_edit_distance import apted_distance
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -143,7 +144,7 @@ function_dtypes_dict = {  # Needs A LOT OF further testing
 }
 functions_multiparam_dict = []  # = ['Min', 'Max']  # Currently not in use
 functions_wrap_dict = ['Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
-functions_inline_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']  # 'Min', 'Max',
+functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']  # 'Min', 'Max',
 # TODO all functions have to be within one of these lists. check it.
 function_arity_dict = {  # Needs A LOT OF further testing
     'float': 0,  # these three are dummies
@@ -193,6 +194,19 @@ function_arity_dict = {  # Needs A LOT OF further testing
     # 'Max': 2,
     'Mini': 2,
     'Maxi': 2,
+}
+function_infix_to_prefix = {  # currently obsolete
+    '+': 'add',
+    '-': 'sub',
+    '*': 'mult',
+    '/': 'div',
+    '**': 'power',
+    '==': 'eq',
+    '!=': 'neq',
+    '<': 'lt',
+    '<=': 'leq',
+    '>': 'gt',
+    '>=': 'geq',
 }
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
@@ -2231,34 +2245,50 @@ class ExplainableGP(object):
         - set parsimony very high?
         """
 
-    def tree_expr_raw(self, tree, node_id):
+    def tree_expr_raw(self, tree, node_id, type='sympy'):
 
         """
         Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
+        sfeh/todo: this can be optimized to create a nicer brackets-styled algorithm
+        """
+        node_id = int(node_id)
 
-        This method is called once per Tree, but may be called at any time to prepare an expression for any full or
-        partial (branch) Tree contained in 'population'. Pass the starting node for recursion via the local variable
-        'node_id' where the local variable 'tree' is a copy of the Tree you desire to evaluate.
+        if tree[TRn_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+            return '(' + tree[TRn_label, node_id] + ')'  # 'node_label' (function or terminal)
+
+        elif tree[TRn_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+            return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TRn_label, node_id] + ')'
+
+        elif tree[TRn_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+            # This if case is for 2-ary ops that is prefix. like Min(a, b)
+            if tree[TRn_label, node_id] not in functions_infix_dict:
+                return '(' + tree[TRn_label, node_id] + '(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + '))'
+            else:
+                return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TRn_label, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
+
+        elif tree[TRn_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+            return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
+
+    def tree_raw_depth_prefix(self, tree, node_id):
+
+        """
+        Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
 
         """
 
         node_id = int(node_id)
 
         if tree[TRn_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '(' + tree[TRn_label, node_id] + ')'  # 'node_label' (function or terminal)
-        else:
-            if tree[TRn_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-                return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TRn_label, node_id] + ')'
+            return '{' + tree[TRn_label, node_id] + '}'  # 'node_label' (function or terminal)
 
-            elif tree[TRn_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-                # This if case is for 2-ary ops that can not be inline. like Min(a, b)
-                if tree[TRn_label, node_id] not in functions_inline_dict:  # in non_inline_functions:
-                    return '(' + tree[TRn_label, node_id] + '(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + '))'
-                else:
-                    return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[TRn_label, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
+        elif tree[TRn_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+            return '{' + tree[TRn_label, node_id] + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
 
-            elif tree[TRn_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-                return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
+        elif tree[TRn_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+            return '{' + tree[TRn_label, node_id] + '' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
+
+        elif tree[TRn_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+            return '{Ifte' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + self.tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
 
     def tree_node_get_childlist(self, tree, node_id):
 
@@ -2294,12 +2324,14 @@ class ExplainableGP(object):
                        + self.tree_node_get_childlist(tree, tree[10, node_id]) + ', ' \
                        + self.tree_node_get_childlist(tree, tree[11, node_id])
 
-    def tree_parsimony(self, tree, parsimony_distance='rel_ari_1'):
+    def tree_parsimony(self, tree, parsimony_distance='ted'):
         """
         parsimony_distance: compute the chosen distance by the user. Default is best historic distance
 
         """
-        if parsimony_distance == 'total_count_nodes':
+        if parsimony_distance == 'ted':
+            return self.tree_parsimony_ted(self.origin_tree, tree)
+        elif parsimony_distance == 'total_count_nodes':
             return int(tree[3][-1:])  # returns the tree size
         elif parsimony_distance == 'total_tree_depth':
             return tree[4][1]     # returns the tree size
@@ -2340,15 +2372,17 @@ class ExplainableGP(object):
 
         return max(distance, 1)  # make sure, it does not return 0
 
-    def tree_parsimony_ted(self, tree):
+    def tree_parsimony_ted(self, tree1, tree2):
         """
         The Tree Edit distance (TED) ('coolest' distance)
         - the amount of changes that have to be applied to the origin to equality are counted
         """
-        # TODO distanzfunktion für Anzahl der Änderungen schreiben
-        og_expr = self.tree_expr_sympify(tree=self.origin_tree)
-        changed_expr = self.tree_expr_sympify(tree=tree)
-        return
+        # TODO TED soll geänderte Werte ignorieren
+        apted_tree1 = self.tree_raw_depth_prefix(tree1, 1)
+        apted_tree2 = self.tree_raw_depth_prefix(tree2, 1)
+        distance, mapping = apted_distance(apted_tree1, apted_tree2)
+        # sfeh the mapping could be handy somewhere
+        return distance
 
     def tree_store_fitness(self, tree, fitness):
 
@@ -2620,7 +2654,14 @@ class ExplainableGP(object):
         # print('Current expr:', expr)  # importantprint
         tree = ast.parse(expr, mode='eval').body
 
-        return self.eval_tf_expr_graph(tree, tensors)
+        # TODO diesen try-except block entfernen
+        try:
+            return self.eval_tf_expr_graph(tree, tensors)
+        except:
+            if self.fitness_type == 'min':
+                return float('Inf')
+            else:
+                return 0
 
     def eval_tf_expr_graph(self, node, tensors):
 
@@ -2645,8 +2686,8 @@ class ExplainableGP(object):
         elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
             # special case: If-then-else
             if node.func.id == 'Ifte':
-                return operator_dict[node.func.id](
-                    tf.dtypes.cast(self.eval_tf_expr_graph(node.args[0], tensors), tf.bool),
+                return operator_dict[node.func.id](tf.dtypes.cast(
+                    self.eval_tf_expr_graph(node.args[0], tensors), tf.bool),
                     self.eval_tf_expr_graph(node.args[1], tensors),
                     self.eval_tf_expr_graph(node.args[2], tensors))
             # special case: Min and Max accept 2 or more arguments. Many errors. Therefore not in use anymore.
@@ -2659,13 +2700,16 @@ class ExplainableGP(object):
                 return tf.dtypes.cast(*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args], dtype=tf.bool)
             elif node.func.id == 'Btof':
                 return tf.dtypes.cast(*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args], dtype=tf.float32)
+
             try:
                 # The actual handling. The '*' inserts all the arguments (in this case 2) into the function.
+                if len(node.args) > 2:
+                    self.printpl('e', 'This has more than 2 args?', str(node.func.id))
                 return operator_dict[node.func.id](*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args])
             except:
                 if 'observation' in node.func.id:
                     print(node.func.id, ' ', self.a_debug_warning)
-                self.printpl('w', 'node.func.id caused an exception', node.func.id)
+                self.printpl('w', 'node.func.id caused an exception:', node.func.id)
 
         elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
             return self.eval_tf_chain_bool(node.values, operator_dict[type(node.op)], tensors)

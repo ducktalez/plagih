@@ -1,17 +1,1 @@
-from plagih.modules.plagih_sympy_extras import plagih_sympify
-import re
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy.stats as st
-
-
-# print(plagih_sympify('(ifte(True, 0, 1))'))
-# print(plagih_sympify('(ifte(False, 0, 1))'))
-# print(plagih_sympify('a == (a<b)'))
-# print(plagih_sympify('a+a+b'))
-# print(plagih_sympify('(ifte((a<2), 0, 2))'))
-# print(plagih_sympify('(ifte((a<2), mini(a, 2), 2))'))
-# print(plagih_sympify('mini(a, 2)'))
-# print(plagih_sympify('maxi(a, 2)'))
-# print(plagih_sympify('ftob(x)'))
-# print(plagih_sympify('ftob(2)'))
+(Ifte(((observation1)<((Ifte(((((Ifte(((Mini((-0.9932952785512101), (observation1)))>(observation0)), ((observation0)*(0.06780742530309536)), (observation1)))-(((-0.7211696970358776)-(observation1))*(Ifte((False), (Maxi((0.3096806245031116), (observation0))), ((observation1)+(0.21136426839679912))))))*((-0.753417111601751)/(Maxi((Ifte((False), (0.014032479771852957), (observation0))), ((Ifte((-0.3260846193322311), (observation1), (0.6765217675917521)))-(-0.8467329233491687))))))>((observation0)/(Ifte((False), (0.9713116326167917), (0.015012772791043627))))), (observation1), (-0.4203299405142009)))*(Ifte(((0)>(observation0)), (Ifte((True), (observation1), (observation0))), (Mini((observation1), (Maxi((Ifte((True), ((((observation0)-(0.8622404989425894))-(-0.9540913171769931))/((Ifte((observation1), (observation0), (0.3379741691735958)))+(observation1))), (-0.2472563440018496))), ((-0.9065824434028913)/(((observation0)-(observation0))/(observation0))))))))))), (0), (Ifte((True), (2), (0)))))

@@ -4,9 +4,35 @@ Not yet quite in use
 """
 import numpy as np
 
+
 class PlagihTree:
-    def __init__(self):
-        tree_nodes = np.array([[]])
+
+    def __init__(self, root_node_label, root_node_arity, history_size=3):
+
+        # The tree nodes
+        self.node_expr = np.array([str(root_node_label)])
+
+        node_depth = 0
+        node_parent = -1  # dummy - this is the root
+        node_arity = root_node_arity  #
+        node_c1, node_c2, node_c3 = self.get_c_values(0)
+        node_modify = -1
+        self.node_info = np.array([node_depth, node_parent, node_arity, node_c1, node_c2, node_c3, node_modify])
+
+        # Metadata
+        self.tree_id = ''
+        self.tree_type = ''
+        self.tree_depth = ''
+        self.node_num = 0
+        self.status = 'init'
+        self.history_size = history_size
+
+        # Tree useful Information
+        self.algo_raw = ''
+        self.algo_sym = ''
+        self.algo_hash = ''
+        self.fitness = np.zeros(history_size)
+        self.parsimony = np.zeros(history_size)
 
         TR_nID = 3
         TR_ndepth = 4
@@ -26,3 +52,56 @@ class PlagihTree:
         TR_parsimony = 14
 
         TR_num_lines = 15
+
+        np.array(
+            [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'],
+             ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'],
+             ['fitness'], ['node_modify'], ['parsimony']])
+
+    def get_c_values(self, id, my_arity):
+        if my_arity == 0:
+            return -1, -1, -1
+        elif my_arity == 1:
+            return id+1, -1, -1
+        elif my_arity == 2:
+            return id+1, id+2, -1
+        elif my_arity == 3:
+            return id+1, id+2, id+3
+
+    def add_node(self, node_label, node_depth, node_parent, node_arity, node_c1, node_c2, node_c3, node_modify):
+        self.nodes = np.append(self.nodes, [node_label, node_depth, node_parent, node_arity, node_c1, node_c2, node_c3, node_modify], axis=0)
+        self.node_num += 1
+
+    def load_from_expr_raw(self, str_expr_raw):
+        """
+        TODO
+        """
+
+    def get_expr_raw(self, str_expr_raw):
+        """
+        TODO
+        """
+
+    def save_to_csv(self, csv_path):
+        """
+        TODO
+        """
+
+    def load_from_csv(self, csv_path):
+        """
+        TODO
+        """
+
+    def save_to_pickle(self, pickle_path):
+        """
+        TODO
+        """
+
+    def load_from_pickle(self, pickle_path):
+        """
+        TODO
+        """
+
+
+test = PlagihTree()
+print(test)

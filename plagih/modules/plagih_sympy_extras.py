@@ -15,6 +15,7 @@ Also, please do not ask me about when to use Ifte() and ifte(), it somehow works
 """
 
 from sympy import Function, sympify
+from sympy.core.numbers import ComplexInfinity
 
 
 class Ifte(Function):
@@ -36,7 +37,6 @@ class Ifte(Function):
 
 class Mini(Function):
     """
-    obsolete, currently not needed.
     """
     nargs = 2
 
@@ -53,12 +53,12 @@ class Mini(Function):
 
 class Maxi(Function):
     """
-    obsolete, currently not needed.
     """
     nargs = 2
 
     @classmethod
     def eval(cls, a, b):
+
         if (a < b) == True or (a < b) == False:
             return a if a > b else b
         else:
@@ -76,7 +76,7 @@ class Ftob(Function):
 
     @classmethod
     def eval(cls, a):
-        if (a>0) == True or (a>0) == False:
+        if (a > 0) == True or (a > 0) == False:
             return True if a > 0 else False
         else:
             return
@@ -106,11 +106,21 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Ftob': Ftob,
                     'Btof': Btof,
                     'Mini': Mini,
-                    'Maxi': Maxi}
+                    'Maxi': Maxi,}
 
 def plagih_sympify(function_string):
     """
+    Sympy bug #1:
     It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139
     Or this issue: https://github.com/sympy/sympy/issues/17785
+
+    Sympy bug #1:
+    >>> print(plagih_sympify('a<zoo'))
+    throws an exception.
+    -> Try-except block for this case
+    todo: Better solution for this?
     """
-    return sympify(sympify(function_string, locals=local_sympy_dict))
+    try:
+        return sympify(sympify(function_string, locals=local_sympy_dict))
+    except:
+        return 'nan'

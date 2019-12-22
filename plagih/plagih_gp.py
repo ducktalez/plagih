@@ -50,13 +50,12 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
 
     file_dict = {
         'samples_file': Path('../mountaincar/karoo_files/behaviour_samples.csv'),
-        # 'origin_tree_file': Path('../mountaincar/karoo_files/test_tree.csv'),
         'origin_tree_file': Path('../mountaincar/karoo_files/test_tree_012.csv'),
         'operators_file': Path('../mountaincar/karoo_files/operators.csv')
     }
 
     monitor = {'verbosity': 'end',      # every [generation] or at the [end]
-               'gen_fitness_avg': 'y',
+               'gen_fitness_average': 'y',
                'sympify_errors': 'y',
                'genepool_size': 'y'
                }

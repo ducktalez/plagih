@@ -270,7 +270,7 @@ class ExplainableGP(object):
         self.agen_debug_warning = ''
         self.time_start = time.perf_counter()  # process_time() would be even more accurate, but not necessary
         self.monitoring_dict = {'genepool_size': {},
-                                'average_fitness': {}}                   # first gen only todo: what if we restart?
+                                'fitness_average': {}}                   # first gen only todo: what if we restart?
 
         return
 
@@ -399,8 +399,8 @@ class ExplainableGP(object):
         # plot_end(self, y, mode='', plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='')
         """
 
-        if self.monitor_dict['fitness_avg'] == 'y':
-            self.plot_end('fitness_avg', plt_title='Average Fitness', plt_y_label='Fitness')
+        if self.monitor_dict['gen_fitness_average'] == 'y':
+            self.plot_end('fitness_average', plt_title='Average Fitness', plt_y_label='Fitness')
 
         if self.monitor_dict['genepool_size'] == 'y':
             self.plot_end('genepool_size', plt_title='Genepool size', plt_y_label='Amount')
@@ -461,7 +461,8 @@ class ExplainableGP(object):
         self.origin['tree'] = tree
         self.origin['algo_raw'] = self.tree_expr_raw(self.origin['tree'], 1)
         self.origin['algo_sym'] = self.tree_expr_sympify(algo_raw_str=self.origin['algo_raw'])
-        
+        origin_hash, origin_meta = self.tree_store_meta_get_hash(tree)
+        self.origin['parsimony'] = origin_meta['parsimony']
         self.origin['fitness_train'] = self.eval_tf(self.origin['algo_sym'], self.data_train)['fitness']
 
         self.hashtable_fitness_train = {}
@@ -546,23 +547,23 @@ class ExplainableGP(object):
         # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
         x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST split
         data_train = np.c_[x_train, y_train]  # recombine each row of data with its associated class label (right column)
-        data_test = np.c_[x_test, y_test]  # recombine each row of data with its associated class label (right column)
+        data_control = np.c_[x_test, y_test]  # recombine each row of data with its associated class label (right column)
 
         data_x, data_y, x_train, y_train, x_test, y_test = [], [], [], [], [], []  # clear from memory
         # self.data_train_cols = len(data_train[0, :])  # qty count
         # self.data_train_rows = len(data_train[:, 0])  # qty count
-        # self.data_test_cols = len(data_test[0, :])  # qty count
-        # self.data_test_rows = len(data_test[:, 0])  # qty count
+        # self.data_control_cols = len(data_control[0, :])  # qty count
+        # self.data_control_rows = len(data_control[:, 0])  # qty count
 
         ### PART 5 - load TRAINING and TEST data for TensorFlow processing
         self.data_train = data_train  # Store train data for processing in TF
-        self.data_test = data_test  # Store test data for processing in TF
+        self.data_control = data_control  # Store test data for processing in TF
         self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU or GPU); gpu:n = 1st, 2nd, or ... GPU device
         self.tf_device_log = False  # TF device usage logging (for debugging)
 
         # TODO what to do with test data?
         if True:
-            self.data_test = self.data_train
+            self.data_control = self.data_train
         dataset_dict = {}
         dataset_dict['x'] = []
         return dataset_dict
@@ -751,38 +752,40 @@ class ExplainableGP(object):
         file.write('\n dataset: ' + str(self.dataset))
         file.write('\n')
 
-        result = self.eval_tf(self.origin['algo_sym'], self.data_test, get_pred_labels=True)
+        result = self.eval_tf(self.origin['algo_sym'], self.data_control, get_pred_labels=True)
         self.origin['result'] = result
-        self.origin['fitness_test'] = result['fitness']
+        self.origin['fitness_control'] = result['fitness']
 
-        fitness_best = self.origin['fitness_test']
+        fitness_best = self.origin['fitness_control']
         fittest_algo = self.origin['algo_sym']
         fittest_parsimony = self.origin['parsimony']
 
-        for parsim_key in self.pareto_hash_dict:
+        for parsim_key, tree_hash in self.pareto_hash_dict.items():
 
-            tmp_algo = self.pareto_hash_dict[parsim_key]['algo_sym']
-            tmp_result = self.eval_tf(self.pareto_hash_dict[parsim_key]['algo_sym'], self.data_test, get_pred_labels=True)
-            tmp_fitness_test = tmp_result['fitness']
-            tmp_parsimony = self.pareto_hash_dict[parsim_key]['parsimony']
+            tree_meta = self.hash_tree_meta[tree_hash]
+            tmp_algo_sym = tree_meta['algo_sym']
+            tmp_parsimony = tree_meta['parsimony']
+            tmp_result = self.eval_tf(tmp_algo_sym, self.data_control, get_pred_labels=True)
+            tmp_fitness_control = tmp_result['fitness']
 
             update_now = False
-            if self.kernel == 'c' and tmp_fitness_test >= fitness_best:  # find the Tree with maximum fitness score
+            if self.kernel == 'c' and tmp_fitness_control >= fitness_best:  # find the Tree with maximum fitness score
                     update_now = True
 
-            elif self.kernel == 'r' and tmp_fitness_test <= fitness_best:  # find the Tree with minimum fitness score
+            elif self.kernel == 'r' and tmp_fitness_control <= fitness_best:  # find the Tree with minimum fitness score
                     update_now = True
 
-            elif self.kernel == 'm' and tmp_fitness_test == self.data_train_rows:  # find the Tree with a perfect match for all data rows
+            elif self.kernel == 'm' and tmp_fitness_control == self.data_train_rows:  # find the Tree with a perfect match for all data rows
+                # TODO what was in the line above that worked?
                     update_now = True
 
             if update_now:
-                fitness_best = tmp_fitness_test
+                fitness_best = tmp_fitness_control
                 fittest_algo = fittest_algo
                 fittest_parsimony = tmp_parsimony
 
 
-            file.write('\n\t Origin fitness score: {}'.format(self.origin['fitness_test']))
+            file.write('\n\t Origin fitness score: {}'.format(self.origin['fitness_control']))
             file.write('\n\n The best Tree has ' + str(fittest_parsimony))
             file.write('\n\n With the following sympifyed algorithm:\n' + fittest_algo)
 
@@ -843,10 +846,11 @@ class ExplainableGP(object):
         """
         file = open(self.path + 'paretofront.txt', 'w')
         # {'algo_raw': '', 'algo_sym': '', 'fitness_train': '', 'parsimony': ''}
-        for parsim_key in sorted(list(self.pareto_hash_dict.keys())):
-            fitness = self.pareto_hash_dict[parsim_key]['fitness_train']
-            algo_sym_str = self.pareto_hash_dict[parsim_key]['algo_sym']
-            file.write('\nParsimony: \t' + str(parsim_key) + ' Fitness: \t' + str(fitness) + ' Expr: \t' + str(algo_sym_str))
+        for parsim_key, tree_hash in sorted(list(self.pareto_hash_dict.items())):
+            tree_meta = self.hash_tree_meta[tree_hash]
+            fitness = tree_meta['fitness_train']
+            algo_sym = tree_meta['algo_sym']
+            file.write('\nParsimony: \t' + str(parsim_key) + ' Fitness: \t' + str(fitness) + ' Expr: \t' + str(algo_sym))
 
         file.close()
 
@@ -907,7 +911,7 @@ class ExplainableGP(object):
         for key, value in gene_pool_hash_dict.items():
             fitness_train_sum += float(self.hash_tree_meta[value]['fitness_train'])
         average_fitness = fitness_train_sum / len(gene_pool_hash_dict)
-        self.monitoring_dict['average_fitness'] = {self.gen_id: average_fitness}
+        self.monitoring_dict['fitness_average'][int(self.gen_id)] = average_fitness
         return
 
     def pop_pareto_update(self, gene_pool_hash_dict):
@@ -3173,7 +3177,7 @@ class ExplainableGP(object):
         elif input_a == 'eval':  # evaluate a Tree against the TEST data
             algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
             self.printpl('o', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, '\033[0;0m')  # print the sympified expression
-            result = self.eval_tf(str(algo_sym), self.data_test, get_pred_labels=True)  # might change to algo_raw_str evaluation
+            result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
             self.pause_fitness_test(result)  # TF tested 2017 02/02
 
         elif input_a == 'print_last':  # print a Tree from population_genepool

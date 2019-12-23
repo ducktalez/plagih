@@ -28,7 +28,12 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
         print('Error: A new generation has less than', evolve_total, 'candidates. It has', tree_pop_max)
         print('Missing', tree_pop_max-evolve_total, 'will be random o')
         evolve_missing = evolve_missing + tree_pop_max-evolve_total
-    gp_ops_distribution_list = [evolve_repro, evolve_point, evolve_branch, evolve_cross, evolve_missing]
+
+    gp_ops_distribution_dict = {'reproduce': evolve_repro,
+                                'mutate_point': evolve_point,
+                                'mutate_branch': evolve_branch,
+                                'crossover': evolve_cross,
+                                'missing': evolve_missing}
 
     config_dict = {
         'name': '_MTC_tree_012',
@@ -43,7 +48,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
         'precision': 6,             # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',                # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'display': 'gewsivtott',      # ewgggsiiiivvvtopppttt
+        'display': 'gewsivtott',      # To display absolutely all: ewgggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'parsimony_min_max': [15, 100],
     }
@@ -60,7 +65,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
                'genepool_size': 'y'
                }
 
-    gp = plagih.ExplainableGP(config_dict, file_dict, gp_ops_distribution_list, monitor)
+    gp = plagih.ExplainableGP(config_dict, file_dict, gp_ops_distribution_dict, monitor)
 
     if run == 'plagih_gp_run':
         gp.plagih_gp_run()

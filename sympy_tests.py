@@ -1,9 +1,4 @@
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-import re
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy.stats as st
-
 
 print(plagih_sympify('(ifte(True, 0, 1))'))
 print(plagih_sympify('(ifte(False, 0, 1))'))
@@ -31,4 +26,9 @@ print(plagih_sympify('Mini(b, (Maxi(a, (1/(0/a)))))'))
 print(plagih_sympify('Mini(b, (Maxi(a, (1/(0/a)))))'))
 print(plagih_sympify('nan'))
 print(plagih_sympify('a<zoo'))
+
+print('New try:')
+print(plagih_sympify(
+    'Ifte(observation1 < Mini(observation0 + 0.9548159122809774, observation1/(observation1 + 0.9271353267175513*Mini(Mini(0.04086515394628076, -0.9059064710609868 + 0.24723027990331237/observation0), observation0*(observation1(Maxi(Maxi(observation0, -0.334440127433157), 0.7714615427010407), -0.7204299835877799) - 0.6154060573223696)) - 0.2500002956173697)), 0, 2)'
+                     ))
 

@@ -11,7 +11,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     evolve_branch = 0.4     # [0.0...1.0]  		decimal percent of pop generated through Branch Mutation
     evolve_cross = 0.25  	# [0.0...1.0]  		decimal percent of pop generated through Crossover
     # [3 to 2^(bas +1) - 1]	minimum number of nodes
-    tree_pop_max = 60
+    tree_pop_max = 120
     # gen_with_max_parsimony = int(gen_max/2)
 
     evolve_repro = int(evolve_repro*tree_pop_max)

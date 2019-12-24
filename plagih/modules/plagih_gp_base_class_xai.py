@@ -1233,24 +1233,40 @@ class ExplainableGP(object):
         the point of execution.
 
         Use of the debug (db) interface mode enables the user to watch the genetic operations as they work on the Trees.
-
+TR_ID = 0
+TR_type = 1
+TR_depth = 2
+TRn_ID = 3
+TRn_depth = 4
+TRn_type = 5
+TRn_label = 6
+TRn_parent = 7
+TRn_arity = 8
+TRn_c1 = 9
+TRn_c2 = 10
+TRn_c3 = 11
+TR_fitness = 12
+TRn_modify = 13
+TR_parsimony = 14
+TRn_um_lines = 15
         """
-
-        self.pop_TREE_ID = TREE_ID  # pos 0: a unique identifier for each tree
-        self.pop_tree_type = last_modification  # pos 1: a global constant based upon the initial user setting
-        self.pop_tree_depth_base = tree_depth  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
-        self.pop_NODE_ID = 1  # pos 3: unique identifier for each node; this is the INDEX KEY to this array
-        self.pop_node_depth = 0  # pos 4: depth of each node when committed to the array
-        self.pop_node_type = ''  # pos 5: root, function, or terminal
-        self.pop_node_label = ''  # pos TRn_label: operator [+, -, *, ...] or terminal [a, b, c, ...]
-        self.pop_node_parent = ''  # pos 7: parent node
-        self.pop_node_arity = ''  # pos 8: number of nodes attached to each non-terminal node
-        self.pop_node_c1 = ''  # pos 9: child node 1
-        self.pop_node_c2 = ''  # pos 10: child node 2
-        self.pop_node_c3 = ''  # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
-        self.pop_fitness = ''  # pos 12: fitness score following Tree evaluation
-        self.pop_node_modify = ''  # pos 13: dummy value whether this node is allowed to be modified
-        self.pop_parsimony = ''  # pos 14: separate line for the latest distance to origin
+        
+        self.pop = {}
+        self.pop[TR_ID] = TREE_ID  # pos 0: a unique identifier for each tree
+        self.pop[TR_type] = last_modification  # pos 1: a global constant based upon the initial user setting
+        self.pop[TR_depth] = tree_depth  # pos 2: a global variable which conveys 'tree_depth_base' as unique to each new Tree
+        self.pop[TRn_ID] = 1  # pos 3: unique identifier for each node; this is the INDEX KEY to this array
+        self.pop[TRn_depth] = 0  # pos 4: depth of each node when committed to the array
+        self.pop[TRn_type] = ''  # pos 5: root, function, or terminal
+        self.pop[TRn_label] = ''  # pos TRn_label: operator [+, -, *, ...] or terminal [a, b, c, ...]
+        self.pop[TRn_parent] = ''  # pos 7: parent node
+        self.pop[TRn_arity] = ''  # pos 8: number of nodes attached to each non-terminal node
+        self.pop[TRn_c1] = ''  # pos 9: child node 1
+        self.pop[TRn_c2] = ''  # pos 10: child node 2
+        self.pop[TRn_c3] = ''  # pos 11: child node 3 (assumed max of 3 with boolean operator 'if')
+        self.pop[TR_fitness] = ''  # pos 12: fitness score following Tree evaluation
+        self.pop[TRn_modify] = ''  # pos 13: dummy value whether this node is allowed to be modified
+        self.pop[TR_parsimony] = ''  # pos 14: separate line for the latest distance to origin
 
         self.tree = np.array(
             [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'], ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'],
@@ -1266,25 +1282,25 @@ class ExplainableGP(object):
         # eg b2f2f
         self.xtype_function_select(old_node_type)  # select the operator for root
 
-        if self.pop_node_arity == 1:  # 1 child
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = ''
-            self.pop_node_c3 = ''
+        if self.pop[TRn_arity] == 1:  # 1 child
+            self.pop[TRn_c1] = 2
+            self.pop[TRn_c2] = ''
+            self.pop[TRn_c3] = ''
 
-        elif self.pop_node_arity == 2:  # 2 children
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = 3
-            self.pop_node_c3 = ''
+        elif self.pop[TRn_arity] == 2:  # 2 children
+            self.pop[TRn_c1] = 2
+            self.pop[TRn_c2] = 3
+            self.pop[TRn_c3] = ''
 
-        elif self.pop_node_arity == 3:  # 3 children
-            self.pop_node_c1 = 2
-            self.pop_node_c2 = 3
-            self.pop_node_c3 = 4
+        elif self.pop[TRn_arity] == 3:  # 3 children
+            self.pop[TRn_c1] = 2
+            self.pop[TRn_c2] = 3
+            self.pop[TRn_c3] = 4
 
         else:
-            self.printpl('p', 'branch_root_build: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
+            self.printpl('p', 'branch_root_build: pop[TRn_arity] =', self.pop[TRn_arity], '\033[0;0m')
 
-        self.pop_node_type = 'func'  # used to be r00t, but what is it good for?
+        self.pop[TRn_type] = 'func'  # used to be r00t, but what is it good for?
 
         self.tree_node_add()
 
@@ -1299,21 +1315,21 @@ class ExplainableGP(object):
         Builds
         """
 
-        for i in range(1, self.pop_tree_depth_base):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
+        for i in range(1, self.pop[TR_depth]):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
 
-            self.pop_node_depth = i  # increment 'node_depth'
+            self.pop[TRn_depth] = i  # increment 'node_depth'
             parent_arity_sum = 0
             prior_sibling_arity = 0  # reset for 'c_buffer' in 'children_link'
             prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
 
             # parent_arity_sum = amount of nodes (that have to be on this level)
             for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # find parent nodes which reside at the prior depth
+                if int(self.tree[4][j]) == self.pop[TRn_depth] - 1:  # find parent nodes which reside at the prior depth
                     parent_arity_sum = parent_arity_sum + int(self.tree[TRn_arity][j])  # sum arities of all parent nodes at the prior depth
 
             # Set for every "free space" a function node (func)
             for j in range(1, len(self.tree[3])):  # increment through all nodes
-                if int(self.tree[4][j]) == self.pop_node_depth - 1:  # ... find all parent nodes, one level above...
+                if int(self.tree[4][j]) == self.pop[TRn_depth] - 1:  # ... find all parent nodes, one level above...
                     if self.tree[TRn_label][j] == 'Ifte':
                         prior_sibling_arity = self.treegp_mutate_branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
@@ -1323,8 +1339,8 @@ class ExplainableGP(object):
                         prior_siblings = prior_siblings + 1
                     else:
                         for k in range(1, int(self.tree[TRn_arity][j]) + 1):  # k = 1,2
-                            self.pop_node_parent = int(self.tree[3][j])  # set the nodes parent
-                            parent_func_xtype = function_xtypes_dict[self.tree[TRn_label][self.pop_node_parent]]  # find parents node
+                            self.pop[TRn_parent] = int(self.tree[3][j])  # set the nodes parent
+                            parent_func_xtype = function_xtypes_dict[self.tree[TRn_label][self.pop[TRn_parent]]]  # find parents node
                             func_xtype = parent_func_xtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
                             prior_sibling_arity = self.treegp_mutate_branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, func_xtype)  # ... generate a Function node
                             prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
@@ -1338,12 +1354,12 @@ class ExplainableGP(object):
 
         """
 
-        self.pop_node_depth = self.pop_tree_depth_base  # set the final node_depth (same as 'gp.pop_node_depth' + 1)
+        self.pop[TRn_depth] = self.pop[TR_depth]  # set the final node_depth (same as 'gp.pop[TRn_depth]' + 1)
 
         for j in range(1, len(self.tree[3])):  # go through all nodes
-            if int(self.tree[4][j]) == self.pop_node_depth - 1:  # this node is a parent
+            if int(self.tree[4][j]) == self.pop[TRn_depth] - 1:  # this node is a parent
                 for k in range(1, (int(self.tree[TRn_arity][j]) + 1)):  # increment through each degree of arity for each parent node
-                    self.pop_node_parent = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
+                    self.pop[TRn_parent] = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
                     self.treegp_mutate_branch_terminal_gen(function_xtypes_dict[self.tree[TRn_label][j]])  # ... generate a Terminal node
 
         return
@@ -1356,9 +1372,9 @@ class ExplainableGP(object):
         """
 
         self.xtype_xtype_get_terminal(terminal_xtype)
-        self.pop_node_c1 = ''
-        self.pop_node_c2 = ''
-        self.pop_node_c3 = ''
+        self.pop[TRn_c1] = ''
+        self.pop[TRn_c2] = ''
+        self.pop[TRn_c3] = ''
 
         self.tree_node_add()  # commit new node to array
 
@@ -1380,12 +1396,12 @@ class ExplainableGP(object):
             self.treegp_mutate_branch_link_child(parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
         else:
             self.xtype_xtype_get_terminal(node_xtype)  # was here
-            self.pop_node_c1 = ''
-            self.pop_node_c2 = ''
-            self.pop_node_c3 = ''
+            self.pop[TRn_c1] = ''
+            self.pop[TRn_c2] = ''
+            self.pop[TRn_c3] = ''
 
         self.tree_node_add()  # commit new node to array
-        prior_sibling_arity = prior_sibling_arity + self.pop_node_arity  # sum the arity of prior siblings
+        prior_sibling_arity = prior_sibling_arity + self.pop[TRn_arity]  # sum the arity of prior siblings
 
         return prior_sibling_arity
 
@@ -1397,31 +1413,31 @@ class ExplainableGP(object):
         """
 
         for n in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-            if int(self.tree[4][n]) == self.pop_node_depth - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
-                c_buffer = self.pop_NODE_ID + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
+            if int(self.tree[4][n]) == self.pop[TRn_depth] - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
+                c_buffer = self.pop[TRn_ID] + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
 
-                if self.pop_node_arity == 0:  # terminal in a Grow Tree
-                    self.pop_node_c1 = ''
-                    self.pop_node_c2 = ''
-                    self.pop_node_c3 = ''
+                if self.pop[TRn_arity] == 0:  # terminal in a Grow Tree
+                    self.pop[TRn_c1] = ''
+                    self.pop[TRn_c2] = ''
+                    self.pop[TRn_c3] = ''
 
-                elif self.pop_node_arity == 1:  # 1 child
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = ''
-                    self.pop_node_c3 = ''
+                elif self.pop[TRn_arity] == 1:  # 1 child
+                    self.pop[TRn_c1] = c_buffer
+                    self.pop[TRn_c2] = ''
+                    self.pop[TRn_c3] = ''
 
-                elif self.pop_node_arity == 2:  # 2 children
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = c_buffer + 1
-                    self.pop_node_c3 = ''
+                elif self.pop[TRn_arity] == 2:  # 2 children
+                    self.pop[TRn_c1] = c_buffer
+                    self.pop[TRn_c2] = c_buffer + 1
+                    self.pop[TRn_c3] = ''
 
-                elif self.pop_node_arity == 3:  # 3 children
-                    self.pop_node_c1 = c_buffer
-                    self.pop_node_c2 = c_buffer + 1
-                    self.pop_node_c3 = c_buffer + 2
+                elif self.pop[TRn_arity] == 3:  # 3 children
+                    self.pop[TRn_c1] = c_buffer
+                    self.pop[TRn_c2] = c_buffer + 1
+                    self.pop[TRn_c3] = c_buffer + 2
 
                 else:
-                    self.printpl('e', '\n\t\033[31m ERROR! In tree_build_child_link: pop_node_arity =', self.pop_node_arity, '\033[0;0m')
+                    self.printpl('e', '\n\t\033[31m ERROR! In tree_build_child_link: pop[TRn_arity] =', self.pop[TRn_arity], '\033[0;0m')
                     self.plagih_pause()  # consider special instructions for this
 
         return
@@ -1715,7 +1731,7 @@ class ExplainableGP(object):
         if mode == 'maximum':
             branch_depth = branch_depth_upper_bound
         elif mode == 'base_depth':
-            branch_depth = min(branch_depth_upper_bound, self.pop_tree_depth_base)
+            branch_depth = min(branch_depth_upper_bound, self.pop[TR_depth])
         elif mode == 'random':
             branch_depth = max(branch_depth_upper_bound, np.random.randint(0, 1+max(branch_depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
         else:
@@ -2048,10 +2064,10 @@ class ExplainableGP(object):
         TODO
         """
 
-        self.tree = np.append(self.tree, [[self.pop_TREE_ID], [self.pop_tree_type], [self.pop_tree_depth_base], [self.pop_NODE_ID], [self.pop_node_depth], [self.pop_node_type], [self.pop_node_label],
-                                          [self.pop_node_parent], [self.pop_node_arity], [self.pop_node_c1], [self.pop_node_c2], [self.pop_node_c3], [self.pop_fitness], [1], [self.pop_parsimony]], 1)
+        self.tree = np.append(self.tree, [[self.pop[TR_ID]], [self.pop[TR_type]], [self.pop[TR_depth]], [self.pop[TRn_ID]], [self.pop[TRn_depth]], [self.pop[TRn_type]], [self.pop[TRn_label]],
+                                          [self.pop[TRn_parent]], [self.pop[TRn_arity]], [self.pop[TRn_c1]], [self.pop[TRn_c2]], [self.pop[TRn_c3]], [self.pop[TR_fitness]], [1], [self.pop[TR_parsimony]]], 1)
 
-        self.pop_NODE_ID = self.pop_NODE_ID + 1
+        self.pop[TRn_ID] = self.pop[TRn_ID] + 1
 
         return
 
@@ -2747,9 +2763,9 @@ class ExplainableGP(object):
 
         """
 
-        self.pop_node_type = 'term'
-        self.pop_node_label = self.xtype_xtype_get_term(node_xtype)  # get a terminal
-        self.pop_node_arity = 0
+        self.pop[TRn_type] = 'term'
+        self.pop[TRn_label] = self.xtype_xtype_get_term(node_xtype)  # get a terminal
+        self.pop[TRn_arity] = 0
 
         return
 
@@ -2898,11 +2914,11 @@ class ExplainableGP(object):
 
         """
 
-        self.pop_node_type = 'func'
+        self.pop[TRn_type] = 'func'
         new_function = self.xtype_xtype_get_func(func_xtype)
-        self.pop_node_label = new_function[0]
-        self.pop_node_arity = int(new_function[1])
-        self.pop_node_modify = 1
+        self.pop[TRn_label] = new_function[0]
+        self.pop[TRn_arity] = int(new_function[1])
+        self.pop[TRn_modify] = 1
 
         return
 

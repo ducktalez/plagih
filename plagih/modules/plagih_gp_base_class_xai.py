@@ -1148,14 +1148,14 @@ class ExplainableGP(object):
         node_xtype = self.xtype_label_get_xtype(tree[TRn_label][node])  # '>' -> 'f2b'
 
         # 2. perform point mutation on that specific node
-        if tree[5][node] == 'func':
+        if tree[TRn_type][node] == 'func':
             func_arity = int(tree[TRn_arity][node])
             tree[TRn_label][node] = self.xtype_func_get_func(node_xtype, arity=func_arity)  # Function is same type, same arity
             # Take care of the modify specs
-        elif tree[5][node] == 'term':
+        elif tree[TRn_type][node] == 'term':
             tree[TRn_label][node] = self.xtype_xtype_get_term(node_xtype)  # 3 -> '2f' -> 5
         else:
-            self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[5][node])
+            self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[TRn_type][node])
             raise
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
@@ -1324,12 +1324,12 @@ TRn_um_lines = 15
 
             # parent_arity_sum = amount of nodes (that have to be on this level)
             for j in range(1, len(self.tree[3])):  # increment through all nodes in array 'tree'
-                if int(self.tree[4][j]) == self.pop[TRn_depth] - 1:  # find parent nodes which reside at the prior depth
+                if int(self.tree[TRn_depth][j]) == self.pop[TRn_depth] - 1:  # find parent nodes which reside at the prior depth
                     parent_arity_sum = parent_arity_sum + int(self.tree[TRn_arity][j])  # sum arities of all parent nodes at the prior depth
 
             # Set for every "free space" a function node (func)
             for j in range(1, len(self.tree[3])):  # increment through all nodes
-                if int(self.tree[4][j]) == self.pop[TRn_depth] - 1:  # ... find all parent nodes, one level above...
+                if int(self.tree[TRn_depth][j]) == self.pop[TRn_depth] - 1:  # ... find all parent nodes, one level above...
                     if self.tree[TRn_label][j] == 'Ifte':
                         prior_sibling_arity = self.treegp_mutate_branch_node_gen(parent_arity_sum, prior_sibling_arity, prior_siblings, '2b')  # ... generate a Function node
                         prior_siblings = prior_siblings + 1
@@ -1357,7 +1357,7 @@ TRn_um_lines = 15
         self.pop[TRn_depth] = self.pop[TR_depth]  # set the final node_depth (same as 'gp.pop[TRn_depth]' + 1)
 
         for j in range(1, len(self.tree[3])):  # go through all nodes
-            if int(self.tree[4][j]) == self.pop[TRn_depth] - 1:  # this node is a parent
+            if int(self.tree[TRn_depth][j]) == self.pop[TRn_depth] - 1:  # this node is a parent
                 for k in range(1, (int(self.tree[TRn_arity][j]) + 1)):  # increment through each degree of arity for each parent node
                     self.pop[TRn_parent] = int(self.tree[3][j])  # set the parent 'NODE_ID'  ...
                     self.treegp_mutate_branch_terminal_gen(function_xtypes_dict[self.tree[TRn_label][j]])  # ... generate a Terminal node
@@ -1413,7 +1413,7 @@ TRn_um_lines = 15
         """
 
         for n in range(1, len(self.tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-            if int(self.tree[4][n]) == self.pop[TRn_depth] - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
+            if int(self.tree[TRn_depth][n]) == self.pop[TRn_depth] - 1:  # find all nodes that reside at the prior (parent) 'node_depth'
                 c_buffer = self.pop[TRn_ID] + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
 
                 if self.pop[TRn_arity] == 0:  # terminal in a Grow Tree
@@ -1491,10 +1491,10 @@ TRn_um_lines = 15
             branch_top = int(branch[0])
             TREE_ID = 'copy'
             tree_type = tree[TR_type][1]
-            tree_depth_base = int(tree[4][branch[-1]]) - int(tree[4][branch_top])  # subtract depth of 'branch_top' from the last in 'branch'
+            tree_depth_base = int(tree[TRn_depth][branch[-1]]) - int(tree[TRn_depth][branch_top])  # subtract depth of 'branch_top' from the last in 'branch'
             NODE_ID = tree[3][node]
-            node_depth = int(tree[4][node]) - int(tree[4][branch_top])  # subtract the depth of 'branch_top' from the current node depth
-            node_type = tree[5][node]
+            node_depth = int(tree[TRn_depth][node]) - int(tree[TRn_depth][branch_top])  # subtract the depth of 'branch_top' from the current node depth
+            node_type = tree[TRn_type][node]
             node_label = tree[TRn_label][node]
             node_parent = ''  # updated by evolve_parent_link_fix(), below
             node_arity = tree[TRn_arity][node]
@@ -1532,16 +1532,16 @@ TRn_um_lines = 15
 
         for n in range(1, len(tree[3])):
 
-            if int(tree[4][n]) == depth and tree[5][n] == 'func':
-                tree[5][n] = 'term'  # mutate type 'func' to 'term'
+            if int(tree[TRn_depth][n]) == depth and tree[TRn_type][n] == 'func':
+                tree[TRn_type][n] = 'term'  # mutate type 'func' to 'term'
                 node_xtype = self.xtype_label_get_xtype(tree[TRn_label][n])
                 tree[TRn_label][n] = self.xtype_xtype_get_term(node_xtype)  # replace label
 
-            elif int(tree[4][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
+            elif int(tree[TRn_depth][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
                 nodes.append(n)
 
             else:
-                pass  # as int(tree[4][n]) < depth and will remain untouched
+                pass  # as int(tree[TRn_depth][n]) < depth and will remain untouched
 
         tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
         tree = self.evolve_node_arity_fix(tree)  # fix all node arities
@@ -1688,7 +1688,7 @@ TRn_um_lines = 15
 
         # 2. Get the old-node's information
         old_node_label = chosen_tree[TRn_label][branch_nodes_list[0]]  # <,        +,-,*,8,action0 ...
-        old_node_type = chosen_tree[5][branch_nodes_list[0]]   # func,     term, ...
+        old_node_type = chosen_tree[TRn_type][branch_nodes_list[0]]   # func,     term, ...
         old_node_xtype = self.xtype_node_get_xtype(old_node_label, old_node_type)  # '2f', 'f2b', ...
 
         # 3. check if we are on a too-low level to branch mutate...
@@ -1703,7 +1703,7 @@ TRn_um_lines = 15
             # 5. 50:50 terminal or function
             if np.random.choice(['func', 'term']) == 'term':  # mutate 'branch_top' to a terminal and delete all nodes beneath (no subsequent nodes are added to this branch)
                 # 5.1 We insert a terminal here
-                chosen_tree[5][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
+                chosen_tree[TRn_type][branch_top] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
                 term_type = self.xtype_node_get_xtype(old_node_label, old_node_type)
                 chosen_tree[TRn_label][branch_top] = self.xtype_xtype_get_term(term_type)  # replace with a correct label
                 chosen_tree = np.delete(chosen_tree, branch_nodes_list[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
@@ -1727,7 +1727,7 @@ TRn_um_lines = 15
 
         # TODO consider tree size of last tree, # TODO consider random tree size, # TODO consider always maximum tree size, TODO is this already considered by 50:50 func-term?
 
-        branch_depth_upper_bound = self.tree_depth_max - int(chosen_tree[4][branch_top])  # 'tree_depth_max' - depth at 'branch_top' to set max size of new branch
+        branch_depth_upper_bound = self.tree_depth_max - int(chosen_tree[TRn_depth][branch_top])  # 'tree_depth_max' - depth at 'branch_top' to set max size of new branch
         if mode == 'maximum':
             branch_depth = branch_depth_upper_bound
         elif mode == 'base_depth':
@@ -1753,7 +1753,7 @@ TRn_um_lines = 15
 
         ### PART 1 - insert branch_top from 'gp.tree' into 'tree' ###
         branch_top = int(branch_nodes[0])
-        chosen_tree[5][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[5][1] from 'root' to 'func'
+        chosen_tree[TRn_type][branch_top] = 'func'  # update type ('func' to 'term' or 'term' to 'term'); this modifies gp.tree[TRn_type][1] from 'root' to 'func'
         chosen_tree[TRn_label][branch_top] = self.tree[TRn_label][1]  # copy node_label from new tree
         chosen_tree[TRn_arity][branch_top] = self.tree[TRn_arity][1]  # copy node_arity from new tree
         chosen_tree = np.delete(chosen_tree, branch_nodes[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
@@ -1769,16 +1769,16 @@ TRn_um_lines = 15
 
             for j in range(1, len(chosen_tree[3])):  # increment through all nodes in tourn_winner ('tree')
 
-                if chosen_tree[5][j] == '':
-                    chosen_tree[5][j] = self.tree[5][node_count]  # copy 'node_type' from branch to tree
+                if chosen_tree[TRn_type][j] == '':
+                    chosen_tree[TRn_type][j] = self.tree[TRn_type][node_count]  # copy 'node_type' from branch to tree
                     chosen_tree[TRn_label][j] = self.tree[TRn_label][node_count]  # copy 'node_label' from branch to tree
                     chosen_tree[TRn_arity][j] = self.tree[TRn_arity][node_count]  # copy 'node_arity' from branch to tree
 
-                    if chosen_tree[5][j] == 'term':
+                    if chosen_tree[TRn_type][j] == 'term':
                         chosen_tree = self.evolve_fix_link_child(chosen_tree)  # fix all child links
                         chosen_tree = self.evolve_node_renum(chosen_tree)  # renumber all 'NODE_ID's
 
-                    if chosen_tree[5][j] == 'func':
+                    if chosen_tree[TRn_type][j] == 'func':
                         c_buffer = self.evolve_c_buffer(chosen_tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
                         chosen_tree = self.evolve_subtree_insert_child(chosen_tree, j, c_buffer)  # insert new nodes
                         chosen_tree = self.evolve_fix_link_child(chosen_tree)  # fix all child links
@@ -1802,34 +1802,34 @@ TRn_um_lines = 15
         elif int(tree[TRn_arity][node]) == 1:  # if arity = 1
             tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
             tree[3][c_buffer] = c_buffer  # node ID
-            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
+            tree[TRn_depth][c_buffer] = int(tree[TRn_depth][node]) + 1  # node_depth
             tree[7][c_buffer] = int(tree[3][node])  # parent ID
 
         elif int(tree[TRn_arity][node]) == 2:  # if arity = 2
             tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
             tree[3][c_buffer] = c_buffer  # node ID
-            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
+            tree[TRn_depth][c_buffer] = int(tree[TRn_depth][node]) + 1  # node_depth
             tree[7][c_buffer] = int(tree[3][node])  # parent ID
 
             tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
             tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[4][c_buffer + 1] = int(tree[4][node]) + 1  # node_depth
+            tree[TRn_depth][c_buffer + 1] = int(tree[TRn_depth][node]) + 1  # node_depth
             tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
 
         elif int(tree[TRn_arity][node]) == 3:  # if arity = 3
             tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
             tree[3][c_buffer] = c_buffer  # node ID
-            tree[4][c_buffer] = int(tree[4][node]) + 1  # node_depth
+            tree[TRn_depth][c_buffer] = int(tree[TRn_depth][node]) + 1  # node_depth
             tree[7][c_buffer] = int(tree[3][node])  # parent ID
 
             tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
             tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[4][c_buffer + 1] = int(tree[4][node]) + 1  # node_depth
+            tree[TRn_depth][c_buffer + 1] = int(tree[TRn_depth][node]) + 1  # node_depth
             tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
 
             tree = np.insert(tree, c_buffer + 2, '', axis=1)  # insert node for 'node_c3'
             tree[3][c_buffer + 2] = c_buffer + 2  # node ID
-            tree[4][c_buffer + 2] = int(tree[4][node]) + 1  # node_depth
+            tree[TRn_depth][c_buffer + 2] = int(tree[TRn_depth][node]) + 1  # node_depth
             tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
 
         else:
@@ -1882,11 +1882,11 @@ TRn_um_lines = 15
 
         for n in range(1, len(tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
 
-            if int(tree[4][n]) == int(tree[4][node]) - 1:  # find parent nodes at the prior depth
+            if int(tree[TRn_depth][n]) == int(tree[TRn_depth][node]) - 1:  # find parent nodes at the prior depth
                 if tree[TRn_arity][n] != '': parent_arity_sum = parent_arity_sum + int(
                     tree[TRn_arity][n])  # sum arities of all parent nodes at the prior depth
 
-            if int(tree[4][n]) == int(tree[4][node]) and int(tree[3][n]) < int(
+            if int(tree[TRn_depth][n]) == int(tree[TRn_depth][node]) and int(tree[3][n]) < int(
                     tree[3][node]):  # find prior siblings at the current depth
                 if tree[TRn_arity][n] != '':
                     prior_sibling_arity = prior_sibling_arity + int(tree[TRn_arity][n])  # sum prior sibling arity
@@ -1997,7 +1997,7 @@ TRn_um_lines = 15
 
         for n in range(1, len(tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
 
-            if tree[5][n] == 'term':  # check for discrepency
+            if tree[TRn_type][n] == 'term':  # check for discrepency
                 tree[TRn_arity][n] = '0'  # set arity to 0
                 tree[9][n] = ''  # wipe 'node_c1'
                 tree[10][n] = ''  # wipe 'node_c2'
@@ -2039,7 +2039,7 @@ TRn_um_lines = 15
                     if self.xtype_outcome_equi_test(node_xtype, same_xtype):
                         node_ids.append(int(tree[3][i]))
         else:
-            for i, x in enumerate(tree[5]):
+            for i, x in enumerate(tree[TRn_type]):
                 if tree[TRn_modify][i] == '1':
                     node_ids.append(int(tree[3][i]))
 
@@ -2349,7 +2349,7 @@ TRn_um_lines = 15
         elif parsimony_distance == 'total_count_nodes':
             return int(tree[3][-1:])  # returns the tree size
         elif parsimony_distance == 'total_tree_depth':
-            return tree[4][1]     # returns the tree size
+            return tree[TRn_depth][1]     # returns the tree size
         elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
             algo_raw_str = str(self.tree_expr_raw(tree, 1))
             return len(str(algo_raw_str))
@@ -3247,12 +3247,12 @@ TRn_um_lines = 15
             self.printpl('o','\n', ind, '\033[36m Tree Depth:', depth, 'of', tree[2][1], '\033[0;0m')
 
             for node in range(1, len(tree[3])):  # increment through all nodes (redundant, I know)
-                if int(tree[4][node]) == depth:
-                    self.printpl('o', '')
-                    self.printpl('o', ind, '\033[1m\033[36m NODE:', tree[3][node], '\033[0;0m')
-                    self.printpl('o', ind, '  type:', tree[5][node])
-                    self.printpl('o', ind, '  label:', tree[6][node], '\tparent node:', tree[7][node])
-                    self.printpl('o', ind, '  arity:', tree[8][node], '\tchild node(s):', tree[9][node], tree[10][node], tree[11][node])
+                if int(tree[TRn_depth][node]) == depth:
+                    self.printpl('i', '')
+                    self.printpl('i', ind, '\033[1m\033[36m NODE:', tree[3][node], '\033[0;0m')
+                    self.printpl('i', ind, '  type:', tree[TRn_type][node])
+                    self.printpl('i', ind, '  label:', tree[6][node], '\tparent node:', tree[7][node])
+                    self.printpl('i', ind, '  arity:', tree[8][node], '\tchild node(s):', tree[9][node], tree[10][node], tree[11][node])
 
             ind = ind + '\t'
 

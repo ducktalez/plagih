@@ -1,5 +1,5 @@
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.plagih_gp_base_class_xai import operator_dict, functions_multiparam_dict
+from plagih.modules.plagih_gp_base_class_xai import operator_dict
 import tensorflow as tf
 import ast
 
@@ -64,13 +64,6 @@ def plagih_fitness_node_parse(node, tensors):
                 plagih_fitness_node_parse(node.args[1], tensors),
                 plagih_fitness_node_parse(node.args[2], tensors))
 
-        if node.func.id in functions_multiparam_dict:
-            print('Here', [plagih_fitness_node_parse(arg, tensors) for arg in node.args])
-            try:
-                return operator_dict[node.func.id]([plagih_fitness_node_parse(arg, tensors) for arg in node.args])  # the star '*' makes the difference
-            except:
-                print('Failed in:', node)
-                return
         if node.func.id == 'ftob':
             return tf.dtypes.cast(*[plagih_fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.bool)
         elif node.func.id == 'btof':

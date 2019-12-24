@@ -3,12 +3,80 @@ This defines a tree that stores a program within it.
 Not yet quite in use
 """
 import numpy as np
+import ast
+
+# TR_nID = 3
+# TR_ndepth = 4
+# TR_ntype = 5
+# TR_nlabel = 6
+# TR_nparent = 7
+# TR_narity = 8
+# TR_nc1 = 9
+# TR_nc2 = 10
+# TR_nc3 = 11
+# TR_nmodify = 13
+#
+# TR_ID = 0
+# TR_type = 1
+# TR_depth = 2
+# TR_fitness = 12
+# TR_parsimony = 14
+#
+# TR_num_lines = 15
+
+op_str = {ast.Add: '+',  # e.g., a + b
+                 ast.Sub: '-',  # e.g., a - b
+                 ast.Mult: '*',  # e.g., a * b
+                 ast.Div: '/',  # e.g., a / b
+                 ast.Pow: '**',  # e.g., a ** 2
+                 ast.USub: '-',  # e.g., -a
+                 ast.And: 'and',  # e.g., a and b
+                 ast.Or: 'or',  # e.g., a or b
+                 ast.Not: 'not',  # e.g., not a
+                 ast.Eq: '==',  # e.g., a == b
+                 ast.NotEq: '!=',  # e.g., a != b
+                 ast.Lt: '<',  # e.g., a < b
+                 ast.LtE: '<=',  # e.g., a <= b
+                 ast.Gt: '>',  # e.g., a > b
+                 ast.GtE: '>=',  # e.g., a >= 1
+                 }
+
+
+class NodeTree:
+    """
+    This is the 'raw' tree.
+    It only contains nodes and no further information
+
+    Attention:
+    - The tree was first created as dictionary.
+    - numpy-arrays with known element positions should we a little faster though.
+    Therefore, I tried to make this modifiable if possible
+    """
+    def __init__(self):
+        """
+        From original
+        [['node_depth'], ['node_type'], ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'], ['node_modify']]
+        """
+        np.empty([9])
+
+    def add_node(self, node_label, node_depth, node_parent, node_arity, node_c1, node_c2, node_c3, node_modify):
+        self.nodes = np.append(self.nodes, [node_label, node_depth, node_parent, node_arity, node_c1, node_c2, node_c3, node_modify], axis=0)
+        self.node_num += 1
 
 
 class PlagihTree:
 
     def __init__(self, root_node_label, root_node_arity, history_size=3):
-
+        """
+        A plagih tree consists of:
+        - A combination of nodes which form
+            - An algo_raw
+            - An algo_sym
+        Meta-Data
+            - fitness
+            - parsimony
+            - Population:
+        """
         # The tree nodes
         self.node_expr = np.array([str(root_node_label)])
 
@@ -34,25 +102,6 @@ class PlagihTree:
         self.fitness = np.zeros(history_size)
         self.parsimony = np.zeros(history_size)
 
-        TR_nID = 3
-        TR_ndepth = 4
-        TR_ntype = 5
-        TR_nlabel = 6
-        TR_nparent = 7
-        TR_narity = 8
-        TR_nc1 = 9
-        TR_nc2 = 10
-        TR_nc3 = 11
-        TR_nmodify = 13
-
-        TR_ID = 0
-        TR_type = 1
-        TR_depth = 2
-        TR_fitness = 12
-        TR_parsimony = 14
-
-        TR_num_lines = 15
-
         np.array(
             [['TREE_ID'], ['tree_type'], ['tree_depth_base'], ['NODE_ID'], ['node_depth'], ['node_type'],
              ['node_label'], ['node_parent'], ['node_arity'], ['node_c1'], ['node_c2'], ['node_c3'],
@@ -67,10 +116,6 @@ class PlagihTree:
             return id+1, id+2, -1
         elif my_arity == 3:
             return id+1, id+2, id+3
-
-    def add_node(self, node_label, node_depth, node_parent, node_arity, node_c1, node_c2, node_c3, node_modify):
-        self.nodes = np.append(self.nodes, [node_label, node_depth, node_parent, node_arity, node_c1, node_c2, node_c3, node_modify], axis=0)
-        self.node_num += 1
 
     def load_from_expr_raw(self, str_expr_raw):
         """
@@ -103,5 +148,70 @@ class PlagihTree:
         """
 
 
-test = PlagihTree()
+def load_from_expression( expr):
+    """
+    Loads
+    Ifte(observation1 < 0, 0, Ifte(observation1 > -0.31764124474209838, 2, 0))
+    """
+    tree = ast.parse(expr, mode='eval').body
+    eval_expr(tree)
+
+def eval_expr(self, tree):
+
+    """
+    Recursively transforms parsed expression tree into TensorFlow (TF) graph.
+
+    """
+
+    if isinstance(tree, ast.Name):  # <tensor_name>
+        print('DBG: '+str(ast.Name))
+        tmp = str(ast.Name)
+        return tmp
+
+    elif isinstance(tree, ast.Num):  # <number>
+        print('DBG: '+str(tree.n))
+        tmp = str(tree.n)
+        return tmp
+
+    elif isinstance(tree, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
+        print('DBG: '+eval_expr(tree.left) + str(op_str[type(tree.op)]) + eval_expr(tree.right))
+        return eval_expr(tree.left) + op_str[type(tree.op)] + eval_expr(tree.right)
+
+    elif isinstance(tree, ast.UnaryOp):  # <operator> <operand> e.g., -1
+        print('DBG: '+op_str[type(tree.op)])
+        return eval_expr(tree.operand)
+
+    elif isinstance(tree, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
+
+        if tree.func.id == 'Ifte':
+            print('DBG: '+tree.func.id)
+            return eval_expr(tree.args[0]), eval_expr(tree.args[1]), eval_expr(tree.args[2])
+
+        # special case: Min and Max accept 2 or more arguments. Many errors. Therefore not in use anymore.
+        if tree.func.id in ['Mini', 'Maxi']:  # Min, Max are now Mini and Maxi. These only accept two inputs.
+            print('DBG: '+tree.func.id + str([eval_expr(arg) for arg in tree.args]))
+            return tree.func.id + str([eval_expr(arg) for arg in tree.args])
+
+        if tree.func.id == 'Ftob':
+            print('DBG: '+eval_expr([eval_expr(arg) for arg in tree.args]))
+            return eval_expr([eval_expr(arg) for arg in tree.args])
+        elif tree.func.id == 'Btof':
+            print('DBG: '+'Float(' + str([eval_expr(arg) for arg in tree.args]) + ')')
+
+        print('DBG: '+tree.func.id + [eval_expr(arg) for arg in tree.args])
+        return tree.func.id + [eval_expr(arg) for arg in tree.args]
+
+    elif isinstance(tree, ast.Compare):  # <left> <compare> <right> e.g., a > z
+        print('DBG: '+'')
+        return  # eval_tf_chain_compare([tree.left] + tree.comparators, tree.ops)
+
+    elif isinstance(tree, ast.NameConstant):  # <True/False> e.g., <True>
+        print('DBG: '+tree.value)
+        return
+
+# expr = 'Ifte(observation1 < 0, 0, Ifte(observation1 > -0.31764124474209838, 2, 0))'
+expr = '1'
+test = NodeTree()
+print(test)
+test.load_from_expr(expr)
 print(test)

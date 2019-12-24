@@ -38,13 +38,12 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     config_dict = {
         'name': '_MTC_tree_012',
         'kernel': 'r',    		    # [r,c,m]			fitness function: (r)egression, (c)lassification, or (m)atching
-        'tree_type': 'g', 		    # [f,g,r]			Tree type: (f)ull, (g)row, or (r)amped half/half
         'tree_depth_base': 3,		# [3...10]			maximum Tree depth for initial population
         'tree_depth_max': 10,		# [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,	    # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'tree_pop_max': 60,   	    # [10...1000]		number of trees in each generational population
-        'gen_max': 20,			    # [1...100]			number of generations
-        'tourn_size': 3,			# [7 per 100]		number of trees selected for tournament
+        'pop_max': 60,   	        # [10...1000]		number of trees in each generational population
+        'gen_max': 10,			    # [1...100]			number of generations
+        'gp_tourn_size': 3,			# [7 per 100]		number of trees selected for tournament
         'precision': 6,             # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',                # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',

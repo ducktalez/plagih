@@ -193,10 +193,9 @@ def eval_expr(self, tree):
             return tree.func.id + str([eval_expr(arg) for arg in tree.args])
 
         if tree.func.id == 'Ftob':
-            print('DBG: '+eval_expr([eval_expr(arg) for arg in tree.args]))
             return eval_expr([eval_expr(arg) for arg in tree.args])
         elif tree.func.id == 'Btof':
-            print('DBG: '+'Float(' + str([eval_expr(arg) for arg in tree.args]) + ')')
+            print('DBG: '+'Btof' + str([eval_expr(arg) for arg in tree.args]) + ')')
 
         print('DBG: '+tree.func.id + [eval_expr(arg) for arg in tree.args])
         return tree.func.id + [eval_expr(arg) for arg in tree.args]

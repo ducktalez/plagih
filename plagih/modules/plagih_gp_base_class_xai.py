@@ -295,6 +295,26 @@ class ExplainableGP(object):
     #   Top level      functions                  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
+    def file_population_write(self, population, key):
+
+        """
+        Save population_* to disk.
+
+        """
+        file_path = self.path + 'population_' + str(key) + '.csv'
+        with open(file_path, 'a', newline='') as csv_file:
+            target = csv.writer(csv_file, delimiter=',')
+            if self.gen_id != 1:
+                target.writerows([''])  # empty row before each generation
+            target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)]])
+
+            for tree in range(1, len(population)):
+                target.writerows([''])  # empty row before each Tree
+                for row in range(0, TRn_um_lines):  # increment through each row in the array Tree (+ row 0)
+                    target.writerows([population[tree][row]])
+
+        return
+
     def file_directories_create(self):
         """
         Create all files that will be saved after all
@@ -328,7 +348,7 @@ class ExplainableGP(object):
             self.printpl('e', 'Could not load data')
         self.gen_finalize()
 
-        self.file_population(self.population_base, '1_first')        # first gen only
+        self.file_population_write(self.population_base, '1_first')        # first gen only
 
     def main_generation_loop(self):
         """
@@ -365,7 +385,7 @@ class ExplainableGP(object):
         self.file_paretofront()
         # target = open(self.filename['f'], 'w')
         # target.close()  # initialize the .csv file for the final population
-        self.file_population(self.population_new, 'f')  # save the final generation of Trees to disk
+        self.file_population_write(self.population_new, 'f')  # save the final generation of Trees to disk
 
         self.printpl('i', '\n\t\033[32m Your Trees and runtime parameters are archived in plagih_gp/runs/[date-time]/\033[0;0m'
                           '\n\033[3m "It is not the strongest of the species that survive, nor the most intelligent,'
@@ -778,26 +798,6 @@ class ExplainableGP(object):
         self.printpl('i', 'We loaded the following population_genepool:', self.population_base)
         return
 
-    def file_population(self, population, key):
-
-        """
-        Save population_* to disk.
-
-        """
-        file_path = self.path + 'population_' + str(key) + '.csv'
-        with open(file_path, 'a', newline='') as csv_file:
-            target = csv.writer(csv_file, delimiter=',')
-            if self.gen_id != 1:
-                target.writerows([''])  # empty row before each generation
-            target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)]])
-
-            for tree in range(1, len(population)):
-                target.writerows([''])  # empty row before each Tree
-                for row in range(0, TRn_um_lines):  # increment through each row in the array Tree (+ row 0)
-                    target.writerows([population[tree][row]])
-
-        return
-
     def pop_genepool_create(self, population):
 
         """
@@ -821,9 +821,7 @@ class ExplainableGP(object):
             if tree_meta['parsimony'] < self.parsimony_min_max[1]:  # Tree -> gene_pool?
 
                 gene_pool_hash_dict[tree_id] = tree_ident
-
-                if (tree_meta['fitness_train'] > self.origin['fitness_train'] and self.fitness_type == 'max') \
-                        or (tree_meta['fitness_train'] < self.origin['fitness_train'] and self.fitness_type == 'min'):
+                if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
                     self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
                     dominator_count += 1
 
@@ -893,21 +891,54 @@ class ExplainableGP(object):
         else:
             return False
 
+    def pop_first_create(self):
+        """
+        Constructs the first generation
+        - loads the origin-tree from file
+        - constructs the first generation from this tree with branch mutation
+        """
+
+        #TODO branch mutation in ALL subtrees? if more options are available
+        #TODO safely create a complete generation
+        self.printpl('g', 'Initial population...')
+
+        tree = self.origin['tree'].copy()
+        # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
+        tree[TR_ID][1] = 1
+        self.population_new.append(tree)
+
+        for TREE_ID in range(2, self.tree_pop_max + 1):  # range(2,10) goes from 2 to 9. No need for the extra -1?
+
+            # Copy reference tree
+            tree = self.origin['tree'].copy()
+
+            # vary this tree with branch mutation
+            branch_nodes_list = self.evolve_subtree_get(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
+            tree = self.evolve_subtree_build(tree, branch_nodes_list)  # tree with new branch
+
+            # Fill the correct meta-data into the tree (and wipe the old fitness)
+            # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
+            tree = self.tree_modifyable_nodes_set(tree)
+            tree[TR_ID][1] = TREE_ID
+
+            self.population_new.append(tree)
+
+        self.printpl('gg', 'We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
+
     def pop_parsimony_best_update(self, gene_pool_hash_dict):
         """
 
         """
         # 1. Check every potential candidate
         for tree_id, tree_hash in gene_pool_hash_dict.items():
-
-            parsim = self.tree_hash_meta[gene_pool_hash_dict[tree_id]]['parsimony']
-            fitness_train = self.tree_hash_meta[gene_pool_hash_dict[tree_id]]['fitness_train']
+            tree_meta = self.tree_hash_meta[gene_pool_hash_dict[tree_id]]
+            parsim = tree_meta['parsimony']
+            fitness_train = tree_meta['fitness_train']
 
             # 3. is the tree better than the current best in this parsimony level?
             if parsim in self.parsimony_best_dict:
                 cmp_fitness = self.tree_hash_meta[self.parsimony_best_dict[parsim]]['fitness_train']
                 if self.fitness_compare(fitness_train, cmp_fitness, mode='better'):
-
                     self.parsimony_best_dict[parsim] = gene_pool_hash_dict[tree_id]
 
                 else:
@@ -937,15 +968,15 @@ class ExplainableGP(object):
 
         return popolation_y
 
-    def pop_copy_genepool(self, pop, gene_pool_hash_dict):
+    def pop_copy_genepool(self, population_new, gene_pool_hash_dict):
 
         """
-        Copy the genepool.
+        Copy the genepool of a gen
         """
         pop_y = ['Population Selection in Generation ' + str(self.gen_id)]  # empty list
 
         for i, (tree_id, tree_ident) in enumerate(gene_pool_hash_dict.items()):
-            tree_copy = np.copy(pop[tree_id])
+            tree_copy = np.copy(population_new[tree_id])
             tree_copy[TR_ID] = i+1
             pop_y.append(tree_copy)
 
@@ -978,14 +1009,13 @@ class ExplainableGP(object):
         """
         A single Tree from the prior generation is copied without mutation
         """
-        self.printpl('gg', 'Reproduce One... starting at Gen-Time: {:4.2f}'.format(time.perf_counter() - self.time_gen))
+        self.printpl('gg', 'Reproduce...')
         time_start = time.perf_counter()
         repro_rate = self.evolve_ratio_dict['reproduce']
         tourn_size = self.tourn_size
 
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
-            tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each reproduction
-            # tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='r')
+            tourn_winner = self.gp_selection_tournament(tourn_size)
             tourn_winner[TR_type][1] = 'r'
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
 
@@ -1003,9 +1033,8 @@ class ExplainableGP(object):
         time_start = time.perf_counter()
 
         for n in range(self.evolve_ratio_dict['mutate_point']):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # get a tournament winner
-            tourn_winner, node = self.treegp_mutate_point_evolve(tourn_winner)  # point mutation; return single point for record keeping
-            # tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='p')
+            tourn_winner = self.gp_selection_tournament(self.tourn_size)
+            tourn_winner, node = self.treegp_mutate_point_evolve(tourn_winner)
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
 
         self.printpl('gg', 'gen_mutate_point took: {:4.2f}'.format(time.perf_counter() - time_start))
@@ -1117,7 +1146,7 @@ class ExplainableGP(object):
         self.pop_pareto_update()
 
         self.population_base = self.pop_copy_genepool(self.population_new, gene_pool_hash_dict)
-        self.file_population(self.population_new, 'new')
+        self.file_population_write(self.population_new, 'new')
 
         self.printpl('p', 'Time needed for this Generation:', time.perf_counter() - self.time_gen)
 
@@ -1126,40 +1155,6 @@ class ExplainableGP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Perform the 3 genetic prog. operations    |
     # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def pop_first_create(self):
-        """
-        Constructs the first generation
-        - loads the origin-tree from file
-        - constructs the first generation from this tree with branch mutation
-        """
-
-        #TODO branch mutation in ALL subtrees? if more options are available
-        #TODO safely create a complete generation
-        self.printpl('g', 'Initial population...')
-
-        tree = self.origin['tree'].copy()
-        # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
-        tree[TR_ID][1] = 1
-        self.population_new.append(tree)
-
-        for TREE_ID in range(2, self.tree_pop_max + 1):  # range(2,10) goes from 2 to 9. No need for the extra -1?
-
-            # Copy reference tree
-            tree = self.origin['tree'].copy()
-
-            # vary this tree with branch mutation
-            branch_nodes_list = self.evolve_subtree_get(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
-            tree = self.evolve_subtree_build(tree, branch_nodes_list)  # tree with new branch
-
-            # Fill the correct meta-data into the tree (and wipe the old fitness)
-            # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
-            tree = self.tree_modifyable_nodes_set(tree)
-            tree[TR_ID][1] = TREE_ID
-
-            self.population_new.append(tree)
-
-        self.printpl('gg', 'We have constructed a single, stochastic population of', self.tree_pop_max, 'Trees, and saved to disk')
 
     def gp_selection_tournament(self, tourn_size):
 
@@ -1223,7 +1218,7 @@ class ExplainableGP(object):
         if tree[TRn_type][node] == 'func':
             func_arity = int(tree[TRn_arity][node])
             tree[TRn_label][node] = self.xtype_func_get_func(node_xtype, arity=func_arity)  # Function is same type, same arity
-            # Take care of the modify specs
+            # TODO different aritys!
         elif tree[TRn_type][node] == 'term':
             tree[TRn_label][node] = self.xtype_xtype_get_term(node_xtype)  # 3 -> '2f' -> 5
         else:
@@ -3132,7 +3127,7 @@ class ExplainableGP(object):
             # self.data_pickle_recover(self.filename['s'])  #
 
         elif input_a == 'write':  # write the evolving population_new to disk
-            self.file_population(self.population_new, 'new')
+            self.file_population_write(self.population_new, 'new')
 
         elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
             self.gen_max = self.gen_max + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05

@@ -148,7 +148,7 @@ class PlagihTree:
         """
 
 
-def load_from_expression( expr):
+def load_from_expression(expr):
     """
     Loads
     Ifte(observation1 < 0, 0, Ifte(observation1 > -0.31764124474209838, 2, 0))
@@ -156,7 +156,7 @@ def load_from_expression( expr):
     tree = ast.parse(expr, mode='eval').body
     eval_expr(tree)
 
-def eval_expr(self, tree):
+def eval_expr(tree):
 
     """
     Recursively transforms parsed expression tree into TensorFlow (TF) graph.
@@ -209,8 +209,6 @@ def eval_expr(self, tree):
         return
 
 # expr = 'Ifte(observation1 < 0, 0, Ifte(observation1 > -0.31764124474209838, 2, 0))'
-expr = '1'
-test = NodeTree()
-print(test)
-test.load_from_expr(expr)
+expr = 'Ifte(observation1 < 0, 0, Ifte(observation1 > -0.31764124474209838, 2, 0))'
+test = load_from_expression(expr)
 print(test)

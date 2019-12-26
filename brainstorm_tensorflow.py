@@ -1,5 +1,5 @@
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.plagih_gp_base_class_xai import operator_dict
+from plagih.modules.plagih_gp_base_class_xai import ast_tensor_dict
 import tensorflow as tf
 import ast
 
@@ -33,9 +33,9 @@ def fx_fitness_chain_compare(comparators, ops, tensors):
     y = plagih_fitness_node_parse(comparators[1], tensors)
 
     if len(comparators) > 2:
-        return tf.logical_and(operator_dict[type(ops[0])](x, y), fx_fitness_chain_compare(comparators[1:], ops[1:], tensors))
+        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), fx_fitness_chain_compare(comparators[1:], ops[1:], tensors))
     else:
-        return operator_dict[type(ops[0])](x, y)
+        return ast_tensor_dict[type(ops[0])](x, y)
     # sfeh idea: note: we have to convert all values to the action space if not discrete
 
 
@@ -52,14 +52,14 @@ def plagih_fitness_node_parse(node, tensors):
         return tf.constant(node.n, shape=shape, dtype=tf.float32)
 
     elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
-        return operator_dict[type(node.op)](plagih_fitness_node_parse(node.left, tensors), plagih_fitness_node_parse(node.right, tensors))
+        return ast_tensor_dict[type(node.op)](plagih_fitness_node_parse(node.left, tensors), plagih_fitness_node_parse(node.right, tensors))
 
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-        return operator_dict[type(node.op)](plagih_fitness_node_parse(node.operand, tensors))
+        return ast_tensor_dict[type(node.op)](plagih_fitness_node_parse(node.operand, tensors))
 
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or ftob(a)
         if node.func.id == 'Ifte':
-            return operator_dict[node.func.id](
+            return ast_tensor_dict[node.func.id](
                 tf.dtypes.cast(plagih_fitness_node_parse(node.args[0], tensors), tf.bool),
                 plagih_fitness_node_parse(node.args[1], tensors),
                 plagih_fitness_node_parse(node.args[2], tensors))
@@ -69,10 +69,10 @@ def plagih_fitness_node_parse(node, tensors):
         elif node.func.id == 'btof':
             return tf.dtypes.cast(*[plagih_fitness_node_parse(arg, tensors) for arg in node.args], dtype=tf.float32)
 
-        return operator_dict[node.func.id](*[plagih_fitness_node_parse(arg, tensors) for arg in node.args])
+        return ast_tensor_dict[node.func.id](*[plagih_fitness_node_parse(arg, tensors) for arg in node.args])
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        return fx_fitness_chain_bool(node.values, operator_dict[type(node.op)], tensors)
+        return fx_fitness_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
         return fx_fitness_chain_compare([node.left] + node.comparators, node.ops, tensors)

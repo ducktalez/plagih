@@ -344,10 +344,10 @@ class ExplainableGP(object):
                 self.gen_prepare_parameters()
 
                 # 2. Create new generation (from last genepool)
-                self.gp_reproduce()  # method 1 - Reproduction
-                self.gp_mutate_point()  # method 2 - Point Mutation
-                self.gp_mutate_branch()  # method 3 - Branch Mutation
-                self.gp_crossover()  # method 4 - Crossover
+                self.gen_reproduce()  # method 1 - Reproduction
+                self.gen_mutate_point()  # method 2 - Point Mutation
+                self.gen_mutate_branch()  # method 3 - Branch Mutation
+                self.gen_crossover()  # method 4 - Crossover
 
                 self.gen_finalize()
 
@@ -377,49 +377,8 @@ class ExplainableGP(object):
         sys.exit()
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Generation loop        |
+    #   Generation loop                           |
     # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def gen_prepare_parameters(self):
-        """
-        Sets the parameters for this generation
-        - reset population_new
-        - Lineary increase threshold for parsimony
-        """
-        self.time_genstart = time.perf_counter()
-        self.agen_debug_warning = ''
-
-        self.printpl('g', 'Preparing to evolve Generation', self.gen_id, '...')
-        self.population_new = ['Plagih GP - Evolving Generation']  # initialise population_new to host the next generation
-
-        full_parsimony_factor = 2  # working with the maximum parsimony for at least some generations
-        gen_relation = min((full_parsimony_factor * self.gen_id) / self.gen_max, 1)
-        self.parsimony_min_max[0] = int(gen_relation * self.parsimony_min_max[1])
-
-        return
-
-    def gen_finalize(self):
-
-        """
-        From raw population_new to new population_genepool
-        - Gene_pool with tree's parsimony (and store info in the tree)
-        -
-
-        """
-
-        self.pop_enum_trees(self.population_new)           # pop +tree_id
-        gene_pool_hash_dict = self.pop_genepool_create(self.population_new)
-        # self.pop_tree_store_fitness_parsimony_analysis(self.population_new, gene_pool_hash_dict)     # gene +fitness
-
-        self.pop_parsimony_best_update(gene_pool_hash_dict)
-        self.pop_pareto_update()
-
-        self.population_base = self.pop_copy_genepool(self.population_new, gene_pool_hash_dict)
-        self.file_population(self.population_new, 'new')
-
-        self.printpl('p', 'Time needed for this Generation:', time.perf_counter() - self.time_genstart)
-
-        return
 
     def gen_olymp_update(self):
         """
@@ -865,10 +824,10 @@ class ExplainableGP(object):
 
                 if (tree_meta['fitness_train'] > self.origin['fitness_train'] and self.fitness_type == 'max') \
                         or (tree_meta['fitness_train'] < self.origin['fitness_train'] and self.fitness_type == 'min'):
-                    self.printpl('vvv', 'A candidate is fitter than the origin (might have occured already)')
+                    self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
                     dominator_count += 1
 
-            self.printpl('gg', dominator_count, ' Candidates were better than the origin.')
+        self.printpl('gg', dominator_count, ' Candidates were better than the origin.')
 
         self.monitor_performance_generation(gene_pool_hash_dict)
 
@@ -993,6 +952,178 @@ class ExplainableGP(object):
         return pop_y
 
     # +++++++++++++++++++++++++++++++++++++++++++++
+    #   What happens in a Generation              |
+    # +++++++++++++++++++++++++++++++++++++++++++++
+
+    def gen_prepare_parameters(self):
+        """
+        Sets the parameters for this generation
+        - reset population_new
+        - Lineary increase threshold for parsimony
+        """
+        self.time_gen = time.perf_counter()
+        self.agen_debug_warning = ''
+
+        self.printpl('g', 'Preparing to evolve Generation', self.gen_id, '...')
+        self.population_new = ['Plagih GP - Evolving Generation']  # initialise population_new to host the next generation
+
+        full_parsimony_factor = 2  # working with the maximum parsimony for at least some generations
+        gen_relation = min((full_parsimony_factor * self.gen_id) / self.gen_max, 1)
+        self.parsimony_min_max[0] = int(gen_relation * self.parsimony_min_max[1])
+
+        return
+
+    def gen_reproduce(self):
+
+        """
+        A single Tree from the prior generation is copied without mutation
+        """
+        self.printpl('gg', 'Reproduce One... starting at Gen-Time: {:4.2f}'.format(time.perf_counter() - self.time_gen))
+        time_start = time.perf_counter()
+        repro_rate = self.evolve_ratio_dict['reproduce']
+        tourn_size = self.tourn_size
+
+        for n in range(repro_rate):  # quantity of Trees to be copied without mutation
+            tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each reproduction
+            # tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='r')
+            tourn_winner[TR_type][1] = 'r'
+            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
+
+        self.printpl('gg', 'gen_reproduce took: {:4.2f}'.format(time.perf_counter() - time_start))
+
+        return
+
+    def gen_mutate_point(self):
+
+        """
+        One point (terminal or function) gets mutated.
+        Currently only mutating with functions/terminals of the exactly same type.
+        """
+        self.printpl('gg', 'Point Mutation... Gen-Time: {:4.2f}'.format(time.perf_counter() - self.time_gen))
+        time_start = time.perf_counter()
+
+        for n in range(self.evolve_ratio_dict['mutate_point']):  # quantity of Trees to be generated through mutation
+            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # get a tournament winner
+            tourn_winner, node = self.treegp_mutate_point_evolve(tourn_winner)  # point mutation; return single point for record keeping
+            # tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='p')
+            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
+
+        self.printpl('gg', 'gen_mutate_point took: {:4.2f}'.format(time.perf_counter() - time_start))
+
+        return
+
+    def gen_mutate_branch(self):
+
+        """
+        Mutates a whole tree branch.
+
+        If the evolutionary run is
+        designated as Full, the size and shape of the Tree will remain identical, each node mutated sequentially, where
+        functions remain functions and terminals remain terminals. If the evolutionary run is designated as Grow or
+        Ramped Half/Half, the size and shape of the Tree may grow smaller or larger, but it may not exceed
+        tree_depth_max as defined by the user.
+
+        """
+        time_tmp = time.perf_counter()
+        self.printpl('gg', 'Branch Mutation... Gen-Time: {:4.2f}'.format(time.perf_counter() - self.time_gen))
+        time_start = time.perf_counter()
+
+        mutate_step_times = [0, 0, 0, 0, 0, 0]
+        if self.gen_id == 4:
+            pass
+        for n in range(self.evolve_ratio_dict['mutate_branch']):  # quantity of Trees to be generated through mutation
+
+            mutate_step_times[0] += time.perf_counter() - time_tmp
+            time_tmp = time.perf_counter()
+            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
+
+            mutate_step_times[1] += time.perf_counter() - time_tmp
+            time_tmp = time.perf_counter()
+            branch_nodes_list = self.evolve_subtree_get(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
+
+            mutate_step_times[2] += time.perf_counter() - time_tmp
+            time_tmp = time.perf_counter()
+            tourn_winner = self.evolve_subtree_build(tourn_winner, branch_nodes_list)
+
+            mutate_step_times[3] += time.perf_counter() - time_tmp
+            time_tmp = time.perf_counter()
+            # tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='b')  # wipe fitness data
+
+            mutate_step_times[4] += time.perf_counter() - time_tmp
+            time_tmp = time.perf_counter()
+            tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
+
+            mutate_step_times[5] += time.perf_counter() - time_tmp
+            time_tmp = time.perf_counter()
+            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
+
+        for i, x in enumerate(mutate_step_times):
+            print(i, 'took: {:4.2f}'.format(x))
+
+        self.printpl('gg', 'gen_mutate_point took: {:4.2f}'.format(time.perf_counter() - time_start))
+
+        return
+
+    def gen_crossover(self, mode='replace_same_types'):
+
+        """
+        TODO now, partners do not exchange their branches, just parent a takes a branch of b_parent
+        - select parent a and b
+        - select swappable branche for a_parent from b_parent
+            - select a node in a (and crossover here, no matter what)
+        - delete a_parent branch and insert b_parent branch (which tactic?)
+
+        """
+        self.printpl('gg', 'Crossover... Gen-Time: {:4.2f}', time.perf_counter() - self.time_gen)
+        time_start = time.perf_counter()
+
+        for n in range(self.evolve_ratio_dict['crossover']):  # quantity of Trees to be generated through Crossover, (now not accounting for 2 children each, changed)
+
+            # 1. Select two parents and their branches
+            a_parent = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for 'a_parent'
+            b_parent = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for 'b_parent'
+
+            # 2. Get the branches for parent a that can be exchanged
+            a_branch, b_branch, x_convert_bool = self.treegp_crossover_get_swap_branches(a_parent, b_parent)
+
+            if x_convert_bool:
+                self.printpl('w', 'Forced conversion is needed between two trees.')
+                offspring = self.treegp_crossover_insert(a_parent, a_branch, b_parent, b_branch, a_convert_bool=x_convert_bool)
+            else:
+                offspring = self.treegp_crossover_insert(a_parent, a_branch, b_parent, b_branch)
+
+            # offspring = self.tree_store_meta_lastgen(offspring, modification='c')
+            offspring = self.tree_modifyable_nodes_set(offspring)
+            self.population_new.append(offspring)  # append the 1st child to next generation of Trees
+
+        self.printpl('gg', 'gen_mutate_point took: {:4.2f}'.format(time.perf_counter() - time_start))
+
+        return
+
+    def gen_finalize(self):
+
+        """
+        From raw population_new to new population_genepool
+        - Gene_pool with tree's parsimony (and store info in the tree)
+        -
+
+        """
+        self.printpl('gg', 'Finalizing... Gen-Time:', time.perf_counter() - self.time_gen)
+        self.pop_enum_trees(self.population_new)           # pop +tree_id
+        gene_pool_hash_dict = self.pop_genepool_create(self.population_new)
+        # self.pop_tree_store_fitness_parsimony_analysis(self.population_new, gene_pool_hash_dict)     # gene +fitness
+
+        self.pop_parsimony_best_update(gene_pool_hash_dict)
+        self.pop_pareto_update()
+
+        self.population_base = self.pop_copy_genepool(self.population_new, gene_pool_hash_dict)
+        self.file_population(self.population_new, 'new')
+
+        self.printpl('p', 'Time needed for this Generation:', time.perf_counter() - self.time_gen)
+
+        return
+
+    # +++++++++++++++++++++++++++++++++++++++++++++
     #   Perform the 3 genetic prog. operations    |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1008,7 +1139,7 @@ class ExplainableGP(object):
         self.printpl('g', 'Initial population...')
 
         tree = self.origin['tree'].copy()
-        tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
+        # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
         tree[TR_ID][1] = 1
         self.population_new.append(tree)
 
@@ -1022,7 +1153,7 @@ class ExplainableGP(object):
             tree = self.evolve_subtree_build(tree, branch_nodes_list)  # tree with new branch
 
             # Fill the correct meta-data into the tree (and wipe the old fitness)
-            tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
+            # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
             tree = self.tree_modifyable_nodes_set(tree)
             tree[TR_ID][1] = TREE_ID
 
@@ -1039,103 +1170,44 @@ class ExplainableGP(object):
             self.genepool a
         """
 
-        tourn_test = 0
+        best_fitness = self.fitness_bad_dummy
         # short_test = 0 # an incomplete parsimony test (seeking shortest solution)
 
         for n in range(tourn_size):
 
-            # 1. choose a random gene_pool tree from population_genepool
-
-            # select one Tree at random from the gene pool
             tree_id = np.random.randint(1, len(self.population_base))
 
             fitness = float(self.population_base[tree_id][TR_fitness][1])  # extract the fitness from the array
             fitness = round(fitness, self.precision)  # force 'result' and 'solution' to the same number of floating points
 
-            if self.fitness_type == 'max':  # if the fitness function is maximising
+            if self.fitness_compare(fitness, best_fitness):
+                best_id = tree_id
+                best_fitness = fitness
 
-                # first time through, 'tourn_test' will be initialised below
-
-                if fitness > tourn_test:
-                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and leads\033[0;0m')
-                    tourn_lead = tree_id
-                    tourn_test = fitness
-                # short_test = int(self.population_genepool[tree_id][TR_parsimony][1]) # set len(algo_raw) of new leader
-
-                elif fitness == tourn_test:
-                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '=', tourn_test, 'and leads\033[0;0m')
-                    tourn_lead = tree_id  # in case there is no variance in this tournament
-                # tourn_test unchanged
-
-                elif fitness < tourn_test:
-                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '<', tourn_test, 'and is ignored\033[0;0m')
-                    # tourn_lead unchanged
-                    # tourn_test unchanged
-
-                else:
-                    self.printpl('e', 'pop_selection_tournament: fitness =', fitness, 'and tourn_test =', tourn_test)
-                    raise  # no reason to pause
-
-            elif self.fitness_type == 'min':  # if the fitness function is minimising
-
-                if tourn_test == 0:  # first time through, 'tourn_test' is given a baseline value
-                    tourn_test = fitness
-
-                if fitness < tourn_test:
-                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '<', tourn_test, 'and leads\033[0;0m')
-                    tourn_lead = tree_id  # set 'TREE_ID' for the new leader
-                    tourn_test = fitness  # set 'fitness' of the new leader
-
-                elif fitness == tourn_test:
-                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '=', tourn_test, 'and leads\033[0;0m')
-                    tourn_lead = tree_id  # in case there is no variance in this tournament
-                # tourn_test unchanged
-
-                elif fitness > tourn_test:
-                    self.printpl('ggg', '\t\033[36m Tree', tree_id, 'has fitness', fitness, '>', tourn_test, 'and is ignored\033[0;0m')
-                    # tourn_lead unchanged
-                    # tourn_test unchanged
-                else:
-                    self.printpl('i', 'fitness', self.gene_pool[tree_id])
-                    self.printpl('e', '\033[31m pop_selection_tournament: fitness =', fitness, 'and tourn_test =', tourn_test, '\033[0;0m')
-                    raise
-
-                tourn_winner = np.copy(self.population_base[tourn_lead])  # copy full Tree so as to not inadvertantly modify the original tree
-                self.printpl('vv', '\t\033[36mThe winner of the tournament is Tree:\033[1m', tourn_winner[TR_ID][1], '\033[0;0m')
+            tourn_winner = np.copy(self.population_base[best_id])
 
         return tourn_winner
 
-    def gp_reproduce(self):
-
+    def gp_mutate_termfilter(self, constant, term_type='', filter='gaussian_filter'):
         """
-        A single Tree from the prior generation is copied without mutation
+        When this happens, constants get a a small variance
         """
-        self.printpl('gg', 'Reproduce One...')
-        repro_rate = self.evolve_ratio_dict['reproduce']
-        tourn_size = self.tourn_size
 
-        for n in range(repro_rate):  # quantity of Trees to be copied without mutation
-            tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each reproduction
-            tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='r')
-            tourn_winner[TR_type][1] = 'r'
-            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
+        if term_type == 'float':
+            if filter == 'gaussian_filter':
+                constant = np.random.normal(constant, 0.1)
+            else:
+                self.printpl('w', 'Warning: Filter  not specified. Please specify a filter.')
+                constant = np.random.normal(constant, 0.1)
 
-        return
+        if term_type == 'int':
+            constant = int(np.random.normal(constant, 2))
 
-    def gp_mutate_point(self):
+        if term_type == 'bool':
+            constant = not constant
+            # random by 50:50?
 
-        """
-        One point (terminal or function) gets mutated.
-        Currently only mutating with functions/terminals of the exactly same type.
-        """
-        self.printpl('gg', 'Point Mutation...')
-
-        for n in range(self.evolve_ratio_dict['mutate_point']):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # get a tournament winner
-            tourn_winner, node = self.treegp_mutate_point_evolve(tourn_winner)  # point mutation; return single point for record keeping
-            tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='p')
-            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
-        return
+        return constant
 
     def treegp_mutate_point_evolve(self, tree, mode='random'):
 
@@ -1159,51 +1231,6 @@ class ExplainableGP(object):
             raise
 
         return tree, node  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
-
-    def gp_mutate_termfilter(self, constant, term_type='', filter='gaussian_filter'):
-        """
-        When this happens, constants get a a small variance
-        """
-
-        if term_type == 'float':
-            if filter == 'gaussian_filter':
-                constant = np.random.normal(constant, 0.1)
-            else:
-                self.printpl('w', 'Warning: Filter  not specified. Please specify a filter.')
-                constant = np.random.normal(constant, 0.1)
-
-        if term_type == 'int':
-            constant = int(np.random.normal(constant, 2))
-
-        if term_type == 'bool':
-            constant = not constant
-            # random by 50:50?
-
-        return constant
-
-    def gp_mutate_branch(self):
-
-        """
-        Mutates a whole tree branch.
-
-        If the evolutionary run is
-        designated as Full, the size and shape of the Tree will remain identical, each node mutated sequentially, where
-        functions remain functions and terminals remain terminals. If the evolutionary run is designated as Grow or
-        Ramped Half/Half, the size and shape of the Tree may grow smaller or larger, but it may not exceed
-        tree_depth_max as defined by the user.
-
-        """
-        self.printpl('gg', 'Branch Mutation...')
-
-        for n in range(self.evolve_ratio_dict['mutate_branch']):  # quantity of Trees to be generated through mutation
-            tourn_winner = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
-            branch_nodes_list = self.evolve_subtree_get(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
-            tourn_winner = self.evolve_subtree_build(tourn_winner, branch_nodes_list)
-            tourn_winner = self.tree_store_meta_lastgen(tourn_winner, modification='b')  # wipe fitness data
-            tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
-            self.population_new.append(tourn_winner)  # append array to next generation population of Trees
-
-        return
 
     def treegp_mutate_branch_new_tree_build(self, TREE_ID, last_modification, old_node_type, tree_depth):
 
@@ -1233,22 +1260,7 @@ class ExplainableGP(object):
         the point of execution.
 
         Use of the debug (db) interface mode enables the user to watch the genetic operations as they work on the Trees.
-TR_ID = 0
-TR_type = 1
-TR_depth = 2
-TRn_ID = 3
-TRn_depth = 4
-TRn_type = 5
-TRn_label = 6
-TRn_parent = 7
-TRn_arity = 8
-TRn_c1 = 9
-TRn_c2 = 10
-TRn_c3 = 11
-TR_fitness = 12
-TRn_modify = 13
-TR_parsimony = 14
-TRn_um_lines = 15
+
         """
         
         self.pop = {}
@@ -1439,39 +1451,6 @@ TRn_um_lines = 15
                 else:
                     self.printpl('e', '\n\t\033[31m ERROR! In tree_build_child_link: pop[TRn_arity] =', self.pop[TRn_arity], '\033[0;0m')
                     self.plagih_pause()  # consider special instructions for this
-
-        return
-
-    def gp_crossover(self, mode='replace_same_types'):
-
-        """
-        TODO now, partners do not exchange their branches, just parent a takes a branch of b_parent
-        - select parent a and b
-        - select swappable branche for a_parent from b_parent
-            - select a node in a (and crossover here, no matter what)
-        - delete a_parent branch and insert b_parent branch (which tactic?)
-
-        """
-        self.printpl('gg', 'Crossover...')
-
-        for n in range(self.evolve_ratio_dict['crossover']):  # quantity of Trees to be generated through Crossover, (now not accounting for 2 children each, changed)
-
-            # 1. Select two parents and their branches
-            a_parent = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for 'a_parent'
-            b_parent = self.gp_selection_tournament(self.tourn_size)  # perform tournament selection for 'b_parent'
-
-            # 2. Get the branches for parent a that can be exchanged
-            a_branch, b_branch, x_convert_bool = self.treegp_crossover_get_swap_branches(a_parent, b_parent)
-
-            if x_convert_bool:
-                self.printpl('w', 'Forced conversion is needed between two trees.')
-                offspring = self.treegp_crossover_insert(a_parent, a_branch, b_parent, b_branch, a_convert_bool=x_convert_bool)
-            else:
-                offspring = self.treegp_crossover_insert(a_parent, a_branch, b_parent, b_branch)
-
-            offspring = self.tree_store_meta_lastgen(offspring, modification='c')
-            offspring = self.tree_modifyable_nodes_set(offspring)
-            self.population_new.append(offspring)  # append the 1st child to next generation of Trees
 
         return
 
@@ -1713,8 +1692,10 @@ TRn_um_lines = 15
             else:
                 # 5.2 We insert a function here
                 # self.branch_new_tree_build('mutant', 'b', old_node_xtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
+                time_start = time.perf_counter()
                 self.treegp_mutate_branch_new_tree_build('mutant', 'b', old_node_xtype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
                 chosen_tree = self.evolve_subtree_build_insert(chosen_tree, branch_nodes_list)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
+                # print('within 3: {:4.2f}'.format(time.perf_counter()-time_start))
             # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
 
         return chosen_tree
@@ -2154,7 +2135,7 @@ TRn_um_lines = 15
         if store_in_tree:
             self.tree_store_parsimony(tree, tree_meta['parsimony'])
             self.tree_store_fitness(tree, tree_meta['fitness_train'])
-            self.tree_store_meta_lastgen(tree)
+            # self.tree_store_meta_lastgen(tree)
 
             return tree_ident, tree_meta
 
@@ -2313,9 +2294,6 @@ TRn_um_lines = 15
         This method generates a list of all 'NODE_ID's from the given Node and below. It is used primarily to generate
         'branch' for the multi-generational mutation of Trees.
 
-        Pass the starting node for recursion via the local variable 'node_id' where the local variable 'tree' is a copy
-        of the Tree you desire to evaluate.
-
         """
 
         node_id = int(node_id)
@@ -2432,13 +2410,13 @@ TRn_um_lines = 15
         """
 
         # save information about how good last changes were
-        for i in range(min(self.tree_depth_min, 5), 2, -1):  # 5,4,3,2
-            tree[TR_type][i] = tree[TR_type][i-1]    # The last modifications
-            tree[TR_fitness][i] = tree[TR_fitness][i-1]  # The last fitness
-            tree[TR_parsimony][i] = tree[TR_parsimony][i-1]  # The last parsimony (TODO) # TREE_ID,1,a,b,c -> TREE_ID,1,a,a,b
+        # for i in range(min(self.tree_depth_min, 5), 2, -1):  # 5,4,3,2
+        #     tree[TR_type][i] = tree[TR_type][i-1]    # The last modifications
+        #     tree[TR_fitness][i] = tree[TR_fitness][i-1]  # The last fitness
+        #     tree[TR_parsimony][i] = tree[TR_parsimony][i-1]  # The last parsimony (TODO) # TREE_ID,1,a,b,c -> TREE_ID,1,a,a,b
 
         # What needs to be assigned later
-        tree[TR_type][1] = modification  # wipe last modification data
+        # tree[TR_type][2] = modification  # wipe last modification data
         # tree[TR_ID][1] = ''  # -> TREE_ID,,
         # tree[TR_fitness][1] = ''  # wipe fitness data
         # tree[TR_parsimony][1] = ''  # wipe parsimony data
@@ -3068,13 +3046,7 @@ TRn_um_lines = 15
     def plagih_pause_refer(self):
 
         """
-        Enables (g)eneration, (i)nteractive, and (d)e(b)ug display modes to offer the (pause) menu at each prompt.
 
-        See plagih_pause() for an explanation of the value being passed.
-
-        Called by: the functions called by PART 4 of plagih_gp()
-
-        Arguments required: none
         """
 
         menu = 1
@@ -3241,7 +3213,7 @@ TRn_um_lines = 15
         """
 
         ind = ''
-        self.printpl('o','\n\033[1m\033[36m Tree ID', int(tree[TR_ID][1]), '\033[0;0m')
+        self.printpl('i', '\n\033[1m\033[36m Tree ID', int(tree[TR_ID][1]), '\033[0;0m')
 
         for depth in range(0, self.tree_depth_max + 1):  # increment through all possible Tree depths - tested 2016 07/09
             self.printpl('o','\n', ind, '\033[36m Tree Depth:', depth, 'of', tree[2][1], '\033[0;0m')
@@ -3256,11 +3228,11 @@ TRn_um_lines = 15
 
             ind = ind + '\t'
 
-        self.printpl('o', 'TODO')
+        self.printpl('i', 'TODO')
         # self.eval_tf(tree)  # generate the raw and sympified expression for the entire Tree
         algo_raw_str = str(self.tree_expr_raw(tree, 1))
-        self.printpl('o', '\t\033[36mTree', tree[TR_ID][1], 'yields (raw):', algo_raw_str, '\033[0;0m')
-        self.printpl('o', '\t\033[36mTree', tree[TR_ID][1], 'yields (sym):\033[1m', '\033[0;0m')
+        self.printpl('i', '\t\033[36mTree', tree[TR_ID][1], 'yields (raw):', algo_raw_str, '\033[0;0m')
+        self.printpl('i', '\t\033[36mTree', tree[TR_ID][1], 'yields (sym):\033[1m', '\033[0;0m')
 
         return
 

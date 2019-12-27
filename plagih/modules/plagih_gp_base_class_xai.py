@@ -972,7 +972,7 @@ class ExplainableGP(object):
 
             # vary this tree with mutation
             branch_nodes_ids = self.ptree_branch_choose_ids(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
-            tree = self.evolve_subtree_build(tree, branch_nodes_ids)  # tree with new branch
+            tree = self.evolve_subtree_build(tree, branch_nodes_ids, 'first')  # tree with new branch
 
             # Fill the correct meta-data into the tree (and wipe the old fitness)
             # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
@@ -1115,31 +1115,15 @@ class ExplainableGP(object):
 
         mutate_step_times = [0, 0, 0, 0, 0]
 
-        for n in range(self.evolve_rates['mutate_branch']):  # quantity of Trees to be generated through mutation
+        for i in range(self.evolve_rates['mutate_branch']):  # quantity of Trees to be generated through mutation
 
             mutate_step_times[0] += time.perf_counter() - time_tmp
-            time_tmp = time.perf_counter()
-
             tourn_winner = self.gp_selection_tournament(self.gp['gp_tourn_size'])  # perform tournament selection for each mutation
-            mutate_step_times[1] += time.perf_counter() - time_tmp
-            time_tmp = time.perf_counter()
-
             branch_nodes_ids = self.ptree_branch_choose_ids(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
-            mutate_step_times[2] += time.perf_counter() - time_tmp
-            time_tmp = time.perf_counter()
-
-            tourn_winner = self.evolve_subtree_build(tourn_winner, branch_nodes_ids)
-            mutate_step_times[3] += time.perf_counter() - time_tmp
-            time_tmp = time.perf_counter()
-
+            tourn_winner = self.evolve_subtree_build(tourn_winner, branch_nodes_ids, 'branch')
             tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
-            mutate_step_times[4] += time.perf_counter() - time_tmp
-            time_tmp = time.perf_counter()
 
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
-
-        for i, x in enumerate(mutate_step_times):
-            print(i, 'took: {:4.2f}'.format(x))
 
         self.printpl('gg', 'gen_mutate_point took: {:4.2f}'.format(time.perf_counter() - time_start))
 
@@ -1287,7 +1271,7 @@ class ExplainableGP(object):
             if tree[TRn_type][node_id] == 'func':
                 tree[TRn_label][node_id] = self.evolve_func_get_func(label)  # Function is same type, same arity
             elif tree[TRn_type][node_id] == 'term':
-                tree[TRn_label][node_id] = self.xtype_xtype_choose_term(node_xtype)  # 3 -> '2f' -> 5
+                tree[TRn_label][node_id] = self.xtype_choose_term(node_xtype)  # 3 -> '2f' -> 5
             else:
                 self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[TRn_type][node_id])
                 raise
@@ -1298,96 +1282,97 @@ class ExplainableGP(object):
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def ptree_branch(self, root_xype, tree_depth):
+    def ptree_branch(self, root_xype, max_depth=''):
 
         """
-
-        if terminal: 2f
-        if func:    f2f
+        Builds a new 'branch'-tree, with a root
+        TODO max_depth or max_nodes
         """
-        tree_id, last_mod = 'mutant', 'b',
 
-        label, arity = self.xtype_choose_func(root_xype)
-        pnode = self.pnode_init_root(tree_id, tree_depth, last_mod, label, arity)
+        tree_id, last_mod = 'x', 'b',
+        if max_depth:
 
-        ptree = self.ptree_init()
-        ptree = self.ptree_node_add_fromdnode(ptree, pnode)
-        self.tnode = self.treegp_branch_function_build(ptree, pnode)  # build all the Function nodes
-        self.treegp_mutate_branch_terminal_build()  # build the Terminal nodes
-        # TODO set tree_depth_base in tree.
-        return
+            label, arity = self.xtype_choose_func(root_xype)
 
-    def pnode_init_root(self, tree_id, tree_depth, last_modification, label, arity):
+            if np.random.choice(['func', 'term']) == 'term':
+                tree[TRn_type][top_id] = 'term'
+                tree[TRn_label][top_id] = self.xtype_choose_term(xype)  # replace with a correct label
+                tree = np.delete(tree, branch_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+                tree = evolve_node_arity_fix(tree)  # fix all node arities (term)
+                tree = self.ntree_fix_link_child(tree)  # fix all child links (func)
+                tree = self.evolve_node_renum(tree)  # renumber all 'node_id's
+
+                # 5.2 We insert a function here
+                tree = self.ptree_replace_branch_nodelist(tree, branch_ids, self.tree)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
+
+            ptree = self.ptree_init()
+            ptree = self.ptree_node_add_fromdnode(ptree, pnode)
+
+            self.treegp_mutate_branch_terminal_build()  # build the Terminal nodes
+            # TODO set tree_depth_base in tree.
+            return
+
+    def pnode_asdf(self, pnode):
+
+        pnode '4' if arity == 3 else ''
+        return pnode
+
+    def pnode_init(self):
 
         """
         Initialize a pnode (plagih-tree-node).
         A ptree is build up of pnodes, of which one this structure represents
         """
 
-        pnode = {TR_ID: tree_id,
-                 TR_type: last_modification,
-                 TR_depth: tree_depth,
-                 TRn_id: 1,
-                 TRn_depth: 0,
-                 TRn_type: 'func',
-                 TRn_label: label,
+        pnode = {TR_ID: '',
+                 TR_type: '',
+                 TR_depth: '',
+                 TRn_id: '',
+                 TRn_depth: '',
+                 TRn_type: '',
+                 TRn_label: '',
                  TRn_parent: '',
-                 TRn_arity: arity,
-                 TRn_c1: '2' if arity == 1 else '',
-                 TRn_c2: '3' if arity == 2 else '',
-                 TRn_c3: '4' if arity == 3 else '',
+                 TRn_arity: '',
+                 TRn_c1: '',
+                 TRn_c2: '',
+                 TRn_c3: '',
                  TRn_modify: '1'}
 
         return pnode
 
-    def pnode_set_root(self, pnode, xtype):
+    def pnode_update(self, tree_id, last_mod):
 
         """
-        Build a root node for a branch insert.
+        Initialize a pnode (plagih-tree-node).
+        A ptree is build up of pnodes, of which one this structure represents
         """
 
+        pnode = {TR_ID: '',
+                 TR_type: '',
+                 TR_depth: '',
+                 TRn_id: '',
+                 TRn_depth: '',
+                 TRn_type: '',
+                 TRn_label: '',
+                 TRn_parent: '',
+                 TRn_arity: '',
+                 TRn_c1: '',
+                 TRn_c2: '',
+                 TRn_c3: '',
+                 TRn_modify: '1'}
 
+        return pnode
 
-        ### Function Nodes ###
-
-    def treegp_branch_function_build(self, ptree, pnode):
+    def treegp_branch_functions(self, tree, node):
 
         """
         Build the branch full depth
         Builds
         """
 
-        for i in range(1, pnode[TR_depth]):  # the tree depth (-1, where the last functions are) sfeh: actually NO -1?
 
-            pnode[TRn_depth] = i  # increment 'node_depth'
-            p_arity_sum = 0
-            prior_s_arity = 0  # reset for 'c_buffer' in 'children_link'
-            prior_siblings = 0  # reset for 'c_buffer' in 'children_link'
 
-            # parent_arity_sum = amount of nodes (that have to be on this level)
-            for j in range(1, len(ptree[3])):  # increment through all nodes in array 'tree'
-                if int(ptree[TRn_depth][j]) == pnode[TRn_depth] - 1:  # find parent nodes which reside at the prior depth
-                    p_arity_sum = p_arity_sum + int(ptree[TRn_arity][j])  # sum arities of all parent nodes at the prior depth
-
-            # Set for every "free space" a function node (func)
-            for j in range(1, len(ptree[3])):  # increment through all nodes
-                if int(ptree[TRn_depth][j]) == pnode[TRn_depth] - 1:  # ... find all parent nodes, one level above...
-                    if ptree[TRn_label][j] == 'Ifte':
-                        prior_s_arity = self.treegp_mutate_branch_node_gen(p_arity_sum, prior_s_arity, prior_siblings, '2b')
-                        prior_siblings += 1
-                        prior_s_arity = self.treegp_mutate_branch_node_gen(p_arity_sum, prior_s_arity, prior_siblings, '2f')
-                        prior_siblings += 1
-                        prior_s_arity = self.treegp_mutate_branch_node_gen(p_arity_sum, prior_s_arity, prior_siblings, '2f')
-                        prior_siblings += 1
-                    else:
-                        for k in range(1, int(ptree[TRn_arity][j]) + 1):  # k = 1,2
-                            self.tnode[TRn_parent] = int(ptree[3][j])  # set the nodes parent
-                            parent_func_xtype = op_xtype_dict[ptree[TRn_label][pnode[TRn_parent]]]  # find parents node
-                            func_xtype = parent_func_xtype[:2][::-1]  # parent 'f2b' -> '2f' child needed. Aka, the first two characters reversed
-                            prior_s_arity = self.treegp_mutate_branch_node_gen(p_arity_sum, prior_s_arity, prior_siblings, func_xtype)
-                            prior_siblings = prior_siblings + 1  # sum sibling nodes (current depth) who will spawn their own children (cousins? :)
-
-        return pnode
+        return node
 
     def treegp_mutate_branch_terminal_build(self):
 
@@ -1398,7 +1383,7 @@ class ExplainableGP(object):
 
         self.tnode[TRn_depth] = self.tnode[TR_depth]  # set the final node_depth (same as 'gp.pop[TRn_depth]' + 1)
 
-        for j in range(1, len(self.tree[3])):  # go through all nodes
+        for j in range(1, len(self.tree[TRn_id])):  # go through all nodes
             if int(self.tree[TRn_depth][j]) == self.tnode[TRn_depth] - 1:  # this node is a parent
                 for k in range(1, (int(self.tree[TRn_arity][j]) + 1)):  # increment through each degree of arity for each parent node
                     self.tnode[TRn_parent] = int(self.tree[3][j])  # set the parent 'node_id'  ...
@@ -1422,7 +1407,7 @@ class ExplainableGP(object):
 
         return
 
-    def treegp_mutate_branch_node_gen(self, parent_arity_sum, prior_sibling_arity, prior_siblings, xtype):
+    def treegp_branch_node(self, parent_arity_sum, prior_sibling_arity, prior_siblings, xtype):
 
         """
         Generate a single label (func or term) for
@@ -1481,7 +1466,7 @@ class ExplainableGP(object):
                     tr_node[TRn_c3] = c_buffer + 2
 
                 else:
-                    self.printpl('e', '\n\t\033[31m ERROR! In tree_build_child_link: pop[TRn_arity] =', self.tnode[TRn_arity], '\033[0;0m')
+                    self.printpl('e', 'tree_build_child_link: pop[TRn_arity] = {}'.format(self.tnode[TRn_arity]))
 
         return tr_node
 
@@ -1555,7 +1540,7 @@ class ExplainableGP(object):
             if int(tree[TRn_depth][n]) == depth and tree[TRn_type][n] == 'func':
                 tree[TRn_type][n] = 'term'  # mutate type 'func' to 'term'
                 node_xtype = self.xtype_label_get_xtype(tree[TRn_label][n])
-                tree[TRn_label][n] = self.xtype_xtype_choose_term(node_xtype)  # replace label
+                tree[TRn_label][n] = self.xtype_choose_term(node_xtype)  # replace label
 
             elif int(tree[TRn_depth][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
                 nodes.append(n)
@@ -1690,11 +1675,11 @@ class ExplainableGP(object):
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def evolve_subtree_build(self, tree, branch_ids):
+    def evolve_subtree_build(self, tree, branch_ids, last_mod):
 
         """
         Given: Tree and a node list
-        - checks how far to build down (todo?)
+        - checks how far to build down
         - checks the old nodes xtype, etc.
         - checks if we are not too far down the tree
         -
@@ -1702,41 +1687,88 @@ class ExplainableGP(object):
         returns: new tree
         """
 
-        # 1. How far can we build down?
-        top_id = int(branch_ids[0])
-        bottom_id = int(branch_ids[-1])
-        branch_depth = self.evolve_subtree_depth_choose(tree, top_id, bottom_id, len(branch_ids))  # sfeh solution to keep tree kind of small, dont forget the mode
+        label = tree[TRn_label][branch_ids[0]]
+        xype = self.xtype_label_get_xtype(label)
+        top_depth = tree[TRn_depth][branch_ids[0]]
+        top_node_id, bottom_id = int(branch_ids[0]), int(branch_ids[-1])
+        top_parent = tree[TRn_parent][branch_ids[0]]
 
-        # 2. Get the old-node's information
-        old_node_label = tree[TRn_label][branch_ids[0]]  # <; +,-,*,8,action0 ...
-        # old_node_type = tree[TRn_type][branch_nodes_ids[0]]  # func; term, ...
-        xype = self.xtype_label_get_xtype(old_node_label)  # '2f'; 'f2b', ...
+        pnode = self.pnode_init()
+        depth_upper_bound = self.gp['tree_depth_max'] - int(top_depth)
 
-        # 3. check if we are on a too-low level to branch mutate...
-        if branch_depth < 0:  # this has never occured ... yet
-            self.printpl('e', 'In evolve_grow_mutate: branch_depth', branch_depth, '< 0')
+        grow_method = self.gp['tree_growth']
 
-        elif branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
-            tree[TRn_label][top_id] = self.xtype_xtype_choose_term(xype)
+        if grow_method == 'depth_base_uniform':
+            """
+            We allow base depth (which is a little lower than max)
+            but every node has 0.5 chance to become a terminal
+            - iterate over depths
+            - fill with as many funcs as possible
+            """
 
-        # 4. We can now mutate the branch!
-        else:
-            # 5. 50:50 terminal or function
-            if np.random.choice(['func', 'term']) == 'term':  # mutate 'branch_top' to a terminal and delete all nodes beneath (no subsequent nodes are added to this branch)
-                # 5.1 We insert a terminal here
-                tree[TRn_type][top_id] = 'term'  # replace type ('func' to 'term' or 'term' to 'term')
-                term_type = self.xtype_label_get_xtype(old_node_label)
-                tree[TRn_label][top_id] = self.xtype_xtype_choose_term(term_type)  # replace with a correct label
-                tree = np.delete(tree, branch_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-                tree = evolve_node_arity_fix(tree)  # fix all node arities (term)
-                tree = self.ntree_fix_link_child(tree)  # fix all child links (func)
-                tree = self.evolve_node_renum(tree)  # renumber all 'node_id's
+            depth_goal = min(self.gp['tree_depth_base'], depth_upper_bound)
+            width_goal = 1
+            nodes_cnt = 0  # reset for 'c_buffer' in 'children_link'
+            prior_s = 0  # reset for 'c_buffer' in 'children_link'
+            parent_list = ['']
+
+            # in every tree depth
+            for depth in range(1, depth_goal + 1):
+
+                # go as far wide as needed
+                for count in range(1, width_goal + 1):
+
+                    # Check, how many of the lower nodes
+                    if label == 'Ifte':
+                        # build up "parent" list
+                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2b')
+                        prior_s += 1
+                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2f')
+                        prior_s += 1
+                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2f')
+                        prior_s += 1
+                    else:
+                        pnode[TRn_parent] = parent_list[count]  # set the nodes parent
+                        parent_func_xtype = op_xtype_dict[tree[TRn_label][pnode[TRn_parent]]]  # find parents node
+                        xype = parent_func_xtype[:2][::-1]
+                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, xype)
+                        prior_s += 1
+
+                    if np.random.choice(['func', 'term']) == 'term':
+                        label = self.xtype_choose_term(xype)
+                    else:
+                        label = self.xtype_choose_func(xype)
+
+                    pnode[TRn_label] = label
+                    # needen: label, c1, c2, c3, depth, parent, arity, depth, type, modify
+
+
+
+                for count in range(1, len(tree[TRn_depth])):  # increment through all nodes in array 'tree'
+                    if int(tree[TRn_depth][count]) == pnode[TRn_depth] - 1:  # find parent nodes which reside at the prior depth
+                        width_goal = width_goal + int(tree[TRn_arity][count])  # sum arities of all parent nodes at the prior depth
+
+                # how many nodes
+                pnode = self.pnode_update()
+
+                self.tnode = self.treegp_branch_functions(tree, pnode)  # build all the Function nodes
+
+            pnode = self.pnode_asdf(pnode, label, arity)
+
+            if branch_depth == 0:  # the point of mutation ('branch_top') chosen resides at the maximum allowable depth, so mutate term to term
+                tree[TRn_label][top_node_id] = self.xtype_choose_term(xype)
+
             else:
-                # 5.2 We insert a function here
-                self.ptree_branch(xype, branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
-                tree = self.ptree_replace_branch_nodelist(tree, branch_ids, self.tree)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
-
-            # because we already know the maximum depth to which this branch can grow, there is no need to prune after insertion
+                self.ptree_branch(xype, max_depth=branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
+        elif grow_method == 'nodes_max_uniform':
+            """
+            We allow a certain amount of new nodes instead tree depth.
+            This could be calculated respectively to the parsimony level
+            which the tree might have up his sleeve
+            """
+            raise
+        else:
+            self.printpl('e', 'That did not work')
 
         return tree
 
@@ -1752,15 +1784,15 @@ class ExplainableGP(object):
         # TODO is this already considered by 50:50 func-term?
 
         depth_old = int(ptree[TRn_depth][bottom_id]) - int(ptree[TRn_depth][top_id])  # subtract depth of 'branch_top' from the last in 'branch'
-        depth_upper_bound = self.gp['tree_depth_base'] - int(ptree[TRn_depth][top_id])  # = 10 - (node_depth)
+        depth_upper_bound = self.gp['tree_depth_max'] - int(ptree[TRn_depth][top_id])  # = 10 - (node_depth)
         if mode == 'maximum':
             return depth_upper_bound
         elif mode == 'same_length':
             return depth_old
         elif mode == 'base_depth':
-            return self.gp['tree_depth_base']
+            return min(self.gp['tree_depth_base'], depth_upper_bound)
         elif mode == 'random':
-            return max(depth_upper_bound, np.random.randint(0, 1 + max(depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
+            return min(depth_upper_bound, np.random.randint(0, 1 + max(depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
         else:
             self.printpl('e', 'evolve_subtree_depth_choose does not accept this mode: {}'.format(mode))
             raise
@@ -2792,7 +2824,7 @@ class ExplainableGP(object):
         """
 
         self.tnode[TRn_type] = 'term'
-        self.tnode[TRn_label] = self.xtype_xtype_choose_term(node_xtype)  # get a terminal
+        self.tnode[TRn_label] = self.xtype_choose_term(node_xtype)  # get a terminal
         self.tnode[TRn_arity] = 0
 
         return
@@ -2896,7 +2928,7 @@ class ExplainableGP(object):
 
         return node_xtype
 
-    def xtype_xtype_choose_term(self, node_xtype):
+    def xtype_choose_term(self, node_xtype):
         """
         Returns a terminal of xtype.
 

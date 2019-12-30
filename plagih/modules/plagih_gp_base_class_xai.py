@@ -30,6 +30,7 @@ import pickle
 import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 from plagih.modules.plagih_sympy_extras import plagih_sympify
+from plagih.modules.dicts import *
 from pprint import pprint
 import matplotlib.pyplot as plt
 import scipy.stats as st
@@ -39,201 +40,6 @@ import time
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-TR_ID = 0
-TR_type = 1
-TR_depth = 2
-TRn_id = 3
-TRn_depth = 4
-TRn_type = 5
-TRn_label = 6
-TRn_parent = 7
-TRn_arity = 8
-TRn_c1 = 9
-TRn_c2 = 10
-TRn_c3 = 11
-TR_fitness = 12
-TRn_modify = 13
-TR_parsimony = 14
-TRn_um_lines = 15
-P_first_node = 1
-
-f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
-
-ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b
-                   ast.Sub: tf.subtract,  # e.g., a - b
-                   ast.Mult: tf.multiply,  # e.g., a * b
-                   ast.Div: tf.divide,  # e.g., a / b
-                   ast.Pow: tf.pow,  # e.g., a ** 2
-                   ast.USub: tf.negative,  # e.g., -a
-                   ast.And: tf.logical_and,  # e.g., a and b
-                   ast.Or: tf.logical_or,  # e.g., a or b
-                   ast.Not: tf.logical_not,  # e.g., not a
-                   ast.Eq: tf.equal,  # e.g., a == b
-                   ast.NotEq: tf.not_equal,  # e.g., a != b
-                   ast.Lt: tf.less,  # e.g., a < b
-                   ast.LtE: tf.less_equal,  # e.g., a <= b
-                   ast.Gt: tf.greater,  # e.g., a > b
-                   ast.GtE: tf.greater_equal,  # e.g., a >= 1
-                   'abs': tf.abs,  # e.g., abs(a)
-                   'sign': tf.sign,  # e.g., sign(a)
-                   'square': tf.square,  # e.g., square(a)
-                   'sqrt': tf.sqrt,  # e.g., sqrt(a)
-                   'pow': tf.pow,  # e.g., pow(a, b)
-                   'log': tf.math.log,  # e.g., log(a)
-                   'log1p': tf.math.log1p,  # e.g., log1p(a)
-                   'cos': tf.cos,  # e.g., cos(a)
-                   'sin': tf.sin,  # e.g., sin(a)
-                   'tan': tf.tan,  # e.g., tan(a)
-                   'acos': tf.acos,  # e.g., acos(a)
-                   'asin': tf.asin,  # e.g., asin(a)
-                   'atan': tf.atan,  # e.g., atan(a)
-                   'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
-                   'Mini': tf.math.minimum,  # if reduce_min does not work...
-                   'Maxi': tf.math.maximum,
-                   }
-op = {
-    'float': {'arity': 0, 'xtype': '2f', 'tf': ''},
-    'int': {'arity': 0, 'xtype': '2f', 'tf': ''},
-    'bool': {'arity': 0, 'xtype': '2b', 'tf': ''},
-
-    '+': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '-': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '*': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '/': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '**': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    'abs': {'arity': 1, 'xtype': 'f2f', 'tf': tf.abs},
-    'sign': {'arity': 1, 'xtype': 'f2f', 'tf': tf.sign},
-    'square': {'arity': 1, 'xtype': 'f2f', 'tf': tf.square},
-    'sqrt': {'arity': 1, 'xtype': 'f2f', 'tf': tf.sqrt},
-    'log': {'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log},
-    'log1p': {'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log1p},
-    'cos': {'arity': 1, 'xtype': 'f2f', 'tf': tf.cos},
-    'sin': {'arity': 1, 'xtype': 'f2f', 'tf': tf.sin},
-    'tan': {'arity': 1, 'xtype': 'f2f', 'tf': tf.atan},
-    'acos': {'arity': 1, 'xtype': 'f2f', 'tf': tf.acos},
-    'asin': {'arity': 1, 'xtype': 'f2f', 'tf': tf.asin},
-    'atan': {'arity': 1, 'xtype': 'f2f', 'tf': tf.atan},
-
-    'And': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Or': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Xor': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Nand': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Xand': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Nor': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Xnor': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Not': {'arity': 1, 'xtype': 'b2b', 'tf': ''},
-
-    '==': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '!=': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '<': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '<=': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '>': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '>=': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-
-    'Ftob': {'arity': 1, 'xtype': 'f2b', 'tf': ''},
-    'Btof': {'arity': 1, 'xtype': 'b2f', 'tf': ''},
-
-    'Ifte': {'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where},  # Note that boolean if's can be realized with boolean operators. (Or ITE())
-    'Mini': {'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
-    'Maxi': {'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
-}
-op_xtype_dict = {  # Needs A LOT OF further testing
-    'float': '2f',  # these three are dummies
-    'int': '2f',  # neede to use the dict for function types aswell
-    'bool': '2b',  # so we can "work around" use them
-
-    '+': 'f2f',
-    '-': 'f2f',
-    '*': 'f2f',
-    '/': 'f2f',
-    '**': 'f2f',
-    'abs': 'f2f',
-    'sign': 'f2f',
-    'square': 'f2f',
-    'sqrt': 'f2f',
-    'log': 'f2f',
-    'log1p': 'f2f',
-    'cos': 'f2f',
-    'sin': 'f2f',
-    'tan': 'f2f',
-    'acos': 'f2f',
-    'asin': 'f2f',
-    'atan': 'f2f',
-
-    'And': 'b2b',
-    'Or': 'b2b',
-    'Xor': 'b2b',
-    'Nand': 'b2b',
-    'Xand': 'b2b',
-    'Nor': 'b2b',
-    'Xnor': 'b2b',
-    'Not': 'b2b',
-    'ITE': 'b2b',
-
-    '==': 'f2b',
-    '!=': 'f2b',
-    '<': 'f2b',
-    '<=': 'f2b',
-    '>': 'f2b',
-    '>=': 'f2b',
-
-    'Ftob': 'f2b',
-    'Btof': 'b2f',  # False->0, True->1, dummy-function
-    'Btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
-
-    'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
-    'Mini': 'f2f',
-    'Maxi': 'f2f',
-}
-function_arity_dict = {  # Needs A LOT OF further testing
-    'float': 0,  # these three are dummies
-    'int': 0,  # neede to use the dict for function types aswell
-    'bool': 0,  # so we can "workarounded" use them
-
-    '+': 2,
-    '-': 2,
-    '*': 2,
-    '/': 2,
-    '**': 2,
-    'abs': 1,
-    'sign': 1,
-    'square': 1,
-    'sqrt': 1,
-    'log': 1,
-    'log1p': 1,
-    'cos': 1,
-    'sin': 1,
-    'tan': 1,
-    'acos': 1,
-    'asin': 1,
-    'atan': 1,
-
-    'And': 2,
-    'Or': 2,
-    'Xor': 2,
-    'Nand': 2,
-    'Xand': 2,
-    'Nor': 2,
-    'Xnor': 2,
-    'Not': 1,
-
-    '==': 2,
-    '!=': 2,
-    '<': 2,
-    '<=': 2,
-    '>': 2,
-    '>=': 2,
-
-    'Ftob': 1,
-    'Btof': 1,  # False->0, True->1, dummy-function
-    'Btof_extreme': 1,  # False->-1, True->1. Does that make sense?
-
-    'Ifte': 3,  # Note that boolean if's can be realized with boolean operators. (Or ITE())
-    'Mini': 2,
-    'Maxi': 2,
-}
-functions_wrap_dict = ['Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
-functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
 # todo write why Min and Max is crap (sympy multielement, tf problem with ast)
 # TODO all functions have to be within one of these lists. check it.
 # random TODO replace and with &, see https://docs.sympy.org/latest/_modules/sympy/core/relational.html
@@ -285,6 +91,29 @@ def evolve_node_arity_fix(tree):
     return tree
 
 
+class BColors:  # sfeh can be deleted
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN = '\033[36m'
+    WHITE = '\033[37m'
+    RESET = '\033[39m'
+
+    BLACK2 = '\033[40m'
+    RED2 = '\033[41m'
+
+
 class ExplainableGP(object):
     """
 
@@ -293,7 +122,7 @@ class ExplainableGP(object):
     def __init__(self, config_dict, file_dict, evolve_ratio_dict, monitor_dict):
 
         self.tree_hash_meta = {}  # All tree informations ->
-        self.parsimony_best_dict = {}  # the best tree for each distance value -> {distance: tree_meta_tuple}
+        self.parsimony_best_dict = {}  # the best tree for each distance c1 -> {distance: tree_meta_tuple}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
 
@@ -444,7 +273,7 @@ class ExplainableGP(object):
                 self.gen_finalize()
 
             else:
-                self.printpl('p', '\t\033[32m Enter \033[1m?\033[0;0m\033[32m to review your options or \033[1mq\033[0;0m\033[32muit\033[0;0m')
+                self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format('\033[32m', '\033[1m', '\033[32m', '\033[1m', '\033[32m', '\033[0;0m'))
                 menu_continue = 0
 
     def main_terminate(self):
@@ -921,7 +750,7 @@ class ExplainableGP(object):
 
                 # 4. was a lower parsimony already better?
                 if self.fitness_compare(fitness_parsimony, fitness_pareto, mode='better'):
-                    self.printpl('v', 'Pareto updated at parsimony {}. New fitness {}. Old fitness: {}'.format(parsim, fitness_parsimony, fitness_best))
+                    self.printpl('arity', 'Pareto updated at parsimony {}. New fitness {}. Old fitness: {}'.format(parsim, fitness_parsimony, fitness_best))
 
                     fitness_best = fitness_parsimony
                     self.pareto[parsim] = parsim_ident
@@ -971,8 +800,8 @@ class ExplainableGP(object):
             tree = self.origin['tree'].copy()
 
             # vary this tree with mutation
-            branch_nodes_ids = self.ptree_branch_choose_ids(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
-            tree = self.evolve_subtree_build(tree, branch_nodes_ids, 'first')  # tree with new branch
+            branch_nodes_ids = self.ptree_choose_branch_ids(tree)  # [6, 9, 10] select point of mutation and all nodes beneath
+            tree = self.evolve_subtree_build(tree, branch_nodes_ids)  # tree with new branch
 
             # Fill the correct meta-data into the tree (and wipe the old fitness)
             # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
@@ -1119,8 +948,8 @@ class ExplainableGP(object):
 
             mutate_step_times[0] += time.perf_counter() - time_tmp
             tourn_winner = self.gp_selection_tournament(self.gp['gp_tourn_size'])  # perform tournament selection for each mutation
-            branch_nodes_ids = self.ptree_branch_choose_ids(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
-            tourn_winner = self.evolve_subtree_build(tourn_winner, branch_nodes_ids, 'branch')
+            branch_nodes_ids = self.ptree_choose_branch_ids(tourn_winner)  # select point of mutation and all nodes beneath [6, 9, 10]
+            tourn_winner = self.evolve_subtree_build(tourn_winner, branch_nodes_ids)
             tourn_winner = self.tree_modifyable_nodes_set(tourn_winner)
 
             self.population_new.append(tourn_winner)  # append array to next generation population of Trees
@@ -1268,9 +1097,9 @@ class ExplainableGP(object):
 
         if arity == 'same':
             # 2. perform point mutation on that specific node
-            if tree[TRn_type][node_id] == 'func':
+            if tree[TRn_arity][node_id] > 0:
                 tree[TRn_label][node_id] = self.evolve_func_get_func(label)  # Function is same type, same arity
-            elif tree[TRn_type][node_id] == 'term':
+            elif tree[TRn_arity][node_id] == 0:  # aka a terminal
                 tree[TRn_label][node_id] = self.xtype_choose_term(node_xtype)  # 3 -> '2f' -> 5
             else:
                 self.printpl('e', 'Operator type is not specified for PLAGIH ("term", "func",...)', tree[TRn_type][node_id])
@@ -1282,14 +1111,15 @@ class ExplainableGP(object):
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def ptree_branch(self, root_xype, max_depth=''):
+    def tree_branch(self, root_xype, max_depth=''):
 
         """
-        Builds a new 'branch'-tree, with a root
+        Builds a new 'branch'-tree
         TODO max_depth or max_nodes
         """
 
         tree_id, last_mod = 'x', 'b',
+        tree = self.ptree_init()
         if max_depth:
 
             label, arity = self.xtype_choose_func(root_xype)
@@ -1311,11 +1141,6 @@ class ExplainableGP(object):
             self.treegp_mutate_branch_terminal_build()  # build the Terminal nodes
             # TODO set tree_depth_base in tree.
             return
-
-    def pnode_asdf(self, pnode):
-
-        pnode '4' if arity == 3 else ''
-        return pnode
 
     def pnode_init(self):
 
@@ -1340,7 +1165,7 @@ class ExplainableGP(object):
 
         return pnode
 
-    def pnode_update(self, tree_id, last_mod):
+    def pnode_update(self, label, c1='', c2='', c3='', tree_id='', last_mod=''):
 
         """
         Initialize a pnode (plagih-tree-node).
@@ -1353,26 +1178,16 @@ class ExplainableGP(object):
                  TRn_id: '',
                  TRn_depth: '',
                  TRn_type: '',
-                 TRn_label: '',
+                 TRn_label: label,
                  TRn_parent: '',
                  TRn_arity: '',
                  TRn_c1: '',
                  TRn_c2: '',
-                 TRn_c3: '',
+                 TRn_c3: '4' if arity == 3 else '',
                  TRn_modify: '1'}
 
         return pnode
 
-    def treegp_branch_functions(self, tree, node):
-
-        """
-        Build the branch full depth
-        Builds
-        """
-
-
-
-        return node
 
     def treegp_mutate_branch_terminal_build(self):
 
@@ -1410,11 +1225,7 @@ class ExplainableGP(object):
     def treegp_branch_node(self, parent_arity_sum, prior_sibling_arity, prior_siblings, xtype):
 
         """
-        Generate a single label (func or term) for
-        -- parent_arity_sum
-        -- prior_sibling_arity
-        -- prior_siblings
-        -- '2b')
+        Generate a single node (func or term) for
 
         """
 
@@ -1537,7 +1348,7 @@ class ExplainableGP(object):
 
         for n in range(1, len(tree[3])):
 
-            if int(tree[TRn_depth][n]) == depth and tree[TRn_type][n] == 'func':
+            if int(tree[TRn_depth][n]) == depth and tree[TRn_arity][n] > 0:
                 tree[TRn_type][n] = 'term'  # mutate type 'func' to 'term'
                 node_xtype = self.xtype_label_get_xtype(tree[TRn_label][n])
                 tree[TRn_label][n] = self.xtype_choose_term(node_xtype)  # replace label
@@ -1623,8 +1434,8 @@ class ExplainableGP(object):
                     x_convert_bool = True
 
         # TODO add try-except-case with point mutation (same arity, swapping xtype)
-        a_branch = self.ptree_branch_choose_ids(a_parent, node=a_node)
-        b_branch = self.ptree_branch_choose_ids(b_parent, node=b_node)
+        a_branch = self.ptree_choose_branch_ids(a_parent, node=a_node)
+        b_branch = self.ptree_choose_branch_ids(b_parent, node=b_node)
 
         return a_branch, b_branch, x_convert_bool
 
@@ -1675,7 +1486,7 @@ class ExplainableGP(object):
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def evolve_subtree_build(self, tree, branch_ids, last_mod):
+    def evolve_subtree_build(self, tree, branch_ids):
 
         """
         Given: Tree and a node list
@@ -1707,51 +1518,79 @@ class ExplainableGP(object):
             """
 
             depth_goal = min(self.gp['tree_depth_base'], depth_upper_bound)
+
+            todo_xypes = [xype]
+            result_label_list = []
+            result_arity_list = []
+            next_xype_list = []
+
+            # Build a list with labels in row, and a list wit their arities
+            for depth in range(1, depth_goal + 1):
+                for t in todo_xypes:
+
+                    # Randomly choose a new label
+                    if np.random.choice(['func', 'term']) == 'term':
+                        label = self.xtype_choose_term(t)
+                        arity = 0
+                    else:
+                        label, arity = self.xtype_choose_func(t)
+
+                    # Add the label to the result list
+                    result_label_list.append(label)
+                    result_arity_list.append(arity)
+
+                    # create a new xype-'To-do' list for the next depth
+                    if label == 'Ifte':
+                        next_xype_list.extend(['2b', '2f', '2f'])
+                    else:
+                        tmp_xtype = self.xtype_label_get_xtype(label)
+                        for n in range(0, arity):  # when arity==2, add 2 times
+                            next_xype_list.append(tmp_xtype)
+
+                    # Finally, update the list for the next round
+                    todo_xypes = next_xype_list[:]
+            print('Oky {}'.format(result_label_list))
+
+            tree = self.ptree_from_labels(tree, branch_ids, result_label_list)
+
+        elif grow_method == 'old plagih code':
+            self.printpl('e', 'Not yet')
+
             width_goal = 1
             nodes_cnt = 0  # reset for 'c_buffer' in 'children_link'
             prior_s = 0  # reset for 'c_buffer' in 'children_link'
-            parent_list = ['']
 
-            # in every tree depth
-            for depth in range(1, depth_goal + 1):
+            # go as far wide as needed
+            for count in range(1, width_goal + 1):
 
-                # go as far wide as needed
-                for count in range(1, width_goal + 1):
-
-                    # Check, how many of the lower nodes
-                    if label == 'Ifte':
-                        # build up "parent" list
-                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2b')
-                        prior_s += 1
-                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2f')
-                        prior_s += 1
-                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2f')
-                        prior_s += 1
-                    else:
-                        pnode[TRn_parent] = parent_list[count]  # set the nodes parent
-                        parent_func_xtype = op_xtype_dict[tree[TRn_label][pnode[TRn_parent]]]  # find parents node
-                        xype = parent_func_xtype[:2][::-1]
-                        nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, xype)
-                        prior_s += 1
-
-                    if np.random.choice(['func', 'term']) == 'term':
-                        label = self.xtype_choose_term(xype)
-                    else:
-                        label = self.xtype_choose_func(xype)
-
-                    pnode[TRn_label] = label
-                    # needen: label, c1, c2, c3, depth, parent, arity, depth, type, modify
+                # Check, how many of the lower nodes
+                if label == 'Ifte':
+                    # build up "parent" list
+                    nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2b')
+                    prior_s += 1
+                    nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2f')
+                    prior_s += 1
+                    nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, '2f')
+                    prior_s += 1
+                else:
+                    pnode[TRn_parent] = todo_xypes[count]  # set the nodes parent
+                    parent_func_xtype = op_xtype_dict[tree[TRn_label][pnode[TRn_parent]]]  # find parents node
+                    xype = parent_func_xtype[:2][::-1]
+                    nodes_cnt = self.treegp_branch_node(width_goal, nodes_cnt, prior_s, xype)
+                    prior_s += 1
 
 
+                pnode[TRn_label] = label
+                # needen: label, c1, c2, c3, depth, parent, arity, depth, type, modify
 
-                for count in range(1, len(tree[TRn_depth])):  # increment through all nodes in array 'tree'
-                    if int(tree[TRn_depth][count]) == pnode[TRn_depth] - 1:  # find parent nodes which reside at the prior depth
-                        width_goal = width_goal + int(tree[TRn_arity][count])  # sum arities of all parent nodes at the prior depth
+            for count in range(1, len(tree[TRn_depth])):  # increment through all nodes in array 'tree'
+                if int(tree[TRn_depth][count]) == pnode[TRn_depth] - 1:  # find parent nodes which reside at the prior depth
+                    width_goal = width_goal + int(tree[TRn_arity][count])  # sum arities of all parent nodes at the prior depth
 
-                # how many nodes
-                pnode = self.pnode_update()
+            # how many nodes
+            pnode = self.pnode_update()
 
-                self.tnode = self.treegp_branch_functions(tree, pnode)  # build all the Function nodes
+            self.tnode = self.treegp_branch_functions(tree, pnode)  # build all the Function nodes
 
             pnode = self.pnode_asdf(pnode, label, arity)
 
@@ -1759,7 +1598,7 @@ class ExplainableGP(object):
                 tree[TRn_label][top_node_id] = self.xtype_choose_term(xype)
 
             else:
-                self.ptree_branch(xype, max_depth=branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
+                self.tree_branch(xype, max_depth=branch_depth)  # build new Tree ('gp.tree') with a maximum depth which matches 'branch'
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
@@ -1771,6 +1610,17 @@ class ExplainableGP(object):
             self.printpl('e', 'That did not work')
 
         return tree
+
+    def ptree_from_labels(self, tree, branch_ids, label_list, arity_list=[]):
+
+        ptree = self.ptree_init()
+        pnode = self.pnode_init()
+        for label in label_list:
+            pnode = self.pnode_update()
+            ptree = np.append()
+
+        return ptree
+
 
     def evolve_subtree_depth_choose(self, ptree, top_id, bottom_id, amount_replaced_nodes, mode='base_depth'):  # sfeh other default
         """
@@ -1808,7 +1658,6 @@ class ExplainableGP(object):
         """
 
         branch_top = int(ptree_ids[0])
-        # ptree[TRn_type][branch_top] = 'func'
         ptree[TRn_label][branch_top] = insert_tree[TRn_label][1]  # copy node_label from new tree
         ptree[TRn_arity][branch_top] = insert_tree[TRn_arity][1]  # copy node_arity from new tree
         ptree = np.delete(ptree, ptree_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
@@ -1893,7 +1742,7 @@ class ExplainableGP(object):
 
         return tree
 
-    def ptree_branch_choose_ids(self, tree, node=0):
+    def ptree_choose_branch_ids(self, tree, node=None):
 
         """
         chooses a mutatable branch to mutate
@@ -1903,14 +1752,14 @@ class ExplainableGP(object):
 
         branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
 
-        if node > 0:  # Crossover: Option to specify own starting node
+        if node:  # Crossover: Option to specify own starting node
             branch_top = node
         else:
             branch_top = self.evolve_choose_mutatable_node_id(tree, mode='mutate_branch_no_root')  # "2" returns mutable node (except root node)
 
         # 2. Also return all child nodes
         branch_eval = self.tree_node_get_childlist(tree, branch_top)  # generate tuple of 'branch_top' and subsequent nodes
-        branch_symp = sympify(branch_eval)  # convert string into something useful
+        branch_symp = plagih_sympify(branch_eval)  # convert string into something useful # sfeh: simple sympy might be faster
         branch = np.append(branch, branch_symp)  # append list to array
         branch = np.sort(branch)  # sort nodes in branch for Crossover.
 
@@ -2004,7 +1853,7 @@ class ExplainableGP(object):
         This is automatically handled in all mutations except with Crossover due to the need to copy branches 'a' and
         'b' to their own trees before inserting them into copies of	the parents.
 
-        Technically speaking, the 'node_parent' value is not used by any methods. The parent ID can be completely out
+        Technically speaking, the 'node_parent' c1 is not used by any methods. The parent ID can be completely out
         of whack and the expression will work perfectly. This is maintained for the sole purpose of granting the user
         a friendly, makes-sense interface which can be read in both directions.
 
@@ -2285,7 +2134,7 @@ class ExplainableGP(object):
             # TODO give more opportunities, similar to random floats
             return np.random.random_integers(-10, 10)
         else:
-            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return value similar to terminals.')
+            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return c1 similar to terminals.')
             self.printpl('e', 'This term type should not occur, I guess', term_type)
             term_type = np.random.choice(self.variables_dict['types'])
             return self.tree_build_type_constant_get(term_type=term_type)
@@ -2371,11 +2220,12 @@ class ExplainableGP(object):
     def tree_node_get_childlist(self, tree, node_id):
 
         """
-        Evaluate all or part of a Tree and return a list of all 'node_id's.
+        return a list of s nodes childs.
+        + Evaluate all or part of a Tree and
 
         This method generates a list of all 'node_id's from the given Node and below. It is used primarily to generate
         'branch' for the multi-generational mutation of Trees.
-
+        TODO what does this exactly?
         """
 
         node_id = int(node_id)
@@ -2385,19 +2235,20 @@ class ExplainableGP(object):
 
         else:
             if tree[TRn_arity, node_id] == '1':  # arity of 1 for the pattern '[node_id], [node_id]'
-                return tree[3, node_id] + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[9, node_id])
+                return '{}, {}'.format(tree[3, node_id], self.tree_node_get_childlist(tree, tree[9, node_id]))
 
             elif tree[TRn_arity, node_id] == '2':  # arity of 2 for the pattern '[node_id], [node_id], [node_id]'
-                return tree[3, node_id] + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[9, node_id]) + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[10, node_id])
+                return '{}, {}, {}'.format(
+                    tree[3, node_id],
+                    self.tree_node_get_childlist(tree, tree[9, node_id]),
+                    self.tree_node_get_childlist(tree, tree[10, node_id]))
 
             elif tree[TRn_arity, node_id] == '3':  # arity of 3 for the pattern '[node_id], [node_id], [node_id], [node_id]'
-                return tree[3, node_id] + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[9, node_id]) + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[10, node_id]) + ', ' \
-                       + self.tree_node_get_childlist(tree, tree[11, node_id])
+                return '{}, {}, {}, {}'.format(
+                    tree[3, node_id],
+                    self.tree_node_get_childlist(tree, tree[9, node_id]),
+                    self.tree_node_get_childlist(tree, tree[10, node_id]),
+                    self.tree_node_get_childlist(tree, tree[11, node_id]))
 
     def tree_parsimony(self, tree, parsimony_distance='ted'):
         """
@@ -2573,7 +2424,7 @@ class ExplainableGP(object):
                 pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
                 # TODO currently does only support one label
-                solution = tensors['action0']  # solution value is assumed to be stored in this terminal
+                solution = tensors['action0']  # solution c1 is assumed to be stored in this terminal
                 # 3- Add fitness computation into TF graph
                 if self.kernel == 'c':  # CLASSIFY kernel
 
@@ -2619,7 +2470,7 @@ class ExplainableGP(object):
 
                     """
                     A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
-                    that you raise the minimum node count to keep it from converging on the value of '1'. Consider writing or 
+                    that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
                     integrating a more sophisticated kernel.
                     """
 
@@ -2632,7 +2483,7 @@ class ExplainableGP(object):
                     """
 
                     # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-                    RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float value lies within a range of values
+                    RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
                     pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
 
                 # elif self.kernel == '[other]': # use others as a template
@@ -2646,7 +2497,7 @@ class ExplainableGP(object):
                 tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
 
         # todo delete this
-        # self.printpl('c', ('v', self.fitness_compare_better(fitness, self.origin['fitness_train'])), 'Fitness was better than original fitness')
+        # self.printpl('c', ('arity', self.fitness_compare_better(fitness, self.origin['fitness_train'])), 'Fitness was better than original fitness')
         # if self.fitness_compare_better(fitness, self.origin['fitness_train']):
         #     print('Fitness was better than original fitness:', fitness, ' better than:', self.origin['fitness_train'])
 
@@ -3258,7 +3109,7 @@ class ExplainableGP(object):
             """
 
             for i in range(len(result['result'])):
-                self.printpl('o', '\t\033[36m Data row {} predicts value:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.
+                self.printpl('o', '\t\033[36m Data row {} predicts c1:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.
                              format(i, result['result'][i], result['solution'][i]))
 
             MSE, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
@@ -3279,7 +3130,7 @@ class ExplainableGP(object):
             for i in range(len(result['result'])):
                 self.printpl('vv', '\t\033[36m Data row {} predicts match:\033[1m {:.2f} ({:.2f} True)\033[0;0m'.format(i, result['result'][i], result['solution'][i]))
 
-            self.printpl('v', 'Matching fitness score: {}'.format(result['fitness']))
+            self.printpl('arity', 'Matching fitness score: {}'.format(result['fitness']))
 
             return
         else:
@@ -3342,31 +3193,6 @@ class ExplainableGP(object):
             minimal (m): displays only the multivariate expression of each tree
             Silent (s): displays only the summary of each generations
 
-        Colors: (examples)
-            BLACK   = '\033[30m'
-            RED     = '\033[31m'
-            GREEN   = '\033[32m'
-            YELLOW  = '\033[33m'
-            BLUE    = '\033[34m'
-            MAGENTA = '\033[35m'
-            CYAN    = '\033[36m'
-            WHITE   = '\033[37m'
-            RESET   = '\033[39m'
-
-        Background: (examples)
-            BLACK   = '\033[40m'
-            RED     = '\033[41m'
-
-        ...maybe these look better?
-        class BColors:  # sfeh can be deleted
-            HEADER = '\033[95m'
-            OKBLUE = '\033[94m'
-            OKGREEN = '\033[92m'
-            WARNING = '\033[93m'
-            FAIL = '\033[91m'
-            ENDC = '\033[0m'
-            BOLD = '\033[1m'
-            UNDERLINE = '\033[4m'
         """
 
         message_posttxt = '\033[39m'
@@ -3387,7 +3213,7 @@ class ExplainableGP(object):
             elif 'g' in message_type:
                 message_style = '\033[32m'
                 message_pretxt = 'Generation: '  # green
-            elif 'v' in message_type:  # verbose
+            elif 'arity' in message_type:  # verbose
                 message_style = '\033[37m'  # white
                 message_pretxt = 'Verbose: '
             elif 'p' in message_type:  # pause

@@ -7,7 +7,7 @@ from mountaincar.agents.move_directions import move_towards_direction
 # plagih
 
 
-# This function returns a key-value pair list to test the fitness on.
+# This function returns a key-c1 pair list to test the fitness on.
 # - We use a pre-trained model from an agent
 # - The agent has to provide a function called get_action(state), which gets a state and returns an action
 # Several options may be helpful:

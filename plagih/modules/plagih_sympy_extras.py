@@ -108,6 +108,7 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Mini': Mini,
                     'Maxi': Maxi,}
 
+
 def plagih_sympify(function_string):
     """
     Sympy bug #1:

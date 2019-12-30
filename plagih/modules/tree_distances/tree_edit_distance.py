@@ -4,7 +4,7 @@ from apted.helpers import Tree as aptree
 
 class CustomConfig(Config):
     def rename(self, node1, node2):
-        """Compares attribute .value of trees"""
+        """Compares attribute .c1 of trees"""
         return 1 if node1.value != node2.value else 0
 
     def children(self, node):

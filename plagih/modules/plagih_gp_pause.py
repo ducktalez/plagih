@@ -88,7 +88,7 @@ def pause(menu_dict):
 	#			query = input('\n\t Adjust the global maximum Tree depth to (1 ... 10): ')
 	#			if int(query) not in list(range(1,11)): raise ValueError()
 	#			if query < gp.tree_depth_max:
-	#				print ('\n\t\033[32m This value is less than the current value.\033[0;0m')
+	#				print ('\n\t\033[32m This c1 is less than the current c1.\033[0;0m')
 	#				conf = input('\n\t Are you ok with this? (y/n) ')
 	#				if conf == 'n': break
 	#		except ValueError: print ('\n\t\033[32m Enter a number from 1 including 10. Try again ...\033[0;0m')

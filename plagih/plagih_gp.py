@@ -1,4 +1,4 @@
-import sys; sys.path.append('modules/') # add directory 'modules' to the current path
+import sys; sys.path.append('modules/')  # add directory 'modules' to the current path
 import plagih.modules.plagih_gp_base_class_xai as plagih
 from pathlib import Path
 from plagih.modules.plagih_sympy_extras import plagih_sympify
@@ -38,6 +38,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
     config_dict = {
         'name': '_MTC_tree_012',
         'kernel': 'r',    		    # [r,c,m]			fitness function: (r)egression, (c)lassification, or (m)atching
+        'tree_growth': 'depth_base_uniform',
         'tree_depth_base': 3,		# [3...10]			maximum Tree depth for initial population
         'tree_depth_max': 10,		# [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,	    # [3 to 2^(bas +1) - 1]	minimum number of nodes

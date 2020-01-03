@@ -1,9 +1,0 @@
-"""
-This file takes care of the strong typing in plagih.
-'Types' of nodes:
-- Terminals: 2f, 2b
-- Functions: f2f, f2b, b2b, b2f, b2f2f (last one being if-then-else)
-This notation offers the opportunity to actually search for parts, e. g.
-> if '2b' in function:  # This returns True if the label evaluates to boolean
-Be careful with if-then-else though. This needs boolean and two float inputs to produce one float
-"""

@@ -1,6 +1,6 @@
-TREE_ID,0,,,,,,,,
-tree_type,g,,,,,,,,
-tree_depth_base,3,,,,,,,,
+TREE_ID,,,,,,,,,
+tree_type,,,,,,,,,
+tree_depth_base,,,,,,,,,
 NODE_ID,1,2,3,4,5,6,7,8,9
 node_depth,0,1,1,1,2,2,2,2,2
 node_type,func,func,term,func,term,term,term,term,term
@@ -10,6 +10,6 @@ node_arity,3,2,0,3,0,0,0,0,0
 node_c1,2,5,,7,,,,,
 node_c2,3,6,,8,,,,,
 node_c3,4,,,9,,,,,
-fitness,1,,,,,,,,
+fitness,,,,,,,,,
 node_modify,0,1,0,0,1,1,1,0,0
 parsimony,0,,,,,,,,

@@ -2,7 +2,7 @@ import os
 import numpy as np
 from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.modules.dicts import *
-from collections import deque
+from plagih.modules.plagih_types import *
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -32,6 +32,30 @@ np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters b
 #                 self.children.append(self.from_expr())
 #
 #         return
+
+
+def karoo_tree_clear_meta(tree):
+    tree[T_fitness][1] = ''
+    tree[T_parsimony][1] = ''
+    return tree
+
+
+def tree_branch_labels(tree, branch):
+
+    """
+    This method prepares a stand-alone Tree as a copy of the given branch.
+
+    """
+    label_list = []
+    arity_list = []
+    type_list = []
+    for node_id in branch:
+
+        label_list.append(tree[N_label][node_id])
+        arity_list.append(tree[N_arity][node_id])
+        type_list.append(tree[N_type][node_id])
+
+    return label_list, arity_list, type_list
 
 
 def evolve_node_arity_fix(tree):
@@ -575,31 +599,25 @@ def tree_test_plausibility(tree, wrapper=True):
         return False
 
 
+def karoo_tree_from_user(label_list, modify_list=None):
+    arity_list = [op_label_get_arity(label) for label in label_list]
+    type_list = ['term' if arity == 0 else 'func' for arity in arity_list]
+    tree = tree_from_labels(label_list, arity_list, type_list)
+    if modify_list:
+        for i, val in enumerate(modify_list):
+            tree[N_modify][i] = val
+    else:  # all can be modified
+        for i, val in enumerate(label_list):
+            tree[N_modify][i] = 1
+    tree = tree_convert_plagih_to_karoo(tree)
+
+    return tree
+
+
 def test():
     label_list, arity_list, type_list = test_cases(4)
     core = tree_from_labels(label_list, arity_list, type_list)
     tree = tree_convert_plagih_to_karoo(core)
-
-    label_list, arity_list, type_list = test_cases(3)
-    core = tree_from_labels(label_list, arity_list, type_list)
-
-    result = tree_insert_subtree(tree, core, [2, 5, 6], wrapper=True)
-    print(result)
-    # tree_test_plausibility(tree)
-
-    # core = tree_convert_karoo_to_plagih(tree)
-
-    # tree1 = tree_from_labels(label_list, arity_list, type_list)
-    # print(tree1)
-    # print()
-
-    #
-    # merge1 = tree_insert_subtree(tree1, tree2, [1, 4, 5])
-    # print(merge1)
-    #
-    # merge2 = tree_insert_subtree(merge1, tree2, [2])
-    # print(merge2)
-    label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
-    modify_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
+    print(tree)
 
 # test()

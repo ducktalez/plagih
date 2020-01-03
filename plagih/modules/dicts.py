@@ -25,6 +25,11 @@ class BColors:  # sfeh can be deleted
     RED2 = '\033[41m'
 
 
+fitt_dict = {'classification': 'max',
+             'regression': 'min',
+             'match': 'max'}
+
+
 TR_ID = 0
 TR_type = 1
 TR_depth = 2
@@ -123,54 +128,7 @@ op = {
     'Mini': {'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
     'Maxi': {'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
 }
-op_xtype_dict = {  # Needs A LOT OF further testing
-    'float': '2f',  # these three are dummies
-    'int': '2f',  # needed to use the dict for function types as well
-    'bool': '2b',  # so we can "work around" use them
 
-    '+': 'f2f',
-    '-': 'f2f',
-    '*': 'f2f',
-    '/': 'f2f',
-    '**': 'f2f',
-    'abs': 'f2f',
-    'sign': 'f2f',
-    'square': 'f2f',
-    'sqrt': 'f2f',
-    'log': 'f2f',
-    'log1p': 'f2f',
-    'cos': 'f2f',
-    'sin': 'f2f',
-    'tan': 'f2f',
-    'acos': 'f2f',
-    'asin': 'f2f',
-    'atan': 'f2f',
-
-    'And': 'b2b',
-    'Or': 'b2b',
-    'Xor': 'b2b',
-    'Nand': 'b2b',
-    'Xand': 'b2b',
-    'Nor': 'b2b',
-    'Xnor': 'b2b',
-    'Not': 'b2b',
-    'ITE': 'b2b',
-
-    '==': 'f2b',
-    '!=': 'f2b',
-    '<': 'f2b',
-    '<=': 'f2b',
-    '>': 'f2b',
-    '>=': 'f2b',
-
-    'Ftob': 'f2b',
-    'Btof': 'b2f',  # False->0, True->1, dummy-function
-    'Btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
-
-    'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
-    'Mini': 'f2f',
-    'Maxi': 'f2f',
-}
 function_arity_dict = {  # Needs A LOT OF further testing
     'float': 0,  # these three are dummies
     'int': 0,  # neede to use the dict for function types aswell
@@ -221,3 +179,52 @@ function_arity_dict = {  # Needs A LOT OF further testing
 
 functions_wrap_dict = ['Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
 functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
+
+# op_xtype_dict = {  # Needs A LOT OF further testing
+#     'float': '2f',  # these three are dummies
+#     'int': '2f',  # needed to use the dict for function types as well
+#     'bool': '2b',  # so we can "work around" use them
+#
+#     '+': 'f2f',
+#     '-': 'f2f',
+#     '*': 'f2f',
+#     '/': 'f2f',
+#     '**': 'f2f',
+#     'abs': 'f2f',
+#     'sign': 'f2f',
+#     'square': 'f2f',
+#     'sqrt': 'f2f',
+#     'log': 'f2f',
+#     'log1p': 'f2f',
+#     'cos': 'f2f',
+#     'sin': 'f2f',
+#     'tan': 'f2f',
+#     'acos': 'f2f',
+#     'asin': 'f2f',
+#     'atan': 'f2f',
+#
+#     'And': 'b2b',
+#     'Or': 'b2b',
+#     'Xor': 'b2b',
+#     'Nand': 'b2b',
+#     'Xand': 'b2b',
+#     'Nor': 'b2b',
+#     'Xnor': 'b2b',
+#     'Not': 'b2b',
+#     'ITE': 'b2b',
+#
+#     '==': 'f2b',
+#     '!=': 'f2b',
+#     '<': 'f2b',
+#     '<=': 'f2b',
+#     '>': 'f2b',
+#     '>=': 'f2b',
+#
+#     'Ftob': 'f2b',
+#     'Btof': 'b2f',  # False->0, True->1, dummy-function
+#     'Btof_extreme': 'b2f',  # False->-1, True->1. Does that make sense?
+#
+#     'Ifte': 'b2f2f',  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+#     'Mini': 'f2f',
+#     'Maxi': 'f2f',
+# }

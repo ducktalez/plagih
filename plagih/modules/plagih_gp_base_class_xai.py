@@ -146,8 +146,8 @@ class ExplainableGP(object):
             self.fitness_bad_dummy = float("inf")
         self.gene_pool = {}
         self.xype_func_dict = {'f2f': [], 'f2b': [], 'b2b': [], 'b2f': [], 'b2f2f': [],
-                             '2b': [], '2f': [],
-                             'b2': [], 'f2': []}
+                               '2b': [], '2f': [],
+                               'b2': [], 'f2': []}
         self.data_load(file_dict['operators_file'], file_dict['samples_file'], file_dict['origin_tree_file'])
 
         # some useful stuff
@@ -941,7 +941,7 @@ class ExplainableGP(object):
     def gen_crossover(self):
 
         """
-        TODO now, partners do not exchange their branches, just parent a takes a branch of b_parent
+        TODO currently, partners do not exchange their branches, just parent a takes a branch of b_parent
         - select parent a and b
         - select swappable branche for a_parent from b_parent
             - select a node in a (and crossover here, no matter what)
@@ -957,16 +957,16 @@ class ExplainableGP(object):
             left_p = self.gp_selection_tournament(self.gp['gp_tourn_size'])  # perform tournament selection for 'a_parent'
             right_p = self.gp_selection_tournament(self.gp['gp_tourn_size'])  # perform tournament selection for 'b_parent'
 
-            # 2. Get the branches for parent a that can be exchanged
-            left_branch, right_branch, x_convert_bool = self.treegp_crossover_get_swap_branches(left_p, right_p)
+            # 2. Get the branches for left and right that can be exchanged
+            left_ids, right_ids, x_convert_bool = self.treegp_crossover_get_swap_branches(left_p, right_p)
 
+            # 3. is a forced conversion needed between the parents?
             if x_convert_bool:
                 self.printpl('w', 'Forced conversion is needed between two trees.')
-                offspring = self.treegp_crossover_insert(left_p, left_branch, right_p, right_branch, left_cast=x_convert_bool)
+                offspring = self.treegp_crossover_insert(left_p, left_ids, right_p, right_ids, left_cast=x_convert_bool)
             else:
-                offspring = self.treegp_crossover_insert(left_p, left_branch, right_p, right_branch)
+                offspring = self.treegp_crossover_insert(left_p, left_ids, right_p, right_ids)
 
-            # offspring = self.tree_store_meta_lastgen(offspring, modification='c')
             offspring = self.tree_modifyable_nodes_set(offspring)
             self.population_new.append(offspring)  # append the 1st child to next generation of Trees
 
@@ -1233,42 +1233,22 @@ class ExplainableGP(object):
              ['parsimony']])
         return ptree
 
-    def treegp_crossover_tree_branch_copy(self, tree, branch):
+    def tree_branch_labels(self, tree, branch):
 
         """
         This method prepares a stand-alone Tree as a copy of the given branch.
-        TODO
+
         """
+        label_list = []
+        arity_list = []
+        type_list = []
+        for node_id in branch:
 
-        new_tree = self.ptree_init()
-        tree_id = 'copy'
-        branch_top = int(branch[0])
+            label_list.append(tree[N_label][node_id])
+            arity_list.append(tree[N_arity][node_id])
+            type_list.append(tree[N_type][node_id])
 
-        tree_type = tree[TR_type][1]
-        node_c1 = ''  # updated by evolve_child_link_fix(), below
-        node_c2 = ''
-        node_c3 = ''
-        node_modify = '1'  # sfeh Test this
-
-        for i in range(len(branch)):
-            node = branch[i]
-
-            node_id = tree[3][node]
-            node_depth = int(tree[N_depth][node]) - int(tree[N_depth][branch_top])  # subtract the depth of 'branch_top' from the current node depth
-            node_type = tree[N_type][node]
-            node_label = tree[N_label][node]
-            node_parent = ''  # updated by evolve_parent_link_fix(), below
-            node_arity = tree[N_arity][node]
-
-            new_tree = self.ptree_node_add_fromvalues(new_tree, node_id, node_depth, node_type, node_label, node_parent, node_arity, node_c1, node_c2, node_c3)
-
-        new_tree = evolve_node_renum_karoo(new_tree)
-        new_tree = self.tree_fix_link_child(new_tree)
-        new_tree = self.evolve_fix_link_parent(new_tree)
-
-        # new_tree = self.data_tree_clean(new_tree)
-
-        return new_tree
+        return label_list, arity_list, type_list
 
     def treegp_crossover_tree_prune(self, tree, depth):
         """
@@ -1280,7 +1260,7 @@ class ExplainableGP(object):
 
         for n in range(1, len(tree[3])):
 
-            if int(tree[N_depth][n]) == depth and tree[N_arity][n] > 0:
+            if int(tree[N_depth][n]) == depth and int(tree[N_arity][n]) > 0:
                 tree[N_type][n] = 'term'  # mutate type 'func' to 'term'
                 node_xtype = self.xtype_label_get_xtype(tree[N_label][n])
                 tree[N_label][n] = self.xtype_choose_term(node_xtype)  # replace label
@@ -1371,45 +1351,47 @@ class ExplainableGP(object):
 
         return a_branch, b_branch, x_convert_bool
 
-    def treegp_crossover_insert(self, left_parent, left_node_ids, b_parent, b_branch, left_cast=False):
+    def treegp_crossover_insert(self, left_parent, left_branch, right_parent, right_branch, left_cast=False):
 
         """
         Perform a crossover between nodes that are crossoverable in terms of function types
         get: parent x, y and their branches
-        return: puts b_branch into parent_x
+        return: puts right_branch into parent_x
         """
 
-        b_root_node = int(b_branch[0])
-        main_root_node = int(left_node_ids[0])
+        right_top_id = int(right_branch[0])
+        left_top_id = int(left_branch[0])
 
-        if len(b_branch) == 1:  # if the branch from the incoming parent contains only one node (terminal)
+        if len(right_branch) == 1:  # if branch of new parent contains only one node (terminal)
             if left_cast:
-                # new_label_xtype = self.xtype_label_get_xtype(main_parent[N_label][main_root_node])
-                # new_label = self.xtype_xtype_get_terminal(new_label_xtype)
-                new_label = b_parent[N_label][b_root_node]
+                new_label = right_parent[N_label][right_top_id]
             else:
-                new_label = b_parent[N_label][b_root_node]
+                new_label = right_parent[N_label][right_top_id]
 
-            left_parent[N_label][main_root_node] = new_label  # replace label with that of a particular node in 'b_branch'
-            left_parent[N_type][main_root_node] = 'term'  # replace type
-            left_parent[N_arity][main_root_node] = 0  # set terminal arity
+            left_parent[N_label][left_top_id] = new_label  # replace label with that of a particular node in 'right_branch'
+            left_parent[N_type][left_top_id] = 'term'  # replace type
+            left_parent[N_arity][left_top_id] = 0  # set terminal arity
 
-            left_parent = np.delete(left_parent, left_node_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
+            left_parent = np.delete(left_parent, left_branch[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
             left_parent = self.tree_fix_link_child(left_parent)  # fix all child links
             left_parent = evolve_node_renum_karoo(left_parent)  # renumber all 'node_id's
 
-        else:  # we are working with a branch from 'parent' >= depth 1 (min 3 nodes)
+        else:  # we are working with a branch from 'parent' >= depth 1 (min 2 nodes)
             if left_cast:
-                pass
+                self.printpl('e', 'This is a large TODO')
+
                 # TODO
-                # main_xtype = self.xtype_label_get_xtype(main_parent[N_label][main_root_node])
-                # b_xtype = self.xtype_label_get_xtype(b_parent[N_label][b_root_node])
+                # left_xtype = self.xtype_label_get_xtype(main_parent[N_label][main_root_node])
+                # b_xtype = self.xtype_label_get_xtype(right_parent[N_label][b_root_node])
                 # func_convert = self.xtype_get_converter(main_xtype, b_xtype)
                 # flist = [func_convert].extend()
             else:
                 pass
-            self.tree = self.treegp_crossover_tree_branch_copy(b_parent, b_branch)
-            left_parent = self.tree_replace_branch_nodelist(left_parent, left_node_ids, self.tree)  # insert new nodes at point of mutation 'branch_top' in tourn_winner 'offspring'
+            label_list, arity_list, type_list = self.tree_branch_labels(right_parent, right_branch)
+
+            right_core = tree_from_labels(label_list, arity_list, type_list)
+            left_parent = tree_insert_subtree(left_parent, right_core, left_branch, wrapper=True)
+            # left_parent = self.tree_replace_branch_nodelist(left_parent, left_branch, right_core)  # insert new nodes at point of mutation 'branch_top' in tourn_winner 'offspring'
             left_parent = self.treegp_crossover_tree_prune(left_parent, self.gp['tree_depth_max'])  # prune to the max Tree depth + adjustment
 
         return left_parent
@@ -1418,7 +1400,7 @@ class ExplainableGP(object):
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def tree_label_insert_list(self, xtype, depth_goal):
+    def tree_create_core_from_labels(self, xtype, depth_goal):
         """
         build a random tree based on a base depth and 50% chance for every node to become a terminal
         """
@@ -1469,7 +1451,7 @@ class ExplainableGP(object):
             # Finally, update the list for the next round
             todo_xtypes = next_xtype_list[:]
 
-        print('Result_label_list', result_label_list, 'result_arity_list', result_arity_list)
+        # print('Result_label_list', result_label_list, 'result_arity_list', result_arity_list)
         return result_label_list, result_arity_list, result_type_list
 
     def evolve_subtree_build_dbu(self, tree, branch_ids):
@@ -1483,17 +1465,12 @@ class ExplainableGP(object):
         label = tree[N_label][branch_ids[0]]
         xtype = self.xtype_label_get_xtype(label)
 
-        label_list, arity_list, type_list = self.tree_label_insert_list(xtype, depth_goal)
-        if len(label_list) == 1:
-            print('wooooorking?')
+        label_list, arity_list, type_list = self.tree_create_core_from_labels(xtype, depth_goal)
         core_insert = tree_from_labels(label_list, arity_list, type_list)
-
         result_tree = tree_insert_subtree(tree, core_insert, branch_ids, wrapper=True)
 
-        if tree_test_plausibility(result_tree):
-            print('Correct')
-        else:
-            print('FALSE\n{} \n and core\n{}', result_tree, core_insert)
+        if not tree_test_plausibility(result_tree):
+            self.printpl('e', 'Tree values are not plausible!\n{} \n and core\n{}'.format(result_tree, core_insert))
 
         return tree
 
@@ -2081,7 +2058,7 @@ class ExplainableGP(object):
                 const = np.random.random_integers(-10, 10)
             elif mode == 'random_optimised':
                 const = np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
-                                         5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
+                                          5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
             else:
                 # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
                 self.printpl('e', 'You did not take care of the kind of numbers you want to have')
@@ -2793,7 +2770,6 @@ class ExplainableGP(object):
         Returns a function with the same outcome
 
         """
-
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Monitoring                                |

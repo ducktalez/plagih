@@ -526,6 +526,10 @@ def tree_insert_core(tree_orig, insert_tree, node_list):
 
 
 def tree_test_plausibility(tree, wrapper=True):
+    """
+    A method to check if a tree is plausible. aka:
+    - do the values in c1, c2, c3 link to correkt
+    """
     if not wrapper:
         pass
     id_list = []

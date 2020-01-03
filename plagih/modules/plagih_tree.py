@@ -10,6 +10,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
+
 #
 # class QwerTree:
 #     def __init__(self, label, *children):
@@ -50,9 +51,11 @@ def evolve_node_arity_fix(tree):
             tree[9][n] = ''  # wipe 'node_c1'
             tree[10][n] = ''  # wipe 'node_c2'
             tree[11][n] = ''  # wipe 'node_c3'
-            tree[TRn_modify][n] = '1'
+            tree[N_modify][n] = '1'
 
     return tree
+
+
 #
 #
 # def evolve_node_arity_fix(tree):
@@ -72,7 +75,7 @@ def evolve_node_arity_fix(tree):
 #             tree[9][n] = ''  # wipe 'node_c1'
 #             tree[10][n] = ''  # wipe 'node_c2'
 #             tree[11][n] = ''  # wipe 'node_c3'
-#             tree[TRn_modify][n] = '1'
+#             tree[N_modify][n] = '1'
 #
 #     return tree
 
@@ -112,7 +115,7 @@ def tree_init_core(node_amount):
     """
     returns an empty tree with an amount of nodes, auto fills
     """
-    tree = np.zeros((TRn_um_lines, node_amount), dtype=np.dtype('U12'))  # U12: longest is observation1
+    tree = np.zeros((T_num_lines, node_amount), dtype=np.dtype('U12'))  # U12: longest is observation1
     # tree = np.concatenate((tree, empty_node_array), axis=1)
 
     return tree
@@ -233,6 +236,32 @@ def tree_from_labels(label_list, arity_list, type_list):
     return tree
 
 
+def evolve_c_buffer_karoo(tree, node):
+    """
+    Generates the c_buffer for a node of a ptree
+
+    """
+
+    parent_arity_sum = 0
+    prior_sibling_arity = 0
+    prior_siblings = 0
+
+    for n in range(1, len(tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
+
+        if int(tree[N_depth][n]) == int(tree[N_depth][node]) - 1:  # find parent nodes at the prior depth
+            if tree[N_arity][n] != '':
+                parent_arity_sum = parent_arity_sum + int(tree[N_arity][n])  # sum arities of all parent nodes at the prior depth
+
+        if int(tree[N_depth][n]) == int(tree[N_depth][node]) and int(tree[3][n]) < int(tree[3][node]):  # find prior siblings at the current depth
+            if tree[N_arity][n] != '':
+                prior_sibling_arity = prior_sibling_arity + int(tree[N_arity][n])  # sum prior sibling arity
+            prior_siblings = prior_siblings + 1  # sum quantity of prior siblings
+
+    c_buffer = node + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
+
+    return c_buffer
+
+
 def evolve_c_buffer(tree, node_id, wrapper=False):
     """
     Generates the c_buffer for a node_id of a tree
@@ -317,7 +346,7 @@ def tree_insert_subtree(tree, insert_core, delete_ids, wrapper=False):
 
     tree = np.delete(tree, delete_ids[1:], axis=1)  # delete all branches below
 
-    c_buffer = evolve_c_buffer(tree, top_node_id)         # child nr.1 at c_buffer
+    c_buffer = evolve_c_buffer(tree, top_node_id)  # child nr.1 at c_buffer
     tree = tree_insert_node_child_dummies(tree, top_node_id, c_buffer)  # --child: id, depth, parent
     tree = evolve_node_renum(tree)  # --all: ids
     tree = tree_fix_link_child(tree)
@@ -352,7 +381,6 @@ def tree_insert_subtree(tree, insert_core, delete_ids, wrapper=False):
 
 
 def evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=False):
-
     """
     Link each parent node_id to its children.
 
@@ -396,8 +424,22 @@ def evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=False):
     return tree
 
 
-def tree_fix_link_child(tree):
+def tree_fix_link_child_karoo(tree):
+    """
+    In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
+    This is required anytime the size of the array 'gp.tree' has been modified, as with both Grow and Full mutation.
+
+    """
+
+    for node_id in range(1, len(tree[3])):
+        c_buffer = evolve_c_buffer(tree, node_id, wrapper=True)  # generate c_buffer for each node
+        tree = evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=True)  # update child links for each node
+
+    return tree
+
+
+def tree_fix_link_child(tree):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
@@ -413,7 +455,6 @@ def tree_fix_link_child(tree):
 
 
 def tree_insert_node_child_dummies(tree, node_id, c_buffer, wrapper=False):
-
     """
     evolve_subtree_insert_child
     Insert child node_id into the copy of a parent Tree.
@@ -442,7 +483,6 @@ def tree_insert_node_child_dummies(tree, node_id, c_buffer, wrapper=False):
 
 
 def evolve_node_renum(tree):
-
     """
     Renumber all 'node_id' in a given tree.
 
@@ -458,7 +498,6 @@ def evolve_node_renum(tree):
 
 
 def evolve_node_renum_karoo(tree):
-
     """
     Renumber all 'node_id' in a given tree.
 
@@ -498,31 +537,22 @@ def test_cases(number):
         label_list = ['0']
         arity_list = [0]
         type_list = ['term']
-        solution = np.array([['tree_id', '', '', '', '', '', '', '', '', '', '', '', ''],
-                             ['tree_type', '', '', '', '', '', '', '', '', '', '', '', ''],
-                             ['tree_depth_base', '', '', '', '', '', '', '', '', '', '', '', ''],
-                             ['node_id', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'],
-                             ['node_depth', '0', '1', '1', '2', '2', '2', '2', '3', '3', '3', '4', '4'],
-                             ['node_type', 'func', 'func', 'func', 'term', 'term', 'func', 'term', 'term', 'func', 'term', 'term', 'term'],
-                             ['node_label', '+', '+', '+', '0', '1', 'Ifte', '2', '3', '+', '4', '5', '6'],
-                             ['node_parent', '-1', '0', '0', '1', '1', '2', '2', '5', '5', '5', '8', '8'],
-                             ['node_arity', '2', '2', '2', '0', '0', '3', '0', '0', '2', '0', '0', '0'],
-                             ['node_c1', '1', '3', '5', '', '', '7', '', '', '10', '', '', ''],
-                             ['node_c2', '2', '4', '6', '', '', '8', '', '', '11', '', '', ''],
-                             ['node_c3', '', '', '', '', '', '9', '', '', '', '', '', ''],
-                             ['fitness', '', '', '', '', '', '', '', '', '', '', '', ''],
-                             ['node_modify', '', '', '', '', '', '', '', '', '', '', '', ''],
-                             ['parsimony', '', '', '', '', '', '', '', '', '', '', '', '']])
+        # solution = np.array([['tree_id', '', '', '', '', '', '', '', '', '', '', '', ''],
+        #                      ['tree_type', '', '', '', '', '', '', '', '', '', '', '', ''],
+        #                      ['tree_depth_base', '', '', '', '', '', '', '', '', '', '', '', ''],
+        #                      ['node_id', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'],
+        #                      ['node_depth', '0', '1', '1', '2', '2', '2', '2', '3', '3', '3', '4', '4'],
+        #                      ['node_type', 'func', 'func', 'func', 'term', 'term', 'func', 'term', 'term', 'func', 'term', 'term', 'term'],
+        #                      ['node_label', '+', '+', '+', '0', '1', 'Ifte', '2', '3', '+', '4', '5', '6'],
+        #                      ['node_parent', '-1', '0', '0', '1', '1', '2', '2', '5', '5', '5', '8', '8'],
+        #                      ['node_arity', '2', '2', '2', '0', '0', '3', '0', '0', '2', '0', '0', '0'],
+        #                      ['node_c1', '1', '3', '5', '', '', '7', '', '', '10', '', '', ''],
+        #                      ['node_c2', '2', '4', '6', '', '', '8', '', '', '11', '', '', ''],
+        #                      ['node_c3', '', '', '', '', '', '9', '', '', '', '', '', ''],
+        #                      ['fitness', '', '', '', '', '', '', '', '', '', '', '', ''],
+        #                      ['node_modify', '', '', '', '', '', '', '', '', '', '', '', ''],
+        #                      ['parsimony', '', '', '', '', '', '', '', '', '', '', '', '']])
     return label_list, arity_list, type_list
-
-
-def tree_insert_core(tree_orig, insert_tree, node_list):
-
-    tree_orig[N_label][node_list] = tree_orig[N_label][node_list]
-    tree_orig[N_arity][node_list]
-    tmp = np.delete(tree_orig, node_list, 1)
-
-    return tmp
 
 
 def tree_test_plausibility(tree, wrapper=True):
@@ -539,7 +569,7 @@ def tree_test_plausibility(tree, wrapper=True):
             if tree[N_c1 + c][n] != '':
                 c_list.append(int(tree[N_c1 + c][n]))
         id_list.append(int(tree[N_id][n]))
-    if sum(c_list) == sum(id_list)-1:
+    if sum(c_list) == sum(id_list) - 1:
         return True
     else:
         return False
@@ -569,5 +599,7 @@ def test():
     #
     # merge2 = tree_insert_subtree(merge1, tree2, [2])
     # print(merge2)
+    label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
+    modify_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 
 # test()

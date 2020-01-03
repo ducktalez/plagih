@@ -1,6 +1,30 @@
 import tensorflow as tf
 import ast
 
+
+class BColors:  # sfeh can be deleted
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN = '\033[36m'
+    WHITE = '\033[37m'
+    RESET = '\033[39m'
+
+    BLACK2 = '\033[40m'
+    RED2 = '\033[41m'
+
+
 TR_ID = 0
 TR_type = 1
 TR_depth = 2
@@ -13,10 +37,10 @@ N_arity = 8
 N_c1 = 9
 N_c2 = 10
 N_c3 = 11
-TR_fitness = 12
-TRn_modify = 13
-TR_parsimony = 14
-TRn_um_lines = 15
+T_fitness = 12
+N_modify = 13
+T_parsimony = 14
+T_num_lines = 15
 P_first_node = 1
 
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4

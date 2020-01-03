@@ -43,7 +43,7 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
         'tree_depth_max': 10,		# [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,	    # [3 to 2^(bas +1) - 1]	minimum number of nodes
         'pop_max': 60,   	        # [10...1000]		number of trees in each generational population
-        'gen_max': 10,			    # [1...100]			number of generations
+        'gen_max': 30,			    # [1...100]			number of generations
         'gp_tourn_size': 3,			# [7 per 100]		number of trees selected for tournament
         'precision': 6,             # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',                # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool

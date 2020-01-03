@@ -34,6 +34,6 @@ def apted_distance(expr1, expr2):
 # pre1 = '(Ifte(observation1<0),(0),(2)'
 # raw1 = '{Ifte{<{0}{2}}{observation1}{0}}'
 # raw2 = '{Ifte{<{0}{2}}{observation1}{0}}'
-# tree1 = aptree.from_text('{a{b}{c}}')
-# tree2 = aptree.from_text('{a{b{d}}}')
-# apted_disstance(tree1, tree2)
+# tree_source = aptree.from_text('{a{b}{c}}')
+# tree_orig = aptree.from_text('{a{b{d}}}')
+# apted_disstance(tree_source, tree_orig)

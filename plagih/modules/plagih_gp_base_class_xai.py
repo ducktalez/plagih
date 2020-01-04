@@ -138,6 +138,8 @@ class ExplainableGP(object):
         self.gen_id = 1  # set initial generation ID    # first gen only
         self.file_config()
         self.main_generation_first_origin()
+        # menu_continue = 1
+        # while menu_continue != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
         self.main_generation_loop()  # (main loop)
         self.main_terminate()  # archive populations and return to plagih_gp.py for a clean exit
 
@@ -198,45 +200,29 @@ class ExplainableGP(object):
         - adjust parameters for this generation (parsimony threshold)
         - Create a gene pool (kick out too complex candidates)
         """
-        menu_continue = 1
-        while menu_continue != 0:  # this allows the user to add generations mid-run and not get buried in nested iterations
-            for self.gen_id in range(self.gen_id + 1, self.gp['gen_max'] + 1):  # generation 2 to *max generation*
+        for self.gen_id in range(self.gen_id + 1, self.gp['gen_max'] + 1):  # generation 2 to *max generation*
 
-                # 1. set parameters for the generation
-                self.time_genstart = time.perf_counter()
+            # 1. set parameters for the generation
+            self.time_genstart = time.perf_counter()
 
-                # gp_list = [self.gen_reproduce,
-                #            self.gen_mutate_point(),
-                #            self.gen_mutate_branch(),
-                #            self.gen_crossover_branch()]
+            gp_list = {('Reproduce', self.gen_reproduce, self.evolve_rates['reproduce']),
+                       ('Point Mutation', self.gen_mutate_point, self.evolve_rates['mutate_point']),
+                       ('Branch Mutation', self.gen_mutate_branch, self.evolve_rates['mutate_branch']),
+                       ('gen_crossover_branch', self.gen_crossover_branch, self.evolve_rates['crossover'])}
+            tourn_size = self.gp['gp_tourn_size']
 
-                self.printpl('gg', 'Generation {}'.format(self.gen_id))
-                self.gen_prepare_parameters()
-                tourn_size = self.gp['gp_tourn_size']
-
-                self.printpl('gggg', 'Reproduce...')
+            for name, gp_function, evolve_rate in gp_list:
+                self.printpl('gggg', '{}...'.format(name))
                 time_1 = time.perf_counter()
-                self.gen_reproduce(self.evolve_rates['reproduce'], tourn_size)
-                self.printpl('ggg', 'Reproducing took: {:4.2f}. Point Mutation...'.format(time.perf_counter() - time_1))
+                gp_function(evolve_rate, tourn_size)
+                self.printpl('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_1))
 
-                time_1 = time.perf_counter()
-                self.gen_mutate_point(tourn_size)
-                self.printpl('ggg', 'Point mutation took: {:4.2f}. Branch Mutation...'.format(time.perf_counter() - time_1))
+            self.gen_finalize()
+            self.printpl('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
 
-                time_1 = time.perf_counter()
-                self.gen_mutate_branch(tourn_size)  # method 3 - Branch Mutation
-                self.printpl('ggg', 'Branch Mutation took: {:4.2f}. Crossover (branches)...'.format(time.perf_counter() - time_1))
-
-                time_1 = time.perf_counter()
-                self.gen_crossover_branch(tourn_size)
-                self.printpl('ggg', 'Crossover (branches) took: {:4.2f}. Finalizing...'.format(time.perf_counter() - time_1))
-
-                self.gen_finalize()
-                self.printpl('ggg', 'Generation took a total time of: {:4.2f}', time.perf_counter() - self.time_genstart)
-
-            else:
-                self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format('\033[32m', '\033[1m', '\033[32m', '\033[1m', '\033[32m', '\033[0;0m'))
-                menu_continue = 0
+        else:
+            self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format('\033[32m', '\033[1m', '\033[32m', '\033[1m', '\033[32m', '\033[0;0m'))
+            menu_continue = 0
 
     def main_terminate(self):
         """
@@ -654,7 +640,7 @@ class ExplainableGP(object):
         dominator_count = 0
         gene_pool_hash_dict = {}
 
-        for tree_id in range(1, len(population)):  # Every tree
+        for tree_id in range(1, len(population)):
             tree = population[tree_id]
             tree_ident, tree_meta = self.tree_store_meta_get_hash(tree)
 
@@ -829,7 +815,7 @@ class ExplainableGP(object):
 
         return
 
-    def gen_mutate_point(self, tourn_size):
+    def gen_mutate_point(self, repro_rate, tourn_size):
 
         """
         One point (terminal or function) gets mutated.
@@ -851,7 +837,7 @@ class ExplainableGP(object):
         :return:
         """
 
-    def gen_mutate_branch(self, tourn_size):
+    def gen_mutate_branch(self, repro_rate, tourn_size):
 
         """
         Mutates a whole tree branch.
@@ -876,12 +862,12 @@ class ExplainableGP(object):
 
         return
 
-    def gen_crossover_point(self, tourn_size):
+    def gen_crossover_point(self, repro_rate, tourn_size):
         """
         swap points of two trees
         """
 
-    def gen_crossover_branch(self, tourn_size):
+    def gen_crossover_branch(self, repro_rate, tourn_size):
         """
         swap branches of two trees
         - select parent a and b
@@ -956,8 +942,6 @@ class ExplainableGP(object):
 
         self.population_base = pop_copy_genepool(self.population_new, gene_pool_hash_dict, self.gen_id)
         self.file_population_write(self.population_new, 'new')
-
-        self.printpl('gg', 'Time needed for Generation {}: {:4.2f}'.format(self.gen_id, time.perf_counter() - self.time_genstart))
 
         if self.gen_id == 5:
             print('Generation 5')

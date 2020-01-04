@@ -47,6 +47,7 @@ N_modify = 13
 T_parsimony = 14
 T_num_lines = 15
 P_first_node = 1
+root_id = 1
 
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
 

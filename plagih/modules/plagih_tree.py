@@ -40,22 +40,27 @@ def karoo_tree_clear_meta(tree):
     return tree
 
 
-def tree_branch_labels(tree, branch):
+def tree_branch_get_label_list(tree, node_ids, karoo=False):
 
     """
-    This method prepares a stand-alone Tree as a copy of the given branch.
+    This method prepares a stand-alone Tree as a copy of the given node_ids.
 
     """
+    if karoo:
+        tree = tree_convert_karoo_to_plagih(tree)
+        node_ids = [x - 1 for x in node_ids]
+
     label_list = []
     arity_list = []
-    type_list = []
-    for node_id in branch:
 
+    for node_id in node_ids:
         label_list.append(tree[N_label][node_id])
         arity_list.append(tree[N_arity][node_id])
-        type_list.append(tree[N_type][node_id])
 
-    return label_list, arity_list, type_list
+    if karoo:
+        pass
+
+    return label_list, arity_list
 
 
 def evolve_node_arity_fix(tree):
@@ -70,11 +75,11 @@ def evolve_node_arity_fix(tree):
     for n in range(1, len(tree[N_id])):  # increment through all nodes (exclude 0) in array 'tree'
         if len(tree[N_id]) <= 2:
             print('FUCK {}'.format(tree))
-        if tree[N_type][n] == 'term':  # check for discrepency
-            tree[N_arity][n] = '0'  # set arity to 0
-            tree[9][n] = ''  # wipe 'node_c1'
-            tree[10][n] = ''  # wipe 'node_c2'
-            tree[11][n] = ''  # wipe 'node_c3'
+        if tree[N_arity][n] == '0':  # check for discrepency
+            # tree[N_arity][n] = '0'  # set arity to 0
+            tree[N_c1][n] = ''  # wipe 'node_c1'
+            tree[N_c2][n] = ''  # wipe 'node_c2'
+            tree[N_c3][n] = ''  # wipe 'node_c3'
             tree[N_modify][n] = '1'
 
     return tree
@@ -96,23 +101,12 @@ def evolve_node_arity_fix(tree):
 #             print('FUCK {}'.format(tree))
 #         if tree[N_type][n] == 'term':  # check for discrepency
 #             tree[N_arity][n] = '0'  # set arity to 0
-#             tree[9][n] = ''  # wipe 'node_c1'
-#             tree[10][n] = ''  # wipe 'node_c2'
-#             tree[11][n] = ''  # wipe 'node_c3'
+#             tree[N_c1][n] = ''  # wipe 'node_c1'
+#             tree[N_c2][n] = ''  # wipe 'node_c2'
+#             tree[N_c3][n] = ''  # wipe 'node_c3'
 #             tree[N_modify][n] = '1'
 #
 #     return tree
-
-
-def tree_node_add_fromvalues(tree, node_id, node_depth,
-                             node_type, node_label, node_parent, node_arity, node_c1,
-                             node_c2, node_c3):
-    np.append(tree,
-              ['', '', '', [node_id], [node_depth], [node_type],
-               [node_label], [node_parent], [node_arity], [node_c1], [node_c2], [node_c3],
-               '', '', ''], 1)
-    return tree
-
 
 def tree_init_first_column():
     tree = np.array(
@@ -140,7 +134,6 @@ def tree_init_core(node_amount):
     returns an empty tree with an amount of nodes, auto fills
     """
     tree = np.zeros((T_num_lines, node_amount), dtype=np.dtype('U12'))  # U12: longest is observation1
-    # tree = np.concatenate((tree, empty_node_array), axis=1)
 
     return tree
 
@@ -237,25 +230,28 @@ def tree_plusnode(tree, add_or_sub, firstrow=1):
     return tree
 
 
-def tree_from_labels(label_list, arity_list, type_list):
+def core_from_labels(label_list, arity_list):
     """
     Given the labels (and label infos) as list
     this function builds the core of a tree (no node_modify)
     """
 
-    # tree = tree_init_first_column()
     size = len(label_list)
     tree = tree_init_core(size)
 
+    # set all the rows that are super easy
     tree = tree_core_setrow(tree, N_id, [x for x in range(0, size)])
-    # tree = tree_core_insert(tree, N_id, [x for x in range(1, size + 1)])
     tree = tree_core_setrow(tree, N_label, label_list)
     tree = tree_core_setrow(tree, N_arity, arity_list)
-    tree = tree_core_setrow(tree, N_type, type_list)
 
+    # and also, fill all the leftover rows
     tree, parent_list = tree_core_parents(tree)
     tree = tree_core_c(tree)
     tree = tree_core_depth(tree, parent_list)
+
+    if not tree_test_check_children(tree, karoo=False):
+        print(tree)
+        raise
 
     return tree
 
@@ -352,11 +348,11 @@ def tree_convert_plagih_to_karoo(plagih_tree):
     return tree_karoo
 
 
-def tree_insert_subtree(tree, insert_core, delete_ids, wrapper=False):
+def tree_insert_subtree(tree, insert_core, delete_ids, karoo=False):
     """
     insert a prepared subtree in a node-spot
     """
-    if wrapper:
+    if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
         for i, val in enumerate(delete_ids):
             delete_ids[i] -= 1
@@ -366,7 +362,7 @@ def tree_insert_subtree(tree, insert_core, delete_ids, wrapper=False):
 
     tree[N_label][top_node_id] = insert_core[N_label][0]  # --label
     tree[N_arity][top_node_id] = insert_core[N_arity][0]  # --arity
-    tree[N_type][top_node_id] = 'term' if int(insert_core[N_arity][0]) == 0 else 'func'  # --type
+    # tree[N_type][top_node_id] = 'term' if int(insert_core[N_arity][0]) == 0 else 'func'  # --type
 
     tree = np.delete(tree, delete_ids[1:], axis=1)  # delete all branches below
 
@@ -382,8 +378,8 @@ def tree_insert_subtree(tree, insert_core, delete_ids, wrapper=False):
 
         for j in range(0, len(tree[N_id])):  # increment through all nodes in og tree ('tree')
 
-            if tree[N_type][j] == '':  # aka: is this a dummy?
-                tree[N_type][j] = insert_core[N_type][insert_count]  # --type
+            if tree[N_label][j] == '':  # aka: is this a dummy?
+                # tree[N_type][j] = insert_core[N_type][insert_count]  # --type
                 tree[N_label][j] = insert_core[N_label][insert_count]  # --label
                 tree[N_arity][j] = insert_core[N_arity][insert_count]  # --arity
 
@@ -398,7 +394,7 @@ def tree_insert_subtree(tree, insert_core, delete_ids, wrapper=False):
                     tree = evolve_node_renum(tree)  # renumber all 'NODE_ID's
 
                 insert_count = insert_count + 1  # exit loop when 'node_count' reaches the number of columns in the array
-    if wrapper:
+    if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
 
     return tree
@@ -420,28 +416,28 @@ def evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=False):
     if tree[N_arity][node_id] != '':
 
         if int(tree[N_arity][node_id]) == 0:  # if arity = 0
-            tree[9][node_id] = ''
-            tree[10][node_id] = ''
-            tree[11][node_id] = ''
+            tree[N_c1][node_id] = ''
+            tree[N_c2][node_id] = ''
+            tree[N_c3][node_id] = ''
 
         elif int(tree[N_arity][node_id]) == 1:  # if arity = 1
-            tree[9][node_id] = c_buffer
-            tree[10][node_id] = ''
-            tree[11][node_id] = ''
+            tree[N_c1][node_id] = c_buffer
+            tree[N_c2][node_id] = ''
+            tree[N_c3][node_id] = ''
 
         elif int(tree[N_arity][node_id]) == 2:  # if arity = 2
-            tree[9][node_id] = c_buffer
-            tree[10][node_id] = c_buffer + 1
-            tree[11][node_id] = ''
+            tree[N_c1][node_id] = c_buffer
+            tree[N_c2][node_id] = c_buffer + 1
+            tree[N_c3][node_id] = ''
 
         elif int(tree[N_arity][node_id]) == 3:  # if arity = 3
-            tree[9][node_id] = c_buffer
-            tree[10][node_id] = c_buffer + 1
-            tree[11][node_id] = c_buffer + 2
+            tree[N_c1][node_id] = c_buffer
+            tree[N_c2][node_id] = c_buffer + 1
+            tree[N_c3][node_id] = c_buffer + 2
 
         else:
             print('e', 'evolve_child_link: node_id', node_id, 'has arity', tree[N_arity][node_id])
-            raise  # self.plagih_pause()  # consider special instructions for this (pause)
+            raise
     if wrapper:
         tree = tree_convert_plagih_to_karoo(tree)
 
@@ -521,6 +517,100 @@ def evolve_node_renum(tree):
     return tree
 
 
+def tree_get_mutatable_list(tree, no_root=False):
+    """
+    Returns a list with mutatable ids
+    """
+
+    node_ids = []
+    for i, node_id in enumerate(tree[N_id]):
+        if tree[N_modify][i] == '1':
+            node_ids.append(int(node_id))
+
+    if no_root:
+        node_ids = node_ids.remove(root_id) if root_id in node_ids else node_ids  # if we remove an element from an empty list, this crashes
+    return node_ids
+
+
+def tree_node_get_idstring(tree, node_id):
+
+    """
+    return a list of s nodes childs.
+    + Evaluate all or part of a Tree and
+
+    This method generates a list of all 'node_id's from the given Node and below. It is used primarily to generate
+    'branch' for the multi-generational mutation of Trees.
+    """
+
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[node_id]'
+        return tree[3, node_id]
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the pattern '[node_id], [node_id]'
+        return '{}, {}'.format(tree[3, node_id], tree_node_get_idstring(tree, tree[9, node_id]))
+
+    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[node_id], [node_id], [node_id]'
+        return '{}, {}, {}'.format(
+            tree[3, node_id],
+            tree_node_get_idstring(tree, tree[9, node_id]),
+            tree_node_get_idstring(tree, tree[10, node_id]))
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the pattern '[node_id], [node_id], [node_id], [node_id]'
+        return '{}, {}, {}, {}'.format(
+            tree[3, node_id],
+            tree_node_get_idstring(tree, tree[9, node_id]),
+            tree_node_get_idstring(tree, tree[10, node_id]),
+            tree_node_get_idstring(tree, tree[11, node_id]))
+
+
+def labels_get_aritys_list(label_list, karoo=False):
+    """
+    returns an arity list for a label list
+    """
+
+    arity_list = [op_label_get_arity(x) for x in label_list]
+
+    if karoo:
+        arity_list.pop(0)
+    return arity_list
+
+
+def tree_get_branchinfo(tree, node_id, karoo=True):
+    """
+    returns all ids, labels and arities for a node in a tree
+    """
+    ids = tree_get_ids_karoo(tree, node_id)
+    labels = [tree[N_label][i] for i in ids]
+    aritys = [tree[N_arity][i] for i in ids]
+    return ids, labels, aritys
+
+
+def tree_get_ids_karoo(tree, node):
+
+    """
+    return all child-nodes as list
+    """
+
+    branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
+
+    # 2. Also return all child nodes
+    branch_eval = tree_node_get_idstring(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
+    branch_symp = plagih_sympify(branch_eval)  # convert string into something useful
+
+    branch = np.append(branch, branch_symp)
+    branch = np.sort(branch)  # sort nodes in branch for Crossover.
+
+    return branch
+
+def tree_labels(tree):
+    """
+    Just helps printing trees better
+    """
+    label_list = tree[N_label]
+    return label_list
+
+
 def evolve_node_renum_karoo(tree):
     """
     Renumber all 'node_id' in a given tree.
@@ -536,56 +626,14 @@ def evolve_node_renum_karoo(tree):
     return tree
 
 
-def test_cases(number):
-    if number == 0:
-        label_list = ['Ifte', '<', '0', '2', 'observation1', '0']
-        arity_list = [3, 2, 0, 0, 0, 0]
-        type_list = ['func', 'func', 'term', 'term', 'term', 'term']
-    elif number == 1:
-        label_list = ['+', '+', '+', '+', '1', '2', '3', '4', '5']
-        arity_list = [2, 2, 2, 2, 0, 0, 0, 0, 0]
-        type_list = ['func', 'func', 'func', 'func', 'term', 'term', 'term', 'term', 'term']
-    elif number == 2:
-        label_list = ['+', '+', '+', '0', '1', 'Ifte', '2', '3', '+', '4', '5', '6']  # 12 nodes
-        arity_list = [2, 2, 2, 0, 0, 3, 0, 0, 2, 0, 0, 0]
-        type_list = ['func', 'func', 'func', 'term', 'term', 'func', 'term', 'term', 'func', 'term', 'term', 'term']
-    elif number == 3:
-        label_list = ['True']  # 12 nodes
-        arity_list = [0]
-        type_list = ['term']
-    elif number == 4:
-        label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
-        arity_list = [3, 2, 0, 3, 0, 0, 0, 0, 0]
-        type_list = ['func', 'func', 'term', 'func', 'term', 'term', 'term', 'term', 'term']
-    else:
-        label_list = ['0']
-        arity_list = [0]
-        type_list = ['term']
-        # solution = np.array([['tree_id', '', '', '', '', '', '', '', '', '', '', '', ''],
-        #                      ['tree_type', '', '', '', '', '', '', '', '', '', '', '', ''],
-        #                      ['tree_depth_base', '', '', '', '', '', '', '', '', '', '', '', ''],
-        #                      ['node_id', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'],
-        #                      ['node_depth', '0', '1', '1', '2', '2', '2', '2', '3', '3', '3', '4', '4'],
-        #                      ['node_type', 'func', 'func', 'func', 'term', 'term', 'func', 'term', 'term', 'func', 'term', 'term', 'term'],
-        #                      ['node_label', '+', '+', '+', '0', '1', 'Ifte', '2', '3', '+', '4', '5', '6'],
-        #                      ['node_parent', '-1', '0', '0', '1', '1', '2', '2', '5', '5', '5', '8', '8'],
-        #                      ['node_arity', '2', '2', '2', '0', '0', '3', '0', '0', '2', '0', '0', '0'],
-        #                      ['node_c1', '1', '3', '5', '', '', '7', '', '', '10', '', '', ''],
-        #                      ['node_c2', '2', '4', '6', '', '', '8', '', '', '11', '', '', ''],
-        #                      ['node_c3', '', '', '', '', '', '9', '', '', '', '', '', ''],
-        #                      ['fitness', '', '', '', '', '', '', '', '', '', '', '', ''],
-        #                      ['node_modify', '', '', '', '', '', '', '', '', '', '', '', ''],
-        #                      ['parsimony', '', '', '', '', '', '', '', '', '', '', '', '']])
-    return label_list, arity_list, type_list
-
-
-def tree_test_plausibility(tree, wrapper=True):
+def tree_test_check_children(tree, karoo=True):
     """
     A method to check if a tree is plausible. aka:
     - do the values in c1, c2, c3 link to correkt
     """
-    if not wrapper:
-        pass
+    if not karoo:
+        tree = tree_convert_plagih_to_karoo(tree)
+
     id_list = []
     c_list = []
     for n in range(1, len(tree[3])):
@@ -599,25 +647,101 @@ def tree_test_plausibility(tree, wrapper=True):
         return False
 
 
+def tree_check_expression(tree, karoo=True):
+    """
+
+    """
+
+    label_list = tree[N_label]
+    arity_list = tree[N_arity]
+
+    if karoo:
+        label_list = label_list[1:]
+        arity_list = arity_list[1:]
+
+    try:
+        core = core_from_labels(label_list, arity_list)
+    except:
+        return False
+
+    return True
+
+
+def tree_check_all(tree, karoo=True):
+
+    label_list = tree[N_label]
+    arity_list = tree[N_arity]
+
+    if karoo:
+        label_list = label_list[1:]
+        arity_list = arity_list[1:]
+
+    try:
+        core = core_from_labels(label_list, arity_list)
+        result = tree_test_check_children(core, karoo=False)
+    except:
+        return False
+
+    return result
+
+
 def karoo_tree_from_user(label_list, modify_list=None):
+    """
+    create a tree from user input
+    """
     arity_list = [op_label_get_arity(label) for label in label_list]
-    type_list = ['term' if arity == 0 else 'func' for arity in arity_list]
-    tree = tree_from_labels(label_list, arity_list, type_list)
+    core = core_from_labels(label_list, arity_list)
     if modify_list:
         for i, val in enumerate(modify_list):
-            tree[N_modify][i] = val
+            core[N_modify][i] = val
     else:  # all can be modified
         for i, val in enumerate(label_list):
-            tree[N_modify][i] = 1
-    tree = tree_convert_plagih_to_karoo(tree)
+            core[N_modify][i] = 1
+    tree = tree_convert_plagih_to_karoo(core)
 
     return tree
 
 
+def test_trees(number):
+    if number == 0:
+        label_list = ['Ifte', '<', '0', '2', 'observation1', '0']
+        arity_list = [3, 2, 0, 0, 0, 0]
+    elif number == 1:
+        label_list = ['+', '+', '+', '+', '1', '2', '3', '4', '5']
+        arity_list = [2, 2, 2, 2, 0, 0, 0, 0, 0]
+    elif number == 2:
+        label_list = ['+', '+', '+', '0', '1', 'Ifte', '2', '3', '+', '4', '5', '6']  # 12 nodes
+        arity_list = [2, 2, 2, 0, 0, 3, 0, 0, 2, 0, 0, 0]
+    elif number == 3:
+        label_list = ['True']  # 12 nodes
+        arity_list = [0]
+    elif number == 4:
+        label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
+        arity_list = [3, 2, 0, 3, 0, 0, 0, 0, 0]
+    elif number == 5:
+        label_list = ['+', '+', '+', '0', '0', '0', '0']
+        arity_list = [2, 2, 2, 0, 0, 0, 0]
+    else:
+        label_list = ['0']
+        arity_list = [0]
+        type_list = ['term']
+
+    core = core_from_labels(label_list, arity_list)
+    return core
+
+
 def test():
-    label_list, arity_list, type_list = test_cases(4)
-    core = tree_from_labels(label_list, arity_list, type_list)
-    tree = tree_convert_plagih_to_karoo(core)
-    print(tree)
+    core = test_trees(4)
+    karoo_tree = tree_convert_plagih_to_karoo(core)
+
+    label_list = ['Ifte', '<', '0', '2', 'observation1', '<', '0', '2']
+    label_list = ['Ifte', '<', '0', '2', 'observation1', '0']
+    arity_list = [3, 2, 0, 0, 0, 0]
+    core = core_from_labels(label_list, arity_list)
+    karoo_tree = tree_convert_plagih_to_karoo(core)
+    x = tree_check_all(karoo_tree)
+
+    print(x)
+    return
 
 # test()

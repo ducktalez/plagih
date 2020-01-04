@@ -5,13 +5,12 @@ import plagih.modules.plagih_gp_base_class_xai as plagih
 from pathlib import Path
 
 
-def start_plagih(run='plagih_gp_run', manual_expr=''):
+def start_plagih(tree_pop_max, gen_max):
     evolve_repro = 0.1  # [0.0...1.0]  		decimal percent of pop generated through Reproduction
-    evolve_point = 0.25  # [0.0...1.0]  		decimal percent of pop generated through Point Mutation
-    evolve_branch = 0.4  # [0.0...1.0]  		decimal percent of pop generated through Branch Mutation
-    evolve_cross = 0.25  # [0.0...1.0]  		decimal percent of pop generated through Crossover
+    evolve_point = 0.2  # [0.0...1.0]  		decimal percent of pop generated through Point Mutation
+    evolve_branch = 0.4  # [0.0...1.0]  	decimal percent of pop generated through Branch Mutation
+    evolve_cross = 0.30  # [0.0...1.0]  		decimal percent of pop generated through Crossover
     # [3 to 2^(bas +1) - 1]	minimum number of nodes
-    tree_pop_max = 120
 
     evolve_repro = int(evolve_repro * tree_pop_max)
     evolve_point = int(evolve_point * tree_pop_max)
@@ -37,12 +36,12 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
         'display': 'ggewsivott',  # To display absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
-        'tree_depth_base': 3,  # [3...10]			maximum Tree depth for initial population
+        'tree_depth_base': 6,  # [3...10]			maximum Tree depth for initial population
         'tree_depth_max': 10,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 100],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 60,  # [10...1000]		number of trees in each generational population
-        'gen_max': 30,  # [1...100]			number of generations
+        'pop_max': tree_pop_max,  # [10...1000]		number of trees in each generational population
+        'gen_max': gen_max,  # [1...100]			number of generations
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
@@ -58,17 +57,22 @@ def start_plagih(run='plagih_gp_run', manual_expr=''):
 
     return plagih.ExplainableGP(config_dict)
 
-
-gp = start_plagih()
+"""
+The must crucial parameters for testing are here
+"""
+tree_pop_max = 60
+gen_max = 10
 
 file_dict = {
     'samples_file': Path('../mountaincar/karoo_files/behaviour_samples.csv'),
     # 'origin_tree_file': Path('../mountaincar/karoo_files/test_tree_012.csv'),
     'operators_file': Path('../mountaincar/karoo_files/operators.csv')
 }
-gp.data_load_data(file_dict['samples_file'])
-gp.data_load_operators(file_dict['operators_file'])
 label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
+
+gp = start_plagih(tree_pop_max, gen_max)
+gp.data_load_samples_csv(file_dict['samples_file'])
+gp.data_load_operators(file_dict['operators_file'])
 gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)
 gp.plagih_gp_run()

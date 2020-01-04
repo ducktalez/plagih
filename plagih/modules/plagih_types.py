@@ -32,21 +32,23 @@ def op_label_get_arity(node_label):
         return 0
 
 
-def xtype_outcome_equi_test(a_xtype, b_xtype):
+def xtype_equi(a_xtype, b_xtype):
     """
     Dummy. Returns, whether two xtypes are equal
     """
     return a_xtype in b_xtype or b_xtype in a_xtype
 
 
-def xtype_get_converter(a_xtype, b_xtype):
+def xtype_get_converters(xtype):
     """
     convert b-to-a dummy
     """
-    if '2b' in a_xtype and '2f' in b_xtype:
-        return 'Ftob'
-    if '2f' in a_xtype and '2b' in b_xtype:
-        return 'Btof'
+    # 'lf left is boolean, give a converter to my type'
+
+    if '2b' in xtype:
+        return 'Ftob', 'Btof'
+    if '2f' in xtype:
+        return 'Btof', 'Ftob'
     else:
-        print('e', 'One of those two cases should happen', a_xtype, b_xtype)
+        print('e', 'Wrong data type? Should be 2b or 2f, but is {}'.format(xtype))
         raise

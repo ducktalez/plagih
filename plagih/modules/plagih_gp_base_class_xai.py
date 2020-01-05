@@ -107,7 +107,7 @@ class ExplainableGP(object):
                      'tree_min_nodes': 3}
 
         self.monitor_dict = config_dict['monitor']
-        self.evolve_rates = config_dict['evolve_ratio']
+        self.evolve_rates = config_dict['evolve_rates']
 
         self.fitness_type = fitt_dict[self.kernel]  # load fitness type
         if self.fitness_type == 'max':
@@ -201,10 +201,11 @@ class ExplainableGP(object):
         - Create a gene pool (kick out too complex candidates)
         """
 
-        gp_list = {('Reproduce', self.gen_reproduce, self.evolve_rates['reproduce']),
-                   ('Point Mutation', self.gen_mutate_point, self.evolve_rates['mutate_point']),
-                   ('Branch Mutation', self.gen_mutate_branch, self.evolve_rates['mutate_branch']),
-                   ('Crossover', self.gen_crossover_branch, self.evolve_rates['crossover'])}
+        gp_list = {('Reproduce', self.gen_reproduce, self.evolve_rates['Reproduce']),
+                   ('Point Mutation', self.gen_mutate_point, self.evolve_rates['Point Mutation']),
+                   ('Point Filter', self.gen_mutate_filter, self.evolve_rates['Point Filter']),
+                   ('Branch Mutation', self.gen_mutate_branch, self.evolve_rates['Branch Mutation']),
+                   ('Crossover', self.gen_crossover_branch, self.evolve_rates['Crossover'])}
         tourn_size = self.gp['gp_tourn_size']
 
         for self.gen_id in range(self.gen_id + 1, self.gp['gen_max'] + 1):  # generation 2 to *max generation*
@@ -556,19 +557,20 @@ class ExplainableGP(object):
     def file_config(self):
         """
         write the parameters to a file
+        Todo update
         """
 
         file = open(self.path + 'config.txt', 'w')
-        file.write('Plagih GP')
+        file.write('Plagih GP. This config is not complete, TODO!')
         file.write('\n launched: {}'.format(self.datetime))
         file.write('\n dataset: {}\n'.format(self.data))
         file.write('\n kernel: {}'.format(self.kernel))
         file.write('\n precision: {}\n'.format(self.precision))
         file.write('\n tree depth max: ' + str(self.gp['tree_depth_max']))
-        file.write('\n genetic operator Reproduction: ' + str(self.evolve_rates['reproduce']))
-        file.write('\n genetic operator Point Mutation: ' + str(self.evolve_rates['mutate_point']))
-        file.write('\n genetic operator Branch Mutation: ' + str(self.evolve_rates['mutate_branch']))
-        file.write('\n genetic operator Crossover: ' + str(self.evolve_rates['crossover']))
+        file.write('\n genetic operator Reproduction: ' + str(self.evolve_rates['Reproduce']))
+        file.write('\n genetic operator Point Mutation: ' + str(self.evolve_rates['Point Mutation']))
+        file.write('\n genetic operator Branch Mutation: ' + str(self.evolve_rates['Branch Mutation']))
+        file.write('\n genetic operator Crossover: ' + str(self.evolve_rates['Crossover']))
         file.write('\n')
         file.write('\n tournament size: ' + str(self.gp['gp_tourn_size']))
         file.write('\n population: ' + str(self.gp['pop_max']))
@@ -664,39 +666,52 @@ class ExplainableGP(object):
     # TODO anzahl bereits bekannter bäume
     # TODO Field Guide programming lesen
 
+    # TODO save sympifyed versions of trees
+
     def pop_pareto_update(self):
         """
         Builds up the pareto front
         - iterate over all parsimonys
             - always check for the best of each parsimony
+            TODO this does not work perfectly. some entrys should not ge there
+
         """
 
         # 1. the current best fitness is the origin
         fitness_best = self.tree_hash_meta[self.parsimony_best_dict[0]]['fitness_train']
 
-        # 2. look at all the best ones in each parsimony
-        for parsim, parsim_ident in sorted(list(self.parsimony_best_dict.items())):
+        # 2. the best ones, but not sorted
+        for a_parsim, a_ident in sorted(list(self.parsimony_best_dict.items())):
 
-            fitness_parsimony = self.tree_hash_meta[parsim_ident]['fitness_train']
+            a_fitness = self.tree_hash_meta[a_ident]['fitness_train']
 
             # 3. is it the same fitness as in pareto?
-            if self.fitness_compare(fitness_parsimony, fitness_best, mode='better_or_equal'):
-                # actually 'pareto efficient' means not worse. optionally, change mode to 'better'
-                if parsim not in self.pareto:
-                    self.pareto[parsim] = parsim_ident
+            if self.fitness_compare(a_fitness, fitness_best, mode='better_or_equal'):
 
-                # Get
-                pareto_ident = self.pareto[parsim]
+                if a_parsim not in self.pareto:
+                    self.pareto[a_parsim] = a_ident
+
+                pareto_ident = self.pareto[a_parsim]
                 fitness_pareto = self.tree_hash_meta[pareto_ident]['fitness_train']
 
                 # 4. was a lower parsimony already better?
-                if self.fitness_compare(fitness_parsimony, fitness_pareto, mode='better'):
-                    self.printpl('arity', 'Pareto updated at parsimony {}. New fitness {}. Old fitness: {}'.format(parsim, fitness_parsimony, fitness_best))
+                if self.fitness_compare(a_fitness, fitness_pareto, mode='better'):
+                    self.printpl('i', 'Pareto updated at parsimony {}. New fitness {}. Old fitness: {}'.format(a_parsim, a_fitness, fitness_best))
 
-                    fitness_best = fitness_parsimony
-                    self.pareto[parsim] = parsim_ident
-
+                    fitness_best = a_fitness
+                    self.pareto[a_parsim] = a_ident
+        self.pareto_clear()
         return
+
+    def pareto_clear(self):
+        """
+        delete all the pareto stuff that does not belong there (anymore)
+        """
+        best_fitness = self.fitness_bad_dummy
+        for parsim, ident in sorted(list(self.pareto.items())):
+            fitness = self.tree_hash_meta[ident]['fitness_train']
+            if not self.fitness_compare(fitness, best_fitness, mode='better_or_equal'):
+                self.pareto.pop(parsim, None)
 
     def fitness_compare(self, fitness1, fitness2, mode='better'):
         """
@@ -819,7 +834,7 @@ class ExplainableGP(object):
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
 
-        for i in range(self.evolve_rates['mutate_point']):  # quantity of Trees to be generated through mutation
+        for i in range(repro_rate):  # quantity of Trees to be generated through mutation
             tree = self.gp_selection_tournament(tourn_size)
             tree, node = self.treegp_mutate_point_evolve(tree, same_arity=True)
 
@@ -827,12 +842,20 @@ class ExplainableGP(object):
 
         return
 
-    def gen_mutate_filter(self, tourn_size):
+    def gen_mutate_filter(self, repro_rate, tourn_size):
         """
 
-        :param tourn_size:
-        :return:
         """
+
+        for i in range(repro_rate):
+            tree = self.gp_selection_tournament(tourn_size)
+            tree = self.treegp_mutate_filter_one(tree)
+            if len(tree) > 0:
+                self.popnew_append(tree, last_modification='point')
+            else:
+                self.printpl('w', 'Tree in mutate filter could not be changed')
+
+        return
 
     def gen_mutate_branch(self, repro_rate, tourn_size):
 
@@ -847,7 +870,7 @@ class ExplainableGP(object):
 
         """
 
-        for i in range(self.evolve_rates['mutate_branch']):  # quantity of Trees to be generated through mutation
+        for i in range(repro_rate):  # quantity of Trees to be generated through mutation
 
             tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
@@ -874,7 +897,7 @@ class ExplainableGP(object):
 
         """
 
-        half_rate = int(self.evolve_rates['crossover'] / 2)
+        half_rate = int(repro_rate / 2)
         for n in range(half_rate):
 
             # 1. two parents
@@ -977,7 +1000,7 @@ class ExplainableGP(object):
 
         return tourn_winner
 
-    def gp_mutate_constantfilter(self, constant, term_type='', filter_type='gaussian_filter'):
+    def gp_mutate_constantfilter(self, constant, term_type=None, filter_type='gaussian_filter'):
         """
         When this happens, constants get a a small variance
         """
@@ -1006,7 +1029,6 @@ class ExplainableGP(object):
 
         # 1. choose a node
         node_id = np.random.choice(tree_get_mutatable_list(tree))
-        label = tree[N_label][node_id]
         arity = int(tree[N_arity][node_id])
         xtype = self.xtype_get(tree[N_label][node_id])  # '>' -> 'f2b'
 
@@ -1026,28 +1048,22 @@ class ExplainableGP(object):
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    # def treegp_branch_node(self, parent_arity_sum, prior_sibling_arity, prior_siblings, xtype):
-    #
-    #     """
-    #     Generate a single node (func or term) for
-    #
-    #     """
-    #
-    #     if np.random.choice(['func', 'term']) == 'func':  # randomly selected as Function
-    #         label, arity = self.xtype_choose_func(xtype)
-    #         self.xtype_choose_func()
-    #         self.pnode_function_select(pnode, xtype)  # retrieve a function, input-reverse the parent-function (f2b -> we need 2f input)
-    #         self.tnode = self.treegp_node_link_child(self.tree, self.tnode, parent_arity_sum, prior_sibling_arity, prior_siblings)  # establish links to children
-    #     else:
-    #         self.xtype_xtype_get_terminal(xtype)  # was here
-    #         self.tnode[N_c1] = ''
-    #         self.tnode[N_c2] = ''
-    #         self.tnode[N_c3] = ''
-    #
-    #     self.tree = self.ptree_node_add_frominstance(self.tree)  # commit new node to array
-    #     prior_sibling_arity = prior_sibling_arity + self.tnode[N_arity]  # sum the arity of prior siblings
-    #
-    #     return prior_sibling_arity
+    def treegp_mutate_filter_one(self, tree):
+        # 1. choose a node
+        node_ids = tree_get_mutatable_list(tree)
+        float_nodes=[]
+        for node_id in node_ids:
+            label = tree_get_label(tree, node_id)
+            if xtype_get_constant(label) == '2f':
+                float_nodes.append(node_id)
+        if float_nodes:
+            float_id = np.random.choice(float_nodes)
+            val = float(tree_get_label(tree, float_id))
+            new_value = self.gp_mutate_constantfilter(val, term_type='float', filter_type='gaussian_filter')
+            tree[N_label][float_id] = str(new_value)
+            return tree
+        else:
+            return None
 
     def treegp_crossover_tree_prune(self, tree, depth):
         """
@@ -1283,7 +1299,7 @@ class ExplainableGP(object):
 
         if int(tree[N_arity][node]) == 0:  # if arity = 0
             self.printpl('e', 'In evolve_child_insert: node', node, 'has arity 0')
-            self.plagih_pause()  # consider special instructions for this
+            # self.plagih_pause()  # consider special instructions for this
 
         elif int(tree[N_arity][node]) == 1:  # if arity = 1
             tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
@@ -1320,7 +1336,7 @@ class ExplainableGP(object):
 
         else:
             self.printpl('e', 'In evolve_child_insert: node', node, 'arity > 3')
-            self.plagih_pause()  # consider special instructions for this (pause)
+            # self.plagih_pause()  # consider special instructions for this (pause)
 
         return tree
 
@@ -1359,7 +1375,7 @@ class ExplainableGP(object):
 
             else:
                 self.printpl('e', 'evolve_child_link: node', node, 'has arity', tree[N_arity][node])
-                raise  # self.plagih_pause()  # consider special instructions for this (pause)
+                raise
 
         return tree
 
@@ -2254,90 +2270,173 @@ class ExplainableGP(object):
         plt.close()
         return
 
-    def plagih_pause(self):
-
-        """
-        Pause the program execution and engage the user, providing a number of options.
-
-        Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
-        within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
-        'ERROR!' for which the user may want to archive data before terminating. At this point in time, (2) is
-        associated with each error but does not provide any special options).
-        """
-
-        ### PART 1 - reset and pack values to send to menu.pause ###
-        menu_dict = {'input_a': '',
-                     'input_b': 0,
-                     'display': self.display,
-                     'tree_depth_max': self.gp['tree_depth_max'],
-                     'tree_pop_max': self.tree_pop_max,
-                     'gen_id': self.gen_id,
-                     'gen_max': self.gp['gen_max'],
-                     'tourn_size': self.tourn_size,
-                     'evolve_repro': self.evolve_rates['reproduce'],
-                     'evolve_point': self.evolve_rates['mutate_point'],
-                     'evolve_branch': self.evolve_rates['mutate_branch'],
-                     'evolve_cross': self.evolve_rates['crossover'],
-                     # 'fittest_dict': self.origin_dominators,
-                     'pop_last_len': len(self.population_base),
-                     'pop_new_len': len(self.population_new),
-                     'path': self.path}
-
-        menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
-
-        ### PART 2 - unpack values returned from menu.pause ###
-        input_a = menu_dict['input_a']
-        input_b = menu_dict['input_b']
-        self.display = menu_dict['display']
-        self.gp['gen_max'] = menu_dict['gen_max']
-
-        self.evolve_rates['reproduce'] = menu_dict['evolve_repro']
-        self.evolve_rates['mutate_point'] = menu_dict['evolve_point']
-        self.evolve_rates['mutate_branch'] = menu_dict['evolve_branch']
-        self.evolve_rates['crossover'] = menu_dict['evolve_cross']
-
-        ### PART 3 - execute the user queries returned from menu.pause ###
-        if input_a == 'esc':
-            return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
-
-        elif input_a == 'eval':  # evaluate a Tree against the TEST data
-            algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
-            self.printpl('o', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, '\033[0;0m')  # print the sympified expression
-            result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
-            self.pause_fitness_test(result)  # TF tested 2017 02/02
-
-        elif input_a == 'print_last':  # print a Tree from population_genepool
-            self.display_tree(self.population_base[input_b])
-
-        elif input_a == 'print_new':  # print a Tree from population_new
-            self.display_tree(self.population_new[input_b])
-
-        elif input_a == 'pop_last':  # list all Trees in population_genepool
-            self.printpl('o', '')
-            for tree_id in range(1, len(self.population_base)):
-                algo_sym = self.tree_expr_sympify(tree=self.population_base[tree_id])
-                self.printpl('i', '\t\033[36m Tree', self.population_base[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, '\033[0;0m')
-
-        elif input_a == 'pop_new':  # list all Trees in population_new
-            self.printpl('ii', '')
-            for tree_id in range(1, len(self.population_new)):
-                algo_sym = self.tree_expr_sympify(tree=self.population_new[tree_id])  # extract the expression
-                self.printpl('ii', '\t\033[36m Tree', self.population_new[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, '\033[0;0m')
-
-        elif input_a == 'load':  # load population_s to replace population_genepool
-            pass
-            # self.data_pickle_recover(self.filename['s'])  #
-
-        elif input_a == 'write':  # write the evolving population_new to disk
-            self.file_population_write(self.population_new, 'new')
-
-        elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
-            self.gp['gen_max'] = self.gp['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
-
-        elif input_a == 'quit':
-            self.main_terminate()  # archive populations and exit
-
-        return 1
+    # def plagih_pause(self):
+    #
+    #     """
+    #     Pause the program execution and engage the user, providing a number of options.
+    #
+    #     Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
+    #     within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
+    #     'ERROR!' for which the user may want to archive data before terminating. At this point in time, (2) is
+    #     associated with each error but does not provide any special options).
+    #     """
+    #
+    #     ### PART 1 - reset and pack values to send to menu.pause ###
+    #     menu_dict = {'input_a': '',
+    #                  'input_b': 0,
+    #                  'display': self.display,
+    #                  'tree_depth_max': self.gp['tree_depth_max'],
+    #                  'tree_pop_max': self.tree_pop_max,
+    #                  'gen_id': self.gen_id,
+    #                  'gen_max': self.gp['gen_max'],
+    #                  'tourn_size': self.tourn_size,
+    #                  'evolve_repro': self.evolve_rates['reproduce'],
+    #                  'evolve_point': self.evolve_rates['mutate_point'],
+    #                  'evolve_branch': self.evolve_rates['mutate_branch'],
+    #                  'evolve_cross': self.evolve_rates['crossover'],
+    #                  # 'fittest_dict': self.origin_dominators,
+    #                  'pop_last_len': len(self.population_base),
+    #                  'pop_new_len': len(self.population_new),
+    #                  'path': self.path}
+    #
+    #     menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
+    #
+    #     ### PART 2 - unpack values returned from menu.pause ###
+    #     input_a = menu_dict['input_a']
+    #     input_b = menu_dict['input_b']
+    #     self.display = menu_dict['display']
+    #     self.gp['gen_max'] = menu_dict['gen_max']
+    #
+    #     self.evolve_rates['reproduce'] = menu_dict['evolve_repro']
+    #     self.evolve_rates['mutate_point'] = menu_dict['evolve_point']
+    #     self.evolve_rates['mutate_branch'] = menu_dict['evolve_branch']
+    #     self.evolve_rates['crossover'] = menu_dict['evolve_cross']
+    #
+    #     ### PART 3 - execute the user queries returned from menu.pause ###
+    #     if input_a == 'esc':
+    #         return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
+    #
+    #     elif input_a == 'eval':  # evaluate a Tree against the TEST data
+    #         algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
+    #         self.printpl('o', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, '\033[0;0m')  # print the sympified expression
+    #         result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
+    #         self.pause_fitness_test(result)  # TF tested 2017 02/02
+    #
+    #     elif input_a == 'print_last':  # print a Tree from population_genepool
+    #         self.display_tree(self.population_base[input_b])
+    #
+    #     elif input_a == 'print_new':  # print a Tree from population_new
+    #         self.display_tree(self.population_new[input_b])
+    #
+    #     elif input_a == 'pop_last':  # list all Trees in population_genepool
+    #         self.printpl('o', '')
+    #         for tree_id in range(1, len(self.population_base)):
+    #             algo_sym = self.tree_expr_sympify(tree=self.population_base[tree_id])
+    #             self.printpl('i', '\t\033[36m Tree', self.population_base[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, '\033[0;0m')
+    #
+    #     elif input_a == 'pop_new':  # list all Trees in population_new
+    #         self.printpl('ii', '')
+    #         for tree_id in range(1, len(self.population_new)):
+    #             algo_sym = self.tree_expr_sympify(tree=self.population_new[tree_id])  # extract the expression
+    #             self.printpl('ii', '\t\033[36m Tree', self.population_new[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, '\033[0;0m')
+    #
+    #     elif input_a == 'load':  # load population_s to replace population_genepool
+    #         pass
+    #         # self.data_pickle_recover(self.filename['s'])  #
+    #
+    #     elif input_a == 'write':  # write the evolving population_new to disk
+    #         self.file_population_write(self.population_new, 'new')
+    #
+    #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
+    #         self.gp['gen_max'] = self.gp['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
+    #
+    #     elif input_a == 'quit':
+    #         self.main_terminate()  # archive populations and exit
+    #
+    #     return _pause(self):
+    #
+    #     """
+    #     Pause the program execution and engage the user, providing a number of options.
+    #
+    #     Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
+    #     within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
+    #     'ERROR!' for which the user may want to archive data before terminating. At this point in time, (2) is
+    #     associated with each error but does not provide any special options).
+    #     """
+    #
+    #     ### PART 1 - reset and pack values to send to menu.pause ###
+    #     menu_dict = {'input_a': '',
+    #                  'input_b': 0,
+    #                  'display': self.display,
+    #                  'tree_depth_max': self.gp['tree_depth_max'],
+    #                  'tree_pop_max': self.tree_pop_max,
+    #                  'gen_id': self.gen_id,
+    #                  'gen_max': self.gp['gen_max'],
+    #                  'tourn_size': self.tourn_size,
+    #                  'evolve_repro': self.evolve_rates['reproduce'],
+    #                  'evolve_point': self.evolve_rates['mutate_point'],
+    #                  'evolve_branch': self.evolve_rates['mutate_branch'],
+    #                  'evolve_cross': self.evolve_rates['crossover'],
+    #                  # 'fittest_dict': self.origin_dominators,
+    #                  'pop_last_len': len(self.population_base),
+    #                  'pop_new_len': len(self.population_new),
+    #                  'path': self.path}
+    #
+    #     menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
+    #
+    #     ### PART 2 - unpack values returned from menu.pause ###
+    #     input_a = menu_dict['input_a']
+    #     input_b = menu_dict['input_b']
+    #     self.display = menu_dict['display']
+    #     self.gp['gen_max'] = menu_dict['gen_max']
+    #
+    #     self.evolve_rates['reproduce'] = menu_dict['evolve_repro']
+    #     self.evolve_rates['mutate_point'] = menu_dict['evolve_point']
+    #     self.evolve_rates['mutate_branch'] = menu_dict['evolve_branch']
+    #     self.evolve_rates['crossover'] = menu_dict['evolve_cross']
+    #
+    #     ### PART 3 - execute the user queries returned from menu.pause ###
+    #     if input_a == 'esc':
+    #         return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
+    #
+    #     elif input_a == 'eval':  # evaluate a Tree against the TEST data
+    #         algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
+    #         self.printpl('o', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, '\033[0;0m')  # print the sympified expression
+    #         result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
+    #         self.pause_fitness_test(result)  # TF tested 2017 02/02
+    #
+    #     elif input_a == 'print_last':  # print a Tree from population_genepool
+    #         self.display_tree(self.population_base[input_b])
+    #
+    #     elif input_a == 'print_new':  # print a Tree from population_new
+    #         self.display_tree(self.population_new[input_b])
+    #
+    #     elif input_a == 'pop_last':  # list all Trees in population_genepool
+    #         self.printpl('o', '')
+    #         for tree_id in range(1, len(self.population_base)):
+    #             algo_sym = self.tree_expr_sympify(tree=self.population_base[tree_id])
+    #             self.printpl('i', '\t\033[36m Tree', self.population_base[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, '\033[0;0m')
+    #
+    #     elif input_a == 'pop_new':  # list all Trees in population_new
+    #         self.printpl('ii', '')
+    #         for tree_id in range(1, len(self.population_new)):
+    #             algo_sym = self.tree_expr_sympify(tree=self.population_new[tree_id])  # extract the expression
+    #             self.printpl('ii', '\t\033[36m Tree', self.population_new[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, '\033[0;0m')
+    #
+    #     elif input_a == 'load':  # load population_s to replace population_genepool
+    #         pass
+    #         # self.data_pickle_recover(self.filename['s'])  #
+    #
+    #     elif input_a == 'write':  # write the evolving population_new to disk
+    #         self.file_population_write(self.population_new, 'new')
+    #
+    #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
+    #         self.gp['gen_max'] = self.gp['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
+    #
+    #     elif input_a == 'quit':
+    #         self.main_terminate()  # archive populations and exit
+    #
+    #     return 1
 
     def pause_fitness_test(self, result):
 

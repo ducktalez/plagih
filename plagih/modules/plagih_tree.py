@@ -519,6 +519,35 @@ def evolve_node_renum(tree):
     return tree
 
 
+def tree_get_label(tree, node_id):
+    """
+
+    """
+    return tree[N_label][node_id]
+
+
+def xtype_get_constant(label, node_arity=None, only_float=True):
+    """
+
+    """
+    const_xtype = None
+
+    if not node_arity:
+        node_arity = op_label_get_arity(label)
+
+    if node_arity == 0:  # arity=0 -> terminal
+        if 'True' in label or 'False' in label:
+            if not only_float:
+                const_xtype = '2b'
+        elif 'observation' in label or 'action' in label:
+            pass
+        else:
+            # now it MUST be float
+            const_xtype = '2f'
+
+    return const_xtype
+
+
 def tree_get_mutatable_list(tree, no_root=False):
     """
     Returns a list with mutatable ids

@@ -5,28 +5,29 @@ import plagih.modules.plagih_gp_base_class_xai as plagih
 from pathlib import Path
 
 
-def start_plagih(tree_pop_max, gen_max):
-    evolve_repro = 0.1  # [0.0...1.0]  		decimal percent of pop generated through Reproduction
-    evolve_point = 0.2  # [0.0...1.0]  		decimal percent of pop generated through Point Mutation
-    evolve_branch = 0.4  # [0.0...1.0]  	decimal percent of pop generated through Branch Mutation
-    evolve_cross = 0.30  # [0.0...1.0]  		decimal percent of pop generated through Crossover
-    # [3 to 2^(bas +1) - 1]	minimum number of nodes
+def get_evolve_rates_dict(rates, tree_pop_max):
 
-    evolve_repro = int(evolve_repro * tree_pop_max)
-    evolve_point = int(evolve_point * tree_pop_max)
-    evolve_branch = int(evolve_branch * tree_pop_max)
-    evolve_cross = int(evolve_cross * tree_pop_max)
-    evolve_missing = 0
-    evolve_total = evolve_repro + evolve_point + evolve_branch + evolve_cross
-
+    amounts = [int(x * tree_pop_max) for x in rates]
+    evolve_total = sum(amounts)
+    missing = 0
     if evolve_total > tree_pop_max:
         print('Error: A new generation has more than', evolve_total, 'candidates. It has', tree_pop_max)
         exit()
     elif evolve_total < tree_pop_max:
         print('Error: A new generation has less than', evolve_total, 'candidates. It has', tree_pop_max)
-        print('Missing', tree_pop_max - evolve_total, 'will be random o')
-        evolve_missing = evolve_missing + tree_pop_max - evolve_total
+        print('Missing', tree_pop_max - evolve_total, 'will be TODO')
+        missing = tree_pop_max - evolve_total
 
+    evolve_rates = {'Reproduce': amounts[0],
+                    'Point Mutation': amounts[1],
+                    'Point Filter': amounts[2],
+                    'Branch Mutation': amounts[3],
+                    'Crossover': amounts[4],
+                    'missing': amounts[5] + missing}
+    return evolve_rates
+
+
+def start_plagih(tree_pop_max, gen_max, evolve_rates):
     config_dict = {
         'name': '_MTC_tree_012',
         'kernel': 'regression',  # [regression, classification, match]
@@ -48,19 +49,16 @@ def start_plagih(tree_pop_max, gen_max):
                     'sympify_errors': 'y',
                     'genepool_size': 'y'
                     },
-        'evolve_ratio': {'reproduce': evolve_repro,
-                         'mutate_point': evolve_point,
-                         'mutate_branch': evolve_branch,
-                         'crossover': evolve_cross,
-                         'missing': evolve_missing}
+        'evolve_rates': evolve_rates
     }
 
     return plagih.ExplainableGP(config_dict)
 
+
 """
 The must crucial parameters for testing are here
 """
-tree_pop_max = 60
+tree_pop_max = 100
 gen_max = 20
 
 file_dict = {
@@ -70,8 +68,11 @@ file_dict = {
 }
 label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
+#         repro, point, filter, branch, cross
+evolve_rates_list = [0.1, 0.1, 0.2, 0.3, 0.3, 0]
+evolve_rates = get_evolve_rates_dict(evolve_rates_list, tree_pop_max)
 
-gp = start_plagih(tree_pop_max, gen_max)
+gp = start_plagih(tree_pop_max, gen_max, evolve_rates)
 gp.data_load_samples_csv(file_dict['samples_file'])
 gp.data_load_operators(file_dict['operators_file'])
 gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)

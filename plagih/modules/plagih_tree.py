@@ -235,7 +235,9 @@ def core_from_labels(label_list, arity_list):
     Given the labels (and label infos) as list
     this function builds the core of a tree (no node_modify)
     """
-
+    if len(label_list) == 0:
+        print('label list is empty. Please handle this error earlier in code.')
+        raise
     size = len(label_list)
     tree = tree_init_core(size)
 
@@ -724,7 +726,6 @@ def test_trees(number):
     else:
         label_list = ['0']
         arity_list = [0]
-        type_list = ['term']
 
     core = core_from_labels(label_list, arity_list)
     return core

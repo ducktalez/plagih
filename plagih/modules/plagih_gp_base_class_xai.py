@@ -200,16 +200,18 @@ class ExplainableGP(object):
         - adjust parameters for this generation (parsimony threshold)
         - Create a gene pool (kick out too complex candidates)
         """
+
+        gp_list = {('Reproduce', self.gen_reproduce, self.evolve_rates['reproduce']),
+                   ('Point Mutation', self.gen_mutate_point, self.evolve_rates['mutate_point']),
+                   ('Branch Mutation', self.gen_mutate_branch, self.evolve_rates['mutate_branch']),
+                   ('Crossover', self.gen_crossover_branch, self.evolve_rates['crossover'])}
+        tourn_size = self.gp['gp_tourn_size']
+
         for self.gen_id in range(self.gen_id + 1, self.gp['gen_max'] + 1):  # generation 2 to *max generation*
 
-            # 1. set parameters for the generation
             self.time_genstart = time.perf_counter()
+            self.gen_prepare_parameters()
 
-            gp_list = {('Reproduce', self.gen_reproduce, self.evolve_rates['reproduce']),
-                       ('Point Mutation', self.gen_mutate_point, self.evolve_rates['mutate_point']),
-                       ('Branch Mutation', self.gen_mutate_branch, self.evolve_rates['mutate_branch']),
-                       ('gen_crossover_branch', self.gen_crossover_branch, self.evolve_rates['crossover'])}
-            tourn_size = self.gp['gp_tourn_size']
 
             for name, gp_function, evolve_rate in gp_list:
                 self.printpl('gggg', '{}...'.format(name))
@@ -222,7 +224,7 @@ class ExplainableGP(object):
 
         else:
             self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format('\033[32m', '\033[1m', '\033[32m', '\033[1m', '\033[32m', '\033[0;0m'))
-            menu_continue = 0
+            # menu_continue = 0
 
     def main_terminate(self):
         """
@@ -579,12 +581,13 @@ class ExplainableGP(object):
         Save all the pareto efficient candidates to file
         """
         file = open(self.path + 'pareto.txt', 'w')
+        file.write('\nParsimony: \t<num> Fitness: \t<fitness> Expr: \t<expression>')
 
         for parsim_key, tree_hash in sorted(list(self.pareto.items())):
             tree_meta = self.tree_hash_meta[tree_hash]
             fitness = tree_meta['fitness_train']
             algo_sym = tree_meta['algo_sym']
-            file.write('\nParsimony: \t' + str(parsim_key) + ' Fitness: \t' + str(fitness) + ' Expr: \t' + str(algo_sym))
+            file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(str(parsim_key), str(fitness), str(algo_sym)))
 
         file.close()
 
@@ -728,16 +731,9 @@ class ExplainableGP(object):
         self.printpl('g', 'Initial population...')
 
         tree_origin = self.origin['tree'].copy()
-        # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data
-        # tree[TR_ID][1] = 1
-        # self.population_new.append(tree)
-
         origin_ids = tree_get_mutatable_list(tree_origin, no_root=True)
 
-        for tree_id in range(1, self.gp['pop_max'] + 1):  # range(1,10) goes from 1 to 9. No need for the extra -1?
-
-            # Copy reference tree
-            tree_origin = self.origin['tree'].copy()
+        for tree_id in range(1, self.gp['pop_max'] + 1):
 
             # vary this tree with mutation
             branch_top = np.random.choice(origin_ids)
@@ -780,8 +776,9 @@ class ExplainableGP(object):
         """
         outsourced enumeration of trees in a population
         """
-        for tree_id in range(1, len(self.population_new)):  #
+        for tree_id in range(1, len(population)):  #
             population[tree_id][TR_ID][1] = tree_id
+        return population
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   What happens in a Generation              |
@@ -934,7 +931,7 @@ class ExplainableGP(object):
 
         """
 
-        self.pop_enum_trees(self.population_new)  # pop +tree_id
+        self.population_new = self.pop_enum_trees(self.population_new)  # pop +tree_id
         gene_pool_hash_dict = self.pop_genepool_create(self.population_new)
 
         self.pop_parsimony_best_update(gene_pool_hash_dict)
@@ -943,11 +940,8 @@ class ExplainableGP(object):
         self.population_base = pop_copy_genepool(self.population_new, gene_pool_hash_dict, self.gen_id)
         self.file_population_write(self.population_new, 'new')
 
-        if self.gen_id == 5:
-            print('Generation 5')
-
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_hash_meta)
-
+        self.printpl('gg', 'Monitoring: Created {} values in this generation'.format(len(set(gene_pool_hash_dict.values()))))
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1119,7 +1113,7 @@ class ExplainableGP(object):
         b_sametype_ids = b_ids[:]
         for i in b_ids:
             b_xtype = self.xtype_get(b_tree[N_label][i])
-            if b_xtype != a_xtype:
+            if not xtype_equi_outcome(b_xtype, a_xtype):
                 b_sametype_ids.remove(i)
 
         if b_sametype_ids:  # if it has entries, choose one. we are done
@@ -1128,10 +1122,9 @@ class ExplainableGP(object):
         else:
             b_id = np.random.choice(b_ids)
             success = False
-
         aaa = self.xtype_get(a_tree[N_label][a_id])
         bbb = self.xtype_get(b_tree[N_label][b_id])
-        if aaa != bbb:
+        if not xtype_equi_outcome(aaa, bbb):
             print('sfeh dummy. delete this, does not happen anymore')
             raise
 
@@ -1223,7 +1216,6 @@ class ExplainableGP(object):
             # Finally, update the list for the next round
             todo_xtypes = next_xtype_list[:]
 
-        # print('Result_label_list', result_label_list, 'result_arity_list', result_arity_list)
         return result_label_list, result_arity_list
 
     def tree_insert_branch_random(self, tree, branch_ids):
@@ -1260,10 +1252,14 @@ class ExplainableGP(object):
             # Build a new tree
             label_list, arity_list = self.invent_label_list(old_xtype, depth_goal)  # Build a complete tree
 
+            if not label_list:
+                self.printpl('w', 'We wanted to branch mutate a node that is on the lowest level')
+                return tree
+
             core_insert = core_from_labels(label_list, arity_list)
             result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
 
-            return tree
+            return result_tree
         elif grow_method == 'old plagih code':
             self.printpl('e', 'Not yet')
         elif grow_method == 'nodes_max_uniform':
@@ -1459,6 +1455,8 @@ class ExplainableGP(object):
 
         origin_hash, origin_meta = self.tree_store_meta_get_hash(tree)
         self.origin['fitness_train'] = origin_meta['fitness_train']
+
+        self.parsimony_best_dict[0] = origin_hash
 
         self.hashtable_fitness_train = {}
         return
@@ -2729,11 +2727,13 @@ def insert_function_or_term(depth, depth_goal):
     """
     with a certain probability, insert terminals or functions
     """
+    build_style = np.random.choice(['50:50', '50:50', '50:50', 'grow_larger'])
     probability = np.random.uniform(0, depth_goal)
     if probability > min(depth, depth_goal / 2):
-        return 'function'
+        decision = 'function'
     else:
-        return 'terminal'
+        decision = 'terminal'
+    return decision
 
 
 def pop_copy_genepool(population_new, gene_pool_hash_dict, gen_id):

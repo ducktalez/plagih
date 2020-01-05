@@ -32,11 +32,15 @@ def op_label_get_arity(node_label):
         return 0
 
 
-def xtype_equi(a_xtype, b_xtype):
+def xtype_equi_outcome(a_xtype, b_xtype):
     """
     Dummy. Returns, whether two xtypes are equal
     """
-    return a_xtype in b_xtype or b_xtype in a_xtype
+    if a_xtype[-2:] == b_xtype[-2:]:
+        equal = True
+    else:
+        equal = False
+    return equal
 
 
 def xtype_get_converters(xtype):

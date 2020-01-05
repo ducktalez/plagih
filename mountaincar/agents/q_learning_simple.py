@@ -53,7 +53,7 @@ def QLearning(env, learning, discount, epsilon, min_eps, episodes, plot_nums):
             if done and state2[0] >= 0.5:
                 Q[state_adj[0], state_adj[1], action] = reward
 
-            # Adjust Q value for current state
+            # Adjust Q c1 for current state
             else:
                 delta = learning * (reward +
                                     discount * np.max(Q[state2_adj[0],

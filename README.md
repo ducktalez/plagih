@@ -6,6 +6,14 @@ Its aim is to provide a framework where a heuristic is improved by genetic progr
 The new code shall both perform significantly better and also be an explainable, 
 plausible addition to the original program which the developer does understand.
 
+## Needed packages
+TODO Apted
+tensorflow
+numpy
+sympy
+pickle
+
+
 ## Including
 
 - Karoo-based gp library

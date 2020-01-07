@@ -34,7 +34,7 @@ def start_plagih(tree_pop_max, gen_max, evolve_rates):
         'precision': 6,  # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'display': 'gggewsivott',  # To display absolutely all: ewggggsiiiivvvtopppttt
+        'display': 'ggewsivott',  # To display absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
         'tree_depth_base': 5,  # [3...10]			maximum Tree depth for initial population
@@ -59,7 +59,7 @@ def start_plagih(tree_pop_max, gen_max, evolve_rates):
 The must crucial parameters for testing are here
 """
 tree_pop_max = 100
-gen_max = 20
+gen_max = 10
 
 file_dict = {
     'samples_file': Path('../mountaincar/karoo_files/behaviour_samples.csv'),

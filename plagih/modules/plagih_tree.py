@@ -40,6 +40,85 @@ def karoo_tree_clear_meta(tree):
     return tree
 
 
+def tree_node_get_arity(tree, node_id, karoo=False):
+
+    if karoo:
+        node_id = int(node_id) - 1
+
+    return int(tree[N_arity][int(node_id)])
+
+
+def round_constant(constant, accuracy):
+    constant = float(constant)
+    new_const = round(constant * accuracy) / accuracy
+    if new_const == 0 and constant > 0:
+        new_const = 1 / accuracy
+    elif new_const == 0 and constant < 0:
+        new_const = -1 / accuracy
+
+    return new_const
+
+
+def tree_round_constants(tree, accuracy, karoo=False):
+    """
+    rounds the values in constant float nodes
+    """
+
+    if karoo:
+        tree = tree_convert_karoo_to_plagih(tree)
+
+    for node_id in tree_get_leafes(tree):
+        if tree_node_get_nodekind(tree, node_id) == 'term-float':
+            tmp = round_constant(tree[N_label][node_id], accuracy)
+            tree[N_label][node_id] = tmp
+
+    if karoo:
+        tree = tree_convert_plagih_to_karoo(tree)
+
+    return tree
+
+
+def tree_node_get_nodekind(tree, node, karoo=False):
+    """
+    'func', 'term-variable', 'term-float', 'term-bool'
+    """
+    arity = tree_node_get_arity(tree, node, karoo=False)
+    if arity > 0:
+        nodekind = 'func'
+    else:
+        label = tree[N_label][node]
+        if 'observation' in label:
+            nodekind = 'term-variable'
+        elif 'True' in label or 'False' in label:
+            nodekind = 'term-bool'
+        else:
+            try:
+                float(label)
+                nodekind = 'term-float'
+            except ValueError:
+                print('No good. This label is completely unknown: {} (or arity {} is not correct).'.format(label, arity))
+                raise
+    return nodekind
+
+
+def tree_get_leafes(tree, karoo=False):
+    """
+    Just return leaf nodes of a tree
+    """
+    if karoo:
+        tree = tree_convert_karoo_to_plagih(tree)
+
+    node_ids = []
+    for node_id in tree[N_id]:
+        if tree_node_get_arity(tree, int(node_id), karoo=False) == 0:
+            node_ids.append(int(node_id))
+
+    if karoo:
+        node_ids = [x - 1 for x in node_ids]
+
+    return node_ids
+
+
 def tree_branch_get_label_list(tree, node_ids, karoo=False):
 
     """
@@ -284,12 +363,12 @@ def evolve_c_buffer_karoo(tree, node):
     return c_buffer
 
 
-def evolve_c_buffer(tree, node_id, wrapper=False):
+def evolve_c_buffer(tree, node_id, karoo=False):
     """
     Generates the c_buffer for a node_id of a tree
     The c_buffer is:
     """
-    if wrapper:
+    if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
         node_id -= 1
 
@@ -319,7 +398,7 @@ def evolve_c_buffer(tree, node_id, wrapper=False):
     # + 1 = our first child node, not the last child of the prior sibling
     c_buffer = node_id + (parent_arity_sum - prior_siblings - 1) + prior_sibling_arity_sum + 1
 
-    if wrapper:
+    if karoo:
         c_buffer += 1
 
     return c_buffer
@@ -402,12 +481,12 @@ def tree_insert_subtree(tree, insert_core, delete_ids, karoo=False):
     return tree
 
 
-def evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=False):
+def evolve_fix_link_child_doit(tree, node_id, c_buffer, karoo=False):
     """
     Link each parent node_id to its children.
 
     """
-    if wrapper:
+    if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
         node_id -= 1
         c_buffer -= 1
@@ -440,7 +519,7 @@ def evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=False):
         else:
             print('e', 'evolve_child_link: node_id', node_id, 'has arity', tree[N_arity][node_id])
             raise
-    if wrapper:
+    if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
 
     return tree
@@ -455,8 +534,8 @@ def tree_fix_link_child_karoo(tree):
     """
 
     for node_id in range(1, len(tree[3])):
-        c_buffer = evolve_c_buffer(tree, node_id, wrapper=True)  # generate c_buffer for each node
-        tree = evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=True)  # update child links for each node
+        c_buffer = evolve_c_buffer(tree, node_id, karoo=True)  # generate c_buffer for each node
+        tree = evolve_fix_link_child_doit(tree, node_id, c_buffer, karoo=True)  # update child links for each node
 
     return tree
 
@@ -476,13 +555,13 @@ def tree_fix_link_child(tree):
     return tree
 
 
-def tree_insert_node_child_dummies(tree, node_id, c_buffer, wrapper=False):
+def tree_insert_node_child_dummies(tree, node_id, c_buffer, karoo=False):
     """
     evolve_subtree_insert_child
     Insert child node_id into the copy of a parent Tree.
 
     """
-    if wrapper:
+    if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
         node_id -= 1
         c_buffer -= 1
@@ -498,7 +577,7 @@ def tree_insert_node_child_dummies(tree, node_id, c_buffer, wrapper=False):
         tree[N_depth][c_buffer + c] = int(tree[N_depth][node_id]) + 1  # node_depth
         tree[N_parent][c_buffer + c] = int(tree[N_id][node_id])  # parent ID
 
-    if wrapper:
+    if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
 
     return tree
@@ -634,6 +713,7 @@ def tree_get_ids_karoo(tree, node):
 
     return branch
 
+
 def tree_labels(tree):
     """
     Just helps printing trees better
@@ -764,13 +844,14 @@ def test():
     core = test_trees(4)
     karoo_tree = tree_convert_plagih_to_karoo(core)
 
-    label_list = ['Ifte', '<', '0', '2', 'observation1', '<', '0', '2']
-    label_list = ['Ifte', '<', '0', '2', 'observation1', '0']
+    label_list = ['Ifte', '<', '0.1234', '2', 'observation1', '0']
     arity_list = [3, 2, 0, 0, 0, 0]
     core = core_from_labels(label_list, arity_list)
     karoo_tree = tree_convert_plagih_to_karoo(core)
-    x = tree_check_all(karoo_tree)
+    karoo_tree = tree_round_constants(karoo_tree, 200, karoo=True)
+    print(karoo_tree)
 
+    x = tree_check_all(karoo_tree)
     print(x)
     return
 

@@ -635,6 +635,14 @@ class ExplainableGP(object):
         self.printpl('i', 'We loaded the following population_genepool: {}'.format(self.population_base))
         return
 
+    def check_if_toosimilar(self, tree):
+        """
+        a function to check if a certain
+        """
+        for node_id, label in enumerate(tree[N_label]):
+            if self.xtype_xtype_get_terminal(label) == True:
+                pass
+
     def pop_genepool_create(self, population):
 
         """
@@ -1375,7 +1383,7 @@ class ExplainableGP(object):
             self.printpl('w', 'No origin provided. Todo. starting from scratch with random generation?')
             raise
 
-        origin_algo_raw = self.tree_expr_raw(tree, P_first_node)
+        origin_algo_raw = tree_expr_raw(tree, P_first_node)
         self.origin = {'tree': tree,
                        'algo_raw': origin_algo_raw,
                        'algo_sym': self.tree_expr_sympify(algo_raw_str=origin_algo_raw),
@@ -1399,7 +1407,7 @@ class ExplainableGP(object):
         4. fitness_train
         """
         # 1. get algo_raw - what is needed to compute the tree identifier
-        algo_raw_str = self.tree_expr_raw(tree, 1)
+        algo_raw_str = tree_expr_raw(tree, 1)
         tree_ident = hash(algo_raw_str)  # sfeh: potential for improvement- use algo_sym in separate dict as identifier.
 
         # 2.1 Did we have this tree already? -> Nice, we have everything
@@ -1496,7 +1504,7 @@ class ExplainableGP(object):
             const = np.random.random_integers(-10, 10)
         else:
             self.printpl('w', 'Please specify your desired datatype if possible. Trying to return c1 similar to terminals.')
-            self.printpl('e', 'This term type should not occur, I guess', term_type)
+            self.printpl('e', 'This term type should not occur, I guess'.format(term_type))
             term_type = np.random.choice(self.variables_dict['types'])
             const = self.tree_build_type_constant_get(term_type=term_type)
         return str(const)
@@ -1507,7 +1515,7 @@ class ExplainableGP(object):
         returns the sympifyed expression
         """
         if len(tree) > 0:  # If we got a tree, we generate the expression
-            algo_raw_str = str(self.tree_expr_raw(tree, 1))
+            algo_raw_str = str(tree_expr_raw(tree, 1))
 
         try:
             x = plagih_sympify(algo_raw_str)
@@ -1536,51 +1544,6 @@ class ExplainableGP(object):
         todo
         """
 
-    def tree_expr_raw(self, tree, node_id):
-
-        """
-        Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
-
-        """
-        node_id = int(node_id)
-
-        if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
-
-        elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-            return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
-
-        elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-            # This if case is for 2-ary ops that is prefix. like Min(a, b)
-            if tree[N_label, node_id] not in functions_infix_dict:
-                return '(' + tree[N_label, node_id] + '(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + '))'
-            else:
-                return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
-
-        elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-            return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
-
-    def tree_raw_depth_prefix(self, tree, node_id):
-
-        """
-        Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
-
-        """
-
-        node_id = int(node_id)
-
-        if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
-
-        elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-            return '{' + tree[N_label, node_id] + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
-
-        elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-            return '{' + tree[N_label, node_id] + '' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
-
-        elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-            return '{Ifte' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + self.tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
-
     def tree_parsimony(self, tree, parsimony_distance='ted'):
         """
         parsimony_distance: compute the chosen distance by the user.
@@ -1593,7 +1556,7 @@ class ExplainableGP(object):
         elif parsimony_distance == 'total_tree_depth':
             return tree[N_depth][1]  # returns the tree size
         elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-            algo_raw_str = str(self.tree_expr_raw(tree, 1))
+            algo_raw_str = str(tree_expr_raw(tree, 1))
             return len(str(algo_raw_str))
         # elif parsimony_distance == 'total_simplified':
         #     algo_sym = self.tree_expr_sympify(tree=tree)
@@ -1635,8 +1598,8 @@ class ExplainableGP(object):
         - the amount of changes that have to be applied to the origin to equality are counted
         """
         # TODO TED soll geänderte Werte ignorieren
-        apted_tree1 = self.tree_raw_depth_prefix(tree1, 1)
-        apted_tree2 = self.tree_raw_depth_prefix(tree2, 1)
+        apted_tree1 = tree_raw_depth_prefix(tree1, 1)
+        apted_tree2 = tree_raw_depth_prefix(tree2, 1)
         distance, mapping = apted_distance(apted_tree1, apted_tree2)
         # sfeh the mapping could be handy somewhere
         return distance
@@ -1660,7 +1623,7 @@ class ExplainableGP(object):
         Store the parsimony within the tree np-array
         """
         if parsimony < 0:
-            self.printpl('w', 'Parsimony is:', parsimony)
+            self.printpl('w', 'Parsimony is:'.format(parsimony))
         tree[T_parsimony][1] = parsimony
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1870,16 +1833,13 @@ class ExplainableGP(object):
                     *[self.eval_tf_expr_graph(arg, tensors) for arg in node.args], dtype=tf.float32)
 
             if len(node.args) > 2:
-                self.printpl('e', 'This has more than 2 args?', str(node.func.id))
+                self.printpl('e', 'This has more than 2 args: {}'.format(str(node.func.id)))
             else:
                 try:
                     return ast_tensor_dict[node.func.id](*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args])
                 except Exception as ex:
-                    self.printpl('w', 'debug warning:', self.debug_warnings)
-                    self.printpl('e', 'node.func.id caused an exception, type:\n', ex,
-                                 '\nnode.func.id:\n', node.func.id,
-                                 '\nnode.args:', str(node.args),
-                                 '\nand expression:\n', self.debug_warnings)
+                    self.printpl('w', 'debug warning: {}'.format(self.debug_warnings))
+                    self.printpl('e', 'node.func.id caused an exception, type:\n{}\n{}\nnode.args:{}\nand expression:\n {}'.format(ex, node.func.id, str(node.args), self.debug_warnings))
 
         elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
             return self.eval_tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
@@ -1994,7 +1954,7 @@ class ExplainableGP(object):
             elif xtype == 'b2f2f':
                 return np.random.choice(self.op_type_arity_array[b2f2f][arity])  # sfeh okay that does not make sense tbh
             else:
-                self.printpl('e', 'Function was not found in function_types_dict', xtype)
+                self.printpl('e', 'Function was not found in function_types_dict: {}'.format(xtype))
                 raise
         else:
             raise
@@ -2082,7 +2042,7 @@ class ExplainableGP(object):
             terminals_type = self.variables_dict['bool']
             the_type = 'bool'
         else:
-            self.printpl('e', 'Probably, you have to check if your "function" is actually a terminal. xtype', node_xtype)
+            self.printpl('e', 'Probably, you have to check if your "function" is actually a terminal. xtype: {}'.format(node_xtype))
             raise
 
         if np.random.choice(['var', 'const']) == 'var':  # our choice is variable
@@ -2127,7 +2087,7 @@ class ExplainableGP(object):
         # How many survived in the selection?
         self.monitoring_dict['genepool_size'][int(self.gen_id)] = len(gene_pool_hash_dict)
         if len(gene_pool_hash_dict) > 0:
-            self.printpl('ggg', 'The generation has:', len(gene_pool_hash_dict), '')
+            self.printpl('ggg', 'The generation has: {}'.format(len(gene_pool_hash_dict)))
         else:  # the evolutionary constraints were too tight, killing off the entire population
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.main_terminate()
@@ -2374,8 +2334,8 @@ class ExplainableGP(object):
                     result['pred_labels'][1][i]))
 
             self.printpl('o', '\n Fitness score: {}'.format(result['fitness']))
-            self.printpl('o', '\n Precision-Recall report:\n', skm.classification_report(result['solution'], result['pred_labels'][0]))
-            self.printpl('o', ' Confusion matrix:\n', skm.confusion_matrix(result['solution'], result['pred_labels'][0]))
+            self.printpl('o', '\n Precision-Recall report:\n{}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
+            self.printpl('o', ' Confusion matrix:\n{}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
 
         elif self.kernel == 'regression':
             """
@@ -2431,27 +2391,24 @@ class ExplainableGP(object):
 
             for node in range(1, len(tree[3])):  # increment through all nodes (redundant, I know)
                 if int(tree[N_depth][node]) == depth:
-                    self.printpl('i', '')
-                    self.printpl('i\033[1m\033[36m NODE:', tree[3][node], '\033[0;0m')
-                    self.printpl('i {} label: {} \tparent node: {}'.format(ind, tree[6][node], tree[7][node]))
-                    self.printpl('i {} arity: {}\tchild node(s): {} {} {}'.format(ind, tree[8][node], tree[9][node], tree[10][node], tree[11][node]))
+                    self.printpl('i', '\n\033[1m\033[36m NODE: {}\033[0;0m{} label: {} \tparent node: {} {} arity: {}\tchild node(s): {} {} {}'.format(
+                        tree[3][node], ind, tree[N_label][node], tree[7][node], ind, tree[8][node], tree[9][node], tree[10][node], tree[11][node]))
 
             ind = ind + '\t'
 
         self.printpl('i', 'TODO')
         # self.eval_tf(tree)  # generate the raw and sympified expression for the entire Tree
-        algo_raw_str = str(self.tree_expr_raw(tree, 1))
-        self.printpl('i', '\t\033[36mTree', tree[TR_ID][1], 'yields (raw):', algo_raw_str, '\033[0;0m')
-        self.printpl('i', '\t\033[36mTree', tree[TR_ID][1], 'yields (sym):\033[1m', '\033[0;0m')
+        algo_raw_str = str(tree_expr_raw(tree, 1))
+        self.printpl('i', '\t\033[36mTree {} yields (raw): {}\033[0;0m'.format(tree[TR_ID][1], algo_raw_str))
 
         return
 
     def manual_expr_fitness(self, expr):
         fitness = self.eval_tf(expr, self.data_train)['fitness']
-        self.printpl('i', 'Your algos fitness:', fitness)
+        self.printpl('i', 'Your algos fitness: {}'.format(fitness))
         return
 
-    def printpl(self, message_type, *args):
+    def printpl(self, message_type, text):
 
         """
         Gets a verbosity (e.g. 'i')
@@ -2505,21 +2462,16 @@ class ExplainableGP(object):
                 # Just show it
                 message_style = ''
                 message_pretxt = ''
-            elif 'c' in message_type:
-                if args[0][1]:
-                    self.printpl(args[0][0], '', args[1:])
-                return
             else:
                 message_style = ''
-                self.printpl('w', 'Display-mode', message_type, 'not known.')
+                self.printpl('w', 'Display-mode {} not known.'.format(message_type))
 
-            print(message_style + message_pretxt + ' '.join(map(str, args)) + message_posttxt)
+            print('{}{}{}{}'.format(message_style, message_pretxt, text, message_posttxt))
+            # print('{}{}{}{}'.format(message_style, message_pretxt, ' '.join(map(str, args)), message_posttxt))
             #
             # if raise_error:
             #     raise
 
-            if pause:
-                self.plagih_pause()  # correct pause?
         return
 
     # def evolve_subtree_depth_choose(self, ptree, top_id, bottom_id, amount_replaced_nodes=None, mode='base_depth'):  # sfeh other default
@@ -2707,6 +2659,47 @@ class ExplainableGP(object):
     #
     #         self.treegp_mutate_branch_terminal_build()  # build the Terminal nodes
     #         return
+
+def printit(message_type):
+    message_pretxt = BColors.RESET  # default color
+    if 'i' in message_type:
+        message_style = '\033[36m'
+        message_pretxt = 'Info: '  # cyan
+    elif 'e' in message_type:
+        message_style = '\033[31m'
+        message_pretxt = 'ERROR: '  # red
+        raise_error = True
+    elif 'w' in message_type:  # warning
+        message_style = '\033[93m'
+        message_pretxt = 'Warning: '  # Warning-yellow
+    elif 'g' in message_type:
+        message_style = '\033[32m'
+        message_pretxt = 'Gen: '  # green
+    elif 'v' in message_type:  # verbose
+        message_style = '\033[37m'  # white
+        message_pretxt = 'Verbose: '
+    elif 'p' in message_type:  # pause
+        message_style = '\033[33m'
+        message_pretxt = 'Pause(TODO): '  # Yellow
+        pause = True
+    elif 'f' in message_type:  # function
+        message_style = '\033[35m'  # Magenta
+        message_pretxt = 'Func: '
+    elif 't' in message_type:  # Timer
+        message_style = '\033[32m'
+        message_pretxt = 'Timer: '
+    elif 'o' in message_type:  # original
+        # Just show it
+        message_style = ''
+        message_pretxt = ''
+    else:
+        message_style = ''
+        printit('w', 'Display-mode {} not known.'.format(message_type))
+    #
+    # print(message_style + message_pretxt + ' '.join(map(str, args)) + message_posttxt)
+    #
+    # if raise_error:
+    #     raise
 
 
 def util_tree_copy(population, tree_id):

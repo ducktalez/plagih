@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.dicts import *
 from plagih.modules.plagih_types import *
 
 ### TensorFlow Imports and Definitions ###
@@ -529,7 +528,7 @@ def tree_fix_link_child_karoo(tree):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
-    This is required anytime the size of the array 'gp.tree' has been modified, as with both Grow and Full mutation.
+    This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
 
     """
 
@@ -544,7 +543,7 @@ def tree_fix_link_child(tree):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
-    This is required anytime the size of the array 'gp.tree' has been modified, as with both Grow and Full mutation.
+    This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
 
     """
 

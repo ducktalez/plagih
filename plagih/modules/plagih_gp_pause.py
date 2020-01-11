@@ -84,10 +84,10 @@ def pause(menu_dict):
 	#elif menu == 'max': # adjust the maximum Tree depth
 	#	while True:
 	#		try:
-	#			print ('\n\t The current \033[3madjusted\033[0;0m maximum Tree depth is:', gp.tree_depth_max)
+	#			print ('\n\t The current \033[3madjusted\033[0;0m maximum Tree depth is:', config.tree_depth_max)
 	#			query = input('\n\t Adjust the global maximum Tree depth to (1 ... 10): ')
 	#			if int(query) not in list(range(1,11)): raise ValueError()
-	#			if query < gp.tree_depth_max:
+	#			if query < config.tree_depth_max:
 	#				print ('\n\t\033[32m This c1 is less than the current c1.\033[0;0m')
 	#				conf = input('\n\t Are you ok with this? (y/n) ')
 	#				if conf == 'n': break

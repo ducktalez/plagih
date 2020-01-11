@@ -181,6 +181,20 @@ function_arity_dict = {  # Needs A LOT OF further testing
 functions_wrap_dict = ['Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
 functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
 
+function_infix_to_prefix = {  # currently obsolete
+    '+': 'add',
+    '-': 'sub',
+    '*': 'mult',
+    '/': 'div',
+    '**': 'power',
+    '==': 'eq',
+    '!=': 'neq',
+    '<': 'lt',
+    '<=': 'leq',
+    '>': 'gt',
+    '>=': 'geq',
+}
+
 # op_xtype_dict = {  # Needs A LOT OF further testing
 #     'float': '2f',  # these three are dummies
 #     'int': '2f',  # needed to use the dict for function types as well

@@ -50,7 +50,7 @@ def create_config_dict(pop_max, gen_max, evolve_rates):
                     'genepool_size': 'y'
                     },
         'evolve_rates': evolve_rates,
-        'time_max': 60*5  # 60 = 1 min
+        'time_max': 60*1  # 60 = 1 min
     }
 
     return config_dict

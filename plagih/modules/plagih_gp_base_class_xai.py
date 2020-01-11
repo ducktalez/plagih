@@ -276,16 +276,16 @@ class ExplainableGP(object):
         num_observations, num_actions = 0, 0
         var_types = []
         # TODO Terminal types as dictionary? would be much prettier.
-        self.input_dict = {'all': {},
+        input_dict = {'all': {},
                            'float': {},
                            'bool': {}}
-        self.variables_dict = {'all': [],
+        variables_dict = {'all': [],
                                'types': [],
                                'float': [],
                                'bool': []}
 
-        self.action_dict = {}
-        self.actions, self.action_types = [], []
+        action_dict = {}
+        actions, action_types = [], []
 
         # 1. Read file
         with Path.open(samples_file) as csvFile:
@@ -300,22 +300,22 @@ class ExplainableGP(object):
                             num_observations += 1
                             term = var_name.rsplit(':', 1)[0]
                             term_type = var_name.split(':', 1)[1]
-                            self.input_dict[term] = term_type  # todo austauschen
-                            self.variables_dict['all'].append(term)
-                            self.variables_dict['types'].append(term_type)
+                            input_dict[term] = term_type  # todo austauschen
+                            variables_dict['all'].append(term)
+                            variables_dict['types'].append(term_type)
                             if term_type == 'float':
-                                self.variables_dict['float'].append(term)
+                                variables_dict['float'].append(term)
                             elif term_type == 'bool':
-                                self.variables_dict['bool'].append(term)
+                                variables_dict['bool'].append(term)
                             else:
                                 raise
                         elif var_name.startswith('a'):  # found an action
                             num_actions += 1
                             action = var_name.split(':', 1)[0]
                             action_type = var_name.split(':', 1)[1]
-                            self.action_dict[action] = action_type
-                            self.actions.append(action)  # action0
-                            self.action_types.append(action_type)  # float
+                            action_dict[action] = action_type
+                            actions.append(action)  # action0
+                            action_types.append(action_type)  # float
                         else:
                             self.printpl('e', 'Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
                             raise
@@ -329,20 +329,22 @@ class ExplainableGP(object):
                     data_y.append(row_as_data[num_observations:])
             csvFile.close()
 
+        self.input_dict = input_dict
+        self.variables_dict = variables_dict
+        self.action_dict = action_dict
+        self.actions = actions
+        self.action_types = action_types
         self.data = samples_file
-
         self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-
         self.data_train_rows, self.data_train, self.data_control = data_load_data_split(data_x, data_y, test_size=0.2)
 
         if save_pickle_path:
-            pickle_data = {'self.data': self.data,
-                           'self.input_dict': self.input_dict,
+            pickle_data = {'self.input_dict': self.input_dict,
                            'self.variables_dict': self.variables_dict,
                            'self.action_dict': self.action_dict,
                            'self.actions': self.actions,
-                           'self.actions': self.actions,
                            'self.action_types': self.action_types,
+                           'self.data': self.data,
                            'self.class_labels': self.class_labels,
                            'self.data_train_rows': self.data_train_rows,
                            'self.data_train': self.data_train,
@@ -361,12 +363,12 @@ class ExplainableGP(object):
             pickle_data = pickle.load(file)
         # pickle_data = pickle.load(Path.open(prepared_data_pickle_path, 'rb'))
 
-        self.data = pickle_data['self.data'],
         self.input_dict = pickle_data['self.input_dict'],
         self.variables_dict = pickle_data['self.variables_dict'],
         self.action_dict = pickle_data['self.action_dict'],
         self.actions = pickle_data['self.actions'],
         self.action_types = pickle_data['self.action_types'],
+        self.data = pickle_data['self.data'],
         self.class_labels = pickle_data['self.class_labels'],
         self.data_train_rows = pickle_data['self.data_train_rows'],
         self.data_train = pickle_data['self.data_train'],
@@ -1547,14 +1549,15 @@ class ExplainableGP(object):
             strx = str(x)
 
             if 'zoo' in strx:
+                self.printpl('ww', 'zoo in expression? sfeh: not anymore... {}'.format(algo_raw_str))
                 x = re.sub('zoo', '10', strx)
 
             if 'inf' in strx:
-                self.printpl('w', 'Inf in expression? {}'.format(algo_raw_str))
+                self.printpl('ww', 'Inf in expression? {}'.format(algo_raw_str))
                 x = re.sub('inf', '10', strx)
 
             if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
-                self.printpl('ww', 'We had a "nan"')
+                self.printpl('w', 'We had a "nan" in {}'.format(algo_raw_str))
                 self.remove_this_tree()
                 return str(sympy_dummy)
             else:

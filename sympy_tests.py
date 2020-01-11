@@ -26,6 +26,8 @@ print(plagih_sympify('Mini(b, (Maxi(a, (1/(0/a)))))'))
 print(plagih_sympify('Mini(b, (Maxi(a, (1/(0/a)))))'))
 print(plagih_sympify('nan'))
 print(plagih_sympify('a<zoo'))
+print(plagih_sympify('a/0'))
+print(plagih_sympify('a/0.0'))
 
 print('New try:')
 print(plagih_sympify(

@@ -77,6 +77,53 @@ def tree_round_constants(tree, accuracy, karoo=False):
     return tree
 
 
+def tree_expr_raw( tree, node_id):
+
+    """
+    Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
+
+    """
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+        return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
+
+    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+        # This if case is for 2-ary ops that is prefix. like Min(a, b)
+        if tree[N_label, node_id] not in functions_infix_dict:
+            return '(' + tree[N_label, node_id] + '(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + '))'
+        else:
+            return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '(Ifte(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + ', ' + tree_expr_raw(tree, tree[11, node_id]) + '))'
+
+
+def tree_raw_depth_prefix(tree, node_id):
+
+    """
+    Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
+
+    """
+
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+        return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        return '{' + tree[N_label, node_id] + tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
+
+    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+        return '{' + tree[N_label, node_id] + '' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '{Ifte' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
+
+
 def tree_node_get_nodekind(tree, node, karoo=False):
     """
     'func', 'term-variable', 'term-float', 'term-bool'

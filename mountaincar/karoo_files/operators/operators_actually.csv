@@ -1,0 +1,11 @@
+operator, arity
++,2
+-,2
+*,2
+/,2
+Ifte,3
+<,2
+>,2
+==,2
+Mini,2
+Maxi,2

@@ -226,7 +226,7 @@ class ExplainableGP(object):
 
         """
         self.file_conclusion()
-        self.file_pareto()
+        self.file_pareto(self.pareto)
         self.file_population_write(self.population_new, 'f')  # save the final generation of Trees to disk
 
         self.printpl('i', '\n\tYour Trees and runtime parameters are archived in plagih_gp/runs/[date-time]/ Congrats!\n Your GP run is complete.')
@@ -376,7 +376,6 @@ class ExplainableGP(object):
 
         self.printpl('t', 'Loading samples done. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         return
-
 
     def data_load_operators(self, operators_file_path):
         """
@@ -591,14 +590,14 @@ class ExplainableGP(object):
         file.write('\n\n')
         file.close()
 
-    def file_pareto(self):
+    def file_pareto(self, pareto):
         """
         Save all the pareto efficient candidates to file
         """
         file = Path.open(self.path / 'pareto.txt', 'w')
         file.write('\nParsimony: \t<num> Fitness: \t<fitness> Expr: \t<expression>')
 
-        for parsim_key, tree_hash in sorted(list(self.pareto.items())):
+        for parsim_key, tree_hash in sorted(list(pareto.items())):
             tree_meta = self.tree_hash_meta[tree_hash]
             fitness = tree_meta['fitness_train']
             algo_sym = tree_meta['algo_sym']
@@ -1172,7 +1171,7 @@ class ExplainableGP(object):
         aaa = self.xtype_get(a_tree[N_label][a_id])
         bbb = self.xtype_get(b_tree[N_label][b_id])
         if not xtype_equi_outcome(aaa, bbb):
-            self.printpl('w', 'sfeh dummy. This might happen sometimes. {}, {}\n{}\n{}'.format(aaa, bbb, a_tree[N_label], b_tree[N_label]))
+            self.printpl('ii', 'sfeh dummy. This might happen sometimes. {}, {}\n{}\n{}'.format(aaa, bbb, a_tree[N_label], b_tree[N_label]))
             # raise
 
         return a_id, b_id, success
@@ -1532,7 +1531,7 @@ class ExplainableGP(object):
         else:
             self.printpl('w', 'Please specify your desired datatype if possible. Trying to return c1 similar to terminals.')
             self.printpl('e', 'This term type should not occur, I guess {}'.format(term_type))
-            term_type = np.random.choice(self.variables_dict['types'])
+            # term_type = np.random.choice(self.variables_dict['types'])
             const = self.tree_build_type_constant_get(term_type=term_type)
         return str(const)
 

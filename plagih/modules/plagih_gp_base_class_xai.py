@@ -203,10 +203,10 @@ class ExplainableGP(object):
         - Create a gene pool (kick out too complex candidates)
         """
 
-        gp_list = [('Reproduce', self.gen_reproduce),
+        gp_list = [('Reproduce gen', self.gen_reproduce),
                    ('Point Mutation', self.gen_mutate_point),
                    ('Point Filter', self.gen_mutate_filter),
-                   ('Branch mutate one', self.gen_mutate_branch),
+                   ('Branch nodebased', self.gen_mutate_branch),
                    ('Crossover one Branch', self.gen_crossover_branch),
                    ('Create Random', self.gen_create_random)]
         tourn_size = self.config['gp_tourn_size']
@@ -656,11 +656,15 @@ class ExplainableGP(object):
         for parsim, ident in sorted(list(self.parsimony_best_dict.items())):
             fitness = self.tree_hash_meta[ident]['fitness_train']
 
-            if self.pareto.get(parsim):
-                if self.fitness_compare(fitness, self.pareto.get(parsim)):
+            if self.fitness_compare(fitness, best_fitness):
+                if self.pareto.get(parsim):
+                    if self.fitness_compare(fitness, self.pareto.get(parsim)):
+                        self.pareto[parsim] = fitness
+                        self.printpl('a', 'Updated pareto at {}. New fitness is: {}, old was: {}'.format(parsim, fitness, best_fitness))
+                else:
                     self.pareto[parsim] = fitness
-                    self.printpl('i', 'Updated paretofront at {}. New fitness is: {}, old was: {}'.format(parsim, fitness, best_fitness))
-                    best_fitness = fitness
+                    self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fitness))
+                best_fitness = fitness
 
             # kick
             if self.fitness_compare(fitness, best_fitness):
@@ -910,7 +914,7 @@ class ExplainableGP(object):
         """
         some stuff to definitely do before actually appending to pop
         """
-        tree = tree_round_constants(tree, 200, karoo=True)  # todo make 200 adjustable
+        tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
         tree = self.tree_modifyable_nodes_set(tree)
         tree[TR_type][1] = last_modification
         if not tree_test_check_children(tree):
@@ -2094,7 +2098,7 @@ class ExplainableGP(object):
         self.plot_end(data_tupels, path, plt_title='Number of created Trees', plt_y_label='Amount')
 
         data_tupels = sorted(list(self.pareto.items()))
-        self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', plt_y_label='Amount')
+        self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness')
         return
 
     def monitor_genepool(self, gene_pool_hash_dict):
@@ -2732,9 +2736,9 @@ def printez(message_type, text, time_total=0.0):
     elif 'f' in message_type:  # function
         message_style = BColors.MAGENTA  # Magenta
         message_pretxt = 'Func: '
-    elif 't' in message_type:  # Timer
+    elif 'a' in message_type:  # Timer
         message_style = BColors.GREEN
-        message_pretxt = 'Done: '
+        message_pretxt = 'Alert: '
     else:
         message_style = ''
         printez('w', 'Display-mode {} not known.'.format(message_type))

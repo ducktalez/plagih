@@ -13,7 +13,7 @@ def get_evolve_rates_dict(evolve_rates, pop_max):
     return evolve_rates
 
 
-def create_config_dict(pop_max, gen_max, evolve_rates, time_max):
+def create_config_dict(evolve_rates, time_max):
     config_dict = {
         'name': '_MTC_tree_012',
         'kernel': 'regression',  # [regression, classification, match]
@@ -27,8 +27,8 @@ def create_config_dict(pop_max, gen_max, evolve_rates, time_max):
         'tree_depth_max': 15,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 100],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': pop_max,
-        'gen_max': gen_max,
+        'pop_max': 300,
+        'gen_max': 60,
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
@@ -40,7 +40,8 @@ def create_config_dict(pop_max, gen_max, evolve_rates, time_max):
                     'gen_monitor': None,  # in gen counts
                     'gen_save': None},  # in gen counts
         'evolve_rates': evolve_rates,
-        'time_max': time_max  # 60 = 1 min
+        'time_max': time_max,  # 60 = 1 min
+        'float_accuracy': 200
     }
 
     return config_dict
@@ -58,24 +59,11 @@ file_dict = {
 label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 
-evolve_rates = {'Reproduce': 0,
-                'Reproduce gen': 0.05,
-                'Reproduce Olymp': 0,
-                'Point': 0,
-                'Point Mutation': 0.1,
-                'Point Filter': 0.1,
-                'Branch': 0,
-                'Branch mutate one': 0.05,
-                'Branch nodebased': 0.2,
-                'Branch 2': 0,
-                'Branch 3': 0,
-                'Crossover': 0,
-                'Crossover one Branch': 0.3,
-                'Crossover 2': 0,
-                'Crossover 3': 0,
-                'dummy1': 0,
-                'dummy2': 0,
-                'dummy3': 0,
+evolve_rates = {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
+                'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
+                'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
+                'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
+
                 'Create Random': 0.2}
 
 time_max = int(60 * 6)

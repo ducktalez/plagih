@@ -54,5 +54,5 @@ def xtype_get_converters(xtype):
     if '2f' in xtype:
         return 'Btof', 'Ftob'
     else:
-        print('e', 'Wrong data type? Should be 2b or 2f, but is {}'.format(xtype))
+        print('e', 'Wrong data_csv_path type? Should be 2b or 2f, but is {}'.format(xtype))
         raise

@@ -102,7 +102,7 @@ class ExplainableGP(object):
 
         self.monitor_dict = config_dict['monitor']
         self.evolve_rates = config_dict['evolve_rates']
-        evolve_missing = self.config['pop_max'] - sum(self.evolve_rates.values())
+        evolve_missing = 1-sum(self.evolve_rates.values())
         self.evolve_rates['Create Random'] += evolve_missing
 
         self.fitness_type = fitt_dict[self.kernel]  # load fitness type
@@ -221,14 +221,14 @@ class ExplainableGP(object):
 
             for name, gp_function in gp_list:
                 self.printpl('gggg', '{}...'.format(name))
-                evolve_rate = self.evolve_rates[name]
+                evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 time_evolve = time.perf_counter()
 
                 # n = 0
                 # while n < evolve_rate:
                 #     n += 1
                 #     pass
-                gp_function(evolve_rate, tourn_size)
+                gp_function(evolve_num, tourn_size)
                 self.printpl('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
             self.autosave_stuff()

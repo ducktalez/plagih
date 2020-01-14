@@ -13,7 +13,7 @@ def get_evolve_rates_dict(evolve_rates, pop_max):
     return evolve_rates
 
 
-def create_config_dict(evolve_rates, time_max):
+def create_config_dict():
     config_dict = {
         'name': '_MTC_tree_012',
         'kernel': 'regression',  # [regression, classification, match]
@@ -39,8 +39,12 @@ def create_config_dict(evolve_rates, time_max):
                     'time_save': 60 * 30,  # in sec
                     'gen_monitor': None,  # in gen counts
                     'gen_save': None},  # in gen counts
-        'evolve_rates': evolve_rates,
-        'time_max': time_max,  # 60 = 1 min
+        'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
+                'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
+                'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
+                'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
+                'Create Random': 0.2},
+        'time_max': int(60 * 6),  # 60 = 1 min
         'float_accuracy': 200
     }
 
@@ -59,19 +63,8 @@ file_dict = {
 label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 
-evolve_rates = {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
-                'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
-                'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
-                'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
 
-                'Create Random': 0.2}
-
-time_max = int(60 * 6)
-pop_max = 300
-gen_max = 60
-evolve_rates = get_evolve_rates_dict(evolve_rates, pop_max)
-
-config_dict = create_config_dict(pop_max, gen_max, evolve_rates, time_max)
+config_dict = create_config_dict()
 gp = plagih.ExplainableGP(config_dict)
 gp.data_from_csv(file_dict['samples_file'], save_pickle_path=file_dict['samples_pickle'])
 # gp.data_from_pickle(file_dict['samples_pickle'])

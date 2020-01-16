@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.dicts import *
 from plagih.modules.plagih_types import *
 
 ### TensorFlow Imports and Definitions ###
@@ -38,6 +37,132 @@ def karoo_tree_clear_meta(tree):
     tree[T_fitness][1] = ''
     tree[T_parsimony][1] = ''
     return tree
+
+
+def tree_node_get_arity(tree, node_id, karoo=False):
+
+    if karoo:
+        node_id = int(node_id) - 1
+
+    return int(tree[N_arity][int(node_id)])
+
+
+def round_constant(constant, accuracy):
+    constant = float(constant)
+    new_const = round(constant * accuracy) / accuracy
+    if new_const == 0 and constant > 0:
+        new_const = 1 / accuracy
+    elif new_const == 0 and constant < 0:
+        new_const = -1 / accuracy
+
+    return new_const
+
+
+def tree_round_constants(tree, accuracy, karoo=False):
+    """
+    rounds the values in constant float nodes
+    """
+
+    if karoo:
+        tree = tree_convert_karoo_to_plagih(tree)
+
+    for node_id in tree_get_leafes(tree):
+        if tree_node_get_nodekind(tree, node_id) == 'term-float':
+            tmp = round_constant(tree[N_label][node_id], accuracy)
+            tree[N_label][node_id] = tmp
+
+    if karoo:
+        tree = tree_convert_plagih_to_karoo(tree)
+
+    return tree
+
+
+def tree_expr_raw( tree, node_id):
+
+    """
+    Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
+
+    """
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+        return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
+
+    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+        # This if case is for 2-ary ops that is prefix. like Min(a, b)
+        if tree[N_label, node_id] not in functions_infix_dict:
+            return '(' + tree[N_label, node_id] + '(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + '))'
+        else:
+            return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '(Ifte(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + ', ' + tree_expr_raw(tree, tree[11, node_id]) + '))'
+
+
+def tree_raw_depth_prefix(tree, node_id):
+
+    """
+    Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
+
+    """
+
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+        return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        return '{' + tree[N_label, node_id] + tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
+
+    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+        return '{' + tree[N_label, node_id] + '' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '{Ifte' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
+
+
+def tree_node_get_nodekind(tree, node, karoo=False):
+    """
+    'func', 'term-variable', 'term-float', 'term-bool'
+    """
+    arity = tree_node_get_arity(tree, node, karoo=False)
+    if arity > 0:
+        nodekind = 'func'
+    else:
+        label = tree[N_label][node]
+        if 'observation' in label:
+            nodekind = 'term-variable'
+        elif 'True' in label or 'False' in label:
+            nodekind = 'term-bool'
+        else:
+            try:
+                float(label)
+                nodekind = 'term-float'
+            except ValueError:
+                print('No good. This label is completely unknown: {} (or arity {} is not correct).'.format(label, arity))
+                raise
+    return nodekind
+
+
+def tree_get_leafes(tree, karoo=False):
+    """
+    Just return leaf nodes of a tree
+    """
+    if karoo:
+        tree = tree_convert_karoo_to_plagih(tree)
+
+    node_ids = []
+    for node_id in tree[N_id]:
+        if tree_node_get_arity(tree, int(node_id), karoo=False) == 0:
+            node_ids.append(int(node_id))
+
+    if karoo:
+        node_ids = [x - 1 for x in node_ids]
+
+    return node_ids
 
 
 def tree_branch_get_label_list(tree, node_ids, karoo=False):
@@ -284,12 +409,12 @@ def evolve_c_buffer_karoo(tree, node):
     return c_buffer
 
 
-def evolve_c_buffer(tree, node_id, wrapper=False):
+def evolve_c_buffer(tree, node_id, karoo=False):
     """
     Generates the c_buffer for a node_id of a tree
     The c_buffer is:
     """
-    if wrapper:
+    if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
         node_id -= 1
 
@@ -319,7 +444,7 @@ def evolve_c_buffer(tree, node_id, wrapper=False):
     # + 1 = our first child node, not the last child of the prior sibling
     c_buffer = node_id + (parent_arity_sum - prior_siblings - 1) + prior_sibling_arity_sum + 1
 
-    if wrapper:
+    if karoo:
         c_buffer += 1
 
     return c_buffer
@@ -402,12 +527,12 @@ def tree_insert_subtree(tree, insert_core, delete_ids, karoo=False):
     return tree
 
 
-def evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=False):
+def evolve_fix_link_child_doit(tree, node_id, c_buffer, karoo=False):
     """
     Link each parent node_id to its children.
 
     """
-    if wrapper:
+    if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
         node_id -= 1
         c_buffer -= 1
@@ -440,7 +565,7 @@ def evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=False):
         else:
             print('e', 'evolve_child_link: node_id', node_id, 'has arity', tree[N_arity][node_id])
             raise
-    if wrapper:
+    if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
 
     return tree
@@ -450,13 +575,13 @@ def tree_fix_link_child_karoo(tree):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
-    This is required anytime the size of the array 'gp.tree' has been modified, as with both Grow and Full mutation.
+    This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
 
     """
 
     for node_id in range(1, len(tree[3])):
-        c_buffer = evolve_c_buffer(tree, node_id, wrapper=True)  # generate c_buffer for each node
-        tree = evolve_fix_link_child_doit(tree, node_id, c_buffer, wrapper=True)  # update child links for each node
+        c_buffer = evolve_c_buffer(tree, node_id, karoo=True)  # generate c_buffer for each node
+        tree = evolve_fix_link_child_doit(tree, node_id, c_buffer, karoo=True)  # update child links for each node
 
     return tree
 
@@ -465,7 +590,7 @@ def tree_fix_link_child(tree):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
-    This is required anytime the size of the array 'gp.tree' has been modified, as with both Grow and Full mutation.
+    This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
 
     """
 
@@ -476,13 +601,13 @@ def tree_fix_link_child(tree):
     return tree
 
 
-def tree_insert_node_child_dummies(tree, node_id, c_buffer, wrapper=False):
+def tree_insert_node_child_dummies(tree, node_id, c_buffer, karoo=False):
     """
     evolve_subtree_insert_child
     Insert child node_id into the copy of a parent Tree.
 
     """
-    if wrapper:
+    if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
         node_id -= 1
         c_buffer -= 1
@@ -498,7 +623,7 @@ def tree_insert_node_child_dummies(tree, node_id, c_buffer, wrapper=False):
         tree[N_depth][c_buffer + c] = int(tree[N_depth][node_id]) + 1  # node_depth
         tree[N_parent][c_buffer + c] = int(tree[N_id][node_id])  # parent ID
 
-    if wrapper:
+    if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
 
     return tree
@@ -517,6 +642,35 @@ def evolve_node_renum(tree):
         tree[N_id][n] = n  # renumber all nodes
 
     return tree
+
+
+def tree_get_label(tree, node_id):
+    """
+
+    """
+    return tree[N_label][node_id]
+
+
+def xtype_get_constant(label, node_arity=None, only_float=True):
+    """
+
+    """
+    const_xtype = None
+
+    if not node_arity:
+        node_arity = op_label_get_arity(label)
+
+    if node_arity == 0:  # arity=0 -> terminal
+        if 'True' in label or 'False' in label:
+            if not only_float:
+                const_xtype = '2b'
+        elif 'observation' in label or 'action' in label:
+            pass
+        else:
+            # now it MUST be float
+            const_xtype = '2f'
+
+    return const_xtype
 
 
 def tree_get_mutatable_list(tree, no_root=False):
@@ -604,6 +758,7 @@ def tree_get_ids_karoo(tree, node):
     branch = np.sort(branch)  # sort nodes in branch for Crossover.
 
     return branch
+
 
 def tree_labels(tree):
     """
@@ -735,13 +890,14 @@ def test():
     core = test_trees(4)
     karoo_tree = tree_convert_plagih_to_karoo(core)
 
-    label_list = ['Ifte', '<', '0', '2', 'observation1', '<', '0', '2']
-    label_list = ['Ifte', '<', '0', '2', 'observation1', '0']
+    label_list = ['Ifte', '<', '0.1234', '2', 'observation1', '0']
     arity_list = [3, 2, 0, 0, 0, 0]
     core = core_from_labels(label_list, arity_list)
     karoo_tree = tree_convert_plagih_to_karoo(core)
-    x = tree_check_all(karoo_tree)
+    karoo_tree = tree_round_constants(karoo_tree, 200, karoo=True)
+    print(karoo_tree)
 
+    x = tree_check_all(karoo_tree)
     print(x)
     return
 

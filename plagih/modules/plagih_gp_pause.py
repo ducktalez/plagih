@@ -40,7 +40,7 @@ def pause(menu_dict):
 		print ('')
 		print ('\t\033[36m\033[1m l \t\033[0;0m list Trees with leading fitness scores')
 		print ('\t\033[36m\033[1m pop \t\033[0;0m list Trees in current population')
-		print ('\t\033[36m\033[1m e \t\033[0;0m evaluate a single Tree against the test data')
+		print ('\t\033[36m\033[1m e \t\033[0;0m evaluate a single Tree against the test data_csv_path')
 		print ('\t\033[36m\033[1m p \t\033[0;0m print a single Tree to screen')
 		print ('')
 		print ('\t\033[36m\033[1m id \t\033[0;0m display current generation ID')
@@ -84,10 +84,10 @@ def pause(menu_dict):
 	#elif menu == 'max': # adjust the maximum Tree depth
 	#	while True:
 	#		try:
-	#			print ('\n\t The current \033[3madjusted\033[0;0m maximum Tree depth is:', gp.tree_depth_max)
+	#			print ('\n\t The current \033[3madjusted\033[0;0m maximum Tree depth is:', config.tree_depth_max)
 	#			query = input('\n\t Adjust the global maximum Tree depth to (1 ... 10): ')
 	#			if int(query) not in list(range(1,11)): raise ValueError()
-	#			if query < gp.tree_depth_max:
+	#			if query < config.tree_depth_max:
 	#				print ('\n\t\033[32m This c1 is less than the current c1.\033[0;0m')
 	#				conf = input('\n\t Are you ok with this? (y/n) ')
 	#				if conf == 'n': break
@@ -155,7 +155,7 @@ def pause(menu_dict):
 		if menu_dict['gen_id'] == 1: menu_dict['input_a'] = 'pop_a'
 		else: menu_dict['input_a'] = 'pop_b'
 		
-	elif menu == 'e': # evaluate a Tree against the TEST data
+	elif menu == 'e': # evaluate a Tree against the TEST data_csv_path
 		if menu_dict['gen_id'] == 1: print ('\n\t\033[32m You cannot evaluate the foundation population. Be patient ...\033[0;0m')
 		
 		else: # gen_id > 1

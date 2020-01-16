@@ -122,8 +122,8 @@ op = {
     '>': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
     '>=': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
 
-    'Ftob': {'arity': 1, 'xtype': 'f2b', 'tf': ''},
-    'Btof': {'arity': 1, 'xtype': 'b2f', 'tf': ''},
+    'Ftob': {'arity': 1, 'xtype': 'f2b', 'tf': tf.bool},
+    'Btof': {'arity': 1, 'xtype': 'b2f', 'tf': tf.float32},
 
     'Ifte': {'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where},  # Note that boolean if's can be realized with boolean operators. (Or ITE())
     'Mini': {'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
@@ -180,6 +180,20 @@ function_arity_dict = {  # Needs A LOT OF further testing
 
 functions_wrap_dict = ['Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
 functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
+
+function_infix_to_prefix = {  # currently obsolete
+    '+': 'add',
+    '-': 'sub',
+    '*': 'mult',
+    '/': 'div',
+    '**': 'power',
+    '==': 'eq',
+    '!=': 'neq',
+    '<': 'lt',
+    '<=': 'leq',
+    '>': 'gt',
+    '>=': 'geq',
+}
 
 # op_xtype_dict = {  # Needs A LOT OF further testing
 #     'float': '2f',  # these three are dummies

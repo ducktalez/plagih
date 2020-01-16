@@ -6,9 +6,8 @@ from pathlib import Path
 
 
 def get_evolve_rates_dict(evolve_rates, pop_max):
-
     for (type, rate) in evolve_rates.items():
-        evolve_rates[type] = int(pop_max*rate)
+        evolve_rates[type] = int(pop_max * rate)
 
     return evolve_rates
 
@@ -20,31 +19,31 @@ def create_config_dict():
         'precision': 6,  # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'display': 'gewsiivott',  # To display absolutely all: ewggggsiiiivvvtopppttt
+        'display': 'ggewsiivoa',  # To display absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
         'tree_depth_base': 5,
-        'tree_depth_max': 15,  # [3...10]			maximum Tree depth for entire run
+        'tree_depth_max': 20,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
-        'tree_parsimony_min_max': [15, 100],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 300,
-        'gen_max': 60,
+        'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
+        'pop_max': 1000,
+        'gen_max': 5000,
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
                     'genepool_size': 'y'
                     },
-        'period': {'time_monitor': 60 * 1,  # in sec
-                    'time_save': 60 * 30,  # in sec
-                    'gen_monitor': None,  # in gen counts
-                    'gen_save': None},  # in gen counts
+        'period': {'time_monitor': 60 * 10,  # in sec
+                   'time_save': 60 * 60,  # in sec
+                   'gen_monitor': None,  # in gen counts
+                   'gen_save': None},  # in gen counts
         'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
-                'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
-                'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
-                'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
-                'Create Random': 0.2},
-        'time_max': int(60 * 6),  # 60 = 1 min
+                         'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
+                         'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
+                         'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
+                         'Create Random': 0.2},
+        'time_max': int(60 * 60 * 7),  # 60 = 1 min
         'float_accuracy': 200
     }
 
@@ -62,7 +61,6 @@ file_dict = {
 }
 label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
-
 
 config_dict = create_config_dict()
 gp = plagih.ExplainableGP(config_dict)

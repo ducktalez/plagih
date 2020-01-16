@@ -640,7 +640,7 @@ class ExplainableGP(object):
                     self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
                     dominator_count += 1
 
-        self.printpl('g', '{} Candidates were better than the origin.'.format(dominator_count))
+        self.printpl('g', '{}: {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
         return gene_pool_hash_dict
 
@@ -656,7 +656,11 @@ class ExplainableGP(object):
         for parsim, ident in sorted(list(self.parsimony_best_dict.items())):
             fitness = self.tree_hash_meta[ident]['fitness_train']
 
-            if self.fitness_compare(fitness, best_fitness):
+            # kick
+            if self.fitness_compare(best_fitness, fitness):
+                self.pareto.pop(parsim, None)
+
+            elif self.fitness_compare(fitness, best_fitness):
                 if self.pareto.get(parsim):
                     if self.fitness_compare(fitness, self.pareto.get(parsim)):
                         self.pareto[parsim] = fitness
@@ -665,10 +669,6 @@ class ExplainableGP(object):
                     self.pareto[parsim] = fitness
                     self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fitness))
                 best_fitness = fitness
-
-            # kick
-            if self.fitness_compare(fitness, best_fitness):
-                self.pareto.pop(parsim, None)
 
         return
 

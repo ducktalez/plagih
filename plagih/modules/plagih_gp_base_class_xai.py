@@ -51,7 +51,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # # TODO is this already considered by 50:50 func-term?
 # TODO point mutation should also reduce arities if needed?
 # TODO tree_choose_node_id only works for same arity functions
-#  todo random samples out of dataset values as new constants?
+# todo random samples out of dataset values as new constants?
 # TODO zoo and inf and nan in plagih_sympify... other solution?
 # TODO what is "swim" in karoo, what is it good for?
 # TODo check memory usage?
@@ -262,18 +262,18 @@ class ExplainableGP(object):
 
         if self.config['period']['time_save']:
             if self.config['period']['time_save'] < (time_now - self.time_last_files):
-                self.printpl('ii', 'auto-plots (time)')
+                self.printpl('ii', 'auto-save (time)')
                 self.file_autowrite(path_auto, auto_enumname)
                 self.time_last_files = time_now
 
         if self.config['period']['gen_monitor']:
             if self.gen_id % int(self.config['period']['gen_monitor']) == 0:
-                self.printpl('ii', 'auto-plots (time)')
+                self.printpl('ii', 'auto-plots (gen)')
                 self.file_autoplots(self.path)
 
         if self.config['period']['gen_save']:
             if self.gen_id % int(self.config['period']['gen_save']) == 0:
-                self.printpl('ii', 'auto-plots (time)')
+                self.printpl('ii', 'auto-save (gen)')
                 self.file_autowrite(path_auto, auto_enumname)
 
         return 0
@@ -289,8 +289,7 @@ class ExplainableGP(object):
 
     def gen_olympus_update(self):
         """
-        The olymp is where the godlike contestants reside.
-        In each generation, the olymp searches for new god contestants
+        thgis is actually only the pareto front?
         """
         self.printpl('e', 'TODO Olympus for candidates')
         return

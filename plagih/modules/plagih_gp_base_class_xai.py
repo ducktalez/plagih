@@ -105,11 +105,10 @@ class ExplainableGP(object):
         evolve_missing = 1-sum(self.evolve_rates.values())
         self.evolve_rates['Create Random'] += evolve_missing
 
-        self.fitness_type = fitt_dict[self.kernel]  # load fitness type
-        if self.fitness_type == 'max':
-            self.fitness_bad_dummy = 0
-        else:
+        if self.kernel == 'regression':
             self.fitness_bad_dummy = float("inf")
+        else:  # 'classification' or 'match'
+            self.fitness_bad_dummy = 0
         self.gene_pool = {}
         self.xype_func_dict = {'f2f': [], 'f2b': [], 'b2b': [], 'b2f': [], 'b2f2f': [],
                                '2b': [], '2f': [],
@@ -147,27 +146,6 @@ class ExplainableGP(object):
     #   Top level      functions                  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def file_population_write(self, population, key, path):
-
-        """
-        Save population_* to disk.
-
-        """
-        file_path = path / 'population_{}.csv'.format(str(key))
-
-        with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-            target = csv.writer(csv_file, delimiter=',')
-            if self.gen_id != 0:
-                target.writerows([''])  # empty row before each generation
-            target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)]])
-
-            for tree in range(1, len(population)):
-                target.writerows([''])  # empty row before each Tree
-                for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                    target.writerows([population[tree][row]])
-
-        return
-
     def file_directories_create(self):
         """
         Create all files that will be saved after all
@@ -175,7 +153,7 @@ class ExplainableGP(object):
 
         self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
         cwd = Path.cwd()
-        self.path = cwd / 'runs' / '{}{}'.format(self.datetime, self.config['name'])
+        self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)
 
@@ -194,7 +172,7 @@ class ExplainableGP(object):
         self.pop_first_create()
         self.pareto[0] = self.origin['fitness_train']
         self.gen_finalize()
-        self.file_population_write(self.population_base, '1_first', self.path)  # first gen only
+        file_population_write(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
 
     def main_generation_loop(self):
         """
@@ -283,9 +261,9 @@ class ExplainableGP(object):
         writes all important files
 
         """
-        self.file_conclusion(path)
+        self.file_conclusion(path, datetime=self.datetime)
         self.file_pareto(self.pareto, path)
-        self.file_population_write(self.population_new, str(gen), path)  # save the final generation of Trees to disk
+        file_population_write(self.population_new, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
 
     def gen_olympus_update(self):
         """
@@ -308,6 +286,7 @@ class ExplainableGP(object):
         self.input_dict = input_dict
         self.variables_dict = variables_dict
         self.action_dict = action_dict
+        self.unique_outputs_num = unique_outputs_num
         self.data_train_rows, self.data_train, self.data_control = data_train_rows, data_train, data_control
 
     def data_load_operators(self, operators_file_path):
@@ -390,20 +369,22 @@ class ExplainableGP(object):
         # saving data_csv_path (including the split)
         # saving pareto front
         # saving hash dict
+        # save gen_id
+        # save monitoring dict
         pass
 
-    def file_conclusion(self, path):
+    def file_conclusion(self, path, datetime=None):
 
         """
         write the performance of the config to disc
         """
 
         file = Path.open(path / 'conclusion.txt', 'w')
-        file.write('Plagih GP\n launched: ' + str(self.datetime))
+        file.write('Plagih GP\n launched: ' + str(datetime))
 
         result = self.eval_tf(self.origin['algo_sym'], self.data_control, get_pred_labels=True)
         self.origin['fit_control'] = result['fitness']
-        fit_best = result['fitness']
+        fit_control_best = result['fitness']
 
         fittest_algo = self.origin['algo_sym']
         fittest_parsimony = 0
@@ -414,16 +395,14 @@ class ExplainableGP(object):
             result = self.eval_tf(algo_sym, self.data_control, get_pred_labels=True)
             fit_control = result['fitness']
 
-            if self.fitness_compare(fit_control, fit_best, mode='better_or_equal') or\
-                    self.kernel == 'regression' and fit_control <= fit_best or\
-                    self.kernel == 'match' and fit_control == self.data_train_rows:  # find the Tree with a perfect match for all data_csv_path rows
+            if self.fitness_compare(fit_control, fit_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
 
-                fit_best = fit_control
+                fit_control_best = fit_control
                 fittest_algo = algo_sym
                 fittest_parsimony = parsimony
 
             if self.kernel == 'classification':
-                file.write('\n\n Classification fitness score: {}'.format(fit_best))
+                file.write('\n\n Classification fitness score: {}'.format(fit_control_best))
                 file.write('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
                 file.write('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
 
@@ -443,7 +422,7 @@ class ExplainableGP(object):
 
         # Info about the best Tree
         file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
-        file.write('\n With fitness: {}'.format(fit_best))
+        file.write('\n With fitness: {}'.format(fit_control_best))
         file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
         file.write('\n\n')
         file.close()
@@ -585,16 +564,14 @@ class ExplainableGP(object):
             >
             fitness_compare
         """
-        if (self.fitness_type == 'max' and fitness1 > fitness2) or \
-                (self.fitness_type == 'min' and fitness1 < fitness2):
+        if self.kernel == 'regression' and fitness1 < fitness2:
             return True
-        elif fitness1 == fitness2:
-            if mode == 'better_or_equal':
-                return True
-            elif mode == 'better':
-                return False
-            else:
-                self.printpl('e', 'Mode not known')
+        elif self.kernel == 'classification' and fitness1 > fitness2:
+            return True
+        elif self.kernel == 'match' and fitness1 > fitness2:
+            return True
+        elif fitness1 == fitness2 and mode == 'better_or_equal':
+            return True
         else:
             return False
 
@@ -843,7 +820,7 @@ class ExplainableGP(object):
         self.pop_pareto_update()
 
         self.population_base = pop_copy_genepool(self.population_new, gene_pool_hash_dict, self.gen_id)
-        self.file_population_write(self.population_new, 'new', self.path)
+        file_population_write(self.population_new, 'new', self.path, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_hash_meta)
         self.printpl('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
@@ -1727,96 +1704,14 @@ class ExplainableGP(object):
         try:
             return self.eval_tf_expr_graph(tree, tensors)
         except:
-            return self.fitness_dummy_get()
+            self.printpl('e', 'Ohoh, hope this does not come up')
+            # return self.fitness_dummy_get()
 
     def eval_tf_expr_graph(self, node, tensors):
-
         """
-        Recursively transforms parsed expression tree into TensorFlow (TF) graph.
-
+        Handy in pycharm, where I can see all the uses easily.
         """
-
-        if isinstance(node, ast.Name):  # <tensor_name>
-            return tensors[node.id]
-
-        elif isinstance(node, ast.Num):  # <number>
-            shape = tensors[list(tensors.keys())[0]].get_shape()
-            return tf.constant(node.n, shape=shape, dtype=tf.float32)
-
-        elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
-            return ast_tensor_dict[type(node.op)](
-                self.eval_tf_expr_graph(node.left, tensors),
-                self.eval_tf_expr_graph(node.right, tensors))
-
-        elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-            return ast_tensor_dict[type(node.op)](
-                self.eval_tf_expr_graph(node.operand, tensors))
-
-        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
-            # special case: If-then-else
-            if node.func.id == 'Ifte':
-                return ast_tensor_dict[node.func.id](tf.dtypes.cast(
-                    self.eval_tf_expr_graph(node.args[0], tensors), tf.bool),
-                    self.eval_tf_expr_graph(node.args[1], tensors),
-                    self.eval_tf_expr_graph(node.args[2], tensors))
-
-            if node.func.id == 'Ftob' or node.func.id == 'Btof':
-                return tf.dtypes.cast(*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
-
-            if len(node.args) > 2:
-                self.printpl('e', 'This has more than 2 args and is not Ifte? {}'.format(str(node.func.id)))
-            else:
-                try:
-                    return ast_tensor_dict[node.func.id](*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args])
-                except Exception as ex:
-                    self.printpl('w', 'debug warning expr: {}'.format(self.debug_warnings['expr']))
-                    self.printpl('e', 'node.func.id caused an exception:{}\n'
-                                      'node.func.id: {}\n'
-                                      'node.args: {}\n'
-                                      'and expression: {}'.format(ex, node.func.id, str(node.args), self.debug_warnings['expr']))
-
-        elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-            return self.eval_tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
-
-        elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-            return self.eval_tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
-
-        elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-            return tf.constant(node.value)
-
-        else:
-            raise TypeError(node)
-
-    def eval_tf_chain_bool(self, values, operation, tensors):
-
-        """
-        Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
-
-        """
-
-        x = tf.dtypes.cast(self.eval_tf_expr_graph(values[0], tensors), tf.bool)
-        if len(values) > 1:
-            return operation(x, self.eval_tf_chain_bool(values[1:], operation, tensors))
-        else:
-            return x
-
-    def eval_tf_chain_compare(self, comparators, ops, tensors):
-
-        """
-        Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
-
-        Called by: fitness_node_parse
-
-        Arguments required: comparators, ops, tensors
-        """
-
-        x = self.eval_tf_expr_graph(comparators[0], tensors)
-        y = self.eval_tf_expr_graph(comparators[1], tensors)
-
-        if len(comparators) > 2:
-            return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), self.eval_tf_chain_compare(comparators[1:], ops[1:], tensors))
-        else:
-            return ast_tensor_dict[type(ops[0])](x, y)
+        return tf_graph_from_expr_recursive(node, tensors)
 
     def eval_tf_classify_labels_map(self, result):
 
@@ -2147,7 +2042,7 @@ class ExplainableGP(object):
     #         # self.data_pickle_recover(self.filename['s'])  #
     #
     #     elif input_a == 'write':  # write the evolving population_new to disk
-    #         self.file_population_write(self.population_new, 'new')
+    #         file_population_write(self.population_new, 'new')
     #
     #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
     #         self.config['gen_max'] = self.config['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
@@ -2230,7 +2125,7 @@ class ExplainableGP(object):
     #         # self.data_pickle_recover(self.filename['s'])  #
     #
     #     elif input_a == 'write':  # write the evolving population_new to disk
-    #         self.file_population_write(self.population_new, 'new')
+    #         file_population_write(self.population_new, 'new')
     #
     #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
     #         self.config['gen_max'] = self.config['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
@@ -2240,68 +2135,68 @@ class ExplainableGP(object):
     #
     #     return 1
 
-    def pause_fitness_test(self, result):
-
-        if self.kernel == 'classification':
-            """
-            Print the Precision-Recall and Confusion Matrix for a CLASSIFICATION run against the test data_csv_path.
-
-            From scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
-                Precision (P) = true_pos / true_pos + false_pos
-                Recall (R) = true_pos / true_pos + false_neg
-                harmonic mean of Precision and Recall (F1) = 2(P x R) / (P + R)
-
-            From scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
-                y_pred = result, the predicted labels generated by Plagih GP
-                y_true = solution, the true labels associated with the data_csv_path
-
-            """
-            for i in range(len(result['result'])):
-                self.printpl('iii', '\t Data row {} predicts class:\033[1m {} ({} True)\033[0;0m\033[36m as {:.2f}{}\033[0;0m'.format(
-                    i, int(result['pred_labels'][0][i]), int(result['solution'][i]), result['result'][i],
-                    result['pred_labels'][1][i]))
-
-            self.printpl('iii', '\n Fitness score: {}\n'
-                                'Precision-Recall report:\n{}\n'
-                                'Confusion matrix:\n{}'.format(result['fitness'],
-                                                               skm.classification_report(result['solution'], result['pred_labels'][0]),
-                                                               skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
-
-        elif self.kernel == 'regression':
-            """
-            Print the Fitness score and Mean Squared Error for a REGRESSION run against the test data_csv_path.
-
-            """
-
-            for i in range(len(result['result'])):
-                self.printpl('iii', '\tData row {} predicts c1:\033[1m {:.2f} ({:.2f} True)'.
-                             format(i, result['result'][i], result['solution'][i]))
-
-            mse, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
-
-            self.printpl('iii', '\n\t Origin fitness score: {}'.format(self.origin['fitness_train']))
-            self.printpl('iii', '\n\t Regression fitness score: {}'.format(fitness))
-            self.printpl('iii', '\t Mean Squared Error: {}'.format(mse))
-
-            return
-
-        elif self.kernel == 'match':
-
-            """
-            Print the accuracy for a MATCH kernel run against the test data_csv_path.
-
-            """
-
-            for i in range(len(result['result'])):
-                self.printpl('vv', '\tData row {} predicts match: {} {:.2f} ({:.2f} True)'.format(i, BColors.BOLD, result['result'][i], result['solution'][i]))
-
-            self.printpl('arity', 'Matching fitness score: {}'.format(result['fitness']))
-
-            return
-        else:
-            self.printpl('e', 'This fitness test is not available:')
-
-        return
+    # def pause_fitness_test(self, result):
+    #
+    #     if self.kernel == 'classification':
+    #         """
+    #         Print the Precision-Recall and Confusion Matrix for a CLASSIFICATION run against the test data_csv_path.
+    #
+    #         From scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
+    #             Precision (P) = true_pos / true_pos + false_pos
+    #             Recall (R) = true_pos / true_pos + false_neg
+    #             harmonic mean of Precision and Recall (F1) = 2(P x R) / (P + R)
+    #
+    #         From scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
+    #             y_pred = result, the predicted labels generated by Plagih GP
+    #             y_true = solution, the true labels associated with the data_csv_path
+    #
+    #         """
+    #         for i in range(len(result['result'])):
+    #             self.printpl('iii', '\t Data row {} predicts class:\033[1m {} ({} True)\033[0;0m\033[36m as {:.2f}{}\033[0;0m'.format(
+    #                 i, int(result['pred_labels'][0][i]), int(result['solution'][i]), result['result'][i],
+    #                 result['pred_labels'][1][i]))
+    #
+    #         self.printpl('iii', '\n Fitness score: {}\n'
+    #                             'Precision-Recall report:\n{}\n'
+    #                             'Confusion matrix:\n{}'.format(result['fitness'],
+    #                                                            skm.classification_report(result['solution'], result['pred_labels'][0]),
+    #                                                            skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
+    #
+    #     elif self.kernel == 'regression':
+    #         """
+    #         Print the Fitness score and Mean Squared Error for a REGRESSION run against the test data_csv_path.
+    #
+    #         """
+    #
+    #         for i in range(len(result['result'])):
+    #             self.printpl('iii', '\tData row {} predicts c1:\033[1m {:.2f} ({:.2f} True)'.
+    #                          format(i, result['result'][i], result['solution'][i]))
+    #
+    #         mse, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
+    #
+    #         self.printpl('iii', '\n\t Origin fitness score: {}'.format(self.origin['fitness_train']))
+    #         self.printpl('iii', '\n\t Regression fitness score: {}'.format(fitness))
+    #         self.printpl('iii', '\t Mean Squared Error: {}'.format(mse))
+    #
+    #         return
+    #
+    #     elif self.kernel == 'match':
+    #
+    #         """
+    #         Print the accuracy for a MATCH kernel run against the test data_csv_path.
+    #
+    #         """
+    #
+    #         for i in range(len(result['result'])):
+    #             self.printpl('vv', '\tData row {} predicts match: {} {:.2f} ({:.2f} True)'.format(i, BColors.BOLD, result['result'][i], result['solution'][i]))
+    #
+    #         self.printpl('arity', 'Matching fitness score: {}'.format(result['fitness']))
+    #
+    #         return
+    #     else:
+    #         self.printpl('e', 'This fitness test is not available:')
+    #
+    #     return
 
     def display_tree(self, tree):
 
@@ -2733,14 +2628,6 @@ def data_load_pickle(prepared_data_pickle_path):
     with Path.open(prepared_data_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
 
-    # input_dict = pickle_data['self.input_dict'],
-    # variables_dict = pickle_data['self.variables_dict'],
-    # action_dict = pickle_data['self.action_dict'],
-    # unique_outputs_num = pickle_data['self.unique_outputs_num'],
-    # data_train_rows = pickle_data['self.data_train_rows'],
-    # data_train = pickle_data['self.data_train'],
-    # data_control = pickle_data['self.data_control']
-
     # self.printpl('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
     return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
@@ -2749,14 +2636,109 @@ def data_save_pickle(prepared_data, data_pickle_path):
     """
     saves prepared plagih data to pickle file
     """
-    # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control = prepared_data
-    # pickle_data = {'self.input_dict': input_dict,
-    #                'self.variables_dict': variables_dict,
-    #                'self.action_dict': action_dict,
-    #                'self.unique_outputs_num': unique_outputs_num,
-    #                'self.data_train_rows': data_train_rows,
-    #                'self.data_train': data_train,
-    #                'self.data_control': data_control}
+
     with Path.open(data_pickle_path, 'wb') as file:
         pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)
     return
+
+
+def file_population_write(population, key, path, gen_id):
+
+    """
+    Save population_* to disk.
+
+    """
+    file_path = path / 'population_{}.csv'.format(str(key))
+
+    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        target = csv.writer(csv_file, delimiter=',')
+        if gen_id != 0:
+            target.writerows([''])  # empty row before each generation
+        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
+
+        for tree in range(1, len(population)):
+            target.writerows([''])  # empty row before each Tree
+            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
+                target.writerows([population[tree][row]])
+
+    return
+
+
+def tf_graph_from_expr_recursive(node, tensors):
+
+    """
+    Recursively transforms parsed expression tree into TensorFlow (TF) graph.
+
+    """
+
+    if isinstance(node, ast.Name):  # <tensor_name>
+        return tensors[node.id]
+
+    elif isinstance(node, ast.Num):  # <number>
+        shape = tensors[list(tensors.keys())[0]].get_shape()
+        return tf.constant(node.n, shape=shape, dtype=tf.float32)
+
+    elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
+        return ast_tensor_dict[type(node.op)](
+            tf_graph_from_expr_recursive(node.left, tensors),
+            tf_graph_from_expr_recursive(node.right, tensors))
+
+    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
+        return ast_tensor_dict[type(node.op)](
+            tf_graph_from_expr_recursive(node.operand, tensors))
+
+    elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
+
+        if node.func.id == 'Ifte':
+            return ast_tensor_dict[node.func.id](tf.dtypes.cast(
+                tf_graph_from_expr_recursive(node.args[0], tensors), tf.bool),
+                tf_graph_from_expr_recursive(node.args[1], tensors),
+                tf_graph_from_expr_recursive(node.args[2], tensors))
+
+        if node.func.id == 'Ftob' or node.func.id == 'Btof':
+            return tf.dtypes.cast(*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
+
+        if len(node.args) <= 2:
+            return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
+
+    elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
+        return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
+
+    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
+        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
+
+    elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
+        return tf.constant(node.value)
+
+    else:
+        raise TypeError(node)
+
+
+def tf_chain_bool(values, operation, tensors):
+
+    """
+    Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
+
+    """
+
+    x = tf.dtypes.cast(tf_graph_from_expr_recursive(values[0], tensors), tf.bool)
+    if len(values) > 1:
+        return operation(x, tf_chain_bool(values[1:], operation, tensors))
+    else:
+        return x
+
+
+def tf_chain_compare(comparators, ops, tensors):
+
+        """
+        Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
+
+        """
+
+        x = tf_graph_from_expr_recursive(comparators[0], tensors)
+        y = tf_graph_from_expr_recursive(comparators[1], tensors)
+
+        if len(comparators) > 2:
+            return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
+        else:
+            return ast_tensor_dict[type(ops[0])](x, y)

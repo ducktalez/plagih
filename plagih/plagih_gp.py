@@ -15,7 +15,7 @@ def get_evolve_rates_dict(evolve_rates, pop_max):
 
 def create_config_dict():
     config_dict = {
-        'name': '_MTC_tree_012',
+        'name': 'MTC_tree_012',
         'kernel': 'regression',  # [regression, classification, match]
         'precision': 6,  # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool

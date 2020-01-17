@@ -2,6 +2,7 @@ import sys;
 
 sys.path.append('modules/')  # add directory 'modules' to the current path
 import plagih.modules.plagih_gp_base_class_xai as plagih
+from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, data_save_pickle
 from pathlib import Path
 
 
@@ -26,7 +27,7 @@ def create_config_dict():
         'tree_depth_max': 20,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 1000,
+        'pop_max': 100,
         'gen_max': 5000,
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
@@ -63,8 +64,14 @@ label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 
 config_dict = create_config_dict()
+
+# prepared_data = data_from_csv(file_dict['samples_file'])
+# data_save_pickle(prepared_data, file_dict['samples_pickle'])
+prepared_data = data_load_pickle(file_dict['samples_pickle'])
+
 gp = plagih.ExplainableGP(config_dict)
-gp.data_from_csv(file_dict['samples_file'], save_pickle_path=file_dict['samples_pickle'])
+gp.data_activate(prepared_data)
+
 # gp.data_from_pickle(file_dict['samples_pickle'])
 gp.data_load_operators(file_dict['operators_file'])
 gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)

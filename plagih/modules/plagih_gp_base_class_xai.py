@@ -123,6 +123,7 @@ class ExplainableGP(object):
 
         self.file_directories_create()
         self.done = False
+        self.gen_id = 0
         self.print_g('gg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
@@ -133,7 +134,7 @@ class ExplainableGP(object):
         """
 
         self.gen_id = 0  # set initial generation ID    # first gen only
-        self.file_config()
+        file_config(self.path, self.config, self.gen_id, self.kernel, self.datetime)
         self.main_generation_first_origin()
         self.main_generation_loop()  # (main loop)
         self.print_g('gg', 'GP-run. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
@@ -209,7 +210,7 @@ class ExplainableGP(object):
                 gp_function(evolve_num, tourn_size)
                 self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
-            self.autosave_stuff()
+            self.autosave()
 
             self.gen_finalize()
             self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
@@ -217,7 +218,7 @@ class ExplainableGP(object):
             self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format(BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.RESET))
             # menu_continue = 0
 
-    def autosave_stuff(self, overwrite=True):
+    def autosave(self, overwrite=True):
         """
 
         """
@@ -242,6 +243,7 @@ class ExplainableGP(object):
             if self.config['period']['time_save'] < (time_now - self.time_last_files):
                 self.printpl('ii', 'auto-save (time)')
                 self.file_autowrite(path_auto, auto_enumname)
+                self.backup_save_pickle()
                 self.time_last_files = time_now
 
         if self.config['period']['gen_monitor']:
@@ -252,6 +254,7 @@ class ExplainableGP(object):
         if self.config['period']['gen_save']:
             if self.gen_id % int(self.config['period']['gen_save']) == 0:
                 self.printpl('ii', 'auto-save (gen)')
+                self.backup_save_pickle()
                 self.file_autowrite(path_auto, auto_enumname)
 
         return 0
@@ -310,38 +313,15 @@ class ExplainableGP(object):
             xtype = op[label]['xtype']
 
             if xtype == 'f2f':
-                self.xype_func_dict['f2f'].append(label)
-                self.xype_func_dict['2f'].append(label)
-                self.xype_func_dict['f2'].append(label)
                 self.op_type_arity_array[f2f][arity].append(label)
             elif xtype == 'f2b':
-                self.xype_func_dict['f2b'].append(label)
-                self.xype_func_dict['2b'].append(label)
-                self.xype_func_dict['f2'].append(label)
                 self.op_type_arity_array[f2b][arity].append(label)
             elif xtype == 'b2b':
-                self.xype_func_dict['b2b'].append(label)
-                self.xype_func_dict['2b'].append(label)
-                self.xype_func_dict['b2'].append(label)
                 self.op_type_arity_array[b2b][arity].append(label)
             elif xtype == 'b2f':
-                self.xype_func_dict['b2f'].append(label)
-                self.xype_func_dict['2f'].append(label)
-                self.xype_func_dict['b2'].append(label)
                 self.op_type_arity_array[b2f][arity].append(label)
             elif xtype == 'b2f2f':
-                self.xype_func_dict['b2f2f'].append(label)
-                self.xype_func_dict['2f'].append(label)
-                self.xype_func_dict['f2'].append(label)
-                self.xype_func_dict['b2'].append(label)
                 self.op_type_arity_array[b2f2f][arity].append(label)
-
-        if not self.xype_func_dict['2f'] and not self.xype_func_dict['2b']:
-            self.printpl('w', 'Neither Boolean nor Float Values can be created!')
-        elif not self.xype_func_dict['2f']:
-            self.printpl('w', 'No Float Values can be created!')
-        elif not self.xype_func_dict['2b']:
-            self.printpl('w', 'Neither Boolean Values can be created!')
 
         self.print_g('g', 'Loading operators. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         return
@@ -362,16 +342,21 @@ class ExplainableGP(object):
                     }
         pickle.dump(run_data, Path.open(self.path / 'Gen-{}-backup.p'.format(str(self.gen_id)), 'wb'))
 
-    def autosave(self):
+    def backup_save_pickle(self):
         """
         automatically saves everything important after a certain amount of time
         """
-        # saving data_csv_path (including the split)
-        # saving pareto front
-        # saving hash dict
-        # save gen_id
-        # save monitoring dict
-        pass
+        path = self.path / 'backup'
+        if not Path.is_dir(path):
+            Path.mkdir(path)
+
+        pickle.dump(self, Path.open(path / 'backup.p', 'wb'))
+
+    def backup_load_pickle(self, pickle_nackup_path):
+
+        with Path.open(pickle_nackup_path, 'rb') as file:
+            self = pickle.load(file)
+        return
 
     def file_conclusion(self, path, datetime=None):
 
@@ -428,25 +413,6 @@ class ExplainableGP(object):
         file.close()
 
         return
-
-    def file_config(self):
-        """
-        write the parameters to a file
-        Todo update
-        """
-
-        file = Path.open(self.path / 'config.txt', 'w')
-        file.write('Plagih GP. This config is not complete, TODO!')
-        file.write('\n launched: {}'.format(self.datetime))
-        file.write('\n kernel: {}'.format(self.kernel))
-        file.write('\n precision: {}\n'.format(self.config['precision']))
-        file.write('\n tree depth max: ' + str(self.config['tree_depth_max']))
-        file.write('\n')
-        file.write('\n tournament size: ' + str(self.config['gp_tourn_size']))
-        file.write('\n population: ' + str(self.config['pop_max']))
-        file.write('\n number of generations: ' + str(self.gen_id))
-        file.write('\n\n')
-        file.close()
 
     def file_pareto(self, pareto, path):
         """
@@ -598,8 +564,8 @@ class ExplainableGP(object):
 
             # Fill the correct meta-data_csv_path into the tree (and wipe the old fitness)
             # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data_csv_path
-            tree = self.tree_modifyable_nodes_set(tree)
-            tree[TR_ID][1] = tree_id
+            tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+            tree = tree_set_id(tree, 1)
 
             self.popnew_append(tree, last_modification='first')
 
@@ -797,7 +763,7 @@ class ExplainableGP(object):
         some stuff to definitely do before actually appending to pop
         """
         tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
-        tree = self.tree_modifyable_nodes_set(tree)
+        tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
         tree[TR_type][1] = last_modification
         if not tree_test_check_children(tree):
             self.printpl('e', 'Tree is not consistent:\n{}'.format(tree))
@@ -839,9 +805,7 @@ class ExplainableGP(object):
 
         """
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
-        Uses:
-            self.population a
-            self.genepool a
+
         """
 
         # Start with dummies
@@ -873,7 +837,7 @@ class ExplainableGP(object):
             if filter_type == 'gaussian_filter':
                 constant = np.random.normal(constant, 0.1)
             else:
-                self.printpl('w', 'Warning: Filter  not specified. Please specify a filter_type.')
+                printez('w', 'Warning: Filter  not specified. Please specify a filter_type.', display=self.display)
                 constant = np.random.normal(constant, 0.1)
 
         if term_type == 'int':
@@ -1152,61 +1116,12 @@ class ExplainableGP(object):
             This could be calculated respectively to the parsimony level
             which the tree might have up his sleeve
             """
-            num_new_nodes = np.random.randint(10, 30)
+            pass
+            # num_new_nodes = np.random.randint(10, 30)
             # max_
 
         else:
-            self.printpl('e', 'That did not work')
-
-        return tree
-
-    def evolve_subtree_insert_child(self, tree, node, c_buffer):
-
-        """
-        Insert child node into the copy of a parent Tree.
-
-        """
-
-        if int(tree[N_arity][node]) == 0:  # if arity = 0
-            self.printpl('e', 'In evolve_child_insert: node {} has arity 0'.format(node))
-            # self.plagih_pause()  # consider special instructions for this
-
-        elif int(tree[N_arity][node]) == 1:  # if arity = 1
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[N_depth][c_buffer] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-        elif int(tree[N_arity][node]) == 2:  # if arity = 2
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[N_depth][c_buffer] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
-            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[N_depth][c_buffer + 1] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
-
-        elif int(tree[N_arity][node]) == 3:  # if arity = 3
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[N_depth][c_buffer] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
-            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[N_depth][c_buffer + 1] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 2, '', axis=1)  # insert node for 'node_c3'
-            tree[3][c_buffer + 2] = c_buffer + 2  # node ID
-            tree[N_depth][c_buffer + 2] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
-
-        else:
-            self.printpl('e', 'In evolve_child_insert: node {} arity > 3'.format(node))
-            # self.plagih_pause()  # consider special instructions for this (pause)
+            print_e('That did not work')
 
         return tree
 
@@ -1301,49 +1216,13 @@ class ExplainableGP(object):
 
         # 5. store fitness in 'old' Karoo tree structure
         if store_in_tree:
-            self.tree_store_parsimony(tree, tree_meta['parsimony'])
-            self.tree_store_fitness(tree, tree_meta['fitness_train'])
+            tree = tree_store_parsimony(tree, tree_meta['parsimony'])
+            tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
             # self.tree_store_meta_lastgen(tree)
 
             return tree_ident, tree_meta
 
-    def tree_modifyable_nodes_set(self, chosen_tree):
-        """
-        Sets all the origin core nodes back to non-modifyable
-        """
-        # Set all nodes to be modifiable (=1)
-        for i, tmp in enumerate(chosen_tree[N_modify][1:]):
-            chosen_tree[N_modify][i + 1] = '1'
-
-        # Find no-modifyables in Origin
-        non_modifiable_nodes = []
-        if self.origin['tree'][N_modify][1] == '0':  # check is modifiable nodes are specified
-            non_modifiable_nodes.extend(self.tree_permanent_nodes_get(1, chosen_tree, 1))
-
-        for non_modifiable in non_modifiable_nodes:
-            chosen_tree[N_modify][non_modifiable] = '0'
-
-        return chosen_tree
-
-    def tree_permanent_nodes_get(self, origin_node, chosen_tree, chosen_node):
-        """
-        Returns a list of nodes that are not supposed to be modified
-        """
-
-        if self.origin['tree'][N_modify][origin_node] == '0':
-            permanent_nodes = [int(chosen_tree[N_id][chosen_node])]
-            for child in [N_c1, N_c2, N_c3]:
-                if self.origin['tree'][child][origin_node] != '':
-                    next_origin_node = int(self.origin['tree'][child][origin_node])
-                    next_chosen_node = int(chosen_tree[child][chosen_node])
-                    tmp = self.tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node)
-                    if tmp is not None:
-                        permanent_nodes.extend(tmp)
-            return permanent_nodes
-        else:
-            return
-
-    def tree_build_type_constant_get(self, term_type='', mode='float-1to1', uniform_range=''):
+    def tree_build_type_constant_get(self, term_type='', mode='float-1to1', uniform_range=None):
         """
 
         Returns a constant that fits into the position
@@ -1521,28 +1400,6 @@ class ExplainableGP(object):
         # sfeh the mapping could be handy somewhere
         return distance
 
-    def tree_store_fitness(self, tree, fitness):
-
-        """
-        Store the fitness within the tree np-array
-
-        """
-
-        fitness = float(fitness)
-        fitness = round(fitness, self.config['precision'])
-
-        tree[T_fitness][1] = fitness  # store the fitness with each tree
-
-        return
-
-    def tree_store_parsimony(self, tree, parsimony):
-        """
-        Store the parsimony within the tree np-array
-        """
-        if parsimony < 0:
-            self.printpl('w', 'Parsimony is: {}'.format(parsimony))
-        tree[T_parsimony][1] = parsimony
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to use evaluate (tensorflow)      |
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1636,7 +1493,7 @@ class ExplainableGP(object):
                     """
 
                     if len(self.action_dict) > 1:
-                        printez('e', 'TODO multidimensional input. To be done, there is no solution yet.')
+                        print_e('TODO multidimensional input. To be done, there is no solution yet.')
 
                     if get_pred_labels:
                         pred_labels = tf.map_fn(self.eval_tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
@@ -1698,20 +1555,12 @@ class ExplainableGP(object):
         """
         # print('Current expr:', expr)  # importantprint for debugging failed expressions
         tree = ast.parse(expr, mode='eval').body
-
-        # TODO diesen try-except block entfernen
-        self.debug_warnings['expr'] = str(expr)
         try:
-            return self.eval_tf_expr_graph(tree, tensors)
+            return tf_graph_from_expr_recursive(tree, tensors)
         except:
             self.printpl('e', 'Ohoh, hope this does not come up')
-            # return self.fitness_dummy_get()
-
-    def eval_tf_expr_graph(self, node, tensors):
-        """
-        Handy in pycharm, where I can see all the uses easily.
-        """
-        return tf_graph_from_expr_recursive(node, tensors)
+            # TODO this dummy seems wrong
+            return self.fitness_dummy_get()
 
     def eval_tf_classify_labels_map(self, result):
 
@@ -1791,7 +1640,7 @@ class ExplainableGP(object):
                 term_position = self.variables_dict['all'].index(label)
                 node_xtype = op[self.variables_dict['types'][term_position]]['xtype']
             elif 'action' in label:
-                self.printpl('w', 'Does this happen? Test it!')
+                print_warning('Does this happen? Test it!')
                 node_xtype = self.action_dict[label]
 
             else:  # only 'float' left
@@ -1911,7 +1760,7 @@ class ExplainableGP(object):
             y.append(b)
 
         if variance:
-            printez('e', 'variance not available')
+            print_e('variance not available')
             means = np.mean(y, axis=0)
             stds = np.std(y, axis=0)
             n = means.size
@@ -2474,10 +2323,32 @@ def data_load_data_split(data_x, data_y, test_size):
     return data_train_rows, data_train, data_control
 
 
+def print_e(text, display=None, time_total=0.0):
+    """
+    Printing errors
+    """
+    message_style = BColors.RED
+    message_pretxt = 'ERROR: '
+    print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
+
+
+def print_warning(text, display=None, time_total=0.0):
+    """
+
+    """
+    message_style = BColors.WARNING
+    message_pretxt = 'Warning: '  # Warning-yellow
+    print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
+
+
 def printez(message_type, text, display=None, time_total=0.0):
     """
     giving prints colours, accessable from everywhere
     """
+    if display:
+        if message_type not in display:
+            return
+
     message_pretxt = BColors.RESET  # default color
     message_posttxt = BColors.RESET
     if 'i' in message_type:
@@ -2486,13 +2357,12 @@ def printez(message_type, text, display=None, time_total=0.0):
     elif 'e' in message_type:
         message_style = BColors.RED
         message_pretxt = 'ERROR: '
-        raise_error = True
     elif 'w' in message_type:  # warning
         message_style = BColors.WARNING
         message_pretxt = 'Warning: '  # Warning-yellow
     elif 'g' in message_type:
         message_style = BColors.BLUE
-        message_pretxt = '{:4.2f} Gen: '.format(time_total)  # green
+        message_pretxt = '{:5.1f}: '.format(time_total)  # green
     elif 'v' in message_type:  # verbose
         message_style = BColors.WHITE  # white
         message_pretxt = 'Verbose: '
@@ -2569,7 +2439,7 @@ def data_from_csv(samples_file):
                         action_type = var_name.split(':', 1)[1]
                         action_dict[action] = action_type  # Do not use this:# '2b' if 'bool' in action_type else '2f'
                     else:
-                        printez('e', 'Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
+                        print_e('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
                         raise
 
                 data_x, data_y = [], []
@@ -2730,7 +2600,28 @@ def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None)
         elif xtype == 'b2f2f':
             return np.random.choice(op_type_arity_array[b2f2f][arity])  # sfeh okay that does not make sense tbh
         else:
-            printez('e', 'Function was not found in function_types_dict {}'.format(xtype))
+            print_e('Function was not found in function_types_dict {}'.format(xtype))
             raise
     else:
         raise
+
+
+def file_config(path,  config, gen_id, kernel, datetime):
+    """
+    write the parameters to a file
+    Todo update
+    """
+
+    file = Path.open(path / 'config.txt', 'w')
+    file.write('Plagih GP. This config is not complete, TODO!')
+    file.write('\n launched: {}'.format(datetime))
+    file.write('\n kernel: {}'.format(kernel))
+    file.write('\n precision: {}\n'.format(config['precision']))
+    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
+    file.write('\n')
+    file.write('\n tournament size: ' + str(config['gp_tourn_size']))
+    file.write('\n population: ' + str(config['pop_max']))
+    file.write('\n number of generations: ' + str(gen_id))
+    file.write('\n\n')
+    file.close()
+    return

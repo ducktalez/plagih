@@ -10,32 +10,58 @@ sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
 
-#
-# class QwerTree:
-#     def __init__(self, label, *children):
-#         self.label = label
-#         self.children = list(children)
-#
-#     def from_expr(self, expr_childs):
-#         """Create tree from bracket notation
-#
-#         Bracket notation encodes the trees with nested parentheses, for example,
-#         in tree {A{B{X}{Y}{F}}{C}} the root node has label A and two children
-#         with labels B and C. Node with label B has three children with labels
-#         X, Y, F.
-#         """
-#         # +, [1, 2]
-#         for label, childs in expr_childs:
-#             self.label = label
-#             for child in range(0, arity):
-#                 self.children.append(self.from_expr())
-#
-#         return
+class Plagih_Tree():
+
+    def __init__(self):
+        pass
+
+
+def tree_modifyable_nodes_set(chosen_tree, origin_tree):
+    """
+    Sets all the origin core nodes back to non-modifyable
+    """
+    # Set all nodes to be modifiable (=1)
+    for i, tmp in enumerate(chosen_tree[N_modify][1:]):
+        chosen_tree[N_modify][i + 1] = '1'
+
+    # Find no-modifyables in Origin
+    non_modifiable_nodes = []
+    if origin_tree[N_modify][1] == '0':  # check is modifiable nodes are specified
+        non_modifiable_nodes.extend(tree_permanent_nodes_get(1, chosen_tree, 1, origin_tree))
+
+    for non_modifiable in non_modifiable_nodes:
+        chosen_tree[N_modify][non_modifiable] = '0'
+
+    return chosen_tree
+
+
+def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree):
+    """
+    Returns a list of nodes that are not supposed to be modified
+    """
+
+    if origin_tree[N_modify][origin_node] == '0':
+        permanent_nodes = [int(chosen_tree[N_id][chosen_node])]
+        for child in [N_c1, N_c2, N_c3]:
+            if origin_tree[child][origin_node] != '':
+                next_origin_node = int(origin_tree[child][origin_node])
+                next_chosen_node = int(chosen_tree[child][chosen_node])
+                tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
+                if tmp is not None:
+                    permanent_nodes.extend(tmp)
+        return permanent_nodes
+    else:
+        return
 
 
 def karoo_tree_clear_meta(tree):
     tree[T_fitness][1] = ''
     tree[T_parsimony][1] = ''
+    return tree
+
+
+def tree_set_id(tree, tree_id):
+    tree[TR_ID][1] = tree_id
     return tree
 
 
@@ -74,6 +100,31 @@ def tree_round_constants(tree, accuracy, karoo=False):
     if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
 
+    return tree
+
+
+def tree_store_fitness(tree, fitness, precision=6):
+
+    """
+    Store the fitness within the tree np-array
+
+    """
+
+    fitness = float(fitness)
+    fitness = round(fitness, precision)
+
+    tree[T_fitness][1] = fitness  # store the fitness with each tree
+
+    return tree
+
+
+def tree_store_parsimony(tree, parsimony):
+    """
+    Store the parsimony within the tree np-array
+    """
+    if parsimony < 0:
+        print('Warning: Parsimony is: {}'.format(parsimony))
+    tree[T_parsimony][1] = parsimony
     return tree
 
 
@@ -766,21 +817,6 @@ def tree_labels(tree):
     """
     label_list = tree[N_label]
     return label_list
-
-
-def evolve_node_renum_karoo(tree):
-    """
-    Renumber all 'node_id' in a given tree.
-
-    This is required after a new generation is evolved as the node_id numbers are carried forward from the previous
-    generation but are no longer in order.
-
-    """
-
-    for n in range(0, len(tree[N_id])):
-        tree[N_id][n] = n  # renumber all nodes
-
-    return tree
 
 
 def tree_test_check_children(tree, karoo=True):

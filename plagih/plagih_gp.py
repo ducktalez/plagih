@@ -24,10 +24,10 @@ def create_config_dict():
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
         'tree_depth_base': 5,
-        'tree_depth_max': 20,  # [3...10]			maximum Tree depth for entire run
+        'tree_depth_max': 30,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 100,
+        'pop_max': 500,
         'gen_max': 5000,
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]

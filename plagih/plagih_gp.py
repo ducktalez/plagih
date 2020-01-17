@@ -60,6 +60,15 @@ file_dict = {
     'samples_pickle': Path('../mountaincar/karoo_files/data_samples/plagih_data_prepared.p'),
     'operators_file': Path('../mountaincar/karoo_files/operators/operators.csv')
 }
+another_list = ['Ifte',
+                'and', '0', '2',
+                '<=', '<=',
+                'Mini', 'observation1', 'observation1', '+',
+                '+', '*', '*', '0.7',
+                '*', '0.03', '**', '0.03', '-0.07', '**',
+                '**', '-0.09', '+', '4', '+', '2',
+                '+', '2', 'observation0', '-0.09', 'observation0', '0.38',
+                'observation0', '0.25']
 label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 

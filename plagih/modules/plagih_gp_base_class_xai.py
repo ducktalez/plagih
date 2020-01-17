@@ -54,6 +54,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # todo random samples out of dataset values as new constants?
 # TODO zoo and inf and nan in plagih_sympify... other solution?
 # TODO what is "swim" in karoo, what is it good for?
+# todo add stop after we achieved our goal
 # TODo check memory usage?
 # random TODO grow depth anpassen!
 # TODO anzahl bereits bekannter bäume
@@ -122,7 +123,7 @@ class ExplainableGP(object):
 
         self.file_directories_create()
         self.done = False
-        self.printpl('gg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
 
@@ -135,11 +136,11 @@ class ExplainableGP(object):
         self.file_config()
         self.main_generation_first_origin()
         self.main_generation_loop()  # (main loop)
-        self.printpl('gg', 'GP-run. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'GP-run. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         self.file_autowrite(self.path, 'f')  # archive populations and return to plagih_gp.py for a clean exit
         self.file_autoplots(self.path)
-        self.printpl('gg', 'Completely. Exit. \tTime: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Completely. Exit. \tTime: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         sys.exit()
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -167,7 +168,7 @@ class ExplainableGP(object):
         - Evaluate the first Generation
         - Monitoring initialisation and monitoring
         """
-        self.printpl('gg', 'Preparing to evolve Generation {}'.format(self.gen_id))
+        self.print_g('gg', 'Preparing to evolve Generation {}'.format(self.gen_id))
         self.gen_prepare_parameters()
         self.pop_first_create()
         self.pareto[0] = self.origin['fitness_train']
@@ -189,7 +190,6 @@ class ExplainableGP(object):
                    ('Create Random', self.gen_create_random)]
         tourn_size = self.config['gp_tourn_size']
 
-        # todo add stop after we achieved our goal
         while self.gen_id < self.config['gen_max'] and \
                 time.perf_counter() - self.time_start < self.config['time_max'] and \
                 not self.done:
@@ -198,7 +198,7 @@ class ExplainableGP(object):
             self.gen_prepare_parameters()
 
             for name, gp_function in gp_list:
-                self.printpl('gggg', '{}...'.format(name))
+                self.print_g('gggg', '{}...'.format(name))
                 evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 time_evolve = time.perf_counter()
 
@@ -207,12 +207,12 @@ class ExplainableGP(object):
                 #     n += 1
                 #     pass
                 gp_function(evolve_num, tourn_size)
-                self.printpl('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
+                self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
             self.autosave_stuff()
 
             self.gen_finalize()
-            self.printpl('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
+            self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
         else:
             self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format(BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.RESET))
             # menu_continue = 0
@@ -343,7 +343,7 @@ class ExplainableGP(object):
         elif not self.xype_func_dict['2b']:
             self.printpl('w', 'Neither Boolean Values can be created!')
 
-        self.printpl('g', 'Loading operators. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('g', 'Loading operators. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         return
 
     def data_pickle_save(self):
@@ -509,7 +509,7 @@ class ExplainableGP(object):
 
 
         """
-        self.printpl('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
+        self.print_g('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
         dominator_count = 0
         gene_pool_hash_dict = {}
 
@@ -524,7 +524,7 @@ class ExplainableGP(object):
                     self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
                     dominator_count += 1
 
-        self.printpl('g', '{}: {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
+        self.print_g('g', '{}: {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
         return gene_pool_hash_dict
 
@@ -584,7 +584,7 @@ class ExplainableGP(object):
 
         # TODO branch mutation in ALL subtrees? if more options are available
         # TODO safely create a complete generation?
-        self.printpl('gg', 'First population...')
+        self.print_g('gg', 'First population...')
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
         tree_origin = self.origin['tree'].copy()
@@ -603,7 +603,7 @@ class ExplainableGP(object):
 
             self.popnew_append(tree, last_modification='first')
 
-        self.printpl('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
+        self.print_g('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
 
     def pop_parsimony_best_update(self, gene_pool_hash_dict):
         """
@@ -823,7 +823,7 @@ class ExplainableGP(object):
         file_population_write(self.population_new, 'new', self.path, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_hash_meta)
-        self.printpl('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
+        self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
             len(set(gene_pool_hash_dict.values())),
             self.config['pop_max'],
             self.gen_id,
@@ -899,7 +899,7 @@ class ExplainableGP(object):
         if same_arity:
             # 2. perform point mutation on that specific node
             if arity > 0:
-                tree[N_label][node_id] = self.xtype_choose_func_pointmutation(xtype=xtype, arity=arity)  # Function is same type, same arity
+                tree[N_label][node_id] = xtype_choose_func_pointmutation(self.op_type_arity_array, xtype=xtype, arity=arity)  # Function is same type, same arity
             elif arity == 0:  # aka a terminal
                 tree[N_label][node_id] = self.xtype_choose_term(xtype)  # 3 -> '2f' -> 5
             else:
@@ -1260,7 +1260,7 @@ class ExplainableGP(object):
 
         self.hashtable_fitness_train = {}
 
-        self.printpl('g', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('g', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         return
 
     def tree_store_meta_get_hash(self, tree, store_in_tree=True):
@@ -1636,7 +1636,7 @@ class ExplainableGP(object):
                     """
 
                     if len(self.action_dict) > 1:
-                        self.printpl('e', 'TODO multidimensional input. To be done, there is no solution yet.')
+                        printez('e', 'TODO multidimensional input. To be done, there is no solution yet.')
 
                     if get_pred_labels:
                         pred_labels = tf.map_fn(self.eval_tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
@@ -1728,9 +1728,6 @@ class ExplainableGP(object):
             elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
             else: fitness = 0 # no class match
 
-        Called by: fitness_eval
-
-        Arguments required: result
         """
 
         skew = (self.unique_outputs_num / 2) - 1
@@ -1747,34 +1744,6 @@ class ExplainableGP(object):
                              lambda: label_rules[1])
 
         return pred_label
-
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to receive correct xtypes (f2b,.) |
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def xtype_choose_func_pointmutation(self, xtype=None, arity=None):
-        """
-        returns a function for a function in point mutation
-        This only accepts functions as inputs. (point mutation)
-        No need to handle terminals
-        """
-
-        if arity:
-            if xtype == 'f2f':
-                return np.random.choice(self.op_type_arity_array[f2f][arity])
-            elif xtype == 'f2b':
-                return np.random.choice(self.op_type_arity_array[f2b][arity])
-            elif xtype == 'b2b':
-                return np.random.choice(self.op_type_arity_array[b2b][arity])
-            elif xtype == 'b2f':
-                return np.random.choice(self.op_type_arity_array[b2f][arity])
-            elif xtype == 'b2f2f':
-                return np.random.choice(self.op_type_arity_array[b2f2f][arity])  # sfeh okay that does not make sense tbh
-            else:
-                self.printpl('e', 'Function was not found in function_types_dict {}'.format(xtype))
-                raise
-        else:
-            raise
 
     def xtype_choose_func_branchmutate(self, xtype=None, arity=False):
         """
@@ -1909,7 +1878,7 @@ class ExplainableGP(object):
         # How many survived in the selection?
         self.monitoring_dict['genepool_size'][int(self.gen_id)] = len(gene_pool_hash_dict)
         if len(gene_pool_hash_dict) > 0:
-            self.printpl('ggg', 'The generation`s population is: {}'.format(len(gene_pool_hash_dict)))
+            self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool_hash_dict)))
         else:  # the evolutionary constraints were too tight, killing off the entire population
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.file_autowrite(self.path, self.gen_id)
@@ -2220,19 +2189,17 @@ class ExplainableGP(object):
     def printpl(self, message_type, text):
 
         """
-        Gets a verbosity (e.g. 'i')
 
-        PLAGIH-Display-modes:
-            Errors (e): always on, does print Errors
-            Info (i): informations. (need further specification)
-            NextGen (n): Prints infos about the current mutation process
+        """
 
-        Display modes: (Just a reminder from original plagih)
-            Generational (g): pauses after each generation is complete
-            Interactive (i): pauses with the completion of each section (e.g. tournament, gene pool, genetic operators)
-            DeBug (db): displays the internal workings of the genetic operators
-            minimal (m): displays only the multivariate expression of each tree
-            Silent (s): displays only the summary of each generations
+        if message_type in self.display:
+            printez(message_type, text, display=self.display, time_total=time.perf_counter() - self.time_start)
+
+        return
+
+    def print_g(self, message_type, text):
+
+        """
 
         """
 
@@ -2491,7 +2458,7 @@ def pop_enum_trees(population):
     """
     outsourced enumeration of trees in a population
     """
-    for tree_id in range(1, len(population)):  #
+    for tree_id in range(FIRST_TREE, len(population)):  #
         population[tree_id][TR_ID][1] = tree_id
     return population
 
@@ -2507,7 +2474,7 @@ def data_load_data_split(data_x, data_y, test_size):
     return data_train_rows, data_train, data_control
 
 
-def printez(message_type, text, time_total=0.0):
+def printez(message_type, text, display=None, time_total=0.0):
     """
     giving prints colours, accessable from everywhere
     """
@@ -2617,7 +2584,7 @@ def data_from_csv(samples_file):
 
     data_train_rows, data_train, data_control = data_load_data_split(data_x, data_y, test_size=0.2)
 
-    # self.printpl('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+    # self.printplg('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
     return input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 
@@ -2628,7 +2595,7 @@ def data_load_pickle(prepared_data_pickle_path):
     with Path.open(prepared_data_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
 
-    # self.printpl('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+    # self.printplg('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
     return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 
@@ -2742,3 +2709,28 @@ def tf_chain_compare(comparators, ops, tensors):
             return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
         else:
             return ast_tensor_dict[type(ops[0])](x, y)
+
+
+def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None):
+    """
+    returns a function for a function in point mutation
+    This only accepts functions as inputs. (point mutation)
+    No need to handle terminals
+    """
+
+    if arity:
+        if xtype == 'f2f':
+            return np.random.choice(op_type_arity_array[f2f][arity])
+        elif xtype == 'f2b':
+            return np.random.choice(op_type_arity_array[f2b][arity])
+        elif xtype == 'b2b':
+            return np.random.choice(op_type_arity_array[b2b][arity])
+        elif xtype == 'b2f':
+            return np.random.choice(op_type_arity_array[b2f][arity])
+        elif xtype == 'b2f2f':
+            return np.random.choice(op_type_arity_array[b2f2f][arity])  # sfeh okay that does not make sense tbh
+        else:
+            printez('e', 'Function was not found in function_types_dict {}'.format(xtype))
+            raise
+    else:
+        raise

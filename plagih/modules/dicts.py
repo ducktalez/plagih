@@ -29,6 +29,7 @@ fitt_dict = {'classification': 'max',
              'regression': 'min',
              'match': 'max'}
 
+FIRST_TREE = 1
 
 TR_ID = 0
 TR_type = 1

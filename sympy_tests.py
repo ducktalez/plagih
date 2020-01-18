@@ -28,7 +28,11 @@ print(plagih_sympify('nan'))
 print(plagih_sympify('a<zoo'))
 print(plagih_sympify('a/0'))  # this is zoo*a
 print(plagih_sympify('a/0.0'))  # this is inf*a
+print(plagih_sympify('observation0+(-0.09)**4'))
+print(plagih_sympify('And(a<2,b<3)'))
+print(plagih_sympify('(a<2) & (b<3)'))
+print(plagih_sympify('(-1)**(-0.5)'))
+print(plagih_sympify('(Ifte((And(((Mini((((((observation0)+(0.25))**(2))*(-0.09))+(0.03)), ((((observation0)+(-0.09))**(4))*(0.03))))<=(observation1)), ((observation1)<=(((-0.07)*(((observation0)+(0.38))**(2)))+(0.7))))), (0), (2)))'))
 
 print('\nNew try:')
-print(plagih_sympify('Mini((1/0), a)'))
-
+print(plagih_sympify('a & True'))

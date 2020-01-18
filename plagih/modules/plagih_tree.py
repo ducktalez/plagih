@@ -65,6 +65,11 @@ def tree_set_id(tree, tree_id):
     return tree
 
 
+def tree_set_history(tree, last_modification):
+    tree[TR_type][1] = last_modification
+    return tree
+
+
 def tree_node_get_arity(tree, node_id, karoo=False):
 
     if karoo:
@@ -734,8 +739,8 @@ def tree_get_mutatable_list(tree, no_root=False):
         if tree[N_modify][i] == '1':
             node_ids.append(int(node_id))
 
-    if no_root:
-        node_ids = node_ids.remove(root_id) if root_id in node_ids else node_ids  # if we remove an element from an empty list, this crashes
+    if no_root and root_id in node_ids:
+        node_ids.pop(root_id)
     return node_ids
 
 
@@ -793,6 +798,26 @@ def tree_get_branchinfo(tree, node_id, karoo=True):
     return ids, labels, aritys
 
 
+def tree_pretty_print(tree, karoo=False):
+    if karoo:
+        tree = tree_convert_karoo_to_plagih(tree)
+
+    depth = 0
+    layer_labels = []
+    for i, n_depth in enumerate(tree[N_depth]):
+        label = tree_get_label(tree, i)
+        if int(n_depth) == depth:
+            layer_labels.append(label)
+        else:
+            print(layer_labels)
+            layer_labels =[label]
+            depth += 1
+    else:
+        print(layer_labels)
+
+    return
+
+
 def tree_get_ids_karoo(tree, node):
 
     """
@@ -822,7 +847,7 @@ def tree_labels(tree):
 def tree_test_check_children(tree, karoo=True):
     """
     A method to check if a tree is plausible. aka:
-    - do the values in c1, c2, c3 link to correkt
+    - do the values in c1, c2, c3 link to correct
     """
     if not karoo:
         tree = tree_convert_plagih_to_karoo(tree)
@@ -889,7 +914,7 @@ def karoo_tree_from_user(label_list, modify_list=None):
             core[N_modify][i] = val
     else:  # all can be modified
         for i, val in enumerate(label_list):
-            core[N_modify][i] = 1
+            core[N_modify][i] = '1'
     tree = tree_convert_plagih_to_karoo(core)
 
     return tree
@@ -925,16 +950,17 @@ def test_trees(number):
 def test():
     core = test_trees(4)
     karoo_tree = tree_convert_plagih_to_karoo(core)
-
-    label_list = ['Ifte', '<', '0.1234', '2', 'observation1', '0']
+    another_list = ['Ifte', 'And', '0', '2', '<=', '<=', 'Mini', 'observation1', 'observation1', '+',
+                    '+', '*', '*', '0.7', '*', '0.03', '**', '0.03', '-0.07', '**', '**', '-0.09', '+', '4', '+', '2',
+                    '+', '2', 'observation0', '-0.09', 'observation0', '0.38', 'observation0', '0.25']
+    label_list = ['&', 'a', 'True']
     arity_list = [3, 2, 0, 0, 0, 0]
-    core = core_from_labels(label_list, arity_list)
-    karoo_tree = tree_convert_plagih_to_karoo(core)
-    karoo_tree = tree_round_constants(karoo_tree, 200, karoo=True)
-    print(karoo_tree)
+    tree = karoo_tree_from_user(label_list)
+    print(tree)
+    tree_pretty_print(tree, karoo=True)
 
-    x = tree_check_all(karoo_tree)
-    print(x)
+    # x = tree_check_all(karoo_tree)
+    # print(x)
     return
 
 # test()

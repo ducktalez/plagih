@@ -67,6 +67,7 @@ ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b
                    ast.LtE: tf.less_equal,  # e.g., a <= b
                    ast.Gt: tf.greater,  # e.g., a > b
                    ast.GtE: tf.greater_equal,  # e.g., a >= 1
+                   ast.BitAnd: tf.logical_and,  # DON'T USE tf.bitwise.bitwise_and
                    'abs': tf.abs,  # e.g., abs(a)
                    'sign': tf.sign,  # e.g., sign(a)
                    'square': tf.square,  # e.g., square(a)
@@ -82,57 +83,104 @@ ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b
                    'atan': tf.atan,  # e.g., atan(a)
                    'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
                    'Mini': tf.math.minimum,  # if reduce_min does not work...
-                   'Maxi': tf.math.maximum,
-                   }
-op = {
-    'float': {'arity': 0, 'xtype': '2f', 'tf': ''},
-    'int': {'arity': 0, 'xtype': '2f', 'tf': ''},
-    'bool': {'arity': 0, 'xtype': '2b', 'tf': ''},
+                   'Maxi': tf.math.maximum}
 
-    '+': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '-': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '*': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '/': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    '**': {'arity': 2, 'xtype': 'f2f', 'tf': ''},
-    'abs': {'arity': 1, 'xtype': 'f2f', 'tf': tf.abs},
-    'sign': {'arity': 1, 'xtype': 'f2f', 'tf': tf.sign},
-    'square': {'arity': 1, 'xtype': 'f2f', 'tf': tf.square},
-    'sqrt': {'arity': 1, 'xtype': 'f2f', 'tf': tf.sqrt},
-    'log': {'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log},
-    'log1p': {'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log1p},
-    'cos': {'arity': 1, 'xtype': 'f2f', 'tf': tf.cos},
-    'sin': {'arity': 1, 'xtype': 'f2f', 'tf': tf.sin},
-    'tan': {'arity': 1, 'xtype': 'f2f', 'tf': tf.atan},
-    'acos': {'arity': 1, 'xtype': 'f2f', 'tf': tf.acos},
-    'asin': {'arity': 1, 'xtype': 'f2f', 'tf': tf.asin},
-    'atan': {'arity': 1, 'xtype': 'f2f', 'tf': tf.atan},
+ast_string_dict = {ast.Add: '+',  # e.g., a + b
+                   ast.Sub: '-',  # e.g., a - b
+                   ast.Mult: '',  # e.g., a * b
+                   ast.Div: '/',  # e.g., a / b
+                   ast.Pow: '**',  # e.g., a ** 2
+                   ast.USub: '-',  # e.g., -a
+                   ast.And: 'And',  # e.g., a and b
+                   ast.Or: 'Or',  # e.g., a or b
+                   ast.Not: 'Not',  # e.g., not a
+                   ast.Eq: 'Eq',  # e.g., a == b
+                   ast.NotEq: 'Neq',  # e.g., a != b
+                   ast.Lt: '<',  # e.g., a < b
+                   ast.LtE: '<=',  # e.g., a <= b
+                   ast.Gt: '>',  # e.g., a > b
+                   ast.GtE: '>=',  # e.g., a >= 1
+                   ast.BitAnd: '&',  # DON'T USE tf.bitwise.bitwise_and
+                   'abs': 'abs',  # e.g., abs(a)
+                   'sign': 'sign',  # e.g., sign(a)
+                   'square': 'square',  # e.g., square(a)
+                   'sqrt': 'sqrt',  # e.g., sqrt(a)
+                   'pow': 'pow',  # e.g., pow(a, b)
+                   'log': 'log',  # e.g., log(a)
+                   'log1p': 'log1p',  # e.g., log1p(a)
+                   'cos': 'cos',  # e.g., cos(a)
+                   'sin': 'sin',  # e.g., sin(a)
+                   'tan': 'tan',  # e.g., tan(a)
+                   'acos': 'acos',  # e.g., acos(a)
+                   'asin': 'asin',  # e.g., asin(a)
+                   'atan': 'atan',  # e.g., atan(a)
+                   'Ifte': 'Ifte',  # e.g., Ifte(a, b, c)
+                   'Mini': 'Mini',  # if reduce_min does not work...
+                   'Maxi': 'Maxi'}
 
-    'And': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Or': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Xor': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Nand': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Xand': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Nor': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Xnor': {'arity': 2, 'xtype': 'b2b', 'tf': ''},
-    'Not': {'arity': 1, 'xtype': 'b2b', 'tf': ''},
+op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
+      'int': {'name': 'int', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
+      'bool': {'name': 'bool', 'arity': 0, 'xtype': '2b', 'tf': 'ä'},
 
-    '==': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '!=': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '<': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '<=': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '>': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
-    '>=': {'arity': 2, 'xtype': 'f2b', 'tf': ''},
+      '+': {'name': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add},
+      ast.Add: {'name': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add},  # e.g., a + b
+      '-': {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
+      ast.Sub: {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract},  # e.g., a - b
+      ast.USub: {'name': '-', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative},  # e.g., -a
+      '*': {'name': '', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},
+      ast.Mult: {'name': '', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},  # e.g., a * b
+      '/': {'name': '/', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
+      ast.Div: {'name': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.divide},  # e.g., a / b
+      '**': {'name': '**', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
+      ast.Pow: {'name': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow},  # e.g., a ** 2
+      'abs': {'name': 'abs', 'arity': 1, 'xtype': 'f2f', 'tf': tf.abs},
+      'sign': {'name': 'sign', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sign},
+      'square': {'name': 'square', 'arity': 1, 'xtype': 'f2f', 'tf': tf.square},
+      'sqrt': {'name': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sqrt},
+      'log': {'name': 'log', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log},
+      'log1p': {'name': 'log1p', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log1p},
+      'cos': {'name': 'cos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.cos},
+      'sin': {'name': 'sin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sin},
+      'tan': {'name': 'tan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan},
+      'acos': {'name': 'acos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.acos},
+      'asin': {'name': 'asin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.asin},
+      'atan': {'name': 'atan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan},
 
-    'Ftob': {'arity': 1, 'xtype': 'f2b', 'tf': tf.bool},
-    'Btof': {'arity': 1, 'xtype': 'b2f', 'tf': tf.float32},
+      'And': {'name': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
+      ast.And: {'name': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and},  # e.g., a and b
+      '&': {'name': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and},
+      ast.BitAnd: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.logical_and},  # DON'T USE tf.bitwise.bitwise_and
+      'Or': {'name': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
+      ast.Or: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.logical_or},  # e.g., a or b
+      'Xor': {'name': 'Xor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
+      'Nand': {'name': 'Nand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
+      'Xand': {'name': 'Xand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
+      'Nor': {'name': 'Nor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
+      'Xnor': {'name': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
+      'Not': {'name': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': 'ä'},
+      ast.Not: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.logical_not},  # e.g., not a
 
-    'Ifte': {'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where},  # Note that boolean if's can be realized with boolean operators. (Or ITE())
-    'Mini': {'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
-    'Maxi': {'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
-}
+      '==': {'name': '==', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
+      ast.Eq: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.equal},  # e.g., a == b
+      '!=': {'name': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
+      ast.NotEq: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.not_equal},  # e.g., a != b
+      '<': {'name': '<', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
+      ast.Lt: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.less},  # e.g., a < b
+      '<=': {'name': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
+      ast.LtE: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.less_equal},  # e.g., a <= b
+      '>': {'name': '>', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
+      ast.Gt: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.greater},  # e.g., a > b
+      '>=': {'name': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
+      ast.GtE: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.greater_equal},  # e.g., a >= 1
 
-functions_wrap_dict = ['Mini', 'Maxi', 'abs', 'sign', 'square', 'sqrt', 'log', 'log1p', 'cos', 'sin', 'tan', 'acos', 'asin', 'atan']
-functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=']
+      'Ftob': {'name': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool},
+      'Btof': {'name': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32},
+
+      'Ifte': {'name': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where},  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+      'Mini': {'name': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum},
+      'Maxi': {'name': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
+      }
+functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&']
 
 function_infix_to_prefix = {  # currently obsolete
     '+': 'add',
@@ -146,5 +194,5 @@ function_infix_to_prefix = {  # currently obsolete
     '<=': 'leq',
     '>': 'gt',
     '>=': 'geq',
+    '&': 'And',
 }
-

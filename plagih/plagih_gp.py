@@ -2,7 +2,7 @@ import sys;
 
 sys.path.append('modules/')  # add directory 'modules' to the current path
 import plagih.modules.plagih_gp_base_class_xai as plagih
-from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, data_save_pickle
+from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, save_data_pickle, load_operators_csv
 from pathlib import Path
 
 
@@ -60,28 +60,26 @@ file_dict = {
     'samples_pickle': Path('../mountaincar/karoo_files/data_samples/plagih_data_prepared.p'),
     'operators_file': Path('../mountaincar/karoo_files/operators/operators.csv')
 }
-another_list = ['Ifte',
-                'and', '0', '2',
-                '<=', '<=',
-                'Mini', 'observation1', 'observation1', '+',
-                '+', '*', '*', '0.7',
-                '*', '0.03', '**', '0.03', '-0.07', '**',
-                '**', '-0.09', '+', '4', '+', '2',
-                '+', '2', 'observation0', '-0.09', 'observation0', '0.38',
-                'observation0', '0.25']
-label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
-permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 
 config_dict = create_config_dict()
 
 # prepared_data = data_from_csv(file_dict['samples_file'])
 # data_save_pickle(prepared_data, file_dict['samples_pickle'])
 prepared_data = data_load_pickle(file_dict['samples_pickle'])
+op_array = load_operators_csv(file_dict['operators_file'])
 
 gp = plagih.ExplainableGP(config_dict)
-gp.data_activate(prepared_data)
+gp.activate_data(prepared_data)
+gp.activate_operators(op_array)
 
 # gp.data_from_pickle(file_dict['samples_pickle'])
-gp.data_load_operators(file_dict['operators_file'])
-gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)
+another_list = ['Ifte', '&', '0', '2', '<=', '<=', 'Mini', 'observation1', 'observation1', '+',
+                '+', '*', '*', '0.7', '*', '0.03', '**', '0.03', '-0.07', '**', '**', '-0.09', '+', '4', '+', '2',
+                '+', '2', 'observation0', '-0.09', 'observation0', '0.38', 'observation0', '0.25']
+label_list = ['Ifte', '<', '0.0', 'Ifte', 'observation1', '0.0', 'True', '2.0', '0.0']
+permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
+
+# gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)
+gp.load_origin_tree(label_list=another_list)
+
 gp.plagih_gp_run()

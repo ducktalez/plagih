@@ -59,6 +59,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # random TODO grow depth anpassen!
 # TODO anzahl bereits bekannter bäume
 # TODO Field Guide programming lesen
+# TODO alert if functions do not allow closure, alert when origin function is not in dict
 
 # TODO save sympifyed versions of trees
 
@@ -279,7 +280,7 @@ class ExplainableGP(object):
     #   Load and Archive Data                     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def data_activate(self, data_prepared):
+    def activate_data(self, data_prepared):
         """
         separate loading the prepared data into the main class.
         Why like this? I needed to find a bug in the data_from_csv file and
@@ -292,38 +293,8 @@ class ExplainableGP(object):
         self.unique_outputs_num = unique_outputs_num
         self.data_train_rows, self.data_train, self.data_control = data_train_rows, data_train, data_control
 
-    def data_load_operators(self, operators_file_path):
-        """
-        Load all operators ready-to-use from a file
-        """
-
-        functions = np.loadtxt(operators_file_path, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-        # Part 3.5: Split the functions in 5 types
-
-        # rows are the function types (f2f)
-        # columns are the arity
-        self.op_type_arity_array = [[[], [], [], []],
-                                    [[], [], [], []],
-                                    [[], [], [], []],
-                                    [[], [], [], []],
-                                    [[], [], [], []]]
-        for fun in functions:
-            label = fun[0]
-            arity = op[label]['arity']  # arity = int(fun[1])
-            xtype = op[label]['xtype']
-
-            if xtype == 'f2f':
-                self.op_type_arity_array[f2f][arity].append(label)
-            elif xtype == 'f2b':
-                self.op_type_arity_array[f2b][arity].append(label)
-            elif xtype == 'b2b':
-                self.op_type_arity_array[b2b][arity].append(label)
-            elif xtype == 'b2f':
-                self.op_type_arity_array[b2f][arity].append(label)
-            elif xtype == 'b2f2f':
-                self.op_type_arity_array[b2f2f][arity].append(label)
-
-        self.print_g('g', 'Loading operators. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+    def activate_operators(self, op_array):
+        self.op_array = op_array
         return
 
     def data_pickle_save(self):
@@ -490,7 +461,7 @@ class ExplainableGP(object):
                     self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
                     dominator_count += 1
 
-        self.print_g('g', '{}: {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
+        self.print_g('g', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
         return gene_pool_hash_dict
 
@@ -563,7 +534,6 @@ class ExplainableGP(object):
             tree = self.tree_insert_branch_random(tree_origin, branch_nodes_ids)  # tree with new branch
 
             # Fill the correct meta-data_csv_path into the tree (and wipe the old fitness)
-            # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data_csv_path
             tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
             tree = tree_set_id(tree, 1)
 
@@ -738,7 +708,7 @@ class ExplainableGP(object):
 
             if force_convert:
                 self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
-                left_xtype = self.xtype_get(left_tree[N_label][left_id])
+                left_xtype = self.xtype_get(tree_get_label(left_tree, left_id))  # left_tree[N_label][left_id]
                 conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
                 right_labels.insert(0, conv_to_left)
                 right_aritys.insert(0, 1)
@@ -764,7 +734,7 @@ class ExplainableGP(object):
         """
         tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
         tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
-        tree[TR_type][1] = last_modification
+        tree = tree_set_history(tree, last_modification)
         if not tree_test_check_children(tree):
             self.printpl('e', 'Tree is not consistent:\n{}'.format(tree))
         self.population_new.append(tree)
@@ -863,7 +833,7 @@ class ExplainableGP(object):
         if same_arity:
             # 2. perform point mutation on that specific node
             if arity > 0:
-                tree[N_label][node_id] = xtype_choose_func_pointmutation(self.op_type_arity_array, xtype=xtype, arity=arity)  # Function is same type, same arity
+                tree[N_label][node_id] = xtype_choose_func_pointmutation(self.op_array, xtype=xtype, arity=arity)  # Function is same type, same arity
             elif arity == 0:  # aka a terminal
                 tree[N_label][node_id] = self.xtype_choose_term(xtype)  # 3 -> '2f' -> 5
             else:
@@ -1046,7 +1016,7 @@ class ExplainableGP(object):
                         label = self.xtype_choose_term(t)
                         arity = 0
                     else:
-                        label, arity = self.xtype_choose_func_branchmutate(xtype=t, arity=False)
+                        label, arity = self.xtype_choose_func(xtype=t)
 
                     # xtype-'To-do' list for the next depth to give values to these functions
                     if label == 'Ifte':
@@ -1154,12 +1124,12 @@ class ExplainableGP(object):
                 if tree.shape[0] == T_num_lines:  # (+ row 0)
                     pass  # print('Origin Tree is: \n' + str(tree))
                 else:
-                    self.printpl('e', "Tree could not be imported correctly from .csv file.")
+                    print_e('Tree could not be imported correctly from .csv file.')
                     raise
         elif label_list:
             tree = karoo_tree_from_user(label_list, permanent_list)
         else:
-            self.printpl('w', 'No origin provided. Todo. starting from scratch with random generation?')
+            print_warning('w', 'No origin provided. Todo. starting from scratch with random generation?')
             raise
 
         origin_algo_raw = self.tree_expr_raw(tree, P_first_node)
@@ -1202,6 +1172,7 @@ class ExplainableGP(object):
             # 3. compute fitness
             if parsimony < self.parsimony_min_max[1]:
                 # 3.1 With tensorflow
+                print('Algo raw:', str(algo_raw_str))  # importantprint 2 for algo_raw
                 algo_sym = self.tree_expr_sympify(algo_raw_str=str(algo_raw_str))
                 fitness_train = self.eval_tf(algo_sym, self.data_train)['fitness']
 
@@ -1269,11 +1240,22 @@ class ExplainableGP(object):
 
             if 'zoo' in strx:
                 self.printpl('ww', 'zoo in expression? sfeh: not anymore... {}'.format(algo_raw_str))
-                x = re.sub('zoo', '10', strx)
+                # x = re.sub('zoo', '10', strx)
+                self.remove_this_tree()
+                return str(sympy_dummy)
 
             if 'inf' in strx:
                 self.printpl('ww', 'Inf in expression? {}'.format(algo_raw_str))
-                x = re.sub('inf', '10', strx)
+                # x = re.sub('inf', '10', strx)
+                # TODO this solution needs more adjustments
+                self.remove_this_tree()
+                return str(sympy_dummy)
+
+            if '*I' in strx:  # this (hopefully) gets all imaginary numbers and also does not acceft 'Ifte'
+                self.printpl('ww', 'imaginary number in expression? {}'.format(algo_raw_str))
+                # x = re.sub('I', '10', strx)
+                self.remove_this_tree()
+                return str(sympy_dummy)
 
             if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
                 self.printpl('ww', 'We had a "nan" in {}'.format(algo_raw_str))
@@ -1430,6 +1412,7 @@ class ExplainableGP(object):
                 'fitness'           - aggregated scalar fitness score
 
         """
+        kernel = self.kernel
 
         # Initialize TensorFlow session
         tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
@@ -1442,127 +1425,108 @@ class ExplainableGP(object):
                 # 1. data_csv_path (observations, actions) to tensors
                 tensors = {}
 
-                num_terminals = len(self.variables_dict['all'])
-
-                for i in range(num_terminals):
-                    var = self.variables_dict['all'][i]
-                    if '2f' in self.xtype_get(var, node_arity=0):
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
-                    else:  # '2b'
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
-
-                # for i in range(num_actions):
-                #     self.action_dict
-                #     action_xtype = self.xtype_get(var, node_arity=0)
-                #     if '2f' in action_xtype:
-                #         tensors[var] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
-
-                for i, action in enumerate(self.action_dict):
-                    py_type = self.action_dict[action]
-                    if 'float' in py_type:
-                        tensors['action' + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
-                    # elif '2b' in action_xtype:  # '2b'
-                    #     self.printpl('e', 'Currently no kernel available for boolean fitness')
-                    #     tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
-                    else:
-                        self.printpl('e', 'action_dict type for {} is: {}.'.format(action, py_type))
+                tensors = self.tensors_leaves(tensors, data)
 
                 # 2- Transform string expression into TF operation graph
-                tf_result = self.eval_tf_ast_expr(expr, tensors)
+                tf_result = tf_from_ast_expr(expr, tensors)
                 pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-                # TODO currently does only support one label
-                solution = tensors['action0']  # solution c1 is assumed to be stored in this terminal
-                # 3- Add fitness computation into TF graph
-                if self.kernel == 'classification':  # CLASSIFY kernel
+                solution = tensors['action0']  # TODO currently does only support one label
 
-                    """
-                    Creates element-wise fitness computation TensorFlow (TF) sub-graph for CLASSIFY kernel.
-                    - tree-label vs. true label
-                    This multiclass classifer compares each row of a given Tree to the known solution, comparing predicted labels 
-                    generated by plagih GP against the true class labels. This method is able to work with any number of class 
-                    labels, from 2 to n. The left-most bin includes -inf. The right-most bin includes +inf. Those inbetween are 
-                    by default confined to the spacing of 1.0 each, as defined by:
-
-                        (solution - 1) < result <= solution
-
-                    The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
-                    origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
-                    side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
-                    negative and positive result.
-                    """
-
-                    if len(self.action_dict) > 1:
-                        print_e('TODO multidimensional input. To be done, there is no solution yet.')
-
-                    if get_pred_labels:
-                        pred_labels = tf.map_fn(self.eval_tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
-
-                    skew = (self.unique_outputs_num / 2) - 1
-
-                    rule11 = tf.equal(solution, 0)
-                    rule12 = tf.less_equal(tf_result, 0 - skew)
-                    rule13 = tf.logical_and(rule11, rule12)
-
-                    rule21 = tf.equal(solution, self.unique_outputs_num - 1)
-                    rule22 = tf.greater(tf_result, solution - 1 - skew)
-                    rule23 = tf.logical_and(rule21, rule22)
-
-                    rule31 = tf.less(solution - 1 - skew, tf_result)
-                    rule32 = tf.less_equal(tf_result, solution - skew)
-                    rule33 = tf.logical_and(rule31, rule32)
-
-                    pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
-
-                elif self.kernel == 'regression':  # REGRESSION kernel
-
-                    """
-                    A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
-                    that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
-                    integrating a more sophisticated kernel.
-                    """
-
-                    pairwise_fitness = tf.abs(solution - tf_result)
-
-                elif self.kernel == 'match':  # MATCH kernel
-
-                    """
-                    This is used for demonstration purposes only.
-                    """
-
-                    # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-                    RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-                    pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
-
-                # elif self.kernel == '[other]': # use others as a template
-
-                else:
-                    raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
-
+                pairwise_fitness = self.tf_get_pairwise_fitness(kernel, solution, tf_result)
                 fitness = tf.reduce_sum(pairwise_fitness)
 
-                # Process TF graph and collect the results
+                if get_pred_labels:
+                    pred_labels = tf.map_fn(self.tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
+
                 tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
 
         return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
                 'pairwise_fitness': pairwise_fitness, 'old_fitness': float(fitness)}
 
-    def eval_tf_ast_expr(self, expr, tensors):
+    def tf_get_pairwise_fitness(self, kernel, solution, tf_result):
+        # 3- Add fitness computation into TF graph
+        if kernel == 'classification':  # CLASSIFY kernel
 
+            """
+            This multiclass classifer compares each row of a given Tree to the known solution.
+            The left-most (class?) bin includes -inf. The right-most bin includes +inf. Those inbetween are 
+            by default confined to the spacing of 1.0 each, as defined by:
+
+                (solution - 1) < result <= solution
+
+            The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
+            origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
+            side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
+            negative and positive result.
+            """
+
+            if len(self.action_dict) > 1:
+                print_e('TODO multidimensional input. To be done, there is no solution yet.')
+
+            skew = (self.unique_outputs_num / 2) - 1
+
+            rule11 = tf.equal(solution, 0)
+            rule12 = tf.less_equal(tf_result, 0 - skew)
+            rule13 = tf.logical_and(rule11, rule12)
+
+            rule21 = tf.equal(solution, self.unique_outputs_num - 1)
+            rule22 = tf.greater(tf_result, solution - 1 - skew)
+            rule23 = tf.logical_and(rule21, rule22)
+
+            rule31 = tf.less(solution - 1 - skew, tf_result)
+            rule32 = tf.less_equal(tf_result, solution - skew)
+            rule33 = tf.logical_and(rule31, rule32)
+
+            pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
+
+        elif kernel == 'regression':  # REGRESSION kernel
+
+            """
+            A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
+            that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
+            integrating a more sophisticated kernel.
+            """
+
+            pairwise_fitness = tf.abs(solution - tf_result)
+
+        elif kernel == 'match':  # MATCH kernel
+
+            """
+            This is used for demonstration purposes only.
+            """
+
+            # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+            RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
+            pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
+
+        else:
+            raise Exception('Kernel type is wrong or missing. You entered {}'.format(kernel))
+
+        return pairwise_fitness
+
+    def tensors_leaves(self, tensors, data):
         """
-        Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
-
+        All the tensors in leaf nodes, aka
         """
-        # print('Current expr:', expr)  # importantprint for debugging failed expressions
-        tree = ast.parse(expr, mode='eval').body
-        try:
-            return tf_graph_from_expr_recursive(tree, tensors)
-        except:
-            self.printpl('e', 'Ohoh, hope this does not come up')
-            # TODO this dummy seems wrong
-            return self.fitness_dummy_get()
+        num_terminals = len(self.variables_dict['all'])
 
-    def eval_tf_classify_labels_map(self, result):
+        for i in range(num_terminals):
+            var = self.variables_dict['all'][i]
+            if '2f' in self.xtype_get(var, node_arity=0):
+                tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
+            else:  # '2b'
+                tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
+
+        for i, action in enumerate(self.action_dict):
+            py_type = self.action_dict[action]
+            if 'float' in py_type:
+                tensors['action' + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
+            else:
+                self.printpl('e', 'action_dict type for {} is: {}.'.format(action, py_type))
+        return tensors
+
+    def tf_classify_labels_map(self, result):
 
         """
         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
@@ -1594,7 +1558,7 @@ class ExplainableGP(object):
 
         return pred_label
 
-    def xtype_choose_func_branchmutate(self, xtype=None, arity=False):
+    def xtype_choose_func(self, xtype=None):
         """
         This fills in a function that fits the type of the function/terminal before.
         terminal  '2f' -> '_2f', arity
@@ -1604,17 +1568,17 @@ class ExplainableGP(object):
         """
         if xtype:
             if '2f' in xtype:
-                choose_func = sum(self.op_type_arity_array[f2f] + self.op_type_arity_array[b2f] + self.op_type_arity_array[b2f2f], [])
+                choose_func = sum(self.op_array[f2f] + self.op_array[b2f] + self.op_array[b2f2f], [])
             elif '2b' in xtype:
-                choose_func = sum(self.op_type_arity_array[f2b] + self.op_type_arity_array[b2b], [])
+                choose_func = sum(self.op_array[f2b] + self.op_array[b2b], [])
             else:
                 raise
         else:
-            choose_func = sum(self.op_type_arity_array[f2f] +
-                              self.op_type_arity_array[b2f] +
-                              self.op_type_arity_array[b2f2f] +
-                              self.op_type_arity_array[f2b] +
-                              self.op_type_arity_array[b2b], [])
+            choose_func = sum(self.op_array[f2f] +
+                              self.op_array[b2f] +
+                              self.op_array[b2f2f] +
+                              self.op_array[f2b] +
+                              self.op_array[b2b], [])
 
         # Attention! do not choose out of an dictionary.
         # every function is inside there only once, so no higher chance for functions that are more often in the list
@@ -1640,7 +1604,7 @@ class ExplainableGP(object):
                 term_position = self.variables_dict['all'].index(label)
                 node_xtype = op[self.variables_dict['types'][term_position]]['xtype']
             elif 'action' in label:
-                print_warning('Does this happen? Test it!')
+                print_warning('w', 'Does this happen? Test it!')
                 node_xtype = self.action_dict[label]
 
             else:  # only 'float' left
@@ -1685,13 +1649,6 @@ class ExplainableGP(object):
             if terminals_type:  # Is there an entry in the list?
                 return np.random.choice(terminals_type)  # ...so we return one
         return self.tree_build_type_constant_get(term_type=the_type)  # otherwise: constant (There are always constants :P)
-
-    def pnode_function_select(self, pnode):
-
-        """
-        Returns a function with the same outcome
-
-        """
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Monitoring                                |
@@ -1747,7 +1704,7 @@ class ExplainableGP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def fitness_dummy_get(self):
-        if self.fitness_type == 'min':
+        if self.kernel == 'regression':
             return float('inf')
         else:
             return float(0)
@@ -1785,256 +1742,6 @@ class ExplainableGP(object):
         plt.close()
         return
 
-    # def plagih_pause(self):
-    #
-    #     """
-    #     Pause the program execution and engage the user, providing a number of options.
-    #
-    #     Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
-    #     within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
-    #     'ERROR!' for which the user may want to archive data_csv_path before terminating. At this point in time, (2) is
-    #     associated with each error but does not provide any special options).
-    #     """
-    #
-    #     ### PART 1 - reset and pack values to send to menu.pause ###
-    #     menu_dict = {'input_a': '',
-    #                  'input_b': 0,
-    #                  'display': self.display,
-    #                  'tree_depth_max': self.config['tree_depth_max'],
-    #                  'pop_max': self.pop_max,
-    #                  'gen_id': self.gen_id,
-    #                  'gen_max': self.config['gen_max'],
-    #                  'tourn_size': self.tourn_size,
-    #                  'evolve_repro': self.evolve_rates['reproduce'],
-    #                  'evolve_point': self.evolve_rates['mutate_point'],
-    #                  'evolve_branch': self.evolve_rates['mutate_branch'],
-    #                  'evolve_cross': self.evolve_rates['Crossover one Branch'],
-    #                  # 'fittest_dict': self.origin_dominators,
-    #                  'pop_last_len': len(self.population_base),
-    #                  'pop_new_len': len(self.population_new),
-    #                  'path': self.path}
-    #
-    #     menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
-    #
-    #     ### PART 2 - unpack values returned from menu.pause ###
-    #     input_a = menu_dict['input_a']
-    #     input_b = menu_dict['input_b']
-    #     self.display = menu_dict['display']
-    #     self.config['gen_max'] = menu_dict['gen_max']
-    #
-    #     self.evolve_rates['reproduce'] = menu_dict['evolve_repro']
-    #     self.evolve_rates['mutate_point'] = menu_dict['evolve_point']
-    #     self.evolve_rates['mutate_branch'] = menu_dict['evolve_branch']
-    #     self.evolve_rates['Crossover one Branch'] = menu_dict['evolve_cross']
-    #
-    #     ### PART 3 - execute the user queries returned from menu.pause ###
-    #     if input_a == 'esc':
-    #         return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
-    #
-    #     elif input_a == 'eval':  # evaluate a Tree against the TEST data_csv_path
-    #         algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
-    #         self.printpl('i', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, BColors.RESET)  # print the sympified expression
-    #         result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
-    #         self.pause_fitness_test(result)  # TF tested 2017 02/02
-    #
-    #     elif input_a == 'print_last':  # print a Tree from population_genepool
-    #         self.display_tree(self.population_base[input_b])
-    #
-    #     elif input_a == 'print_new':  # print a Tree from population_new
-    #         self.display_tree(self.population_new[input_b])
-    #
-    #     elif input_a == 'pop_last':  # list all Trees in population_genepool
-    #         self.printpl('i', '')
-    #         for tree_id in range(1, len(self.population_base)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_base[tree_id])
-    #             self.printpl('i', '\t\033[36m Tree', self.population_base[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'pop_new':  # list all Trees in population_new
-    #         self.printpl('ii', '')
-    #         for tree_id in range(1, len(self.population_new)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_new[tree_id])  # extract the expression
-    #             self.printpl('ii', '\t\033[36m Tree', self.population_new[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'load':  # load population_s to replace population_genepool
-    #         pass
-    #         # self.data_pickle_recover(self.filename['s'])  #
-    #
-    #     elif input_a == 'write':  # write the evolving population_new to disk
-    #         file_population_write(self.population_new, 'new')
-    #
-    #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
-    #         self.config['gen_max'] = self.config['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
-    #
-    #     elif input_a == 'quit':
-    #         self.main_terminate()  # archive populations and exit
-    #
-    #     return _pause(self):
-    #
-    #     """
-    #     Pause the program execution and engage the user, providing a number of options.
-    #
-    #     Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
-    #     within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
-    #     'ERROR!' for which the user may want to archive data_csv_path before terminating. At this point in time, (2) is
-    #     associated with each error but does not provide any special options).
-    #     """
-    #
-    #     ### PART 1 - reset and pack values to send to menu.pause ###
-    #     menu_dict = {'input_a': '',
-    #                  'input_b': 0,
-    #                  'display': self.display,
-    #                  'tree_depth_max': self.config['tree_depth_max'],
-    #                  'pop_max': self.pop_max,
-    #                  'gen_id': self.gen_id,
-    #                  'gen_max': self.config['gen_max'],
-    #                  'tourn_size': self.tourn_size,
-    #                  'evolve_repro': self.evolve_rates['reproduce'],
-    #                  'evolve_point': self.evolve_rates['mutate_point'],
-    #                  'evolve_branch': self.evolve_rates['mutate_branch'],
-    #                  'evolve_cross': self.evolve_rates['Crossover one Branch'],
-    #                  # 'fittest_dict': self.origin_dominators,
-    #                  'pop_last_len': len(self.population_base),
-    #                  'pop_new_len': len(self.population_new),
-    #                  'path': self.path}
-    #
-    #     menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
-    #
-    #     ### PART 2 - unpack values returned from menu.pause ###
-    #     input_a = menu_dict['input_a']
-    #     input_b = menu_dict['input_b']
-    #     self.display = menu_dict['display']
-    #     self.config['gen_max'] = menu_dict['gen_max']
-    #
-    #     self.evolve_rates['reproduce'] = menu_dict['evolve_repro']
-    #     self.evolve_rates['mutate_point'] = menu_dict['evolve_point']
-    #     self.evolve_rates['mutate_branch'] = menu_dict['evolve_branch']
-    #     self.evolve_rates['Crossover one Branch'] = menu_dict['evolve_cross']
-    #
-    #     ### PART 3 - execute the user queries returned from menu.pause ###
-    #     if input_a == 'esc':
-    #         return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
-    #
-    #     elif input_a == 'eval':  # evaluate a Tree against the TEST data_csv_path
-    #         algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
-    #         self.printpl('i', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, BColors.RESET)  # print the sympified expression
-    #         result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
-    #         self.pause_fitness_test(result)  # TF tested 2017 02/02
-    #
-    #     elif input_a == 'print_last':  # print a Tree from population_genepool
-    #         self.display_tree(self.population_base[input_b])
-    #
-    #     elif input_a == 'print_new':  # print a Tree from population_new
-    #         self.display_tree(self.population_new[input_b])
-    #
-    #     elif input_a == 'pop_last':  # list all Trees in population_genepool
-    #         self.printpl('i', '')
-    #         for tree_id in range(1, len(self.population_base)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_base[tree_id])
-    #             self.printpl('i', '\t\033[36m Tree', self.population_base[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'pop_new':  # list all Trees in population_new
-    #         self.printpl('ii', '')
-    #         for tree_id in range(1, len(self.population_new)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_new[tree_id])  # extract the expression
-    #             self.printpl('ii', '\t\033[36m Tree', self.population_new[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'load':  # load population_s to replace population_genepool
-    #         pass
-    #         # self.data_pickle_recover(self.filename['s'])  #
-    #
-    #     elif input_a == 'write':  # write the evolving population_new to disk
-    #         file_population_write(self.population_new, 'new')
-    #
-    #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
-    #         self.config['gen_max'] = self.config['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
-    #
-    #     elif input_a == 'quit':
-    #         self.main_terminate()  # archive populations and exit
-    #
-    #     return 1
-
-    # def pause_fitness_test(self, result):
-    #
-    #     if self.kernel == 'classification':
-    #         """
-    #         Print the Precision-Recall and Confusion Matrix for a CLASSIFICATION run against the test data_csv_path.
-    #
-    #         From scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
-    #             Precision (P) = true_pos / true_pos + false_pos
-    #             Recall (R) = true_pos / true_pos + false_neg
-    #             harmonic mean of Precision and Recall (F1) = 2(P x R) / (P + R)
-    #
-    #         From scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
-    #             y_pred = result, the predicted labels generated by Plagih GP
-    #             y_true = solution, the true labels associated with the data_csv_path
-    #
-    #         """
-    #         for i in range(len(result['result'])):
-    #             self.printpl('iii', '\t Data row {} predicts class:\033[1m {} ({} True)\033[0;0m\033[36m as {:.2f}{}\033[0;0m'.format(
-    #                 i, int(result['pred_labels'][0][i]), int(result['solution'][i]), result['result'][i],
-    #                 result['pred_labels'][1][i]))
-    #
-    #         self.printpl('iii', '\n Fitness score: {}\n'
-    #                             'Precision-Recall report:\n{}\n'
-    #                             'Confusion matrix:\n{}'.format(result['fitness'],
-    #                                                            skm.classification_report(result['solution'], result['pred_labels'][0]),
-    #                                                            skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
-    #
-    #     elif self.kernel == 'regression':
-    #         """
-    #         Print the Fitness score and Mean Squared Error for a REGRESSION run against the test data_csv_path.
-    #
-    #         """
-    #
-    #         for i in range(len(result['result'])):
-    #             self.printpl('iii', '\tData row {} predicts c1:\033[1m {:.2f} ({:.2f} True)'.
-    #                          format(i, result['result'][i], result['solution'][i]))
-    #
-    #         mse, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
-    #
-    #         self.printpl('iii', '\n\t Origin fitness score: {}'.format(self.origin['fitness_train']))
-    #         self.printpl('iii', '\n\t Regression fitness score: {}'.format(fitness))
-    #         self.printpl('iii', '\t Mean Squared Error: {}'.format(mse))
-    #
-    #         return
-    #
-    #     elif self.kernel == 'match':
-    #
-    #         """
-    #         Print the accuracy for a MATCH kernel run against the test data_csv_path.
-    #
-    #         """
-    #
-    #         for i in range(len(result['result'])):
-    #             self.printpl('vv', '\tData row {} predicts match: {} {:.2f} ({:.2f} True)'.format(i, BColors.BOLD, result['result'][i], result['solution'][i]))
-    #
-    #         self.printpl('arity', 'Matching fitness score: {}'.format(result['fitness']))
-    #
-    #         return
-    #     else:
-    #         self.printpl('e', 'This fitness test is not available:')
-    #
-    #     return
-
-    def display_tree(self, tree):
-
-        """
-        dummy for displaying a tree
-        """
-
-        self.printpl('i', '\n{} Tree ID {}{}'.format(BColors.CYAN, int(tree[TR_ID][1]), BColors.RESET))
-
-        for depth in range(0, self.config['tree_depth_max'] + 1):  # increment through all possible Tree depths - tested 2016 07/09
-
-            self.printpl('i', 'Tree: {}\n'.format(tree))
-
-        algo_raw_str = str(self.tree_expr_raw(tree, 1))
-        self.printpl('i', '\tTree {} yields (raw): {}'.format(tree[TR_ID][1], algo_raw_str))
-        algo_sym = self.tree_expr_sympify(algo_raw_str=algo_raw_str)
-        self.printpl('i', '\tTree {} yields (sym): {}'.format(tree[TR_ID][1], algo_sym))
-
-        return
-
     def printpl(self, message_type, text):
 
         """
@@ -2056,192 +1763,6 @@ class ExplainableGP(object):
             printez(message_type, text, time_total=time.perf_counter() - self.time_start)
 
         return
-
-    # def evolve_subtree_depth_choose(self, ptree, top_id, bottom_id, amount_replaced_nodes=None, mode='base_depth'):  # sfeh other default
-    #     """
-    #     Return the size of the tree to be inserted.
-    #     Should not be set to maximum to reduce complexity!
-    #     """
-    #
-    #     depth_old = int(ptree[N_depth][bottom_id]) - int(ptree[N_depth][top_id])  # subtract depth of 'branch_top' from the last in 'branch'
-    #     depth_upper_bound = self.config['tree_depth_max'] - int(ptree[N_depth][top_id])  # = 10 - (node_depth)
-    #     if mode == 'maximum':
-    #         branch_depth = depth_upper_bound
-    #     elif mode == 'same_length':
-    #         branch_depth = depth_old
-    #     elif mode == 'base_depth':
-    #         branch_depth = min(self.config['tree_depth_base'], depth_upper_bound)
-    #     elif mode == 'random':
-    #         branch_depth = min(depth_upper_bound, np.random.randint(0, 1 + max(depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
-    #     else:
-    #         self.printpl('e', 'evolve_subtree_depth_choose does not accept this mode: {}'.format(mode))
-    #         raise
-    #     return branch_depth
-    # def tree_store_meta_lastgen(self, tree, modification=''):
-    #
-    #     """
-    #     Remove all fitness data_csv_path from a given tree.
-    #
-    #     This is required after a new generation is evolved as the fitness of the same Tree prior to its mutation will
-    #     no longer apply.
-    #
-    #     """
-    #
-    #     # save information about how good last changes were
-    #     # for i in range(min(self.tree_depth_min, 5), 2, -1):  # 5,4,3,2
-    #     #     tree[TR_type][i] = tree[TR_type][i-1]    # The last modifications
-    #     #     tree[T_fitness][i] = tree[T_fitness][i-1]  # The last fitness
-    #     #     tree[T_parsimony][i] = tree[T_parsimony][i-1]  # The last parsimony (TODO) # tree_id,1,a,b,c -> tree_id,1,a,a,b
-    #
-    #     # What needs to be assigned later
-    #     # tree[TR_type][2] = modification  # wipe last modification data_csv_path
-    #     # tree[TR_ID][1] = ''  # -> tree_id,,
-    #     # tree[T_fitness][1] = ''  # wipe fitness data_csv_path
-    #     # tree[T_parsimony][1] = ''  # wipe parsimony data_csv_path
-    #
-    #     return tree
-
-    # Stuff, that is not needed
-    #
-    # def treegp_mutate_branch_terminal_build(self):
-    #
-    #     """
-    #     Build the Terminal nodes for the tree.
-    #
-    #     """
-    #
-    #     self.tnode[N_depth] = self.tnode[TR_depth]  # set the final node_depth (same as 'config.pop[N_depth]' + 1)
-    #
-    #     for j in range(1, len(self.tree[N_id])):  # go through all nodes
-    #         if int(self.tree[N_depth][j]) == self.tnode[N_depth] - 1:  # this node is a parent
-    #             for k in range(1, (int(self.tree[N_arity][j]) + 1)):  # increment through each degree of arity for each parent node
-    #                 self.tnode[N_parent] = int(self.tree[3][j])  # set the parent 'node_id'  ...
-    #                 self.treegp_branch_terminal(op[self.tree[N_label][j]]['xtype'])  # ... generate a Terminal node
-    #
-    #     return
-    # def plot_live(self):
-    #     many_values = np.array([[6, 5, 4, 5, 6, 5, 4, 5, 5, 6, 5, 8, 5, 5, 5, 5, 5, 5, 4, 5, 6, 5],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 8, 9, 8, 7],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 8, 9, 8, 7],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 7, 8, 9, 0],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 8, 9, 8, 7, 6, 5, 6, 7, 8, 9, 0, 9, 8, 7],
-    #                             [2, 3, 4, 5, 4, 5, 6, 7, 8, 9, 7, 6, 5, 4, 3, 4, 5, 6, 7, 8, 7, 1],
-    #                             [8, 7, 6, 5, 6, 7, 8, 9, 0, 9, 8, 7, 6, 3, 4, 5, 6, 7, 8, 7, 6, 1]])
-    #
-    #     means = np.mean(many_values, axis=0)
-    #     stds = np.std(many_values, axis=0)
-    #     n = means.size
-    #
-    #     # helpers
-    #     epsilon = 0.1
-    #     num_plays = np.shape(many_values)[1]
-    #
-    #     ### start episode loop
-    #     # compute upper/lower confidence bounds
-    #     ci = 0.95
-    #     e = 6  # if e%200 == 0:, the current episode we are in. aka the last one for us
-    #     test_stat = st.t.ppf((ci + 1) / 2, e)
-    #     lower_bound = means - test_stat * stds / np.sqrt(e)
-    #     upper_bound = means + test_stat * stds / np.sqrt(e)
-    #
-    #     # clear plot frame
-    #     plt.clf()
-    #
-    #     # plot average reward
-    #     plt.plot(means, color='blue', label="epsilon=%.2f" % epsilon)
-    #
-    #     # plot upper/lower confidence bound
-    #     x = np.arange(0, num_plays, 1)
-    #     plt.fill_between(x=x, y1=lower_bound, y2=upper_bound, color='blue', alpha=0.2, label="CI %.2f" % ci)
-    #
-    #     plt.grid()
-    #     # plt.ylim(0, 2)  # limit y axis
-    #     plt.title('Avg. Reward per step in experiment {}: {}'.format(e, sum(means) / num_plays))
-    #     plt.ylabel("Reward per step")
-    #     plt.xlabel("Play")
-    #     plt.legend()
-    #     plt.show()
-    #     plt.pause(0.1)
-    #     ### end episode loop
-    #
-    #     ## disable interactive plotting => otherwise window terminates
-    #     plt.ioff()
-    #     plt.show()
-    #     return
-
-    # # 03.01. not needed?
-    # def tree_replace_branch_nodelist(self, karoo_tree, tree_ids, insert_tree):
-    #
-    #     """
-    #     This method enables the insertion of ptree_branch_node_ids in place of a branch
-    #     ptree_branch_node_ids = [5,6,8,9] node that are changed
-    #
-    #     The end result is a Tree with a mutated branch.
-    #     """
-    #
-    #     branch_top = int(tree_ids[0])
-    #     karoo_tree[N_label][branch_top] = insert_tree[N_label][1]  # copy node_label from new karoo_tree
-    #     karoo_tree[N_arity][branch_top] = insert_tree[N_arity][1]  # copy node_arity from new karoo_tree
-    #     karoo_tree = np.delete(karoo_tree, tree_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-    #
-    #     c_buffer = evolve_c_buffer_karoo(karoo_tree, branch_top)  # generate c_buffer for point of mutation ('branch_top')
-    #     karoo_tree = tree_insert_node_child_dummies(karoo_tree, branch_top, c_buffer, wrapper=True)  # insert a single new node ('branch_top')
-    #     karoo_tree = evolve_node_renum_karoo(karoo_tree)  # renumber all 'node_id's
-    #
-    #     ### PART 2 - insert b_branchody from 'config.karoo_tree' into 'karoo_tree' ###
-    #     node_count = 2  # set node count for 'config.karoo_tree' to 2 as the new root has already replaced 'branch_top' (above)
-    #
-    #     while node_count < len(insert_tree[3]):  # increment through all nodes in the new Tree ('config.karoo_tree'), starting with node 2
-    #
-    #         for j in range(1, len(karoo_tree[3])):  # increment through all nodes in tourn_winner ('karoo_tree')
-    #
-    #             if karoo_tree[N_type][j] == '':
-    #                 karoo_tree[N_type][j] = insert_tree[N_type][node_count]  # copy 'node_type' from branch to karoo_tree
-    #                 karoo_tree[N_label][j] = insert_tree[N_label][node_count]  # copy 'node_label' from branch to karoo_tree
-    #                 karoo_tree[N_arity][j] = insert_tree[N_arity][node_count]  # copy 'node_arity' from branch to karoo_tree
-    #
-    #                 if karoo_tree[N_arity][j] == '0':  # terminal
-    #                     karoo_tree = tree_fix_link_child_karoo(karoo_tree)  # fix all child links
-    #                     karoo_tree = evolve_node_renum_karoo(karoo_tree)  # renumber all 'node_id's
-    #
-    #                 if int(karoo_tree[N_arity][j]) > 0:
-    #                     c_buffer = evolve_c_buffer_karoo(karoo_tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
-    #                     karoo_tree = tree_insert_node_child_dummies(karoo_tree, j, c_buffer, wrapper=True)  # insert new nodes
-    #                     karoo_tree = tree_fix_link_child_karoo(karoo_tree)  # fix all child links
-    #                     karoo_tree = evolve_node_renum_karoo(karoo_tree)  # renumber all 'node_id's
-    #
-    #                 node_count = node_count + 1  # exit loop when 'node_count' reaches the number of columns in the array 'config.karoo_tree'
-    #
-    #     return karoo_tree
-
-    # def tree_branch(self, root_xype, max_depth=''):
-    #
-    #     """
-    #     Builds a new 'branch'-tree
-    #     """
-    #
-    #     tree_id, last_mod = 'x', 'b',
-    #     tree = self.ptree_init()
-    #     if max_depth:
-    #
-    #         label, arity = self.xtype_choose_func(root_xype)
-    #
-    #         if np.random.choice(['function', 'terminal']) == 'terminal':
-    #             tree[N_type][top_id] = 'term'
-    #             tree[N_label][top_id] = self.xtype_choose_term(xype)  # replace with a correct label
-    #             tree = np.delete(tree, branch_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-    #             tree = evolve_node_arity_fix(tree)  # fix all node arities (term)
-    #             tree = self.tree_fix_link_child(tree)  # fix all child links (func)
-    #             tree = evolve_node_renum(tree)  # renumber all 'node_id's
-    #
-    #             # 5.2 We insert a function here
-    #             tree = self.ptree_replace_branch_nodelist(tree, branch_ids, self.tree)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
-    #
-    #         ptree = self.ptree_init()
-    #         ptree = self.ptree_node_add_fromdnode(ptree, pnode)
-    #
-    #         self.treegp_mutate_branch_terminal_build()  # build the Terminal nodes
-    #         return
 
 
 def util_tree_copy(population, tree_id):
@@ -2332,13 +1853,13 @@ def print_e(text, display=None, time_total=0.0):
     print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
 
 
-def print_warning(text, display=None, time_total=0.0):
+def print_warning(message_type, text, display=None, time_total=0.0):
     """
 
     """
     message_style = BColors.WARNING
     message_pretxt = 'Warning: '  # Warning-yellow
-    print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
+    printez(message_type, text, display=display, time_total=time_total)
 
 
 def printez(message_type, text, display=None, time_total=0.0):
@@ -2469,7 +1990,7 @@ def data_load_pickle(prepared_data_pickle_path):
     return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 
-def data_save_pickle(prepared_data, data_pickle_path):
+def save_data_pickle(prepared_data, data_pickle_path):
     """
     saves prepared plagih data to pickle file
     """
@@ -2501,56 +2022,6 @@ def file_population_write(population, key, path, gen_id):
     return
 
 
-def tf_graph_from_expr_recursive(node, tensors):
-
-    """
-    Recursively transforms parsed expression tree into TensorFlow (TF) graph.
-
-    """
-
-    if isinstance(node, ast.Name):  # <tensor_name>
-        return tensors[node.id]
-
-    elif isinstance(node, ast.Num):  # <number>
-        shape = tensors[list(tensors.keys())[0]].get_shape()
-        return tf.constant(node.n, shape=shape, dtype=tf.float32)
-
-    elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
-        return ast_tensor_dict[type(node.op)](
-            tf_graph_from_expr_recursive(node.left, tensors),
-            tf_graph_from_expr_recursive(node.right, tensors))
-
-    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-        return ast_tensor_dict[type(node.op)](
-            tf_graph_from_expr_recursive(node.operand, tensors))
-
-    elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
-
-        if node.func.id == 'Ifte':
-            return ast_tensor_dict[node.func.id](tf.dtypes.cast(
-                tf_graph_from_expr_recursive(node.args[0], tensors), tf.bool),
-                tf_graph_from_expr_recursive(node.args[1], tensors),
-                tf_graph_from_expr_recursive(node.args[2], tensors))
-
-        if node.func.id == 'Ftob' or node.func.id == 'Btof':
-            return tf.dtypes.cast(*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
-
-        if len(node.args) <= 2:
-            return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
-
-    elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
-
-    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
-
-    elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-        return tf.constant(node.value)
-
-    else:
-        raise TypeError(node)
-
-
 def tf_chain_bool(values, operation, tensors):
 
     """
@@ -2567,18 +2038,21 @@ def tf_chain_bool(values, operation, tensors):
 
 def tf_chain_compare(comparators, ops, tensors):
 
-        """
-        Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
+    """
+    Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
-        """
+    """
+    print('_8>', str(type(ops[0])))
 
-        x = tf_graph_from_expr_recursive(comparators[0], tensors)
-        y = tf_graph_from_expr_recursive(comparators[1], tensors)
+    x = tf_graph_from_expr_recursive(comparators[0], tensors)
+    y = tf_graph_from_expr_recursive(comparators[1], tensors)
 
-        if len(comparators) > 2:
-            return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
-        else:
-            return ast_tensor_dict[type(ops[0])](x, y)
+    if len(comparators) > 2:
+        print_warning('w', 'This is usually not used, and-concatenation of multiple chain compares')
+        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
+    else:
+        print('-8>', str(type(ops[0])))
+        return ast_tensor_dict[type(ops[0])](x, y)
 
 
 def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None):
@@ -2589,6 +2063,7 @@ def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None)
     """
 
     if arity:
+
         if xtype == 'f2f':
             return np.random.choice(op_type_arity_array[f2f][arity])
         elif xtype == 'f2b':
@@ -2602,6 +2077,7 @@ def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None)
         else:
             print_e('Function was not found in function_types_dict {}'.format(xtype))
             raise
+
     else:
         raise
 
@@ -2625,3 +2101,126 @@ def file_config(path,  config, gen_id, kernel, datetime):
     file.write('\n\n')
     file.close()
     return
+
+
+def load_operators_csv(op_csv_path):
+    """
+    Load all operators ready-to-use from a file
+    """
+
+    functions = np.loadtxt(op_csv_path, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+    # Part 3.5: Split the functions in 5 types
+
+    # rows are the function types (f2f)
+    # columns are the arity
+    op_array = [[[], [], [], []],
+                                [[], [], [], []],
+                                [[], [], [], []],
+                                [[], [], [], []],
+                                [[], [], [], []]]
+    for fun in functions:
+        label = fun[0]
+        arity = op[label]['arity']  # arity = int(fun[1])
+        xtype = op[label]['xtype']
+
+        if xtype == 'f2f':
+            op_array[f2f][arity].append(label)
+        elif xtype == 'f2b':
+            op_array[f2b][arity].append(label)
+        elif xtype == 'b2b':
+            op_array[b2b][arity].append(label)
+        elif xtype == 'b2f':
+            op_array[b2f][arity].append(label)
+        elif xtype == 'b2f2f':
+            op_array[b2f2f][arity].append(label)
+
+    return op_array
+
+
+def tf_from_ast_expr(expr, tensors):
+
+    """
+    Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
+
+    """
+    # print('Current expr:', expr)  # importantprint for debugging failed expressions
+    tree = ast.parse(expr, mode='eval').body
+    # try:
+    return tf_graph_from_expr_recursive(tree, tensors)
+    # except BaseException:
+    #     print_warning('w', 'Oh oh, hope this does not come up TODO this dummy seems wrong')
+    #     return None  # self.fitness_dummy_get()
+
+
+def tf_graph_from_expr_recursive(node, tensors, print_string=False):
+
+    """
+    Recursively transforms parsed expression tree into TensorFlow (TF) graph.
+
+    """
+
+    if isinstance(node, ast.Name):  # <tensor_name>
+        print('-1>', str(node.id))
+        return tensors[node.id]
+
+    elif isinstance(node, ast.Num):  # <number>
+        print('-2>', str(node.n))
+        shape = tensors[list(tensors.keys())[0]].get_shape()
+        return tf.constant(node.n, shape=shape, dtype=tf.float32)
+
+    elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
+        print('-3>', op[type(node.op)]['name'])
+        return ast_tensor_dict[type(node.op)](
+            tf_graph_from_expr_recursive(node.left, tensors),
+            tf_graph_from_expr_recursive(node.right, tensors))
+
+    elif isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., x + y
+        print('-4>', str(type(node.op)))
+        return ast_tensor_dict[type(node.op)](
+            tf_graph_from_expr_recursive(node.left, tensors),
+            tf_graph_from_expr_recursive(node.right, tensors))
+
+    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
+        print('-5>', op[type(node.op)]['name'])
+        return ast_tensor_dict[type(node.op)](
+            tf_graph_from_expr_recursive(node.operand, tensors))
+
+    elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
+        print('-6>', str(node.func.id))
+
+        if node.func.id == 'Ifte':
+            return ast_tensor_dict[node.func.id](tf.dtypes.cast(
+                tf_graph_from_expr_recursive(node.args[0], tensors), tf.bool),
+                tf_graph_from_expr_recursive(node.args[1], tensors),
+                tf_graph_from_expr_recursive(node.args[2], tensors))
+
+        elif node.func.id == 'Ftob' or node.func.id == 'Btof':
+            return tf.dtypes.cast(*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
+
+        elif len(node.args) <= 2:
+            return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
+        else:
+            raise('Failed to identify the function')
+
+    elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
+        print('-7>', str(node.op))
+        return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
+
+    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
+        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
+
+    elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
+        print('-9>', str(node.value))
+        return tf.constant(node.value)
+
+    else:
+        raise TypeError(node)
+
+
+# x = 'Ifte(1.019*(-0.09)**observation1*(0.98 - 0.13*I) + Mini(observation1, observation0) > -0.97, 0.0, 2.0)'
+# tf_from_ast_expr('Ifte(1.019*(-0.09)**observation1*(0.98 - 0.13*I) + Mini(observation1, observation0) > -0.97, 0.0, 2.0)', 'tensors')
+# fake_tensors = {'a': tf.constant(5, dtype=tf.float32),
+#            'b': tf.constant(True, dtype=tf.bool)}
+# label_list_test = ['And', 'False', 'True']
+# graph = tf_from_ast_expr('False & True', fake_tensors)
+# print(graph)

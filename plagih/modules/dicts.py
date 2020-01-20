@@ -127,8 +127,8 @@ op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       '-': {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
       ast.Sub: {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract},  # e.g., a - b
       ast.USub: {'name': '-', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative},  # e.g., -a
-      '*': {'name': '', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},
-      ast.Mult: {'name': '', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},  # e.g., a * b
+      '*': {'name': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},
+      ast.Mult: {'name': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},  # e.g., a * b
       '/': {'name': '/', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
       ast.Div: {'name': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.divide},  # e.g., a / b
       '**': {'name': '**', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
@@ -149,29 +149,29 @@ op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       'And': {'name': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
       ast.And: {'name': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and},  # e.g., a and b
       '&': {'name': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and},
-      ast.BitAnd: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.logical_and},  # DON'T USE tf.bitwise.bitwise_and
+      ast.BitAnd: {'name': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and},  # DON'T USE tf.bitwise.bitwise_and
       'Or': {'name': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
-      ast.Or: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.logical_or},  # e.g., a or b
+      ast.Or: {'name': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or},  # e.g., a or b
       'Xor': {'name': 'Xor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
       'Nand': {'name': 'Nand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
       'Xand': {'name': 'Xand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
       'Nor': {'name': 'Nor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
       'Xnor': {'name': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä'},
       'Not': {'name': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': 'ä'},
-      ast.Not: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.logical_not},  # e.g., not a
+      ast.Not: {'name': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not},  # e.g., not a
 
       '==': {'name': '==', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
-      ast.Eq: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.equal},  # e.g., a == b
+      ast.Eq: {'name': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal},  # e.g., a == b
       '!=': {'name': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
-      ast.NotEq: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.not_equal},  # e.g., a != b
+      ast.NotEq: {'name': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.not_equal},  # e.g., a != b
       '<': {'name': '<', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
-      ast.Lt: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.less},  # e.g., a < b
+      ast.Lt: {'name': '<', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less},  # e.g., a < b
       '<=': {'name': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
-      ast.LtE: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.less_equal},  # e.g., a <= b
+      ast.LtE: {'name': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less_equal},  # e.g., a <= b
       '>': {'name': '>', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
-      ast.Gt: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.greater},  # e.g., a > b
+      ast.Gt: {'name': '>', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater},  # e.g., a > b
       '>=': {'name': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä'},
-      ast.GtE: {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': tf.greater_equal},  # e.g., a >= 1
+      ast.GtE: {'name': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater_equal},  # e.g., a >= 1
 
       'Ftob': {'name': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool},
       'Btof': {'name': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32},

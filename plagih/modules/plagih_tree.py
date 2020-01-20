@@ -199,7 +199,7 @@ def tree_expr_sympify(algo_raw=None, tree=None):
     """
     returns the sympifyed expression
     """
-    if tree:  # If we got a tree, we generate the expression
+    if tree is not None:  # If we got a tree, we generate the expression
         algo_raw = str(tree_expr_raw(tree, 1))
 
     try:
@@ -244,51 +244,6 @@ def tree_store_parsimony(tree, parsimony):
         print('Warning: Parsimony is: {}'.format(parsimony))
     tree[T_parsimony][1] = parsimony
     return tree
-
-
-def tree_expr_raw(tree, node_id):
-    """
-    Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
-
-    """
-    node_id = int(node_id)
-
-    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-        return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
-
-    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
-
-    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-        # This if case is for 2-ary ops that is prefix. like Min(a, b)
-        if tree[N_label, node_id] not in functions_infix_dict:
-            return '(' + tree[N_label, node_id] + '(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + '))'
-        else:
-            return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
-
-    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-        return '(Ifte(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + ', ' + tree_expr_raw(tree, tree[11, node_id]) + '))'
-
-
-def tree_raw_depth_prefix(tree, node_id):
-    """
-    Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
-
-    """
-
-    node_id = int(node_id)
-
-    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-        return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
-
-    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        return '{' + tree[N_label, node_id] + tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
-
-    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-        return '{' + tree[N_label, node_id] + '' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
-
-    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-        return '{Ifte' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
 
 
 def tree_node_get_nodekind(tree, node, karoo=False):
@@ -901,7 +856,7 @@ def tree_get_branchinfo(tree, node_id, karoo=True):
     """
     returns all ids, labels and arities for a node in a tree
     """
-    ids = tree_get_ids_karoo(tree, node_id)
+    ids = tree_get_branch(tree, node_id)
     labels = [tree[N_label][i] for i in ids]
     aritys = [tree[N_arity][i] for i in ids]
     return ids, labels, aritys
@@ -927,10 +882,12 @@ def tree_pretty_print(tree, karoo=False):
     return
 
 
-def tree_get_ids_karoo(tree, node):
+def tree_get_branch(tree, node, karoo=True):
     """
     return all child-nodes as list
     """
+    if not karoo:
+        raise Exception
 
     branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
 
@@ -1010,7 +967,7 @@ def tree_check_all(tree, karoo=True):
     return result
 
 
-def karoo_tree_from_user(label_list, modify_list=None):
+def karoo_tree_from_labellist(label_list, modify_list=None):
     """
     create a tree from user input
     """
@@ -1062,7 +1019,7 @@ def test():
                     '+', '2', 'observation0', '-0.09', 'observation0', '0.38', 'observation0', '0.25']
     label_list = ['&', 'a', 'True']
     arity_list = [3, 2, 0, 0, 0, 0]
-    tree = karoo_tree_from_user(label_list)
+    tree = karoo_tree_from_labellist(label_list)
     print(tree)
     tree_pretty_print(tree, karoo=True)
 

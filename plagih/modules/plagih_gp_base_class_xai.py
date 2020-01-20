@@ -73,8 +73,8 @@ class ExplainableGP(object):
     def __init__(self, config_dict):
 
         self.time_start = time.perf_counter()
-        self.tree_hash_meta = {}
-        self.parsimony_best_dict = {}
+        self.tree_meta = {}
+        self.parsimony_best_meta = {}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
 
@@ -102,7 +102,7 @@ class ExplainableGP(object):
 
         self.monitor_dict = config_dict['monitor']
         self.evolve_rates = config_dict['evolve_rates']
-        evolve_missing = 1-sum(self.evolve_rates.values())
+        evolve_missing = 1 - sum(self.evolve_rates.values())
         self.evolve_rates['Create Random'] += evolve_missing
 
         if self.kernel == 'regression':
@@ -306,7 +306,7 @@ class ExplainableGP(object):
         run_data = {'gen_id': self.gen_id,
                     'parsimony_front_fitness': '',
                     'pareto': self.pareto,
-                    'hash_trees_meta': self.tree_hash_meta,
+                    'hash_trees_meta': self.tree_meta,
                     'population_new': self.population_new
                     }
         pickle.dump(run_data, Path.open(self.path / 'Gen-{}-backup.p'.format(str(self.gen_id)), 'wb'))
@@ -336,16 +336,19 @@ class ExplainableGP(object):
         file = Path.open(path / 'conclusion.txt', 'w')
         file.write('Plagih GP\n launched: ' + str(datetime))
 
-        result = self.eval_tf(self.origin['algo_sym'], self.data_control, get_pred_labels=True)
+        result = self.eval_tf(self.origin['expr_sym'], self.data_control, get_pred_labels=True)
         self.origin['fit_control'] = result['fitness']
         fit_control_best = result['fitness']
 
-        fittest_algo = self.origin['algo_sym']
+        fittest_algo = self.origin['expr_sym']
         fittest_parsimony = 0
 
         for parsimony, tree_hash in self.pareto.items():
-
-            algo_sym = self.tree_hash_meta[self.parsimony_best_dict[parsimony]]['algo_sym']
+            try:
+                algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
+            except:
+                print('LOLOLO', self.parsimony_best_meta[parsimony]['expr_sym'])
+                raise
             result = self.eval_tf(algo_sym, self.data_control, get_pred_labels=True)
             fit_control = result['fitness']
 
@@ -391,9 +394,9 @@ class ExplainableGP(object):
         file.write('\nParsimony: \t<num> Fitness: \t<fitness> Expr: \t<expression>')
 
         for parsim, fit in sorted(list(pareto.items())):
-            tree_meta = self.tree_hash_meta[self.parsimony_best_dict[parsim]]
+            tree_meta = self.parsimony_best_meta[parsim]
             fitness = tree_meta['fitness_train']
-            algo_sym = tree_meta['algo_sym']
+            algo_sym = tree_meta['expr_sym']
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(str(parsim), str(fitness), str(algo_sym)))
 
         file.close()
@@ -446,7 +449,7 @@ class ExplainableGP(object):
         """
         self.print_g('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
         dominator_count = 0
-        gene_pool_dict = {}
+        gene_pool = {}
 
         for tree_id in range(1, len(population)):
             tree = population[tree_id]
@@ -456,14 +459,17 @@ class ExplainableGP(object):
                 continue
             else:
                 population[tree_id] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
-                gene_pool_dict[tree_id] = tree_ident
-                if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
+                gene_pool[tree_id] = tree_meta
+                fitness = tree_meta['fitness_train']
+                if fitness < 341.0:
+                    print('Genepool found:', fitness)
+                if self.fitness_compare(fitness, self.origin['fitness_train']):
                     self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
                     dominator_count += 1
 
         self.print_g('g', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
-        return gene_pool_dict
+        return gene_pool
 
     def pop_pareto_update(self):
         """
@@ -472,11 +478,12 @@ class ExplainableGP(object):
         """
 
         # 1. Find lowest complexity
-        best_fitness = self.tree_hash_meta[self.parsimony_best_dict[0]]['fitness_train']
+        best_fitness = self.parsimony_best_meta[0]['fitness_train']
 
-        for parsim, ident in sorted(list(self.parsimony_best_dict.items())):
-            fitness = self.tree_hash_meta[ident]['fitness_train']
-
+        for parsim, meta in sorted(list(self.parsimony_best_meta.items())):
+            fitness = meta['fitness_train']
+            if fitness < 341.0:
+                print('Pareto found:', fitness)
             # kick
             if self.fitness_compare(best_fitness, fitness):
                 self.pareto.pop(parsim, None)
@@ -530,7 +537,7 @@ class ExplainableGP(object):
         for tree_id in range(1, self.config['pop_max'] + 1):
             # vary this tree with mutation
             branch_top = np.random.choice(origin_ids)
-            branch_nodes_ids = tree_get_ids_karoo(tree_origin, branch_top)  # [6, 9, 10] select point of mutation and all nodes beneath
+            branch_nodes_ids = tree_get_branch(tree_origin, branch_top)  # [6, 9, 10] select point of mutation and all nodes beneath
             tree = self.tree_insert_branch_random(tree_origin, branch_nodes_ids)  # tree with new branch
 
             # Fill the correct meta-data_csv_path into the tree (and wipe the old fitness)
@@ -541,26 +548,23 @@ class ExplainableGP(object):
 
         self.print_g('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
 
-    def pop_parsimony_best_update(self, gene_pool_hash_dict):
+    def pop_parsimony_best_update(self, gene_pool):
         """
 
         """
         # 1. Check every potential candidate
-        for tree_id, tree_hash in gene_pool_hash_dict.items():
-            tree_meta = self.tree_hash_meta[gene_pool_hash_dict[tree_id]]
-            parsim = tree_meta['parsimony']
-            fitness_train = tree_meta['fitness_train']
+        for tree_id, meta in gene_pool.items():
+            parsim = meta['parsimony']
+            fitness_train = meta['fitness_train']
 
             # 3. is the tree better than the current best in this parsimony level?
-            if parsim in self.parsimony_best_dict:
-                cmp_fitness = self.tree_hash_meta[self.parsimony_best_dict[parsim]]['fitness_train']
-                if self.fitness_compare(fitness_train, cmp_fitness, mode='better'):
-                    self.parsimony_best_dict[parsim] = gene_pool_hash_dict[tree_id]
+            if parsim in self.parsimony_best_meta:
+                cmp_fitness = self.parsimony_best_meta[parsim]['fitness_train']
+                if self.fitness_compare(fitness_train, cmp_fitness):
                     self.printpl('aa', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
+                    self.parsimony_best_meta[parsim] = meta
                 else:
                     return  # The "regular" case
-            else:
-                self.parsimony_best_dict[parsim] = gene_pool_hash_dict[tree_id]
 
         return
 
@@ -647,7 +651,7 @@ class ExplainableGP(object):
             tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_ids_karoo(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
 
             self.popnew_append(tourn_winner, last_modification='branch')
@@ -665,7 +669,7 @@ class ExplainableGP(object):
             tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_ids_karoo(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
 
             self.popnew_append(tourn_winner, last_modification='miss(br)')
@@ -749,21 +753,21 @@ class ExplainableGP(object):
         """
 
         self.population_new = pop_enum_trees(self.population_new)  # pop +tree_id
-        gene_pool_hash_dict = self.pop_genepool_create(self.population_new)
-        self.monitor_genepool(gene_pool_hash_dict)
+        gene_pool = self.pop_genepool_create(self.population_new)
+        self.monitor_genepool(gene_pool)
 
-        self.pop_parsimony_best_update(gene_pool_hash_dict)
+        self.pop_parsimony_best_update(gene_pool)
         self.pop_pareto_update()
 
-        self.population_base = pop_copy_genepool(self.population_new, gene_pool_hash_dict, self.gen_id)
+        self.population_base = pop_copy_genepool(self.population_new, gene_pool, self.gen_id)
         file_population_write(self.population_new, 'new', self.path, self.gen_id)
 
-        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_hash_meta)
+        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
-            len(set(gene_pool_hash_dict.values())),
+            len(set(gene_pool.keys())),
             self.config['pop_max'],
             self.gen_id,
-            time.perf_counter()-self.time_genstart))
+            time.perf_counter() - self.time_genstart))
 
         return
 
@@ -1126,7 +1130,7 @@ class ExplainableGP(object):
                     print_e('Tree could not be imported correctly from .csv file.')
                     raise
         elif label_list:
-            tree = karoo_tree_from_user(label_list, permanent_list)
+            tree = karoo_tree_from_labellist(label_list, permanent_list)
         else:
             print_warning('w', 'No origin provided. Todo. starting from scratch with random generation?')
             raise
@@ -1137,8 +1141,8 @@ class ExplainableGP(object):
         except:
             raise Exception('Your origin algorithm can already not be sympified. Aborting.')
         self.origin = {'tree': tree,
-                       'algo_raw': origin_algo_raw,
-                       'algo_sym': expr_sym,
+                       'expr_raw': origin_algo_raw,
+                       'expr_sym': expr_sym,
                        'parsimony': 0}
         try:
             origin_hash, origin_meta = self.tree_get_meta(tree)
@@ -1146,7 +1150,7 @@ class ExplainableGP(object):
             raise Exception('Your origin algorithm already caused an exception. THis should never happen.')
         self.origin['fitness_train'] = origin_meta['fitness_train']
 
-        self.parsimony_best_dict[0] = origin_hash
+        self.parsimony_best_meta[0] = origin_meta
 
         self.hashtable_fitness_train = {}
 
@@ -1162,12 +1166,12 @@ class ExplainableGP(object):
         4. fitness_train
         """
         # 1. get expr_raw - what is needed to compute the tree identifier
-        expr_raw = tree_expr_raw(tree, 1)
+        expr_raw = tree_expr_raw(tree, root_id)
         tree_ident = hash(expr_raw)  # sfeh: potential for improvement- use expr_sym in separate dict as identifier.
 
         # 2 Did we have this tree already? -> Nice, we have everything
-        if tree_ident in self.tree_hash_meta:
-            tree_meta = self.tree_hash_meta[tree_ident]
+        if tree_ident in self.tree_meta:
+            tree_meta = self.tree_meta[tree_ident]
 
         else:  # 2.2 New tree, but still skip fitness eval for complex trees
             parsimony = self.tree_parsimony(tree, origin_tree=self.origin['tree'])
@@ -1180,8 +1184,8 @@ class ExplainableGP(object):
                     raise Exception('Expr could not be sympified.')
 
                 fitness_train = self.eval_tf(expr_sym, self.data_train)['fitness']
-                tree_meta = {'expr_sym': str(expr_sym), 'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_raw': str(expr_raw)}
-                self.tree_hash_meta[tree_ident] = tree_meta
+                tree_meta = {'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_sym': str(expr_sym), 'expr_raw': str(expr_raw)}
+                self.tree_meta[tree_ident] = tree_meta
 
             else:
                 # 3.2 just fill with bad values
@@ -1244,7 +1248,7 @@ class ExplainableGP(object):
         elif parsimony_distance == 'total_tree_depth':
             return tree[N_depth][1]  # returns the tree size
         elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-            algo_raw_str = str(tree_expr_raw(tree, 1))
+            algo_raw_str = str(tree_expr_raw(tree, root_id))
             return len(str(algo_raw_str))
         # elif parsimony_distance == 'total_simplified':
         #     algo_sym = self.tree_expr_sympify(tree=tree)
@@ -1253,7 +1257,6 @@ class ExplainableGP(object):
             return tree_parsimony_relari(tree, origin_tree)
         else:
             raise Exception('Parsimony distance not specified!')
-
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to use evaluate (tensorflow)      |
@@ -1294,7 +1297,6 @@ class ExplainableGP(object):
 
         with tf.compat.v1.Session(config=config) as sess:
             with sess.graph.device(self.tf_device):
-
                 # 1. data_csv_path (observations, actions) to tensors
                 tensors = {}
 
@@ -1315,7 +1317,7 @@ class ExplainableGP(object):
                 tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
 
         return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
-                'pairwise_fitness': pairwise_fitness, 'old_fitness': float(fitness)}
+                'pairwise_fitness': pairwise_fitness}
 
     def tf_get_pairwise_fitness(self, kernel, solution, tf_result):
         # 3- Add fitness computation into TF graph
@@ -1549,15 +1551,15 @@ class ExplainableGP(object):
         self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness')
         return
 
-    def monitor_genepool(self, gene_pool_hash_dict):
+    def monitor_genepool(self, gene_pool):
         """
         Give the user some feedback
         """
 
         # How many survived in the selection?
-        self.monitoring_dict['genepool_size'][int(self.gen_id)] = len(gene_pool_hash_dict)
-        if len(gene_pool_hash_dict) > 0:
-            self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool_hash_dict)))
+        self.monitoring_dict['genepool_size'][int(self.gen_id)] = len(gene_pool)
+        if len(gene_pool) > 0:
+            self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool)))
         else:  # the evolutionary constraints were too tight, killing off the entire population
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.file_autowrite(self.path, self.gen_id)
@@ -1566,12 +1568,10 @@ class ExplainableGP(object):
 
         # average fitness our genepool?
         fitness_train_sum = 0
-        for key, value in gene_pool_hash_dict.items():
-            fitness_train_sum = float(self.tree_hash_meta[value]['fitness_train'])
-        average_fitness = fitness_train_sum / len(gene_pool_hash_dict)
-        print('Oha', fitness_train_sum, len(gene_pool_hash_dict))
+        for _, meta in gene_pool.items():
+            fitness_train_sum += float(meta['fitness_train'])
+        average_fitness = fitness_train_sum / len(gene_pool)
         self.monitoring_dict['fitness_average'][int(self.gen_id)] = average_fitness
-        print('Test:', self.monitoring_dict['fitness_average'][int(self.gen_id)])
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1685,15 +1685,15 @@ def insert_function_or_term(depth, depth_goal):
     return decision
 
 
-def pop_copy_genepool(population_new, gene_pool_hash_dict, gen_id):
+def pop_copy_genepool(population_new, gene_pool, gen_id):
     """
     Copy the genepool of a gen
     """
     pop_y = ['Population Selection in Generation {}.'.format(str(gen_id))]  # empty list
 
-    for i, (tree_id, tree_ident) in enumerate(gene_pool_hash_dict.items()):
-        tree_copy = util_tree_copy(population_new, tree_id)
-        tree_copy[TR_ID][1] = i + 1
+    for i, (tree_num, tree_meta) in enumerate(gene_pool.items()):
+        tree_copy = util_tree_copy(population_new, tree_num)
+        tree_copy = tree_set_id(tree_copy, i + 1)
         pop_y.append(tree_copy)
 
     return pop_y
@@ -1781,7 +1781,6 @@ def printez(message_type, text, display=None, time_total=0.0):
 
 
 def data_from_csv(samples_file):
-
     """
     loads the goal-data_csv_path from .csv file. first observations then actions.
     Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
@@ -1876,7 +1875,6 @@ def save_data_pickle(prepared_data, data_pickle_path):
 
 
 def file_population_write(population, key, path, gen_id):
-
     """
     Save population_* to disk.
 
@@ -1897,8 +1895,7 @@ def file_population_write(population, key, path, gen_id):
     return
 
 
-def tf_chain_bool(values, operation, tensors):
-
+def tf_chain_bool(values, operation, tensors, print_string=False):
     """
     Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
 
@@ -1906,29 +1903,40 @@ def tf_chain_bool(values, operation, tensors):
 
     x = tf.dtypes.cast(tf_graph_from_expr_recursive(values[0], tensors), tf.bool)
     if len(values) > 1:
+        if print_string:
+            if len(values) == 2:
+                return '({} {} {})'.format(
+                    values[0],
+                    operation,
+                    values[1])
+            else:
+                print('FUCK')
+                raise
         return operation(x, tf_chain_bool(values[1:], operation, tensors))
     else:
+        if print_string:
+            print_warning('w', 'Whats x? {}'.format(x))
+            return str(x)
         return x
 
 
 def tf_chain_compare(comparators, ops, tensors, print_string=False):
-
     """
     Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
     """
-    if print_string:
-        print('_8>', op[ops[0]]['name'])
 
-    x = tf_graph_from_expr_recursive(comparators[0], tensors)
-    y = tf_graph_from_expr_recursive(comparators[1], tensors)
+    x = tf_graph_from_expr_recursive(comparators[0], tensors, print_string=print_string)
+    y = tf_graph_from_expr_recursive(comparators[1], tensors, print_string=print_string)
 
     if len(comparators) > 2:
         print_warning('w', 'This is usually not used, and-concatenation of multiple chain compares')
         return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
     else:
         if print_string:
-            print('-8>', op[ops[0]]['name'])
+            return '({} {} {})'.format(x,
+                                       op[type(ops[0])]['name'],
+                                       y)
         return ast_tensor_dict[type(ops[0])](x, y)
 
 
@@ -1959,7 +1967,7 @@ def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None)
         raise
 
 
-def file_config(path,  config, gen_id, kernel, datetime):
+def file_config(path, config, gen_id, kernel, datetime):
     """
     write the parameters to a file
     Todo update
@@ -1991,10 +1999,10 @@ def load_operators_csv(op_csv_path):
     # rows are the function types (f2f)
     # columns are the arity
     op_array = [[[], [], [], []],
-                                [[], [], [], []],
-                                [[], [], [], []],
-                                [[], [], [], []],
-                                [[], [], [], []]]
+                [[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []]]
     for fun in functions:
         label = fun[0]
         arity = op[label]['arity']  # arity = int(fun[1])
@@ -2015,7 +2023,6 @@ def load_operators_csv(op_csv_path):
 
 
 def tf_from_ast_expr(expr, tensors, print_string=None):
-
     """
     Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
 
@@ -2027,7 +2034,6 @@ def tf_from_ast_expr(expr, tensors, print_string=None):
 
 
 def tf_graph_from_expr_recursive(node, tensors, print_string=None):
-
     """
     Recursively transforms parsed expression tree into TensorFlow (TF) graph.
 
@@ -2048,66 +2054,94 @@ def tf_graph_from_expr_recursive(node, tensors, print_string=None):
 
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
         if print_string:
-            return op[node.op]['name'] \
-                   + str(tf_graph_from_expr_recursive(node.left, tensors, print_string=print_string)) \
-                   + str(tf_graph_from_expr_recursive(node.right, tensors, print_string=print_string))
+            return '({} {} {})'.format(
+                tf_graph_from_expr_recursive(node.left, tensors, print_string=print_string),
+                op[type(node.op)]['name'],
+                tf_graph_from_expr_recursive(node.right, tensors, print_string=print_string))
+
         return ast_tensor_dict[type(node.op)](
             tf_graph_from_expr_recursive(node.left, tensors),
             tf_graph_from_expr_recursive(node.right, tensors))
 
-    #
-    # elif isinstance(node, ast.BitAnd):  # <left> & <right>, e.g., a & True
-    #     if print_string:
-    #         print('-4>', str(type(node.op)))
-    #     return ast_tensor_dict[type(node.op)](
-    #         tf_graph_from_expr_recursive(node.left, tensors),
-    #         tf_graph_from_expr_recursive(node.right, tensors))
-
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
         if print_string:
-            print('-5>', op[type(node.op)]['name'])
+            return '({}{})'.format(
+                op[type(node.op)]['name'],
+                tf_graph_from_expr_recursive(node.operand, tensors, print_string=print_string))
         return ast_tensor_dict[type(node.op)](
             tf_graph_from_expr_recursive(node.operand, tensors))
 
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
-        if print_string:
-            print('-6>', str(node.func.id))
 
         if node.func.id == 'Ifte':
+            if print_string:
+                return '(If ({}) then ({}) else ({}))'.format(
+                    tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string),
+                    tf_graph_from_expr_recursive(node.args[1], tensors, print_string=print_string),
+                    tf_graph_from_expr_recursive(node.args[2], tensors, print_string=print_string))
             return ast_tensor_dict[node.func.id](tf.dtypes.cast(
                 tf_graph_from_expr_recursive(node.args[0], tensors), tf.bool),
                 tf_graph_from_expr_recursive(node.args[1], tensors),
                 tf_graph_from_expr_recursive(node.args[2], tensors))
 
         elif node.func.id == 'Ftob' or node.func.id == 'Btof':
+            if print_string:
+                return '({} {})'.format(node.func.id, tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string))
             return tf.dtypes.cast(*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
 
         elif len(node.args) <= 2:
+            if print_string:
+                if len(node.args) == 1:
+                    return '({} {})'.format(
+                        op[node.func.id]['name'],
+                        tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string))
+                if len(node.args) == 2:
+                    return '({} ({}, {}))'.format(
+                        op[node.func.id]['name'],
+                        tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string),
+                        tf_graph_from_expr_recursive(node.args[1], tensors, print_string=print_string))
             return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
         else:
             raise Exception('Failed to identify the function')
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if print_string:
-            print('-7>', str(node.op))
+            return tf_chain_bool(node.values, op[type(node.op)]['name'], tensors, print_string=True)
         return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
 
-    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, print_string=print_string)
+    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z        if print_string:
+        if print_string:
+            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, print_string=print_string)
+        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
         if print_string:
-            print('-9>', str(node.value))
+            return str(node.value)
         return tf.constant(node.value)
 
     else:
         raise TypeError(node)
 
 
-# x = 'Ifte(1.019*(-0.09)**observation1*(0.98 - 0.13*I) + Mini(observation1, observation0) > -0.97, 0.0, 2.0)'
-# tf_from_ast_expr('Ifte(1.019*(-0.09)**observation1*(0.98 - 0.13*I) + Mini(observation1, observation0) > -0.97, 0.0, 2.0)', 'tensors')
-# fake_tensors = {'a': tf.constant(5, dtype=tf.float32),
-#            'b': tf.constant(True, dtype=tf.bool)}
-# label_list_test = ['And', 'False', 'True']
-# graph = tf_from_ast_expr('False & True', fake_tensors)
-# print(graph)
+x = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, observation0) > -0.97, 0.0, 2.0)'
+fix_labels = ['Ifte',
+              '&', '2', '0',
+              '<=', '<=',
+              'Mini', 'observation1', 'observation1', '+',
+              '+', '-', '*', '0.7',
+              '*', '0.03', '*', '0.008', '-0.07', '**',
+              '-0.09', '**', '0.3', '**', '+', '2',
+              '+', '2', '+', '4', 'observation0', '0.38',
+              'observation0', '0.25', 'pos', '0.9']
+fix_tree = karoo_tree_from_labellist(fix_labels)
+tree_pretty_print(fix_tree, karoo=True)
+fix_expr_raw = tree_expr_raw(fix_tree, root_id)
+print('RAW:', fix_expr_raw)
+fix_expr_sym = tree_expr_sympify(tree=fix_tree)
+print('SYM:', fix_expr_sym)
+fake_tensors = {'observation0': tf.constant(1.1, dtype=tf.float32),
+                'observation1': tf.constant(2.2, dtype=tf.float32),
+                'bl': tf.constant(True, dtype=tf.bool)}
+# graph = tf_from_ast_expr('Ifte(Or(b & b, b), Mini(a,2), a+a)', fake_tensors, print_string=True)
+graph = tf_from_ast_expr(fix_expr_sym, fake_tensors, print_string=True)
+print(graph)

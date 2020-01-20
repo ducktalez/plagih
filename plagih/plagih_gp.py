@@ -27,7 +27,7 @@ def create_config_dict():
         'tree_depth_max': 30,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 200,
+        'pop_max': 600,
         'gen_max': 5000,
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
@@ -35,8 +35,8 @@ def create_config_dict():
                     'sympify_errors': 'y',
                     'genepool_size': 'y'
                     },
-        'period': {'time_monitor': 60 * 10,  # in sec
-                   'time_save': 60 * 60,  # in sec
+        'period': {'time_monitor': 60 * 1,  # in sec
+                   'time_save': 60 * 5,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
         'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
@@ -73,13 +73,19 @@ gp.activate_data(prepared_data)
 gp.activate_operators(op_array)
 
 # gp.data_from_pickle(file_dict['samples_pickle'])
-another_list = ['Ifte', '&', '0', '2', '<=', '<=', 'Mini', 'observation1', 'observation1', '+',
-                '+', '*', '*', '0.7', '*', '0.03', '**', '0.03', '-0.07', '**', '**', '-0.09', '+', '4', '+', '2',
-                '+', '2', 'observation0', '-0.09', 'observation0', '0.38', 'observation0', '0.25']
+fix_labels = ['Ifte',
+              '&', '2', '0',
+              '<=', '<=',
+              'Mini', 'observation1', 'observation1', '+',
+              '+', '-', '*', '0.7',
+              '+', '0.03', '**', '0.008', '-0.07', '**',
+              '-0.09', '**', '0.3', '**', '+', '2',
+              '+', '2', '+', '4', 'observation0', '0.38',
+              'observation0', '0.25', 'pos', '0.9']
 label_list = ['Ifte', '<', '0.0', 'Ifte', 'observation1', '0.0', 'True', '2.0', '0.0']
 permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 
-# gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)
-gp.load_origin_tree(label_list=another_list)
+gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)
+# gp.load_origin_tree(label_list=fix_labels)
 
 gp.plagih_gp_run()

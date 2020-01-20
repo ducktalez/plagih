@@ -18,12 +18,10 @@ import sklearn.model_selection as skcv
 from datetime import datetime
 from plagih.modules.plagih_tree import *
 import pickle
-import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 import numpy as np
 
 import matplotlib.pyplot as plt
-from plagih.modules.tree_distances.tree_edit_distance import apted_distance
 import time
 from pathlib import Path
 
@@ -448,22 +446,24 @@ class ExplainableGP(object):
         """
         self.print_g('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
         dominator_count = 0
-        gene_pool_hash_dict = {}
+        gene_pool_dict = {}
 
         for tree_id in range(1, len(population)):
             tree = population[tree_id]
-            tree_ident, tree_meta = self.tree_store_meta_get_hash(tree)
-
-            if tree_meta['parsimony'] < self.parsimony_min_max[1]:  # Tree -> gene_pool?
-
-                gene_pool_hash_dict[tree_id] = tree_ident
+            try:
+                tree_ident, tree_meta = self.tree_get_meta(tree)
+            except:
+                continue
+            else:
+                population[tree_id] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
+                gene_pool_dict[tree_id] = tree_ident
                 if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
                     self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
                     dominator_count += 1
 
         self.print_g('g', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
-        return gene_pool_hash_dict
+        return gene_pool_dict
 
     def pop_pareto_update(self):
         """
@@ -592,7 +592,7 @@ class ExplainableGP(object):
         """
 
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
-            tourn_winner = self.gp_selection_tournament(tourn_size)
+            tourn_winner = self.pop_selection_tournament(tourn_size)
             self.popnew_append(tourn_winner, last_modification='repro')  # i know, tests are not necessary...
 
         return
@@ -605,7 +605,7 @@ class ExplainableGP(object):
         """
 
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
-            tree = self.gp_selection_tournament(tourn_size)
+            tree = self.pop_selection_tournament(tourn_size)
             tree, node = self.treegp_mutate_point_evolve(tree, same_arity=True)
 
             self.popnew_append(tree, last_modification='point')
@@ -618,7 +618,7 @@ class ExplainableGP(object):
         """
 
         for i in range(repro_rate):
-            tree = self.gp_selection_tournament(tourn_size)
+            tree = self.pop_selection_tournament(tourn_size)
             try:
                 self.debug_warnings['824 tree'] = tree
                 new_tree = self.treegp_mutate_filter_one(tree)
@@ -644,7 +644,7 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
 
-            tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each mutation
+            tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
             branch_nodes_ids = tree_get_ids_karoo(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
@@ -662,7 +662,7 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
 
-            tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each mutation
+            tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
             branch_nodes_ids = tree_get_ids_karoo(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
@@ -691,8 +691,8 @@ class ExplainableGP(object):
         for n in range(half_rate):
 
             # 1. two parents
-            left_tree = self.gp_selection_tournament(tourn_size)  # perform tournament selection for 'a_parent'
-            right_tree = self.gp_selection_tournament(tourn_size)  # perform tournament selection for 'b_parent'
+            left_tree = self.pop_selection_tournament(tourn_size)  # perform tournament selection for 'a_parent'
+            right_tree = self.pop_selection_tournament(tourn_size)  # perform tournament selection for 'b_parent'
 
             force_convert = False
 
@@ -771,7 +771,7 @@ class ExplainableGP(object):
     #   Perform the 3 genetic prog. operations    |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def gp_selection_tournament(self, tourn_size):
+    def pop_selection_tournament(self, tourn_size):
 
         """
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
@@ -785,10 +785,9 @@ class ExplainableGP(object):
         # Get several values
         for n in range(tourn_size):
 
-            tree_id = pop_util_random(self.population_base)
-
-            fitness = float(self.population_base[tree_id][T_fitness][1])  # extract the fitness from the array
-            fitness = round(fitness, self.config['precision'])  # force 'result' and 'solution' to the same number of floating points
+            tree_id = pop_random(self.population_base)
+            tree = self.population_base[tree_id]
+            fitness = tree_get_fitness(tree, precision=self.config['precision'])  # extract the fitness from the array
 
             if self.fitness_compare(fitness, best_fitness, mode='better'):
                 best_id = tree_id
@@ -1132,13 +1131,19 @@ class ExplainableGP(object):
             print_warning('w', 'No origin provided. Todo. starting from scratch with random generation?')
             raise
 
-        origin_algo_raw = self.tree_expr_raw(tree, P_first_node)
+        origin_algo_raw = tree_expr_raw(tree, P_first_node)
+        try:
+            expr_sym = tree_expr_sympify(algo_raw=origin_algo_raw)
+        except:
+            raise Exception('Your origin algorithm can already not be sympified. Aborting.')
         self.origin = {'tree': tree,
                        'algo_raw': origin_algo_raw,
-                       'algo_sym': self.tree_expr_sympify(algo_raw_str=origin_algo_raw),
+                       'algo_sym': expr_sym,
                        'parsimony': 0}
-
-        origin_hash, origin_meta = self.tree_store_meta_get_hash(tree)
+        try:
+            origin_hash, origin_meta = self.tree_get_meta(tree)
+        except:
+            raise Exception('Your origin algorithm already caused an exception. THis should never happen.')
         self.origin['fitness_train'] = origin_meta['fitness_train']
 
         self.parsimony_best_dict[0] = origin_hash
@@ -1148,50 +1153,43 @@ class ExplainableGP(object):
         self.print_g('g', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         return
 
-    def tree_store_meta_get_hash(self, tree, store_in_tree=True):
+    def tree_get_meta(self, tree):
         """
         gets all the main tree information
-        1. algo_raw
-        2. tree_identifier (algo_raw)
-        2. algo_sym
+        1. tree_identifier (expr_raw)
+        2. expr_sym
         3. parsimony
         4. fitness_train
         """
-        # 1. get algo_raw - what is needed to compute the tree identifier
-        algo_raw_str = self.tree_expr_raw(tree, 1)
-        tree_ident = hash(algo_raw_str)  # sfeh: potential for improvement- use algo_sym in separate dict as identifier.
+        # 1. get expr_raw - what is needed to compute the tree identifier
+        expr_raw = tree_expr_raw(tree, 1)
+        tree_ident = hash(expr_raw)  # sfeh: potential for improvement- use expr_sym in separate dict as identifier.
 
-        # 2.1 Did we have this tree already? -> Nice, we have everything
+        # 2 Did we have this tree already? -> Nice, we have everything
         if tree_ident in self.tree_hash_meta:
             tree_meta = self.tree_hash_meta[tree_ident]
 
-        # 2.2 New tree, but still Skip fitness eval for complex trees
-        else:
-            parsimony = self.tree_parsimony(tree)
+        else:  # 2.2 New tree, but still skip fitness eval for complex trees
+            parsimony = self.tree_parsimony(tree, origin_tree=self.origin['tree'])
 
-            # 3. compute fitness
-            if parsimony < self.parsimony_min_max[1]:
-                # 3.1 With tensorflow
-                print('Algo raw:', str(algo_raw_str))  # importantprint 2 for algo_raw
-                algo_sym = self.tree_expr_sympify(algo_raw_str=str(algo_raw_str))
-                fitness_train = self.eval_tf(algo_sym, self.data_train)['fitness']
+            if parsimony < self.parsimony_min_max[1]:  # 3. compute fitness
+                # print('Algo raw:', str(expr_raw))  # importantprint 2 for expr_raw
+                try:  # 3. With tensorflow
+                    expr_sym = tree_expr_sympify(algo_raw=str(expr_raw))
+                except:
+                    raise Exception('Expr could not be sympified.')
+
+                fitness_train = self.eval_tf(expr_sym, self.data_train)['fitness']
+                tree_meta = {'expr_sym': str(expr_sym), 'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_raw': str(expr_raw)}
+                self.tree_hash_meta[tree_ident] = tree_meta
 
             else:
                 # 3.2 just fill with bad values
-                algo_sym = sympy_dummy
-                fitness_train = self.fitness_bad_dummy
+                # expr_sym = sympy_dummy
+                # fitness_train = self.fitness_bad_dummy
+                raise Exception('Tree too complex, parsimony is too high.')
 
-            # 4. All the tree-specific meta into dict
-            tree_meta = {'algo_raw': str(algo_raw_str), 'tree_ident': tree_ident, 'algo_sym': str(algo_sym), 'parsimony': float(parsimony), 'fitness_train': float(fitness_train)}
-            self.tree_hash_meta[tree_ident] = tree_meta
-
-        # 5. store fitness in 'old' Karoo tree structure
-        if store_in_tree:
-            tree = tree_store_parsimony(tree, tree_meta['parsimony'])
-            tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
-            # self.tree_store_meta_lastgen(tree)
-
-            return tree_ident, tree_meta
+        return tree_ident, tree_meta
 
     def tree_build_type_constant_get(self, term_type='', mode='float-1to1', uniform_range=None):
         """
@@ -1226,49 +1224,6 @@ class ExplainableGP(object):
             const = self.tree_build_type_constant_get(term_type=term_type)
         return str(const)
 
-    def tree_expr_sympify(self, algo_raw_str=None, tree=None):
-
-        """
-        returns the sympifyed expression
-        """
-        if tree:  # If we got a tree, we generate the expression
-            algo_raw_str = str(self.tree_expr_raw(tree, 1))
-
-        try:
-            x = plagih_sympify(algo_raw_str)
-            strx = str(x)
-
-            if 'zoo' in strx:
-                self.printpl('ww', 'zoo in expression? sfeh: not anymore... {}'.format(algo_raw_str))
-                # x = re.sub('zoo', '10', strx)
-                self.remove_this_tree()
-                return str(sympy_dummy)
-
-            if 'inf' in strx:
-                self.printpl('ww', 'Inf in expression? {}'.format(algo_raw_str))
-                # x = re.sub('inf', '10', strx)
-                # TODO this solution needs more adjustments
-                self.remove_this_tree()
-                return str(sympy_dummy)
-
-            if '*I' in strx:  # this (hopefully) gets all imaginary numbers and also does not acceft 'Ifte'
-                self.printpl('ww', 'imaginary number in expression? {}'.format(algo_raw_str))
-                # x = re.sub('I', '10', strx)
-                self.remove_this_tree()
-                return str(sympy_dummy)
-
-            if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
-                self.printpl('ww', 'We had a "nan" in {}'.format(algo_raw_str))
-                self.remove_this_tree()
-                return str(sympy_dummy)
-            else:
-                return str(x)
-        except Exception:
-            self.printpl('w', 'In sympify. Caused by this raw algorithm: ' + str(algo_raw_str))
-            # todo.
-            self.remove_this_tree()
-            return str(sympy_dummy)
-
     def remove_this_tree(self):
         self.printpl('ww', 'This still is a todo')
         """
@@ -1277,110 +1232,28 @@ class ExplainableGP(object):
         todo
         """
 
-    def tree_expr_raw(self, tree, node_id):
-
-        """
-        Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
-
-        """
-        node_id = int(node_id)
-
-        if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
-
-        elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-            return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
-
-        elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-            # This if case is for 2-ary ops that is prefix. like Min(a, b)
-            if tree[N_label, node_id] not in functions_infix_dict:
-                return '(' + tree[N_label, node_id] + '(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + '))'
-            else:
-                return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
-
-        elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-            return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
-
-    def tree_raw_depth_prefix(self, tree, node_id):
-
-        """
-        Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
-
-        """
-
-        node_id = int(node_id)
-
-        if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
-
-        elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-            return '{' + tree[N_label, node_id] + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
-
-        elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-            return '{' + tree[N_label, node_id] + '' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
-
-        elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-            return '{Ifte' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + self.tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
-
-    def tree_parsimony(self, tree, parsimony_distance='ted'):
+    def tree_parsimony(self, tree, origin_tree=None, parsimony_distance='ted'):
         """
         parsimony_distance: compute the chosen distance by the user.
 
         """
         if parsimony_distance == 'ted':
-            return self.tree_parsimony_ted(self.origin['tree'], tree)
+            return tree_parsimony_ted(tree, origin_tree)
         elif parsimony_distance == 'total_count_nodes':
             return int(tree[3][-1:])  # returns the tree size
         elif parsimony_distance == 'total_tree_depth':
             return tree[N_depth][1]  # returns the tree size
         elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-            algo_raw_str = str(self.tree_expr_raw(tree, 1))
+            algo_raw_str = str(tree_expr_raw(tree, 1))
             return len(str(algo_raw_str))
         # elif parsimony_distance == 'total_simplified':
         #     algo_sym = self.tree_expr_sympify(tree=tree)
         #     return count_ops(algo_sym)
         elif parsimony_distance == 'rel_ari_1':  # Does this work?
-            return self.tree_parsimony_relari(tree)
+            return tree_parsimony_relari(tree, origin_tree)
         else:
-            self.printpl('i', 'Parsimony distance not specified! Use default.')
-            self.tree_parsimony(tree)
+            raise Exception('Parsimony distance not specified!')
 
-    def tree_parsimony_relari(self, tree):
-        """
-        This distance penalizes non-original functions with its arity
-        - ignore node[0] [description]
-        - look within the subtree if the original function is on origin spot
-        """
-
-        # If the new tree is actually less complex than the original one, just return 1
-        if len(tree[N_label]) < len(self.origin['tree'][N_label]):
-            return 1
-
-        distance = 0
-
-        # iterate over every node in the new tree
-        for i, arity in enumerate(tree[N_arity]):
-            if i == 0:  # skip node 0. the description
-                continue
-            elif i < len(self.origin['tree'][N_label]):  # Make sure we stay within the tree index. <= does not work
-                if self.origin['tree'][N_label][i] != tree[N_label][i]:  # is it different from the origin?
-                    distance = distance + int(arity)  # add the nodes arity. double-punishes large trees
-            else:
-                distance = distance + int(arity)
-
-        return max(distance, 1)  # make sure, it does not return 0
-
-    def tree_parsimony_ted(self, tree1, tree2):
-        """
-        The Tree Edit distance (TED) ('coolest' distance)
-        - the amount of changes that have to be applied to the origin to equality are counted
-        """
-        # TODO TED soll geänderte Werte ignorieren
-        apted_tree1 = self.tree_raw_depth_prefix(tree1, 1)
-        apted_tree2 = self.tree_raw_depth_prefix(tree2, 1)
-        distance, mapping = apted_distance(apted_tree1, apted_tree2)
-        # sfeh the mapping could be handy somewhere
-        return distance
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to use evaluate (tensorflow)      |
@@ -1694,9 +1567,11 @@ class ExplainableGP(object):
         # average fitness our genepool?
         fitness_train_sum = 0
         for key, value in gene_pool_hash_dict.items():
-            fitness_train_sum += float(self.tree_hash_meta[value]['fitness_train'])
+            fitness_train_sum = float(self.tree_hash_meta[value]['fitness_train'])
         average_fitness = fitness_train_sum / len(gene_pool_hash_dict)
+        print('Oha', fitness_train_sum, len(gene_pool_hash_dict))
         self.monitoring_dict['fitness_average'][int(self.gen_id)] = average_fitness
+        print('Test:', self.monitoring_dict['fitness_average'][int(self.gen_id)])
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1772,7 +1647,7 @@ def util_tree_copy(population, tree_id):
     return np.copy(population[tree_id])
 
 
-def pop_util_random(population):
+def pop_random(population):
     """
     Returns a random tree_id from a population
     """
@@ -2036,13 +1911,14 @@ def tf_chain_bool(values, operation, tensors):
         return x
 
 
-def tf_chain_compare(comparators, ops, tensors):
+def tf_chain_compare(comparators, ops, tensors, print_string=False):
 
     """
     Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
     """
-    print('_8>', str(type(ops[0])))
+    if print_string:
+        print('_8>', op[ops[0]]['name'])
 
     x = tf_graph_from_expr_recursive(comparators[0], tensors)
     y = tf_graph_from_expr_recursive(comparators[1], tensors)
@@ -2051,7 +1927,8 @@ def tf_chain_compare(comparators, ops, tensors):
         print_warning('w', 'This is usually not used, and-concatenation of multiple chain compares')
         return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
     else:
-        print('-8>', str(type(ops[0])))
+        if print_string:
+            print('-8>', op[ops[0]]['name'])
         return ast_tensor_dict[type(ops[0])](x, y)
 
 
@@ -2137,7 +2014,7 @@ def load_operators_csv(op_csv_path):
     return op_array
 
 
-def tf_from_ast_expr(expr, tensors):
+def tf_from_ast_expr(expr, tensors, print_string=None):
 
     """
     Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
@@ -2145,14 +2022,11 @@ def tf_from_ast_expr(expr, tensors):
     """
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
     tree = ast.parse(expr, mode='eval').body
-    # try:
-    return tf_graph_from_expr_recursive(tree, tensors)
-    # except BaseException:
-    #     print_warning('w', 'Oh oh, hope this does not come up TODO this dummy seems wrong')
-    #     return None  # self.fitness_dummy_get()
+
+    return tf_graph_from_expr_recursive(tree, tensors, print_string=print_string)
 
 
-def tf_graph_from_expr_recursive(node, tensors, print_string=False):
+def tf_graph_from_expr_recursive(node, tensors, print_string=None):
 
     """
     Recursively transforms parsed expression tree into TensorFlow (TF) graph.
@@ -2160,33 +2034,44 @@ def tf_graph_from_expr_recursive(node, tensors, print_string=False):
     """
 
     if isinstance(node, ast.Name):  # <tensor_name>
-        print('-1>', str(node.id))
-        return tensors[node.id]
+        if print_string:
+            return str(node.id)
+        else:
+            return tensors[node.id]
 
     elif isinstance(node, ast.Num):  # <number>
-        print('-2>', str(node.n))
-        shape = tensors[list(tensors.keys())[0]].get_shape()
-        return tf.constant(node.n, shape=shape, dtype=tf.float32)
+        if print_string:
+            return str(node.n)
+        else:
+            shape = tensors[list(tensors.keys())[0]].get_shape()
+            return tf.constant(node.n, shape=shape, dtype=tf.float32)
 
-    elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
-        print('-3>', op[type(node.op)]['name'])
+    elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
+        if print_string:
+            return op[node.op]['name'] \
+                   + str(tf_graph_from_expr_recursive(node.left, tensors, print_string=print_string)) \
+                   + str(tf_graph_from_expr_recursive(node.right, tensors, print_string=print_string))
         return ast_tensor_dict[type(node.op)](
             tf_graph_from_expr_recursive(node.left, tensors),
             tf_graph_from_expr_recursive(node.right, tensors))
 
-    elif isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., x + y
-        print('-4>', str(type(node.op)))
-        return ast_tensor_dict[type(node.op)](
-            tf_graph_from_expr_recursive(node.left, tensors),
-            tf_graph_from_expr_recursive(node.right, tensors))
+    #
+    # elif isinstance(node, ast.BitAnd):  # <left> & <right>, e.g., a & True
+    #     if print_string:
+    #         print('-4>', str(type(node.op)))
+    #     return ast_tensor_dict[type(node.op)](
+    #         tf_graph_from_expr_recursive(node.left, tensors),
+    #         tf_graph_from_expr_recursive(node.right, tensors))
 
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-        print('-5>', op[type(node.op)]['name'])
+        if print_string:
+            print('-5>', op[type(node.op)]['name'])
         return ast_tensor_dict[type(node.op)](
             tf_graph_from_expr_recursive(node.operand, tensors))
 
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
-        print('-6>', str(node.func.id))
+        if print_string:
+            print('-6>', str(node.func.id))
 
         if node.func.id == 'Ifte':
             return ast_tensor_dict[node.func.id](tf.dtypes.cast(
@@ -2200,17 +2085,19 @@ def tf_graph_from_expr_recursive(node, tensors, print_string=False):
         elif len(node.args) <= 2:
             return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
         else:
-            raise('Failed to identify the function')
+            raise Exception('Failed to identify the function')
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        print('-7>', str(node.op))
+        if print_string:
+            print('-7>', str(node.op))
         return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
+        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, print_string=print_string)
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-        print('-9>', str(node.value))
+        if print_string:
+            print('-9>', str(node.value))
         return tf.constant(node.value)
 
     else:

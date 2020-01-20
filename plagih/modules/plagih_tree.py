@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from plagih.modules.plagih_sympy_extras import plagih_sympify
+from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
 
 ### TensorFlow Imports and Definitions ###
@@ -71,7 +72,6 @@ def tree_set_history(tree, last_modification):
 
 
 def tree_node_get_arity(tree, node_id, karoo=False):
-
     if karoo:
         node_id = int(node_id) - 1
 
@@ -109,7 +109,6 @@ def tree_round_constants(tree, accuracy, karoo=False):
 
 
 def tree_store_fitness(tree, fitness, precision=6):
-
     """
     Store the fitness within the tree np-array
 
@@ -123,6 +122,120 @@ def tree_store_fitness(tree, fitness, precision=6):
     return tree
 
 
+def tree_get_fitness(tree, precision=None, karoo=True):
+    if not karoo:
+        raise
+    fitness = float(tree[T_fitness][1])
+
+    if precision:
+        fitness = round(fitness, precision)
+    return fitness
+
+
+def tree_expr_raw(tree, node_id):
+    """
+    Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
+
+    """
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+        return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
+
+    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+        # This if case is for 2-ary ops that is prefix. like Min(a, b)
+        if tree[N_label, node_id] not in functions_infix_dict:
+            return '(' + tree[N_label, node_id] + '(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + '))'
+        else:
+            return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '(Ifte(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + ', ' + tree_expr_raw(tree, tree[11, node_id]) + '))'
+
+
+def tree_parsimony_ted(tree1, tree2):
+    """
+    The Tree Edit distance (TED) ('coolest' distance)
+    - the amount of changes that have to be applied to the origin to equality are counted
+    """
+    # TODO TED soll geänderte Werte ignorieren
+    apted_tree1 = tree_raw_depth_prefix(tree1, 1)
+    apted_tree2 = tree_raw_depth_prefix(tree2, 1)
+    distance, mapping = apted_distance(apted_tree1, apted_tree2)
+    # sfeh the mapping could be handy somewhere
+    return distance
+
+
+def tree_parsimony_relari(tree, origin_tree):
+    """
+    This distance penalizes non-original functions with its arity
+    - ignore node[0] [description]
+    - look within the subtree if the original function is on origin_tree spot
+    """
+
+    # If the new tree is actually less complex than the original one, just return 1
+    if len(tree[N_label]) < len(origin_tree[N_label]):
+        return 1
+
+    distance = 0
+
+    # iterate over every node in the new tree
+    for i, arity in enumerate(tree[N_arity]):
+        if i == 0:  # skip node 0. the description
+            continue
+        elif i < len(origin_tree[N_label]):  # Make sure we stay within the tree index. <= does not work
+            if origin_tree[N_label][i] != tree[N_label][i]:  # is it different from the origin_tree?
+                distance = distance + int(arity)  # add the nodes arity. double-punishes large trees
+        else:
+            distance = distance + int(arity)
+
+    return max(distance, 1)  # make sure, it does not return 0
+
+
+def tree_expr_sympify(algo_raw=None, tree=None):
+    """
+    returns the sympifyed expression
+    """
+    if tree:  # If we got a tree, we generate the expression
+        algo_raw = str(tree_expr_raw(tree, 1))
+
+    try:
+        expr_sym = plagih_sympify(algo_raw)
+        expr_sym_str = str(expr_sym)
+    except:
+        print('w', 'In sympify. Caused by this raw algorithm: ' + str(algo_raw))
+        raise
+
+    for fail_reason in ['zoo', 'inf', '*I', 'nan']:
+        if fail_reason in expr_sym_str:
+            raise
+    return expr_sym_str
+
+
+def tree_raw_depth_prefix(tree, node_id):
+    """
+    Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
+
+    """
+
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+        return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        return '{' + tree[N_label, node_id] + tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
+
+    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+        return '{' + tree[N_label, node_id] + '' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '{Ifte' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
+
+
 def tree_store_parsimony(tree, parsimony):
     """
     Store the parsimony within the tree np-array
@@ -133,8 +246,7 @@ def tree_store_parsimony(tree, parsimony):
     return tree
 
 
-def tree_expr_raw( tree, node_id):
-
+def tree_expr_raw(tree, node_id):
     """
     Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
 
@@ -159,7 +271,6 @@ def tree_expr_raw( tree, node_id):
 
 
 def tree_raw_depth_prefix(tree, node_id):
-
     """
     Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
 
@@ -222,7 +333,6 @@ def tree_get_leafes(tree, karoo=False):
 
 
 def tree_branch_get_label_list(tree, node_ids, karoo=False):
-
     """
     This method prepares a stand-alone Tree as a copy of the given node_ids.
 
@@ -740,12 +850,11 @@ def tree_get_mutatable_list(tree, no_root=False):
             node_ids.append(int(node_id))
 
     if no_root and root_id in node_ids:
-        node_ids.pop(root_id)
+        node_ids.remove(root_id)
     return node_ids
 
 
 def tree_node_get_idstring(tree, node_id):
-
     """
     return a list of s nodes childs.
     + Evaluate all or part of a Tree and
@@ -810,7 +919,7 @@ def tree_pretty_print(tree, karoo=False):
             layer_labels.append(label)
         else:
             print(layer_labels)
-            layer_labels =[label]
+            layer_labels = [label]
             depth += 1
     else:
         print(layer_labels)
@@ -819,7 +928,6 @@ def tree_pretty_print(tree, karoo=False):
 
 
 def tree_get_ids_karoo(tree, node):
-
     """
     return all child-nodes as list
     """
@@ -886,7 +994,6 @@ def tree_check_expression(tree, karoo=True):
 
 
 def tree_check_all(tree, karoo=True):
-
     label_list = tree[N_label]
     arity_list = tree[N_arity]
 

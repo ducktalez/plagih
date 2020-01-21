@@ -61,6 +61,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # TODO alert if functions do not allow closure, alert when origin function is not in dict
 
 # TODO save sympifyed versions of trees
+# TODO Tournament selection vergrößern
 
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees

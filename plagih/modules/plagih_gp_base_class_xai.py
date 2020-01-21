@@ -462,8 +462,7 @@ class ExplainableGP(object):
 
             population[tree_num] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
             gene_pool[tree_num] = tree_meta
-            if tree_meta['fitness_train'] < 341.0:
-                print('Genepool found:', tree_meta['fitness_train'])
+
             if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
                 dominator_count += 1
 
@@ -478,25 +477,26 @@ class ExplainableGP(object):
         """
 
         # 1. Find lowest complexity
-        best_fitness = self.parsimony_best_meta[0]['fitness_train']
+        best_fit = self.parsimony_best_meta[0]['fitness_train']
 
-        for parsim, meta in sorted(self.parsimony_best_meta.items(), key=lambda x: x[1]['fitness_train']):
-            fitness = meta['fitness_train']
-            if fitness < 341.0:
-                print('Pareto found:', fitness)
-            # kick
-            if self.fitness_compare(best_fitness, fitness):
-                x = self.pareto.pop(parsim, None)
+        sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
+        for parsim, meta in sorted_parsimony_best:
+            fit = meta['fitness_train']
 
-            elif self.fitness_compare(fitness, best_fitness):
+            if self.fitness_compare(best_fit, fit):
+                self.pareto.pop(parsim, None)
+
+            elif self.fitness_compare(fit, best_fit):
+                print('\tFit, Best:', fit, best_fit)
                 if self.pareto.get(parsim):
-                    if self.fitness_compare(fitness, self.pareto.get(parsim)):
-                        self.pareto[parsim] = fitness
-                        self.printpl('a', 'Updated pareto at {}. New fitness is: {}, old was: {}'.format(parsim, fitness, best_fitness))
+                    pareto_fit = self.pareto.get(parsim)
+                    if self.fitness_compare(fit, pareto_fit):
+                        self.pareto[parsim] = fit
+                        self.printpl('a', 'Updated pareto at {}. New fitness is: {}, old was: {}'.format(parsim, fit, best_fit))
                 else:
-                    self.pareto[parsim] = fitness
-                    self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fitness))
-                best_fitness = fitness
+                    self.pareto[parsim] = fit
+                    self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fit))
+                best_fit = fit
         return
 
     def fitness_compare(self, fitness1, fitness2, mode='better'):
@@ -527,7 +527,7 @@ class ExplainableGP(object):
 
         # TODO branch mutation in ALL subtrees? if more options are available
         # TODO safely create a complete generation?
-        self.print_g('gg', 'First population...')
+        self.print_g('ggg', 'First population...')
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
         tree_origin = self.origin['tree'].copy()
@@ -551,20 +551,21 @@ class ExplainableGP(object):
         """
 
         """
+
         # 1. Check every potential candidate
-        for tree_num, meta in gene_pool.items():
+        for key, meta in gene_pool.items():
+
             parsim = meta['parsimony']
             fitness_train = meta['fitness_train']
 
             # 3. is the tree better than the current best at this parsimony level?
             if parsim in self.parsimony_best_meta:
-                best_fit = self.parsimony_best_meta[parsim]['fitness_train']
-                if self.fitness_compare(fitness_train, best_fit):
+                comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
+                if self.fitness_compare(fitness_train, comp_fit):
                     self.printpl('aa', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
                     self.parsimony_best_meta[parsim] = meta
-                else:
-                    return  # The "regular" case
             else:
+                self.printpl('aa', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
                 self.parsimony_best_meta[parsim] = meta
 
         return
@@ -755,9 +756,11 @@ class ExplainableGP(object):
 
         self.population_new = pop_enum_trees(self.population_new)  # pop +tree_id
         gene_pool, self.population_new = self.pop_genepool_create(self.population_new)
+
         self.monitor_genepool(gene_pool)
 
         self.pop_parsimony_best_update(gene_pool)
+
         self.pop_pareto_update()
 
         self.population_base = pop_copy_genepool(self.population_new, gene_pool, self.gen_id)

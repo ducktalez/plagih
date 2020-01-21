@@ -480,16 +480,13 @@ class ExplainableGP(object):
         # 1. Find lowest complexity
         best_fitness = self.parsimony_best_meta[0]['fitness_train']
 
-        # TODOTODO TODO SFEH
         for parsim, meta in sorted(self.parsimony_best_meta.items(), key=lambda x: x[1]['fitness_train']):
             fitness = meta['fitness_train']
-            print('\tFitness, Best Fitness:', fitness, best_fitness)
             if fitness < 341.0:
                 print('Pareto found:', fitness)
             # kick
             if self.fitness_compare(best_fitness, fitness):
                 x = self.pareto.pop(parsim, None)
-                print('\tPopped?', x)
 
             elif self.fitness_compare(fitness, best_fitness):
                 if self.pareto.get(parsim):
@@ -500,7 +497,6 @@ class ExplainableGP(object):
                     self.pareto[parsim] = fitness
                     self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fitness))
                 best_fitness = fitness
-            print('\tlen pareto 2:', len(self.pareto))
         return
 
     def fitness_compare(self, fitness1, fitness2, mode='better'):

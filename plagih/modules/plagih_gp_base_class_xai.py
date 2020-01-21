@@ -24,6 +24,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from pathlib import Path
+from itertools import chain
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -1895,51 +1896,6 @@ def file_population_write(population, key, path, gen_id):
     return
 
 
-def tf_chain_bool(values, operation, tensors, print_string=False):
-    """
-    Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
-
-    """
-
-    x = tf.dtypes.cast(tf_graph_from_expr_recursive(values[0], tensors), tf.bool)
-    if len(values) > 1:
-        if print_string:
-            if len(values) == 2:
-                return '({} {} {})'.format(
-                    values[0],
-                    operation,
-                    values[1])
-            else:
-                print('FUCK')
-                raise
-        return operation(x, tf_chain_bool(values[1:], operation, tensors))
-    else:
-        if print_string:
-            print_warning('w', 'Whats x? {}'.format(x))
-            return str(x)
-        return x
-
-
-def tf_chain_compare(comparators, ops, tensors, print_string=False):
-    """
-    Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
-
-    """
-
-    x = tf_graph_from_expr_recursive(comparators[0], tensors, print_string=print_string)
-    y = tf_graph_from_expr_recursive(comparators[1], tensors, print_string=print_string)
-
-    if len(comparators) > 2:
-        print_warning('w', 'This is usually not used, and-concatenation of multiple chain compares')
-        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
-    else:
-        if print_string:
-            return '({} {} {})'.format(x,
-                                       op[type(ops[0])]['name'],
-                                       y)
-        return ast_tensor_dict[type(ops[0])](x, y)
-
-
 def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None):
     """
     returns a function for a function in point mutation
@@ -2022,7 +1978,7 @@ def load_operators_csv(op_csv_path):
     return op_array
 
 
-def tf_from_ast_expr(expr, tensors, print_string=None):
+def tf_from_ast_expr(expr, tensors, prnt=None, build=None):
     """
     Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
 
@@ -2030,118 +1986,236 @@ def tf_from_ast_expr(expr, tensors, print_string=None):
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
     tree = ast.parse(expr, mode='eval').body
 
-    return tf_graph_from_expr_recursive(tree, tensors, print_string=print_string)
+    return tf_graph_from_expr_recursive(tree, tensors, prnt=prnt, build=build)
 
 
-def tf_graph_from_expr_recursive(node, tensors, print_string=None):
+def tf_graph_from_expr_recursive(node, tensors, prnt=None, build=None):
     """
     Recursively transforms parsed expression tree into TensorFlow (TF) graph.
 
     """
 
+    # Arity 0
     if isinstance(node, ast.Name):  # <tensor_name>
-        if print_string:
-            return str(node.id)
+        if prnt:
+            return '{}'.format(node.id)
+        elif build:
+            return [node.id]
         else:
             return tensors[node.id]
 
     elif isinstance(node, ast.Num):  # <number>
-        if print_string:
-            return str(node.n)
+        if prnt:
+            return '{}'.format(node.n)
+        if build:
+            return [node.n]
         else:
             shape = tensors[list(tensors.keys())[0]].get_shape()
             return tf.constant(node.n, shape=shape, dtype=tf.float32)
 
-    elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
-        if print_string:
-            return '({} {} {})'.format(
-                tf_graph_from_expr_recursive(node.left, tensors, print_string=print_string),
-                op[type(node.op)]['name'],
-                tf_graph_from_expr_recursive(node.right, tensors, print_string=print_string))
+    elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
+        if prnt:
+            return '{}'.format(node.value)
+        if build:
+            return [node.value]
+        else:
+            return tf.constant(node.value)
 
-        return ast_tensor_dict[type(node.op)](
-            tf_graph_from_expr_recursive(node.left, tensors),
-            tf_graph_from_expr_recursive(node.right, tensors))
-
-    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-        if print_string:
+    # Arity 1
+    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1)
+        if prnt:
             return '({}{})'.format(
                 op[type(node.op)]['name'],
-                tf_graph_from_expr_recursive(node.operand, tensors, print_string=print_string))
-        return ast_tensor_dict[type(node.op)](
-            tf_graph_from_expr_recursive(node.operand, tensors))
+                tf_graph_from_expr_recursive(node.operand, tensors, prnt=prnt))
+        if build:
+            return [op[type(node.op)]['name'], [tf_graph_from_expr_recursive(node.operand, tensors, build=build)]]
+        else:
+            return ast_tensor_dict[type(node.op)](
+                tf_graph_from_expr_recursive(node.operand, tensors))
 
+    # Arity 2
+    elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
+        if prnt:
+            return '({} {} {})'.format(
+                tf_graph_from_expr_recursive(node.left, tensors, prnt=prnt),
+                op[type(node.op)]['name'],
+                tf_graph_from_expr_recursive(node.right, tensors, prnt=prnt))
+        if build:
+            return [op[type(node.op)]['name'],
+                    [tf_graph_from_expr_recursive(node.left, tensors, build=build),
+                     tf_graph_from_expr_recursive(node.right, tensors, build=build)]]
+        else:
+            return ast_tensor_dict[type(node.op)](
+                tf_graph_from_expr_recursive(node.left, tensors),
+                tf_graph_from_expr_recursive(node.right, tensors))
+
+    elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
+        if prnt:
+            return tf_chain_bool(node.values, op[type(node.op)]['name'], tensors, prnt=True)
+        if build:
+            return tf_chain_bool(node.values, op[type(node.op)]['name'], tensors, build=build)
+        else:
+            return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
+
+    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
+        if prnt:
+            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, prnt=prnt)
+        if build:
+            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, build=build)
+        else:
+            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
+
+    # Arity x, all custom functions
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
 
         if node.func.id == 'Ifte':
-            if print_string:
+            if prnt:
                 return '(If ({}) then ({}) else ({}))'.format(
-                    tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string),
-                    tf_graph_from_expr_recursive(node.args[1], tensors, print_string=print_string),
-                    tf_graph_from_expr_recursive(node.args[2], tensors, print_string=print_string))
-            return ast_tensor_dict[node.func.id](tf.dtypes.cast(
-                tf_graph_from_expr_recursive(node.args[0], tensors), tf.bool),
-                tf_graph_from_expr_recursive(node.args[1], tensors),
-                tf_graph_from_expr_recursive(node.args[2], tensors))
+                    tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt),
+                    tf_graph_from_expr_recursive(node.args[1], tensors, prnt=prnt),
+                    tf_graph_from_expr_recursive(node.args[2], tensors, prnt=prnt))
+            if build:
+                return ['Ifte',
+                        [tf_graph_from_expr_recursive(node.args[0], tensors, build=build),
+                         tf_graph_from_expr_recursive(node.args[1], tensors, build=build),
+                         tf_graph_from_expr_recursive(node.args[2], tensors, build=build)]]
+            else:
+                return ast_tensor_dict[node.func.id](tf.dtypes.cast(
+                    tf_graph_from_expr_recursive(node.args[0], tensors), tf.bool),
+                    tf_graph_from_expr_recursive(node.args[1], tensors),
+                    tf_graph_from_expr_recursive(node.args[2], tensors))
 
         elif node.func.id == 'Ftob' or node.func.id == 'Btof':
-            if print_string:
-                return '({} {})'.format(node.func.id, tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string))
-            return tf.dtypes.cast(*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
+            if prnt:
+                return '({} {})'.format(node.func.id, tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt))
+            if build:
+                return [node.func.id,
+                        [tf_graph_from_expr_recursive(node.args[0], tensors, build=build)]]
+            else:
+                return tf.dtypes.cast(*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
 
         elif len(node.args) <= 2:
-            if print_string:
+            if prnt:
                 if len(node.args) == 1:
                     return '({} {})'.format(
                         op[node.func.id]['name'],
-                        tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string))
-                if len(node.args) == 2:
+                        tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt))
+                elif len(node.args) == 2:
                     return '({} ({}, {}))'.format(
                         op[node.func.id]['name'],
-                        tf_graph_from_expr_recursive(node.args[0], tensors, print_string=print_string),
-                        tf_graph_from_expr_recursive(node.args[1], tensors, print_string=print_string))
-            return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
+                        tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt),
+                        tf_graph_from_expr_recursive(node.args[1], tensors, prnt=prnt))
+                else:
+                    raise Exception('This arity is not supported')
+            if build:
+                if len(node.args) == 1:
+                    return [op[node.func.id]['name'],
+                            [tf_graph_from_expr_recursive(node.args[0], tensors, build=build)]]
+                elif len(node.args) == 2:
+                    return [op[node.func.id]['name'],
+                            [tf_graph_from_expr_recursive(node.args[0], tensors, build=build),
+                            tf_graph_from_expr_recursive(node.args[1], tensors, build=build)]]
+                else:
+                    raise Exception('This arity is not supported')
+            else:
+                return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
+
+            # If nothing matched
         else:
             raise Exception('Failed to identify the function')
-
-    elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        if print_string:
-            return tf_chain_bool(node.values, op[type(node.op)]['name'], tensors, print_string=True)
-        return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
-
-    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z        if print_string:
-        if print_string:
-            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, print_string=print_string)
-        return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
-
-    elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-        if print_string:
-            return str(node.value)
-        return tf.constant(node.value)
 
     else:
         raise TypeError(node)
 
 
-x = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, observation0) > -0.97, 0.0, 2.0)'
-fix_labels = ['Ifte',
-              '&', '2', '0',
-              '<=', '<=',
-              'Mini', 'observation1', 'observation1', '+',
-              '+', '-', '*', '0.7',
-              '*', '0.03', '*', '0.008', '-0.07', '**',
-              '-0.09', '**', '0.3', '**', '+', '2',
-              '+', '2', '+', '4', 'observation0', '0.38',
-              'observation0', '0.25', 'pos', '0.9']
-fix_tree = karoo_tree_from_labellist(fix_labels)
-tree_pretty_print(fix_tree, karoo=True)
-fix_expr_raw = tree_expr_raw(fix_tree, root_id)
-print('RAW:', fix_expr_raw)
-fix_expr_sym = tree_expr_sympify(tree=fix_tree)
-print('SYM:', fix_expr_sym)
-fake_tensors = {'observation0': tf.constant(1.1, dtype=tf.float32),
-                'observation1': tf.constant(2.2, dtype=tf.float32),
-                'bl': tf.constant(True, dtype=tf.bool)}
-# graph = tf_from_ast_expr('Ifte(Or(b & b, b), Mini(a,2), a+a)', fake_tensors, print_string=True)
-graph = tf_from_ast_expr(fix_expr_sym, fake_tensors, print_string=True)
-print(graph)
+def tf_chain_bool(values, operation, tensors, prnt=False, build=False):
+    """
+    Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
+
+    """
+
+    x = tf.dtypes.cast(tf_graph_from_expr_recursive(values[0], tensors), tf.bool)
+    if len(values) > 1:
+        if prnt:
+            if len(values) == 2:
+                return '({} {} {})'.format(
+                    values[0],
+                    operation,
+                    values[1])
+            else:
+                print('FUCK')
+                raise
+        if build:
+            if len(values) == 2:
+                return [operation,
+                        [values[0],
+                         values[1]]]
+            else:
+                print('FUCK')
+                raise
+        return operation(x, tf_chain_bool(values[1:], operation, tensors))
+    else:
+        if prnt:
+            print_warning('w', 'Whats x? {}'.format(x))
+            return str(x)
+        return x
+
+
+def tf_chain_compare(comparators, ops, tensors, prnt=False, build=False):
+    """
+    Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
+
+    """
+
+    x = tf_graph_from_expr_recursive(comparators[0], tensors, prnt=prnt, build=build)
+    y = tf_graph_from_expr_recursive(comparators[1], tensors, prnt=prnt, build=build)
+
+    if len(comparators) > 2:
+        print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')
+        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
+    else:
+        if prnt:
+            return '({} {} {})'.format(x, op[type(ops[0])]['name'], y)
+        if build:
+            return [op[type(ops[0])]['name'], [x, y]]
+        else:
+            return ast_tensor_dict[type(ops[0])](x, y)
+
+
+def labels_from_algo(expr_array, expr):
+    for x in expr_array:
+        if type(x) is not list:
+            # print('->', x)
+            expr.append(x)
+
+    only_lists = [x for x in expr_array if (type(x) == list)]
+    if only_lists:
+        lists_removed = list(chain(*only_lists))
+        expr = labels_from_algo(lists_removed, expr)
+    return expr
+
+
+# # x = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, observation0) > -0.97, 0.0, 2.0)'
+# fix_labels = ['Ifte',
+#               '&', '2', '0',
+#               '<=', '<=',
+#               'Mini', 'observation1', 'observation1', '+',
+#               '+', '-', '*', '0.7',
+#               '*', '0.03', '*', '0.008', '-0.07', '**',
+#               '-0.09', '**', '0.3', '**', '+', '2',
+#               '+', '2', '+', '4', 'observation0', '0.38',
+#               'observation0', '0.25', 'pos', '0.9']
+# fix_tree = karoo_tree_from_labellist(fix_labels)
+# fix_expr_raw = tree_expr_raw(fix_tree, root_id)
+#
+# fix_expr_sym = tree_expr_sympify(tree=fix_tree)
+#
+# fake_tensors = {'observation0': tf.constant(1.1, dtype=tf.float32),
+#                 'observation1': tf.constant(2.2, dtype=tf.float32),
+#                 'bl': tf.constant(True, dtype=tf.bool)}
+# # graph = tf_from_ast_expr('Ifte(Or(b & b, b), Mini(a,2), a+a)', fake_tensors, print_string=True)
+# graph = tf_from_ast_expr(fix_expr_sym, fake_tensors, build=True)
+# # test = tf_from_ast_expr(graph, fake_tensors, build=1)
+# print(graph)
+# expr = labels_from_algo(graph, [])
+# print(expr)

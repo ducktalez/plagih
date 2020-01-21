@@ -779,7 +779,7 @@ def xtype_get_constant(label, node_arity=None, only_float=True):
     const_xtype = None
 
     if not node_arity:
-        node_arity = op_label_get_arity(label)
+        node_arity = label_get_arity(label)
 
     if node_arity == 0:  # arity=0 -> terminal
         if 'True' in label or 'False' in label:
@@ -845,7 +845,7 @@ def labels_get_aritys_list(label_list, karoo=False):
     returns an arity list for a label list
     """
 
-    arity_list = [op_label_get_arity(x) for x in label_list]
+    arity_list = [label_get_arity(x) for x in label_list]
 
     if karoo:
         arity_list.pop(0)
@@ -971,7 +971,7 @@ def karoo_tree_from_labellist(label_list, modify_list=None):
     """
     create a tree from user input
     """
-    arity_list = [op_label_get_arity(label) for label in label_list]
+    arity_list = [label_get_arity(label) for label in label_list]
     core = core_from_labels(label_list, arity_list)
     if modify_list:
         for i, val in enumerate(modify_list):

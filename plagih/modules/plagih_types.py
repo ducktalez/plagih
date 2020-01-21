@@ -21,7 +21,7 @@ def op_label_get_basictype(node_label):
         return 'term'
 
 
-def op_label_get_arity(node_label):
+def label_get_arity(node_label):
     """
     return terminal or function according to the label
     """

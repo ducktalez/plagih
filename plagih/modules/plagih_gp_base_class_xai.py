@@ -477,7 +477,7 @@ class ExplainableGP(object):
         for parsim, meta in sorted_parsimony_best:
             fit = meta['fitness_train']
 
-            if self.fitness_compare(best_fit, fit):
+            if self.fitness_compare(best_fit, fit, mode='better_or_equal'):
                 self.pareto.pop(parsim, None)
 
             elif self.fitness_compare(fit, best_fit):
@@ -827,8 +827,9 @@ class ExplainableGP(object):
 
         # 1. choose a node
         node_id = np.random.choice(tree_get_mutatable_list(tree))
-        arity = int(tree[N_arity][node_id])
-        xtype = self.xtype_get(tree[N_label][node_id])  # '>' -> 'f2b'
+        label = tree_get_label(tree, node_id)
+        arity = label_get_arity(label)  # int(tree[N_arity][node_id])
+        xtype = self.xtype_get(label)  # '>' -> 'f2b'
 
         if same_arity:
             # 2. perform point mutation on that specific node
@@ -1467,7 +1468,7 @@ class ExplainableGP(object):
         returns xtype for a label
         """
         if not node_arity:
-            node_arity = op_label_get_arity(label)
+            node_arity = label_get_arity(label)
 
         if node_arity == 0:  # arity=0 -> terminal
             if 'True' in label or 'False' in label:

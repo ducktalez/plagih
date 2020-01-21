@@ -2,6 +2,7 @@ import sys;
 
 sys.path.append('modules/')  # add directory 'modules' to the current path
 import plagih.modules.plagih_gp_base_class_xai as plagih
+from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, save_data_pickle, load_operators_from_csv
 from pathlib import Path
 
 
@@ -14,7 +15,7 @@ def get_evolve_rates_dict(evolve_rates, pop_max):
 
 def create_config_dict():
     config_dict = {
-        'name': '_MTC_tree_012',
+        'name': 'MTC_tree_012',
         'kernel': 'regression',  # [regression, classification, match]
         'precision': 6,  # number of floating points for the round function in 'fx_fitness_eval'
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
@@ -22,8 +23,8 @@ def create_config_dict():
         'display': 'ggewsiivoa',  # To display absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
-        'tree_depth_base': 5,
-        'tree_depth_max': 20,  # [3...10]			maximum Tree depth for entire run
+        'tree_depth_base': 7,
+        'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
         'pop_max': 1000,
@@ -34,8 +35,8 @@ def create_config_dict():
                     'sympify_errors': 'y',
                     'genepool_size': 'y'
                     },
-        'period': {'time_monitor': 60 * 10,  # in sec
-                   'time_save': 60 * 60,  # in sec
+        'period': {'time_monitor': 60 * 1,  # in sec
+                   'time_save': 60 * 1,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
         'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
@@ -43,7 +44,7 @@ def create_config_dict():
                          'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
                          'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
                          'Create Random': 0.2},
-        'time_max': int(60 * 60 * 7),  # 60 = 1 min
+        'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }
 
@@ -59,13 +60,32 @@ file_dict = {
     'samples_pickle': Path('../mountaincar/karoo_files/data_samples/plagih_data_prepared.p'),
     'operators_file': Path('../mountaincar/karoo_files/operators/operators.csv')
 }
-label_list = ['Ifte', '<', '0', 'Ifte', 'observation1', '0', 'True', '2', '0']
-permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
 
 config_dict = create_config_dict()
+
+# prepared_data = data_from_csv(file_dict['samples_file'])
+# data_save_pickle(prepared_data, file_dict['samples_pickle'])
+prepared_data = data_load_pickle(file_dict['samples_pickle'])
+op_array = load_operators_from_csv(file_dict['operators_file'])
+
 gp = plagih.ExplainableGP(config_dict)
-gp.data_from_csv(file_dict['samples_file'], save_pickle_path=file_dict['samples_pickle'])
+gp.activate_data(prepared_data)
+gp.activate_operators(op_array)
+
 # gp.data_from_pickle(file_dict['samples_pickle'])
-gp.data_load_operators(file_dict['operators_file'])
+fix_labels = ['Ifte',
+              '&', '2', '0',
+              '<=', '<=',
+              'Mini', 'observation1', 'observation1', '+',
+              '+', '-', '*', '0.7',
+              '*', '0.03', '*', '0.008', '-0.07', '**',
+              '-0.09', '**', '0.3', '**', '+', '2',
+              '+', '2', '+', '4', 'observation0', '0.38',
+              'observation0', '0.25', 'pos', '0.9']
+label_list = ['Ifte', '<', '0.0', 'Ifte', 'observation1', '0.0', 'True', '2.0', '0.0']
+permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
+
 gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)
+# gp.load_origin_tree(label_list=fix_labels)
+
 gp.plagih_gp_run()

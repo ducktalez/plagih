@@ -18,14 +18,13 @@ import sklearn.model_selection as skcv
 from datetime import datetime
 from plagih.modules.plagih_tree import *
 import pickle
-import re
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 import numpy as np
 
 import matplotlib.pyplot as plt
-from plagih.modules.tree_distances.tree_edit_distance import apted_distance
 import time
 from pathlib import Path
+from itertools import chain
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -54,15 +53,18 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # todo random samples out of dataset values as new constants?
 # TODO zoo and inf and nan in plagih_sympify... other solution?
 # TODO what is "swim" in karoo, what is it good for?
+# todo add stop after we achieved our goal
 # TODo check memory usage?
 # random TODO grow depth anpassen!
 # TODO anzahl bereits bekannter bäume
 # TODO Field Guide programming lesen
+# TODO alert if functions do not allow closure, alert when origin function is not in dict
 
 # TODO save sympifyed versions of trees
+# TODO Tournament selection vergrößern
 
 sympy_dummy = plagih_sympify(1)
-np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
+np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
 class ExplainableGP(object):
@@ -73,8 +75,8 @@ class ExplainableGP(object):
     def __init__(self, config_dict):
 
         self.time_start = time.perf_counter()
-        self.tree_hash_meta = {}
-        self.parsimony_best_dict = {}
+        self.tree_meta = {}
+        self.parsimony_best_meta = {}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
 
@@ -87,29 +89,18 @@ class ExplainableGP(object):
 
         self.tnode = {}
 
-        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU or GPU); gpu:n = 1st, 2nd, or ... GPU device
+        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device
         self.tf_device_log = False  # TF device usage logging (for debugging)
-
-        # What trees should be built
-        # TODO
-        self.asdf = {'tree_depth_max': 10,
-                     'strongly_typed': True,
-                     'mutate_branch_depth_max': 6,
-                     'mutate_branch_build_method': 'grow',
-                     'mutate_branch_grow_term_probability': 0.5,
-                     'crossover_strategy': ['same_type', 'same_type_switched', 'convert', 'plagih_switcharoo'],
-                     'tree_min_nodes': 3}
 
         self.monitor_dict = config_dict['monitor']
         self.evolve_rates = config_dict['evolve_rates']
-        evolve_missing = 1-sum(self.evolve_rates.values())
+        evolve_missing = 1 - sum(self.evolve_rates.values())
         self.evolve_rates['Create Random'] += evolve_missing
 
-        self.fitness_type = fitt_dict[self.kernel]  # load fitness type
-        if self.fitness_type == 'max':
-            self.fitness_bad_dummy = 0
-        else:
+        if self.kernel == 'regression':
             self.fitness_bad_dummy = float("inf")
+        else:  # 'classification' or 'match'
+            self.fitness_bad_dummy = 0
         self.gene_pool = {}
         self.xype_func_dict = {'f2f': [], 'f2b': [], 'b2b': [], 'b2f': [], 'b2f2f': [],
                                '2b': [], '2f': [],
@@ -123,7 +114,8 @@ class ExplainableGP(object):
 
         self.file_directories_create()
         self.done = False
-        self.printpl('gg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.gen_id = 0
+        self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
 
@@ -133,40 +125,19 @@ class ExplainableGP(object):
         """
 
         self.gen_id = 0  # set initial generation ID    # first gen only
-        self.file_config()
+        file_config(self.path, self.config, self.gen_id, self.kernel, self.datetime)
         self.main_generation_first_origin()
         self.main_generation_loop()  # (main loop)
-        self.printpl('gg', 'GP-run. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'GP-run. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         self.file_autowrite(self.path, 'f')  # archive populations and return to plagih_gp.py for a clean exit
         self.file_autoplots(self.path)
-        self.printpl('gg', 'Completely. Exit. \tTime: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Completely. Exit. \tTime: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         sys.exit()
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Top level      functions                  |
     # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def file_population_write(self, population, key, path):
-
-        """
-        Save population_* to disk.
-
-        """
-        file_path = path / 'population_{}.csv'.format(str(key))
-
-        with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-            target = csv.writer(csv_file, delimiter=',')
-            if self.gen_id != 0:
-                target.writerows([''])  # empty row before each generation
-            target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)]])
-
-            for tree in range(1, len(population)):
-                target.writerows([''])  # empty row before each Tree
-                for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                    target.writerows([population[tree][row]])
-
-        return
 
     def file_directories_create(self):
         """
@@ -175,7 +146,7 @@ class ExplainableGP(object):
 
         self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
         cwd = Path.cwd()
-        self.path = cwd / 'runs' / '{}{}'.format(self.datetime, self.config['name'])
+        self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)
 
@@ -189,12 +160,12 @@ class ExplainableGP(object):
         - Evaluate the first Generation
         - Monitoring initialisation and monitoring
         """
-        self.printpl('gg', 'Preparing to evolve Generation {}'.format(self.gen_id))
+        self.print_g('gg', 'Preparing to evolve Generation {}'.format(self.gen_id))
         self.gen_prepare_parameters()
         self.pop_first_create()
         self.pareto[0] = self.origin['fitness_train']
         self.gen_finalize()
-        self.file_population_write(self.population_base, '1_first', self.path)  # first gen only
+        file_population_write(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
 
     def main_generation_loop(self):
         """
@@ -211,7 +182,6 @@ class ExplainableGP(object):
                    ('Create Random', self.gen_create_random)]
         tourn_size = self.config['gp_tourn_size']
 
-        # todo add stop after we achieved our goal
         while self.gen_id < self.config['gen_max'] and \
                 time.perf_counter() - self.time_start < self.config['time_max'] and \
                 not self.done:
@@ -220,7 +190,7 @@ class ExplainableGP(object):
             self.gen_prepare_parameters()
 
             for name, gp_function in gp_list:
-                self.printpl('gggg', '{}...'.format(name))
+                self.print_g('gggg', '{}...'.format(name))
                 evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 time_evolve = time.perf_counter()
 
@@ -229,17 +199,17 @@ class ExplainableGP(object):
                 #     n += 1
                 #     pass
                 gp_function(evolve_num, tourn_size)
-                self.printpl('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
+                self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
-            self.autosave_stuff()
+            self.autosave()
 
             self.gen_finalize()
-            self.printpl('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
+            self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
         else:
             self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format(BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.RESET))
             # menu_continue = 0
 
-    def autosave_stuff(self, overwrite=True):
+    def autosave(self, overwrite=True):
         """
 
         """
@@ -264,6 +234,7 @@ class ExplainableGP(object):
             if self.config['period']['time_save'] < (time_now - self.time_last_files):
                 self.printpl('ii', 'auto-save (time)')
                 self.file_autowrite(path_auto, auto_enumname)
+                self.backup_save_pickle()
                 self.time_last_files = time_now
 
         if self.config['period']['gen_monitor']:
@@ -274,6 +245,7 @@ class ExplainableGP(object):
         if self.config['period']['gen_save']:
             if self.gen_id % int(self.config['period']['gen_save']) == 0:
                 self.printpl('ii', 'auto-save (gen)')
+                self.backup_save_pickle()
                 self.file_autowrite(path_auto, auto_enumname)
 
         return 0
@@ -283,9 +255,9 @@ class ExplainableGP(object):
         writes all important files
 
         """
-        self.file_conclusion(path)
+        self.file_conclusion(path, datetime=self.datetime)
         self.file_pareto(self.pareto, path)
-        self.file_population_write(self.population_new, str(gen), path)  # save the final generation of Trees to disk
+        file_population_write(self.population_new, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
 
     def gen_olympus_update(self):
         """
@@ -298,167 +270,21 @@ class ExplainableGP(object):
     #   Load and Archive Data                     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def data_from_csv(self, samples_file, save_pickle_path=None):
-
+    def activate_data(self, data_prepared):
         """
-        loads the goal-data_csv_path from .csv file. first observations then actions.
-        Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
-
-        Mountaincar .csv first lines (11.12.2019):
-        --------------------------------------------------------
-        observation0:float,     observation1:float, action0:float
-        -0.5031261704876531,    0.0,                2
-        --------------------------------------------------------
+        separate loading the prepared data into the main class.
+        Why like this? I needed to find a bug in the data_from_csv file and
+        did not want to start the whole stuff everytime
         """
-
-        num_observations, num_actions = 0, 0
-        var_types = []
-        # TODO Terminal types as dictionary? would be much prettier.
-        input_dict = {'all': {},
-                      'float': {},
-                      'bool': {}}
-        variables_dict = {'all': [],
-                          'types': [],
-                          'float': [],
-                          'bool': []}
-
-        action_dict = {}
-        actions, action_types = [], []
-
-        # 1. Read file
-        with Path.open(samples_file) as csvFile:
-            reader = csv.reader(csvFile, delimiter=',')
-
-            for i, row in enumerate(reader):
-                if i == 0:  # variable identifiers
-                    # all_variables = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
-                    for var_name in row:
-                        var_types.append(var_name.split(':', 1)[1])
-                        if var_name.startswith('o'):  # found an observation
-                            num_observations += 1
-                            term = var_name.rsplit(':', 1)[0]
-                            term_type = var_name.split(':', 1)[1]
-                            input_dict[term] = term_type  # todo austauschen
-                            variables_dict['all'].append(term)
-                            variables_dict['types'].append(term_type)
-                            if term_type == 'float':
-                                variables_dict['float'].append(term)
-                            elif term_type == 'bool':
-                                variables_dict['bool'].append(term)
-                            else:
-                                raise
-                        elif var_name.startswith('a'):  # found an action
-                            num_actions += 1
-                            action = var_name.split(':', 1)[0]
-                            action_type = var_name.split(':', 1)[1]
-                            action_dict[action] = action_type  # Do not use this:# '2b' if 'bool' in action_type else '2f'
-                        else:
-                            self.printpl('e', 'Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
-                            raise
-
-                    data_x, data_y = [], []
-
-                else:  # convert every 'string' element to its data_csv_path type
-                    # TODO var_types ist genau dasselbe wie self.terminal , oder? eines ersetzen?
-                    row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
-                    data_x.append(row_as_data[:num_observations])
-                    data_y.append(row_as_data[num_observations:])
-            csvFile.close()
-
+        input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control = data_prepared
         self.input_dict = input_dict
         self.variables_dict = variables_dict
         self.action_dict = action_dict
-        self.class_labels = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-        self.data_train_rows, self.data_train, self.data_control = data_load_data_split(data_x, data_y, test_size=0.2)
+        self.unique_outputs_num = unique_outputs_num
+        self.data_train_rows, self.data_train, self.data_control = data_train_rows, data_train, data_control
 
-        if save_pickle_path:
-            pickle_data = {'self.input_dict': self.input_dict,
-                           'self.variables_dict': self.variables_dict,
-                           'self.action_dict': self.action_dict,
-                           'self.class_labels': self.class_labels,
-                           'self.data_train_rows': self.data_train_rows,
-                           'self.data_train': self.data_train,
-                           'self.data_control': self.data_control}
-            with Path.open(save_pickle_path, 'wb') as file:
-                pickle.dump(pickle_data, file)
-
-        self.printpl('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-        return
-
-    def data_load_pickle(self, prepared_data_pickle_path):
-        """
-        loads a data_csv_path file that was already split with the csv reader
-        """
-        with Path.open(prepared_data_pickle_path, 'rb') as file:
-            pickle_data = pickle.load(file)
-        # pickle_data = pickle.load(Path.open(prepared_data_pickle_path, 'rb'))
-
-        self.input_dict = pickle_data['self.input_dict'],
-        self.variables_dict = pickle_data['self.variables_dict'],
-        self.action_dict = pickle_data['self.action_dict'],
-        self.class_labels = pickle_data['self.class_labels'],
-        self.data_train_rows = pickle_data['self.data_train_rows'],
-        self.data_train = pickle_data['self.data_train'],
-        self.data_control = pickle_data['self.data_control']
-
-        self.printpl('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-        return
-
-    def data_load_operators(self, operators_file_path):
-        """
-        Load all operators ready-to-use from a file
-        """
-
-        functions = np.loadtxt(operators_file_path, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-        # Part 3.5: Split the functions in 5 types
-
-        # rows are the function types (f2f)
-        # columns are the arity
-        self.op_type_arity_array = [[[], [], [], []],
-                                    [[], [], [], []],
-                                    [[], [], [], []],
-                                    [[], [], [], []],
-                                    [[], [], [], []]]
-        for fun in functions:
-            label = fun[0]
-            arity = op[label]['arity']  # arity = int(fun[1])
-            xtype = op[label]['xtype']
-
-            if xtype == 'f2f':
-                self.xype_func_dict['f2f'].append(label)
-                self.xype_func_dict['2f'].append(label)
-                self.xype_func_dict['f2'].append(label)
-                self.op_type_arity_array[f2f][arity].append(label)
-            elif xtype == 'f2b':
-                self.xype_func_dict['f2b'].append(label)
-                self.xype_func_dict['2b'].append(label)
-                self.xype_func_dict['f2'].append(label)
-                self.op_type_arity_array[f2b][arity].append(label)
-            elif xtype == 'b2b':
-                self.xype_func_dict['b2b'].append(label)
-                self.xype_func_dict['2b'].append(label)
-                self.xype_func_dict['b2'].append(label)
-                self.op_type_arity_array[b2b][arity].append(label)
-            elif xtype == 'b2f':
-                self.xype_func_dict['b2f'].append(label)
-                self.xype_func_dict['2f'].append(label)
-                self.xype_func_dict['b2'].append(label)
-                self.op_type_arity_array[b2f][arity].append(label)
-            elif xtype == 'b2f2f':
-                self.xype_func_dict['b2f2f'].append(label)
-                self.xype_func_dict['2f'].append(label)
-                self.xype_func_dict['f2'].append(label)
-                self.xype_func_dict['b2'].append(label)
-                self.op_type_arity_array[b2f2f][arity].append(label)
-
-        if not self.xype_func_dict['2f'] and not self.xype_func_dict['2b']:
-            self.printpl('w', 'Neither Boolean nor Float Values can be created!')
-        elif not self.xype_func_dict['2f']:
-            self.printpl('w', 'No Float Values can be created!')
-        elif not self.xype_func_dict['2b']:
-            self.printpl('w', 'Neither Boolean Values can be created!')
-
-        self.printpl('g', 'Loading operators. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+    def activate_operators(self, op_array):
+        self.op_array = op_array
         return
 
     def data_pickle_save(self):
@@ -472,52 +298,64 @@ class ExplainableGP(object):
         run_data = {'gen_id': self.gen_id,
                     'parsimony_front_fitness': '',
                     'pareto': self.pareto,
-                    'hash_trees_meta': self.tree_hash_meta,
+                    'hash_trees_meta': self.tree_meta,
                     'population_new': self.population_new
                     }
         pickle.dump(run_data, Path.open(self.path / 'Gen-{}-backup.p'.format(str(self.gen_id)), 'wb'))
 
-    def autosave(self):
+    def backup_save_pickle(self):
         """
         automatically saves everything important after a certain amount of time
         """
-        # saving data_csv_path (including the split)
-        # saving pareto front
-        # saving hash dict
+        path = self.path / 'backup'
+        if not Path.is_dir(path):
+            Path.mkdir(path)
+
+        # pickle.dump(self, Path.open(path / 'backup.p', 'wb'))
+        # TODO, pickle too large?
+
+    def restart_basics(self, pareto_path, last_pop_path):
         pass
 
-    def file_conclusion(self, path):
+    def backup_load_pickle(self, pickle_nackup_path):
+
+        with Path.open(pickle_nackup_path, 'rb') as file:
+            self = pickle.load(file)
+        return
+
+    def file_conclusion(self, path, datetime=None):
 
         """
         write the performance of the config to disc
         """
 
         file = Path.open(path / 'conclusion.txt', 'w')
-        file.write('Plagih GP\n launched: ' + str(self.datetime))
+        file.write('Plagih GP\n launched: ' + str(datetime))
 
-        result = self.eval_tf(self.origin['algo_sym'], self.data_control, get_pred_labels=True)
+        result = self.eval_tf(self.origin['expr_sym'], self.data_control, get_pred_labels=True)
         self.origin['fit_control'] = result['fitness']
-        fit_best = result['fitness']
+        fit_control_best = result['fitness']
 
-        fittest_algo = self.origin['algo_sym']
+        fittest_algo = self.origin['expr_sym']
         fittest_parsimony = 0
 
         for parsimony, tree_hash in self.pareto.items():
-
-            algo_sym = self.tree_hash_meta[self.parsimony_best_dict[parsimony]]['algo_sym']
+            try:
+                algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
+            except:
+                print('LOLOLO', self.parsimony_best_meta[parsimony]['expr_sym'])
+                raise
             result = self.eval_tf(algo_sym, self.data_control, get_pred_labels=True)
             fit_control = result['fitness']
 
-            if self.fitness_compare(fit_control, fit_best, mode='better_or_equal') or\
-                    self.kernel == 'regression' and fit_control <= fit_best or\
-                    self.kernel == 'match' and fit_control == self.data_train_rows:  # find the Tree with a perfect match for all data_csv_path rows
+            if self.fitness_compare(fit_control, fit_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
 
-                fit_best = fit_control
+                fit_control_best = fit_control
                 fittest_algo = algo_sym
                 fittest_parsimony = parsimony
 
             if self.kernel == 'classification':
-                file.write('\n\n Classification fitness score: {}'.format(fit_best))
+                file.write('\n\n Classification fitness score: {}'.format(fit_control_best))
                 file.write('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
                 file.write('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
 
@@ -537,31 +375,12 @@ class ExplainableGP(object):
 
         # Info about the best Tree
         file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
-        file.write('\n With fitness: {}'.format(fit_best))
+        file.write('\n With fitness: {}'.format(fit_control_best))
         file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
         file.write('\n\n')
         file.close()
 
         return
-
-    def file_config(self):
-        """
-        write the parameters to a file
-        Todo update
-        """
-
-        file = Path.open(self.path / 'config.txt', 'w')
-        file.write('Plagih GP. This config is not complete, TODO!')
-        file.write('\n launched: {}'.format(self.datetime))
-        file.write('\n kernel: {}'.format(self.kernel))
-        file.write('\n precision: {}\n'.format(self.config['precision']))
-        file.write('\n tree depth max: ' + str(self.config['tree_depth_max']))
-        file.write('\n')
-        file.write('\n tournament size: ' + str(self.config['gp_tourn_size']))
-        file.write('\n population: ' + str(self.config['pop_max']))
-        file.write('\n number of generations: ' + str(self.gen_id))
-        file.write('\n\n')
-        file.close()
 
     def file_pareto(self, pareto, path):
         """
@@ -571,9 +390,9 @@ class ExplainableGP(object):
         file.write('\nParsimony: \t<num> Fitness: \t<fitness> Expr: \t<expression>')
 
         for parsim, fit in sorted(list(pareto.items())):
-            tree_meta = self.tree_hash_meta[self.parsimony_best_dict[parsim]]
+            tree_meta = self.parsimony_best_meta[parsim]
             fitness = tree_meta['fitness_train']
-            algo_sym = tree_meta['algo_sym']
+            algo_sym = tree_meta['expr_sym']
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(str(parsim), str(fitness), str(algo_sym)))
 
         file.close()
@@ -624,24 +443,26 @@ class ExplainableGP(object):
 
 
         """
-        self.printpl('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
+        self.print_g('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
         dominator_count = 0
-        gene_pool_hash_dict = {}
+        gene_pool = {}
 
-        for tree_id in range(1, len(population)):
-            tree = population[tree_id]
-            tree_ident, tree_meta = self.tree_store_meta_get_hash(tree)
+        for tree_num in range(1, len(population)):
+            tree = population[tree_num]
+            try:
+                tree_ident, tree_meta = self.tree_get_meta(tree)
+            except:
+                continue
 
-            if tree_meta['parsimony'] < self.parsimony_min_max[1]:  # Tree -> gene_pool?
+            population[tree_num] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
+            gene_pool[tree_num] = tree_meta
 
-                gene_pool_hash_dict[tree_id] = tree_ident
-                if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
-                    self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
-                    dominator_count += 1
+            if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
+                dominator_count += 1
 
-        self.printpl('g', '{}: {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
+        self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
-        return gene_pool_hash_dict
+        return gene_pool, population
 
     def pop_pareto_update(self):
         """
@@ -650,25 +471,25 @@ class ExplainableGP(object):
         """
 
         # 1. Find lowest complexity
-        best_fitness = self.tree_hash_meta[self.parsimony_best_dict[0]]['fitness_train']
+        best_fit = self.parsimony_best_meta[0]['fitness_train']
 
-        for parsim, ident in sorted(list(self.parsimony_best_dict.items())):
-            fitness = self.tree_hash_meta[ident]['fitness_train']
+        sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
+        for parsim, meta in sorted_parsimony_best:
+            fit = meta['fitness_train']
 
-            # kick
-            if self.fitness_compare(best_fitness, fitness):
+            if self.fitness_compare(best_fit, fit):
                 self.pareto.pop(parsim, None)
 
-            elif self.fitness_compare(fitness, best_fitness):
+            elif self.fitness_compare(fit, best_fit):
                 if self.pareto.get(parsim):
-                    if self.fitness_compare(fitness, self.pareto.get(parsim)):
-                        self.pareto[parsim] = fitness
-                        self.printpl('a', 'Updated pareto at {}. New fitness is: {}, old was: {}'.format(parsim, fitness, best_fitness))
+                    pareto_fit = self.pareto.get(parsim)
+                    if self.fitness_compare(fit, pareto_fit):
+                        self.pareto[parsim] = fit
+                        self.printpl('a', 'Updated pareto at {}. New fitness is: {}, old was: {}'.format(parsim, fit, best_fit))
                 else:
-                    self.pareto[parsim] = fitness
-                    self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fitness))
-                best_fitness = fitness
-
+                    self.pareto[parsim] = fit
+                    self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fit))
+                best_fit = fit
         return
 
     def fitness_compare(self, fitness1, fitness2, mode='better'):
@@ -679,16 +500,14 @@ class ExplainableGP(object):
             >
             fitness_compare
         """
-        if (self.fitness_type == 'max' and fitness1 > fitness2) or \
-                (self.fitness_type == 'min' and fitness1 < fitness2):
+        if self.kernel == 'regression' and fitness1 < fitness2:
             return True
-        elif fitness1 == fitness2:
-            if mode == 'better_or_equal':
-                return True
-            elif mode == 'better':
-                return False
-            else:
-                self.printpl('e', 'Mode not known')
+        elif self.kernel == 'classification' and fitness1 > fitness2:
+            return True
+        elif self.kernel == 'match' and fitness1 > fitness2:
+            return True
+        elif fitness1 == fitness2 and mode == 'better_or_equal':
+            return True
         else:
             return False
 
@@ -701,7 +520,7 @@ class ExplainableGP(object):
 
         # TODO branch mutation in ALL subtrees? if more options are available
         # TODO safely create a complete generation?
-        self.printpl('gg', 'First population...')
+        self.print_g('ggg', 'First population...')
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
         tree_origin = self.origin['tree'].copy()
@@ -710,38 +529,37 @@ class ExplainableGP(object):
         for tree_id in range(1, self.config['pop_max'] + 1):
             # vary this tree with mutation
             branch_top = np.random.choice(origin_ids)
-            branch_nodes_ids = tree_get_ids_karoo(tree_origin, branch_top)  # [6, 9, 10] select point of mutation and all nodes beneath
+            branch_nodes_ids = tree_get_branch(tree_origin, branch_top)  # [6, 9, 10] select point of mutation and all nodes beneath
             tree = self.tree_insert_branch_random(tree_origin, branch_nodes_ids)  # tree with new branch
 
             # Fill the correct meta-data_csv_path into the tree (and wipe the old fitness)
-            # tree = self.tree_store_meta_lastgen(tree, modification='i')  # wipe fitness data_csv_path
-            tree = self.tree_modifyable_nodes_set(tree)
-            tree[TR_ID][1] = tree_id
+            tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+            tree = tree_set_id(tree, 1)
 
             self.popnew_append(tree, last_modification='first')
 
-        self.printpl('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
+        self.print_g('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
 
-    def pop_parsimony_best_update(self, gene_pool_hash_dict):
+    def pop_parsimony_best_update(self, gene_pool):
         """
 
         """
+
         # 1. Check every potential candidate
-        for tree_id, tree_hash in gene_pool_hash_dict.items():
-            tree_meta = self.tree_hash_meta[gene_pool_hash_dict[tree_id]]
-            parsim = tree_meta['parsimony']
-            fitness_train = tree_meta['fitness_train']
+        for key, meta in gene_pool.items():
 
-            # 3. is the tree better than the current best in this parsimony level?
-            if parsim in self.parsimony_best_dict:
-                cmp_fitness = self.tree_hash_meta[self.parsimony_best_dict[parsim]]['fitness_train']
-                if self.fitness_compare(fitness_train, cmp_fitness, mode='better'):
-                    self.parsimony_best_dict[parsim] = gene_pool_hash_dict[tree_id]
+            parsim = meta['parsimony']
+            fitness_train = meta['fitness_train']
+
+            # 3. is the tree better than the current best at this parsimony level?
+            if parsim in self.parsimony_best_meta:
+                comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
+                if self.fitness_compare(fitness_train, comp_fit):
                     self.printpl('aa', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
-                else:
-                    return  # The "regular" case
+                    self.parsimony_best_meta[parsim] = meta
             else:
-                self.parsimony_best_dict[parsim] = gene_pool_hash_dict[tree_id]
+                self.printpl('aa', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
+                self.parsimony_best_meta[parsim] = meta
 
         return
 
@@ -773,7 +591,7 @@ class ExplainableGP(object):
         """
 
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
-            tourn_winner = self.gp_selection_tournament(tourn_size)
+            tourn_winner = self.pop_selection_tournament(tourn_size)
             self.popnew_append(tourn_winner, last_modification='repro')  # i know, tests are not necessary...
 
         return
@@ -786,7 +604,7 @@ class ExplainableGP(object):
         """
 
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
-            tree = self.gp_selection_tournament(tourn_size)
+            tree = self.pop_selection_tournament(tourn_size)
             tree, node = self.treegp_mutate_point_evolve(tree, same_arity=True)
 
             self.popnew_append(tree, last_modification='point')
@@ -799,7 +617,7 @@ class ExplainableGP(object):
         """
 
         for i in range(repro_rate):
-            tree = self.gp_selection_tournament(tourn_size)
+            tree = self.pop_selection_tournament(tourn_size)
             try:
                 self.debug_warnings['824 tree'] = tree
                 new_tree = self.treegp_mutate_filter_one(tree)
@@ -825,10 +643,10 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
 
-            tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each mutation
+            tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_ids_karoo(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
 
             self.popnew_append(tourn_winner, last_modification='branch')
@@ -843,10 +661,10 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
 
-            tourn_winner = self.gp_selection_tournament(tourn_size)  # perform tournament selection for each mutation
+            tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_ids_karoo(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
 
             self.popnew_append(tourn_winner, last_modification='miss(br)')
@@ -872,8 +690,8 @@ class ExplainableGP(object):
         for n in range(half_rate):
 
             # 1. two parents
-            left_tree = self.gp_selection_tournament(tourn_size)  # perform tournament selection for 'a_parent'
-            right_tree = self.gp_selection_tournament(tourn_size)  # perform tournament selection for 'b_parent'
+            left_tree = self.pop_selection_tournament(tourn_size)  # perform tournament selection for 'a_parent'
+            right_tree = self.pop_selection_tournament(tourn_size)  # perform tournament selection for 'b_parent'
 
             force_convert = False
 
@@ -889,7 +707,7 @@ class ExplainableGP(object):
 
             if force_convert:
                 self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
-                left_xtype = self.xtype_get(left_tree[N_label][left_id])
+                left_xtype = self.xtype_get(tree_get_label(left_tree, left_id))  # left_tree[N_label][left_id]
                 conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
                 right_labels.insert(0, conv_to_left)
                 right_aritys.insert(0, 1)
@@ -914,8 +732,8 @@ class ExplainableGP(object):
         some stuff to definitely do before actually appending to pop
         """
         tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
-        tree = self.tree_modifyable_nodes_set(tree)
-        tree[TR_type][1] = last_modification
+        tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+        tree = tree_set_history(tree, last_modification)
         if not tree_test_check_children(tree):
             self.printpl('e', 'Tree is not consistent:\n{}'.format(tree))
         self.population_new.append(tree)
@@ -930,21 +748,23 @@ class ExplainableGP(object):
         """
 
         self.population_new = pop_enum_trees(self.population_new)  # pop +tree_id
-        gene_pool_hash_dict = self.pop_genepool_create(self.population_new)
-        self.monitor_genepool(gene_pool_hash_dict)
+        gene_pool, self.population_new = self.pop_genepool_create(self.population_new)
 
-        self.pop_parsimony_best_update(gene_pool_hash_dict)
+        self.monitor_genepool(gene_pool)
+
+        self.pop_parsimony_best_update(gene_pool)
+
         self.pop_pareto_update()
 
-        self.population_base = pop_copy_genepool(self.population_new, gene_pool_hash_dict, self.gen_id)
-        self.file_population_write(self.population_new, 'new', self.path)
+        self.population_base = pop_copy_genepool(self.population_new, gene_pool, self.gen_id)
+        file_population_write(self.population_new, 'new', self.path, self.gen_id)
 
-        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_hash_meta)
-        self.printpl('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
-            len(set(gene_pool_hash_dict.values())),
+        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
+        self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
+            len(set(gene_pool.keys())),
             self.config['pop_max'],
             self.gen_id,
-            time.perf_counter()-self.time_genstart))
+            time.perf_counter() - self.time_genstart))
 
         return
 
@@ -952,13 +772,11 @@ class ExplainableGP(object):
     #   Perform the 3 genetic prog. operations    |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def gp_selection_tournament(self, tourn_size):
+    def pop_selection_tournament(self, tourn_size):
 
         """
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
-        Uses:
-            self.population a
-            self.genepool a
+
         """
 
         # Start with dummies
@@ -968,10 +786,9 @@ class ExplainableGP(object):
         # Get several values
         for n in range(tourn_size):
 
-            tree_id = pop_util_random(self.population_base)
-
-            fitness = float(self.population_base[tree_id][T_fitness][1])  # extract the fitness from the array
-            fitness = round(fitness, self.config['precision'])  # force 'result' and 'solution' to the same number of floating points
+            tree_id = pop_random(self.population_base)
+            tree = self.population_base[tree_id]
+            fitness = tree_get_fitness(tree, precision=self.config['precision'])  # extract the fitness from the array
 
             if self.fitness_compare(fitness, best_fitness, mode='better'):
                 best_id = tree_id
@@ -990,7 +807,7 @@ class ExplainableGP(object):
             if filter_type == 'gaussian_filter':
                 constant = np.random.normal(constant, 0.1)
             else:
-                self.printpl('w', 'Warning: Filter  not specified. Please specify a filter_type.')
+                printez('w', 'Warning: Filter  not specified. Please specify a filter_type.', display=self.display)
                 constant = np.random.normal(constant, 0.1)
 
         if term_type == 'int':
@@ -1016,7 +833,7 @@ class ExplainableGP(object):
         if same_arity:
             # 2. perform point mutation on that specific node
             if arity > 0:
-                tree[N_label][node_id] = self.xtype_choose_func_pointmutation(xtype=xtype, arity=arity)  # Function is same type, same arity
+                tree[N_label][node_id] = xtype_choose_func_pointmutation(self.op_array, xtype=xtype, arity=arity)  # Function is same type, same arity
             elif arity == 0:  # aka a terminal
                 tree[N_label][node_id] = self.xtype_choose_term(xtype)  # 3 -> '2f' -> 5
             else:
@@ -1199,7 +1016,7 @@ class ExplainableGP(object):
                         label = self.xtype_choose_term(t)
                         arity = 0
                     else:
-                        label, arity = self.xtype_choose_func_branchmutate(xtype=t, arity=False)
+                        label, arity = self.xtype_choose_func(xtype=t)
 
                     # xtype-'To-do' list for the next depth to give values to these functions
                     if label == 'Ifte':
@@ -1269,61 +1086,12 @@ class ExplainableGP(object):
             This could be calculated respectively to the parsimony level
             which the tree might have up his sleeve
             """
-            num_new_nodes = np.random.randint(10, 30)
+            pass
+            # num_new_nodes = np.random.randint(10, 30)
             # max_
 
         else:
-            self.printpl('e', 'That did not work')
-
-        return tree
-
-    def evolve_subtree_insert_child(self, tree, node, c_buffer):
-
-        """
-        Insert child node into the copy of a parent Tree.
-
-        """
-
-        if int(tree[N_arity][node]) == 0:  # if arity = 0
-            self.printpl('e', 'In evolve_child_insert: node {} has arity 0'.format(node))
-            # self.plagih_pause()  # consider special instructions for this
-
-        elif int(tree[N_arity][node]) == 1:  # if arity = 1
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[N_depth][c_buffer] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-        elif int(tree[N_arity][node]) == 2:  # if arity = 2
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[N_depth][c_buffer] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
-            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[N_depth][c_buffer + 1] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
-
-        elif int(tree[N_arity][node]) == 3:  # if arity = 3
-            tree = np.insert(tree, c_buffer, '', axis=1)  # insert node for 'node_c1'
-            tree[3][c_buffer] = c_buffer  # node ID
-            tree[N_depth][c_buffer] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 1, '', axis=1)  # insert node for 'node_c2'
-            tree[3][c_buffer + 1] = c_buffer + 1  # node ID
-            tree[N_depth][c_buffer + 1] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer + 1] = int(tree[3][node])  # parent ID
-
-            tree = np.insert(tree, c_buffer + 2, '', axis=1)  # insert node for 'node_c3'
-            tree[3][c_buffer + 2] = c_buffer + 2  # node ID
-            tree[N_depth][c_buffer + 2] = int(tree[N_depth][node]) + 1  # node_depth
-            tree[7][c_buffer + 2] = int(tree[3][node])  # parent ID
-
-        else:
-            self.printpl('e', 'In evolve_child_insert: node {} arity > 3'.format(node))
-            # self.plagih_pause()  # consider special instructions for this (pause)
+            print_e('That did not work')
 
         return tree
 
@@ -1356,111 +1124,75 @@ class ExplainableGP(object):
                 if tree.shape[0] == T_num_lines:  # (+ row 0)
                     pass  # print('Origin Tree is: \n' + str(tree))
                 else:
-                    self.printpl('e', "Tree could not be imported correctly from .csv file.")
+                    print_e('Tree could not be imported correctly from .csv file.')
                     raise
         elif label_list:
-            tree = karoo_tree_from_user(label_list, permanent_list)
+            tree = karoo_tree_from_labellist(label_list, permanent_list)
         else:
-            self.printpl('w', 'No origin provided. Todo. starting from scratch with random generation?')
+            print_warning('w', 'No origin provided. Todo. starting from scratch with random generation?')
             raise
 
-        origin_algo_raw = self.tree_expr_raw(tree, P_first_node)
+        origin_algo_raw = tree_expr_raw(tree, P_first_node)
+        try:
+            expr_sym = tree_expr_sympify(algo_raw=origin_algo_raw)
+        except:
+            raise Exception('Your origin algorithm can already not be sympified. Aborting.')
         self.origin = {'tree': tree,
-                       'algo_raw': origin_algo_raw,
-                       'algo_sym': self.tree_expr_sympify(algo_raw_str=origin_algo_raw),
+                       'expr_raw': origin_algo_raw,
+                       'expr_sym': expr_sym,
                        'parsimony': 0}
-
-        origin_hash, origin_meta = self.tree_store_meta_get_hash(tree)
+        try:
+            origin_hash, origin_meta = self.tree_get_meta(tree)
+        except:
+            raise Exception('Your origin algorithm already caused an exception. THis should never happen.')
         self.origin['fitness_train'] = origin_meta['fitness_train']
 
-        self.parsimony_best_dict[0] = origin_hash
+        self.parsimony_best_meta[0] = origin_meta
 
         self.hashtable_fitness_train = {}
 
-        self.printpl('g', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         return
 
-    def tree_store_meta_get_hash(self, tree, store_in_tree=True):
+    def tree_get_meta(self, tree):
         """
         gets all the main tree information
-        1. algo_raw
-        2. tree_identifier (algo_raw)
-        2. algo_sym
+        1. tree_identifier (expr_raw)
+        2. expr_sym
         3. parsimony
         4. fitness_train
         """
-        # 1. get algo_raw - what is needed to compute the tree identifier
-        algo_raw_str = self.tree_expr_raw(tree, 1)
-        tree_ident = hash(algo_raw_str)  # sfeh: potential for improvement- use algo_sym in separate dict as identifier.
+        # 1. get expr_raw - what is needed to compute the tree identifier
+        expr_raw = tree_expr_raw(tree, root_id)
+        tree_ident = hash(expr_raw)  # sfeh: potential for improvement- use expr_sym in separate dict as identifier.
 
-        # 2.1 Did we have this tree already? -> Nice, we have everything
-        if tree_ident in self.tree_hash_meta:
-            tree_meta = self.tree_hash_meta[tree_ident]
+        # 2 Did we have this tree already? -> Nice, we have everything
+        if tree_ident in self.tree_meta:
+            tree_meta = self.tree_meta[tree_ident]
 
-        # 2.2 New tree, but still Skip fitness eval for complex trees
-        else:
-            parsimony = self.tree_parsimony(tree)
+        else:  # 2.2 New tree, but still skip fitness eval for complex trees
+            parsimony = self.tree_parsimony(tree, origin_tree=self.origin['tree'])
 
-            # 3. compute fitness
-            if parsimony < self.parsimony_min_max[1]:
-                # 3.1 With tensorflow
-                algo_sym = self.tree_expr_sympify(algo_raw_str=str(algo_raw_str))
-                fitness_train = self.eval_tf(algo_sym, self.data_train)['fitness']
+            if parsimony < self.parsimony_min_max[1]:  # 3. compute fitness
+                # print('Algo raw:', str(expr_raw))  # importantprint 2 for expr_raw
+                try:  # 3. With tensorflow
+                    expr_sym = tree_expr_sympify(algo_raw=str(expr_raw))
+                except:
+                    raise Exception('Expr could not be sympified: {}.'.format(expr_raw))
+
+                fitness_train = self.eval_tf(expr_sym, self.data_train)['fitness']
+                tree_meta = {'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_sym': str(expr_sym), 'expr_raw': str(expr_raw)}
+                self.tree_meta[tree_ident] = tree_meta
 
             else:
                 # 3.2 just fill with bad values
-                algo_sym = sympy_dummy
-                fitness_train = self.fitness_bad_dummy
+                # expr_sym = sympy_dummy
+                # fitness_train = self.fitness_bad_dummy
+                raise Exception('Tree too complex, parsimony is too high.')
 
-            # 4. All the tree-specific meta into dict
-            tree_meta = {'algo_raw': str(algo_raw_str), 'tree_ident': tree_ident, 'algo_sym': str(algo_sym), 'parsimony': float(parsimony), 'fitness_train': float(fitness_train)}
-            self.tree_hash_meta[tree_ident] = tree_meta
+        return tree_ident, tree_meta
 
-        # 5. store fitness in 'old' Karoo tree structure
-        if store_in_tree:
-            self.tree_store_parsimony(tree, tree_meta['parsimony'])
-            self.tree_store_fitness(tree, tree_meta['fitness_train'])
-            # self.tree_store_meta_lastgen(tree)
-
-            return tree_ident, tree_meta
-
-    def tree_modifyable_nodes_set(self, chosen_tree):
-        """
-        Sets all the origin core nodes back to non-modifyable
-        """
-        # Set all nodes to be modifiable (=1)
-        for i, tmp in enumerate(chosen_tree[N_modify][1:]):
-            chosen_tree[N_modify][i + 1] = '1'
-
-        # Find no-modifyables in Origin
-        non_modifiable_nodes = []
-        if self.origin['tree'][N_modify][1] == '0':  # check is modifiable nodes are specified
-            non_modifiable_nodes.extend(self.tree_permanent_nodes_get(1, chosen_tree, 1))
-
-        for non_modifiable in non_modifiable_nodes:
-            chosen_tree[N_modify][non_modifiable] = '0'
-
-        return chosen_tree
-
-    def tree_permanent_nodes_get(self, origin_node, chosen_tree, chosen_node):
-        """
-        Returns a list of nodes that are not supposed to be modified
-        """
-
-        if self.origin['tree'][N_modify][origin_node] == '0':
-            permanent_nodes = [int(chosen_tree[N_id][chosen_node])]
-            for child in [N_c1, N_c2, N_c3]:
-                if self.origin['tree'][child][origin_node] != '':
-                    next_origin_node = int(self.origin['tree'][child][origin_node])
-                    next_chosen_node = int(chosen_tree[child][chosen_node])
-                    tmp = self.tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node)
-                    if tmp is not None:
-                        permanent_nodes.extend(tmp)
-            return permanent_nodes
-        else:
-            return
-
-    def tree_build_type_constant_get(self, term_type='', mode='float-1to1', uniform_range=''):
+    def tree_build_type_constant_get(self, term_type='', mode='float-1to1', uniform_range=None):
         """
 
         Returns a constant that fits into the position
@@ -1493,38 +1225,6 @@ class ExplainableGP(object):
             const = self.tree_build_type_constant_get(term_type=term_type)
         return str(const)
 
-    def tree_expr_sympify(self, algo_raw_str=None, tree=None):
-
-        """
-        returns the sympifyed expression
-        """
-        if tree:  # If we got a tree, we generate the expression
-            algo_raw_str = str(self.tree_expr_raw(tree, 1))
-
-        try:
-            x = plagih_sympify(algo_raw_str)
-            strx = str(x)
-
-            if 'zoo' in strx:
-                self.printpl('ww', 'zoo in expression? sfeh: not anymore... {}'.format(algo_raw_str))
-                x = re.sub('zoo', '10', strx)
-
-            if 'inf' in strx:
-                self.printpl('ww', 'Inf in expression? {}'.format(algo_raw_str))
-                x = re.sub('inf', '10', strx)
-
-            if 'nan' in strx:  # Happens when 0/0 occurs. This tree is worth nothing anyways
-                self.printpl('ww', 'We had a "nan" in {}'.format(algo_raw_str))
-                self.remove_this_tree()
-                return str(sympy_dummy)
-            else:
-                return str(x)
-        except Exception:
-            self.printpl('w', 'In sympify. Caused by this raw algorithm: ' + str(algo_raw_str))
-            # todo.
-            self.remove_this_tree()
-            return str(sympy_dummy)
-
     def remove_this_tree(self):
         self.printpl('ww', 'This still is a todo')
         """
@@ -1533,132 +1233,27 @@ class ExplainableGP(object):
         todo
         """
 
-    def tree_expr_raw(self, tree, node_id):
-
-        """
-        Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
-
-        """
-        node_id = int(node_id)
-
-        if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
-
-        elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-            return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
-
-        elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-            # This if case is for 2-ary ops that is prefix. like Min(a, b)
-            if tree[N_label, node_id] not in functions_infix_dict:
-                return '(' + tree[N_label, node_id] + '(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + '))'
-            else:
-                return '(' + self.tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + self.tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
-
-        elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-            return '(Ifte(' + self.tree_expr_raw(tree, tree[9, node_id]) + ', ' + self.tree_expr_raw(tree, tree[10, node_id]) + ', ' + self.tree_expr_raw(tree, tree[11, node_id]) + '))'
-
-    def tree_raw_depth_prefix(self, tree, node_id):
-
-        """
-        Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
-
-        """
-
-        node_id = int(node_id)
-
-        if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-            return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
-
-        elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-            return '{' + tree[N_label, node_id] + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
-
-        elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-            return '{' + tree[N_label, node_id] + '' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
-
-        elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-            return '{Ifte' + self.tree_raw_depth_prefix(tree, tree[9, node_id]) + self.tree_raw_depth_prefix(tree, tree[10, node_id]) + self.tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
-
-    def tree_parsimony(self, tree, parsimony_distance='ted'):
+    def tree_parsimony(self, tree, origin_tree=None, parsimony_distance='ted'):
         """
         parsimony_distance: compute the chosen distance by the user.
 
         """
         if parsimony_distance == 'ted':
-            return self.tree_parsimony_ted(self.origin['tree'], tree)
+            return tree_parsimony_ted(tree, origin_tree)
         elif parsimony_distance == 'total_count_nodes':
             return int(tree[3][-1:])  # returns the tree size
         elif parsimony_distance == 'total_tree_depth':
             return tree[N_depth][1]  # returns the tree size
         elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-            algo_raw_str = str(self.tree_expr_raw(tree, 1))
+            algo_raw_str = str(tree_expr_raw(tree, root_id))
             return len(str(algo_raw_str))
         # elif parsimony_distance == 'total_simplified':
         #     algo_sym = self.tree_expr_sympify(tree=tree)
         #     return count_ops(algo_sym)
         elif parsimony_distance == 'rel_ari_1':  # Does this work?
-            return self.tree_parsimony_relari(tree)
+            return tree_parsimony_relari(tree, origin_tree)
         else:
-            self.printpl('i', 'Parsimony distance not specified! Use default.')
-            self.tree_parsimony(tree)
-
-    def tree_parsimony_relari(self, tree):
-        """
-        This distance penalizes non-original functions with its arity
-        - ignore node[0] [description]
-        - look within the subtree if the original function is on origin spot
-        """
-
-        # If the new tree is actually less complex than the original one, just return 1
-        if len(tree[N_label]) < len(self.origin['tree'][N_label]):
-            return 1
-
-        distance = 0
-
-        # iterate over every node in the new tree
-        for i, arity in enumerate(tree[N_arity]):
-            if i == 0:  # skip node 0. the description
-                continue
-            elif i < len(self.origin['tree'][N_label]):  # Make sure we stay within the tree index. <= does not work
-                if self.origin['tree'][N_label][i] != tree[N_label][i]:  # is it different from the origin?
-                    distance = distance + int(arity)  # add the nodes arity. double-punishes large trees
-            else:
-                distance = distance + int(arity)
-
-        return max(distance, 1)  # make sure, it does not return 0
-
-    def tree_parsimony_ted(self, tree1, tree2):
-        """
-        The Tree Edit distance (TED) ('coolest' distance)
-        - the amount of changes that have to be applied to the origin to equality are counted
-        """
-        # TODO TED soll geänderte Werte ignorieren
-        apted_tree1 = self.tree_raw_depth_prefix(tree1, 1)
-        apted_tree2 = self.tree_raw_depth_prefix(tree2, 1)
-        distance, mapping = apted_distance(apted_tree1, apted_tree2)
-        # sfeh the mapping could be handy somewhere
-        return distance
-
-    def tree_store_fitness(self, tree, fitness):
-
-        """
-        Store the fitness within the tree np-array
-
-        """
-
-        fitness = float(fitness)
-        fitness = round(fitness, self.config['precision'])
-
-        tree[T_fitness][1] = fitness  # store the fitness with each tree
-
-        return
-
-    def tree_store_parsimony(self, tree, parsimony):
-        """
-        Store the parsimony within the tree np-array
-        """
-        if parsimony < 0:
-            self.printpl('w', 'Parsimony is: {}'.format(parsimony))
-        tree[T_parsimony][1] = parsimony
+            raise Exception('Parsimony distance not specified!')
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to use evaluate (tensorflow)      |
@@ -1690,6 +1285,7 @@ class ExplainableGP(object):
                 'fitness'           - aggregated scalar fitness score
 
         """
+        kernel = self.kernel
 
         # Initialize TensorFlow session
         tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
@@ -1698,221 +1294,111 @@ class ExplainableGP(object):
 
         with tf.compat.v1.Session(config=config) as sess:
             with sess.graph.device(self.tf_device):
-
                 # 1. data_csv_path (observations, actions) to tensors
                 tensors = {}
 
-                num_terminals = len(self.variables_dict['all'])
-
-                for i in range(num_terminals):
-                    var = self.variables_dict['all'][i]
-                    if '2f' in self.xtype_get(var, node_arity=0):
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
-                    else:  # '2b'
-                        tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
-
-                # for i in range(num_actions):
-                #     self.action_dict
-                #     action_xtype = self.xtype_get(var, node_arity=0)
-                #     if '2f' in action_xtype:
-                #         tensors[var] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
-
-                for i, action in enumerate(self.action_dict):
-                    py_type = self.action_dict[action]
-                    if 'float' in py_type:
-                        tensors['action' + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
-                    # elif '2b' in action_xtype:  # '2b'
-                    #     self.printpl('e', 'Currently no kernel available for boolean fitness')
-                    #     tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
-                    else:
-                        self.printpl('e', 'action_dict type for {} is: {}.'.format(action, py_type))
+                tensors = self.tensors_leaves(tensors, data)
 
                 # 2- Transform string expression into TF operation graph
-                tf_result = self.eval_tf_ast_expr(expr, tensors)
+                tf_result = tf_from_ast_expr(expr, tensors)
                 pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-                # TODO currently does only support one label
-                solution = tensors['action0']  # solution c1 is assumed to be stored in this terminal
-                # 3- Add fitness computation into TF graph
-                if self.kernel == 'classification':  # CLASSIFY kernel
+                solution = tensors['action0']  # TODO currently does only support one label
 
-                    """
-                    Creates element-wise fitness computation TensorFlow (TF) sub-graph for CLASSIFY kernel.
-                    - tree-label vs. true label
-                    This multiclass classifer compares each row of a given Tree to the known solution, comparing predicted labels 
-                    generated by plagih GP against the true class labels. This method is able to work with any number of class 
-                    labels, from 2 to n. The left-most bin includes -inf. The right-most bin includes +inf. Those inbetween are 
-                    by default confined to the spacing of 1.0 each, as defined by:
-
-                        (solution - 1) < result <= solution
-
-                    The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
-                    origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
-                    side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
-                    negative and positive result.
-                    """
-
-                    if len(self.action_dict) > 1:
-                        self.printpl('e', 'TODO multidimensional input. To be done, there is no solution yet.')
-
-                    if get_pred_labels:
-                        pred_labels = tf.map_fn(self.eval_tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
-
-                    skew = (self.class_labels / 2) - 1
-
-                    rule11 = tf.equal(solution, 0)
-                    rule12 = tf.less_equal(tf_result, 0 - skew)
-                    rule13 = tf.logical_and(rule11, rule12)
-
-                    rule21 = tf.equal(solution, self.class_labels - 1)
-                    rule22 = tf.greater(tf_result, solution - 1 - skew)
-                    rule23 = tf.logical_and(rule21, rule22)
-
-                    rule31 = tf.less(solution - 1 - skew, tf_result)
-                    rule32 = tf.less_equal(tf_result, solution - skew)
-                    rule33 = tf.logical_and(rule31, rule32)
-
-                    pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
-
-                elif self.kernel == 'regression':  # REGRESSION kernel
-
-                    """
-                    A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
-                    that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
-                    integrating a more sophisticated kernel.
-                    """
-
-                    pairwise_fitness = tf.abs(solution - tf_result)
-
-                elif self.kernel == 'match':  # MATCH kernel
-
-                    """
-                    This is used for demonstration purposes only.
-                    """
-
-                    # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-                    RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-                    pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
-
-                # elif self.kernel == '[other]': # use others as a template
-
-                else:
-                    raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
-
+                pairwise_fitness = self.tf_get_pairwise_fitness(kernel, solution, tf_result)
                 fitness = tf.reduce_sum(pairwise_fitness)
 
-                # Process TF graph and collect the results
+                if get_pred_labels:
+                    pred_labels = tf.map_fn(self.tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
+
                 tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
 
         return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
-                'pairwise_fitness': pairwise_fitness, 'old_fitness': float(fitness)}
+                'pairwise_fitness': pairwise_fitness}
 
-    def eval_tf_ast_expr(self, expr, tensors):
+    def tf_get_pairwise_fitness(self, kernel, solution, tf_result):
+        # 3- Add fitness computation into TF graph
+        if kernel == 'classification':  # CLASSIFY kernel
 
+            """
+            This multiclass classifer compares each row of a given Tree to the known solution.
+            The left-most (class?) bin includes -inf. The right-most bin includes +inf. Those inbetween are 
+            by default confined to the spacing of 1.0 each, as defined by:
+
+                (solution - 1) < result <= solution
+
+            The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
+            origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
+            side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
+            negative and positive result.
+            """
+
+            if len(self.action_dict) > 1:
+                print_e('TODO multidimensional input. To be done, there is no solution yet.')
+
+            skew = (self.unique_outputs_num / 2) - 1
+
+            rule11 = tf.equal(solution, 0)
+            rule12 = tf.less_equal(tf_result, 0 - skew)
+            rule13 = tf.logical_and(rule11, rule12)
+
+            rule21 = tf.equal(solution, self.unique_outputs_num - 1)
+            rule22 = tf.greater(tf_result, solution - 1 - skew)
+            rule23 = tf.logical_and(rule21, rule22)
+
+            rule31 = tf.less(solution - 1 - skew, tf_result)
+            rule32 = tf.less_equal(tf_result, solution - skew)
+            rule33 = tf.logical_and(rule31, rule32)
+
+            pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
+
+        elif kernel == 'regression':  # REGRESSION kernel
+
+            """
+            A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
+            that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
+            integrating a more sophisticated kernel.
+            """
+
+            pairwise_fitness = tf.abs(solution - tf_result)
+
+        elif kernel == 'match':  # MATCH kernel
+
+            """
+            This is used for demonstration purposes only.
+            """
+
+            # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+            RTOL, ATOL = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
+            pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), ATOL + RTOL * tf.abs(tf_result)), tf.int32)
+
+        else:
+            raise Exception('Kernel type is wrong or missing. You entered {}'.format(kernel))
+
+        return pairwise_fitness
+
+    def tensors_leaves(self, tensors, data):
         """
-        Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
-
+        All the tensors in leaf nodes, aka
         """
-        # print('Current expr:', expr)  # importantprint for debugging failed expressions
-        tree = ast.parse(expr, mode='eval').body
+        num_terminals = len(self.variables_dict['all'])
 
-        # TODO diesen try-except block entfernen
-        self.debug_warnings['expr'] = str(expr)
-        try:
-            return self.eval_tf_expr_graph(tree, tensors)
-        except:
-            return self.fitness_dummy_get()
+        for i in range(num_terminals):
+            var = self.variables_dict['all'][i]
+            if '2f' in self.xtype_get(var, node_arity=0):
+                tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
+            else:  # '2b'
+                tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
 
-    def eval_tf_expr_graph(self, node, tensors):
-
-        """
-        Recursively transforms parsed expression tree into TensorFlow (TF) graph.
-
-        """
-
-        if isinstance(node, ast.Name):  # <tensor_name>
-            return tensors[node.id]
-
-        elif isinstance(node, ast.Num):  # <number>
-            shape = tensors[list(tensors.keys())[0]].get_shape()
-            return tf.constant(node.n, shape=shape, dtype=tf.float32)
-
-        elif isinstance(node, ast.BinOp):  # <left> <operator> <right>, e.g., x + y
-            return ast_tensor_dict[type(node.op)](
-                self.eval_tf_expr_graph(node.left, tensors),
-                self.eval_tf_expr_graph(node.right, tensors))
-
-        elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-            return ast_tensor_dict[type(node.op)](
-                self.eval_tf_expr_graph(node.operand, tensors))
-
-        elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
-            # special case: If-then-else
-            if node.func.id == 'Ifte':
-                return ast_tensor_dict[node.func.id](tf.dtypes.cast(
-                    self.eval_tf_expr_graph(node.args[0], tensors), tf.bool),
-                    self.eval_tf_expr_graph(node.args[1], tensors),
-                    self.eval_tf_expr_graph(node.args[2], tensors))
-
-            if node.func.id == 'Ftob' or node.func.id == 'Btof':
-                return tf.dtypes.cast(*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
-
-            if len(node.args) > 2:
-                self.printpl('e', 'This has more than 2 args and is not Ifte? {}'.format(str(node.func.id)))
+        for i, action in enumerate(self.action_dict):
+            py_type = self.action_dict[action]
+            if 'float' in py_type:
+                tensors['action' + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
             else:
-                try:
-                    return ast_tensor_dict[node.func.id](*[self.eval_tf_expr_graph(arg, tensors) for arg in node.args])
-                except Exception as ex:
-                    self.printpl('w', 'debug warning expr: {}'.format(self.debug_warnings['expr']))
-                    self.printpl('e', 'node.func.id caused an exception:{}\n'
-                                      'node.func.id: {}\n'
-                                      'node.args: {}\n'
-                                      'and expression: {}'.format(ex, node.func.id, str(node.args), self.debug_warnings['expr']))
+                self.printpl('e', 'action_dict type for {} is: {}.'.format(action, py_type))
+        return tensors
 
-        elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-            return self.eval_tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
-
-        elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-            return self.eval_tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
-
-        elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-            return tf.constant(node.value)
-
-        else:
-            raise TypeError(node)
-
-    def eval_tf_chain_bool(self, values, operation, tensors):
-
-        """
-        Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
-
-        """
-
-        x = tf.dtypes.cast(self.eval_tf_expr_graph(values[0], tensors), tf.bool)
-        if len(values) > 1:
-            return operation(x, self.eval_tf_chain_bool(values[1:], operation, tensors))
-        else:
-            return x
-
-    def eval_tf_chain_compare(self, comparators, ops, tensors):
-
-        """
-        Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
-
-        Called by: fitness_node_parse
-
-        Arguments required: comparators, ops, tensors
-        """
-
-        x = self.eval_tf_expr_graph(comparators[0], tensors)
-        y = self.eval_tf_expr_graph(comparators[1], tensors)
-
-        if len(comparators) > 2:
-            return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), self.eval_tf_chain_compare(comparators[1:], ops[1:], tensors))
-        else:
-            return ast_tensor_dict[type(ops[0])](x, y)
-
-    def eval_tf_classify_labels_map(self, result):
+    def tf_classify_labels_map(self, result):
 
         """
         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
@@ -1921,22 +1407,19 @@ class ExplainableGP(object):
 
         For comparison, the original (pre-TensorFlow) cod follows:
 
-            skew = (self.class_labels / 2) - 1 # '-1' keeps a binary classification splitting over the origin
+            skew = (self.unique_outputs_num / 2) - 1 # '-1' keeps a binary classification splitting over the origin
             if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
-            elif solution == self.class_labels - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
+            elif solution == self.unique_outputs_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
             elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
             else: fitness = 0 # no class match
 
-        Called by: fitness_eval
-
-        Arguments required: result
         """
 
-        skew = (self.class_labels / 2) - 1
-        label_rules = {self.class_labels - 1: (
-            tf.constant(self.class_labels - 1), tf.constant(' > {}'.format(self.class_labels - 2 - skew)))}
+        skew = (self.unique_outputs_num / 2) - 1
+        label_rules = {self.unique_outputs_num - 1: (
+            tf.constant(self.unique_outputs_num - 1), tf.constant(' > {}'.format(self.unique_outputs_num - 2 - skew)))}
 
-        for class_label in range(self.class_labels - 2, 0, -1):
+        for class_label in range(self.unique_outputs_num - 2, 0, -1):
             cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
             label_rules[class_label] = tf.cond(cond, lambda: (
                 tf.constant(class_label), tf.constant(' <= {}'.format(class_label - skew))),
@@ -1947,35 +1430,7 @@ class ExplainableGP(object):
 
         return pred_label
 
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to receive correct xtypes (f2b,.) |
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def xtype_choose_func_pointmutation(self, xtype=None, arity=None):
-        """
-        returns a function for a function in point mutation
-        This only accepts functions as inputs. (point mutation)
-        No need to handle terminals
-        """
-
-        if arity:
-            if xtype == 'f2f':
-                return np.random.choice(self.op_type_arity_array[f2f][arity])
-            elif xtype == 'f2b':
-                return np.random.choice(self.op_type_arity_array[f2b][arity])
-            elif xtype == 'b2b':
-                return np.random.choice(self.op_type_arity_array[b2b][arity])
-            elif xtype == 'b2f':
-                return np.random.choice(self.op_type_arity_array[b2f][arity])
-            elif xtype == 'b2f2f':
-                return np.random.choice(self.op_type_arity_array[b2f2f][arity])  # sfeh okay that does not make sense tbh
-            else:
-                self.printpl('e', 'Function was not found in function_types_dict {}'.format(xtype))
-                raise
-        else:
-            raise
-
-    def xtype_choose_func_branchmutate(self, xtype=None, arity=False):
+    def xtype_choose_func(self, xtype=None):
         """
         This fills in a function that fits the type of the function/terminal before.
         terminal  '2f' -> '_2f', arity
@@ -1985,17 +1440,17 @@ class ExplainableGP(object):
         """
         if xtype:
             if '2f' in xtype:
-                choose_func = sum(self.op_type_arity_array[f2f] + self.op_type_arity_array[b2f] + self.op_type_arity_array[b2f2f], [])
+                choose_func = sum(self.op_array[f2f] + self.op_array[b2f] + self.op_array[b2f2f], [])
             elif '2b' in xtype:
-                choose_func = sum(self.op_type_arity_array[f2b] + self.op_type_arity_array[b2b], [])
+                choose_func = sum(self.op_array[f2b] + self.op_array[b2b], [])
             else:
                 raise
         else:
-            choose_func = sum(self.op_type_arity_array[f2f] +
-                              self.op_type_arity_array[b2f] +
-                              self.op_type_arity_array[b2f2f] +
-                              self.op_type_arity_array[f2b] +
-                              self.op_type_arity_array[b2b], [])
+            choose_func = sum(self.op_array[f2f] +
+                              self.op_array[b2f] +
+                              self.op_array[b2f2f] +
+                              self.op_array[f2b] +
+                              self.op_array[b2b], [])
 
         # Attention! do not choose out of an dictionary.
         # every function is inside there only once, so no higher chance for functions that are more often in the list
@@ -2021,7 +1476,7 @@ class ExplainableGP(object):
                 term_position = self.variables_dict['all'].index(label)
                 node_xtype = op[self.variables_dict['types'][term_position]]['xtype']
             elif 'action' in label:
-                self.printpl('w', 'Does this happen? Test it!')
+                print_warning('w', 'Does this happen? Test it!')
                 node_xtype = self.action_dict[label]
 
             else:  # only 'float' left
@@ -2067,13 +1522,6 @@ class ExplainableGP(object):
                 return np.random.choice(terminals_type)  # ...so we return one
         return self.tree_build_type_constant_get(term_type=the_type)  # otherwise: constant (There are always constants :P)
 
-    def pnode_function_select(self, pnode):
-
-        """
-        Returns a function with the same outcome
-
-        """
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Monitoring                                |
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -2100,15 +1548,15 @@ class ExplainableGP(object):
         self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness')
         return
 
-    def monitor_genepool(self, gene_pool_hash_dict):
+    def monitor_genepool(self, gene_pool):
         """
         Give the user some feedback
         """
 
         # How many survived in the selection?
-        self.monitoring_dict['genepool_size'][int(self.gen_id)] = len(gene_pool_hash_dict)
-        if len(gene_pool_hash_dict) > 0:
-            self.printpl('ggg', 'The generation`s population is: {}'.format(len(gene_pool_hash_dict)))
+        self.monitoring_dict['genepool_size'][int(self.gen_id)] = len(gene_pool)
+        if len(gene_pool) > 0:
+            self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool)))
         else:  # the evolutionary constraints were too tight, killing off the entire population
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.file_autowrite(self.path, self.gen_id)
@@ -2117,9 +1565,9 @@ class ExplainableGP(object):
 
         # average fitness our genepool?
         fitness_train_sum = 0
-        for key, value in gene_pool_hash_dict.items():
-            fitness_train_sum += float(self.tree_hash_meta[value]['fitness_train'])
-        average_fitness = fitness_train_sum / len(gene_pool_hash_dict)
+        for _, meta in gene_pool.items():
+            fitness_train_sum += float(meta['fitness_train'])
+        average_fitness = fitness_train_sum / len(gene_pool)
         self.monitoring_dict['fitness_average'][int(self.gen_id)] = average_fitness
         return
 
@@ -2128,7 +1576,7 @@ class ExplainableGP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def fitness_dummy_get(self):
-        if self.fitness_type == 'min':
+        if self.kernel == 'regression':
             return float('inf')
         else:
             return float(0)
@@ -2141,7 +1589,7 @@ class ExplainableGP(object):
             y.append(b)
 
         if variance:
-            printez('e', 'variance not available')
+            print_e('variance not available')
             means = np.mean(y, axis=0)
             stds = np.std(y, axis=0)
             n = means.size
@@ -2166,272 +1614,20 @@ class ExplainableGP(object):
         plt.close()
         return
 
-    # def plagih_pause(self):
-    #
-    #     """
-    #     Pause the program execution and engage the user, providing a number of options.
-    #
-    #     Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
-    #     within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
-    #     'ERROR!' for which the user may want to archive data_csv_path before terminating. At this point in time, (2) is
-    #     associated with each error but does not provide any special options).
-    #     """
-    #
-    #     ### PART 1 - reset and pack values to send to menu.pause ###
-    #     menu_dict = {'input_a': '',
-    #                  'input_b': 0,
-    #                  'display': self.display,
-    #                  'tree_depth_max': self.config['tree_depth_max'],
-    #                  'pop_max': self.pop_max,
-    #                  'gen_id': self.gen_id,
-    #                  'gen_max': self.config['gen_max'],
-    #                  'tourn_size': self.tourn_size,
-    #                  'evolve_repro': self.evolve_rates['reproduce'],
-    #                  'evolve_point': self.evolve_rates['mutate_point'],
-    #                  'evolve_branch': self.evolve_rates['mutate_branch'],
-    #                  'evolve_cross': self.evolve_rates['Crossover one Branch'],
-    #                  # 'fittest_dict': self.origin_dominators,
-    #                  'pop_last_len': len(self.population_base),
-    #                  'pop_new_len': len(self.population_new),
-    #                  'path': self.path}
-    #
-    #     menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
-    #
-    #     ### PART 2 - unpack values returned from menu.pause ###
-    #     input_a = menu_dict['input_a']
-    #     input_b = menu_dict['input_b']
-    #     self.display = menu_dict['display']
-    #     self.config['gen_max'] = menu_dict['gen_max']
-    #
-    #     self.evolve_rates['reproduce'] = menu_dict['evolve_repro']
-    #     self.evolve_rates['mutate_point'] = menu_dict['evolve_point']
-    #     self.evolve_rates['mutate_branch'] = menu_dict['evolve_branch']
-    #     self.evolve_rates['Crossover one Branch'] = menu_dict['evolve_cross']
-    #
-    #     ### PART 3 - execute the user queries returned from menu.pause ###
-    #     if input_a == 'esc':
-    #         return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
-    #
-    #     elif input_a == 'eval':  # evaluate a Tree against the TEST data_csv_path
-    #         algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
-    #         self.printpl('i', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, BColors.RESET)  # print the sympified expression
-    #         result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
-    #         self.pause_fitness_test(result)  # TF tested 2017 02/02
-    #
-    #     elif input_a == 'print_last':  # print a Tree from population_genepool
-    #         self.display_tree(self.population_base[input_b])
-    #
-    #     elif input_a == 'print_new':  # print a Tree from population_new
-    #         self.display_tree(self.population_new[input_b])
-    #
-    #     elif input_a == 'pop_last':  # list all Trees in population_genepool
-    #         self.printpl('i', '')
-    #         for tree_id in range(1, len(self.population_base)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_base[tree_id])
-    #             self.printpl('i', '\t\033[36m Tree', self.population_base[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'pop_new':  # list all Trees in population_new
-    #         self.printpl('ii', '')
-    #         for tree_id in range(1, len(self.population_new)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_new[tree_id])  # extract the expression
-    #             self.printpl('ii', '\t\033[36m Tree', self.population_new[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'load':  # load population_s to replace population_genepool
-    #         pass
-    #         # self.data_pickle_recover(self.filename['s'])  #
-    #
-    #     elif input_a == 'write':  # write the evolving population_new to disk
-    #         self.file_population_write(self.population_new, 'new')
-    #
-    #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
-    #         self.config['gen_max'] = self.config['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
-    #
-    #     elif input_a == 'quit':
-    #         self.main_terminate()  # archive populations and exit
-    #
-    #     return _pause(self):
-    #
-    #     """
-    #     Pause the program execution and engage the user, providing a number of options.
-    #
-    #     Arguments required: [0,1,2] where (0) refers to an end-of-run; (1) refers to any use of the (pause) menu from
-    #     within the run, and anticipates ENTER as an escape from the menu to continue the run; and (2) refers to an
-    #     'ERROR!' for which the user may want to archive data_csv_path before terminating. At this point in time, (2) is
-    #     associated with each error but does not provide any special options).
-    #     """
-    #
-    #     ### PART 1 - reset and pack values to send to menu.pause ###
-    #     menu_dict = {'input_a': '',
-    #                  'input_b': 0,
-    #                  'display': self.display,
-    #                  'tree_depth_max': self.config['tree_depth_max'],
-    #                  'pop_max': self.pop_max,
-    #                  'gen_id': self.gen_id,
-    #                  'gen_max': self.config['gen_max'],
-    #                  'tourn_size': self.tourn_size,
-    #                  'evolve_repro': self.evolve_rates['reproduce'],
-    #                  'evolve_point': self.evolve_rates['mutate_point'],
-    #                  'evolve_branch': self.evolve_rates['mutate_branch'],
-    #                  'evolve_cross': self.evolve_rates['Crossover one Branch'],
-    #                  # 'fittest_dict': self.origin_dominators,
-    #                  'pop_last_len': len(self.population_base),
-    #                  'pop_new_len': len(self.population_new),
-    #                  'path': self.path}
-    #
-    #     menu_dict = menu.pause(menu_dict)  # call the external function menu.pause
-    #
-    #     ### PART 2 - unpack values returned from menu.pause ###
-    #     input_a = menu_dict['input_a']
-    #     input_b = menu_dict['input_b']
-    #     self.display = menu_dict['display']
-    #     self.config['gen_max'] = menu_dict['gen_max']
-    #
-    #     self.evolve_rates['reproduce'] = menu_dict['evolve_repro']
-    #     self.evolve_rates['mutate_point'] = menu_dict['evolve_point']
-    #     self.evolve_rates['mutate_branch'] = menu_dict['evolve_branch']
-    #     self.evolve_rates['Crossover one Branch'] = menu_dict['evolve_cross']
-    #
-    #     ### PART 3 - execute the user queries returned from menu.pause ###
-    #     if input_a == 'esc':
-    #         return 2  # breaks out of the plagih_gp() or plagih_pause_refer() loop
-    #
-    #     elif input_a == 'eval':  # evaluate a Tree against the TEST data_csv_path
-    #         algo_sym = self.tree_expr_sympify(tree=self.population_new[input_b])  # generate the raw and sympified expression for the given Tree using SymPy
-    #         self.printpl('i', '\n\t\033[36mTree', input_b, 'yields (sym):\033[1m', algo_sym, BColors.RESET)  # print the sympified expression
-    #         result = self.eval_tf(str(algo_sym), self.data_control, get_pred_labels=True)  # might change to algo_raw_str evaluation
-    #         self.pause_fitness_test(result)  # TF tested 2017 02/02
-    #
-    #     elif input_a == 'print_last':  # print a Tree from population_genepool
-    #         self.display_tree(self.population_base[input_b])
-    #
-    #     elif input_a == 'print_new':  # print a Tree from population_new
-    #         self.display_tree(self.population_new[input_b])
-    #
-    #     elif input_a == 'pop_last':  # list all Trees in population_genepool
-    #         self.printpl('i', '')
-    #         for tree_id in range(1, len(self.population_base)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_base[tree_id])
-    #             self.printpl('i', '\t\033[36m Tree', self.population_base[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'pop_new':  # list all Trees in population_new
-    #         self.printpl('ii', '')
-    #         for tree_id in range(1, len(self.population_new)):
-    #             algo_sym = self.tree_expr_sympify(tree=self.population_new[tree_id])  # extract the expression
-    #             self.printpl('ii', '\t\033[36m Tree', self.population_new[tree_id][TR_ID][1], 'yields (sym):\033[1m', algo_sym, BColors.RESET)
-    #
-    #     elif input_a == 'load':  # load population_s to replace population_genepool
-    #         pass
-    #         # self.data_pickle_recover(self.filename['s'])  #
-    #
-    #     elif input_a == 'write':  # write the evolving population_new to disk
-    #         self.file_population_write(self.population_new, 'new')
-    #
-    #     elif input_a == 'add':  # check for added generations, then exit plagih_pause and continue the run
-    #         self.config['gen_max'] = self.config['gen_max'] + input_b  # if input_b > 0: self.gen_max = self.gen_max + input_b - REMOVED 2019 06/05
-    #
-    #     elif input_a == 'quit':
-    #         self.main_terminate()  # archive populations and exit
-    #
-    #     return 1
-
-    def pause_fitness_test(self, result):
-
-        if self.kernel == 'classification':
-            """
-            Print the Precision-Recall and Confusion Matrix for a CLASSIFICATION run against the test data_csv_path.
-
-            From scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
-                Precision (P) = true_pos / true_pos + false_pos
-                Recall (R) = true_pos / true_pos + false_neg
-                harmonic mean of Precision and Recall (F1) = 2(P x R) / (P + R)
-
-            From scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
-                y_pred = result, the predicted labels generated by Plagih GP
-                y_true = solution, the true labels associated with the data_csv_path
-
-            """
-            for i in range(len(result['result'])):
-                self.printpl('iii', '\t Data row {} predicts class:\033[1m {} ({} True)\033[0;0m\033[36m as {:.2f}{}\033[0;0m'.format(
-                    i, int(result['pred_labels'][0][i]), int(result['solution'][i]), result['result'][i],
-                    result['pred_labels'][1][i]))
-
-            self.printpl('iii', '\n Fitness score: {}\n'
-                                'Precision-Recall report:\n{}\n'
-                                'Confusion matrix:\n{}'.format(result['fitness'],
-                                                               skm.classification_report(result['solution'], result['pred_labels'][0]),
-                                                               skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
-
-        elif self.kernel == 'regression':
-            """
-            Print the Fitness score and Mean Squared Error for a REGRESSION run against the test data_csv_path.
-
-            """
-
-            for i in range(len(result['result'])):
-                self.printpl('iii', '\tData row {} predicts c1:\033[1m {:.2f} ({:.2f} True)'.
-                             format(i, result['result'][i], result['solution'][i]))
-
-            mse, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
-
-            self.printpl('iii', '\n\t Origin fitness score: {}'.format(self.origin['fitness_train']))
-            self.printpl('iii', '\n\t Regression fitness score: {}'.format(fitness))
-            self.printpl('iii', '\t Mean Squared Error: {}'.format(mse))
-
-            return
-
-        elif self.kernel == 'match':
-
-            """
-            Print the accuracy for a MATCH kernel run against the test data_csv_path.
-
-            """
-
-            for i in range(len(result['result'])):
-                self.printpl('vv', '\tData row {} predicts match: {} {:.2f} ({:.2f} True)'.format(i, BColors.BOLD, result['result'][i], result['solution'][i]))
-
-            self.printpl('arity', 'Matching fitness score: {}'.format(result['fitness']))
-
-            return
-        else:
-            self.printpl('e', 'This fitness test is not available:')
-
-        return
-
-    def display_tree(self, tree):
-
-        """
-        dummy for displaying a tree
-        """
-
-        self.printpl('i', '\n{} Tree ID {}{}'.format(BColors.CYAN, int(tree[TR_ID][1]), BColors.RESET))
-
-        for depth in range(0, self.config['tree_depth_max'] + 1):  # increment through all possible Tree depths - tested 2016 07/09
-
-            self.printpl('i', 'Tree: {}\n'.format(tree))
-
-        algo_raw_str = str(self.tree_expr_raw(tree, 1))
-        self.printpl('i', '\tTree {} yields (raw): {}'.format(tree[TR_ID][1], algo_raw_str))
-        algo_sym = self.tree_expr_sympify(algo_raw_str=algo_raw_str)
-        self.printpl('i', '\tTree {} yields (sym): {}'.format(tree[TR_ID][1], algo_sym))
-
-        return
-
     def printpl(self, message_type, text):
 
         """
-        Gets a verbosity (e.g. 'i')
 
-        PLAGIH-Display-modes:
-            Errors (e): always on, does print Errors
-            Info (i): informations. (need further specification)
-            NextGen (n): Prints infos about the current mutation process
+        """
 
-        Display modes: (Just a reminder from original plagih)
-            Generational (g): pauses after each generation is complete
-            Interactive (i): pauses with the completion of each section (e.g. tournament, gene pool, genetic operators)
-            DeBug (db): displays the internal workings of the genetic operators
-            minimal (m): displays only the multivariate expression of each tree
-            Silent (s): displays only the summary of each generations
+        if message_type in self.display:
+            printez(message_type, text, display=self.display, time_total=time.perf_counter() - self.time_start)
+
+        return
+
+    def print_g(self, message_type, text):
+
+        """
 
         """
 
@@ -2439,192 +1635,6 @@ class ExplainableGP(object):
             printez(message_type, text, time_total=time.perf_counter() - self.time_start)
 
         return
-
-    # def evolve_subtree_depth_choose(self, ptree, top_id, bottom_id, amount_replaced_nodes=None, mode='base_depth'):  # sfeh other default
-    #     """
-    #     Return the size of the tree to be inserted.
-    #     Should not be set to maximum to reduce complexity!
-    #     """
-    #
-    #     depth_old = int(ptree[N_depth][bottom_id]) - int(ptree[N_depth][top_id])  # subtract depth of 'branch_top' from the last in 'branch'
-    #     depth_upper_bound = self.config['tree_depth_max'] - int(ptree[N_depth][top_id])  # = 10 - (node_depth)
-    #     if mode == 'maximum':
-    #         branch_depth = depth_upper_bound
-    #     elif mode == 'same_length':
-    #         branch_depth = depth_old
-    #     elif mode == 'base_depth':
-    #         branch_depth = min(self.config['tree_depth_base'], depth_upper_bound)
-    #     elif mode == 'random':
-    #         branch_depth = min(depth_upper_bound, np.random.randint(0, 1 + max(depth_upper_bound, 3)))  # SFEH random depth, I hope this is enough to guarantee tree size
-    #     else:
-    #         self.printpl('e', 'evolve_subtree_depth_choose does not accept this mode: {}'.format(mode))
-    #         raise
-    #     return branch_depth
-    # def tree_store_meta_lastgen(self, tree, modification=''):
-    #
-    #     """
-    #     Remove all fitness data_csv_path from a given tree.
-    #
-    #     This is required after a new generation is evolved as the fitness of the same Tree prior to its mutation will
-    #     no longer apply.
-    #
-    #     """
-    #
-    #     # save information about how good last changes were
-    #     # for i in range(min(self.tree_depth_min, 5), 2, -1):  # 5,4,3,2
-    #     #     tree[TR_type][i] = tree[TR_type][i-1]    # The last modifications
-    #     #     tree[T_fitness][i] = tree[T_fitness][i-1]  # The last fitness
-    #     #     tree[T_parsimony][i] = tree[T_parsimony][i-1]  # The last parsimony (TODO) # tree_id,1,a,b,c -> tree_id,1,a,a,b
-    #
-    #     # What needs to be assigned later
-    #     # tree[TR_type][2] = modification  # wipe last modification data_csv_path
-    #     # tree[TR_ID][1] = ''  # -> tree_id,,
-    #     # tree[T_fitness][1] = ''  # wipe fitness data_csv_path
-    #     # tree[T_parsimony][1] = ''  # wipe parsimony data_csv_path
-    #
-    #     return tree
-
-    # Stuff, that is not needed
-    #
-    # def treegp_mutate_branch_terminal_build(self):
-    #
-    #     """
-    #     Build the Terminal nodes for the tree.
-    #
-    #     """
-    #
-    #     self.tnode[N_depth] = self.tnode[TR_depth]  # set the final node_depth (same as 'config.pop[N_depth]' + 1)
-    #
-    #     for j in range(1, len(self.tree[N_id])):  # go through all nodes
-    #         if int(self.tree[N_depth][j]) == self.tnode[N_depth] - 1:  # this node is a parent
-    #             for k in range(1, (int(self.tree[N_arity][j]) + 1)):  # increment through each degree of arity for each parent node
-    #                 self.tnode[N_parent] = int(self.tree[3][j])  # set the parent 'node_id'  ...
-    #                 self.treegp_branch_terminal(op[self.tree[N_label][j]]['xtype'])  # ... generate a Terminal node
-    #
-    #     return
-    # def plot_live(self):
-    #     many_values = np.array([[6, 5, 4, 5, 6, 5, 4, 5, 5, 6, 5, 8, 5, 5, 5, 5, 5, 5, 4, 5, 6, 5],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 8, 9, 8, 7],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 8, 9, 8, 7],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 4, 5, 6, 7, 6, 5, 4, 5, 6, 7, 7, 8, 9, 0],
-    #                             [2, 3, 4, 5, 4, 3, 2, 3, 8, 9, 8, 7, 6, 5, 6, 7, 8, 9, 0, 9, 8, 7],
-    #                             [2, 3, 4, 5, 4, 5, 6, 7, 8, 9, 7, 6, 5, 4, 3, 4, 5, 6, 7, 8, 7, 1],
-    #                             [8, 7, 6, 5, 6, 7, 8, 9, 0, 9, 8, 7, 6, 3, 4, 5, 6, 7, 8, 7, 6, 1]])
-    #
-    #     means = np.mean(many_values, axis=0)
-    #     stds = np.std(many_values, axis=0)
-    #     n = means.size
-    #
-    #     # helpers
-    #     epsilon = 0.1
-    #     num_plays = np.shape(many_values)[1]
-    #
-    #     ### start episode loop
-    #     # compute upper/lower confidence bounds
-    #     ci = 0.95
-    #     e = 6  # if e%200 == 0:, the current episode we are in. aka the last one for us
-    #     test_stat = st.t.ppf((ci + 1) / 2, e)
-    #     lower_bound = means - test_stat * stds / np.sqrt(e)
-    #     upper_bound = means + test_stat * stds / np.sqrt(e)
-    #
-    #     # clear plot frame
-    #     plt.clf()
-    #
-    #     # plot average reward
-    #     plt.plot(means, color='blue', label="epsilon=%.2f" % epsilon)
-    #
-    #     # plot upper/lower confidence bound
-    #     x = np.arange(0, num_plays, 1)
-    #     plt.fill_between(x=x, y1=lower_bound, y2=upper_bound, color='blue', alpha=0.2, label="CI %.2f" % ci)
-    #
-    #     plt.grid()
-    #     # plt.ylim(0, 2)  # limit y axis
-    #     plt.title('Avg. Reward per step in experiment {}: {}'.format(e, sum(means) / num_plays))
-    #     plt.ylabel("Reward per step")
-    #     plt.xlabel("Play")
-    #     plt.legend()
-    #     plt.show()
-    #     plt.pause(0.1)
-    #     ### end episode loop
-    #
-    #     ## disable interactive plotting => otherwise window terminates
-    #     plt.ioff()
-    #     plt.show()
-    #     return
-
-    # # 03.01. not needed?
-    # def tree_replace_branch_nodelist(self, karoo_tree, tree_ids, insert_tree):
-    #
-    #     """
-    #     This method enables the insertion of ptree_branch_node_ids in place of a branch
-    #     ptree_branch_node_ids = [5,6,8,9] node that are changed
-    #
-    #     The end result is a Tree with a mutated branch.
-    #     """
-    #
-    #     branch_top = int(tree_ids[0])
-    #     karoo_tree[N_label][branch_top] = insert_tree[N_label][1]  # copy node_label from new karoo_tree
-    #     karoo_tree[N_arity][branch_top] = insert_tree[N_arity][1]  # copy node_arity from new karoo_tree
-    #     karoo_tree = np.delete(karoo_tree, tree_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-    #
-    #     c_buffer = evolve_c_buffer_karoo(karoo_tree, branch_top)  # generate c_buffer for point of mutation ('branch_top')
-    #     karoo_tree = tree_insert_node_child_dummies(karoo_tree, branch_top, c_buffer, wrapper=True)  # insert a single new node ('branch_top')
-    #     karoo_tree = evolve_node_renum_karoo(karoo_tree)  # renumber all 'node_id's
-    #
-    #     ### PART 2 - insert b_branchody from 'config.karoo_tree' into 'karoo_tree' ###
-    #     node_count = 2  # set node count for 'config.karoo_tree' to 2 as the new root has already replaced 'branch_top' (above)
-    #
-    #     while node_count < len(insert_tree[3]):  # increment through all nodes in the new Tree ('config.karoo_tree'), starting with node 2
-    #
-    #         for j in range(1, len(karoo_tree[3])):  # increment through all nodes in tourn_winner ('karoo_tree')
-    #
-    #             if karoo_tree[N_type][j] == '':
-    #                 karoo_tree[N_type][j] = insert_tree[N_type][node_count]  # copy 'node_type' from branch to karoo_tree
-    #                 karoo_tree[N_label][j] = insert_tree[N_label][node_count]  # copy 'node_label' from branch to karoo_tree
-    #                 karoo_tree[N_arity][j] = insert_tree[N_arity][node_count]  # copy 'node_arity' from branch to karoo_tree
-    #
-    #                 if karoo_tree[N_arity][j] == '0':  # terminal
-    #                     karoo_tree = tree_fix_link_child_karoo(karoo_tree)  # fix all child links
-    #                     karoo_tree = evolve_node_renum_karoo(karoo_tree)  # renumber all 'node_id's
-    #
-    #                 if int(karoo_tree[N_arity][j]) > 0:
-    #                     c_buffer = evolve_c_buffer_karoo(karoo_tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
-    #                     karoo_tree = tree_insert_node_child_dummies(karoo_tree, j, c_buffer, wrapper=True)  # insert new nodes
-    #                     karoo_tree = tree_fix_link_child_karoo(karoo_tree)  # fix all child links
-    #                     karoo_tree = evolve_node_renum_karoo(karoo_tree)  # renumber all 'node_id's
-    #
-    #                 node_count = node_count + 1  # exit loop when 'node_count' reaches the number of columns in the array 'config.karoo_tree'
-    #
-    #     return karoo_tree
-
-    # def tree_branch(self, root_xype, max_depth=''):
-    #
-    #     """
-    #     Builds a new 'branch'-tree
-    #     """
-    #
-    #     tree_id, last_mod = 'x', 'b',
-    #     tree = self.ptree_init()
-    #     if max_depth:
-    #
-    #         label, arity = self.xtype_choose_func(root_xype)
-    #
-    #         if np.random.choice(['function', 'terminal']) == 'terminal':
-    #             tree[N_type][top_id] = 'term'
-    #             tree[N_label][top_id] = self.xtype_choose_term(xype)  # replace with a correct label
-    #             tree = np.delete(tree, branch_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-    #             tree = evolve_node_arity_fix(tree)  # fix all node arities (term)
-    #             tree = self.tree_fix_link_child(tree)  # fix all child links (func)
-    #             tree = evolve_node_renum(tree)  # renumber all 'node_id's
-    #
-    #             # 5.2 We insert a function here
-    #             tree = self.ptree_replace_branch_nodelist(tree, branch_ids, self.tree)  # insert new 'branch' at point of mutation 'branch_top' in tourn_winner 'tree'
-    #
-    #         ptree = self.ptree_init()
-    #         ptree = self.ptree_node_add_fromdnode(ptree, pnode)
-    #
-    #         self.treegp_mutate_branch_terminal_build()  # build the Terminal nodes
-    #         return
 
 
 def util_tree_copy(population, tree_id):
@@ -2634,7 +1644,7 @@ def util_tree_copy(population, tree_id):
     return np.copy(population[tree_id])
 
 
-def pop_util_random(population):
+def pop_random(population):
     """
     Returns a random tree_id from a population
     """
@@ -2672,15 +1682,15 @@ def insert_function_or_term(depth, depth_goal):
     return decision
 
 
-def pop_copy_genepool(population_new, gene_pool_hash_dict, gen_id):
+def pop_copy_genepool(population_new, gene_pool, gen_id):
     """
     Copy the genepool of a gen
     """
     pop_y = ['Population Selection in Generation {}.'.format(str(gen_id))]  # empty list
 
-    for i, (tree_id, tree_ident) in enumerate(gene_pool_hash_dict.items()):
-        tree_copy = util_tree_copy(population_new, tree_id)
-        tree_copy[TR_ID][1] = i + 1
+    for i, (tree_num, tree_meta) in enumerate(gene_pool.items()):
+        tree_copy = util_tree_copy(population_new, tree_num)
+        tree_copy = tree_set_id(tree_copy, i + 1)
         pop_y.append(tree_copy)
 
     return pop_y
@@ -2690,7 +1700,7 @@ def pop_enum_trees(population):
     """
     outsourced enumeration of trees in a population
     """
-    for tree_id in range(1, len(population)):  #
+    for tree_id in range(FIRST_TREE, len(population)):  #
         population[tree_id][TR_ID][1] = tree_id
     return population
 
@@ -2706,10 +1716,32 @@ def data_load_data_split(data_x, data_y, test_size):
     return data_train_rows, data_train, data_control
 
 
-def printez(message_type, text, time_total=0.0):
+def print_e(text, display=None, time_total=0.0):
+    """
+    Printing errors
+    """
+    message_style = BColors.RED
+    message_pretxt = 'ERROR: '
+    print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
+
+
+def print_warning(message_type, text, display=None, time_total=0.0):
+    """
+
+    """
+    message_style = BColors.WARNING
+    message_pretxt = 'Warning: '  # Warning-yellow
+    printez(message_type, text, display=display, time_total=time_total)
+
+
+def printez(message_type, text, display=None, time_total=0.0):
     """
     giving prints colours, accessable from everywhere
     """
+    if display:
+        if message_type not in display:
+            return
+
     message_pretxt = BColors.RESET  # default color
     message_posttxt = BColors.RESET
     if 'i' in message_type:
@@ -2718,13 +1750,12 @@ def printez(message_type, text, time_total=0.0):
     elif 'e' in message_type:
         message_style = BColors.RED
         message_pretxt = 'ERROR: '
-        raise_error = True
     elif 'w' in message_type:  # warning
         message_style = BColors.WARNING
         message_pretxt = 'Warning: '  # Warning-yellow
     elif 'g' in message_type:
         message_style = BColors.BLUE
-        message_pretxt = '{:4.2f} Gen: '.format(time_total)  # green
+        message_pretxt = '{:5.1f}: '.format(time_total)  # green
     elif 'v' in message_type:  # verbose
         message_style = BColors.WHITE  # white
         message_pretxt = 'Verbose: '
@@ -2744,3 +1775,482 @@ def printez(message_type, text, time_total=0.0):
 
     print('{}{}{}{}'.format(message_style, message_pretxt, str(text), message_posttxt))
     return
+
+
+def data_from_csv(samples_file):
+    """
+    loads the goal-data_csv_path from .csv file. first observations then actions.
+    Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
+
+    Mountaincar .csv first lines (11.12.2019):
+    --------------------------------------------------------
+    observation0:float,     observation1:float, action0:float
+    -0.5031261704876531,    0.0,                2
+    --------------------------------------------------------
+    """
+
+    num_observations, num_actions = 0, 0
+    var_types = []
+    # TODO Terminal types as dictionary? would be much prettier.
+    input_dict = {'all': {},
+                  'float': {},
+                  'bool': {}}
+    variables_dict = {'all': [],
+                      'types': [],
+                      'float': [],
+                      'bool': []}
+
+    action_dict = {}
+
+    # 1. Read file
+    with Path.open(samples_file) as csvFile:
+        reader = csv.reader(csvFile, delimiter=',')
+
+        for i, row in enumerate(reader):
+            if i == 0:  # variable identifiers
+                # all_variables = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
+                for var_name in row:
+                    var_types.append(var_name.split(':', 1)[1])
+                    if var_name.startswith('o'):  # found an observation
+                        num_observations += 1
+                        term = var_name.rsplit(':', 1)[0]
+                        term_type = var_name.split(':', 1)[1]
+                        input_dict[term] = term_type  # todo austauschen
+                        variables_dict['all'].append(term)
+                        variables_dict['types'].append(term_type)
+                        if term_type == 'float':
+                            variables_dict['float'].append(term)
+                            variables_dict['float'].append(term)
+                        elif term_type == 'bool':
+                            variables_dict['bool'].append(term)
+                        else:
+                            raise
+                    elif var_name.startswith('a'):  # found an action
+                        num_actions += 1
+                        action = var_name.split(':', 1)[0]
+                        action_type = var_name.split(':', 1)[1]
+                        action_dict[action] = action_type  # Do not use this:# '2b' if 'bool' in action_type else '2f'
+                    else:
+                        print_e('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
+                        raise
+
+                data_x, data_y = [], []
+
+            else:  # convert every 'string' element to its data_csv_path type
+                # TODO var_types ist genau dasselbe wie self.terminal , oder? eines ersetzen?
+                row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
+                data_x.append(row_as_data[:num_observations])
+                data_y.append(row_as_data[num_observations:])
+        csvFile.close()
+    unique_outputs_num = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
+
+    data_train_rows, data_train, data_control = data_load_data_split(data_x, data_y, test_size=0.2)
+
+    # self.printplg('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+    return input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
+
+
+def data_load_pickle(prepared_data_pickle_path):
+    """
+    loads a data_csv_path file that was already split with the csv reader
+    """
+    with Path.open(prepared_data_pickle_path, 'rb') as file:
+        pickle_data = pickle.load(file)
+
+    # self.printplg('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+    return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
+
+
+def save_data_pickle(prepared_data, data_pickle_path):
+    """
+    saves prepared plagih data to pickle file
+    """
+
+    with Path.open(data_pickle_path, 'wb') as file:
+        pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)
+    return
+
+
+def file_population_write(population, key, path, gen_id):
+    """
+    Save population_* to disk.
+
+    """
+    file_path = path / 'population_{}.csv'.format(str(key))
+
+    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        target = csv.writer(csv_file, delimiter=',')
+        if gen_id != 0:
+            target.writerows([''])  # empty row before each generation
+        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
+
+        for tree in range(1, len(population)):
+            target.writerows([''])  # empty row before each Tree
+            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
+                target.writerows([population[tree][row]])
+
+    return
+
+
+def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None):
+    """
+    returns a function for a function in point mutation
+    This only accepts functions as inputs. (point mutation)
+    No need to handle terminals
+    """
+
+    if arity:
+
+        if xtype == 'f2f':
+            return np.random.choice(op_type_arity_array[f2f][arity])
+        elif xtype == 'f2b':
+            return np.random.choice(op_type_arity_array[f2b][arity])
+        elif xtype == 'b2b':
+            return np.random.choice(op_type_arity_array[b2b][arity])
+        elif xtype == 'b2f':
+            return np.random.choice(op_type_arity_array[b2f][arity])
+        elif xtype == 'b2f2f':
+            return np.random.choice(op_type_arity_array[b2f2f][arity])  # sfeh okay that does not make sense tbh
+        else:
+            print_e('Function was not found in function_types_dict {}'.format(xtype))
+            raise
+
+    else:
+        raise
+
+
+def file_config(path, config, gen_id, kernel, datetime):
+    """
+    write the parameters to a file
+    Todo update
+    """
+
+    file = Path.open(path / 'config.txt', 'w')
+    file.write('Plagih GP. This config is not complete, TODO!')
+    file.write('\n launched: {}'.format(datetime))
+    file.write('\n kernel: {}'.format(kernel))
+    file.write('\n precision: {}\n'.format(config['precision']))
+    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
+    file.write('\n')
+    file.write('\n tournament size: ' + str(config['gp_tourn_size']))
+    file.write('\n population: ' + str(config['pop_max']))
+    file.write('\n number of generations: ' + str(gen_id))
+    file.write('\n\n')
+    file.close()
+    return
+
+
+def load_operators_from_csv(op_csv_path):
+    """
+    Load all operators ready-to-use from a file
+    """
+
+    functions = np.loadtxt(op_csv_path, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+    # Part 3.5: Split the functions in 5 types
+
+    # rows are the function types (f2f)
+    # columns are the arity
+    op_array = [[[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []]]
+    for fun in functions:
+        label = fun[0]
+        arity = op[label]['arity']  # arity = int(fun[1])
+        xtype = op[label]['xtype']
+
+        if xtype == 'f2f':
+            op_array[f2f][arity].append(label)
+        elif xtype == 'f2b':
+            op_array[f2b][arity].append(label)
+        elif xtype == 'b2b':
+            op_array[b2b][arity].append(label)
+        elif xtype == 'b2f':
+            op_array[b2f][arity].append(label)
+        elif xtype == 'b2f2f':
+            op_array[b2f2f][arity].append(label)
+
+    return op_array
+
+
+def tf_from_ast_expr(expr, tensors, prnt=None, build=None):
+    """
+    Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
+
+    """
+    # print('Current expr:', expr)  # importantprint for debugging failed expressions
+    tree = ast.parse(expr, mode='eval').body
+
+    return tf_graph_from_expr_recursive(tree, tensors, prnt=prnt, build=build)
+
+
+def tf_graph_from_expr_recursive(node, tensors, prnt=None, build=None):
+    """
+    Recursively transforms parsed expression tree into TensorFlow (TF) graph.
+
+    """
+
+    # Arity 0
+    if isinstance(node, ast.Name):  # <tensor_name>
+        if prnt:
+            return '{}'.format(node.id)
+        elif build:
+            return [node.id]
+        else:
+            return tensors[node.id]
+
+    elif isinstance(node, ast.Num):  # <number>
+        if prnt:
+            return '{}'.format(node.n)
+        if build:
+            return [node.n]
+        else:
+            shape = tensors[list(tensors.keys())[0]].get_shape()
+            return tf.constant(node.n, shape=shape, dtype=tf.float32)
+
+    elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
+        if prnt:
+            return '{}'.format(node.value)
+        if build:
+            return [node.value]
+        else:
+            return tf.constant(node.value)
+
+    # Arity 1
+    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1)
+        if prnt:
+            return '({}{})'.format(
+                op[type(node.op)]['name'],
+                tf_graph_from_expr_recursive(node.operand, tensors, prnt=prnt))
+        if build:
+            return [op[type(node.op)]['name'], [tf_graph_from_expr_recursive(node.operand, tensors, build=build)]]
+        else:
+            return ast_tensor_dict[type(node.op)](
+                tf_graph_from_expr_recursive(node.operand, tensors))
+
+    # Arity 2
+    elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
+        if prnt:
+            return '({} {} {})'.format(
+                tf_graph_from_expr_recursive(node.left, tensors, prnt=prnt),
+                op[type(node.op)]['name'],
+                tf_graph_from_expr_recursive(node.right, tensors, prnt=prnt))
+        if build:
+            return [op[type(node.op)]['name'],
+                    [tf_graph_from_expr_recursive(node.left, tensors, build=build),
+                     tf_graph_from_expr_recursive(node.right, tensors, build=build)]]
+        else:
+            return ast_tensor_dict[type(node.op)](
+                tf_graph_from_expr_recursive(node.left, tensors),
+                tf_graph_from_expr_recursive(node.right, tensors))
+
+    elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
+        if prnt:
+            return tf_chain_bool(node.values, op[type(node.op)]['name'], tensors, prnt=True)
+        if build:
+            return tf_chain_bool(node.values, op[type(node.op)]['name'], tensors, build=build)
+        else:
+            return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors)
+
+    elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
+        if prnt:
+            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, prnt=prnt)
+        if build:
+            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors, build=build)
+        else:
+            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors)
+
+    # Arity x, all custom functions
+    elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
+
+        if node.func.id == 'Ifte':
+            if prnt:
+                return '(If ({}) then ({}) else ({}))'.format(
+                    tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt),
+                    tf_graph_from_expr_recursive(node.args[1], tensors, prnt=prnt),
+                    tf_graph_from_expr_recursive(node.args[2], tensors, prnt=prnt))
+            if build:
+                return ['Ifte',
+                        [tf_graph_from_expr_recursive(node.args[0], tensors, build=build),
+                         tf_graph_from_expr_recursive(node.args[1], tensors, build=build),
+                         tf_graph_from_expr_recursive(node.args[2], tensors, build=build)]]
+            else:
+                return ast_tensor_dict[node.func.id](tf.dtypes.cast(
+                    tf_graph_from_expr_recursive(node.args[0], tensors), tf.bool),
+                    tf_graph_from_expr_recursive(node.args[1], tensors),
+                    tf_graph_from_expr_recursive(node.args[2], tensors))
+
+        elif node.func.id == 'Ftob' or node.func.id == 'Btof':
+            if prnt:
+                return '({} {})'.format(node.func.id, tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt))
+            if build:
+                return [node.func.id,
+                        [tf_graph_from_expr_recursive(node.args[0], tensors, build=build)]]
+            else:
+                return tf.dtypes.cast(*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
+
+        elif len(node.args) <= 2:
+            if prnt:
+                if len(node.args) == 1:
+                    return '({} {})'.format(
+                        op[node.func.id]['name'],
+                        tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt))
+                elif len(node.args) == 2:
+                    return '({} ({}, {}))'.format(
+                        op[node.func.id]['name'],
+                        tf_graph_from_expr_recursive(node.args[0], tensors, prnt=prnt),
+                        tf_graph_from_expr_recursive(node.args[1], tensors, prnt=prnt))
+                else:
+                    raise Exception('This arity is not supported')
+            if build:
+                if len(node.args) == 1:
+                    return [op[node.func.id]['name'],
+                            [tf_graph_from_expr_recursive(node.args[0], tensors, build=build)]]
+                elif len(node.args) == 2:
+                    return [op[node.func.id]['name'],
+                            [tf_graph_from_expr_recursive(node.args[0], tensors, build=build),
+                            tf_graph_from_expr_recursive(node.args[1], tensors, build=build)]]
+                else:
+                    raise Exception('This arity is not supported')
+            else:
+                return ast_tensor_dict[node.func.id](*[tf_graph_from_expr_recursive(arg, tensors) for arg in node.args])
+
+            # If nothing matched
+        else:
+            raise Exception('Failed to identify the function')
+
+    else:
+        raise TypeError(node)
+
+
+def tf_chain_bool(values, operation, tensors, prnt=False, build=False):
+    """
+    Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
+
+    """
+
+    x = tf.dtypes.cast(tf_graph_from_expr_recursive(values[0], tensors), tf.bool)
+    if len(values) > 1:
+        if prnt:
+            if len(values) == 2:
+                return '({} {} {})'.format(
+                    values[0],
+                    operation,
+                    values[1])
+            else:
+                print('FUCK')
+                raise
+        if build:
+            if len(values) == 2:
+                return [operation,
+                        [values[0],
+                         values[1]]]
+            else:
+                print('FUCK')
+                raise
+        return operation(x, tf_chain_bool(values[1:], operation, tensors))
+    else:
+        if prnt:
+            print_warning('w', 'Whats x? {}'.format(x))
+            return str(x)
+        return x
+
+
+def tf_chain_compare(comparators, ops, tensors, prnt=False, build=False):
+    """
+    Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
+
+    """
+
+    x = tf_graph_from_expr_recursive(comparators[0], tensors, prnt=prnt, build=build)
+    y = tf_graph_from_expr_recursive(comparators[1], tensors, prnt=prnt, build=build)
+
+    if len(comparators) > 2:
+        print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')
+        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors))
+    else:
+        if prnt:
+            return '({} {} {})'.format(x, op[type(ops[0])]['name'], y)
+        if build:
+            return [op[type(ops[0])]['name'], [x, y]]
+        else:
+            return ast_tensor_dict[type(ops[0])](x, y)
+
+
+def labels_from_algo(expr_array, expr):
+    for x in expr_array:
+        if type(x) is not list:
+            # print('->', x)
+            expr.append(x)
+
+    only_lists = [x for x in expr_array if (type(x) == list)]
+    if only_lists:
+        lists_removed = list(chain(*only_lists))
+        expr = labels_from_algo(lists_removed, expr)
+    return expr
+
+
+def data_recover_pop_from_csv(pop_csv):
+
+    """
+    This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
+    replaces population_a in the karoo_gp/runs/[date-time]/ directory.
+    """
+
+    with Path.open(pop_csv, 'rb') as csv_file:
+        target = csv.reader(csv_file, delimiter=',')
+        n = 0  # track row count
+
+        for row in target:
+            print('row', row)
+
+            n = n + 1
+            if n == 1:
+                pass  # skip first empty row
+
+            elif n == 2:
+                population_a = [row]  # write header to population_a
+
+            else:
+                if row == []:
+                    tree = np.array([[]])  # initialise Tree array
+
+                else:
+                    if tree.shape[1] == 0:
+                        tree = np.append(tree, [row], axis=1)  # append first row to Tree
+
+                    else:
+                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
+
+                if tree.shape[0] == 13:
+                    population_a.append(tree)  # append complete Tree to population list
+
+    print('\n', population_a)
+
+    return
+
+# # x = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, observation0) > -0.97, 0.0, 2.0)'
+# fix_labels = ['Ifte',
+#               '&', '2', '0',
+#               '<=', '<=',
+#               'Mini', 'observation1', 'observation1', '+',
+#               '+', '-', '*', '0.7',
+#               '*', '0.03', '*', '0.008', '-0.07', '**',
+#               '-0.09', '**', '0.3', '**', '+', '2',
+#               '+', '2', '+', '4', 'observation0', '0.38',
+#               'observation0', '0.25', 'pos', '0.9']
+# fix_tree = karoo_tree_from_labellist(fix_labels)
+# fix_expr_raw = tree_expr_raw(fix_tree, root_id)
+#
+# fix_expr_sym = tree_expr_sympify(tree=fix_tree)
+#
+# fake_tensors = {'observation0': tf.constant(1.1, dtype=tf.float32),
+#                 'observation1': tf.constant(2.2, dtype=tf.float32),
+#                 'bl': tf.constant(True, dtype=tf.bool)}
+# # graph = tf_from_ast_expr('Ifte(Or(b & b, b), Mini(a,2), a+a)', fake_tensors, print_string=True)
+# graph = tf_from_ast_expr(fix_expr_sym, fake_tensors, build=True)
+# # test = tf_from_ast_expr(graph, fake_tensors, build=1)
+# print(graph)
+# expr = labels_from_algo(graph, [])
+# print(expr)

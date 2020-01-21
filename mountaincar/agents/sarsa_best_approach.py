@@ -1,6 +1,7 @@
 import csv
 
 import numpy as np
+
 np.random.seed(0)
 import gym
 import matplotlib.pyplot as plt
@@ -8,6 +9,7 @@ import sys
 from pathlib import Path, PurePath
 
 import pickle
+
 
 class TileCoder:
     def __init__(self, layers, features):
@@ -131,12 +133,13 @@ def play_sarsa(env, agent, train=False, render=False, save=False):
 
     return episode_reward
 
-def sarsa_start_training(env, episodes, rewardSample_interval, train = False, render = False):
+
+def sarsa_start_training(env, episodes, rewardSample_interval, train=False, render=False):
     agent = SARSALambdaAgent(env)
     episode_rewards, episode_rewards_preaverage, episode_rewards_average = [], [], []
     for episode in range(episodes):
         episode_reward = play_sarsa(env, agent, train, render)
-        episode_rewards_preaverage.append(episode_reward) #
+        episode_rewards_preaverage.append(episode_reward)
         if episode % rewardSample_interval == 0:
             episode_rewards.append(episode_reward)
             episode_rewards_average.append(np.mean(episode_rewards_preaverage[-rewardSample_interval:]))
@@ -144,7 +147,8 @@ def sarsa_start_training(env, episodes, rewardSample_interval, train = False, re
             print("SARSA: " + str(episode_reward))
     return episode_rewards, episode_rewards_average
 
-def sarsa_start_frommodel(env, episodes, rewardSample_interval, train = False, render = False):
+
+def sarsa_start_frommodel(env, episodes, rewardSample_interval, train=False, render=False):
     agent = SARSALambdaAgent(env)
     episode_rewards, episode_rewards_preaverage, episode_rewards_average = [], [], []
     for episode in range(episodes):
@@ -170,11 +174,11 @@ def plagih_get_behaviour_samples(env, agent, episodes, train=False, render=False
         observation = env.reset()
         while True:
             action = agent.decide(observation)
-            plagih_state_actions.append([observation,action]) # plagih
+            plagih_state_actions.append([observation, action])  # plagih
             observation_next, reward, done, _ = env.step(action)
             episode_reward += reward
             if done:
-                print('Adding samples which create this reward: '+str(episode_reward))
+                print('Adding samples which create this reward: ' + str(episode_reward))
                 break
             action_next = agent.decide(observation_next)
             observation, action = observation_next, action_next
@@ -209,7 +213,7 @@ def create_behaviour_samples_file(seed=0):
     #     pickle.dump(plagih_behaviour_samples, fp)
 
     # pickle-version does make too much trouble for now... need to switch to .csv
-    samples_csv_ready = [['observation0:'+'float', 'observation1:'+'float', 'action0:'+'int']]
+    samples_csv_ready = [['observation0:' + 'float', 'observation1:' + 'float', 'action0:' + 'int']]
     for sample in plagih_behaviour_samples:
         row = []
         row.append(sample[0][0])
@@ -223,7 +227,6 @@ def create_behaviour_samples_file(seed=0):
         writer = csv.writer(csvFile)
         writer.writerows(samples_csv_ready)
     csvFile.close()
-
 
     # import pickle
     # with open(samples_file, "rb") as fp:

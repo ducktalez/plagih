@@ -2,7 +2,7 @@ import sys;
 
 sys.path.append('modules/')  # add directory 'modules' to the current path
 import plagih.modules.plagih_gp_base_class_xai as plagih
-from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, save_data_pickle, load_operators_csv
+from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, save_data_pickle, load_operators_from_csv
 from pathlib import Path
 
 
@@ -23,11 +23,11 @@ def create_config_dict():
         'display': 'ggewsiivoa',  # To display absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
-        'tree_depth_base': 5,
-        'tree_depth_max': 30,  # [3...10]			maximum Tree depth for entire run
+        'tree_depth_base': 7,
+        'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 600,
+        'pop_max': 1000,
         'gen_max': 5000,
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
@@ -44,7 +44,7 @@ def create_config_dict():
                          'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
                          'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
                          'Create Random': 0.2},
-        'time_max': int(60 * 60 * 7),  # 60 = 1 min
+        'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }
 
@@ -66,7 +66,7 @@ config_dict = create_config_dict()
 # prepared_data = data_from_csv(file_dict['samples_file'])
 # data_save_pickle(prepared_data, file_dict['samples_pickle'])
 prepared_data = data_load_pickle(file_dict['samples_pickle'])
-op_array = load_operators_csv(file_dict['operators_file'])
+op_array = load_operators_from_csv(file_dict['operators_file'])
 
 gp = plagih.ExplainableGP(config_dict)
 gp.activate_data(prepared_data)

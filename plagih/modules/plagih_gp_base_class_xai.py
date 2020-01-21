@@ -64,7 +64,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # TODO Tournament selection vergrößern
 
 sympy_dummy = plagih_sympify(1)
-np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
+np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
 class ExplainableGP(object):
@@ -89,18 +89,8 @@ class ExplainableGP(object):
 
         self.tnode = {}
 
-        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU or GPU); gpu:n = 1st, 2nd, or ... GPU device
+        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device
         self.tf_device_log = False  # TF device usage logging (for debugging)
-
-        # What trees should be built
-        # TODO
-        self.asdf = {'tree_depth_max': 10,
-                     'strongly_typed': True,
-                     'mutate_branch_depth_max': 6,
-                     'mutate_branch_build_method': 'grow',
-                     'mutate_branch_grow_term_probability': 0.5,
-                     'crossover_strategy': ['same_type', 'same_type_switched', 'convert', 'plagih_switcharoo'],
-                     'tree_min_nodes': 3}
 
         self.monitor_dict = config_dict['monitor']
         self.evolve_rates = config_dict['evolve_rates']
@@ -321,7 +311,11 @@ class ExplainableGP(object):
         if not Path.is_dir(path):
             Path.mkdir(path)
 
-        pickle.dump(self, Path.open(path / 'backup.p', 'wb'))
+        # pickle.dump(self, Path.open(path / 'backup.p', 'wb'))
+        # TODO, pickle too large?
+
+    def restart_basics(self, pareto_path, last_pop_path):
+        pass
 
     def backup_load_pickle(self, pickle_nackup_path):
 
@@ -487,7 +481,6 @@ class ExplainableGP(object):
                 self.pareto.pop(parsim, None)
 
             elif self.fitness_compare(fit, best_fit):
-                print('\tFit, Best:', fit, best_fit)
                 if self.pareto.get(parsim):
                     pareto_fit = self.pareto.get(parsim)
                     if self.fitness_compare(fit, pareto_fit):
@@ -1948,7 +1941,7 @@ def file_config(path, config, gen_id, kernel, datetime):
     return
 
 
-def load_operators_csv(op_csv_path):
+def load_operators_from_csv(op_csv_path):
     """
     Load all operators ready-to-use from a file
     """
@@ -2198,6 +2191,45 @@ def labels_from_algo(expr_array, expr):
         expr = labels_from_algo(lists_removed, expr)
     return expr
 
+
+def data_recover_pop_from_csv(pop_csv):
+
+    """
+    This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
+    replaces population_a in the karoo_gp/runs/[date-time]/ directory.
+    """
+
+    with Path.open(pop_csv, 'rb') as csv_file:
+        target = csv.reader(csv_file, delimiter=',')
+        n = 0  # track row count
+
+        for row in target:
+            print('row', row)
+
+            n = n + 1
+            if n == 1:
+                pass  # skip first empty row
+
+            elif n == 2:
+                population_a = [row]  # write header to population_a
+
+            else:
+                if row == []:
+                    tree = np.array([[]])  # initialise Tree array
+
+                else:
+                    if tree.shape[1] == 0:
+                        tree = np.append(tree, [row], axis=1)  # append first row to Tree
+
+                    else:
+                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
+
+                if tree.shape[0] == 13:
+                    population_a.append(tree)  # append complete Tree to population list
+
+    print('\n', population_a)
+
+    return
 
 # # x = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, observation0) > -0.97, 0.0, 2.0)'
 # fix_labels = ['Ifte',

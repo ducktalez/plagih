@@ -1009,7 +1009,46 @@ def test_trees(number):
 
     core = core_from_labels(label_list, arity_list)
     return core
+#
+# def tree_node_get_arity(tree, node_id, karoo=False):
+#     node_id = int(node_id) - 1
+#
+#     return int(tree[N_arity][int(node_id)])
 
+
+def tree_set_label(tree, node_id, label, karoo=False):
+    pass
+    #TODO
+    # FUCK TODOTODO
+
+
+def tree_iterate(tree, karoo=False):
+    if karoo:
+        start = 1
+    else:
+        start = 0
+    node_id_list = [node_id for node_id in tree[N_id]]
+    return node_id_list
+
+
+def tree_node_get_child(tree, node_id, child_num, karoo=False):
+    if karoo:
+        child_id = tree[N_c1 + child_num][node_id]
+    else:
+        raise
+    return child_id
+
+
+def tree_normalize_exponentiation(tree):
+
+    # 1. ** ahould have an int as second number
+    for node_id in tree_iterate(tree):
+        if tree_get_label(tree, node_id) == '**':
+            child_id = tree_node_get_child(tree, node_id, 1, karoo=True)  # get second argument
+            old_power = tree_get_label(tree, child_id)
+            new_power = float(int(old_power))
+            tree_set_label(tree, child_id, new_power, karoo=True)
+    return
 
 def test():
     core = test_trees(4)

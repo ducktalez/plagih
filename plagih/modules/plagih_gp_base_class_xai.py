@@ -462,8 +462,8 @@ class ExplainableGP(object):
 
             population[tree_num] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
             gene_pool[tree_num] = tree_meta
-            # if tree_meta['fitness_train'] < 341.0:
-            #     print('Genepool found:', tree_meta['fitness_train'])
+            if tree_meta['fitness_train'] < 341.0:
+                print('Genepool found:', tree_meta['fitness_train'])
             if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
                 dominator_count += 1
 
@@ -480,13 +480,16 @@ class ExplainableGP(object):
         # 1. Find lowest complexity
         best_fitness = self.parsimony_best_meta[0]['fitness_train']
 
-        for parsim, meta in sorted(list(self.parsimony_best_meta.items())):
+        # TODOTODO TODO SFEH
+        for parsim, meta in sorted(self.parsimony_best_meta.items(), key=lambda x: x[1]['fitness_train']):
             fitness = meta['fitness_train']
-            # if fitness < 341.0:
-            #     print('Pareto found:', fitness)
+            print('\tFitness, Best Fitness:', fitness, best_fitness)
+            if fitness < 341.0:
+                print('Pareto found:', fitness)
             # kick
             if self.fitness_compare(best_fitness, fitness):
-                self.pareto.pop(parsim, None)
+                x = self.pareto.pop(parsim, None)
+                print('\tPopped?', x)
 
             elif self.fitness_compare(fitness, best_fitness):
                 if self.pareto.get(parsim):
@@ -497,7 +500,7 @@ class ExplainableGP(object):
                     self.pareto[parsim] = fitness
                     self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fitness))
                 best_fitness = fitness
-
+            print('\tlen pareto 2:', len(self.pareto))
         return
 
     def fitness_compare(self, fitness1, fitness2, mode='better'):

@@ -1,6 +1,6 @@
 import numpy as np
 
-# Define Q-learning function
+
 def QLearning(env, learning, discount, epsilon, min_eps, episodes, plot_nums):
     # Determine size of discretized state space
     num_states = (env.observation_space.high - env.observation_space.low) * \

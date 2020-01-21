@@ -124,7 +124,7 @@ class ExplainableGP(object):
         self.file_directories_create()
         self.done = False
         self.gen_id = 0
-        self.print_g('gg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
 
@@ -452,25 +452,23 @@ class ExplainableGP(object):
         dominator_count = 0
         gene_pool = {}
 
-        for tree_id in range(1, len(population)):
-            tree = population[tree_id]
+        for tree_num in range(1, len(population)):
+            tree = population[tree_num]
             try:
                 tree_ident, tree_meta = self.tree_get_meta(tree)
             except:
                 continue
-            else:
-                population[tree_id] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
-                gene_pool[tree_id] = tree_meta
-                fitness = tree_meta['fitness_train']
-                if fitness < 341.0:
-                    print('Genepool found:', fitness)
-                if self.fitness_compare(fitness, self.origin['fitness_train']):
-                    self.printpl('vvv', 'A candidate is fitter than the origin (might have occurred already)')
-                    dominator_count += 1
 
-        self.print_g('g', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
+            population[tree_num] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
+            gene_pool[tree_num] = tree_meta
+            # if tree_meta['fitness_train'] < 341.0:
+            #     print('Genepool found:', tree_meta['fitness_train'])
+            if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
+                dominator_count += 1
 
-        return gene_pool
+        self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
+
+        return gene_pool, population
 
     def pop_pareto_update(self):
         """
@@ -483,8 +481,8 @@ class ExplainableGP(object):
 
         for parsim, meta in sorted(list(self.parsimony_best_meta.items())):
             fitness = meta['fitness_train']
-            if fitness < 341.0:
-                print('Pareto found:', fitness)
+            # if fitness < 341.0:
+            #     print('Pareto found:', fitness)
             # kick
             if self.fitness_compare(best_fitness, fitness):
                 self.pareto.pop(parsim, None)
@@ -554,18 +552,20 @@ class ExplainableGP(object):
 
         """
         # 1. Check every potential candidate
-        for tree_id, meta in gene_pool.items():
+        for tree_num, meta in gene_pool.items():
             parsim = meta['parsimony']
             fitness_train = meta['fitness_train']
 
-            # 3. is the tree better than the current best in this parsimony level?
+            # 3. is the tree better than the current best at this parsimony level?
             if parsim in self.parsimony_best_meta:
-                cmp_fitness = self.parsimony_best_meta[parsim]['fitness_train']
-                if self.fitness_compare(fitness_train, cmp_fitness):
+                best_fit = self.parsimony_best_meta[parsim]['fitness_train']
+                if self.fitness_compare(fitness_train, best_fit):
                     self.printpl('aa', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
                     self.parsimony_best_meta[parsim] = meta
                 else:
                     return  # The "regular" case
+            else:
+                self.parsimony_best_meta[parsim] = meta
 
         return
 
@@ -754,7 +754,7 @@ class ExplainableGP(object):
         """
 
         self.population_new = pop_enum_trees(self.population_new)  # pop +tree_id
-        gene_pool = self.pop_genepool_create(self.population_new)
+        gene_pool, self.population_new = self.pop_genepool_create(self.population_new)
         self.monitor_genepool(gene_pool)
 
         self.pop_parsimony_best_update(gene_pool)
@@ -1155,7 +1155,7 @@ class ExplainableGP(object):
 
         self.hashtable_fitness_train = {}
 
-        self.print_g('g', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         return
 
     def tree_get_meta(self, tree):
@@ -1182,7 +1182,7 @@ class ExplainableGP(object):
                 try:  # 3. With tensorflow
                     expr_sym = tree_expr_sympify(algo_raw=str(expr_raw))
                 except:
-                    raise Exception('Expr could not be sympified.')
+                    raise Exception('Expr could not be sympified: {}.'.format(expr_raw))
 
                 fitness_train = self.eval_tf(expr_sym, self.data_train)['fitness']
                 tree_meta = {'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_sym': str(expr_sym), 'expr_raw': str(expr_raw)}

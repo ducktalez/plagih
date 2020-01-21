@@ -1,17 +1,10 @@
 import itertools
-
 import numpy as np
 import gym
-import matplotlib.pyplot as plt
 
-
-class SimpleAgent:
-
-    def decide(self, observation):
-        if observation[1] < 0: #PLAGI
-            return 0
-        else:
-            return 2
+np.random.seed(0)
+env = gym.make('MountainCar-v0')
+env.seed(0)
 
 
 class FixAgent:
@@ -26,31 +19,6 @@ class FixAgent:
         else:
             action = 0  # push left
         return action
-
-
-def move_towards_direction(env, agent, episodes, reward_interval):
-
-    reward_list, reward_list_avg = [], []
-
-    for i in range(episodes):
-        observation = env.reset()
-        done = False
-        reward_tot = 0
-        reward_list_preavg = []
-
-        while(done is False):
-            action = agent.decide(observation)
-            observation, reward, done, info = env.step(action)
-            reward_tot += reward
-        reward_list_preavg.append(reward_tot)
-
-        if i % reward_interval == 0:
-
-            reward_list.append(reward_tot)
-            reward_list_avg.append(np.mean(reward_list[-reward_interval:]))
-            print('EZ-Episode {} Average Reward: {}'.format(i + 1, reward_tot))
-
-    return reward_list, reward_list_avg
 
 
 def play_once(env, agent, render=False, verbose=False):
@@ -72,10 +40,10 @@ def play_once(env, agent, render=False, verbose=False):
 
 agent = FixAgent()
 
-np.random.seed(0)
-
-env = gym.make('MountainCar-v0')
-env.seed(0)
 episode_rewards = [play_once(env, agent) for _ in range(100)]
 print('average episode rewards = {}'.format(np.mean(episode_rewards)))
+
+episode_rewards = [play_once(env, agent) for _ in range(10000)]
+print('average episode rewards = {}'.format(np.mean(episode_rewards)))
+
 env.close()

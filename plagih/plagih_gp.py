@@ -36,7 +36,7 @@ def create_config_dict():
                     'genepool_size': 'y'
                     },
         'period': {'time_monitor': 60 * 1,  # in sec
-                   'time_save': 60 * 5,  # in sec
+                   'time_save': 60 * 1,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
         'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,

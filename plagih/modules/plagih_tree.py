@@ -11,10 +11,24 @@ sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
 
-class Plagih_Tree():
+class WriteTree(object):
 
-    def __init__(self):
+    def __init__(self, expr):
+        self.fitness = None
+        self.parsimony = None
+        self.expr = expr
+
+    def write_to_file(self, path):
         pass
+
+
+def tree_init_core(node_amount):
+    """
+    returns an empty tree with an amount of nodes, auto fills
+    """
+    tree = np.zeros((T_num_lines, node_amount), dtype=np.dtype('U12'))  # U12: longest is observation1
+
+    return tree
 
 
 def tree_modifyable_nodes_set(chosen_tree, origin_tree):
@@ -371,15 +385,6 @@ def tree_init_first_column():
          ['fitness'],
          ['node_modify'],
          ['parsimony']])
-
-    return tree
-
-
-def tree_init_core(node_amount):
-    """
-    returns an empty tree with an amount of nodes, auto fills
-    """
-    tree = np.zeros((T_num_lines, node_amount), dtype=np.dtype('U12'))  # U12: longest is observation1
 
     return tree
 

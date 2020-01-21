@@ -2,10 +2,6 @@ import itertools
 import numpy as np
 import gym
 
-np.random.seed(0)
-env = gym.make('MountainCar-v0')
-env.seed(0)
-
 
 class FixAgent:
 
@@ -19,6 +15,26 @@ class FixAgent:
         else:
             action = 0  # push left
         return action
+
+
+class PlagihAgent_A:
+
+    def decide(self, observation):
+        observation0, observation1 = observation
+        if -observation1 + min(observation1, observation0 + 1.025) > observation1:
+            return 0
+        else:
+            return 2
+
+
+class SimpleAgent:
+
+    def decide(self, observation):
+        observation0, observation1 = observation
+        if observation1 < 0:
+            return 0
+        else:
+            return 2
 
 
 def play_once(env, agent, render=False, verbose=False):
@@ -38,12 +54,13 @@ def play_once(env, agent, render=False, verbose=False):
     return episode_reward
 
 
-agent = FixAgent()
+agents = [SimpleAgent(), FixAgent(), PlagihAgent_A()]
+for agent in agents:
 
-episode_rewards = [play_once(env, agent) for _ in range(100)]
-print('average episode rewards = {}'.format(np.mean(episode_rewards)))
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
 
-episode_rewards = [play_once(env, agent) for _ in range(10000)]
-print('average episode rewards = {}'.format(np.mean(episode_rewards)))
-
-env.close()
+    episode_rewards = [play_once(env, agent) for _ in range(100)]
+    print('average episode rewards = {}'.format(np.mean(episode_rewards)))
+    env.close()

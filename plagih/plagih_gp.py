@@ -27,16 +27,16 @@ def create_config_dict():
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 1000,
-        'gen_max': 5000,
+        'pop_max': 300,
+        'gen_max': 12,
         'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
                     'genepool_size': 'y'
                     },
-        'period': {'time_monitor': 60 * 1,  # in sec
-                   'time_save': 60 * 1,  # in sec
+        'period': {'time_monitor': 60 * 0.5,  # in sec
+                   'time_save': 60 * 0.5,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
         'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,

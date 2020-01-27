@@ -39,11 +39,11 @@ def create_config_dict():
                    'time_save': 60 * 0.5,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
-        'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
-                         'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
-                         'Branch': 0, 'Branch mutate one': 0.0, 'Branch nodebased': 0.25, 'Branch 2': 0, 'Branch 3': 0,
+        'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.1, 'Reproduce Olymp': 0,
+                         'Point': 0, 'Point Mutation': 0.2, 'Point Filter': 0.1,
+                         'Branch': 0, 'Branch mutate one': 0.0, 'Branch nodebased': 0.3, 'Branch 2': 0, 'Branch 3': 0,
                          'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
-                         'Create Random': 0.2},
+                         'Create Random': 0.0},
         'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }

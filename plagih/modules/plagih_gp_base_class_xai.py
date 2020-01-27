@@ -168,7 +168,7 @@ class ExplainableGP(object):
         self.pop_first_create()
         self.pareto[0] = self.origin['fitness_train']
         self.gen_finalize()
-        file_population_write(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
+        file_population_write_karoo(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
 
     def main_generation_loop(self):
         """
@@ -260,7 +260,7 @@ class ExplainableGP(object):
         """
         self.file_conclusion(path, datetime=self.datetime)
         self.file_pareto(self.pareto, path)
-        file_population_write(self.population_new, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
+        file_population_write_karoo(self.population_new, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
 
     def gen_olympus_update(self):
         """
@@ -758,7 +758,7 @@ class ExplainableGP(object):
         self.pop_pareto_update()
 
         self.population_base = pop_copy_genepool(self.population_new, gene_pool, self.gen_id)
-        file_population_write(self.population_new, 'new', self.path, self.gen_id)
+        file_population_write_karoo(self.population_new, 'new', self.path, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
@@ -1648,12 +1648,30 @@ def save_data_pickle(prepared_data, data_pickle_path):
     return
 
 
-def file_population_write(population, key, path, gen_id):
+def file_population_write_plagih(population, pop_name, path, gen_id):
+
+    file_path = path / 'population_plagih_{}.csv'.format(str(pop_name))
+
+    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        target = csv.writer(csv_file, delimiter=',')
+        if gen_id != 0:
+            target.writerows([''])  # empty row before each generation
+        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
+
+        for tree in range(1, len(population)):
+            target.writerows([''])  # empty row before each Tree
+            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
+                target.writerows([population[tree][row]])
+
+    return
+
+
+def file_population_write_karoo(population, pop_name, path, gen_id):
     """
     Save population_* to disk.
 
     """
-    file_path = path / 'population_{}.csv'.format(str(key))
+    file_path = path / 'population_{}.csv'.format(str(pop_name))
 
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')

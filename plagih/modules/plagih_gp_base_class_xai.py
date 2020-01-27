@@ -599,12 +599,11 @@ class ExplainableGP(object):
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
-                expr_raw = meta['expr_raw']
-                print('raw', expr_raw)
-                label_list = ast_convert_from_expr(expr_raw, build=True)
-                print('label_list', label_list)
+                expr_sym = meta['expr_sym']; print('sym', expr_sym)
+                label_list = ast_convert_from_expr(expr_sym, build=True); print('label_list', label_list)
                 olymp_winner = karoo_tree_from_labellist(label_list)
                 self.popnew_append(olymp_winner, last_modification='repro')
+
                 print('Olymp winner:\n', olymp_winner)
 
         return

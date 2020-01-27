@@ -16,12 +16,23 @@ def test_plagih_eval():
     print(graph)
 
 
-def test_plagih_tree():
+def test_sympify():
+    pass
 
-    tree3 = ['Ifte', '<', 0.0, 'Ifte', 'observation1', 0.0, '<', 2.0, 1.0, '/', '-', '**', 'observation1', 0.975, 'observation1', 0.17, 'Mini', 'observation0', '*', 0.185, 'Mini', '-', 'observation0', 0.145]
-    # tree3 = ['+', 1, 2]
-    tree3 = karoo_tree_from_labellist(tree3)
-    print(tree3)
+
+def test_plagih_tree():
+    expr_raw = '(Ifte((b < (b / (Maxi((((((b - b) + (Mini(0.2, b))) / 2) ** (Maxi(1, b))) ** 0), a)))), 0, (Ifte((True), 2, 1))))'
+    expr_1 = '-(5)'
+    list1 = ast_convert_from_expr(expr_1, build=True)
+    tree1 = karoo_tree_from_labellist(list1)
+
+    expr_raw = '-0.9'
+    label_list = ast_convert_from_expr(expr_raw, build=True)
+    print('labellist:', label_list, type(label_list[1]))
+    label_list = [-2]
+    olymp_winner = karoo_tree_from_labellist(label_list)
+    print(olymp_winner)
     return
 
-# test_plagih_tree()
+
+test_plagih_tree()

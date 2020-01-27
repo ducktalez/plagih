@@ -161,7 +161,9 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
     tree = ast.parse(expr, mode='eval').body
 
     graph = ast_convert_from_expr_recursive(tree, tensors=tensors, prnt=prnt, build=build)
+
     if build:
+        print('before:', graph)
         graph = labels_from_graphlist(graph, [])
 
     return graph
@@ -217,13 +219,16 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             return tf.constant(node.value)
 
     # Arity 1
-    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1)
+    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
         if prnt:
             return '({}{})'.format(
                 op[type(node.op)]['name'],
                 ast_convert_from_expr_recursive(node.operand, prnt=prnt))
         if build:
-            return [op[type(node.op)]['name'], [ast_convert_from_expr_recursive(node.operand, tensors=tensors, build=build)]]
+            # TODO this makes the operator to ~. should be a unary -.
+            if type(node.op) == ast.USub:
+                return ['-' + str(ast_convert_from_expr_recursive(node.operand, build=True))]
+            return [op[type(node.op)]['name'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
         else:
             return ast_tensor_dict[type(node.op)](
                 ast_convert_from_expr_recursive(node.operand, tensors=tensors))
@@ -232,13 +237,13 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
         if prnt:
             return '({} {} {})'.format(
-                ast_convert_from_expr_recursive(node.left, prnt=prnt),
+                ast_convert_from_expr_recursive(node.left, prnt=True),
                 op[type(node.op)]['name'],
-                ast_convert_from_expr_recursive(node.right, prnt=prnt))
+                ast_convert_from_expr_recursive(node.right, prnt=True))
         if build:
             return [op[type(node.op)]['name'],
-                    [ast_convert_from_expr_recursive(node.left, build=build),
-                     ast_convert_from_expr_recursive(node.right, build=build)]]
+                    [ast_convert_from_expr_recursive(node.left, build=True),
+                     ast_convert_from_expr_recursive(node.right, build=True)]]
         else:
             return ast_tensor_dict[type(node.op)](
                 ast_convert_from_expr_recursive(node.left, tensors=tensors),
@@ -254,9 +259,9 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
         if prnt:
-            return tf_chain_compare([node.left] + node.comparators, node.ops, prnt=prnt)
+            return tf_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
         if build:
-            return tf_chain_compare([node.left] + node.comparators, node.ops, build=build)
+            return tf_chain_compare([node.left] + node.comparators, node.ops, build=True)
         else:
             return tf_chain_compare([node.left] + node.comparators, node.ops, tensors=tensors)
 
@@ -266,14 +271,14 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
         if node.func.id == 'Ifte':
             if prnt:
                 return '(If ({}) then ({}) else ({}))'.format(
-                    ast_convert_from_expr_recursive(node.args[0], prnt=prnt),
-                    ast_convert_from_expr_recursive(node.args[1], prnt=prnt),
-                    ast_convert_from_expr_recursive(node.args[2], prnt=prnt))
+                    ast_convert_from_expr_recursive(node.args[0], prnt=True),
+                    ast_convert_from_expr_recursive(node.args[1], prnt=True),
+                    ast_convert_from_expr_recursive(node.args[2], prnt=True))
             if build:
                 return ['Ifte',
-                        [ast_convert_from_expr_recursive(node.args[0], build=build),
-                         ast_convert_from_expr_recursive(node.args[1], build=build),
-                         ast_convert_from_expr_recursive(node.args[2], build=build)]]
+                        [ast_convert_from_expr_recursive(node.args[0], build=True),
+                         ast_convert_from_expr_recursive(node.args[1], build=True),
+                         ast_convert_from_expr_recursive(node.args[2], build=True)]]
             else:
                 return ast_tensor_dict[node.func.id](tf.dtypes.cast(
                     ast_convert_from_expr_recursive(node.args[0], tensors=tensors), tf.bool),
@@ -284,7 +289,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             if prnt:
                 return '({} {})'.format(node.func.id, ast_convert_from_expr_recursive(node.args[0], prnt=prnt))
             if build:
-                return [node.func.id, [ast_convert_from_expr_recursive(node.args[0], build=build)]]
+                return [node.func.id, [ast_convert_from_expr_recursive(node.args[0], build=True)]]
             else:
                 return tf.dtypes.cast(*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
 
@@ -327,32 +332,28 @@ def tf_chain_bool(values, operation, tensors=None, prnt=False, build=False):
     Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
 
     """
-
-    x = tf.dtypes.cast(ast_convert_from_expr_recursive(values[0], tensors=tensors), tf.bool)
-    if len(values) > 1:
-        if prnt:
-            if len(values) == 2:
-                return '({} {} {})'.format(
-                    values[0],
-                    operation,
-                    values[1])
-            else:
-                print('FUCK')
-                raise
-        if build:
-            if len(values) == 2:
-                return [operation,
-                        [values[0],
-                         values[1]]]
-            else:
-                print('FUCK')
-                raise
-        return operation(x, tf_chain_bool(values[1:], operation, tensors=tensors))
-    else:
-        if prnt:
-            print_warning('w', 'Whats x? {}'.format(x))
-            return str(x)
-        return x
+    if prnt:
+        x = ast_convert_from_expr_recursive(values[0], prnt=True)
+        if len(values) == 2:
+            return '({} {} {})'.format(values[0], operation, values[1])
+        elif len(values) == 1:
+            return x
+        else:
+            raise
+    elif build:
+        x = ast_convert_from_expr_recursive(values[0], build=True)
+        if len(values) == 2:
+            return [operation, [values[0], values[1]]]
+        elif len(values) == 1:
+            return x
+        else:
+            raise
+    elif tensors:
+        x = tf.dtypes.cast(ast_convert_from_expr_recursive(values[0], tensors=tensors), tf.bool)
+        if len(values) > 1:
+            return operation(x, tf_chain_bool(values[1:], operation, tensors=tensors))
+        else:
+            return x
 
 
 def tf_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):

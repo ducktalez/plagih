@@ -2,7 +2,7 @@ import sys;
 
 sys.path.append('modules/')  # add directory 'modules' to the current path
 import plagih.modules.plagih_gp_base_class_xai as plagih
-from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, save_data_pickle, load_operators_from_csv
+from plagih.modules.plagih_gp_base_class_xai import data_from_csv, data_load_pickle, save_data_pickle, load_operators_from_csv, load_pop_from_csv
 from pathlib import Path
 
 
@@ -23,7 +23,7 @@ def create_config_dict():
         'display': 'ggewsiivoa',  # To display absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
-        'tree_depth_base': 7,
+        'tree_depth_base': 8,
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
@@ -35,8 +35,8 @@ def create_config_dict():
                     'sympify_errors': 'y',
                     'genepool_size': 'y'
                     },
-        'period': {'time_monitor': 60 * 1,  # in sec
-                   'time_save': 60 * 1,  # in sec
+        'period': {'time_monitor': 60 * 0.5,  # in sec
+                   'time_save': 60 * 0.5,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
         'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0,
@@ -67,24 +67,34 @@ file_dict = {
     'samples_file': Path('../mountaincar/karoo_files/data_samples/behaviour_samples.csv'),
     'samples_pickle': Path('../mountaincar/karoo_files/data_samples/plagih_data_prepared.p'),
     'operators_file': Path('../mountaincar/karoo_files/operators/operators.csv'),
-    'restore_pop': Path('runs/backup_pops/test_pop_v0.csv')
+
+    'backup_pop': Path('runs/Best_of/old_v1/population_new.csv')
+
 }
+
+# gp.data_from_pickle(file_dict['samples_pickle'])
+tree_v1 = ['Ifte', '<', '0.0', '2.0', 'observation1', '0.0']
+tree_v1_modify = [0, 1, 0, 0, 1, 1]
+tree_v2 = ['Ifte', '<', '0.0', 'Ifte', 'observation1', '0.0', 'True', '2.0', '1.0']
+tree_v2_modify = [0, 1, 0, 0, 1, 1, 1, 0, 0]
+tree_v3 = ['Ifte', '&', '2', '0', '<=', '<=', 'Mini', 'observation1', 'observation1', '+', '+', '-', '*', '0.7', '*', '0.03', '*', '0.008', '-0.07', '**',
+           '-0.09', '**', '0.3', '**', '+', '2', '+', '2', '+', '4', 'observation0', '0.38', 'observation0', '0.25', 'pos', '0.9']
+tree_v3_modify = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 config_dict = create_config_dict()
 
-# prepared_data = data_from_csv(file_dict['samples_file'])
 # data_save_pickle(prepared_data, file_dict['samples_pickle'])
+# prepared_data = data_from_csv(file_dict['samples_file'])
 prepared_data = data_load_pickle(file_dict['samples_pickle'])
 op_array = load_operators_from_csv(file_dict['operators_file'])
+pop = load_pop_from_csv(file_dict['backup_pop'])
 
 gp = plagih.ExplainableGP(config_dict)
 gp.activate_data(prepared_data)
 gp.activate_operators(op_array)
+gp.activate_pop(pop)
 
-# gp.data_from_pickle(file_dict['samples_pickle'])
+gp.load_origin_tree(label_list=tree_v2, permanent_list=tree_v2_modify)
 
-
-gp.load_origin_tree(label_list=label_list, permanent_list=permanent_list)
-# gp.load_origin_tree(label_list=fix_labels)
 
 gp.plagih_gp_run()

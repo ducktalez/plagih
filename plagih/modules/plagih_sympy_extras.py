@@ -1,5 +1,5 @@
 """
-This class enrichens the python-core "sympy".
+This class enrichens the python-core 'sympy'.
 Sympy is used to reduce the functions to their most basic form.
 E. g., it reduces '1+1+a' to 'a+2' and thus saves much computation power.
 Sympy does not have some functions, e. g. 'if a then b else c', which we want to use though.

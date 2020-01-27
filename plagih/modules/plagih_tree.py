@@ -799,7 +799,8 @@ def tree_get_label(tree, node_id):
     """
 
     """
-    return tree[N_label][node_id]
+    label = tree[N_label][int(node_id)]
+    return label
 
 
 def xtype_get_constant(label, node_arity=None, only_float=True):
@@ -1046,10 +1047,9 @@ def test_trees(number):
 #     return int(tree[N_arity][int(node_id)])
 
 
-def tree_set_label(tree, node_id, label, karoo=False):
-    pass
-    #TODO
-    # FUCK TODOTODO
+def tree_set_label(tree, node_id, label):
+    tree[N_label][int(node_id)] = label
+    return tree
 
 
 def tree_iterate(tree, karoo=False):
@@ -1057,7 +1057,7 @@ def tree_iterate(tree, karoo=False):
         start = 1
     else:
         start = 0
-    node_id_list = [node_id for node_id in tree[N_id]]
+    node_id_list = [int(node_id) for node_id in tree[N_id][start:]]
     return node_id_list
 
 
@@ -1071,29 +1071,15 @@ def tree_node_get_child(tree, node_id, child_num, karoo=False):
 
 def tree_normalize_exponentiation(tree):
 
-    # 1. ** ahould have an int as second number
-    for node_id in tree_iterate(tree):
+    # 1. ** should have an int as second number
+    for node_id in tree_iterate(tree, karoo=True):
         if tree_get_label(tree, node_id) == '**':
             child_id = tree_node_get_child(tree, node_id, 1, karoo=True)  # get second argument
             old_power = tree_get_label(tree, child_id)
-            new_power = float(int(old_power))
-            tree_set_label(tree, child_id, new_power, karoo=True)
-    return
+            try:
+                new_power = float(int(float(old_power)))
+                tree = tree_set_label(tree, child_id, new_power)
+            except ValueError:
+                pass  # sfeh: This may actually take some time. Every tree gets checked any many have '**'.
+    return tree
 
-def test():
-    core = test_trees(4)
-    karoo_tree = tree_convert_plagih_to_karoo(core)
-    another_list = ['Ifte', 'And', '0', '2', '<=', '<=', 'Mini', 'observation1', 'observation1', '+',
-                    '+', '*', '*', '0.7', '*', '0.03', '**', '0.03', '-0.07', '**', '**', '-0.09', '+', '4', '+', '2',
-                    '+', '2', 'observation0', '-0.09', 'observation0', '0.38', 'observation0', '0.25']
-    label_list = ['&', 'a', 'True']
-    arity_list = [3, 2, 0, 0, 0, 0]
-    tree = karoo_tree_from_labellist(label_list)
-    print(tree)
-    tree_pretty_print(tree, karoo=True)
-
-    # x = tree_check_all(karoo_tree)
-    # print(x)
-    return
-
-# test()

@@ -24,7 +24,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from pathlib import Path
-from itertools import chain
 from plagih.modules.plagih_eval import *
 from plagih.modules.printing import *
 from plagih.modules.plagih_pop import *
@@ -79,7 +78,7 @@ class ExplainableGP(object):
 
         self.time_start = time.perf_counter()
         self.tree_meta = {}
-        self.parsimony_best_meta = {}
+        self.parsimony_best_meta = {}  #tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
 
@@ -317,12 +316,6 @@ class ExplainableGP(object):
         path = self.path / 'backup'
         if not Path.is_dir(path):
             Path.mkdir(path)
-
-        # pickle.dump(self, Path.open(path / 'backup.p', 'wb'))
-        # TODO, pickle too large?
-
-    def restart_basics(self, pareto_path, last_pop_path):
-        pass
 
     def file_conclusion(self, path, datetime=None):
 
@@ -597,6 +590,20 @@ class ExplainableGP(object):
 
         return
 
+    def gen_reproduce_olymp(self, repro_rate, tourn_size):
+
+        """
+        A single Tree from the prior generation is copied without mutation
+        """
+
+        for n in range(repro_rate):  # quantity of Trees to be copied without mutation
+            expr = np.random.choice(self.parsimony_best_meta)['expr_sym']
+            label_list = ast_convert_from_expr(expr)
+            olymp_winner = karoo_tree_from_labellist()
+            self.popnew_append(tourn_winner, last_modification='repro')  # i know, tests are not necessary...
+
+        return
+
     def gen_mutate_point(self, repro_rate, tourn_size):
 
         """
@@ -734,6 +741,7 @@ class ExplainableGP(object):
         """
         tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
         tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+        tree = tree_normalize_exponentiation(tree)
         tree = tree_set_history(tree, last_modification)
         if not tree_test_check_children(tree):
             self.printpl('e', 'Tree is not consistent:\n{}'.format(tree))
@@ -1767,18 +1775,6 @@ def load_operators_from_csv(op_csv_path):
             op_array[b2f2f][arity].append(label)
 
     return op_array
-
-
-def labels_from_algo(expr_array, expr):
-    for x in expr_array:
-        if type(x) is not list:
-            expr.append(x)
-
-    only_lists = [x for x in expr_array if (type(x) == list)]
-    if only_lists:
-        lists_removed = list(chain(*only_lists))
-        expr = labels_from_algo(lists_removed, expr)
-    return expr
 
 
 def load_pop_from_csv(pop_csv):

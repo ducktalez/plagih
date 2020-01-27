@@ -22,16 +22,11 @@ def test_sympify():
 
 def test_plagih_tree():
     expr_raw = '(Ifte((b < (b / (Maxi((((((b - b) + (Mini(0.2, b))) / 2) ** (Maxi(1, b))) ** 0), a)))), 0, (Ifte((True), 2, 1))))'
-    expr_1 = '-(5)'
-    list1 = ast_convert_from_expr(expr_1, build=True)
-    tree1 = karoo_tree_from_labellist(list1)
 
-    expr_raw = '-0.9'
     label_list = ast_convert_from_expr(expr_raw, build=True)
-    print('labellist:', label_list, type(label_list[1]))
-    label_list = [-2]
     olymp_winner = karoo_tree_from_labellist(label_list)
     print(olymp_winner)
+
     return
 
 

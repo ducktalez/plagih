@@ -251,19 +251,19 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if prnt:
-            return tf_chain_bool(node.values, op[type(node.op)]['name'], prnt=True)
+            return ast_chain_bool(node.values, op[type(node.op)]['name'], prnt=True)
         if build:
-            return tf_chain_bool(node.values, op[type(node.op)]['name'], build=True)
+            return ast_chain_bool(node.values, op[type(node.op)]['name'], build=True)
         else:
-            return tf_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors=tensors)
+            return ast_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors=tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
         if prnt:
-            return tf_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
+            return ast_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
         if build:
-            return tf_chain_compare([node.left] + node.comparators, node.ops, build=True)
+            return ast_chain_compare([node.left] + node.comparators, node.ops, build=True)
         else:
-            return tf_chain_compare([node.left] + node.comparators, node.ops, tensors=tensors)
+            return ast_chain_compare([node.left] + node.comparators, node.ops, tensors=tensors)
 
     # Arity x, all custom functions
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
@@ -327,10 +327,11 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
         raise TypeError(node)
 
 
-def tf_chain_bool(values, operation, tensors=None, prnt=False, build=False):
+def ast_chain_bool(values, operation, tensors=None, prnt=False, build=False):
     """
     Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
-
+        a & b
+    --> values[0] operation values[1]
     """
     if prnt:
         x = ast_convert_from_expr_recursive(values[0], prnt=True)
@@ -351,12 +352,12 @@ def tf_chain_bool(values, operation, tensors=None, prnt=False, build=False):
     elif tensors:
         x = tf.dtypes.cast(ast_convert_from_expr_recursive(values[0], tensors=tensors), tf.bool)
         if len(values) > 1:
-            return operation(x, tf_chain_bool(values[1:], operation, tensors=tensors))
+            return operation(x, ast_chain_bool(values[1:], operation, tensors=tensors))
         else:
             return x
 
 
-def tf_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):
+def ast_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):
     """
     Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
@@ -367,7 +368,7 @@ def tf_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):
 
     if len(comparators) > 2:
         print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')
-        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), tf_chain_compare(comparators[1:], ops[1:], tensors=tensors))
+        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if prnt:
             return '({} {} {})'.format(x, op[type(ops[0])]['name'], y)

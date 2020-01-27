@@ -78,6 +78,7 @@ test_1(45)
 
 import time
 
+
 class WhatsBetter:
 
     def __init__(self):

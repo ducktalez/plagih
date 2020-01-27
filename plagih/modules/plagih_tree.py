@@ -11,6 +11,34 @@ sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
 
+def util_tree_copy(population, tree_id):
+    """
+    copy a tree from a population
+    """
+    return np.copy(population[tree_id])
+
+
+def pop_random(population):
+    """
+    Returns a random tree_id from a population
+    """
+    return np.random.randint(1, len(population))
+
+
+def pop_copy_genepool(population_new, gene_pool, gen_id):
+    """
+    Copy the genepool of a gen
+    """
+    pop_y = ['Population Selection in Generation {}.'.format(str(gen_id))]  # empty list
+
+    for i, (tree_num, tree_meta) in enumerate(gene_pool.items()):
+        tree_copy = util_tree_copy(population_new, tree_num)
+        tree_copy = tree_set_id(tree_copy, i + 1)
+        pop_y.append(tree_copy)
+
+    return pop_y
+
+
 class Plagih_Tree():
 
     def __init__(self):
@@ -55,12 +83,6 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
         return
 
 
-def karoo_tree_clear_meta(tree):
-    tree[T_fitness][1] = ''
-    tree[T_parsimony][1] = ''
-    return tree
-
-
 def tree_set_id(tree, tree_id):
     tree[TR_ID][1] = tree_id
     return tree
@@ -79,6 +101,9 @@ def tree_node_get_arity(tree, node_id, karoo=False):
 
 
 def round_constant(constant, accuracy):
+    """
+    Rounding float constants
+    """
     constant = float(constant)
     new_const = round(constant * accuracy) / accuracy
     if new_const == 0 and constant > 0:
@@ -573,7 +598,7 @@ def evolve_c_buffer(tree, node_id, karoo=False):
 
 def tree_convert_karoo_to_plagih(karoo_tree):
     """
-    karoo has a first row with nonsense and nodes start with 1
+    tests has a first row with nonsense and nodes start with 1
     plagih has no first row and nodes start with 0
     """
 
@@ -586,7 +611,7 @@ def tree_convert_karoo_to_plagih(karoo_tree):
 
 def tree_convert_plagih_to_karoo(plagih_tree):
     """
-    karoo has a first row with nonsense and nodes start with 1
+    tests has a first row with nonsense and nodes start with 1
     plagih has no first row and nodes start with 0
     """
     first_col = tree_init_first_column()
@@ -1010,7 +1035,7 @@ def test_trees(number):
     core = core_from_labels(label_list, arity_list)
     return core
 #
-# def tree_node_get_arity(tree, node_id, karoo=False):
+# def tree_node_get_arity(tree, node_id, tests=False):
 #     node_id = int(node_id) - 1
 #
 #     return int(tree[N_arity][int(node_id)])

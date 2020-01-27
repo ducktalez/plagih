@@ -27,6 +27,7 @@ from pathlib import Path
 from itertools import chain
 from plagih.modules.plagih_eval import *
 from plagih.modules.printing import *
+from plagih.modules.plagih_pop import *
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -44,7 +45,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # todo. "zufällige" Kandidaten bedeuten auch: Alle branches ausprobieren- mehrfach branch mutation?
 # TODO: TED with values- just assume values are elements? 0.12 == 0.1 distance wise? ...
 # Genepool_create: TODO stop equal candidates from being in the gene pool multiple times?
-# ( and { in karoo and TED. sfeh/todo: this can be optimized to create a nicer brackets-styled algorithm
+# ( and { in tests and TED. sfeh/todo: this can be optimized to create a nicer brackets-styled algorithm
 # Todos in evolve_subtree_depth_choose
 # # TODO consider tree size of last tree,
 # # TODO consider random tree size,
@@ -54,7 +55,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # TODO tree_choose_node_id only works for same arity functions
 # todo random samples out of dataset values as new constants?
 # TODO zoo and inf and nan in plagih_sympify... other solution?
-# TODO what is "swim" in karoo, what is it good for?
+# TODO what is "swim" in tests, what is it good for?
 # todo add stop after we achieved our goal
 # TODo check memory usage?
 # random TODO grow depth anpassen!
@@ -289,6 +290,10 @@ class ExplainableGP(object):
         self.op_array = op_array
         return
 
+    def activate_pop(self, pop):
+        self.population_new = pop
+        return
+
     def data_pickle_save(self):
         """
         save all data_csv_path every few rounds to restore them
@@ -318,12 +323,6 @@ class ExplainableGP(object):
 
     def restart_basics(self, pareto_path, last_pop_path):
         pass
-
-    def backup_load_pickle(self, pickle_nackup_path):
-
-        with Path.open(pickle_nackup_path, 'rb') as file:
-            self = pickle.load(file)
-        return
 
     def file_conclusion(self, path, datetime=None):
 
@@ -403,7 +402,7 @@ class ExplainableGP(object):
     #   Population specific                       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def pop_data_load_backup_population(self, population_backup_file):
+    def load_backup_population(self, population_backup_file):
         """
         Loads a saved population from an earlier run
         """
@@ -962,7 +961,7 @@ class ExplainableGP(object):
     #     right_top_id = int(right_ids[0])
     #     left_top_id = int(left_ids[0])
     #
-    #     r_labels, r_aritys = tree_branch_get_label_list(right_parent, right_ids, karoo=True)
+    #     r_labels, r_aritys = tree_branch_get_label_list(right_parent, right_ids, tests=True)
     #
     #     if len(right_ids) == 1:
     #         # if branch of new parent contains only one node (terminal)
@@ -978,7 +977,7 @@ class ExplainableGP(object):
     #     else:
     #
     #         right_core = core_from_labels(r_labels, r_aritys)
-    #         left_parent = tree_insert_subtree(left_parent, right_core, left_ids, karoo=True)
+    #         left_parent = tree_insert_subtree(left_parent, right_core, left_ids, tests=True)
     #         left_parent = self.treegp_crossover_tree_prune(left_parent, self.config['tree_depth_max'])  # sfeh: not sure if this is necessary?
     #
     #     return left_parent
@@ -1448,12 +1447,6 @@ class ExplainableGP(object):
     #   Methods to display output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def fitness_dummy_get(self):
-        if self.kernel == 'regression':
-            return float('inf')
-        else:
-            return float(0)
-
     def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', variance=None):
 
         x, y = [], []
@@ -1510,20 +1503,6 @@ class ExplainableGP(object):
         return
 
 
-def util_tree_copy(population, tree_id):
-    """
-    copy a tree from a population
-    """
-    return np.copy(population[tree_id])
-
-
-def pop_random(population):
-    """
-    Returns a random tree_id from a population
-    """
-    return np.random.randint(1, len(population))
-
-
 def pop_util_copy(population_x, title):
     """
     Copy one population to another.
@@ -1553,20 +1532,6 @@ def insert_function_or_term(depth, depth_goal):
         decision = np.random.choice(['terminal', 'function'])
 
     return decision
-
-
-def pop_copy_genepool(population_new, gene_pool, gen_id):
-    """
-    Copy the genepool of a gen
-    """
-    pop_y = ['Population Selection in Generation {}.'.format(str(gen_id))]  # empty list
-
-    for i, (tree_num, tree_meta) in enumerate(gene_pool.items()):
-        tree_copy = util_tree_copy(population_new, tree_num)
-        tree_copy = tree_set_id(tree_copy, i + 1)
-        pop_y.append(tree_copy)
-
-    return pop_y
 
 
 def pop_enum_trees(population):
@@ -1789,7 +1754,6 @@ def load_operators_from_csv(op_csv_path):
 def labels_from_algo(expr_array, expr):
     for x in expr_array:
         if type(x) is not list:
-            # print('->', x)
             expr.append(x)
 
     only_lists = [x for x in expr_array if (type(x) == list)]
@@ -1799,19 +1763,18 @@ def labels_from_algo(expr_array, expr):
     return expr
 
 
-def data_recover_pop_from_csv(pop_csv):
+def load_pop_from_csv(pop_csv):
 
     """
     This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
     replaces population_a in the karoo_gp/runs/[date-time]/ directory.
     """
 
-    with Path.open(pop_csv, 'rb') as csv_file:
+    with Path.open(pop_csv, 'r') as csv_file:
         target = csv.reader(csv_file, delimiter=',')
         n = 0  # track row count
 
         for row in target:
-            print('row', row)
 
             n = n + 1
             if n == 1:
@@ -1831,9 +1794,7 @@ def data_recover_pop_from_csv(pop_csv):
                     else:
                         tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
 
-                if tree.shape[0] == 13:
+                if tree.shape[0] == T_num_lines:
                     population_a.append(tree)  # append complete Tree to population list
 
-    print('\n', population_a)
-
-    return
+    return population_a

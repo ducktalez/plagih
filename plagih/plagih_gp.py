@@ -51,26 +51,11 @@ def create_config_dict():
     return config_dict
 
 
-fix_labels = ['Ifte',
-              '&', '2', '0',
-              '<=', '<=',
-              'Mini', 'observation1', 'observation1', '+',
-              '+', '-', '*', '0.7',
-              '*', '0.03', '*', '0.008', '-0.07', '**',
-              '-0.09', '**', '0.3', '**', '+', '2',
-              '+', '2', '+', '4', 'observation0', '0.38',
-              'observation0', '0.25', 'pos', '0.9']
-label_list = ['Ifte', '<', '0.0', 'Ifte', 'observation1', '0.0', 'True', '2.0', '0.0']
-permanent_list = [0, 1, 0, 0, 1, 1, 1, 0, 0]
-
 file_dict = {
     'samples_file': Path('../mountaincar/karoo_files/data_samples/behaviour_samples.csv'),
     'samples_pickle': Path('../mountaincar/karoo_files/data_samples/plagih_data_prepared.p'),
     'operators_file': Path('../mountaincar/karoo_files/operators/operators.csv'),
-
-    'backup_pop': Path('runs/Best_of/old_v1/population_new.csv')
-
-}
+    'backup_pop': Path('runs/Best_of/old_v1/population_new.csv')}
 
 # gp.data_from_pickle(file_dict['samples_pickle'])
 tree_v1 = ['Ifte', '<', '0.0', '2.0', 'observation1', '0.0']
@@ -95,6 +80,5 @@ gp.activate_operators(op_array)
 gp.activate_pop(pop)
 
 gp.load_origin_tree(label_list=tree_v2, permanent_list=tree_v2_modify)
-
 
 gp.plagih_gp_run()

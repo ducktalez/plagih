@@ -17,10 +17,13 @@ patches.append(Circle((0.25, 0.5), radii))
 patches.append(Circle((0.75, 0.5), radii))
 
 colors = 100*np.random.rand(len(patches))
+colors = [20, 20, 20]
 p = PatchCollection(patches, alpha=0.8)
 p.set_array(np.array(colors))
 ax.add_collection(p)
-fig.colorbar(p, ax=ax)
+# fig.colorbar(p, ax=ax)
 
+ax.grid()
+plt.axis('equal')
 plt.axis('off')
 plt.show()

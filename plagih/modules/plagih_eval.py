@@ -160,7 +160,27 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
     tree = ast.parse(expr, mode='eval').body
 
-    return ast_convert_from_expr_recursive(tree, tensors=tensors, prnt=prnt, build=build)
+    graph = ast_convert_from_expr_recursive(tree, tensors=tensors, prnt=prnt, build=build)
+    if build:
+        graph = labels_from_graphlist(graph, [])
+
+    return graph
+
+
+def labels_from_graphlist(expr_array, expr):
+    """
+    Returns a list
+    """
+    for x in expr_array:
+        if type(x) is not list:
+            expr.append(x)
+
+    only_lists = [x for x in expr_array if (type(x) == list)]
+    if only_lists:
+        from itertools import chain
+        lists_removed = list(chain(*only_lists))
+        expr = labels_from_graphlist(lists_removed, expr)
+    return expr
 
 
 def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):

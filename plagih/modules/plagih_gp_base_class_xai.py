@@ -177,6 +177,7 @@ class ExplainableGP(object):
         """
 
         gp_list = [('Reproduce gen', self.gen_reproduce),
+                   ('Reproduce Olymp', self.gen_reproduce_olymp),
                    ('Point Mutation', self.gen_mutate_point),
                    ('Point Filter', self.gen_mutate_filter),
                    ('Branch nodebased', self.gen_mutate_branch),
@@ -192,7 +193,6 @@ class ExplainableGP(object):
             self.gen_prepare_parameters()
 
             for name, gp_function in gp_list:
-                self.print_g('gggg', '{}...'.format(name))
                 evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 time_evolve = time.perf_counter()
 
@@ -597,10 +597,15 @@ class ExplainableGP(object):
         """
 
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
-            expr = np.random.choice(self.parsimony_best_meta)['expr_sym']
-            label_list = ast_convert_from_expr(expr)
-            olymp_winner = karoo_tree_from_labellist()
-            self.popnew_append(tourn_winner, last_modification='repro')  # i know, tests are not necessary...
+            if self.parsimony_best_meta:
+                meta = np.random.choice(list(self.parsimony_best_meta.values()))
+                expr_raw = meta['expr_raw']
+                print('raw', expr_raw)
+                label_list = ast_convert_from_expr(expr_raw, build=True)
+                print('label_list', label_list)
+                olymp_winner = karoo_tree_from_labellist(label_list)
+                self.popnew_append(olymp_winner, last_modification='repro')
+                print('Olymp winner:\n', olymp_winner)
 
         return
 

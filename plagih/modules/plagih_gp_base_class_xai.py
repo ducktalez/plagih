@@ -138,7 +138,7 @@ class ExplainableGP(object):
         sys.exit()
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Top level      functions                  |
+    #   Top dim_y      functions                  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def file_directories_create(self):
@@ -545,7 +545,7 @@ class ExplainableGP(object):
             parsim = meta['parsimony']
             fitness_train = meta['fitness_train']
 
-            # 3. is the tree better than the current best at this parsimony level?
+            # 3. is the tree better than the current best at this parsimony dim_y?
             if parsim in self.parsimony_best_meta:
                 comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
                 if self.fitness_compare(fitness_train, comp_fit):
@@ -1011,7 +1011,7 @@ class ExplainableGP(object):
         for depth in range(0, depth_goal):
             next_xtype_list = []
 
-            if depth == depth_goal - 1:  # now, we are on the lowest level.
+            if depth == depth_goal - 1:  # now, we are on the lowest dim_y.
 
                 for t in todo_xtypes:  # Build terminals now.
                     label = self.xtype_choose_term(t)
@@ -1085,7 +1085,7 @@ class ExplainableGP(object):
             label_list, arity_list = self.invent_label_list(old_xtype, depth_goal)  # Build a complete tree
 
             if not label_list:
-                self.printpl('ww', 'Wanted to branch-mutate a node that is on the lowest level')
+                self.printpl('ww', 'Wanted to branch-mutate a node that is on the lowest dim_y')
                 return tree
 
             core_insert = core_from_labels(label_list, arity_list)
@@ -1097,7 +1097,7 @@ class ExplainableGP(object):
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
-            This could be calculated respectively to the parsimony level
+            This could be calculated respectively to the parsimony dim_y
             which the tree might have up his sleeve
             """
             pass

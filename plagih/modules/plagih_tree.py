@@ -578,7 +578,7 @@ def evolve_c_buffer(tree, node_id, karoo=False):
 
     for n in range(0, len(tree[N_id])):  # increment through all nodes in array 'tree'
 
-        # sum up all arities of the parent level
+        # sum up all arities of the parent dim_y
         if int(tree[N_depth][n]) == int(tree[N_depth][node_id]) - 1:  # find parent nodes at the prior depth
             if tree[N_arity][n] != '':
                 parent_arity_sum += int(tree[N_arity][n])  # sum arities of all parent nodes at the prior depth

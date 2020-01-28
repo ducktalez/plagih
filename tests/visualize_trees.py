@@ -11,31 +11,45 @@ def caltulate_grid_granularity(tree):
 
 
 def label(xy, text):
-    y = xy[1]
-    # y = xy[1] - 0.01  # shift y-value for label so that it's below the artist
-    plt.text(xy[0], y, text, ha="center", family='sans-serif', size=14)
-
-
-def link_nodes(a, b):
-    # add a line
-    line2 = mlines.Line2D(a, b, lw=2., alpha=0.9)
-    colors = np.linspace(0, 1, 2)
-    collection = PatchCollection(patches, cmap=plt.cm.hsv, alpha=0.3)
-    collection.set_array(np.array(colors))
-    ax.add_collection(collection)
-    ax.add_line(line2)
+    y = xy[1] - 0.01  # shift y-value for label so that it's below the artist
+    plt.text(xy[0], y, text, ha="center", family='sans-serif', size=12)
     return
 
 
-def add_circle(grid_num):
+def add_circle(level, pos_x, name):
+    grid_num = get_grid(level, pos_x)
     circle = mpatches.Circle(grid[grid_num], 0.05, ec="none")
+    label(grid[grid_num], str(name))
     patches.append(circle)
-    label(grid[grid_num], "Circle")
+    return
 
 
-def get_grid(pos_y, pos_x):
+def add_box(level, pos_x):
+    # add a fancy box
+    grid_num = get_grid(level, pos_x)
+    box_width = 0.1
+    box_height = 0.05
+    fancybox = mpatches.FancyBboxPatch(
+        grid[grid_num] - [box_width / 2, box_height / 2], box_width, box_height,
+        boxstyle=mpatches.BoxStyle("Round", pad=0.02))
+    label(grid[grid_num], "Ifte")
+    patches.append(fancybox)
+    return
 
-    num = pos_x + pos_y * dim_x
+
+def add_link(aa, bb):
+    # add a line
+    a = grid[get_grid(aa[0], aa[1])]
+    b = grid[get_grid(bb[0], bb[1])]
+    x, y = np.array([[a[0], b[0]], [a[1], b[1]]])
+    line = mlines.Line2D(x, y, lw=2., alpha=0.9)
+    ax.add_line(line)
+    return line
+
+
+def get_grid(lvl, pos_x):
+
+    num = lvl * dim_x + pos_x
     return num
 
 
@@ -45,70 +59,40 @@ def make_grid(dim_x, dim_y):
     return grid
 
 
-def doit():
-    # link_nodes(grid[0], grid[1])
-    # link_nodes(grid[2], grid[3])
-    # link_nodes(grid[3], grid[4])
-
-    label(grid[0], "0")
-    label(grid[1], "1")
-    label(grid[2], "2")
-    label(grid[3], "3")
-    label(grid[4], "4")
-    label(grid[5], "5")
-    label(grid[6], "6")
-    label(grid[7], "7")
-    label(grid[8], "8")
-    label(grid[9], "9")
-    label(grid[10], "10")
-    label(grid[11], "11")
-    label(grid[12], "12")
-    label(grid[13], "13")
-    label(grid[14], "14")
-
-    # circle2 = mpatches.Circle(grid[1], 0.05, ec="none")
-    # patches.append(circle2)
-    # label(grid[1], "Circle2")
-
-    # add_circle(0, 1)
-    # numer = get_grid(1, 2)
-    # print(numer)
-    # add_circle(numer)
-
-    # add a fancy box
-    grid_num = get_grid(0,2)
-    box_width = 0.1
-    box_height = 0.05
-    fancybox = mpatches.FancyBboxPatch(
-        grid[grid_num] - [box_width / 2, box_height / 2], box_width, box_height,
-        boxstyle=mpatches.BoxStyle("Round", pad=0.02))
-    patches.append(fancybox)
-    # label(grid[grid_num], "Ifte")
-    #
-    # # add a line
-    # x, y = np.array([[-0.06, 0.0, 0.1], [0.05, -0.05, 0.05]])
-    # line = mlines.Line2D(x + grid[8, 0], y + grid[8, 1], lw=2., alpha=0.9)
-    # label(grid[8], "grid 8")
-    #
-    colors = np.linspace(0, 1, len(patches))
-    collection = PatchCollection(patches, cmap=plt.cm.hsv, alpha=0.3)
-    collection.set_array(np.array(colors))
-    ax.add_collection(collection)
-    # ax.add_line(line)
+def auto_enum():
+    for i in range(0, len(grid)):
+        label(grid[i], str(i))
 
 
 fig, ax = plt.subplots()
-# create 3x3 grid to plot the artists
-dim_x = 5
+dim_x = 7
 dim_y = 3
 grid = make_grid(dim_x, dim_y)
 
 patches = []
 
-doit()
+add_box(0, 3)
 
-# plt.axis('equal')
+add_circle(1, 1, '<')
+add_circle(1, 3, '0')
+add_circle(1, 5, '2')
+add_circle(2, 0, 'obs')
+add_circle(2, 2, '0')
+
+colors = np.linspace(1, 0, 2)
+collection = PatchCollection(patches, cmap=plt.cm.hsv, alpha=0.9)
+collection.set_array(np.array(colors))
+ax.add_collection(collection)
+
+add_link((0, 3), (1, 1))
+add_link((0, 3), (1, 3))
+add_link((0, 3), (1, 5))
+add_link((1, 1), (2, 0))
+add_link((1, 1), (2, 2))
+
 plt.axis('off')
+plt.axis('scaled')
+
 plt.tight_layout()
 
 plt.show()

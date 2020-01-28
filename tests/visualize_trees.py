@@ -1,29 +1,57 @@
-import numpy as np
-from matplotlib.patches import Circle, Wedge, Polygon
-from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.path as mpath
+import matplotlib.lines as mlines
+import matplotlib.patches as mpatches
+from matplotlib.collections import PatchCollection
 
-# Fixing random state for reproducibility
-np.random.seed(19680801)
+
+def label(xy, text):
+    y = xy[1] - 0.15  # shift y-value for label so that it's below the artist
+    plt.text(xy[0], y, text, ha="center", family='sans-serif', size=14)
 
 
 fig, ax = plt.subplots()
+# create 3x3 grid to plot the artists
+grid = np.mgrid[0.2:0.8:3j, 0.2:0.8:3j].reshape(2, -1).T
 
-resolution = 50  # the number of vertices
-radii = 0.05
 patches = []
-patches.append(Circle((0.5, 0.8), radii))
-patches.append(Circle((0.25, 0.5), radii))
-patches.append(Circle((0.75, 0.5), radii))
 
-colors = 100*np.random.rand(len(patches))
-colors = [20, 20, 20]
-p = PatchCollection(patches, alpha=0.8)
-p.set_array(np.array(colors))
-ax.add_collection(p)
-# fig.colorbar(p, ax=ax)
+# add a circle
+circle = mpatches.Circle(grid[0], 0.1, ec="none")
+patches.append(circle)
+label(grid[0], "Circle")
 
-ax.grid()
+# add a rectangle
+circle2 = mpatches.Circle(grid[1], 0.1, ec="none")
+patches.append(circle2)
+label(grid[1], "Rectangle")
+
+# add an ellipse
+ellipse = mpatches.Ellipse(grid[4], 0.2, 0.1)
+patches.append(ellipse)
+label(grid[4], "Ellipse")
+
+# add a fancy box
+fancybox = mpatches.FancyBboxPatch(
+    grid[7] - [0.025, 0.05], 0.05, 0.1,
+    boxstyle=mpatches.BoxStyle("Round", pad=0.02))
+patches.append(fancybox)
+label(grid[7], "FancyBboxPatch")
+
+# add a line
+x, y = np.array([[-0.06, 0.0, 0.1], [0.05, -0.05, 0.05]])
+line = mlines.Line2D(x + grid[8, 0], y + grid[8, 1], lw=5., alpha=0.3)
+label(grid[8], "Line2D")
+
+colors = np.linspace(0, 1, len(patches))
+collection = PatchCollection(patches, cmap=plt.cm.hsv, alpha=0.3)
+collection.set_array(np.array(colors))
+ax.add_collection(collection)
+ax.add_line(line)
+
 plt.axis('equal')
 plt.axis('off')
+plt.tight_layout()
+
 plt.show()

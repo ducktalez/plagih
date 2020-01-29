@@ -24,7 +24,7 @@ def create_config_dict():
         'display': 'ggewsiivoa',  # To display absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_uniform',
-        'tree_depth_base': 8,
+        'tree_depth_base': 10,
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
@@ -44,7 +44,7 @@ def create_config_dict():
                          'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
                          'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
                          'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
-                         'Create Random': 0.2},
+                         'Create Random': 0.3},
         'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }
@@ -65,6 +65,6 @@ gp.activate_operators(op_array)
 # pop = load_pop_from_csv(MountainCarExamples.files['backup_pop'])
 # gp.activate_pop(pop)
 
-gp.load_origin_tree(label_list=MountainCarExamples.tree_v2, permanent_list=MountainCarExamples.tree_v2_modify)
+gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, permanent_list=MountainCarExamples.tree_v2_modify)
 
 gp.plagih_gp_run()

@@ -24,7 +24,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from pathlib import Path
-from itertools import chain
 from plagih.modules.plagih_eval import *
 from plagih.modules.printing import *
 from plagih.modules.plagih_pop import *
@@ -79,7 +78,7 @@ class ExplainableGP(object):
 
         self.time_start = time.perf_counter()
         self.tree_meta = {}
-        self.parsimony_best_meta = {}
+        self.parsimony_best_meta = {}  #tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
 
@@ -139,7 +138,7 @@ class ExplainableGP(object):
         sys.exit()
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Top level      functions                  |
+    #   Top dim_y      functions                  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def file_directories_create(self):
@@ -178,6 +177,7 @@ class ExplainableGP(object):
         """
 
         gp_list = [('Reproduce gen', self.gen_reproduce),
+                   ('Reproduce Olymp', self.gen_reproduce_olymp),
                    ('Point Mutation', self.gen_mutate_point),
                    ('Point Filter', self.gen_mutate_filter),
                    ('Branch nodebased', self.gen_mutate_branch),
@@ -193,7 +193,6 @@ class ExplainableGP(object):
             self.gen_prepare_parameters()
 
             for name, gp_function in gp_list:
-                self.print_g('gggg', '{}...'.format(name))
                 evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 time_evolve = time.perf_counter()
 
@@ -317,12 +316,6 @@ class ExplainableGP(object):
         path = self.path / 'backup'
         if not Path.is_dir(path):
             Path.mkdir(path)
-
-        # pickle.dump(self, Path.open(path / 'backup.p', 'wb'))
-        # TODO, pickle too large?
-
-    def restart_basics(self, pareto_path, last_pop_path):
-        pass
 
     def file_conclusion(self, path, datetime=None):
 
@@ -525,7 +518,7 @@ class ExplainableGP(object):
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
         tree_origin = self.origin['tree'].copy()
-        origin_ids = tree_get_mutatable_list(tree_origin, no_root=True)
+        origin_ids = tree_get_mutatable_nodes(tree_origin, no_root=True)
 
         for tree_id in range(1, self.config['pop_max'] + 1):
             # vary this tree with mutation
@@ -552,7 +545,7 @@ class ExplainableGP(object):
             parsim = meta['parsimony']
             fitness_train = meta['fitness_train']
 
-            # 3. is the tree better than the current best at this parsimony level?
+            # 3. is the tree better than the current best at this parsimony dim_y?
             if parsim in self.parsimony_best_meta:
                 comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
                 if self.fitness_compare(fitness_train, comp_fit):
@@ -597,6 +590,24 @@ class ExplainableGP(object):
 
         return
 
+    def gen_reproduce_olymp(self, repro_rate, tourn_size):
+
+        """
+        A single Tree from the prior generation is copied without mutation
+        """
+
+        for n in range(repro_rate):  # quantity of Trees to be copied without mutation
+            if self.parsimony_best_meta:
+                meta = np.random.choice(list(self.parsimony_best_meta.values()))
+                expr_sym = meta['expr_sym']; print('sym', expr_sym)
+                label_list = ast_convert_from_expr(expr_sym, build=True); print('label_list', label_list)
+                olymp_winner = karoo_tree_from_labellist(label_list)
+                self.popnew_append(olymp_winner, last_modification='repro')
+
+                print('Olymp winner:\n', olymp_winner)
+
+        return
+
     def gen_mutate_point(self, repro_rate, tourn_size):
 
         """
@@ -629,6 +640,38 @@ class ExplainableGP(object):
 
         return
 
+    def tree_random_build(self, tree):
+        tree_origin = tree.copy()
+
+        node_ids = tree_get_mutatable_leaves(tree, 0)
+        num_new_branches = len(node_ids)
+        if num_new_branches > 3:
+            print_warning('w', 'That is a lot of new trees')
+        for i in range(0, num_new_branches):
+            node_ids = tree_get_mutatable_leaves(tree, 0)
+            node_id = node_ids[i]
+            old_branch = tree_get_branch(tree, node_id, karoo=True)
+            tree = self.tree_insert_branch_random(tree_origin, old_branch)  # tree with new branch
+
+        tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+        tree = tree_set_id(tree, 1)
+        return tree
+
+    def gen_create_random(self, repro_rate, tourn_size):
+        """
+
+        """
+        tree_origin = self.origin['tree'].copy()
+        for i in range(repro_rate):
+
+            tree = self.tree_random_build(tree_origin)
+            tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+            tree = tree_set_id(tree, 1)
+
+            self.popnew_append(tree, last_modification='miss(br)')
+
+        return
+
     def gen_mutate_branch(self, repro_rate, tourn_size):
 
         """
@@ -645,30 +688,12 @@ class ExplainableGP(object):
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
 
             tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
-            node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
+            node_ids = tree_get_mutatable_nodes(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
             branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
 
             self.popnew_append(tourn_winner, last_modification='branch')
-
-        return
-
-    def gen_create_random(self, repro_rate, tourn_size):
-        """
-        TODO, this is currently only branch mutation
-
-        """
-
-        for i in range(repro_rate):  # quantity of Trees to be generated through mutation
-
-            tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
-            node_ids = tree_get_mutatable_list(tourn_winner, no_root=True)
-            node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
-            tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
-
-            self.popnew_append(tourn_winner, last_modification='miss(br)')
 
         return
 
@@ -734,6 +759,7 @@ class ExplainableGP(object):
         """
         tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
         tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+        tree = tree_normalize_exponentiation(tree)
         tree = tree_set_history(tree, last_modification)
         if not tree_test_check_children(tree):
             self.printpl('e', 'Tree is not consistent:\n{}'.format(tree))
@@ -827,7 +853,7 @@ class ExplainableGP(object):
         """
 
         # 1. choose a node
-        node_id = np.random.choice(tree_get_mutatable_list(tree))
+        node_id = np.random.choice(tree_get_mutatable_nodes(tree))
         label = tree_get_label(tree, node_id)
         arity = label_get_arity(label)  # int(tree[N_arity][node_id])
         xtype = self.xtype_get(label)  # '>' -> 'f2b'
@@ -853,7 +879,7 @@ class ExplainableGP(object):
         Mutates one float terminal of a tree
         """
         # 1. choose a node
-        node_ids = tree_get_mutatable_list(tree)
+        node_ids = tree_get_mutatable_nodes(tree)
         float_nodes = []
         for node_id in node_ids:
             label = tree_get_label(tree, node_id)
@@ -924,12 +950,12 @@ class ExplainableGP(object):
         """
 
         # choose a node from parent a
-        a_ids = tree_get_mutatable_list(a_tree, no_root=True)
+        a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
         a_id = np.random.choice(a_ids)
         a_xtype = self.xtype_get(a_tree[N_label][a_id])
 
         # create a list from parent b with same xtype
-        b_ids = tree_get_mutatable_list(b_tree, no_root=True)
+        b_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
         b_sametype_ids = b_ids[:]
         for i in b_ids:
             b_xtype = self.xtype_get(b_tree[N_label][i])
@@ -999,7 +1025,7 @@ class ExplainableGP(object):
         for depth in range(0, depth_goal):
             next_xtype_list = []
 
-            if depth == depth_goal - 1:  # now, we are on the lowest level.
+            if depth == depth_goal - 1:  # now, we are on the lowest dim_y.
 
                 for t in todo_xtypes:  # Build terminals now.
                     label = self.xtype_choose_term(t)
@@ -1038,9 +1064,10 @@ class ExplainableGP(object):
 
         return result_label_list, result_arity_list
 
-    def tree_insert_branch_random(self, tree, branch_ids):
+    def tree_insert_branch_random(self, tree, branch_ids, grow_method='depth_base_uniform'):
 
         """
+        # TODO would be nicer is this just returned a new branch and insert is separately
         replaces the branch_ids in a tree with a new branch
         Given: Tree and a list of node ids
         - checks how far to build down
@@ -1050,8 +1077,6 @@ class ExplainableGP(object):
 
         returns: new tree
         """
-
-        grow_method = self.config['tree_growth']
 
         if grow_method == 'depth_base_uniform':
             """
@@ -1073,7 +1098,7 @@ class ExplainableGP(object):
             label_list, arity_list = self.invent_label_list(old_xtype, depth_goal)  # Build a complete tree
 
             if not label_list:
-                self.printpl('ww', 'Wanted to branch-mutate a node that is on the lowest level')
+                print_warning('ww', 'Wanted to branch-mutate a node that is on the lowest dim_y')
                 return tree
 
             core_insert = core_from_labels(label_list, arity_list)
@@ -1081,11 +1106,11 @@ class ExplainableGP(object):
 
             return result_tree
         elif grow_method == 'old plagih code':
-            self.printpl('e', 'Not yet')
+            print_e('Not yet')
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
-            This could be calculated respectively to the parsimony level
+            This could be calculated respectively to the parsimony dim_y
             which the tree might have up his sleeve
             """
             pass
@@ -1202,39 +1227,6 @@ class ExplainableGP(object):
                 raise Exception('Tree too complex, parsimony is too high.')
 
         return tree_ident, tree_meta
-
-    def tree_build_type_constant_get(self, term_type='', mode='float-1to1', uniform_range=None):
-        """
-
-        Returns a constant that fits into the position
-        -- term_type = 'float'
-        """
-        if uniform_range:
-            return np.random.uniform(uniform_range[0], uniform_range[1])
-
-        if term_type == 'bool':
-            const = np.random.choice([True, False])
-        elif term_type == 'float':
-            if mode == 'float-1to1':
-                const = np.random.uniform(-1, 1)
-            elif mode == 'intTotal_10':
-                const = np.random.random_integers(-10, 10)
-            elif mode == 'random_optimised':
-                const = np.random.choice([-10, -5, -2, -1, -1, -0.8, -0.6, -0.5, -0.4, -0.2, 0, 10,
-                                          5, 2, 1, 1, 0.8, 0.6, 0.5, 0.4, 0.2, 0])
-            else:
-                # sfeh: gibt viele Verteilungen: https://docs.scipy.org/doc/numpy-1.14.0/reference/routines.random.html
-                self.printpl('e', 'You did not take care of the kind of numbers you want to have')
-                raise
-        elif term_type == 'int':
-            # TODO give more opportunities, similar to random floats
-            const = np.random.random_integers(-10, 10)
-        else:
-            self.printpl('w', 'Please specify your desired datatype if possible. Trying to return c1 similar to terminals.')
-            self.printpl('e', 'This term type should not occur, I guess {}'.format(term_type))
-            # term_type = np.random.choice(self.variables_dict['types'])
-            const = self.tree_build_type_constant_get(term_type=term_type)
-        return str(const)
 
     def remove_this_tree(self):
         self.printpl('ww', 'This still is a todo')
@@ -1392,7 +1384,7 @@ class ExplainableGP(object):
         if np.random.choice(['var', 'const']) == 'var':  # our choice is variable
             if terminals_type:  # Is there an entry in the list?
                 return np.random.choice(terminals_type)  # ...so we return one
-        return self.tree_build_type_constant_get(term_type=the_type)  # otherwise: constant (There are always constants :P)
+        return tree_build_type_constant_get(term_type=the_type)  # otherwise: constant (There are always constants :P)
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Monitoring                                |
@@ -1687,33 +1679,6 @@ def file_population_write_karoo(population, pop_name, path, gen_id):
     return
 
 
-def xtype_choose_func_pointmutation(op_type_arity_array, xtype=None, arity=None):
-    """
-    returns a function for a function in point mutation
-    This only accepts functions as inputs. (point mutation)
-    No need to handle terminals
-    """
-
-    if arity:
-
-        if xtype == 'f2f':
-            return np.random.choice(op_type_arity_array[f2f][arity])
-        elif xtype == 'f2b':
-            return np.random.choice(op_type_arity_array[f2b][arity])
-        elif xtype == 'b2b':
-            return np.random.choice(op_type_arity_array[b2b][arity])
-        elif xtype == 'b2f':
-            return np.random.choice(op_type_arity_array[b2f][arity])
-        elif xtype == 'b2f2f':
-            return np.random.choice(op_type_arity_array[b2f2f][arity])  # sfeh okay that does not make sense tbh
-        else:
-            print_e('Function was not found in function_types_dict {}'.format(xtype))
-            raise
-
-    else:
-        raise
-
-
 def file_config(path, config, gen_id, kernel, datetime):
     """
     write the parameters to a file
@@ -1767,18 +1732,6 @@ def load_operators_from_csv(op_csv_path):
             op_array[b2f2f][arity].append(label)
 
     return op_array
-
-
-def labels_from_algo(expr_array, expr):
-    for x in expr_array:
-        if type(x) is not list:
-            expr.append(x)
-
-    only_lists = [x for x in expr_array if (type(x) == list)]
-    if only_lists:
-        lists_removed = list(chain(*only_lists))
-        expr = labels_from_algo(lists_removed, expr)
-    return expr
 
 
 def load_pop_from_csv(pop_csv):

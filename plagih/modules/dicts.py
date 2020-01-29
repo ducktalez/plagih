@@ -62,39 +62,6 @@ ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b
                    'Mini': tf.math.minimum,  # if reduce_min does not work...
                    'Maxi': tf.math.maximum}
 
-ast_string_dict = {ast.Add: '+',  # e.g., a + b
-                   ast.Sub: '-',  # e.g., a - b
-                   ast.Mult: '',  # e.g., a * b
-                   ast.Div: '/',  # e.g., a / b
-                   ast.Pow: '**',  # e.g., a ** 2
-                   ast.USub: '-',  # e.g., -a
-                   ast.And: 'And',  # e.g., a and b
-                   ast.Or: 'Or',  # e.g., a or b
-                   ast.Not: 'Not',  # e.g., not a
-                   ast.Eq: 'Eq',  # e.g., a == b
-                   ast.NotEq: 'Neq',  # e.g., a != b
-                   ast.Lt: '<',  # e.g., a < b
-                   ast.LtE: '<=',  # e.g., a <= b
-                   ast.Gt: '>',  # e.g., a > b
-                   ast.GtE: '>=',  # e.g., a >= 1
-                   ast.BitAnd: '&',  # DON'T USE tf.bitwise.bitwise_and
-                   'abs': 'abs',  # e.g., abs(a)
-                   'sign': 'sign',  # e.g., sign(a)
-                   'square': 'square',  # e.g., square(a)
-                   'sqrt': 'sqrt',  # e.g., sqrt(a)
-                   'pow': 'pow',  # e.g., pow(a, b)
-                   'log': 'log',  # e.g., log(a)
-                   'log1p': 'log1p',  # e.g., log1p(a)
-                   'cos': 'cos',  # e.g., cos(a)
-                   'sin': 'sin',  # e.g., sin(a)
-                   'tan': 'tan',  # e.g., tan(a)
-                   'acos': 'acos',  # e.g., acos(a)
-                   'asin': 'asin',  # e.g., asin(a)
-                   'atan': 'atan',  # e.g., atan(a)
-                   'Ifte': 'Ifte',  # e.g., Ifte(a, b, c)
-                   'Mini': 'Mini',  # if reduce_min does not work...
-                   'Maxi': 'Maxi'}
-
 op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       'int': {'name': 'int', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       'bool': {'name': 'bool', 'arity': 0, 'xtype': '2b', 'tf': 'ä'},
@@ -103,7 +70,8 @@ op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       ast.Add: {'name': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add},  # e.g., a + b
       '-': {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
       ast.Sub: {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract},  # e.g., a - b
-      ast.USub: {'name': '-', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative},  # e.g., -a
+      '~': {'name': '~', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä'},  # TODO this is a weird solution (if it is one)
+      ast.USub: {'name': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative},  # e.g., -a
       '*': {'name': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},
       ast.Mult: {'name': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},  # e.g., a * b
       '/': {'name': '/', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},

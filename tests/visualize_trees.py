@@ -1,14 +1,98 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import networkx as nx
+import numpy as np
+import matplotlib.path as mpath
+import matplotlib.lines as mlines
+import matplotlib.patches as mpatches
+from matplotlib.collections import PatchCollection
 
-# G = nx.Graph()
-# G.add_nodes_from(['a', 'a', 'a', 'c'])
-# G.add_edges_from([('a', 'a'), ('a', 'b'), ('a', 'c')])
-#
-# print(G.number_of_nodes())
-#
-# nx.draw_networkx(G, with_labels=True, font_weight='bold')
-# plt.axis('off')
-# plt.show()
 
+def caltulate_grid_granularity(tree):
+    pass
+
+
+def label(xy, text):
+    y = xy[1] - 0.01  # shift y-value for label so that it's below the artist
+    plt.text(xy[0], y, text, ha="center", family='sans-serif', size=12)
+    return
+
+
+def add_circle(level, pos_x, name):
+    grid_num = get_grid(level, pos_x)
+    circle = mpatches.Circle(grid[grid_num], 0.05, ec="none")
+    label(grid[grid_num], str(name))
+    patches.append(circle)
+    return
+
+
+def add_box(level, pos_x):
+    # add a fancy box
+    grid_num = get_grid(level, pos_x)
+    box_width = 0.1
+    box_height = 0.05
+    fancybox = mpatches.FancyBboxPatch(
+        grid[grid_num] - [box_width / 2, box_height / 2], box_width, box_height,
+        boxstyle=mpatches.BoxStyle("Round", pad=0.02))
+    label(grid[grid_num], "Ifte")
+    patches.append(fancybox)
+    return
+
+
+def add_link(aa, bb):
+    # add a line
+    a = grid[get_grid(aa[0], aa[1])]
+    b = grid[get_grid(bb[0], bb[1])]
+    x, y = np.array([[a[0], b[0]], [a[1], b[1]]])
+    line = mlines.Line2D(x, y, lw=2., alpha=0.9)
+    ax.add_line(line)
+    return line
+
+
+def get_grid(lvl, pos_x):
+
+    num = lvl * dim_x + pos_x
+    return num
+
+
+def make_grid(dim_x, dim_y):
+    grid = np.mgrid[0.1:0.9:dim_x * 1j, 0.9:0.1:-dim_y * 1j].T
+    grid = grid.reshape(dim_y * dim_x, 2)
+    return grid
+
+
+def auto_enum():
+    for i in range(0, len(grid)):
+        label(grid[i], str(i))
+
+
+fig, ax = plt.subplots()
+dim_x = 7
+dim_y = 3
+grid = make_grid(dim_x, dim_y)
+
+patches = []
+
+add_box(0, 3)
+
+add_circle(1, 1, '<')
+add_circle(1, 3, '0')
+add_circle(1, 5, '2')
+add_circle(2, 0, 'obs')
+add_circle(2, 2, '0')
+
+colors = np.linspace(1, 0, 2)
+collection = PatchCollection(patches, cmap=plt.cm.hsv, alpha=0.9)
+collection.set_array(np.array(colors))
+ax.add_collection(collection)
+
+add_link((0, 3), (1, 1))
+add_link((0, 3), (1, 3))
+add_link((0, 3), (1, 5))
+add_link((1, 1), (2, 0))
+add_link((1, 1), (2, 2))
+
+plt.axis('off')
+plt.axis('scaled')
+
+plt.tight_layout()
+
+plt.show()

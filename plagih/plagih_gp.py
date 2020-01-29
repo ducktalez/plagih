@@ -28,9 +28,10 @@ def create_config_dict():
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 3,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
-        'pop_max': 100,
-        'gen_max': 15,
-        'gp_tourn_size': 3,  # [7 per 100]		number of trees selected for tournament
+        'pop_max': 1000,
+        'gen_max': 1000,
+        'gp_tourn_size': 5,  # [7 per 100]		number of trees selected for tournament
+        # TODO tournament size?
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
@@ -42,9 +43,9 @@ def create_config_dict():
                    'gen_save': None},  # in gen counts
         'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.05, 'Reproduce Olymp': 0.0,
                          'Point': 0, 'Point Mutation': 0.1, 'Point Filter': 0.1,
-                         'Branch': 0, 'Branch mutate one': 0.05, 'Branch nodebased': 0.2, 'Branch 2': 0, 'Branch 3': 0,
+                         'Branch': 0, 'Branch mutate one': 0.0, 'Branch nodebased': 0.15, 'Branch 2': 0, 'Branch 3': 0,
                          'Crossover': 0, 'Crossover one Branch': 0.3, 'Crossover 2': 0, 'Crossover 3': 0,
-                         'Create Random': 0.3},
+                         'Create Random': 0.25},
         'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }

@@ -34,4 +34,7 @@ def test_plagih_tree():
     return
 
 
-test_plagih_tree()
+def test_label_creation():
+    invent_label_list_depth_random
+
+test_label_creation()

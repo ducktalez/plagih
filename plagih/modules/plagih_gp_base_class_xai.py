@@ -149,6 +149,7 @@ class ExplainableGP(object):
         self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
         cwd = Path.cwd()
         self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
+        print('cwd:', cwd)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)
 
@@ -195,11 +196,6 @@ class ExplainableGP(object):
             for name, gp_function in gp_list:
                 evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 time_evolve = time.perf_counter()
-
-                # n = 0
-                # while n < evolve_rate:
-                #     n += 1
-                #     pass
                 gp_function(evolve_num, tourn_size)
                 self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
@@ -697,11 +693,6 @@ class ExplainableGP(object):
 
         return
 
-    def gen_crossover_point(self, repro_rate, tourn_size):
-        """
-        swap points of two trees
-        """
-
     def gen_crossover_branch(self, repro_rate, tourn_size):
         """
         swap branches of two trees
@@ -1012,59 +1003,7 @@ class ExplainableGP(object):
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def invent_label_list(self, xtype, depth_goal):
-        """
-        build a random, but within itself consistent label list
-        Also, return the arities aswell (they are searched anyways)
-        """
-        todo_xtypes = [xtype]
-        result_label_list = []
-        result_arity_list = []
-
-        # Build a list with labels in row, and a list with their arities
-        for depth in range(0, depth_goal):
-            next_xtype_list = []
-
-            if depth == depth_goal - 1:  # now, we are on the lowest dim_y.
-
-                for t in todo_xtypes:  # Build terminals now.
-                    label = self.xtype_choose_term(t)
-                    arity = 0
-
-                    # Add the label to the result list
-                    result_label_list.append(label)
-                    result_arity_list.append(arity)
-
-            else:
-                for t in todo_xtypes:
-
-                    # Randomly choose a new label
-
-                    if insert_function_or_term(depth, depth_goal) == 'terminal':
-                        label = self.xtype_choose_term(t)
-                        arity = 0
-                    else:
-                        label, arity = self.xtype_choose_func(xtype=t)
-
-                    # xtype-'To-do' list for the next depth to give values to these functions
-                    if label == 'Ifte':
-                        next_xtype_list.extend(['2b', '2f', '2f'])
-                    else:
-                        tmp_xtype = self.xtype_get(label)
-                        child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
-                        for _ in range(0, arity):  # when arity==2, add 2 times
-                            next_xtype_list.append(child_type)
-
-                    # Add the label to the result list
-                    result_label_list.append(label)
-                    result_arity_list.append(arity)
-
-            # Finally, update the list for the next round
-            todo_xtypes = next_xtype_list[:]
-
-        return result_label_list, result_arity_list
-
-    def tree_insert_branch_random(self, tree, branch_ids, grow_method='depth_base_uniform'):
+    def tree_insert_branch_random(self, tree, branch_ids, grow_method='depth_base_random'):
 
         """
         # TODO would be nicer is this just returned a new branch and insert is separately
@@ -1078,7 +1017,7 @@ class ExplainableGP(object):
         returns: new tree
         """
 
-        if grow_method == 'depth_base_uniform':
+        if grow_method == 'depth_base_random':
             """
             We allow base depth (which is a little lower than max)
             but every node has 0.5 chance to become a terminal
@@ -1095,18 +1034,16 @@ class ExplainableGP(object):
             old_xtype = self.xtype_get(old_label)
 
             # Build a new tree
-            label_list, arity_list = self.invent_label_list(old_xtype, depth_goal)  # Build a complete tree
+            label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.op_array)
 
             if not label_list:
-                print_warning('ww', 'Wanted to branch-mutate a node that is on the lowest dim_y')
-                return tree
+                result_tree = tree
+            else:
+                core_insert = core_from_labels(label_list, arity_list)
+                result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
 
-            core_insert = core_from_labels(label_list, arity_list)
-            result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
-
-            return result_tree
-        elif grow_method == 'old plagih code':
-            print_e('Not yet')
+        elif grow_method == 'num_nodes':
+            pass
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
@@ -1120,7 +1057,7 @@ class ExplainableGP(object):
         else:
             print_e('That did not work')
 
-        return tree
+        return result_tree
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Work with trees                           |
@@ -1506,24 +1443,6 @@ def pop_util_copy(population_x, title):
         population_y.append(tree_copy)  # add each copied Tree to the new population list
 
     return population_y
-
-
-def insert_function_or_term(depth, depth_goal):
-    """
-    with a certain probability, insert terminals or functions
-    SFEH TODO this need to be changed
-    """
-    if np.random.choice(['50', '50', '50', '50', 'larger']) == 'larger':
-        probability = np.random.uniform(0, depth_goal)
-        if probability > min(depth, depth_goal / 2):
-            decision = 'function'
-        else:
-            decision = 'terminal'
-        return decision
-    else:
-        decision = np.random.choice(['terminal', 'function'])
-
-    return decision
 
 
 def pop_enum_trees(population):

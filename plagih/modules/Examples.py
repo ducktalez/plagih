@@ -21,17 +21,17 @@ class MountainCarExamples:
     tree_v3_list = ['Ifte', '&', '2', '0', '<=', '<=', 'Mini', 'observation1', 'observation1', '+', '+', '-', '*', '0.7',
                     '*', '0.03', '*', '0.008', '-0.07', '**',
                     '-0.09', '**', '0.3', '**', '+', '2', '+', '2', '+', '4', 'observation0', '0.38', 'observation0', '0.25',
-                    'pos', '0.9']
+                    'observation0', '0.9']
     tree_v3_modify = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                       1, 1, 1]
-    tree_v3_expr_raw = '(Ifte((((Mini((((-0.09)*(((observation0)+(0.25))**(2)))+(0.03)), (((0.3)*(((pos)+(0.9))**(' \
+    tree_v3_expr_raw = '(Ifte((((Mini((((-0.09)*(((observation0)+(0.25))**(2)))+(0.03)), (((0.3)*(((observation0)+(0.9))**(' \
                        '4)))-(0.008))))<=(observation1))&((observation1)<=(((-0.07)*(((observation0)+(0.38))**(2)))+(' \
-                       '0.7)))), (2), (0))) '
+                       '0.7)))), (2), (0)))'
     tree_v3_expr_sym = 'Ifte((observation1 <= 0.7 - 0.07*(observation0 + 0.38)**2) & (Mini(0.03 - 0.09*(observation0 ' \
-                       '+ 0.25)**2, 0.3*(pos + 0.9)**4 - 0.008) <= observation1), 2, 0) '
+                       '+ 0.25)**2, 0.3*(observation0 + 0.9)**4 - 0.008) <= observation1), 2, 0)'
     tree_v3_new = ['Ifte', '&', 2, 0, '<=', '<=', 'Mini', 'observation1', 'observation1', '+', '+', '-', '*', 0.7, '*',
                    0.03, '*', 0.008, '-', '**', '-', '**', 0.3, '**', 0.07, '+', 2, 0.09, '+', 2, '+', 4,
-                   'observation0', 0.38, 'observation0', 0.25, 'pos', 0.9]
+                   'observation0', 0.38, 'observation0', 0.25, 'observation0', 0.9]
 
     tree_plus_list = ['+', '-', '-', '*', '*', '*', '*', 1, 2, 3, 4, 5, 6, 7, 8]
     tree_plus_modify_v1 = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]

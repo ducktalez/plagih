@@ -149,7 +149,6 @@ class ExplainableGP(object):
         self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
         cwd = Path.cwd()
         self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
-        print('cwd:', cwd)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)
 
@@ -333,7 +332,6 @@ class ExplainableGP(object):
             try:
                 algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
             except:
-                print('LOLOLO', self.parsimony_best_meta[parsimony]['expr_sym'])
                 raise
             result = eval_tf(algo_sym, self.data_control, self.eval_parameters, get_pred_labels=True)
             fit_control = result['fitness']
@@ -1063,7 +1061,7 @@ class ExplainableGP(object):
     #   Work with trees                           |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def load_origin_tree(self, origin_tree_file_path=None, label_list=None, permanent_list=None):
+    def load_origin_tree(self, origin_tree_file_path=None, label_list=None, modify_list=None):
         """
         This loads the 'origin' and evaluates it
         Two loading options:
@@ -1091,7 +1089,7 @@ class ExplainableGP(object):
                     print_e('Tree could not be imported correctly from .csv file.')
                     raise
         elif label_list:
-            tree = karoo_tree_from_labellist(label_list, permanent_list)
+            tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
         else:
             print_warning('w', 'No origin provided. Todo. starting from scratch with random generation?')
             raise
@@ -1116,8 +1114,9 @@ class ExplainableGP(object):
                        'parsimony': 0}
         try:
             origin_hash, origin_meta = self.tree_get_meta(tree)
-        except:
-            raise Exception('Your origin algorithm already caused an exception. THis should never happen.')
+        except Exception as ex:
+            whats_wrong = 'Your origin algorithm already caused an exception. {}'.format(ex)
+            raise Exception(whats_wrong)
         self.origin['fitness_train'] = origin_meta['fitness_train']
 
         self.parsimony_best_meta[0] = origin_meta

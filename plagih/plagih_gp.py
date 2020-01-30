@@ -22,7 +22,7 @@ def create_config_dict():
     config_dict = {
         'name': 'MTC_tree_',
         'kernel': 'regression',  # [regression, classification, match]
-        'precision': 6,  # number of floating points for the round function in 'fx_fitness_eval'
+        'precision': 6,  # rounding the fitness
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
         'display': 'ggggewsiivoa',  # To display absolutely all: ewggggsiiiivvvtopppttt
@@ -81,33 +81,38 @@ def mountaincar_prepare(config_dict):
     return gp
 
 
-def mountaincar_v1():
-    config_dict = create_config_dict()
+def mountaincar_v1(config_dict):
     config_dict['name'] = 'MTC_v1_'
     gp = mountaincar_prepare(config_dict)
-    gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list, permanent_list=MountainCarExamples.tree_v1_modify)
+    gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list, modify_list=MountainCarExamples.tree_v1_modify)
     return gp
 
 
-def mountaincar_v2():
-    config_dict = create_config_dict()
+def mountaincar_v2(config_dict):
     config_dict['name'] = 'MTC_v2_'
     gp = mountaincar_prepare(config_dict)
-    gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, permanent_list=MountainCarExamples.tree_v2_modify)
+    gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
 
 
-def mountaincar_tmp():
-    config_dict = create_config_dict()
-    config_dict['name'] = 'MTC_v1_'
+def mountaincar_v3(config_dict):
+    config_dict['name'] = 'MTC_v3_'
+    gp = mountaincar_prepare(config_dict)
+    gp.load_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
+    return gp
+
+
+def mountaincar_tmp(config_dict):
+    config_dict['name'] = 'MTC_tmp_'
     config_dict = fast_run(config_dict)
     gp = mountaincar_prepare(config_dict)
-    gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list, permanent_list=MountainCarExamples.tree_v1_modify)
+    gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
 
 
 def run():
-    gp = mountaincar_tmp()
+    config_dict = create_config_dict()
+    gp = mountaincar_v3(config_dict)
     gp.plagih_gp_run()
 
 

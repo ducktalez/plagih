@@ -37,6 +37,17 @@ class SimpleAgent:
             return 2
 
 
+class TestAgent:
+
+    def decide(selfself, observation):
+        observation0, observation1 = observation
+        if (observation1 <= 0.7 - 0.07 * (observation0 + 0.38) ** 2) & \
+                (min(0.03 - 0.09 * (observation0 + 0.25)**2, 0.3*(observation0 + 0.9)**4 - 0.008) <= observation1):
+            return 2
+        else:
+            return 0
+
+
 def play_once(env, agent, render=False, verbose=False):
     observation = env.reset()
     episode_reward = 0.
@@ -54,7 +65,7 @@ def play_once(env, agent, render=False, verbose=False):
     return episode_reward
 
 
-agents = [SimpleAgent(), FixAgent(), PlagihAgent_A()]
+agents = [SimpleAgent(), FixAgent(), PlagihAgent_A(), TestAgent()]
 for agent in agents:
 
     np.random.seed(0)

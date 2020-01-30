@@ -31,40 +31,6 @@ from plagih.modules.plagih_pop import *
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-# TODO hash dict based on the sympy version?
-# Load backupfrom a .csv File (TODO), check, if it is compartible with tree_origin (TODO)
-# todo write why Min and Max is crap (sympy multielement, tf problem with ast)
-# TODO all functions have to be within one of these lists. check it.
-# random TODO replace and with &, see https://docs.sympy.org/latest/_modules/sympy/core/relational.html
-# TODO count new tree_ident in each evolve step
-# TODO point mutation mehrfach anwenden? branch mutation mehrfach anwenden?
-# TODO ...somit wäre garantiert, dass jedes mal die richtige Lösung harauskommen könnte. Nur mit
-# TODO ...einer Mutation pro Kandidat wäre das nicht möglich
-# TODO: Wenn average fitness convergiert oder alte Bäume neu auftreten, dann sollten zufällige Kandidaten erzeugt werden!
-# todo. "zufällige" Kandidaten bedeuten auch: Alle branches ausprobieren- mehrfach branch mutation?
-# TODO: TED with values- just assume values are elements? 0.12 == 0.1 distance wise? ...
-# Genepool_create: TODO stop equal candidates from being in the gene pool multiple times?
-# ( and { in tests and TED. sfeh/todo: this can be optimized to create a nicer brackets-styled algorithm
-# Todos in evolve_subtree_depth_choose
-# # TODO consider tree size of last tree,
-# # TODO consider random tree size,
-# # TODO consider always maximum tree size,
-# # TODO is this already considered by 50:50 func-term?
-# TODO point mutation should also reduce arities if needed?
-# TODO tree_choose_node_id only works for same arity functions
-# todo random samples out of dataset values as new constants?
-# TODO zoo and inf and nan in plagih_sympify... other solution?
-# TODO what is "swim" in tests, what is it good for?
-# todo add stop after we achieved our goal
-# TODo check memory usage?
-# random TODO grow depth anpassen!
-# TODO anzahl bereits bekannter bäume
-# TODO Field Guide programming lesen
-# TODO alert if functions do not allow closure, alert when origin function is not in dict
-
-# TODO save sympifyed versions of trees
-# TODO Tournament selection vergrößern
-
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -1123,7 +1089,7 @@ class ExplainableGP(object):
 
         self.hashtable_fitness_train = {}
 
-        self.print_g('gg', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(origin_meta['fitness_train'], time.perf_counter() - self.time_start))
         return
 
     def tree_get_meta(self, tree):

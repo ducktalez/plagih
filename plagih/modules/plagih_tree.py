@@ -62,7 +62,6 @@ def tree_init_core(node_amount):
 def insert_function_or_term(depth, depth_goal):
     """
     with a certain probability, insert terminals or functions
-    SFEH TODO this need to be changed
     """
     if np.random.choice(['50', 'larger']) == 'larger':
         probability = np.random.uniform(0, depth_goal)
@@ -72,7 +71,6 @@ def insert_function_or_term(depth, depth_goal):
             decision = 'terminal'
         return decision
     else:
-        # TODO this is not used, making only larger trees and smaller ones with crossover
         decision = np.random.choice(['terminal', 'function'])
 
     return decision
@@ -283,7 +281,6 @@ def tree_parsimony_ted(tree1, tree2):
     The Tree Edit distance (TED) ('coolest' distance)
     - the amount of changes that have to be applied to the origin to equality are counted
     """
-    # TODO TED soll geänderte Werte ignorieren
     apted_tree1 = tree_raw_depth_prefix(tree1, 1)
     apted_tree2 = tree_raw_depth_prefix(tree2, 1)
     distance, mapping = apted_distance(apted_tree1, apted_tree2)

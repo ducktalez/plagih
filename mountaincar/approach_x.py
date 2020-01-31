@@ -41,7 +41,7 @@ def mtc_approach_start(approach):
     episodes_ez = episodes
 
     # episode_rewards2, rewards2_avg = sarsa_start_training(env, episodes_sarsa, rewardSample_interval, train=True, render=False)
-    # TODO ansatz synamisch übergeben (als funktion übergeben)
+
     episode_rewards1, rewards1_avg = improved_v1(env, episodes_ez, reward_sample_interval)
 
     env.close()

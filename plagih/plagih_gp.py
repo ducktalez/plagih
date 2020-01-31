@@ -1,4 +1,5 @@
 import sys
+sys.path = ['..'] + sys.path
 sys.path.append('modules/')  # add directory 'modules' to the current path
 
 import plagih.modules.plagih_gp_base_class_xai as plagih
@@ -34,8 +35,7 @@ def create_config_dict():
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
         'pop_max': 600,
         'gen_max': 1000,
-        'gp_tourn_size': 4,  # [7 per 100]		number of trees selected for tournament
-        # TODO tournament size?
+        'gp_tourn_size': 5,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
@@ -112,7 +112,7 @@ def mountaincar_tmp(config_dict):
 
 def run():
     config_dict = create_config_dict()
-    gp = mountaincar_v3(config_dict)
+    gp = mountaincar_v2(config_dict)
     gp.plagih_gp_run()
 
 

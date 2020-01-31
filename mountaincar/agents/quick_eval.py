@@ -90,10 +90,12 @@ class TestTmp:
     """
     def decide(self, observation):
         pos, velocity = observation
-        if (velocity <= 0.63) and (min(-0.09*(pos + 0.25)**2.0 + 0.03, 0.3*(pos + 0.9)**4.0 - 0.01) <= velocity):
-            return 2
-        else:
+        observation0 = pos
+        observation1 = velocity
+        if observation1 < -0.16*observation0*max(-0.045, min(observation0 - max(2 * observation1, -0.16) + 0.485, -0.935 / min(1, observation0))):
             return 0
+        else:
+            return 2
 
 
 def play_once(env, agent, render=False, verbose=False):
@@ -135,6 +137,7 @@ def render_simple():
         env.close()
 
 
-agents = [SimpleAgent(), PlagihAgent_A(), FixAgent(), TestAgent(), TestFixNoLowerbound(), TestTmp()]
+all_agents = [SimpleAgent(), PlagihAgent_A(), FixAgent(), TestAgent(), TestFixNoLowerbound(), TestTmp()]
+agents = [SimpleAgent(), FixAgent(), TestTmp()]
 
 compare_simple()

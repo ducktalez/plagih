@@ -115,11 +115,10 @@ def plagih_sympify(function_string):
     It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139
     Or this issue: https://github.com/sympy/sympy/issues/17785
 
-    Sympy bug #1:
+    Sympy bug #2:
     >>> print(plagih_sympify('a<zoo'))
     throws an exception.
     -> Try-except block for this case
-    todo: Better solution for this?
     """
     try:
         return sympify(sympify(function_string, locals=local_sympy_dict))

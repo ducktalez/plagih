@@ -72,7 +72,7 @@ class ExplainableGP(object):
         self.gene_pool = {}
         self.xype_func_dict = {'f2f': [], 'f2b': [], 'b2b': [], 'b2f': [], 'b2f2f': [],
                                '2b': [], '2f': [],
-                               'b2': [], 'f2': []}  # todo delete this
+                               'b2': [], 'f2': []}  # todo, is this necessary? could be deleted
 
         # some useful stuff
         self.debug_warnings = {}
@@ -260,7 +260,6 @@ class ExplainableGP(object):
         - save the pareto front (done)
         - save the last generation (done)
         - Save valuable meta-data_csv_path: current generation (done)
-        TODO not complete
         """
         run_data = {'gen_id': self.gen_id,
                     'parsimony_front_fitness': '',
@@ -472,8 +471,6 @@ class ExplainableGP(object):
         - constructs the first generation from this tree with branc. mutation
         """
 
-        # TODO branch mutation in ALL subtrees? if more options are available
-        # TODO safely create a complete generation?
         self.print_g('ggg', 'First population...')
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
@@ -1267,7 +1264,6 @@ class ExplainableGP(object):
         Modes:
         var_and_const: return randomly (50:50) a variable or a constant
         terminal_only: return                  a variable
-        Todo Introduce constants-mode, where the user can give constant types (similar to functions)?
 
         input options: f2f, f2b, b2f, b2b, f2b2b, 2f, 2b
         """
@@ -1420,7 +1416,7 @@ def pop_enum_trees(population):
 
 
 def data_load_data_split(data_x, data_y, test_size):
-    # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
+
     x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST split
     data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its associated class label (right column)
     data_control = np.c_[x_test, y_test]  # recombine each row of data_csv_path with its associated class label (right column)
@@ -1444,7 +1440,6 @@ def data_from_csv(samples_file):
 
     num_observations, num_actions = 0, 0
     var_types = []
-    # TODO Terminal types as dictionary? would be much prettier.
     input_dict = {'all': {},
                   'float': {},
                   'bool': {}}
@@ -1468,7 +1463,7 @@ def data_from_csv(samples_file):
                         num_observations += 1
                         term = var_name.rsplit(':', 1)[0]
                         term_type = var_name.split(':', 1)[1]
-                        input_dict[term] = term_type  # todo austauschen
+                        input_dict[term] = term_type
                         variables_dict['all'].append(term)
                         variables_dict['types'].append(term_type)
                         if term_type == 'float':
@@ -1490,7 +1485,6 @@ def data_from_csv(samples_file):
                 data_x, data_y = [], []
 
             else:  # convert every 'string' element to its data_csv_path type
-                # TODO var_types ist genau dasselbe wie self.terminal , oder? eines ersetzen?
                 row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
                 data_x.append(row_as_data[:num_observations])
                 data_y.append(row_as_data[num_observations:])
@@ -1566,11 +1560,10 @@ def file_population_write_karoo(population, pop_name, path, gen_id):
 def file_config(path, config, gen_id, kernel, datetime):
     """
     write the parameters to a file
-    Todo update
     """
 
     file = Path.open(path / 'config.txt', 'w')
-    file.write('Plagih GP. This config is not complete, TODO!')
+    file.write('Plagih GP. This config is not complete, sfeh!')
     file.write('\n launched: {}'.format(datetime))
     file.write('\n kernel: {}'.format(kernel))
     file.write('\n precision: {}\n'.format(config['precision']))

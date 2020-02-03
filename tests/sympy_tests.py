@@ -39,3 +39,4 @@ print(plagih_sympify('5 + (+6)'))
 print(plagih_sympify('5 + (-6)'))
 
 print('\nNew try:')
+print(plagih_sympify('(-1)**(-0.5)'))

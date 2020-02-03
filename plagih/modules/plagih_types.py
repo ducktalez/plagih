@@ -72,7 +72,6 @@ def xtype_choose_term_v2(node_xtype, variables_dict):
     Modes:
     var_and_const: return randomly (50:50) a variable or a constant
     terminal_only: return                  a variable
-    Todo Introduce constants-mode, where the user can give constant types (similar to functions)?
 
     input options: f2f, f2b, b2f, b2b, f2b2b, 2f, 2b
     """

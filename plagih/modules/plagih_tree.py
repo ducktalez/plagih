@@ -59,6 +59,87 @@ def tree_init_core(node_amount):
     return tree
 
 
+def insert_function_or_term(depth, depth_goal):
+    """
+    with a certain probability, insert terminals or functions
+    """
+    if np.random.choice(['50', 'larger']) == 'larger':
+        probability = np.random.uniform(0, depth_goal)
+        if probability > min(depth, depth_goal / 2):
+            decision = 'function'
+        else:
+            decision = 'terminal'
+        return decision
+    else:
+        decision = np.random.choice(['terminal', 'function'])
+
+    return decision
+
+
+def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dict, op_array):
+    """
+    build a random, but within itself consistent label list
+    Also, return the arities aswell (they are searched anyways)
+    """
+    todo_xtypes = [xtype]
+    result_label_list = []
+    result_arity_list = []
+
+    # Build a list with labels in row, and a list with their arities
+    for depth in range(0, depth_goal):
+        next_xtype_list = []
+
+        if depth == depth_goal - 1:  # now, we are on the lowest dim_y.
+
+            for t in todo_xtypes:  # Build terminals now.
+                label = xtype_choose_term_v2(t, variables_dict)
+                arity = 0
+
+                # Add the label to the result list
+                result_label_list.append(label)
+                result_arity_list.append(arity)
+
+        else:
+            for t in todo_xtypes:
+
+                # Randomly choose a new label
+
+                if insert_function_or_term(depth, depth_goal) == 'terminal':
+                    label = xtype_choose_term_v2(t, variables_dict)
+                    arity = 0
+                else:
+                    label, arity = xtype_choose_func_v2(op_array, xtype=t)
+
+                # xtype-'To-do' list for the next depth to give values to these functions
+                if label == 'Ifte':
+                    next_xtype_list.extend(['2b', '2f', '2f'])
+                else:
+                    tmp_xtype = xtype_get_v2(label, variables_dict=variables_dict, action_dict=action_dict)
+                    child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
+                    for _ in range(0, arity):  # when arity==2, add 2 times
+                        next_xtype_list.append(child_type)
+
+                # Add the label to the result list
+                result_label_list.append(label)
+                result_arity_list.append(arity)
+
+        # Finally, update the list for the next round
+        todo_xtypes = next_xtype_list[:]
+
+    return result_label_list, result_arity_list
+
+def invent_label_list_nodes(xtype, max_nodes, variables_dict, action_dict, op_array):
+    """
+    build a random, but within itself consistent label list
+    Also, return the arities aswell (they are searched anyways)
+    """
+    todo_xtypes = [xtype]
+    result_label_list = []
+    result_arity_list = []
+
+    return result_label_list, result_arity_list
+
+
 def tree_modifyable_nodes_set(chosen_tree, origin_tree):
     """
     Sets all the origin core nodes back to non-modifyable
@@ -200,7 +281,6 @@ def tree_parsimony_ted(tree1, tree2):
     The Tree Edit distance (TED) ('coolest' distance)
     - the amount of changes that have to be applied to the origin to equality are counted
     """
-    # TODO TED soll geänderte Werte ignorieren
     apted_tree1 = tree_raw_depth_prefix(tree1, 1)
     apted_tree2 = tree_raw_depth_prefix(tree2, 1)
     distance, mapping = apted_distance(apted_tree1, apted_tree2)

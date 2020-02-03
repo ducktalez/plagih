@@ -34,4 +34,11 @@ def test_plagih_tree():
     return
 
 
-test_plagih_tree()
+def test_tmp():
+    tree = karoo_tree_from_labellist(MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
+    algo_raw = tree_expr_raw(tree, P_first_node)
+    print(algo_raw)
+    algo_sym = tree_expr_sympify(algo_raw=algo_raw)
+    print(algo_sym)
+
+test_tmp()

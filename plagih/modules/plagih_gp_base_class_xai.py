@@ -31,40 +31,6 @@ from plagih.modules.plagih_pop import *
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-# TODO hash dict based on the sympy version?
-# Load backupfrom a .csv File (TODO), check, if it is compartible with tree_origin (TODO)
-# todo write why Min and Max is crap (sympy multielement, tf problem with ast)
-# TODO all functions have to be within one of these lists. check it.
-# random TODO replace and with &, see https://docs.sympy.org/latest/_modules/sympy/core/relational.html
-# TODO count new tree_ident in each evolve step
-# TODO point mutation mehrfach anwenden? branch mutation mehrfach anwenden?
-# TODO ...somit wäre garantiert, dass jedes mal die richtige Lösung harauskommen könnte. Nur mit
-# TODO ...einer Mutation pro Kandidat wäre das nicht möglich
-# TODO: Wenn average fitness convergiert oder alte Bäume neu auftreten, dann sollten zufällige Kandidaten erzeugt werden!
-# todo. "zufällige" Kandidaten bedeuten auch: Alle branches ausprobieren- mehrfach branch mutation?
-# TODO: TED with values- just assume values are elements? 0.12 == 0.1 distance wise? ...
-# Genepool_create: TODO stop equal candidates from being in the gene pool multiple times?
-# ( and { in tests and TED. sfeh/todo: this can be optimized to create a nicer brackets-styled algorithm
-# Todos in evolve_subtree_depth_choose
-# # TODO consider tree size of last tree,
-# # TODO consider random tree size,
-# # TODO consider always maximum tree size,
-# # TODO is this already considered by 50:50 func-term?
-# TODO point mutation should also reduce arities if needed?
-# TODO tree_choose_node_id only works for same arity functions
-# todo random samples out of dataset values as new constants?
-# TODO zoo and inf and nan in plagih_sympify... other solution?
-# TODO what is "swim" in tests, what is it good for?
-# todo add stop after we achieved our goal
-# TODo check memory usage?
-# random TODO grow depth anpassen!
-# TODO anzahl bereits bekannter bäume
-# TODO Field Guide programming lesen
-# TODO alert if functions do not allow closure, alert when origin function is not in dict
-
-# TODO save sympifyed versions of trees
-# TODO Tournament selection vergrößern
-
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
@@ -106,15 +72,15 @@ class ExplainableGP(object):
         self.gene_pool = {}
         self.xype_func_dict = {'f2f': [], 'f2b': [], 'b2b': [], 'b2f': [], 'b2f2f': [],
                                '2b': [], '2f': [],
-                               'b2': [], 'f2': []}  # todo delete this
+                               'b2': [], 'f2': []}  # todo, is this necessary? could be deleted
 
         # some useful stuff
         self.debug_warnings = {}
         self.monitoring_dict = {'genepool_size': {},
                                 'fitness_average': {},
                                 'total_found_trees': {}}
-
-        self.file_directories_create()
+        runs_path = self.config['path']
+        self.file_directories_create(runs_path)
         self.done = False
         self.gen_id = 0
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
@@ -141,13 +107,16 @@ class ExplainableGP(object):
     #   Top dim_y      functions                  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def file_directories_create(self):
+    def file_directories_create(self, path_cwd):
         """
         Create all files that will be saved after all
         """
 
-        self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
-        cwd = Path.cwd()
+        # self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
+        self.datetime = datetime.now().strftime('%H%M%S')
+        # cwd = Path.cwd()
+        cwd = path_cwd
+        print('cwd is:', cwd)
         self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)
@@ -195,11 +164,6 @@ class ExplainableGP(object):
             for name, gp_function in gp_list:
                 evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 time_evolve = time.perf_counter()
-
-                # n = 0
-                # while n < evolve_rate:
-                #     n += 1
-                #     pass
                 gp_function(evolve_num, tourn_size)
                 self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
@@ -299,7 +263,6 @@ class ExplainableGP(object):
         - save the pareto front (done)
         - save the last generation (done)
         - Save valuable meta-data_csv_path: current generation (done)
-        TODO not complete
         """
         run_data = {'gen_id': self.gen_id,
                     'parsimony_front_fitness': '',
@@ -337,7 +300,6 @@ class ExplainableGP(object):
             try:
                 algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
             except:
-                print('LOLOLO', self.parsimony_best_meta[parsimony]['expr_sym'])
                 raise
             result = eval_tf(algo_sym, self.data_control, self.eval_parameters, get_pred_labels=True)
             fit_control = result['fitness']
@@ -512,8 +474,6 @@ class ExplainableGP(object):
         - constructs the first generation from this tree with branc. mutation
         """
 
-        # TODO branch mutation in ALL subtrees? if more options are available
-        # TODO safely create a complete generation?
         self.print_g('ggg', 'First population...')
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
@@ -696,11 +656,6 @@ class ExplainableGP(object):
             self.popnew_append(tourn_winner, last_modification='branch')
 
         return
-
-    def gen_crossover_point(self, repro_rate, tourn_size):
-        """
-        swap points of two trees
-        """
 
     def gen_crossover_branch(self, repro_rate, tourn_size):
         """
@@ -1012,59 +967,7 @@ class ExplainableGP(object):
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def invent_label_list(self, xtype, depth_goal):
-        """
-        build a random, but within itself consistent label list
-        Also, return the arities aswell (they are searched anyways)
-        """
-        todo_xtypes = [xtype]
-        result_label_list = []
-        result_arity_list = []
-
-        # Build a list with labels in row, and a list with their arities
-        for depth in range(0, depth_goal):
-            next_xtype_list = []
-
-            if depth == depth_goal - 1:  # now, we are on the lowest dim_y.
-
-                for t in todo_xtypes:  # Build terminals now.
-                    label = self.xtype_choose_term(t)
-                    arity = 0
-
-                    # Add the label to the result list
-                    result_label_list.append(label)
-                    result_arity_list.append(arity)
-
-            else:
-                for t in todo_xtypes:
-
-                    # Randomly choose a new label
-
-                    if insert_function_or_term(depth, depth_goal) == 'terminal':
-                        label = self.xtype_choose_term(t)
-                        arity = 0
-                    else:
-                        label, arity = self.xtype_choose_func(xtype=t)
-
-                    # xtype-'To-do' list for the next depth to give values to these functions
-                    if label == 'Ifte':
-                        next_xtype_list.extend(['2b', '2f', '2f'])
-                    else:
-                        tmp_xtype = self.xtype_get(label)
-                        child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
-                        for _ in range(0, arity):  # when arity==2, add 2 times
-                            next_xtype_list.append(child_type)
-
-                    # Add the label to the result list
-                    result_label_list.append(label)
-                    result_arity_list.append(arity)
-
-            # Finally, update the list for the next round
-            todo_xtypes = next_xtype_list[:]
-
-        return result_label_list, result_arity_list
-
-    def tree_insert_branch_random(self, tree, branch_ids, grow_method='depth_base_uniform'):
+    def tree_insert_branch_random(self, tree, branch_ids, grow_method='depth_base_random'):
 
         """
         # TODO would be nicer is this just returned a new branch and insert is separately
@@ -1078,7 +981,7 @@ class ExplainableGP(object):
         returns: new tree
         """
 
-        if grow_method == 'depth_base_uniform':
+        if grow_method == 'depth_base_random':
             """
             We allow base depth (which is a little lower than max)
             but every node has 0.5 chance to become a terminal
@@ -1095,18 +998,16 @@ class ExplainableGP(object):
             old_xtype = self.xtype_get(old_label)
 
             # Build a new tree
-            label_list, arity_list = self.invent_label_list(old_xtype, depth_goal)  # Build a complete tree
+            label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.op_array)
 
             if not label_list:
-                print_warning('ww', 'Wanted to branch-mutate a node that is on the lowest dim_y')
-                return tree
+                result_tree = tree
+            else:
+                core_insert = core_from_labels(label_list, arity_list)
+                result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
 
-            core_insert = core_from_labels(label_list, arity_list)
-            result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
-
-            return result_tree
-        elif grow_method == 'old plagih code':
-            print_e('Not yet')
+        elif grow_method == 'num_nodes':
+            pass
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
@@ -1120,13 +1021,13 @@ class ExplainableGP(object):
         else:
             print_e('That did not work')
 
-        return tree
+        return result_tree
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Work with trees                           |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def load_origin_tree(self, origin_tree_file_path=None, label_list=None, permanent_list=None):
+    def load_origin_tree(self, origin_tree_file_path=None, label_list=None, modify_list=None):
         """
         This loads the 'origin' and evaluates it
         Two loading options:
@@ -1154,7 +1055,7 @@ class ExplainableGP(object):
                     print_e('Tree could not be imported correctly from .csv file.')
                     raise
         elif label_list:
-            tree = karoo_tree_from_labellist(label_list, permanent_list)
+            tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
         else:
             print_warning('w', 'No origin provided. Todo. starting from scratch with random generation?')
             raise
@@ -1179,15 +1080,16 @@ class ExplainableGP(object):
                        'parsimony': 0}
         try:
             origin_hash, origin_meta = self.tree_get_meta(tree)
-        except:
-            raise Exception('Your origin algorithm already caused an exception. THis should never happen.')
+        except Exception as ex:
+            whats_wrong = 'Your origin algorithm already caused an exception. {}'.format(ex)
+            raise Exception(whats_wrong)
         self.origin['fitness_train'] = origin_meta['fitness_train']
 
         self.parsimony_best_meta[0] = origin_meta
 
         self.hashtable_fitness_train = {}
 
-        self.print_g('gg', 'Loading origin. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(origin_meta['fitness_train'], time.perf_counter() - self.time_start))
         return
 
     def tree_get_meta(self, tree):
@@ -1365,7 +1267,6 @@ class ExplainableGP(object):
         Modes:
         var_and_const: return randomly (50:50) a variable or a constant
         terminal_only: return                  a variable
-        Todo Introduce constants-mode, where the user can give constant types (similar to functions)?
 
         input options: f2f, f2b, b2f, b2b, f2b2b, 2f, 2b
         """
@@ -1508,24 +1409,6 @@ def pop_util_copy(population_x, title):
     return population_y
 
 
-def insert_function_or_term(depth, depth_goal):
-    """
-    with a certain probability, insert terminals or functions
-    SFEH TODO this need to be changed
-    """
-    if np.random.choice(['50', '50', '50', '50', 'larger']) == 'larger':
-        probability = np.random.uniform(0, depth_goal)
-        if probability > min(depth, depth_goal / 2):
-            decision = 'function'
-        else:
-            decision = 'terminal'
-        return decision
-    else:
-        decision = np.random.choice(['terminal', 'function'])
-
-    return decision
-
-
 def pop_enum_trees(population):
     """
     outsourced enumeration of trees in a population
@@ -1536,7 +1419,7 @@ def pop_enum_trees(population):
 
 
 def data_load_data_split(data_x, data_y, test_size):
-    # TODO die func kann sicher nicht mit 2d labels umgehen. Funktion macht das echt super uneffizient.
+
     x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST split
     data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its associated class label (right column)
     data_control = np.c_[x_test, y_test]  # recombine each row of data_csv_path with its associated class label (right column)
@@ -1560,7 +1443,6 @@ def data_from_csv(samples_file):
 
     num_observations, num_actions = 0, 0
     var_types = []
-    # TODO Terminal types as dictionary? would be much prettier.
     input_dict = {'all': {},
                   'float': {},
                   'bool': {}}
@@ -1584,7 +1466,7 @@ def data_from_csv(samples_file):
                         num_observations += 1
                         term = var_name.rsplit(':', 1)[0]
                         term_type = var_name.split(':', 1)[1]
-                        input_dict[term] = term_type  # todo austauschen
+                        input_dict[term] = term_type
                         variables_dict['all'].append(term)
                         variables_dict['types'].append(term_type)
                         if term_type == 'float':
@@ -1606,7 +1488,6 @@ def data_from_csv(samples_file):
                 data_x, data_y = [], []
 
             else:  # convert every 'string' element to its data_csv_path type
-                # TODO var_types ist genau dasselbe wie self.terminal , oder? eines ersetzen?
                 row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
                 data_x.append(row_as_data[:num_observations])
                 data_y.append(row_as_data[num_observations:])
@@ -1682,11 +1563,10 @@ def file_population_write_karoo(population, pop_name, path, gen_id):
 def file_config(path, config, gen_id, kernel, datetime):
     """
     write the parameters to a file
-    Todo update
     """
 
     file = Path.open(path / 'config.txt', 'w')
-    file.write('Plagih GP. This config is not complete, TODO!')
+    file.write('Plagih GP. This config is not complete, sfeh!')
     file.write('\n launched: {}'.format(datetime))
     file.write('\n kernel: {}'.format(kernel))
     file.write('\n precision: {}\n'.format(config['precision']))

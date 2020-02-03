@@ -162,8 +162,6 @@ def sarsa_start_frommodel(env, episodes, rewardSample_interval, train=False, ren
     return episode_rewards, episode_rewards_average
 
 
-# dummy function for exactly this case
-# TODO: Nur gute Dinge zurückgeben?
 def plagih_get_behaviour_samples(env, agent, episodes, train=False, render=False):
     agent.epsilon = 0
     plagih_state_actions = []

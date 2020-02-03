@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 # Import and initialize Mountain Car Environment
 # capsulated function "choose action" which gets a state and then chooses an action
 
-# TODO divide by zero- what should happen?
 
 def choose_action(state):
     if state[1] < state[1]*min(state[1], 0.7008215584020565):
         return 0
     else:
         return 2
+
 
 def improved_v1(env, episodes, reward_interval):
 

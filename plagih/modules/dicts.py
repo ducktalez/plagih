@@ -70,7 +70,7 @@ op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       ast.Add: {'name': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add},  # e.g., a + b
       '-': {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä'},
       ast.Sub: {'name': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract},  # e.g., a - b
-      '~': {'name': '~', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä'},  # TODO this is a weird solution (if it is one)
+      '~': {'name': '~', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä'},
       ast.USub: {'name': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative},  # e.g., -a
       '*': {'name': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},
       ast.Mult: {'name': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply},  # e.g., a * b

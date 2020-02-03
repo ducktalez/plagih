@@ -47,6 +47,7 @@ class ExplainableGP(object):
         self.parsimony_best_meta = {}  #tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
+        self.best_fitness = None
 
         # 1. set global variables to those local values passed from the user script
         self.config = config_dict
@@ -78,6 +79,7 @@ class ExplainableGP(object):
         self.debug_warnings = {}
         self.monitoring_dict = {'genepool_size': {},
                                 'fitness_average': {},
+                                'best_candidate': {},
                                 'total_found_trees': {}}
         runs_path = self.config['path']
         self.file_directories_create(runs_path)
@@ -92,7 +94,7 @@ class ExplainableGP(object):
         regular plagih-config run from scratch
         """
 
-        self.gen_id = 0  # set initial generation ID    # first gen only
+        self.gen_id = 0
         file_config(self.path, self.config, self.gen_id, self.kernel, self.datetime)
         self.main_generation_first_origin()
         self.main_generation_loop()  # (main loop)
@@ -1310,7 +1312,11 @@ class ExplainableGP(object):
         self.plot_end(data_tupels, path, plt_title='Number of created Trees', plt_y_label='Amount')
 
         data_tupels = sorted(list(self.pareto.items()))
-        self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness')
+        self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', only_dots=True, plt_x_label='Parsimony', plt_y_label='Fitness')
+
+        data_tupels = sorted(list(self.monitoring_dict['best_candidate'].items()))
+        self.plot_end(data_tupels, path, plt_title='Best candidate', only_dots=True, plt_x_label='Generation', plt_y_label='Fitness')
+
         return
 
     def monitor_genepool(self, gene_pool, path, gen_id):
@@ -1322,25 +1328,33 @@ class ExplainableGP(object):
         self.monitoring_dict['genepool_size'][int(gen_id)] = len(gene_pool)
         if len(gene_pool) > 0:
             self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool)))
-        else:  # the evolutionary constraints were too tight, killing off the entire population
+        else:
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.file_autowrite(path, gen_id)
             self.file_autoplots(path)
             sys.exit()
 
-        # average fitness our genepool?
+        if not self.best_fitness:
+            self.best_fitness = self.origin['fitness_train']
+
         fitness_train_sum = 0
         for _, meta in gene_pool.items():
-            fitness_train_sum += float(meta['fitness_train'])
+            fitness = float(meta['fitness_train'])
+            fitness_train_sum += fitness  # for fitness average
+            if self.fitness_compare(fitness, self.best_fitness):
+                self.best_fitness = fitness
+
         average_fitness = fitness_train_sum / len(gene_pool)
         self.monitoring_dict['fitness_average'][gen_id] = average_fitness
+        self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
+
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to display output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', variance=None):
+    def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', only_dots=None, variance=None):
 
         x, y = [], []
         for a, b in data_2d:
@@ -1353,7 +1367,10 @@ class ExplainableGP(object):
             stds = np.std(y, axis=0)
             n = means.size
 
-        plt.plot(x, y, label=plt_curve_label)
+        if only_dots:
+            plt.plot(x, y, linestyle='', marker='o', label=plt_curve_label)
+        else:
+            plt.plot(x, y, label=plt_curve_label)
 
         if plt_x_label and plt_y_label:
             plt.xlabel(plt_x_label)

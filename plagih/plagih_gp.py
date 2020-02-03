@@ -117,7 +117,7 @@ def mountaincar_tmp(config_dict, path):
 
 def run(root_dir):
     config_dict = create_config_dict()
-    gp = mountaincar_v2(config_dict, root_dir)
+    gp = mountaincar_tmp(config_dict, root_dir)
     gp.plagih_gp_run()
 
 

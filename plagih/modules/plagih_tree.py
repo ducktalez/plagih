@@ -128,6 +128,7 @@ def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dic
 
     return result_label_list, result_arity_list
 
+
 def invent_label_list_nodes(xtype, max_nodes, variables_dict, action_dict, op_array):
     """
     build a random, but within itself consistent label list
@@ -263,8 +264,11 @@ def tree_expr_raw(tree, node_id):
         return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
 
     elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        fun = str(tree[N_label, node_id]).replace('~', '-')
-        return '(' + fun + tree_expr_raw(tree, tree[9, node_id]) + ')'
+        fun = tree[N_label, node_id]
+        if fun == '~':  # ~- workaround
+            return '(-({}))'.format(tree_expr_raw(tree, tree[9, node_id]))
+        else:
+            return '(' + fun + tree_expr_raw(tree, tree[9, node_id]) + ')'
 
     elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
         # This if case is for 2-ary ops that is prefix. like Min(a, b)

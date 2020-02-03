@@ -46,7 +46,7 @@ def create_config_dict():
                    'time_save': 60 * 0.5,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
-        'evolve_rates': {'Reproduce gen': 0.05, 'Reproduce Olymp': 0.0,
+        'evolve_rates': {'Reproduce gen': 0.05, 'Reproduce Olymp': 0.05,
                          'Point Mutation': 0.5, 'Point Filter': 0.05,
                          'Branch nodebased': 0.1,
                          'Crossover one Branch': 0.35,

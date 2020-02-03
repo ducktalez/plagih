@@ -34,25 +34,34 @@ def test_plagih_tree():
     return
 
 
-def test_tmp():
+def rebuild_same_tree():
+    """
+    just try to make the complete tree-transformation
+    """
     # tree = karoo_tree_from_labellist(MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
-    tree = karoo_tree_from_labellist(MountainCarExamples.tree_test_minus_list)
+    tree = karoo_tree_from_labellist(MountainCarExamples.tree_v3_list)
     algo_raw = tree_expr_raw(tree, P_first_node)
-    print('Algo raw:', algo_raw)
+    print('1 Algo raw:', algo_raw)
     algo_sym_1 = tree_expr_sympify(algo_raw=algo_raw)
-    print('Also sym:', algo_sym_1)
+    print('1 Also sym:', algo_sym_1)
     label_list_1 = ast_convert_from_expr(algo_sym_1, build=True)
-    print('Label List 1:\n', label_list_1)
+    print('1 Label List 1:\n', label_list_1)
     tree2 = karoo_tree_from_labellist(label_list_1)
-    if tree_check_expression(tree, karoo=True):
-        print('True test')
-    else:
-        print('False test')
-    algo_raw2 = tree_expr_raw(tree2, root_id)
+    algo_raw2 = tree_expr_raw(tree2, P_first_node)
+    print('2 Algo raw:', algo_raw2)
+    algo_sym_2 = tree_expr_sympify(algo_raw=algo_raw2)
+    print('2 Also sym:', algo_sym_2)
+    label_list_2 = ast_convert_from_expr(algo_sym_2, build=True)
+    print('2 Label List 1:\n', label_list_2)
 
-    print('Algo raw2:', algo_raw2)
-    algo_sym2 = tree_expr_sympify(tree=tree2)
-    print('Algo_sym2:', algo_sym2)
+    if label_list_1 == label_list_2:
+        print('SUCCESS')
 
 
-test_tmp()
+def test_tree_build():
+    label_list = ['Ifte', '<', 0.0, 2.0, 'observation1', 'Maxi', 'Mini', 'Mini', 'observation1', '-', 'Mini', '~', 'Mini', 0.855, 'observation0', '**', 0.455, 0.927014714644712, 'observation1', 'observation1', 'observation1']
+    tree = karoo_tree_from_labellist(label_list)
+    print(tree)
+
+
+test_tree_build()

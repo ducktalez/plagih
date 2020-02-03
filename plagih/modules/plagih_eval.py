@@ -163,7 +163,7 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
     graph = ast_convert_from_expr_recursive(tree, tensors=tensors, prnt=prnt, build=build)
 
     if build:
-        print('before:', graph)
+        # print('before:', graph)
         graph = labels_from_graphlist(graph, [])
         # graph = [str(x).replace('~', '-') for x in graph]
 

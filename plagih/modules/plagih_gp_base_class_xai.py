@@ -562,9 +562,9 @@ class ExplainableGP(object):
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
                 # expr_sym = meta['expr_sym']; print('sym', expr_sym)
-                expr_raw = meta['expr_raw']; print('raw', expr_raw)
+                expr_raw = meta['expr_raw']
                 # label_list = ast_convert_from_expr(expr_sym, build=True); print('label_list', label_list)
-                label_list = ast_convert_from_expr(expr_raw, build=True); print('label_list', label_list)
+                label_list = ast_convert_from_expr(expr_raw, build=True)
                 olymp_winner = karoo_tree_from_labellist(label_list)
                 olymp_winner = tree_modifyable_nodes_set(olymp_winner, self.origin['tree'])
                 self.popnew_append(olymp_winner, last_modification='repro')

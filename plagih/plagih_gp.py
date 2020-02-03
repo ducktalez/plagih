@@ -21,6 +21,7 @@ def get_evolve_rates_dict(evolve_rates, pop_max):
 
 def create_config_dict():
     config_dict = {
+        'path': Path.cwd(),
         'name': 'MTC_tree_',
         'kernel': 'regression',  # [regression, classification, match]
         'precision': 6,  # rounding the fitness
@@ -69,51 +70,55 @@ def fast_run(config):
     return config
 
 
-def mountaincar_prepare(config_dict):
+def mountaincar_prepare(config_dict, path):
 
     # prepared_data = data_from_csv(file_dict['samples_file'])
 
     gp = plagih.ExplainableGP(config_dict)
-    prepared_data = data_load_pickle(MountainCarExamples.files['samples_pickle'])
+    prepared_data = data_load_pickle(path / MountainCarExamples.files['samples_pickle'])
     gp.activate_data(prepared_data)
-    op_array = load_operators_from_csv(MountainCarExamples.files['operators_file'])
+    op_array = load_operators_from_csv(path / MountainCarExamples.files['operators_file'])
     gp.activate_operators(op_array)
     return gp
 
 
-def mountaincar_v1(config_dict):
+def mountaincar_v1(config_dict, path):
     config_dict['name'] = 'MTC_v1_'
-    gp = mountaincar_prepare(config_dict)
+    config_dict['path'] = path
+    gp = mountaincar_prepare(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list, modify_list=MountainCarExamples.tree_v1_modify)
     return gp
 
 
-def mountaincar_v2(config_dict):
+def mountaincar_v2(config_dict, path):
     config_dict['name'] = 'MTC_v2_'
-    gp = mountaincar_prepare(config_dict)
+    config_dict['path'] = path
+    gp = mountaincar_prepare(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
 
 
-def mountaincar_v3(config_dict):
+def mountaincar_v3(config_dict, path):
     config_dict['name'] = 'MTC_v3_'
-    gp = mountaincar_prepare(config_dict)
+    config_dict['path'] = path
+    gp = mountaincar_prepare(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
     return gp
 
 
-def mountaincar_tmp(config_dict):
+def mountaincar_tmp(config_dict, path):
     config_dict['name'] = 'MTC_tmp_'
+    config_dict['path'] = path
     config_dict = fast_run(config_dict)
-    gp = mountaincar_prepare(config_dict)
+    gp = mountaincar_prepare(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
 
 
-def run():
+def run(root_dir):
     config_dict = create_config_dict()
-    gp = mountaincar_v2(config_dict)
+    gp = mountaincar_v2(config_dict, root_dir)
     gp.plagih_gp_run()
 
 
-run()
+# run()

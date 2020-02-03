@@ -79,8 +79,8 @@ class ExplainableGP(object):
         self.monitoring_dict = {'genepool_size': {},
                                 'fitness_average': {},
                                 'total_found_trees': {}}
-
-        self.file_directories_create()
+        runs_path = self.config['path']
+        self.file_directories_create(runs_path)
         self.done = False
         self.gen_id = 0
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
@@ -107,13 +107,16 @@ class ExplainableGP(object):
     #   Top dim_y      functions                  |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def file_directories_create(self):
+    def file_directories_create(self, path_cwd):
         """
         Create all files that will be saved after all
         """
 
-        self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
-        cwd = Path.cwd()
+        # self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
+        self.datetime = datetime.now().strftime('%H%M%S')
+        # cwd = Path.cwd()
+        cwd = path_cwd
+        print('cwd is:', cwd)
         self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)

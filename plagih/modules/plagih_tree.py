@@ -263,7 +263,8 @@ def tree_expr_raw(tree, node_id):
         return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
 
     elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
+        fun = str(tree[N_label, node_id]).replace('~', '-')
+        return '(' + fun + tree_expr_raw(tree, tree[9, node_id]) + ')'
 
     elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
         # This if case is for 2-ary ops that is prefix. like Min(a, b)
@@ -318,8 +319,8 @@ def tree_expr_sympify(algo_raw=None, tree=None):
     """
     returns the sympifyed expression
     """
-    if tree is not None:  # If we got a tree, we generate the expression
-        algo_raw = str(tree_expr_raw(tree, 1))
+    if not algo_raw:  # If we got a tree, we generate the expression
+        algo_raw = str(tree_expr_raw(tree, root_id))
 
     try:
         expr_sym = plagih_sympify(algo_raw)

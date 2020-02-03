@@ -165,6 +165,7 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
     if build:
         print('before:', graph)
         graph = labels_from_graphlist(graph, [])
+        # graph = [str(x).replace('~', '-') for x in graph]
 
     return graph
 
@@ -173,8 +174,10 @@ def labels_from_graphlist(expr_array, expr):
     """
     Returns a list
     """
-    for x in expr_array:
+
+    for x in expr_array:  # all elements, that are not lists themselves
         if type(x) is not list:
+            # x = str(x).replace('~', '-')  # workaround for usub/sub problem
             expr.append(x)
 
     only_lists = [x for x in expr_array if (type(x) == list)]
@@ -198,6 +201,8 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             return '{}'.format(node.id)
         elif build:
             return [node.id]
+            # sfeh, what is better?
+            # return node.id
         else:
             return tensors[node.id]
 
@@ -205,6 +210,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
         if prnt:
             return '{}'.format(node.n)
         if build:
+            # return node.n
             return [node.n]
         else:
             shape = tensors[list(tensors.keys())[0]].get_shape()
@@ -215,9 +221,10 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             return '{}'.format(node.value)
         if build:
             return [node.value]
+            # return node.value
         else:
             return tf.constant(node.value)
-
+#
     # Arity 1
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
         if prnt:
@@ -225,9 +232,9 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                 op[type(node.op)]['name'],
                 ast_convert_from_expr_recursive(node.operand, prnt=prnt))
         if build:
-            # TODO this makes the operator to ~. should be a unary -.
             if type(node.op) == ast.USub:
-                return ['-' + str(ast_convert_from_expr_recursive(node.operand, build=True))]
+                return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
+                # return ['-', ['0', ast_convert_from_expr_recursive(node.operand, build=True)]]
             return [op[type(node.op)]['name'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
         else:
             return ast_tensor_dict[type(node.op)](

@@ -33,8 +33,10 @@ class MountainCarExamples:
                    0.03, '*', 0.008, '-', '**', '-', '**', 0.3, '**', 0.07, '+', 2, 0.09, '+', 2, '+', 4,
                    'observation0', 0.38, 'observation0', 0.25, 'observation0', 0.9]
 
-    tree_plus_list = ['+', '-', '-', '*', '*', '*', '*', 1, 2, 3, 4, 5, 6, 7, 8]
-    tree_plus_modify_v1 = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    tree_test_minus_list = ['*', 'a', '-2']
+
+    tree_test_plus_list = ['+', '-', '-', '*', '*', '*', '*', 1, 2, 3, 4, 5, 6, 7, 8]
+    tree_test_plus_modify_v1 = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
     fake_tensors = {'observation0': tf.constant(1.1, dtype=tf.float32),
                     'observation1': tf.constant(2.2, dtype=tf.float32),

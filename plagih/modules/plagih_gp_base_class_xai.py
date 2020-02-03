@@ -555,7 +555,7 @@ class ExplainableGP(object):
     def gen_reproduce_olymp(self, repro_rate, tourn_size):
 
         """
-        A single Tree from the prior generation is copied without mutation
+        Copy an entry from the pareto candidates into the population
         """
 
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation

@@ -88,14 +88,13 @@ class TestTmp:
     """
     random test
     """
+
     def decide(self, observation):
         pos, velocity = observation
-        observation0 = pos
-        observation1 = velocity
-        if observation1 < -0.16*observation0*max(-0.045, min(observation0 - max(2 * observation1, -0.16) + 0.485, -0.935 / min(1, observation0))):
-            return 0
-        else:
+        if (velocity <= 0.63) and (min(-0.09 * (pos + 0.25) ** 2.0 + 0.03, 0.3 * (pos + 0.9) ** 4.0 - 0.01) <= velocity):
             return 2
+        else:
+            return 0
 
 
 def play_once(env, agent, render=False, verbose=False):

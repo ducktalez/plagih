@@ -36,7 +36,7 @@ def create_config_dict():
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
         'pop_max': 600,
         'gen_max': 1000,
-        'gp_tourn_size': 5,  # [7 per 100]		number of trees selected for tournament
+        'gp_tourn_size': 7,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
@@ -117,6 +117,6 @@ def mountaincar_tmp(config_dict, path):
 
 def run(root_dir):
     config_dict = create_config_dict()
-    gp = mountaincar_tmp(config_dict, root_dir)
+    # gp = mountaincar_tmp(config_dict, root_dir)
+    gp = mountaincar_v1(config_dict, root_dir)
     gp.plagih_gp_run()
-

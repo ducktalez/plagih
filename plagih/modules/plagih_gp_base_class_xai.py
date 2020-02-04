@@ -149,6 +149,7 @@ class ExplainableGP(object):
 
         gp_list = [('Reproduce gen', self.gen_reproduce),
                    ('Reproduce Olymp', self.gen_reproduce_olymp),
+                   ('Reproduce reduce', self.gen_reproduce_reduce),
                    ('Point Mutation', self.gen_mutate_point),
                    ('Point Filter', self.gen_mutate_filter),
                    ('Branch nodebased', self.gen_mutate_branch),
@@ -574,6 +575,19 @@ class ExplainableGP(object):
         # print('after olymp:', len(self.population_new))
         return
 
+    def gen_reproduce_reduce(self, repro_rate, tourn_size):
+
+        """
+        copy a tree from the last population and sympify parts of it
+        """
+
+        for i in range(repro_rate):
+            tree = self.pop_selection_tournament(tourn_size)
+            tree = self.treegp_reduce_parts(tree)
+            self.popnew_append(tree, last_modification='point')
+
+        return
+
     def gen_mutate_point(self, repro_rate, tourn_size):
 
         """
@@ -689,8 +703,8 @@ class ExplainableGP(object):
             if not success:
                 force_convert = True
 
-            left_ids, left_labels, left_aritys = tree_get_branchinfo(left_tree, left_id)
-            right_ids, right_labels, right_aritys = tree_get_branchinfo(right_tree, right_id)
+            left_ids, left_labels, left_aritys = tree_get_branch_plus(left_tree, left_id)
+            right_ids, right_labels, right_aritys = tree_get_branch_plus(right_tree, right_id)
 
             if force_convert:
                 self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
@@ -705,11 +719,11 @@ class ExplainableGP(object):
             right_core = core_from_labels(right_labels, right_aritys)
 
             left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-            left_offspring = self.treegp_crossover_tree_prune(left_offspring, self.config['tree_depth_max'])
+            left_offspring = self.treegp_tree_prune(left_offspring, self.config['tree_depth_max'])
             self.popnew_append(left_offspring, last_modification='cross')
 
             right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-            right_offspring = self.treegp_crossover_tree_prune(right_offspring, self.config['tree_depth_max'])
+            right_offspring = self.treegp_tree_prune(right_offspring, self.config['tree_depth_max'])
             self.popnew_append(right_offspring, last_modification='cross')
             # right_offspring = self.treegp_crossover_insert(right_tree, right_ids, left_tree, left_ids, convert_needed=convert_needed)
         return
@@ -816,7 +830,7 @@ class ExplainableGP(object):
         # 1. choose a node
         node_id = np.random.choice(tree_get_mutatable_nodes(tree))
         label = tree_get_label(tree, node_id)
-        arity = label_get_arity(label)  # int(tree[N_arity][node_id])
+        arity = tree_label_get_arity(label)  # int(tree[N_arity][node_id])
         xtype = self.xtype_get(label)  # '>' -> 'f2b'
 
         if same_arity:
@@ -834,6 +848,27 @@ class ExplainableGP(object):
             self.printpl('e', 'treegp_mutate_point_evolve dies not know this method to handle the arity: {}'.format(arity))
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
+
+    def treegp_reduce_parts(self, tree):
+
+        """
+        Mutate a single mutatable point in any Tree.
+        """
+
+        # todo this could be for node in "first row of modifiable nodes"
+        node_id = np.random.choice(tree_get_mutatable_nodes(tree))  # choose
+
+        delete_ids = tree_get_branch(tree, node_id)
+        expr_raw = tree_expr_raw(tree, node_id)
+        # print('reducing expr raw:', expr_raw)
+        expr_sym = tree_expr_sympify(algo_raw=expr_raw)
+        # print('reducing expr sym:', expr_sym)
+        label_list = ast_convert_from_expr(expr_sym, build=True)
+        arity_list = [tree_label_get_arity(label) for label in label_list]  # todo zeile auslagern?
+        core = core_from_labels(label_list, arity_list)
+        tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
+
+        return tree_sympified
 
     def treegp_mutate_filter_one(self, tree):
         """
@@ -856,7 +891,7 @@ class ExplainableGP(object):
             raise Exception('No mutatable node found!')
             # return None
 
-    def treegp_crossover_tree_prune(self, tree, depth):
+    def treegp_tree_prune(self, tree, depth):
         """
         reduces the depth of a Tree (in case it is too deep).
         Arguments required: tree, depth
@@ -1239,7 +1274,7 @@ class ExplainableGP(object):
         returns xtype for a label
         """
         if not node_arity:
-            node_arity = label_get_arity(label)
+            node_arity = tree_label_get_arity(label)
 
         if node_arity == 0:  # arity=0 -> terminal
             if 'True' in label or 'False' in label:

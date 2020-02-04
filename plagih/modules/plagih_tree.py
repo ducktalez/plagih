@@ -895,7 +895,7 @@ def xtype_get_constant(label, node_arity=None, only_float=True):
     const_xtype = None
 
     if not node_arity:
-        node_arity = label_get_arity(label)
+        node_arity = tree_label_get_arity(label)
 
     if node_arity == 0:  # arity=0 -> terminal
         if 'True' in label or 'False' in label:
@@ -974,18 +974,37 @@ def labels_get_aritys_list(label_list, karoo=False):
     returns an arity list for a label list
     """
 
-    arity_list = [label_get_arity(x) for x in label_list]
+    arity_list = [tree_label_get_arity(x) for x in label_list]
 
     if karoo:
         arity_list.pop(0)
     return arity_list
 
 
-def tree_get_branchinfo(tree, node_id, karoo=True):
+def tree_get_branch(tree, node, karoo=True):
+    """
+    return all child-nodes as list
+    """
+    if not karoo:
+        raise Exception
+
+    branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
+
+    # 2. Also return all child nodes
+    branch_eval = tree_node_get_idstring(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
+    branch_symp = plagih_sympify(branch_eval)  # convert string into something useful
+
+    branch = np.append(branch, branch_symp)
+    branch = np.sort(branch)  # sort nodes in branch for Crossover.
+
+    return branch
+
+
+def tree_get_branch_plus(tree, node_id, karoo=True):
     """
     returns all ids, labels and arities for a node in a tree
     """
-    ids = tree_get_branch(tree, node_id)
+    ids = tree_get_branch(tree, node_id, karoo=karoo)
     labels = [tree[N_label][i] for i in ids]
     aritys = [tree[N_arity][i] for i in ids]
     return ids, labels, aritys
@@ -1009,25 +1028,6 @@ def tree_pretty_print(tree, karoo=False):
         print(layer_labels)
 
     return
-
-
-def tree_get_branch(tree, node, karoo=True):
-    """
-    return all child-nodes as list
-    """
-    if not karoo:
-        raise Exception
-
-    branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-
-    # 2. Also return all child nodes
-    branch_eval = tree_node_get_idstring(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
-    branch_symp = plagih_sympify(branch_eval)  # convert string into something useful
-
-    branch = np.append(branch, branch_symp)
-    branch = np.sort(branch)  # sort nodes in branch for Crossover.
-
-    return branch
 
 
 def tree_labels(tree):
@@ -1105,7 +1105,7 @@ def karoo_tree_from_labellist(label_list, modify_list=None):
     """
     create a tree from user input
     """
-    arity_list = [label_get_arity(label) for label in label_list]
+    arity_list = [tree_label_get_arity(label) for label in label_list]
     core = core_from_labels(label_list, arity_list)
     if modify_list:
         for i, val in enumerate(modify_list):

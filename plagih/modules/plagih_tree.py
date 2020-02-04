@@ -128,6 +128,7 @@ def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dic
 
     return result_label_list, result_arity_list
 
+
 def invent_label_list_nodes(xtype, max_nodes, variables_dict, action_dict, op_array):
     """
     build a random, but within itself consistent label list
@@ -263,7 +264,11 @@ def tree_expr_raw(tree, node_id):
         return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
 
     elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + ')'
+        fun = tree[N_label, node_id]
+        if fun == '~':  # ~- workaround
+            return '(-({}))'.format(tree_expr_raw(tree, tree[9, node_id]))
+        else:
+            return '(' + fun + tree_expr_raw(tree, tree[9, node_id]) + ')'
 
     elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
         # This if case is for 2-ary ops that is prefix. like Min(a, b)
@@ -318,8 +323,8 @@ def tree_expr_sympify(algo_raw=None, tree=None):
     """
     returns the sympifyed expression
     """
-    if tree is not None:  # If we got a tree, we generate the expression
-        algo_raw = str(tree_expr_raw(tree, 1))
+    if not algo_raw:  # If we got a tree, we generate the expression
+        algo_raw = str(tree_expr_raw(tree, root_id))
 
     try:
         expr_sym = plagih_sympify(algo_raw)
@@ -890,7 +895,7 @@ def xtype_get_constant(label, node_arity=None, only_float=True):
     const_xtype = None
 
     if not node_arity:
-        node_arity = label_get_arity(label)
+        node_arity = tree_label_get_arity(label)
 
     if node_arity == 0:  # arity=0 -> terminal
         if 'True' in label or 'False' in label:
@@ -969,18 +974,37 @@ def labels_get_aritys_list(label_list, karoo=False):
     returns an arity list for a label list
     """
 
-    arity_list = [label_get_arity(x) for x in label_list]
+    arity_list = [tree_label_get_arity(x) for x in label_list]
 
     if karoo:
         arity_list.pop(0)
     return arity_list
 
 
-def tree_get_branchinfo(tree, node_id, karoo=True):
+def tree_get_branch(tree, node, karoo=True):
+    """
+    return all child-nodes as list
+    """
+    if not karoo:
+        raise Exception
+
+    branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
+
+    # 2. Also return all child nodes
+    branch_eval = tree_node_get_idstring(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
+    branch_symp = plagih_sympify(branch_eval)  # convert string into something useful
+
+    branch = np.append(branch, branch_symp)
+    branch = np.sort(branch)  # sort nodes in branch for Crossover.
+
+    return branch
+
+
+def tree_get_branch_plus(tree, node_id, karoo=True):
     """
     returns all ids, labels and arities for a node in a tree
     """
-    ids = tree_get_branch(tree, node_id)
+    ids = tree_get_branch(tree, node_id, karoo=karoo)
     labels = [tree[N_label][i] for i in ids]
     aritys = [tree[N_arity][i] for i in ids]
     return ids, labels, aritys
@@ -1004,25 +1028,6 @@ def tree_pretty_print(tree, karoo=False):
         print(layer_labels)
 
     return
-
-
-def tree_get_branch(tree, node, karoo=True):
-    """
-    return all child-nodes as list
-    """
-    if not karoo:
-        raise Exception
-
-    branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-
-    # 2. Also return all child nodes
-    branch_eval = tree_node_get_idstring(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
-    branch_symp = plagih_sympify(branch_eval)  # convert string into something useful
-
-    branch = np.append(branch, branch_symp)
-    branch = np.sort(branch)  # sort nodes in branch for Crossover.
-
-    return branch
 
 
 def tree_labels(tree):
@@ -1100,7 +1105,7 @@ def karoo_tree_from_labellist(label_list, modify_list=None):
     """
     create a tree from user input
     """
-    arity_list = [label_get_arity(label) for label in label_list]
+    arity_list = [tree_label_get_arity(label) for label in label_list]
     core = core_from_labels(label_list, arity_list)
     if modify_list:
         for i, val in enumerate(modify_list):
@@ -1196,7 +1201,7 @@ def tree_normalize_exponentiation(tree):
     return tree
 
 
-def tree_get_mutatable_leaves_lv0(tree, karoo=True):
+def tree_get_mutatable_layer_lv0(tree, karoo=True):
     """
     Returns a list with mutatable ids on the outside
     """
@@ -1273,7 +1278,7 @@ def tree_node_get_parent_functype(tree, node_id, karoo=True):
         raise
 
 
-def tree_get_mutatable_leaves(tree, level, karoo=True):
+def tree_get_mutatable_layer(tree, level, karoo=True):
     """
     Returns a list with mutatable ids on the outside
     """
@@ -1282,7 +1287,7 @@ def tree_get_mutatable_leaves(tree, level, karoo=True):
     node_ids = []
     while lvl_count <= level:
         if lvl_count == 0:
-            node_ids = tree_get_mutatable_leaves_lv0(tree, karoo=karoo)
+            node_ids = tree_get_mutatable_layer_lv0(tree, karoo=karoo)
         elif lvl_count > 0:
             new_node_ids = []
             for node_id in node_ids:

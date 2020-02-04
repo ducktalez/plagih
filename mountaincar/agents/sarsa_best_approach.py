@@ -226,16 +226,12 @@ def create_behaviour_samples_file(seed=0):
         writer.writerows(samples_csv_ready)
     csvFile.close()
 
-    # import pickle
-    # with open(samples_file, "rb") as fp:
-    #     plagih_behaviour_samples = pickle.load(fp)
-    # print(plagih_behaviour_samples[:10])
-
     return
 
 
 if __name__ == "__main__":
-    create_behaviour_samples_file()
+    # create_behaviour_samples_file()
     # dothis = input('Please press: create (s)amples, run coming later: ')
     # if dothis == 's':
     #     create_behaviour_samples_file()
+    sarsa_start_frommodel()

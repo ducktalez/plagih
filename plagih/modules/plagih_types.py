@@ -23,7 +23,7 @@ def op_label_get_basictype(node_label):
         return 'term'
 
 
-def label_get_arity(node_label):
+def tree_label_get_arity(node_label):
     """
     return terminal or function according to the label
     """
@@ -194,7 +194,7 @@ def xtype_get_v2(label, variables_dict=None, action_dict=None, node_arity=None):
     if you are not 100% sure that it is a function.
     """
     if not node_arity:
-        node_arity = label_get_arity(label)
+        node_arity = tree_label_get_arity(label)
 
     if node_arity == 0:  # arity=0 -> terminal
         if 'True' in label or 'False' in label:

@@ -47,6 +47,7 @@ class ExplainableGP(object):
         self.parsimony_best_meta = {}  #tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
+        self.best_fitness = None
 
         # 1. set global variables to those local values passed from the user script
         self.config = config_dict
@@ -78,6 +79,7 @@ class ExplainableGP(object):
         self.debug_warnings = {}
         self.monitoring_dict = {'genepool_size': {},
                                 'fitness_average': {},
+                                'best_candidate': {},
                                 'total_found_trees': {}}
         runs_path = self.config['path']
         self.file_directories_create(runs_path)
@@ -92,7 +94,7 @@ class ExplainableGP(object):
         regular plagih-config run from scratch
         """
 
-        self.gen_id = 0  # set initial generation ID    # first gen only
+        self.gen_id = 0
         file_config(self.path, self.config, self.gen_id, self.kernel, self.datetime)
         self.main_generation_first_origin()
         self.main_generation_loop()  # (main loop)
@@ -147,6 +149,7 @@ class ExplainableGP(object):
 
         gp_list = [('Reproduce gen', self.gen_reproduce),
                    ('Reproduce Olymp', self.gen_reproduce_olymp),
+                   ('Reproduce reduce', self.gen_reproduce_reduce),
                    ('Point Mutation', self.gen_mutate_point),
                    ('Point Filter', self.gen_mutate_filter),
                    ('Branch nodebased', self.gen_mutate_branch),
@@ -553,18 +556,35 @@ class ExplainableGP(object):
     def gen_reproduce_olymp(self, repro_rate, tourn_size):
 
         """
-        A single Tree from the prior generation is copied without mutation
+        Copy an entry from the pareto candidates into the population
         """
-
+        # print('before olymp:', len(self.population_new))
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
-                expr_sym = meta['expr_sym']; print('sym', expr_sym)
-                label_list = ast_convert_from_expr(expr_sym, build=True); print('label_list', label_list)
+                # expr_sym = meta['expr_sym']; print('sym', expr_sym)
+                expr_raw = meta['expr_raw']
+                # label_list = ast_convert_from_expr(expr_sym, build=True); print('label_list', label_list)
+                label_list = ast_convert_from_expr(expr_raw, build=True)
                 olymp_winner = karoo_tree_from_labellist(label_list)
+                olymp_winner = tree_modifyable_nodes_set(olymp_winner, self.origin['tree'])
                 self.popnew_append(olymp_winner, last_modification='repro')
 
-                print('Olymp winner:\n', olymp_winner)
+                # print('Olymp winner:\n', olymp_winner)
+
+        # print('after olymp:', len(self.population_new))
+        return
+
+    def gen_reproduce_reduce(self, repro_rate, tourn_size):
+
+        """
+        copy a tree from the last population and sympify parts of it
+        """
+
+        for i in range(repro_rate):
+            tree = self.pop_selection_tournament(tourn_size)
+            tree = self.treegp_reduce_parts(tree, completely=False)
+            self.popnew_append(tree, last_modification='point')
 
         return
 
@@ -603,12 +623,12 @@ class ExplainableGP(object):
     def tree_random_build(self, tree):
         tree_origin = tree.copy()
 
-        node_ids = tree_get_mutatable_leaves(tree, 0)
+        node_ids = tree_get_mutatable_layer(tree, 0)
         num_new_branches = len(node_ids)
         if num_new_branches > 3:
             print_warning('w', 'That is a lot of new trees')
         for i in range(0, num_new_branches):
-            node_ids = tree_get_mutatable_leaves(tree, 0)
+            node_ids = tree_get_mutatable_layer(tree, 0)
             node_id = node_ids[i]
             old_branch = tree_get_branch(tree, node_id, karoo=True)
             tree = self.tree_insert_branch_random(tree_origin, old_branch)  # tree with new branch
@@ -683,8 +703,8 @@ class ExplainableGP(object):
             if not success:
                 force_convert = True
 
-            left_ids, left_labels, left_aritys = tree_get_branchinfo(left_tree, left_id)
-            right_ids, right_labels, right_aritys = tree_get_branchinfo(right_tree, right_id)
+            left_ids, left_labels, left_aritys = tree_get_branch_plus(left_tree, left_id)
+            right_ids, right_labels, right_aritys = tree_get_branch_plus(right_tree, right_id)
 
             if force_convert:
                 self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
@@ -699,11 +719,11 @@ class ExplainableGP(object):
             right_core = core_from_labels(right_labels, right_aritys)
 
             left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-            left_offspring = self.treegp_crossover_tree_prune(left_offspring, self.config['tree_depth_max'])
+            left_offspring = self.treegp_tree_prune(left_offspring, self.config['tree_depth_max'])
             self.popnew_append(left_offspring, last_modification='cross')
 
             right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-            right_offspring = self.treegp_crossover_tree_prune(right_offspring, self.config['tree_depth_max'])
+            right_offspring = self.treegp_tree_prune(right_offspring, self.config['tree_depth_max'])
             self.popnew_append(right_offspring, last_modification='cross')
             # right_offspring = self.treegp_crossover_insert(right_tree, right_ids, left_tree, left_ids, convert_needed=convert_needed)
         return
@@ -810,7 +830,7 @@ class ExplainableGP(object):
         # 1. choose a node
         node_id = np.random.choice(tree_get_mutatable_nodes(tree))
         label = tree_get_label(tree, node_id)
-        arity = label_get_arity(label)  # int(tree[N_arity][node_id])
+        arity = tree_label_get_arity(label)  # int(tree[N_arity][node_id])
         xtype = self.xtype_get(label)  # '>' -> 'f2b'
 
         if same_arity:
@@ -828,6 +848,40 @@ class ExplainableGP(object):
             self.printpl('e', 'treegp_mutate_point_evolve dies not know this method to handle the arity: {}'.format(arity))
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
+
+    def treegp_reduce_branch(self, tree, node_id):
+        delete_ids = tree_get_branch(tree, node_id)
+        expr_raw = tree_expr_raw(tree, node_id)
+        try:
+            expr_sym = tree_expr_sympify(algo_raw=expr_raw)
+            label_list = ast_convert_from_expr(expr_sym, build=True)
+            arity_list = [tree_label_get_arity(label) for label in label_list]  # todo zeile auslagern?
+            core = core_from_labels(label_list, arity_list)
+            tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
+
+            return tree_sympified
+        except:
+            print_warning('w', 'reducing expr raw: {}'.format(expr_raw))
+            print_warning('w', 'Delete this tree! nan tree or other error.')
+            return tree
+
+    def treegp_reduce_parts(self, tree, completely=False):
+
+        """
+        Mutate a single mutatable point in any Tree.
+        """
+
+        if completely:
+            # todo test this
+            nodes_lv0 = tree_get_mutatable_layer_lv0(tree, karoo=True)
+            for node_id in nodes_lv0:
+                tree = self.treegp_reduce_branch(tree, node_id)
+        else:
+            node_ids = tree_get_mutatable_nodes(tree)
+            # todo only functions? maybe always all?
+            node_id = np.random.choice(node_ids)  # choose
+            tree = self.treegp_reduce_branch(tree, node_id)
+        return tree
 
     def treegp_mutate_filter_one(self, tree):
         """
@@ -850,7 +904,7 @@ class ExplainableGP(object):
             raise Exception('No mutatable node found!')
             # return None
 
-    def treegp_crossover_tree_prune(self, tree, depth):
+    def treegp_tree_prune(self, tree, depth):
         """
         reduces the depth of a Tree (in case it is too deep).
         Arguments required: tree, depth
@@ -1007,19 +1061,20 @@ class ExplainableGP(object):
                 result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
 
         elif grow_method == 'num_nodes':
-            pass
+            return None
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
             This could be calculated respectively to the parsimony dim_y
             which the tree might have up his sleeve
             """
-            pass
+            return None
             # num_new_nodes = np.random.randint(10, 30)
             # max_
 
         else:
             print_e('That did not work')
+            return None
 
         return result_tree
 
@@ -1233,7 +1288,7 @@ class ExplainableGP(object):
         returns xtype for a label
         """
         if not node_arity:
-            node_arity = label_get_arity(label)
+            node_arity = tree_label_get_arity(label)
 
         if node_arity == 0:  # arity=0 -> terminal
             if 'True' in label or 'False' in label:
@@ -1310,7 +1365,11 @@ class ExplainableGP(object):
         self.plot_end(data_tupels, path, plt_title='Number of created Trees', plt_y_label='Amount')
 
         data_tupels = sorted(list(self.pareto.items()))
-        self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness')
+        self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', only_dots=True, plt_x_label='Parsimony', plt_y_label='Fitness')
+
+        data_tupels = sorted(list(self.monitoring_dict['best_candidate'].items()))
+        self.plot_end(data_tupels, path, plt_title='Best candidate', only_dots=True, plt_x_label='Generation', plt_y_label='Fitness')
+
         return
 
     def monitor_genepool(self, gene_pool, path, gen_id):
@@ -1322,25 +1381,33 @@ class ExplainableGP(object):
         self.monitoring_dict['genepool_size'][int(gen_id)] = len(gene_pool)
         if len(gene_pool) > 0:
             self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool)))
-        else:  # the evolutionary constraints were too tight, killing off the entire population
+        else:
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.file_autowrite(path, gen_id)
             self.file_autoplots(path)
             sys.exit()
 
-        # average fitness our genepool?
+        if not self.best_fitness:
+            self.best_fitness = self.origin['fitness_train']
+
         fitness_train_sum = 0
         for _, meta in gene_pool.items():
-            fitness_train_sum += float(meta['fitness_train'])
+            fitness = float(meta['fitness_train'])
+            fitness_train_sum += fitness  # for fitness average
+            if self.fitness_compare(fitness, self.best_fitness):
+                self.best_fitness = fitness
+
         average_fitness = fitness_train_sum / len(gene_pool)
         self.monitoring_dict['fitness_average'][gen_id] = average_fitness
+        self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
+
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to display output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', variance=None):
+    def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', only_dots=None, variance=None):
 
         x, y = [], []
         for a, b in data_2d:
@@ -1353,7 +1420,10 @@ class ExplainableGP(object):
             stds = np.std(y, axis=0)
             n = means.size
 
-        plt.plot(x, y, label=plt_curve_label)
+        if only_dots:
+            plt.plot(x, y, linestyle='', marker='o', label=plt_curve_label)
+        else:
+            plt.plot(x, y, label=plt_curve_label)
 
         if plt_x_label and plt_y_label:
             plt.xlabel(plt_x_label)

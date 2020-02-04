@@ -46,11 +46,11 @@ def create_config_dict():
                    'time_save': 60 * 0.5,  # in sec
                    'gen_monitor': None,  # in gen counts
                    'gen_save': None},  # in gen counts
-        'evolve_rates': {'Reproduce gen': 0.05, 'Reproduce Olymp': 0.0,
-                         'Point Mutation': 0.1, 'Point Filter': 0.05,
+        'evolve_rates': {'Reproduce gen': 0.05, 'Reproduce Olymp': 0.05, 'Reproduce reduce': 0.05,
+                         'Point Mutation': 0.05, 'Point Filter': 0.05,
                          'Branch nodebased': 0.1,
                          'Crossover one Branch': 0.35,
-                         'Create Random': 0.35},
+                         'Create Random': 0.30},
         # 'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.0, 'Reproduce Olymp': 0.0,
         #                  'Point': 0, 'Point Mutation': 0.0, 'Point Filter': 0.0,
         #                  'Branch': 0, 'Branch mutate one': 0.0, 'Branch nodebased': 0.0, 'Branch 2': 0, 'Branch 3': 0,
@@ -117,8 +117,6 @@ def mountaincar_tmp(config_dict, path):
 
 def run(root_dir):
     config_dict = create_config_dict()
-    gp = mountaincar_v2(config_dict, root_dir)
+    gp = mountaincar_tmp(config_dict, root_dir)
     gp.plagih_gp_run()
 
-
-# run()

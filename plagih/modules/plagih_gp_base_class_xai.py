@@ -860,15 +860,18 @@ class ExplainableGP(object):
 
         delete_ids = tree_get_branch(tree, node_id)
         expr_raw = tree_expr_raw(tree, node_id)
-        # print('reducing expr raw:', expr_raw)
-        expr_sym = tree_expr_sympify(algo_raw=expr_raw)
-        # print('reducing expr sym:', expr_sym)
-        label_list = ast_convert_from_expr(expr_sym, build=True)
-        arity_list = [tree_label_get_arity(label) for label in label_list]  # todo zeile auslagern?
-        core = core_from_labels(label_list, arity_list)
-        tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
+        print('reducing expr raw:', expr_raw)
+        try:
+            expr_sym = tree_expr_sympify(algo_raw=expr_raw)
+            label_list = ast_convert_from_expr(expr_sym, build=True)
+            arity_list = [tree_label_get_arity(label) for label in label_list]  # todo zeile auslagern?
+            core = core_from_labels(label_list, arity_list)
+            tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
 
-        return tree_sympified
+            return tree_sympified
+        except:
+            print_warning('w', 'Delete this tree! nan tree or other error.')
+            return tree
 
     def treegp_mutate_filter_one(self, tree):
         """

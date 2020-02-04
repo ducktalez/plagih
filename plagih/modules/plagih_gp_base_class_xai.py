@@ -860,7 +860,6 @@ class ExplainableGP(object):
 
         delete_ids = tree_get_branch(tree, node_id)
         expr_raw = tree_expr_raw(tree, node_id)
-        print('reducing expr raw:', expr_raw)
         try:
             expr_sym = tree_expr_sympify(algo_raw=expr_raw)
             label_list = ast_convert_from_expr(expr_sym, build=True)
@@ -870,6 +869,7 @@ class ExplainableGP(object):
 
             return tree_sympified
         except:
+            print_warning('w', 'reducing expr raw: {}'.format(expr_raw))
             print_warning('w', 'Delete this tree! nan tree or other error.')
             return tree
 

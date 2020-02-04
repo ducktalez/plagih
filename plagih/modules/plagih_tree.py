@@ -1201,7 +1201,7 @@ def tree_normalize_exponentiation(tree):
     return tree
 
 
-def tree_get_mutatable_leaves_lv0(tree, karoo=True):
+def tree_get_mutatable_layer_lv0(tree, karoo=True):
     """
     Returns a list with mutatable ids on the outside
     """
@@ -1278,7 +1278,7 @@ def tree_node_get_parent_functype(tree, node_id, karoo=True):
         raise
 
 
-def tree_get_mutatable_leaves(tree, level, karoo=True):
+def tree_get_mutatable_layer(tree, level, karoo=True):
     """
     Returns a list with mutatable ids on the outside
     """
@@ -1287,7 +1287,7 @@ def tree_get_mutatable_leaves(tree, level, karoo=True):
     node_ids = []
     while lvl_count <= level:
         if lvl_count == 0:
-            node_ids = tree_get_mutatable_leaves_lv0(tree, karoo=karoo)
+            node_ids = tree_get_mutatable_layer_lv0(tree, karoo=karoo)
         elif lvl_count > 0:
             new_node_ids = []
             for node_id in node_ids:

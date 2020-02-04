@@ -583,7 +583,7 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):
             tree = self.pop_selection_tournament(tourn_size)
-            tree = self.treegp_reduce_parts(tree)
+            tree = self.treegp_reduce_parts(tree, completely=False)
             self.popnew_append(tree, last_modification='point')
 
         return
@@ -623,12 +623,12 @@ class ExplainableGP(object):
     def tree_random_build(self, tree):
         tree_origin = tree.copy()
 
-        node_ids = tree_get_mutatable_leaves(tree, 0)
+        node_ids = tree_get_mutatable_layer(tree, 0)
         num_new_branches = len(node_ids)
         if num_new_branches > 3:
             print_warning('w', 'That is a lot of new trees')
         for i in range(0, num_new_branches):
-            node_ids = tree_get_mutatable_leaves(tree, 0)
+            node_ids = tree_get_mutatable_layer(tree, 0)
             node_id = node_ids[i]
             old_branch = tree_get_branch(tree, node_id, karoo=True)
             tree = self.tree_insert_branch_random(tree_origin, old_branch)  # tree with new branch
@@ -849,15 +849,7 @@ class ExplainableGP(object):
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
-    def treegp_reduce_parts(self, tree):
-
-        """
-        Mutate a single mutatable point in any Tree.
-        """
-
-        # todo this could be for node in "first row of modifiable nodes"
-        node_id = np.random.choice(tree_get_mutatable_nodes(tree))  # choose
-
+    def treegp_reduce_branch(self, tree, node_id):
         delete_ids = tree_get_branch(tree, node_id)
         expr_raw = tree_expr_raw(tree, node_id)
         try:
@@ -872,6 +864,24 @@ class ExplainableGP(object):
             print_warning('w', 'reducing expr raw: {}'.format(expr_raw))
             print_warning('w', 'Delete this tree! nan tree or other error.')
             return tree
+
+    def treegp_reduce_parts(self, tree, completely=False):
+
+        """
+        Mutate a single mutatable point in any Tree.
+        """
+
+        if completely:
+            # todo test this
+            nodes_lv0 = tree_get_mutatable_layer_lv0(tree, karoo=True)
+            for node_id in nodes_lv0:
+                tree = self.treegp_reduce_branch(tree, node_id)
+        else:
+            node_ids = tree_get_mutatable_nodes(tree)
+            # todo only functions? maybe always all?
+            node_id = np.random.choice(node_ids)  # choose
+            tree = self.treegp_reduce_branch(tree, node_id)
+        return tree
 
     def treegp_mutate_filter_one(self, tree):
         """
@@ -1051,19 +1061,20 @@ class ExplainableGP(object):
                 result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
 
         elif grow_method == 'num_nodes':
-            pass
+            return None
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
             This could be calculated respectively to the parsimony dim_y
             which the tree might have up his sleeve
             """
-            pass
+            return None
             # num_new_nodes = np.random.randint(10, 30)
             # max_
 
         else:
             print_e('That did not work')
+            return None
 
         return result_tree
 

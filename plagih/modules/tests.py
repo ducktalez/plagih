@@ -26,10 +26,10 @@ def test_plagih_tree():
     tree = karoo_tree_from_labellist(tree_list, modify_list=tree_modify)
     # tree = karoo_tree_from_labellist(tree_list)
     print(tree)
-    print(tree_get_mutatable_leaves(tree, 0))
-    print(tree_get_mutatable_leaves(tree, 1))
-    print(tree_get_mutatable_leaves(tree, 2))
-    print(tree_get_mutatable_leaves(tree, 3))
+    print(tree_get_mutatable_layer(tree, 0))
+    print(tree_get_mutatable_layer(tree, 1))
+    print(tree_get_mutatable_layer(tree, 2))
+    print(tree_get_mutatable_layer(tree, 3))
 
     return
 

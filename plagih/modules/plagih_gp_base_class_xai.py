@@ -43,6 +43,7 @@ class ExplainableGP(object):
     def __init__(self, config_dict):
 
         self.time_start = time.perf_counter()
+
         self.tree_meta = {}
         self.parsimony_best_meta = {}  #tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}
@@ -82,9 +83,10 @@ class ExplainableGP(object):
                                 'best_candidate': {},
                                 'total_found_trees': {}}
         runs_path = self.config['path']
-        self.file_directories_create(runs_path)
-        self.done = False
         self.gen_id = 0
+        self.done = False
+
+        self.file_directories_create(runs_path)
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
@@ -94,14 +96,13 @@ class ExplainableGP(object):
         regular plagih-config run from scratch
         """
 
-        self.gen_id = 0
-        file_config(self.path, self.config, self.gen_id, self.kernel, self.datetime)
+        write_config_file(self.path, self.config, self.gen_id, self.kernel, self.datetime)
         self.main_generation_first_origin()
         self.main_generation_loop()  # (main loop)
         self.print_g('gg', 'GP-run. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
-        self.file_autowrite(self.path, 'f')  # archive populations and return to plagih_gp.py for a clean exit
-        self.file_autoplots(self.path)
+        self.file_autowrite(self.path, 'f')
+        self.auto_plots(self.path)
         self.print_g('gg', 'Completely. Exit. \tTime: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         sys.exit()
 
@@ -116,12 +117,19 @@ class ExplainableGP(object):
 
         # self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
         self.datetime = datetime.now().strftime('%H%M%S')
-        # cwd = Path.cwd()
         cwd = path_cwd
-        print('cwd is:', cwd)
-        self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
+        self.path = cwd / 'runs' / '{}'.format(self.config['name'])
+        path_backup = self.path / 'backup.p'
+        # self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)
+
+        elif Path.is_file(path_backup):
+            self.printpl('g', 'Restarting old run now...')
+            self.load_backup(path_backup)
+        else:
+            print_e('Old run started here, but no pickle file was found')
+            raise
 
         return
 
@@ -170,7 +178,7 @@ class ExplainableGP(object):
                 gp_function(evolve_num, tourn_size)
                 self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
-            self.autosave()
+            self.auto_procedures()
 
             self.gen_finalize()
             self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
@@ -178,9 +186,9 @@ class ExplainableGP(object):
             self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format(BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.RESET))
             # menu_continue = 0
 
-    def autosave(self, overwrite=True):
+    def auto_procedures(self, overwrite=True):
         """
-
+        Every few generations, save the current status
         """
         if overwrite:
             path_auto = self.path / 'autosave'
@@ -196,26 +204,28 @@ class ExplainableGP(object):
         if self.config['period']['time_monitor']:
             if self.config['period']['time_monitor'] < (time_now - self.time_last_monitor):
                 self.printpl('ii', 'auto-plots (time)')
-                self.file_autoplots(self.path)
+                self.auto_plots(self.path)
                 self.time_last_monitor = time_now
 
         if self.config['period']['time_save']:
             if self.config['period']['time_save'] < (time_now - self.time_last_files):
                 self.printpl('ii', 'auto-save (time)')
                 self.file_autowrite(path_auto, auto_enumname)
-                self.backup_save_pickle()
+                self.auto_save_pickle()
                 self.time_last_files = time_now
 
         if self.config['period']['gen_monitor']:
             if self.gen_id % int(self.config['period']['gen_monitor']) == 0:
                 self.printpl('ii', 'auto-plots (gen)')
-                self.file_autoplots(self.path)
+                self.auto_plots(self.path)
 
         if self.config['period']['gen_save']:
             if self.gen_id % int(self.config['period']['gen_save']) == 0:
                 self.printpl('ii', 'auto-save (gen)')
-                self.backup_save_pickle()
+                self.auto_save_pickle()
                 self.file_autowrite(path_auto, auto_enumname)
+
+        self.printpl('ii', 'Done with auto-procedures')
 
         return 0
 
@@ -227,6 +237,7 @@ class ExplainableGP(object):
         self.file_conclusion(path, datetime=self.datetime)
         self.file_pareto(self.pareto, path)
         file_population_write_karoo(self.population_new, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
+        return
 
     def gen_olympus_update(self):
         """
@@ -260,28 +271,39 @@ class ExplainableGP(object):
         self.population_new = pop
         return
 
-    def data_pickle_save(self):
+    def load_backup(self, path_backup):
         """
-        save all data_csv_path every few rounds to restore them
+
+        """
+        with Path.open(path_backup, 'rb') as file:
+            run_data = pickle.load(file)
+        self.gen_id = run_data['self.gen_id']
+        self.parsimony_best_meta = run_data['self.parsimony_best_meta']
+        self.pareto = run_data['self.pareto']
+        self.population_new = run_data['self.population_new']
+        self.monitoring_dict = run_data['self.monitoring_dict']
+        print('Generation:', self.gen_id)
+
+        return
+
+    def auto_save_pickle(self):
+        """
+        automatically saves everything important after a certain amount of time
         - save the pareto front (done)
         - save the last generation (done)
         - Save valuable meta-data_csv_path: current generation (done)
         """
-        run_data = {'gen_id': self.gen_id,
-                    'parsimony_front_fitness': '',
-                    'pareto': self.pareto,
-                    'hash_trees_meta': self.tree_meta,
-                    'population_new': self.population_new
-                    }
-        pickle.dump(run_data, Path.open(self.path / 'Gen-{}-backup.p'.format(str(self.gen_id)), 'wb'))
+        path_backup = self.path / 'backup.p'
 
-    def backup_save_pickle(self):
-        """
-        automatically saves everything important after a certain amount of time
-        """
-        path = self.path / 'backup'
-        if not Path.is_dir(path):
-            Path.mkdir(path)
+        run_data = {'self.gen_id': self.gen_id,
+                    'self.parsimony_best_meta': self.parsimony_best_meta,
+                    'self.pareto': self.pareto,  # todo as raw trees
+                    'self.population_new': self.population_new,
+                    'self.monitoring_dict': self.monitoring_dict
+                    }
+        pickle.dump(run_data, Path.open(path_backup, 'wb'))
+        # pickle.dump(run_data, Path.open(backup_path / 'Gen-{}-backup.p'.format(str(self.gen_id)), 'wb'))
+        return
 
     def file_conclusion(self, path, datetime=None):
 
@@ -1277,7 +1299,7 @@ class ExplainableGP(object):
         # every function is inside there only once, so no higher chance for functions that are more often in the list
         # label = np.random.choice(self.xype_func_dict['2f'])
 
-        # choose out of a list, or add another way. maybe automatic?
+        # choose out of a list, or add another way. maybe autmatic?
 
         label = np.random.choice(choose_func)
 
@@ -1346,7 +1368,7 @@ class ExplainableGP(object):
     #   Monitoring                                |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def file_autoplots(self, path, post_path=None):
+    def auto_plots(self, path, post_path=None):
         """
         monitors everything
 
@@ -1384,7 +1406,7 @@ class ExplainableGP(object):
         else:
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.file_autowrite(path, gen_id)
-            self.file_autoplots(path)
+            self.auto_plots(path)
             sys.exit()
 
         if not self.best_fitness:
@@ -1630,7 +1652,7 @@ def file_population_write_karoo(population, pop_name, path, gen_id):
     return
 
 
-def file_config(path, config, gen_id, kernel, datetime):
+def write_config_file(path, config, gen_id, kernel, datetime):
     """
     write the parameters to a file
     """

@@ -42,10 +42,10 @@ def create_config_dict():
                     'sympify_errors': 'y',
                     'genepool_size': 'y'
                     },
-        'period': {'time_monitor': 60 * 0.5,  # in sec
-                   'time_save': 60 * 0.5,  # in sec
-                   'gen_monitor': None,  # in gen counts
-                   'gen_save': None},  # in gen counts
+        'period': {'time_monitor': None,    # in sec
+                   'time_save': None,       # in sec
+                   'gen_monitor': 1,        # in gen counts
+                   'gen_save': 1},          # in gen counts
         'evolve_rates': {'Reproduce gen': 0.05, 'Reproduce Olymp': 0.05, 'Reproduce reduce': 0.05,
                          'Point Mutation': 0.05, 'Point Filter': 0.05,
                          'Branch nodebased': 0.1,
@@ -70,7 +70,7 @@ def fast_run(config):
     return config
 
 
-def mountaincar_prepare(config_dict, path):
+def mountaincar_load_corefiles(config_dict, path):
 
     # prepared_data = data_from_csv(file_dict['samples_file'])
 
@@ -85,7 +85,7 @@ def mountaincar_prepare(config_dict, path):
 def mountaincar_v1(config_dict, path):
     config_dict['name'] = 'MTC_v1_'
     config_dict['path'] = path
-    gp = mountaincar_prepare(config_dict, path)
+    gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list, modify_list=MountainCarExamples.tree_v1_modify)
     return gp
 
@@ -93,7 +93,7 @@ def mountaincar_v1(config_dict, path):
 def mountaincar_v2(config_dict, path):
     config_dict['name'] = 'MTC_v2_'
     config_dict['path'] = path
-    gp = mountaincar_prepare(config_dict, path)
+    gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
 
@@ -101,7 +101,7 @@ def mountaincar_v2(config_dict, path):
 def mountaincar_v3(config_dict, path):
     config_dict['name'] = 'MTC_v3_'
     config_dict['path'] = path
-    gp = mountaincar_prepare(config_dict, path)
+    gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
     return gp
 
@@ -110,13 +110,13 @@ def mountaincar_tmp(config_dict, path):
     config_dict['name'] = 'MTC_tmp_'
     config_dict['path'] = path
     config_dict = fast_run(config_dict)
-    gp = mountaincar_prepare(config_dict, path)
+    gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
 
 
 def run(root_dir):
     config_dict = create_config_dict()
-    # gp = mountaincar_tmp(config_dict, root_dir)
-    gp = mountaincar_v1(config_dict, root_dir)
+    gp = mountaincar_tmp(config_dict, root_dir)
+    # gp = mountaincar_v1(config_dict, root_dir)
     gp.plagih_gp_run()

@@ -23,7 +23,7 @@ class BColors:  # sfeh can be deleted
     RED2 = '\033[41m'
 
 
-def print_e(text, display=None, time_total=0.0):
+def print_e(text, print_type=None, time_total=0.0):
     """
     Printing errors
     """
@@ -32,21 +32,21 @@ def print_e(text, display=None, time_total=0.0):
     print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
 
 
-def print_warning(message_type, text, display=None, time_total=0.0):
+def print_warning(message_type, text, print_type=None, time_total=0.0):
     """
 
     """
     message_style = BColors.WARNING
     message_pretxt = 'Warning: '  # Warning-yellow
-    printez(message_type, text, display=display, time_total=time_total)
+    printez(message_type, text, print_type=print_type, time_total=time_total)
 
 
-def printez(message_type, text, display=None, time_total=0.0):
+def printez(message_type, text, print_type=None, time_total=0.0):
     """
     giving prints colours, accessable from everywhere
     """
-    if display:
-        if message_type not in display:
+    if print_type:
+        if message_type not in print_type:
             return
 
     message_pretxt = BColors.RESET  # default color
@@ -78,7 +78,7 @@ def printez(message_type, text, display=None, time_total=0.0):
         message_pretxt = 'Alert: '
     else:
         message_style = ''
-        printez('w', 'Display-mode {} not known.'.format(message_type))
+        printez('w', 'print_type-mode {} not known.'.format(message_type))
 
     print('{}{}{}{}'.format(message_style, message_pretxt, str(text), message_posttxt))
     return

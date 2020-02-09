@@ -27,7 +27,7 @@ def create_config_dict():
         'precision': 6,  # rounding the fitness
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'display': 'ggewsiivoa',  # To display absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'ggewsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
         'tree_depth_base': 7,
@@ -51,12 +51,6 @@ def create_config_dict():
                          'Branch nodebased': 0.1,
                          'Crossover one Branch': 0.35,
                          'Create Random': 0.30},
-        # 'evolve_rates': {'Reproduce': 0, 'Reproduce gen': 0.0, 'Reproduce Olymp': 0.0,
-        #                  'Point': 0, 'Point Mutation': 0.0, 'Point Filter': 0.0,
-        #                  'Branch': 0, 'Branch mutate one': 0.0, 'Branch nodebased': 0.0, 'Branch 2': 0, 'Branch 3': 0,
-        #                  'Crossover': 0, 'Crossover one Branch': 0.0, 'Crossover 2': 0, 'Crossover 3': 0,
-        #                  'Create Random': 0.0},
-        'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }
 
@@ -65,7 +59,7 @@ def create_config_dict():
 
 def fast_run(config):
     config['pop_max'] = 200
-    config['gen_max'] = 15
+    config['gen_max'] = 18
     config['gp_tourn_size'] = 3
     return config
 
@@ -107,7 +101,7 @@ def mountaincar_v3(config_dict, path):
 
 
 def mountaincar_tmp(config_dict, path):
-    config_dict['name'] = 'MTC_tmp_'
+    config_dict['name'] = 'MTC_test'
     config_dict['path'] = path
     config_dict = fast_run(config_dict)
     gp = mountaincar_load_corefiles(config_dict, path)

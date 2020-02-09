@@ -27,11 +27,11 @@ def pause(menu_dict):
 	
 	elif menu == '?' or menu == 'help':
 		print ('\n\t\033[32m Select from one of the following options:\033[0;0m')
-		print ('\t\033[36m\033[1m i \t\033[0;0m engage Interactive display mode')
-		print ('\t\033[36m\033[1m m \t\033[0;0m engage Minimal display mode')
-		print ('\t\033[36m\033[1m g \t\033[0;0m engage Generation display mode')
-		print ('\t\033[36m\033[1m s \t\033[0;0m engage Silent display mode')
-		print ('\t\033[36m\033[1m db \t\033[0;0m engage De-Bug display mode')
+		print ('\t\033[36m\033[1m i \t\033[0;0m engage Interactive print_type mode')
+		print ('\t\033[36m\033[1m m \t\033[0;0m engage Minimal print_type mode')
+		print ('\t\033[36m\033[1m g \t\033[0;0m engage Generation print_type mode')
+		print ('\t\033[36m\033[1m s \t\033[0;0m engage Silent print_type mode')
+		print ('\t\033[36m\033[1m db \t\033[0;0m engage De-Bug print_type mode')
 		print ('')
 		print ('\t\033[36m\033[1m ts \t\033[0;0m adjust tournament size')
 		print ('\t\033[36m\033[1m min \t\033[0;0m adjust minimum number of nodes')
@@ -43,19 +43,19 @@ def pause(menu_dict):
 		print ('\t\033[36m\033[1m e \t\033[0;0m evaluate a single Tree against the test data_csv_path')
 		print ('\t\033[36m\033[1m p \t\033[0;0m print a single Tree to screen')
 		print ('')
-		print ('\t\033[36m\033[1m id \t\033[0;0m display current generation ID')
-		print ('\t\033[36m\033[1m dir \t\033[0;0m display current working directory')
+		print ('\t\033[36m\033[1m id \t\033[0;0m print_type current generation ID')
+		print ('\t\033[36m\033[1m dir \t\033[0;0m print_type current working directory')
 		# print ('\t\033[36m\033[1m load \t\033[0;0m load population_s (seed) to replace population_a (current)') # NEED TO FIX
 		print ('\t\033[36m\033[1m w \t\033[0;0m write the evolving population_b to disk')
 		print ('')
 		print ('\t\033[36m\033[1m add \t\033[0;0m add generations and continue your run')
 		print ('\t\033[36m\033[1m q \t\033[0;0m quit Karoo GP')
 				
-	elif menu == 'i': menu_dict['display'] = 'i'; print ('\n\t Interactive display mode engaged (for control freaks)')
-	elif menu == 'g': menu_dict['display'] = 'g'; print ('\n\t Generation display mode engaged (for recovering control freaks)')
-	elif menu == 'm': menu_dict['display'] = 'm'; print ('\n\t Minimal display mode engaged (for GP gurus)')
-	elif menu == 's': menu_dict['display'] = 's'; print ('\n\t Silent display mode engaged (for zen masters)')
-	elif menu == 'db': menu_dict['display'] = 'db'; print ('\n\t De-Bug display mode engaged (for evolutionary biologists)')
+	elif menu == 'i': menu_dict['print_type'] = 'i'; print ('\n\t Interactive print_type mode engaged (for control freaks)')
+	elif menu == 'g': menu_dict['print_type'] = 'g'; print ('\n\t Generation print_type mode engaged (for recovering control freaks)')
+	elif menu == 'm': menu_dict['print_type'] = 'm'; print ('\n\t Minimal print_type mode engaged (for GP gurus)')
+	elif menu == 's': menu_dict['print_type'] = 's'; print ('\n\t Silent print_type mode engaged (for zen masters)')
+	elif menu == 'db': menu_dict['print_type'] = 'db'; print ('\n\t De-Bug print_type mode engaged (for evolutionary biologists)')
 	
 	elif menu == 'ts': # adjust the tournament size
 		while True:
@@ -147,7 +147,7 @@ def pause(menu_dict):
 			print ('\t\t Branch Mutation:', tmp_branch); menu_dict['evolve_branch'] = tmp_branch
 			print ('\t\t Crossover:', tmp_cross); menu_dict['evolve_cross'] = tmp_cross
 			
-	elif menu == 'l': # display dictionary of Trees with the best fitness score
+	elif menu == 'l': # print_type dictionary of Trees with the best fitness score
 		print ('\n\t The leading Trees and their associated expressions are:')
 		for n in sorted(menu_dict['fittest_dict']): print ('\t ', n, ':', menu_dict['fittest_dict'][n])
 		

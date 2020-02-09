@@ -43,8 +43,9 @@ class ExplainableGP(object):
     def __init__(self, config_dict):
 
         self.time_start = time.perf_counter()
+
         self.tree_meta = {}
-        self.parsimony_best_meta = {}  #tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
+        self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}
         self.population_base = []  # population that is taken to the next generation
         self.best_fitness = None
@@ -52,24 +53,15 @@ class ExplainableGP(object):
         # 1. set global variables to those local values passed from the user script
         self.config = config_dict
         self.kernel = config_dict['kernel']  # fitness function
-        self.display = config_dict['display']
+        self.print_type = config_dict['print_type']
         self.precision = config_dict['precision']  # the number of floating points for the round function
         self.parsimony_min_max = config_dict['tree_parsimony_min_max']
-
-        self.tnode = {}
+        self.monitor_dict = config_dict['monitor']
+        self.evolve_rates = config_dict['evolve_rates']
 
         self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device
         self.tf_device_log = False  # TF device usage logging (for debugging)
 
-        self.monitor_dict = config_dict['monitor']
-        self.evolve_rates = config_dict['evolve_rates']
-        evolve_missing = 1 - sum(self.evolve_rates.values())
-        self.evolve_rates['Create Random'] += evolve_missing
-
-        if self.kernel == 'regression':
-            self.fitness_bad_dummy = float("inf")
-        else:  # 'classification' or 'match'
-            self.fitness_bad_dummy = 0
         self.gene_pool = {}
         self.xype_func_dict = {'f2f': [], 'f2b': [], 'b2b': [], 'b2f': [], 'b2f2f': [],
                                '2b': [], '2f': [],
@@ -82,9 +74,10 @@ class ExplainableGP(object):
                                 'best_candidate': {},
                                 'total_found_trees': {}}
         runs_path = self.config['path']
-        self.file_directories_create(runs_path)
-        self.done = False
         self.gen_id = 0
+        self.done = False
+
+        self.file_directories_create(runs_path)
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
@@ -94,14 +87,19 @@ class ExplainableGP(object):
         regular plagih-config run from scratch
         """
 
-        self.gen_id = 0
-        file_config(self.path, self.config, self.gen_id, self.kernel, self.datetime)
-        self.main_generation_first_origin()
+        path_backup = self.path / 'backup.p'
+        if Path.is_file(path_backup):
+            self.printpl('g', 'Restarting old run now...')
+            self.load_backup(path_backup)
+
+        write_config_file(self.path, self.config, self.gen_id, self.kernel, self.datetime)
+        if self.gen_id == 0:
+            self.main_generation_first_from_origin()
         self.main_generation_loop()  # (main loop)
         self.print_g('gg', 'GP-run. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
-        self.file_autowrite(self.path, 'f')  # archive populations and return to plagih_gp.py for a clean exit
-        self.file_autoplots(self.path)
+        self.file_autowrite(self.path, 'f')
+        self.auto_plots(self.path)
         self.print_g('gg', 'Completely. Exit. \tTime: {:4.2f}s'.format(time.perf_counter() - self.time_start))
         sys.exit()
 
@@ -116,16 +114,15 @@ class ExplainableGP(object):
 
         # self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
         self.datetime = datetime.now().strftime('%H%M%S')
-        # cwd = Path.cwd()
         cwd = path_cwd
-        print('cwd is:', cwd)
-        self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
+        self.path = cwd / 'runs' / '{}'.format(self.config['name'])
+        # self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
         if not Path.is_dir(self.path):
             Path.mkdir(self.path)
 
         return
 
-    def main_generation_first_origin(self):
+    def main_generation_first_from_origin(self):
         """
         Everything that needs to be done for the first generation
         - Extracts "origin Tree" from file
@@ -133,10 +130,9 @@ class ExplainableGP(object):
         - Evaluate the first Generation
         - Monitoring initialisation and monitoring
         """
-        self.print_g('gg', 'Preparing to evolve Generation {}'.format(self.gen_id))
+        self.print_g('gg', 'Preparing to evolve first Generation. Gen {}.'.format(self.gen_id))
         self.gen_prepare_parameters()
         self.pop_first_create()
-        self.pareto[0] = self.origin['fitness_train']
         self.gen_finalize()
         file_population_write_karoo(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
 
@@ -156,7 +152,7 @@ class ExplainableGP(object):
                    ('Crossover one Branch', self.gen_crossover_branch),
                    ('Create Random', self.gen_create_random)]
         tourn_size = self.config['gp_tourn_size']
-
+        # print('DELETE!!', '\n', self.gen_id, '<', self.config['gen_max'], '\n', time.perf_counter(), '-', self.time_start,  '<', self.config['time_max'], '\n', self.done)
         while self.gen_id < self.config['gen_max'] and \
                 time.perf_counter() - self.time_start < self.config['time_max'] and \
                 not self.done:
@@ -170,17 +166,18 @@ class ExplainableGP(object):
                 gp_function(evolve_num, tourn_size)
                 self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
 
-            self.autosave()
+            self.auto_procedures()
 
             self.gen_finalize()
             self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
         else:
-            self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format(BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.RESET))
+            # self.printpl('p', '{} Enter {}?{} to review your options or {}q{}uit{}'.format(BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.BOLD, BColors.GREEN, BColors.RESET))
             # menu_continue = 0
+            printez('g', 'Done after Generation {}. Time passed: {:4.2f}sec. Done: {}'.format(self.gen_id, time.perf_counter() - self.time_start, self.done), print_type=self.print_type)
 
-    def autosave(self, overwrite=True):
+    def auto_procedures(self, overwrite=True):
         """
-
+        Every few generations, save the current status
         """
         if overwrite:
             path_auto = self.path / 'autosave'
@@ -196,26 +193,28 @@ class ExplainableGP(object):
         if self.config['period']['time_monitor']:
             if self.config['period']['time_monitor'] < (time_now - self.time_last_monitor):
                 self.printpl('ii', 'auto-plots (time)')
-                self.file_autoplots(self.path)
+                self.auto_plots(self.path)
                 self.time_last_monitor = time_now
 
         if self.config['period']['time_save']:
             if self.config['period']['time_save'] < (time_now - self.time_last_files):
                 self.printpl('ii', 'auto-save (time)')
                 self.file_autowrite(path_auto, auto_enumname)
-                self.backup_save_pickle()
+                self.auto_save_pickle()
                 self.time_last_files = time_now
 
         if self.config['period']['gen_monitor']:
             if self.gen_id % int(self.config['period']['gen_monitor']) == 0:
                 self.printpl('ii', 'auto-plots (gen)')
-                self.file_autoplots(self.path)
+                self.auto_plots(self.path)
 
         if self.config['period']['gen_save']:
             if self.gen_id % int(self.config['period']['gen_save']) == 0:
                 self.printpl('ii', 'auto-save (gen)')
-                self.backup_save_pickle()
+                self.auto_save_pickle()
                 self.file_autowrite(path_auto, auto_enumname)
+
+        self.printpl('ii', 'Done with auto-procedures')
 
         return 0
 
@@ -226,7 +225,8 @@ class ExplainableGP(object):
         """
         self.file_conclusion(path, datetime=self.datetime)
         self.file_pareto(self.pareto, path)
-        file_population_write_karoo(self.population_new, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
+        file_population_write_karoo(self.population_tmp, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
+        return
 
     def gen_olympus_update(self):
         """
@@ -257,31 +257,44 @@ class ExplainableGP(object):
         return
 
     def activate_pop(self, pop):
-        self.population_new = pop
+        self.population_tmp = pop
         return
 
-    def data_pickle_save(self):
+    def load_backup(self, path_backup):
         """
-        save all data_csv_path every few rounds to restore them
+
+        """
+        with Path.open(path_backup, 'rb') as file:
+            run_data = pickle.load(file)
+        self.gen_id = run_data['self.gen_id']
+        self.parsimony_best_meta = run_data['self.parsimony_best_meta']
+        self.pareto = run_data['self.pareto']
+        self.population_base = run_data['self.population_base']
+        self.monitoring_dict = run_data['self.monitoring_dict']
+        print('Loading Generation:', self.gen_id)
+        print(len(self.population_base))
+
+        return
+
+    def auto_save_pickle(self):
+        """
+        automatically saves everything important after a certain amount of time
         - save the pareto front (done)
         - save the last generation (done)
         - Save valuable meta-data_csv_path: current generation (done)
         """
-        run_data = {'gen_id': self.gen_id,
-                    'parsimony_front_fitness': '',
-                    'pareto': self.pareto,
-                    'hash_trees_meta': self.tree_meta,
-                    'population_new': self.population_new
-                    }
-        pickle.dump(run_data, Path.open(self.path / 'Gen-{}-backup.p'.format(str(self.gen_id)), 'wb'))
+        path_backup = self.path / 'backup.p'
 
-    def backup_save_pickle(self):
-        """
-        automatically saves everything important after a certain amount of time
-        """
-        path = self.path / 'backup'
-        if not Path.is_dir(path):
-            Path.mkdir(path)
+        print('saving: ', len(self.population_base))
+        run_data = {'self.gen_id': self.gen_id,
+                    'self.parsimony_best_meta': self.parsimony_best_meta,
+                    'self.pareto': self.pareto,  # todo as raw trees
+                    'self.population_base': self.population_base,
+                    'self.monitoring_dict': self.monitoring_dict
+                    }
+        pickle.dump(run_data, Path.open(path_backup, 'wb'))
+        # pickle.dump(run_data, Path.open(backup_path / 'Gen-{}-backup.p'.format(str(self.gen_id)), 'wb'))
+        return
 
     def file_conclusion(self, path, datetime=None):
 
@@ -360,40 +373,6 @@ class ExplainableGP(object):
     #   Population specific                       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def load_backup_population(self, population_backup_file):
-        """
-        Loads a saved population from an earlier run
-        """
-        with Path.open(population_backup_file, 'rb') as csv_file:
-            target = csv.reader(csv_file, delimiter=',')
-            n = 0  # track row count
-
-            for row in target:
-
-                n = n + 1
-                if n == 1:
-                    pass  # skip first empty row
-
-                elif n == 2:
-                    self.population_base = [row]  # write header to population_genepool
-
-                else:
-                    if not row:
-                        self.tree = np.array([[]])  # initialise Tree array
-
-                    else:
-                        if self.tree.shape[1] == 0:
-                            self.tree = np.append(self.tree, [row], axis=1)  # append first row to Tree
-
-                        else:
-                            self.tree = np.append(self.tree, [row], axis=0)  # append subsequent rows to Tree
-
-                    if self.tree.shape[0] == T_num_lines:  # (current tree rows + row 0
-                        self.population_base.append(self.tree)  # append complete Tree to population list
-
-        self.printpl('i', 'We loaded the following population_genepool: {}'.format(self.population_base))
-        return
-
     def pop_genepool_create(self, population):
 
         """
@@ -459,7 +438,9 @@ class ExplainableGP(object):
             >
             fitness_compare
         """
-        if self.kernel == 'regression' and fitness1 < fitness2:
+        if fitness2 is None:
+            return True
+        elif self.kernel == 'regression' and fitness1 < fitness2:
             return True
         elif self.kernel == 'classification' and fitness1 > fitness2:
             return True
@@ -527,14 +508,14 @@ class ExplainableGP(object):
     def gen_prepare_parameters(self):
         """
         Sets the parameters for the generation
-        - reset population_new
+        - reset population_tmp
         - Linearly increase threshold for parsimony
         """
 
         self.time_genstart = time.perf_counter()
         self.debug_warnings = {}
 
-        self.population_new = ['Plagih GP - Evolving Generation']  # initialise population_new to host the next generation
+        self.population_tmp = ['Plagih GP - Evolving Generation']  # initialise population_tmp to host the next generation
         full_parsimony_factor = 2  # working with the maximum parsimony for at least some generations
         gen_relation = min((full_parsimony_factor * self.gen_id) / self.config['gen_max'], 1)
         self.parsimony_min_max[0] = int(gen_relation * self.parsimony_min_max[1])
@@ -558,7 +539,7 @@ class ExplainableGP(object):
         """
         Copy an entry from the pareto candidates into the population
         """
-        # print('before olymp:', len(self.population_new))
+        # print('before olymp:', len(self.population_tmp))
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
@@ -572,7 +553,7 @@ class ExplainableGP(object):
 
                 # print('Olymp winner:\n', olymp_winner)
 
-        # print('after olymp:', len(self.population_new))
+        # print('after olymp:', len(self.population_tmp))
         return
 
     def gen_reproduce_reduce(self, repro_rate, tourn_size):
@@ -643,7 +624,6 @@ class ExplainableGP(object):
         """
         tree_origin = self.origin['tree'].copy()
         for i in range(repro_rate):
-
             tree = self.tree_random_build(tree_origin)
             tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
             tree = tree_set_id(tree, 1)
@@ -732,25 +712,30 @@ class ExplainableGP(object):
         """
         some stuff to definitely do before actually appending to pop
         """
-        tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
-        tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
-        tree = tree_normalize_exponentiation(tree)
-        tree = tree_set_history(tree, last_modification)
-        if not tree_test_check_children(tree):
-            self.printpl('e', 'Tree is not consistent:\n{}'.format(tree))
-        self.population_new.append(tree)
+        if tree is None:
+            return
+        else:
+            tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
+            tree = tree_modifyable_nodes_set(tree, self.origin['tree'])
+            tree = tree_normalize_exponentiation(tree)
+            tree = tree_set_history(tree, last_modification)
+            if not tree_test_check_children(tree):
+                self.printpl('e', 'Tree is not consistent:\n{}'.format(tree))
+            self.population_tmp.append(tree)
+
+        return
 
     def gen_finalize(self):
 
         """
-        From raw population_new to new population_genepool
+        From raw population_tmp to new population_genepool
         - Gene_pool with tree's parsimony (and store info in the tree)
         -
 
         """
 
-        self.population_new = pop_enum_trees(self.population_new)  # pop +tree_id
-        gene_pool, self.population_new = self.pop_genepool_create(self.population_new)
+        self.population_tmp = pop_enum_trees(self.population_tmp)  # pop +tree_id
+        gene_pool, self.population_tmp = self.pop_genepool_create(self.population_tmp)
 
         self.monitor_genepool(gene_pool, self.path, self.gen_id)
 
@@ -758,8 +743,8 @@ class ExplainableGP(object):
 
         self.pop_pareto_update()
 
-        self.population_base = pop_copy_genepool(self.population_new, gene_pool, self.gen_id)
-        file_population_write_karoo(self.population_new, 'new', self.path, self.gen_id)
+        self.population_base = pop_copy_genepool(self.population_tmp, gene_pool, self.gen_id)
+        file_population_write_karoo(self.population_tmp, 'new', self.path, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
@@ -782,8 +767,8 @@ class ExplainableGP(object):
         """
 
         # Start with dummies
-        best_id = -1
-        best_fitness = self.fitness_bad_dummy
+        best_id = None
+        best_fitness = None
 
         # Get several values
         for n in range(tourn_size):
@@ -809,7 +794,7 @@ class ExplainableGP(object):
             if filter_type == 'gaussian_filter':
                 constant = np.random.normal(constant, 0.1)
             else:
-                printez('w', 'Warning: Filter  not specified. Please specify a filter_type.', display=self.display)
+                printez('w', 'Warning: Filter  not specified. Please specify a filter_type.', print_type=self.print_type)
                 constant = np.random.normal(constant, 0.1)
 
         if term_type == 'int':
@@ -863,7 +848,7 @@ class ExplainableGP(object):
         except:
             print_warning('w', 'reducing expr raw: {}'.format(expr_raw))
             print_warning('w', 'Delete this tree! nan tree or other error.')
-            return tree
+            return None
 
     def treegp_reduce_parts(self, tree, completely=False):
 
@@ -895,6 +880,7 @@ class ExplainableGP(object):
             if xtype_get_constant(label) == '2f':
                 float_nodes.append(node_id)
         if float_nodes:
+            # todo modify multiple float nodes at once?
             float_id = np.random.choice(float_nodes)
             val = float(tree_get_label(tree, float_id))
             new_value = self.gp_mutate_constantfilter(val, term_type='float', filter_type='gaussian_filter')
@@ -1143,6 +1129,7 @@ class ExplainableGP(object):
         self.parsimony_best_meta[0] = origin_meta
 
         self.hashtable_fitness_train = {}
+        self.pareto[0] = self.origin['fitness_train']
 
         self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(origin_meta['fitness_train'], time.perf_counter() - self.time_start))
         return
@@ -1277,7 +1264,7 @@ class ExplainableGP(object):
         # every function is inside there only once, so no higher chance for functions that are more often in the list
         # label = np.random.choice(self.xype_func_dict['2f'])
 
-        # choose out of a list, or add another way. maybe automatic?
+        # choose out of a list, or add another way. maybe autmatic?
 
         label = np.random.choice(choose_func)
 
@@ -1346,7 +1333,7 @@ class ExplainableGP(object):
     #   Monitoring                                |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def file_autoplots(self, path, post_path=None):
+    def auto_plots(self, path, post_path=None):
         """
         monitors everything
 
@@ -1384,7 +1371,7 @@ class ExplainableGP(object):
         else:
             self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
             self.file_autowrite(path, gen_id)
-            self.file_autoplots(path)
+            self.auto_plots(path)
             sys.exit()
 
         if not self.best_fitness:
@@ -1404,7 +1391,7 @@ class ExplainableGP(object):
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to display output information     |
+    #   Methods to print_type output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', only_dots=None, variance=None):
@@ -1449,8 +1436,8 @@ class ExplainableGP(object):
 
         """
 
-        if message_type in self.display:
-            printez(message_type, text, display=self.display, time_total=time.perf_counter() - self.time_start)
+        if message_type in self.print_type:
+            printez(message_type, text, print_type=self.print_type, time_total=time.perf_counter() - self.time_start)
 
         return
 
@@ -1460,7 +1447,7 @@ class ExplainableGP(object):
 
         """
 
-        if message_type in self.display:
+        if message_type in self.print_type:
             printez(message_type, text, time_total=time.perf_counter() - self.time_start)
 
         return
@@ -1489,7 +1476,6 @@ def pop_enum_trees(population):
 
 
 def data_load_data_split(data_x, data_y, test_size):
-
     x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST split
     data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its associated class label (right column)
     data_control = np.c_[x_test, y_test]  # recombine each row of data_csv_path with its associated class label (right column)
@@ -1592,7 +1578,6 @@ def save_data_pickle(prepared_data, data_pickle_path):
 
 
 def file_population_write_plagih(population, pop_name, path, gen_id):
-
     file_path = path / 'population_plagih_{}.csv'.format(str(pop_name))
 
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
@@ -1630,7 +1615,7 @@ def file_population_write_karoo(population, pop_name, path, gen_id):
     return
 
 
-def file_config(path, config, gen_id, kernel, datetime):
+def write_config_file(path, config, gen_id, kernel, datetime):
     """
     write the parameters to a file
     """
@@ -1685,7 +1670,6 @@ def load_operators_from_csv(op_csv_path):
 
 
 def load_pop_from_csv(pop_csv):
-
     """
     This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
     replaces population_a in the karoo_gp/runs/[date-time]/ directory.

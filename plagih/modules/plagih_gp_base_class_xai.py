@@ -14,19 +14,17 @@ Functions, that might be addable in the future:
 import sys
 import csv
 import sklearn.metrics as skm
-import sklearn.model_selection as skcv
 from datetime import datetime
 from plagih.modules.plagih_tree import *
 import pickle
-from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 import numpy as np
 
-import matplotlib.pyplot as plt
 import time
 from pathlib import Path
 from plagih.modules.plagih_eval import *
 from plagih.modules.printing import *
 from plagih.modules.plagih_pop import *
+from plagih.modules.file_interaction import *
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -392,7 +390,7 @@ class ExplainableGP(object):
             except:
                 continue
 
-            population[tree_num] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
+            population[tree_num] = tree_set_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
             gene_pool[tree_num] = tree_meta
 
             if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
@@ -467,7 +465,7 @@ class ExplainableGP(object):
         for tree_id in range(1, self.config['pop_max'] + 1):
             # vary this tree with mutation
             branch_top = np.random.choice(origin_ids)
-            branch_nodes_ids = tree_get_branch(tree_origin, branch_top)  # [6, 9, 10] select point of mutation and all nodes beneath
+            branch_nodes_ids = tree_get_branch(tree_origin, branch_top)  # [6, 9, 10] choose node and all nodes beneath
             tree = self.tree_insert_branch_random(tree_origin, branch_nodes_ids)  # tree with new branch
 
             # Fill the correct meta-data_csv_path into the tree (and wipe the old fitness)
@@ -476,7 +474,7 @@ class ExplainableGP(object):
 
             self.popnew_append(tree, last_modification='first')
 
-        self.print_g('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
+        self.print_g('ggg', 'Constructed the first population of {} trees, saved'.format(self.config['pop_max']))
 
     def pop_parsimony_best_update(self, gene_pool):
         """
@@ -794,7 +792,7 @@ class ExplainableGP(object):
             if filter_type == 'gaussian_filter':
                 constant = np.random.normal(constant, 0.1)
             else:
-                printez('w', 'Warning: Filter  not specified. Please specify a filter_type.', print_type=self.print_type)
+                printez('w', 'Filter  not specified. Please specify a filter_type.', print_type=self.print_type)
                 constant = np.random.normal(constant, 0.1)
 
         if term_type == 'int':
@@ -971,38 +969,6 @@ class ExplainableGP(object):
 
         return a_id, b_id, success
 
-    # def treegp_crossover_insert(self, left_parent, left_ids, right_parent, right_ids):
-    #
-    #     """
-    #     Perform a crossover between nodes that are crossoverable in terms of function types
-    #     get: parent x, y and their branches
-    #     return: puts right_ids into parent_x
-    #     """
-    #
-    #     right_top_id = int(right_ids[0])
-    #     left_top_id = int(left_ids[0])
-    #
-    #     r_labels, r_aritys = tree_branch_get_label_list(right_parent, right_ids, tests=True)
-    #
-    #     if len(right_ids) == 1:
-    #         # if branch of new parent contains only one node (terminal)
-    #         # Remember: if a conversion was needed, a terminal would now have a function in front of it!
-    #
-    #         new_label = right_parent[N_label][right_top_id]
-    #         left_parent[N_label][left_top_id] = new_label  # replace label with that of a particular node in 'right_ids'
-    #         left_parent[N_arity][left_top_id] = 0  # set terminal arity
-    #
-    #         left_parent = np.delete(left_parent, left_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-    #         left_parent = tree_fix_link_child_karoo(left_parent)  # fix all child links
-    #         left_parent = evolve_node_renum_karoo(left_parent)  # renumber all 'node_id's
-    #     else:
-    #
-    #         right_core = core_from_labels(r_labels, r_aritys)
-    #         left_parent = tree_insert_subtree(left_parent, right_core, left_ids, tests=True)
-    #         left_parent = self.treegp_crossover_tree_prune(left_parent, self.config['tree_depth_max'])  # sfeh: not sure if this is necessary?
-    #
-    #     return left_parent
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1151,7 +1117,7 @@ class ExplainableGP(object):
             tree_meta = self.tree_meta[tree_ident]
 
         else:  # 2.2 New tree, but still skip fitness eval for complex trees
-            parsimony = self.tree_parsimony(tree, origin_tree=self.origin['tree'])
+            parsimony = tree_parsimony(tree, origin_tree=self.origin['tree'])
 
             if parsimony < self.parsimony_min_max[1]:  # 3. compute fitness
                 # print('Algo raw:', str(expr_raw))  # importantprint 2 for expr_raw
@@ -1161,7 +1127,10 @@ class ExplainableGP(object):
                     raise Exception('Expr could not be sympified: {}.'.format(expr_raw))
 
                 fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
-                tree_meta = {'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_sym': str(expr_sym), 'expr_raw': str(expr_raw)}
+                tree_meta = {'parsimony': float(parsimony),
+                             'fitness_train': float(fitness_train),
+                             'expr_sym': str(expr_sym),
+                             'expr_raw': str(expr_raw)}
                 self.tree_meta[tree_ident] = tree_meta
 
             else:
@@ -1180,28 +1149,6 @@ class ExplainableGP(object):
         todo
         """
 
-    def tree_parsimony(self, tree, origin_tree=None, parsimony_distance='ted'):
-        """
-        parsimony_distance: compute the chosen distance by the user.
-
-        """
-        if parsimony_distance == 'ted':
-            return tree_parsimony_ted(tree, origin_tree)
-        elif parsimony_distance == 'total_count_nodes':
-            return int(tree[3][-1:])  # returns the tree size
-        elif parsimony_distance == 'total_tree_depth':
-            return tree[N_depth][1]  # returns the tree size
-        elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-            algo_raw_str = str(tree_expr_raw(tree, root_id))
-            return len(str(algo_raw_str))
-        # elif parsimony_distance == 'total_simplified':
-        #     algo_sym = self.tree_expr_sympify(tree=tree)
-        #     return count_ops(algo_sym)
-        elif parsimony_distance == 'rel_ari_1':  # Does this work?
-            return tree_parsimony_relari(tree, origin_tree)
-        else:
-            raise Exception('Parsimony distance not specified!')
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to use evaluate (tensorflow)      |
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1209,8 +1156,9 @@ class ExplainableGP(object):
     def tf_classify_labels_map(self, result):
 
         """
-        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
-        the quantity of true class labels provided in the data_csv_path .csv. Outputs an array of tuples containing the predicted
+        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based
+        upon the quantity of true class labels provided in the data_csv_path .csv.
+        Outputs an array of tuples containing the predicted
         labels based upon the result and corresponding boolean condition triggered.
 
         For comparison, the original (pre-TensorFlow) cod follows:
@@ -1342,20 +1290,20 @@ class ExplainableGP(object):
         """
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tupels = sorted(list(self.monitoring_dict['fitness_average'].items()))
-            self.plot_end(data_tupels, path, plt_title='Average Fitness', plt_y_label='Fitness')
+            plot_end(data_tupels, path, plt_title='Average Fitness', plt_y_label='Fitness')
 
         if self.monitor_dict['genepool_size'] == 'y':
             data_tupels = sorted(list(self.monitoring_dict['genepool_size'].items()))
-            self.plot_end(data_tupels, path, plt_title='Genepool size', plt_y_label='Amount')
+            plot_end(data_tupels, path, plt_title='Genepool size', plt_y_label='Amount')
 
         data_tupels = sorted(list(self.monitoring_dict['total_found_trees'].items()))
-        self.plot_end(data_tupels, path, plt_title='Number of created Trees', plt_y_label='Amount')
+        plot_end(data_tupels, path, plt_title='Number of created Trees', plt_y_label='Amount')
 
         data_tupels = sorted(list(self.pareto.items()))
-        self.plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', only_dots=True, plt_x_label='Parsimony', plt_y_label='Fitness')
+        plot_end(data_tupels, path, plt_title='Pareto Dominant Candidates', only_dots=True, plt_x_label='Parsimony', plt_y_label='Fitness')
 
         data_tupels = sorted(list(self.monitoring_dict['best_candidate'].items()))
-        self.plot_end(data_tupels, path, plt_title='Best candidate', only_dots=True, plt_x_label='Generation', plt_y_label='Fitness')
+        plot_end(data_tupels, path, plt_title='Best candidate', only_dots=True, plt_x_label='Generation', plt_y_label='Fitness')
 
         return
 
@@ -1393,42 +1341,6 @@ class ExplainableGP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to print_type output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
-
-    def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', only_dots=None, variance=None):
-
-        x, y = [], []
-        for a, b in data_2d:
-            x.append(a)
-            y.append(b)
-
-        if variance:
-            print_e('variance not available')
-            means = np.mean(y, axis=0)
-            stds = np.std(y, axis=0)
-            n = means.size
-
-        if only_dots:
-            plt.plot(x, y, linestyle='', marker='o', label=plt_curve_label)
-        else:
-            plt.plot(x, y, label=plt_curve_label)
-
-        if plt_x_label and plt_y_label:
-            plt.xlabel(plt_x_label)
-            plt.ylabel(plt_y_label)
-
-        if plt_title:
-            plt.title(plt_title)
-
-        # plt.legend()
-        plt.yscale(yscale)
-        plt.ylim(0)
-        plt.xlim(0)
-        path_plot = path / 'plots'
-        if not Path.is_dir(path_plot):
-            Path.mkdir(path_plot)
-        plt.savefig(path_plot / '{}-plot.jpg'.format(plt_title))
-        plt.close()
-        return
 
     def printpl(self, message_type, text):
 
@@ -1474,232 +1386,3 @@ def pop_enum_trees(population):
         population[tree_id][TR_ID][1] = tree_id
     return population
 
-
-def data_load_data_split(data_x, data_y, test_size):
-    x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST split
-    data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its associated class label (right column)
-    data_control = np.c_[x_test, y_test]  # recombine each row of data_csv_path with its associated class label (right column)
-
-    data_train_rows = len(data_train[:, 0])
-
-    return data_train_rows, data_train, data_control
-
-
-def data_from_csv(samples_file):
-    """
-    loads the goal-data_csv_path from .csv file. first observations then actions.
-    Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
-
-    Mountaincar .csv first lines (11.12.2019):
-    --------------------------------------------------------
-    observation0:float,     observation1:float, action0:float
-    -0.5031261704876531,    0.0,                2
-    --------------------------------------------------------
-    """
-
-    num_observations, num_actions = 0, 0
-    var_types = []
-    input_dict = {'all': {},
-                  'float': {},
-                  'bool': {}}
-    variables_dict = {'all': [],
-                      'types': [],
-                      'float': [],
-                      'bool': []}
-
-    action_dict = {}
-
-    # 1. Read file
-    with Path.open(samples_file) as csvFile:
-        reader = csv.reader(csvFile, delimiter=',')
-
-        for i, row in enumerate(reader):
-            if i == 0:  # variable identifiers
-                # all_variables = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
-                for var_name in row:
-                    var_types.append(var_name.split(':', 1)[1])
-                    if var_name.startswith('o'):  # found an observation
-                        num_observations += 1
-                        term = var_name.rsplit(':', 1)[0]
-                        term_type = var_name.split(':', 1)[1]
-                        input_dict[term] = term_type
-                        variables_dict['all'].append(term)
-                        variables_dict['types'].append(term_type)
-                        if term_type == 'float':
-                            variables_dict['float'].append(term)
-                            variables_dict['float'].append(term)
-                        elif term_type == 'bool':
-                            variables_dict['bool'].append(term)
-                        else:
-                            raise
-                    elif var_name.startswith('a'):  # found an action
-                        num_actions += 1
-                        action = var_name.split(':', 1)[0]
-                        action_type = var_name.split(':', 1)[1]
-                        action_dict[action] = action_type  # Do not use this:# '2b' if 'bool' in action_type else '2f'
-                    else:
-                        print_e('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
-                        raise
-
-                data_x, data_y = [], []
-
-            else:  # convert every 'string' element to its data_csv_path type
-                row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
-                data_x.append(row_as_data[:num_observations])
-                data_y.append(row_as_data[num_observations:])
-        csvFile.close()
-    unique_outputs_num = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-
-    data_train_rows, data_train, data_control = data_load_data_split(data_x, data_y, test_size=0.2)
-
-    # self.printplg('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-    return input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
-
-
-def data_load_pickle(prepared_data_pickle_path):
-    """
-    loads a data_csv_path file that was already split with the csv reader
-    """
-    with Path.open(prepared_data_pickle_path, 'rb') as file:
-        pickle_data = pickle.load(file)
-
-    # self.printplg('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-    return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
-
-
-def save_data_pickle(prepared_data, data_pickle_path):
-    """
-    saves prepared plagih data to pickle file
-    """
-
-    with Path.open(data_pickle_path, 'wb') as file:
-        pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-    return
-
-
-def file_population_write_plagih(population, pop_name, path, gen_id):
-    file_path = path / 'population_plagih_{}.csv'.format(str(pop_name))
-
-    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-        target = csv.writer(csv_file, delimiter=',')
-        if gen_id != 0:
-            target.writerows([''])  # empty row before each generation
-        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
-
-        for tree in range(1, len(population)):
-            target.writerows([''])  # empty row before each Tree
-            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[tree][row]])
-
-    return
-
-
-def file_population_write_karoo(population, pop_name, path, gen_id):
-    """
-    Save population_* to disk.
-
-    """
-    file_path = path / 'population_{}.csv'.format(str(pop_name))
-
-    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-        target = csv.writer(csv_file, delimiter=',')
-        if gen_id != 0:
-            target.writerows([''])  # empty row before each generation
-        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
-
-        for tree in range(1, len(population)):
-            target.writerows([''])  # empty row before each Tree
-            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[tree][row]])
-
-    return
-
-
-def write_config_file(path, config, gen_id, kernel, datetime):
-    """
-    write the parameters to a file
-    """
-
-    file = Path.open(path / 'config.txt', 'w')
-    file.write('Plagih GP. This config is not complete, sfeh!')
-    file.write('\n launched: {}'.format(datetime))
-    file.write('\n kernel: {}'.format(kernel))
-    file.write('\n precision: {}\n'.format(config['precision']))
-    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
-    file.write('\n')
-    file.write('\n tournament size: ' + str(config['gp_tourn_size']))
-    file.write('\n population: ' + str(config['pop_max']))
-    file.write('\n number of generations: ' + str(gen_id))
-    file.write('\n\n')
-    file.close()
-    return
-
-
-def load_operators_from_csv(op_csv_path):
-    """
-    Load all operators ready-to-use from a file
-    """
-
-    functions = np.loadtxt(op_csv_path, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-    # Part 3.5: Split the functions in 5 types
-
-    # rows are the function types (f2f)
-    # columns are the arity
-    op_array = [[[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []]]
-    for fun in functions:
-        label = fun[0]
-        arity = op[label]['arity']  # arity = int(fun[1])
-        xtype = op[label]['xtype']
-
-        if xtype == 'f2f':
-            op_array[f2f][arity].append(label)
-        elif xtype == 'f2b':
-            op_array[f2b][arity].append(label)
-        elif xtype == 'b2b':
-            op_array[b2b][arity].append(label)
-        elif xtype == 'b2f':
-            op_array[b2f][arity].append(label)
-        elif xtype == 'b2f2f':
-            op_array[b2f2f][arity].append(label)
-
-    return op_array
-
-
-def load_pop_from_csv(pop_csv):
-    """
-    This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
-    replaces population_a in the karoo_gp/runs/[date-time]/ directory.
-    """
-
-    with Path.open(pop_csv, 'r') as csv_file:
-        target = csv.reader(csv_file, delimiter=',')
-        n = 0  # track row count
-
-        for row in target:
-
-            n = n + 1
-            if n == 1:
-                pass  # skip first empty row
-
-            elif n == 2:
-                population_a = [row]  # write header to population_a
-
-            else:
-                if not row:
-                    tree = np.array([[]])  # initialise Tree array
-
-                else:
-                    if tree.shape[1] == 0:
-                        tree = np.append(tree, [row], axis=1)  # append first row to Tree
-
-                    else:
-                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
-
-                if tree.shape[0] == T_num_lines:
-                    population_a.append(tree)  # append complete Tree to population list
-
-    return population_a

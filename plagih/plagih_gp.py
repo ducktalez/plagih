@@ -51,6 +51,7 @@ def create_config_dict():
                          'Branch nodebased': 0.1,
                          'Crossover one Branch': 0.35,
                          'Create Random': 0.30},
+        'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }
 

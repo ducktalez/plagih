@@ -1,5 +1,6 @@
 """
-Maybe this helps starting from the command line
+This starts the whole genetic programming.
+This extra file was added to make the program start from command line. (Path problems...)
 """
 from pathlib import Path
 from plagih import plagih_gp

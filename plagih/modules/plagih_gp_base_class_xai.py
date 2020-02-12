@@ -415,7 +415,7 @@ class ExplainableGP(object):
             except:
                 continue
 
-            population[tree_num] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
+            population[tree_num] = tree_set_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
             gene_pool[tree_num] = tree_meta
             if len(self.origin)>0:
                 if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):

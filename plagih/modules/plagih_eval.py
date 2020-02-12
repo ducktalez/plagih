@@ -37,6 +37,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
     tf_device = eval_parameters['tf_device']
     unique_outputs_num = eval_parameters['unique_outputs_num']
     tf_classify_labels_map = eval_parameters['tf_classify_labels_map']
+    label_min_max = eval_parameters['label_min_max']
 
     # Initialize TensorFlow session
     tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
@@ -56,7 +57,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
             solution = tensors['action0']
 
-            pairwise_fitness = tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num)
+            pairwise_fitness = tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, label_min_max=label_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if get_pred_labels:
@@ -90,8 +91,9 @@ def tensors_leaves(tensors, data, variables_dict, action_dict):
     return tensors
 
 
-def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num):
+def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, label_min_max=None):
     # 3- Add fitness computation into TF graph
+
     if kernel == 'classification':  # CLASSIFY kernel
 
         """
@@ -146,6 +148,27 @@ def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_out
         rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
         pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), atol + rtol * tf.abs(tf_result)), tf.int32)
 
+    elif kernel == 'regression bounded':
+        """
+        special regression for float solutions and discrete labels
+        - if the solution is between labels, the difference is added
+        - if the solution > bound_pop (the highest possible label), difference 0 is added
+        ---
+        suitable for:
+        - not fitting labels beforehand
+        - small amount of labels
+        - orderable amount of labels
+        """
+        # kernel, solution, tf_result, action_dict, unique_outputs_num
+
+        # TODO adjust this stuff
+        label_min_max[0] = 0
+        label_min_max[1] = 2
+        new_result = min(max(tf_result, label_min_max[0]), label_min_max[1])
+        pairwise_fitness = tf.abs(solution - new_result)
+    elif kernel == 'regression discrete bounded penalise':
+        # 1. Check if correct: (float) Results are mapped to a decision.
+        raise
     else:
         raise Exception('Kernel type is wrong or missing. You entered {}'.format(kernel))
 

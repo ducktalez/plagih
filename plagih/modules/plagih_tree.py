@@ -509,7 +509,10 @@ def tree_core_depth(tree, parent_list=None):
     if not parent_list:
         parent_list = tree_row_int(tree, N_c1)
 
-    tree[N_depth][0] = 0  # the root is always here
+    if len(tree)>0:
+        tree[N_depth][0] = 0  # the root is always here
+    else:
+        print_warning('w', 'Tree is completely empty')
 
     for my_id, _ in enumerate(parent_list):
 
@@ -597,8 +600,8 @@ def core_from_labels(label_list, arity_list):
     this function builds the core of a tree (no node_modify)
     """
     if len(label_list) == 0:
-        print('label list is empty. Please handle this error earlier in code.')
-        raise
+        print_warning('w', 'label list is empty')
+
     size = len(label_list)
     tree = tree_init_core(size)
 

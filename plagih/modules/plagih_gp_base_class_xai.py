@@ -14,12 +14,9 @@ Functions, that might be addable in the future:
 import sys
 import csv
 import sklearn.metrics as skm
-import sklearn.model_selection as skcv
 from datetime import datetime
 from plagih.modules.plagih_tree import *
 import pickle
-from pydoc import locate  # convert stringed-type to type. ('float' -> float)
-import numpy as np
 
 import matplotlib.pyplot as plt
 import time
@@ -44,11 +41,13 @@ class ExplainableGP(object):
 
         self.time_start = time.perf_counter()
 
-        self.tree_meta = {}
+        # init values that are set later
+        self.tree_meta = {}  # LUT to save all expressions with their corresponding meta data (e.g. fitness). needs memory.
         self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-        self.pareto = {}
+        self.pareto = {}  # a dict with all pareto candidates. key is complexity, value is tree meta
         self.population_base = []  # population that is taken to the next generation
-        self.best_fitness = None
+        self.best_fitness = None  # keeps track of the current best fitness
+        self.label_min_max = None  # list with [0] = min and [1] = max, For kernel "regression bounded" (or so)
 
         # 1. set global variables to those local values passed from the user script
         self.config = config_dict
@@ -132,7 +131,7 @@ class ExplainableGP(object):
         """
         self.print_g('gg', 'Preparing to evolve first Generation. Gen {}.'.format(self.gen_id))
         self.gen_prepare_parameters()
-        self.pop_first_create()
+        self.pop_first_create_from_origin()
         self.gen_finalize()
         file_population_write_karoo(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
 
@@ -252,6 +251,25 @@ class ExplainableGP(object):
         self.unique_outputs_num = unique_outputs_num
         self.data_train_rows, self.data_train, self.data_control = data_train_rows, data_train, data_control
 
+        if self.kernel == 'regression bounded':
+            pass
+            lowest = 0
+            highest = 2
+            self.label_min_max[0] = lowest
+            self.label_min_max[1] = highest
+
+        self.eval_parameters = {
+            'kernel': self.kernel,
+            'action_dict': self.action_dict,
+            'variables_dict': self.variables_dict,
+            'tf_device_log': self.tf_device_log,
+            'tf_device': self.tf_device,
+            'unique_outputs_num': self.unique_outputs_num,
+            'tf_classify_labels_map': self.tf_classify_labels_map,
+            'label_min_max': self.label_min_max}
+
+        return
+
     def activate_operators(self, op_array):
         self.op_array = op_array
         return
@@ -304,13 +322,15 @@ class ExplainableGP(object):
 
         file = Path.open(path / 'conclusion.txt', 'w')
         file.write('Plagih GP\n launched: ' + str(datetime))
+        if len(self.origin)>0:
+            result = eval_tf(self.origin['expr_sym'], self.data_control, self.eval_parameters, get_pred_labels=True)
+            self.origin['fit_control'] = result['fitness']
+            fit_control_best = result['fitness']
 
-        result = eval_tf(self.origin['expr_sym'], self.data_control, self.eval_parameters, get_pred_labels=True)
-        self.origin['fit_control'] = result['fitness']
-        fit_control_best = result['fitness']
-
-        fittest_algo = self.origin['expr_sym']
-        fittest_parsimony = 0
+            fittest_algo = self.origin['expr_sym']
+            fittest_parsimony = 0
+        else:
+            raise
 
         for parsimony, tree_hash in self.pareto.items():
             try:
@@ -343,7 +363,10 @@ class ExplainableGP(object):
             file.write('\n\n No solution was better than the origin... your species has gone extinct!')
 
         # Info about the origin tree
-        file.write('\n\t Origin fitness score: {}'.format(self.origin['fit_control']))
+        if len(self.origin)>0:
+            file.write('\n\t Origin fitness score: {}'.format(self.origin['fit_control']))
+        else:
+            pass
 
         # Info about the best Tree
         file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
@@ -394,9 +417,11 @@ class ExplainableGP(object):
 
             population[tree_num] = tree_store_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
             gene_pool[tree_num] = tree_meta
-
-            if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
-                dominator_count += 1
+            if len(self.origin)>0:
+                if self.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
+                    dominator_count += 1
+            else:
+                pass
 
         self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
@@ -451,7 +476,7 @@ class ExplainableGP(object):
         else:
             return False
 
-    def pop_first_create(self):
+    def pop_first_create_from_origin(self):
         """
         Constructs the first generation
         - loads the origin-tree from file
@@ -1098,18 +1123,18 @@ class ExplainableGP(object):
         elif label_list:
             tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
         else:
-            print_warning('w', 'No origin provided. Todo. starting from scratch with random generation?')
-            raise
+            print_warning('w', 'No origin provided. starting from scratch with random generation?')
+            tree = None
+        if len(tree)>0:  # dummy
+            self.origin_set_meta(tree)
+        return
 
-        self.eval_parameters = {
-            'kernel': self.kernel,
-            'action_dict': self.action_dict,
-            'variables_dict': self.variables_dict,
-            'tf_device_log': self.tf_device_log,
-            'tf_device': self.tf_device,
-            'unique_outputs_num': self.unique_outputs_num,
-            'tf_classify_labels_map': self.tf_classify_labels_map}
-
+    def origin_set_meta(self, tree):
+        """
+        for origin, fill meta...
+        - self.origin
+            - tree, raw, sym, parsimony
+        """
         origin_algo_raw = tree_expr_raw(tree, P_first_node)
         try:
             expr_sym = tree_expr_sympify(algo_raw=origin_algo_raw)
@@ -1125,10 +1150,7 @@ class ExplainableGP(object):
             whats_wrong = 'Your origin algorithm already caused an exception. {}'.format(ex)
             raise Exception(whats_wrong)
         self.origin['fitness_train'] = origin_meta['fitness_train']
-
         self.parsimony_best_meta[0] = origin_meta
-
-        self.hashtable_fitness_train = {}
         self.pareto[0] = self.origin['fitness_train']
 
         self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(origin_meta['fitness_train'], time.perf_counter() - self.time_start))
@@ -1375,7 +1397,10 @@ class ExplainableGP(object):
             sys.exit()
 
         if not self.best_fitness:
-            self.best_fitness = self.origin['fitness_train']
+            if len(self.origin)>0:
+                self.best_fitness = self.origin['fitness_train']
+            else:
+                self.best_fitness = next(iter(gene_pool.values()))['fitness_train']
 
         fitness_train_sum = 0
         for _, meta in gene_pool.items():
@@ -1474,107 +1499,6 @@ def pop_enum_trees(population):
         population[tree_id][TR_ID][1] = tree_id
     return population
 
-
-def data_load_data_split(data_x, data_y, test_size):
-    x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST split
-    data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its associated class label (right column)
-    data_control = np.c_[x_test, y_test]  # recombine each row of data_csv_path with its associated class label (right column)
-
-    data_train_rows = len(data_train[:, 0])
-
-    return data_train_rows, data_train, data_control
-
-
-def data_from_csv(samples_file):
-    """
-    loads the goal-data_csv_path from .csv file. first observations then actions.
-    Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
-
-    Mountaincar .csv first lines (11.12.2019):
-    --------------------------------------------------------
-    observation0:float,     observation1:float, action0:float
-    -0.5031261704876531,    0.0,                2
-    --------------------------------------------------------
-    """
-
-    num_observations, num_actions = 0, 0
-    var_types = []
-    input_dict = {'all': {},
-                  'float': {},
-                  'bool': {}}
-    variables_dict = {'all': [],
-                      'types': [],
-                      'float': [],
-                      'bool': []}
-
-    action_dict = {}
-
-    # 1. Read file
-    with Path.open(samples_file) as csvFile:
-        reader = csv.reader(csvFile, delimiter=',')
-
-        for i, row in enumerate(reader):
-            if i == 0:  # variable identifiers
-                # all_variables = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
-                for var_name in row:
-                    var_types.append(var_name.split(':', 1)[1])
-                    if var_name.startswith('o'):  # found an observation
-                        num_observations += 1
-                        term = var_name.rsplit(':', 1)[0]
-                        term_type = var_name.split(':', 1)[1]
-                        input_dict[term] = term_type
-                        variables_dict['all'].append(term)
-                        variables_dict['types'].append(term_type)
-                        if term_type == 'float':
-                            variables_dict['float'].append(term)
-                            variables_dict['float'].append(term)
-                        elif term_type == 'bool':
-                            variables_dict['bool'].append(term)
-                        else:
-                            raise
-                    elif var_name.startswith('a'):  # found an action
-                        num_actions += 1
-                        action = var_name.split(':', 1)[0]
-                        action_type = var_name.split(':', 1)[1]
-                        action_dict[action] = action_type  # Do not use this:# '2b' if 'bool' in action_type else '2f'
-                    else:
-                        print_e('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
-                        raise
-
-                data_x, data_y = [], []
-
-            else:  # convert every 'string' element to its data_csv_path type
-                row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
-                data_x.append(row_as_data[:num_observations])
-                data_y.append(row_as_data[num_observations:])
-        csvFile.close()
-    unique_outputs_num = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
-
-    data_train_rows, data_train, data_control = data_load_data_split(data_x, data_y, test_size=0.2)
-
-    # self.printplg('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-    return input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
-
-
-def data_load_pickle(prepared_data_pickle_path):
-    """
-    loads a data_csv_path file that was already split with the csv reader
-    """
-    with Path.open(prepared_data_pickle_path, 'rb') as file:
-        pickle_data = pickle.load(file)
-
-    # self.printplg('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-    return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
-
-
-def save_data_pickle(prepared_data, data_pickle_path):
-    """
-    saves prepared plagih data to pickle file
-    """
-
-    with Path.open(data_pickle_path, 'wb') as file:
-        pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-    return
 
 
 def file_population_write_plagih(population, pop_name, path, gen_id):

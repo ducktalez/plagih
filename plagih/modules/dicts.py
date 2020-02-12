@@ -1,5 +1,6 @@
 import tensorflow as tf
 import ast
+from pathlib import Path
 
 
 fitt_dict = {'classification': 'max',
@@ -27,8 +28,14 @@ T_num_lines = 15
 P_first_node = 1
 root_id = 1
 
+path_runs = 'runs'
+path_autosave = 'autosave'
+path_plots = 'plots'
+
+
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
 
+# TODO replace this with the op file down there
 ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b
                    ast.Sub: tf.subtract,  # e.g., a - b
                    ast.Mult: tf.multiply,  # e.g., a * b
@@ -122,7 +129,7 @@ op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       'Ftob': {'name': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool},
       'Btof': {'name': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32},
 
-      'Ifte': {'name': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where},  # Note that boolean if's can be realized with boolean operators. (Or ITE())
+      'Ifte': {'name': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where},
       'Mini': {'name': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum},
       'Maxi': {'name': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum},
       }

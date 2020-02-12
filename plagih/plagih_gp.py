@@ -41,11 +41,18 @@ def create_config_dict():
                          'Branch nodebased': 0.1,
                          'Crossover one Branch': 0.35,
                          'Create Random': 0.30},
-        'float_accuracy': 200,
-        'time_max': 60 * 60 * 7  # 60min * 60s * hours
+        'time_max': int(60 * 60 * 12),  # 60 = 1 min
+        'float_accuracy': 200
     }
 
     return config_dict
+
+
+def fast_run(config):
+    config['pop_max'] = 200
+    config['gen_max'] = 18
+    config['gp_tourn_size'] = 3
+    return config
 
 
 def mountaincar_load_corefiles(config_dict, path):

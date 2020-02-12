@@ -11,6 +11,55 @@ sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
 
+class Plagih_Tree():
+
+    def __init__(self, expr):
+        self.fitness = None
+        self.parsimony = None
+        self.expr = expr
+
+    def write_to_file(self, path):
+        pass
+
+
+def tree_modifyable_nodes_set(chosen_tree, origin_tree):
+    """
+    Sets all the origin core nodes back to non-modifyable
+    """
+    # Set all nodes to be modifiable (=1)
+    for i, tmp in enumerate(chosen_tree[N_modify][1:]):
+        chosen_tree[N_modify][i + 1] = '1'
+
+    # Find no-modifyables in Origin
+    non_modifiable_nodes = []
+    if origin_tree[N_modify][1] == '0':  # check is modifiable nodes are specified
+        non_modifiable_nodes.extend(tree_permanent_nodes_get(1, chosen_tree, 1, origin_tree))
+
+    for non_modifiable in non_modifiable_nodes:
+        chosen_tree[N_modify][non_modifiable] = '0'
+
+    return chosen_tree
+
+
+def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree):
+    """
+    Returns a list of nodes that are not supposed to be modified
+    """
+
+    if origin_tree[N_modify][origin_node] == '0':
+        permanent_nodes = [int(chosen_tree[N_id][chosen_node])]
+        for child in [N_c1, N_c2, N_c3]:
+            if origin_tree[child][origin_node] != '':
+                next_origin_node = int(origin_tree[child][origin_node])
+                next_chosen_node = int(chosen_tree[child][chosen_node])
+                tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
+                if tmp is not None:
+                    permanent_nodes.extend(tmp)
+        return permanent_nodes
+    else:
+        return
+
+
 def util_tree_copy(population, tree_id):
     """
     copy a tree from a population
@@ -39,17 +88,6 @@ def pop_copy_genepool(population_new, gene_pool, gen_id):
     return pop_y
 
 
-class Plagih_Tree():
-
-    def __init__(self, expr):
-        self.fitness = None
-        self.parsimony = None
-        self.expr = expr
-
-    def write_to_file(self, path):
-        pass
-
-
 def tree_init_core(node_amount):
     """
     returns an empty tree with an amount of nodes, auto fills
@@ -74,6 +112,29 @@ def insert_function_or_term(depth, depth_goal):
         decision = np.random.choice(['terminal', 'function'])
 
     return decision
+
+
+def tree_parsimony(tree, origin_tree=None, parsimony_distance='ted'):
+    """
+    parsimony_distance: compute the chosen distance by the user.
+
+    """
+    if parsimony_distance == 'ted':
+        return tree_parsimony_ted(tree, origin_tree)
+    elif parsimony_distance == 'total_count_nodes':
+        return int(tree[3][-1:])  # returns the tree size
+    elif parsimony_distance == 'total_tree_depth':
+        return tree[N_depth][1]  # returns the tree size
+    elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
+        algo_raw_str = str(tree_expr_raw(tree, root_id))
+        return len(str(algo_raw_str))
+    # elif parsimony_distance == 'total_simplified':
+    #     algo_sym = self.tree_expr_sympify(tree=tree)
+    #     return count_ops(algo_sym)
+    elif parsimony_distance == 'rel_ari_1':  # Does this work?
+        return tree_parsimony_relari(tree, origin_tree)
+    else:
+        raise Exception('Parsimony distance not specified!')
 
 
 def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dict, op_array):
@@ -141,44 +202,6 @@ def invent_label_list_nodes(xtype, max_nodes, variables_dict, action_dict, op_ar
     return result_label_list, result_arity_list
 
 
-def tree_modifyable_nodes_set(chosen_tree, origin_tree):
-    """
-    Sets all the origin core nodes back to non-modifyable
-    """
-    # Set all nodes to be modifiable (=1)
-    for i, tmp in enumerate(chosen_tree[N_modify][1:]):
-        chosen_tree[N_modify][i + 1] = '1'
-
-    # Find no-modifyables in Origin
-    non_modifiable_nodes = []
-    if origin_tree[N_modify][1] == '0':  # check is modifiable nodes are specified
-        non_modifiable_nodes.extend(tree_permanent_nodes_get(1, chosen_tree, 1, origin_tree))
-
-    for non_modifiable in non_modifiable_nodes:
-        chosen_tree[N_modify][non_modifiable] = '0'
-
-    return chosen_tree
-
-
-def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree):
-    """
-    Returns a list of nodes that are not supposed to be modified
-    """
-
-    if origin_tree[N_modify][origin_node] == '0':
-        permanent_nodes = [int(chosen_tree[N_id][chosen_node])]
-        for child in [N_c1, N_c2, N_c3]:
-            if origin_tree[child][origin_node] != '':
-                next_origin_node = int(origin_tree[child][origin_node])
-                next_chosen_node = int(chosen_tree[child][chosen_node])
-                tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
-                if tmp is not None:
-                    permanent_nodes.extend(tmp)
-        return permanent_nodes
-    else:
-        return
-
-
 def tree_set_id(tree, tree_id):
     tree[TR_ID][1] = tree_id
     return tree
@@ -218,7 +241,7 @@ def tree_round_constants(tree, accuracy, karoo=False):
     if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
 
-    for node_id in tree_get_leafes(tree):
+    for node_id in tree_get_leaves(tree):
         if tree_node_get_nodekind(tree, node_id) == 'term-float':
             tmp = round_constant(tree[N_label][node_id], accuracy)
             tree[N_label][node_id] = tmp
@@ -229,7 +252,7 @@ def tree_round_constants(tree, accuracy, karoo=False):
     return tree
 
 
-def tree_store_fitness(tree, fitness, precision=6):
+def tree_set_fitness(tree, fitness, precision=6):
     """
     Store the fitness within the tree np-array
 
@@ -360,7 +383,7 @@ def tree_raw_depth_prefix(tree, node_id):
         return '{Ifte' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
 
 
-def tree_store_parsimony(tree, parsimony):
+def tree_set_parsimony(tree, parsimony):
     """
     Store the parsimony within the tree np-array
     """
@@ -393,7 +416,7 @@ def tree_node_get_nodekind(tree, node, karoo=False):
     return nodekind
 
 
-def tree_get_leafes(tree, karoo=False):
+def tree_get_leaves(tree, karoo=False):
     """
     Just return leaf nodes of a tree
     """
@@ -455,29 +478,6 @@ def evolve_node_arity_fix(tree):
     return tree
 
 
-#
-#
-# def evolve_node_arity_fix(tree):
-#     """
-#     In a given Tree, fix 'node_arity' for all nodes labeled 'term' but with arity 2.
-#
-#     This is required after a function has been replaced by a terminal, as may occur with both Grow mutation and
-#     Crossover.
-#
-#     """
-#
-#     for n in range(1, len(tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-#         if len(tree[3]) <= 2:
-#             print('FUCK {}'.format(tree))
-#         if tree[N_type][n] == 'term':  # check for discrepency
-#             tree[N_arity][n] = '0'  # set arity to 0
-#             tree[N_c1][n] = ''  # wipe 'node_c1'
-#             tree[N_c2][n] = ''  # wipe 'node_c2'
-#             tree[N_c3][n] = ''  # wipe 'node_c3'
-#             tree[N_modify][n] = '1'
-#
-#     return tree
-
 def tree_init_first_column():
     tree = np.array(
         [['tree_id'],
@@ -499,7 +499,7 @@ def tree_init_first_column():
     return tree
 
 
-def tree_core_depth(tree, parent_list=None):
+def tree_core_init_depth(tree, parent_list=None):
     """
     Automatically filly node depth
     - Tree needs:
@@ -526,7 +526,7 @@ def tree_core_depth(tree, parent_list=None):
     return tree
 
 
-def tree_core_parents(tree, arity_lst=None):
+def tree_core_init_parents(tree, arity_lst=None):
     """
     Automatically fill the node_parent of a tree
     - arity list in tree or
@@ -541,7 +541,7 @@ def tree_core_parents(tree, arity_lst=None):
     return tree, parent_list
 
 
-def tree_core_c(tree, parent_list=None):
+def tree_core_init_c(tree, parent_list=None):
     """
     automaticalls fills c1, c2, c3 for each node
     Needed: node_parent
@@ -574,13 +574,16 @@ def tree_row_int(tree, row_id):
     return row
 
 
-def tree_core_setrow(tree, row_id, row):
+def tree_core_init_row(tree, row_id, row):
+    """
+    sets any complete row in a np-tree
+    """
     for i, x in enumerate(row):
         tree[row_id][i] = x
     return tree
 
 
-def tree_plusnode(tree, add_or_sub, firstrow=1):
+def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
     """
     returns a tree where the nodes start at 1 instead of 0
     """
@@ -606,20 +609,43 @@ def core_from_labels(label_list, arity_list):
     tree = tree_init_core(size)
 
     # set all the rows that are super easy
-    tree = tree_core_setrow(tree, N_id, [x for x in range(0, size)])
-    tree = tree_core_setrow(tree, N_label, label_list)
-    tree = tree_core_setrow(tree, N_arity, arity_list)
+    tree = tree_core_init_row(tree, N_id, [x for x in range(0, size)])
+    tree = tree_core_init_row(tree, N_label, label_list)
+    tree = tree_core_init_row(tree, N_arity, arity_list)
 
     # and also, fill all the leftover rows
-    tree, parent_list = tree_core_parents(tree)
-    tree = tree_core_c(tree)
-    tree = tree_core_depth(tree, parent_list)
+    tree, parent_list = tree_core_init_parents(tree)
+    tree = tree_core_init_c(tree)
+    tree = tree_core_init_depth(tree, parent_list)
 
     if not tree_test_check_children(tree, karoo=False):
         print(tree)
         raise
 
     return tree
+
+
+def tree_parsimony(tree, origin_tree=None, parsimony_distance='ted'):
+    """
+    parsimony_distance: compute the chosen distance by the user.
+
+    """
+    if parsimony_distance == 'ted':
+        return tree_parsimony_ted(tree, origin_tree)
+    elif parsimony_distance == 'total_count_nodes':
+        return int(tree[3][-1:])  # returns the tree size
+    elif parsimony_distance == 'total_tree_depth':
+        return tree[N_depth][1]  # returns the tree size
+    elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
+        algo_raw_str = str(tree_expr_raw(tree, root_id))
+        return len(str(algo_raw_str))
+    # elif parsimony_distance == 'total_simplified':
+    #     algo_sym = self.tree_expr_sympify(tree=tree)
+    #     return count_ops(algo_sym)
+    elif parsimony_distance == 'rel_ari_1':  # Does this work?
+        return tree_parsimony_relari(tree, origin_tree)
+    else:
+        raise Exception('Parsimony distance not specified!')
 
 
 def evolve_c_buffer_karoo(tree, node):
@@ -636,7 +662,7 @@ def evolve_c_buffer_karoo(tree, node):
 
         if int(tree[N_depth][n]) == int(tree[N_depth][node]) - 1:  # find parent nodes at the prior depth
             if tree[N_arity][n] != '':
-                parent_arity_sum = parent_arity_sum + int(tree[N_arity][n])  # sum arities of all parent nodes at the prior depth
+                parent_arity_sum = parent_arity_sum + int(tree[N_arity][n])  # sum arities of parents at  prior depth
 
         if int(tree[N_depth][n]) == int(tree[N_depth][node]) and int(tree[3][n]) < int(tree[3][node]):  # find prior siblings at the current depth
             if tree[N_arity][n] != '':
@@ -696,7 +722,7 @@ def tree_convert_karoo_to_plagih(karoo_tree):
     """
 
     tree_nofirst = np.delete(karoo_tree, 0, 1)
-    tree_nofirst_nodezero = tree_plusnode(tree_nofirst, add_or_sub=-1, firstrow=0)
+    tree_nofirst_nodezero = tree_convert_plusnode(tree_nofirst, add_or_sub=-1, firstrow=0)
     tree_nofirst_nodezero[N_parent][0] = -1
 
     return tree_nofirst_nodezero
@@ -709,7 +735,7 @@ def tree_convert_plagih_to_karoo(plagih_tree):
     """
     first_col = tree_init_first_column()
     tree_withfirst = np.concatenate((first_col, plagih_tree), axis=1)
-    tree_karoo = tree_plusnode(tree_withfirst, add_or_sub=1, firstrow=1)
+    tree_karoo = tree_convert_plusnode(tree_withfirst, add_or_sub=1, firstrow=1)
     tree_karoo[N_parent][1] = ''
     return tree_karoo
 
@@ -1069,7 +1095,7 @@ def tree_delete_nodes(tree, node_list):
 
 def tree_check_expression(tree, karoo=True):
     """
-
+    Check if a valid tree can be built from the expression
     """
 
     label_list = tree[N_label]

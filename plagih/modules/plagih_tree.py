@@ -3,6 +3,7 @@ import numpy as np
 from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
+import csv
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -231,6 +232,24 @@ def round_constant(constant, accuracy):
         new_const = -1 / accuracy
 
     return new_const
+
+
+def tree_single_from_csv(origin_tree_file_path):
+    # Load origin from file
+    with Path.open(origin_tree_file_path, 'r') as csv_file:
+        target = csv.reader(csv_file, delimiter=',')
+        tree = np.array([[]])
+        for row in target:
+            if tree.shape[1] == 0:  # looks if tree is empty
+                tree = np.append(tree, [row], axis=1)  # append first row to Tree ('tree_id')
+            else:
+                tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
+        if tree.shape[0] == T_num_lines:  # (+ row 0)
+            pass  # print('Origin Tree is: \n' + str(tree))
+        else:
+            print_e('Tree could not be imported correctly from .csv file.')
+            raise
+    return tree
 
 
 def tree_round_constants(tree, accuracy, karoo=False):
@@ -917,6 +936,14 @@ def tree_get_label(tree, node_id):
     return label
 
 
+def tree_node_get_depth(tree, node_id):
+    """
+
+    """
+    label = tree[N_depth][int(node_id)]
+    return label
+
+
 def xtype_get_constant(label, node_arity=None, only_float=True):
     """
 
@@ -1179,16 +1206,21 @@ def test_trees(number):
 #     return int(tree[N_arity][int(node_id)])
 
 
-def tree_set_label(tree, node_id, label):
+def tree_node_set_label(tree, node_id, label):
     tree[N_label][int(node_id)] = label
     return tree
 
 
-def tree_iterate_ids(tree, karoo=False):
+def tree_node_set_arity(tree, node_id, arity):
+    tree[N_arity][int(node_id)] = int(arity)
+    return tree
+
+
+def tree_iterate_ids(tree, skip_nodes=0, karoo=False):
     if karoo:
-        start = 1
+        start = 1 + skip_nodes
     else:
-        start = 0
+        start = 0 + skip_nodes
     node_id_list = [int(node_id) for node_id in tree[N_id][start:]]
     return node_id_list
 
@@ -1224,7 +1256,7 @@ def tree_normalize_exponentiation(tree):
             old_power = tree_get_label(tree, child_id)
             try:
                 new_power = float(int(float(old_power)))
-                tree = tree_set_label(tree, child_id, new_power)
+                tree = tree_node_set_label(tree, child_id, new_power)
             except ValueError:
                 pass  # sfeh: This may actually take some time. Every tree gets checked any many have '**'.
     return tree

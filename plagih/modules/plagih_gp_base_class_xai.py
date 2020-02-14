@@ -846,9 +846,11 @@ class ExplainableGP(object):
         if same_arity:
             # 2. perform point mutation on that specific node
             if arity > 0:
-                tree[N_label][node_id] = xtype_choose_func_pointmutation(self.op_array, xtype=xtype, arity=arity)  # Function is same type, same arity
+                new_label = xtype_choose_func_pointmutation(self.op_array, xtype=xtype, arity=arity)  # Function is same type, same arity
+                tree = tree_node_set_label(tree, node_id, new_label)
             elif arity == 0:  # aka a terminal
-                tree[N_label][node_id] = self.xtype_choose_term(xtype)  # 3 -> '2f' -> 5
+                new_label = self.xtype_choose_term(xtype)  # 3 -> '2f' -> 5
+                tree = tree_node_set_label(tree, node_id, new_label)
             else:
                 self.printpl('e', 'Arity not as expected: {}'.format(tree[N_arity][node_id]))
                 raise
@@ -909,13 +911,13 @@ class ExplainableGP(object):
             float_id = np.random.choice(float_nodes)
             val = float(tree_get_label(tree, float_id))
             new_value = self.gp_mutate_constantfilter(val, term_type='float', filter_type='gaussian_filter')
-            tree[N_label][float_id] = str(new_value)
+            tree = tree_node_set_label(tree, float_id, new_value)
             return tree
         else:
             raise Exception('No mutatable node found!')
             # return None
 
-    def treegp_tree_prune(self, tree, depth):
+    def treegp_tree_prune(self, tree, max_depth):
         """
         reduces the depth of a Tree (in case it is too deep).
         Arguments required: tree, depth
@@ -923,15 +925,19 @@ class ExplainableGP(object):
 
         nodes = []
 
-        for n in range(1, len(tree[3])):
+        for node_id in range(root_id, len(tree[3])):
 
-            if int(tree[N_depth][n]) == depth and int(tree[N_arity][n]) > 0:
-                tree[N_arity][n] = 0
-                node_xtype = self.xtype_get(tree[N_label][n])
-                tree[N_label][n] = self.xtype_choose_term(node_xtype)  # replace label
+            node_depth = tree_get_label(tree, node_id)
+            node_arity = tree_node_get_arity(tree, node_id, karoo=True)
+            if node_depth == max_depth and node_arity > 0:  # replace this node with terminal
+                label = tree_get_label(tree, node_id)
+                node_xtype = self.xtype_get(label)
+                tree = tree_node_set_arity(tree, node_id, 0)
+                new_term = self.xtype_choose_term(node_xtype)  # replace label
+                tree = tree_node_set_label(tree, node_id, new_term)
 
-            elif int(tree[N_depth][n]) > depth:  # record nodes deeper than the maximum allowed Tree depth
-                nodes.append(n)
+            elif int(tree[N_depth][node_id]) > max_depth:  # record nodes deeper than the maximum allowed Tree depth
+                nodes.append(node_id)
 
         tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
         tree = evolve_node_arity_fix(tree)  # fix all node arities
@@ -947,7 +953,8 @@ class ExplainableGP(object):
         node_options = []
 
         if mode == 'same_type':  # only return a node with the same function type
-            for i, label in enumerate(partner_tree[N_label][1:]):
+            # for i, label in enumerate(partner_tree[N_label][1:]):
+            for i, label in enumerate(tree_iterate_ids(partner_tree, skip_nodes=1)):
                 if self.xtype_get(label) == node_xtype:
                     node_options.append(i + 1)  # +1, we skipped the first element
 
@@ -972,21 +979,23 @@ class ExplainableGP(object):
         # choose a node from parent a
         a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
         a_id = np.random.choice(a_ids)
-        a_xtype = self.xtype_get(a_tree[N_label][a_id])
+        a_node_label = tree_get_label(a_tree, a_id)
+        a_xtype = self.xtype_get(a_node_label)
 
         # create a list from parent b with same xtype
-        b_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
-        b_sametype_ids = b_ids[:]
-        for i in b_ids:
-            b_xtype = self.xtype_get(b_tree[N_label][i])
+        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
+        b_sametype_ids = b_node_ids[:]
+        for b_id in b_node_ids:
+            b_label = tree_get_label(b_tree, b_id)
+            b_xtype = self.xtype_get(b_label)
             if not xtype_equi_outcome(b_xtype, a_xtype):
-                b_sametype_ids.remove(i)
+                b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
-        if b_sametype_ids:  # if it has entries, choose one. we are done
+        if b_sametype_ids:  # if entries were found, choose one. we are done
             b_id = np.random.choice(b_sametype_ids)
             success = True
         else:
-            b_id = np.random.choice(b_ids)
+            b_id = np.random.choice(b_node_ids)
             success = False
         aaa = self.xtype_get(a_tree[N_label][a_id])
         bbb = self.xtype_get(b_tree[N_label][b_id])
@@ -1105,21 +1114,8 @@ class ExplainableGP(object):
 
         # Check if the user provided an origin
         if origin_tree_file_path:
+            tree = tree_single_from_csv(origin_tree_file_path)
 
-            # Load origin from file
-            with Path.open(origin_tree_file_path, 'r') as csv_file:
-                target = csv.reader(csv_file, delimiter=',')
-                tree = np.array([[]])
-                for row in target:
-                    if tree.shape[1] == 0:  # looks if tree is empty
-                        tree = np.append(tree, [row], axis=1)  # append first row to Tree ('tree_id')
-                    else:
-                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
-                if tree.shape[0] == T_num_lines:  # (+ row 0)
-                    pass  # print('Origin Tree is: \n' + str(tree))
-                else:
-                    print_e('Tree could not be imported correctly from .csv file.')
-                    raise
         elif label_list:
             tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
         else:

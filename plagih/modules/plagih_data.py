@@ -17,7 +17,7 @@ def data_load_data_split(data_x, data_y, test_size):
     return data_train_rows, data_train, data_control
 
 
-def data_from_csv(samples_file):
+def data_from_csv(samples_file, test_size=0.2):
     """
     loads the goal-data_csv_path from .csv file. first observations then actions.
     Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
@@ -82,9 +82,8 @@ def data_from_csv(samples_file):
         csvFile.close()
     unique_outputs_num = len(np.unique(data_y))  # load the user defined true labels for classification or solutions for regression
 
-    data_train_rows, data_train, data_control = data_load_data_split(data_x, data_y, test_size=0.2)
+    data_train_rows, data_train, data_control = data_load_data_split(data_x, data_y, test_size=test_size)
 
-    # self.printplg('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
     return input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 
@@ -95,7 +94,6 @@ def data_load_pickle(prepared_data_pickle_path):
     with Path.open(prepared_data_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
 
-    # self.printplg('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
     return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 

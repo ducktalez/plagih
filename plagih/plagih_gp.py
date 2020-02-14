@@ -20,12 +20,13 @@ def create_config_dict():
         'print_type': 'ggewsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
-        'tree_depth_base': 7,
+        'tree_depth_base': 5,
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 5,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
         'pop_max': 1000,
         'gen_max': 1000,
+        'complexity_measure': 'ted',
         'gp_tourn_size': 7,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
@@ -106,7 +107,7 @@ def mountaincar_test(config_dict, path):
     config_dict['name'] = 'MTC_test'
     config_dict['path'] = path
     config_dict['pop_max'] = 200
-    config_dict['gen_max'] = 18
+    config_dict['gen_max'] = 12
     config_dict['gp_tourn_size'] = 3
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)

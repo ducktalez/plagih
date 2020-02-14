@@ -14,16 +14,23 @@ np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters b
 
 class Plagih_Tree():
 
-    def __init__(self, expr):
+    def __init__(self, expr=None):
         self.fitness = None
         self.parsimony = None
         self.expr = expr
+        self.numpy_nodes = None
 
     def write_to_file(self, path):
         pass
 
 
-def tree_modifyable_nodes_set(chosen_tree, origin_tree):
+class Plagih_node():
+
+    def __init__(self, n_id, depth, n_type, label, parent, arity, c1, c2, c3):
+        return
+
+
+def tree_set_modifyable_nodes(chosen_tree, origin_tree):
     """
     Sets all the origin core nodes back to non-modifyable
     """
@@ -75,14 +82,14 @@ def pop_random(population):
     return np.random.randint(1, len(population))
 
 
-def pop_copy_genepool(population_new, gene_pool, gen_id):
+def pop_copy_genepool(population_tmp, gene_pool, gen_id):
     """
     Copy the genepool of a gen
     """
     pop_y = ['Population Selection in Generation {}.'.format(str(gen_id))]  # empty list
 
     for i, (tree_num, tree_meta) in enumerate(gene_pool.items()):
-        tree_copy = util_tree_copy(population_new, tree_num)
+        tree_copy = util_tree_copy(population_tmp, tree_num)
         tree_copy = tree_set_id(tree_copy, i + 1)
         pop_y.append(tree_copy)
 
@@ -127,7 +134,7 @@ def tree_parsimony(tree, origin_tree=None, parsimony_distance='ted'):
     elif parsimony_distance == 'total_tree_depth':
         return tree[N_depth][1]  # returns the tree size
     elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-        algo_raw_str = str(tree_expr_raw(tree, root_id))
+        algo_raw_str = str(tree_get_expr_raw(tree, root_id))
         return len(str(algo_raw_str))
     # elif parsimony_distance == 'total_simplified':
     #     algo_sym = self.tree_expr_sympify(tree=tree)
@@ -295,7 +302,7 @@ def tree_get_fitness(tree, precision=None, karoo=True):
     return fitness
 
 
-def tree_expr_raw(tree, node_id):
+def tree_get_expr_raw(tree, node_id):
     """
     Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
 
@@ -308,19 +315,19 @@ def tree_expr_raw(tree, node_id):
     elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
         fun = tree[N_label, node_id]
         if fun == '~':  # ~- workaround
-            return '(-({}))'.format(tree_expr_raw(tree, tree[9, node_id]))
+            return '(-({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]))
         else:
-            return '(' + fun + tree_expr_raw(tree, tree[9, node_id]) + ')'
+            return '(' + fun + tree_get_expr_raw(tree, tree[9, node_id]) + ')'
 
     elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
         # This if case is for 2-ary ops that is prefix. like Min(a, b)
         if tree[N_label, node_id] not in functions_infix_dict:
-            return '(' + tree[N_label, node_id] + '(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + '))'
+            return '(' + tree[N_label, node_id] + '(' + tree_get_expr_raw(tree, tree[9, node_id]) + ', ' + tree_get_expr_raw(tree, tree[10, node_id]) + '))'
         else:
-            return '(' + tree_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
+            return '(' + tree_get_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_get_expr_raw(tree, tree[10, node_id]) + ')'  # Klammern, da sympify sonst abkacnen könnte
 
     elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-        return '(Ifte(' + tree_expr_raw(tree, tree[9, node_id]) + ', ' + tree_expr_raw(tree, tree[10, node_id]) + ', ' + tree_expr_raw(tree, tree[11, node_id]) + '))'
+        return '(Ifte(' + tree_get_expr_raw(tree, tree[9, node_id]) + ', ' + tree_get_expr_raw(tree, tree[10, node_id]) + ', ' + tree_get_expr_raw(tree, tree[11, node_id]) + '))'
 
 
 def tree_parsimony_ted(tree1, tree2):
@@ -366,7 +373,7 @@ def tree_expr_sympify(algo_raw=None, tree=None):
     returns the sympifyed expression
     """
     if not algo_raw:  # If we got a tree, we generate the expression
-        algo_raw = str(tree_expr_raw(tree, root_id))
+        algo_raw = str(tree_get_expr_raw(tree, root_id))
 
     try:
         expr_sym = plagih_sympify(algo_raw)
@@ -616,13 +623,16 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
     return tree
 
 
-def core_from_labels(label_list, arity_list):
+def core_from_labels(label_list, arity_list=None):
     """
     Given the labels (and label infos) as list
     this function builds the core of a tree (no node_modify)
     """
     if len(label_list) == 0:
         print_warning('w', 'label list is empty')
+
+    if not arity_list:
+        arity_list = [label_get_arity(label) for label in label_list]
 
     size = len(label_list)
     tree = tree_init_core(size)
@@ -656,7 +666,7 @@ def tree_parsimony(tree, origin_tree=None, parsimony_distance='ted'):
     elif parsimony_distance == 'total_tree_depth':
         return tree[N_depth][1]  # returns the tree size
     elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-        algo_raw_str = str(tree_expr_raw(tree, root_id))
+        algo_raw_str = str(tree_get_expr_raw(tree, root_id))
         return len(str(algo_raw_str))
     # elif parsimony_distance == 'total_simplified':
     #     algo_sym = self.tree_expr_sympify(tree=tree)
@@ -940,8 +950,8 @@ def tree_node_get_depth(tree, node_id):
     """
 
     """
-    label = tree[N_depth][int(node_id)]
-    return label
+    depth = tree[N_depth][int(node_id)]
+    return int(depth)
 
 
 def xtype_get_constant(label, node_arity=None, only_float=True):
@@ -951,7 +961,7 @@ def xtype_get_constant(label, node_arity=None, only_float=True):
     const_xtype = None
 
     if not node_arity:
-        node_arity = tree_label_get_arity(label)
+        node_arity = label_get_arity(label)
 
     if node_arity == 0:  # arity=0 -> terminal
         if 'True' in label or 'False' in label:
@@ -1030,7 +1040,7 @@ def labels_get_aritys_list(label_list, karoo=False):
     returns an arity list for a label list
     """
 
-    arity_list = [tree_label_get_arity(x) for x in label_list]
+    arity_list = [label_get_arity(x) for x in label_list]
 
     if karoo:
         arity_list.pop(0)
@@ -1161,7 +1171,7 @@ def karoo_tree_from_labellist(label_list, modify_list=None):
     """
     create a tree from user input
     """
-    arity_list = [tree_label_get_arity(label) for label in label_list]
+    arity_list = [label_get_arity(label) for label in label_list]
     core = core_from_labels(label_list, arity_list)
     if modify_list:
         for i, val in enumerate(modify_list):

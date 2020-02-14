@@ -7,7 +7,7 @@ class MountainCarExamples:
         'samples_file': '../mountaincar/karoo_files/data_samples/behaviour_samples.csv',
         'samples_pickle': '../mountaincar/karoo_files/data_samples/plagih_data_prepared.p',
         'operators_file': '../mountaincar/karoo_files/operators/operators.csv',
-        'backup_pop': 'runs/Best_of/old_v1/population_new.csv'}
+        'backup_pop': 'runs/Best_of/old_v1/population_tmp.csv'}
 
     tree_v1_list = ['Ifte', '<', '0.0', '2.0', 'observation1', '0.0']
     tree_v1_modify = [0, 1, 0, 0, 1, 1]

@@ -23,7 +23,7 @@ def op_label_get_basictype(node_label):
         return 'term'
 
 
-def tree_label_get_arity(node_label):
+def label_get_arity(node_label):
     """
     return terminal or function according to the label
     """
@@ -84,7 +84,7 @@ def xtype_choose_term_v2(node_xtype, variables_dict):
         terminals_type = variables_dict['bool']
         the_type = 'bool'
     else:
-        print_e('Probably, you have to check if your "function" is actually a terminal. xtype {}'.format(node_xtype))
+        print_e('Probably, you have to check if your "function" is actually a terminal. xtype: {}'.format(node_xtype))
         raise
 
     if np.random.choice(['var', 'const']) == 'var':  # our choice is variable
@@ -141,6 +141,7 @@ def xtype_choose_func_v2(op_array, xtype=None):
         elif '2b' in xtype:
             choose_func = sum(op_array[f2b] + op_array[b2b], [])
         else:
+            print_e('What kind of type is that? {}'.format(xtype))
             raise
     else:
         choose_func = sum(op_array[f2f] +
@@ -194,7 +195,7 @@ def xtype_get_v2(label, variables_dict=None, action_dict=None, node_arity=None):
     if you are not 100% sure that it is a function.
     """
     if not node_arity:
-        node_arity = tree_label_get_arity(label)
+        node_arity = label_get_arity(label)
 
     if node_arity == 0:  # arity=0 -> terminal
         if 'True' in label or 'False' in label:

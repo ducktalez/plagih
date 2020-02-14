@@ -11,7 +11,6 @@ FIRST_TREE = 1
 
 TR_ID = 0
 TR_type = 1
-# TR_depth = 2
 N_id = 3
 N_depth = 4
 N_type = 5

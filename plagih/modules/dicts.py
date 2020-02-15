@@ -5,9 +5,11 @@ from pathlib import Path
 
 fitt_dict = {'classification': 'max',
              'regression': 'min',
+             'regression bounded': 'min',
              'match': 'max'}
 
 FIRST_TREE = 1
+first_action = 'action0'
 
 TR_ID = 0
 TR_type = 1

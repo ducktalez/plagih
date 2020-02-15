@@ -47,7 +47,7 @@ class ExplainableGP(object):
         self.pareto = {}  # a dict with all pareto candidates. key is complexity, value is tree meta
         self.population_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
-        self.label_min_max = None  # list with [0] = min and [1] = max, For kernel "regression bounded" (or so)
+        self.action_min_max = None  # list with [0] = min and [1] = max, For kernel "regression bounded" (or so)
         self.origin = None
 
         # 1. set global variables to those local values passed from the user script
@@ -248,19 +248,15 @@ class ExplainableGP(object):
         Why like this? I needed to find a bug in the data_from_csv file and
         did not want to start the whole stuff everytime
         """
-        input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control = data_prepared
+        input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max = data_prepared
         self.input_dict = input_dict
         self.variables_dict = variables_dict
         self.action_dict = action_dict
         self.unique_outputs_num = unique_outputs_num
         self.data_train_rows, self.data_train, self.data_control = data_train_rows, data_train, data_control
-
+        self.action_min_max = action_min_max
         if self.kernel == 'regression bounded':
-            pass
-            lowest = 0
-            highest = 2
-            self.label_min_max[0] = lowest
-            self.label_min_max[1] = highest
+            self.action_min_max = action_min_max
 
         self.eval_parameters = {
             'kernel': self.kernel,
@@ -270,11 +266,14 @@ class ExplainableGP(object):
             'tf_device': self.tf_device,
             'unique_outputs_num': self.unique_outputs_num,
             'tf_classify_labels_map': self.tf_classify_labels_map,
-            'label_min_max': self.label_min_max}
+            'action_min_max': self.action_min_max}
 
         return
 
     def activate_operators(self, op_array):
+        """
+        operators were loaded already and need to be set in the gp run
+        """
         self.op_array = op_array
         return
 
@@ -338,8 +337,9 @@ class ExplainableGP(object):
             first_pareto = next(iter(self.pareto.values()))
             fitness_control_best = first_pareto['fitness']
             fittest_parsimony = int(first_pareto['parsimony'])
+            fittest_algo = first_pareto['expr_sym']
         else:
-            file.write('\n There are no candidates to be mentioned')
+            file.write('\n There are no candidates to be mentioned at all. Maybe change your config?')
             return
 
         for parsimony, tree_hash in self.pareto.items():
@@ -362,15 +362,20 @@ class ExplainableGP(object):
                 file.write('\n\n Regression fitness score: {}'.format(fitness))
                 file.write('\n Mean Squared Error: {}'.format(mse))
 
+            elif self.kernel == 'regression bounded':
+                mse, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
+                file.write('\n\n Regression bounded fitness score: {}'.format(fitness))
+                file.write('\n Mean Squared Error: {}'.format(mse))
+
             elif self.kernel == 'match':
                 file.write('\n\n Matching fitness score: {}'.format(result['fitness']))
-
-        # Info about the best Tree
-        file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
-        file.write('\n With fitness: {}'.format(fitness_control_best))
-        file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
-        file.write('\n\n')
-        file.close()
+        else:
+            # Info about the best Tree
+            file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
+            file.write('\n With fitness: {}'.format(fitness_control_best))
+            file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
+            file.write('\n\n')
+            file.close()
 
         return
 
@@ -403,12 +408,18 @@ class ExplainableGP(object):
         self.print_g('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
         dominator_count = 0
         gene_pool = {}
+        fail_count = 0
 
-        for tree_num in range(1, len(population)):
+        for tree_num in range(0, len(population)):  # todo was 1 not from 0
             tree = population[tree_num]
             try:
-                tree_ident, tree_meta = self.tree_get_meta(tree, tree_origin=self.origin['tree'])
+                if self.origin is not None:
+                    tree_ident, tree_meta = self.tree_get_meta(tree, tree_origin=self.origin['tree'])
+                else:
+                    tree_ident, tree_meta = self.tree_get_meta(tree, tree_origin=None)
+
             except:
+                fail_count += 1
                 continue
 
             population[tree_num] = tree_set_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
@@ -419,6 +430,8 @@ class ExplainableGP(object):
                     dominator_count += 1
             else:
                 pass
+
+        print('Had so many fails:', fail_count)
 
         self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
@@ -431,7 +444,10 @@ class ExplainableGP(object):
         """
 
         # 1. Find lowest complexity
-        best_fit = self.parsimony_best_meta[0]['fitness_train']
+        if self.origin is not None:
+            best_fit = self.parsimony_best_meta[0]['fitness_train']
+        else:
+            best_fit = next(iter(self.parsimony_best_meta.values()))['fitness_train']
 
         sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
         for parsim, meta in sorted_parsimony_best:
@@ -463,6 +479,8 @@ class ExplainableGP(object):
         if fitness2 is None:
             return True
         elif self.kernel == 'regression' and fitness1 < fitness2:
+            return True
+        elif self.kernel == 'regression bounded' and fitness1 < fitness2:
             return True
         elif self.kernel == 'classification' and fitness1 > fitness2:
             return True
@@ -774,6 +792,7 @@ class ExplainableGP(object):
 
         self.population_tmp = pop_enum_trees(self.population_tmp)  # pop +tree_id
         gene_pool, self.population_tmp = self.pop_genepool_create(self.population_tmp)
+        print('genepool is', len(gene_pool))
         self.monitor_genepool(gene_pool, self.path, self.gen_id)
         self.pop_parsimony_best_update(gene_pool)
         self.pop_pareto_update()
@@ -1132,7 +1151,7 @@ class ExplainableGP(object):
 
         return
 
-    def tree_get_meta(self, tree, tree_origin):
+    def tree_get_meta(self, tree, tree_origin=None):
         """
         gets all the main tree information
         1. tree_identifier (expr_raw)
@@ -1159,6 +1178,7 @@ class ExplainableGP(object):
                     raise Exception('Expr could not be sympified: {}.'.format(expr_raw))
 
                 fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
+                print('Nftr', fitness_train)
                 tree_meta = {'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_sym': str(expr_sym), 'expr_raw': str(expr_raw)}
                 self.tree_meta[tree_ident] = tree_meta
 
@@ -1345,13 +1365,13 @@ class ExplainableGP(object):
         if len(gene_pool) > 0:
             self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool)))
         else:
-            self.printpl('e', 'There are no Trees in the gene pool. You should archive your population and (q)uit.')
+            self.printpl('e', 'There are no Trees in the gene pool.')
             self.file_autowrite(path, gen_id)
             self.auto_plots(path)
             sys.exit()
 
         if not self.best_fitness:
-            if len(self.origin)>0:
+            if self.origin is not None:
                 self.best_fitness = self.origin['fitness_train']
             else:
                 self.best_fitness = next(iter(gene_pool.values()))['fitness_train']
@@ -1605,10 +1625,10 @@ def tree_get_parsimony(tree, parsimony_distance, origin_tree=None):
 
     """
 
-    if parsimony_distance == 'total_count_nodes':  # Absolute distances
-        return int(tree[3][-1:])  # returns the tree size
+    if parsimony_distance == 'total_count_nodes':  # number of nodes
+        return tree_get_last_nodeid(tree)  # returns the number of nodes
     elif parsimony_distance == 'total_tree_depth':
-        return tree[N_depth][1]  # returns the tree size
+        return tree[N_depth][1]  # returns the tree depth
 
     elif origin_tree is not None:  # origin-related distances
         if parsimony_distance == 'ted':
@@ -1616,4 +1636,5 @@ def tree_get_parsimony(tree, parsimony_distance, origin_tree=None):
         elif parsimony_distance == 'rel_ari_1':  # Does this work?
             return tree_parsimony_relari(tree, origin_tree)
     else:
-        print_e('Complexity measurement not available')
+        print_e('Complexity measurement not available: {}'.format(parsimony_distance))
+        raise

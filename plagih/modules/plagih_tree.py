@@ -419,6 +419,13 @@ def tree_set_parsimony(tree, parsimony):
     return tree
 
 
+def tree_get_last_nodeid(tree, karoo=True):
+    """
+    returns the total amount of nodes in a tree
+    """
+    return int(tree[3][-1:])  # returns last node_id
+
+
 def tree_node_get_nodekind(tree, node, karoo=False):
     """
     'func', 'term-variable', 'term-float', 'term-bool'

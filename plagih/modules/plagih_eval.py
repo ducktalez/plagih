@@ -37,7 +37,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
     tf_device = eval_parameters['tf_device']
     unique_outputs_num = eval_parameters['unique_outputs_num']
     tf_classify_labels_map = eval_parameters['tf_classify_labels_map']
-    label_min_max = eval_parameters['label_min_max']
+    action_min_max = eval_parameters['action_min_max']
 
     # Initialize TensorFlow session
     tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
@@ -57,7 +57,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
             solution = tensors['action0']
 
-            pairwise_fitness = tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, label_min_max=label_min_max)
+            pairwise_fitness = tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if get_pred_labels:
@@ -91,7 +91,7 @@ def tensors_leaves(tensors, data, variables_dict, action_dict):
     return tensors
 
 
-def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, label_min_max=None):
+def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, action_min_max=None):
     # 3- Add fitness computation into TF graph
 
     if kernel == 'classification':  # CLASSIFY kernel
@@ -159,12 +159,11 @@ def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_out
         - small amount of labels
         - orderable amount of labels
         """
-        # kernel, solution, tf_result, action_dict, unique_outputs_num
 
         # TODO adjust this stuff
-        label_min_max[0] = 0
-        label_min_max[1] = 2
-        new_result = min(max(tf_result, label_min_max[0]), label_min_max[1])
+        act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+        act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+        new_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
         pairwise_fitness = tf.abs(solution - new_result)
     elif kernel == 'regression discrete bounded penalise':
         # 1. Check if correct: (float) Results are mapped to a decision.

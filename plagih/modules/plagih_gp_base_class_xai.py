@@ -355,7 +355,7 @@ class ExplainableGP(object):
 
             no_fault = True
             for todo in result['result']:
-                if todo == float('NaN') or todo == float('inf'):
+                if todo != todo or todo == float('inf'):
                     print('LOIUS', todo)
                     no_fault = False
 
@@ -427,9 +427,13 @@ class ExplainableGP(object):
                 if self.origin is not None:
                     tree_ident, tree_meta = self.tree_get_meta(tree, tree_origin=self.origin['tree'])
                 else:
-                    tree_ident, tree_meta = self.tree_get_meta(tree, tree_origin=None)
+                    tree_ident, tree_meta = self.tree_get_meta(tree)
 
             except:
+                fail_count += 1
+                continue
+
+            if tree_meta['fitness_train'] != tree_meta['fitness_train'] or tree_meta['fitness_train'] == float('inf'):
                 fail_count += 1
                 continue
 
@@ -818,7 +822,7 @@ class ExplainableGP(object):
         self.pop_parsimony_best_update(gene_pool)
         self.pop_pareto_update()
         self.population_base = pop_copy_genepool(self.population_tmp, gene_pool, self.gen_id)
-        file_population_write_karoo(self.population_tmp, 'new', self.path, self.gen_id)
+        file_population_write_karoo(self.population_tmp, 'tmp', self.path, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
@@ -1379,14 +1383,19 @@ class ExplainableGP(object):
             else:
                 self.best_fitness = next(iter(gene_pool.values()))['fitness_train']
 
-        fitness_train_sum = 0
+        fitness_train_sum, count = 0, 0
         for _, meta in gene_pool.items():
             fitness = float(meta['fitness_train'])
-            fitness_train_sum += fitness  # for fitness average
-            if self.fitness_compare(fitness, self.best_fitness):
-                self.best_fitness = fitness
+            if fitness == fitness and fitness is not float('inf'):  # weird comparison is NaN Test
+                count += 1
+                fitness_train_sum += fitness  # for fitness average
+                if self.fitness_compare(fitness, self.best_fitness):
+                    self.best_fitness = fitness
 
-        average_fitness = fitness_train_sum / len(gene_pool)
+        average_fitness = fitness_train_sum / max(count, 1)
+        print('avg fit is', average_fitness)
+        print('fitness_train_sum is', fitness_train_sum)
+        print('count is', count)
         self.monitoring_dict['fitness_average'][gen_id] = average_fitness
         self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
 

@@ -121,6 +121,7 @@ def load_operators_from_csv(op_csv_path):
 
     return op_array
 
+
 def data_load_data_split(data_x, data_y, test_size):
     x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST
     data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its class label (right column)

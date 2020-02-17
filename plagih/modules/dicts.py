@@ -33,8 +33,10 @@ path_runs = 'runs'
 path_autosave = 'autosave'
 path_plots = 'plots'
 
+delete_this = True
 
-f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
+# ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
+f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4  #
 
 # TODO replace this with the op file down there
 ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b

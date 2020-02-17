@@ -124,15 +124,14 @@ def insert_function_or_term(depth, depth_goal):
     """
     with a certain probability, insert terminals or functions
     """
-    if np.random.choice(['50', 'larger']) == 'larger':
+    if np.random.choice(['50', 'larger', 'larger', 'larger', 'larger']) == 'larger':
         probability = np.random.uniform(0, depth_goal)
         if probability > min(depth, depth_goal / 2):
-            decision = 'function'
+            decision = 'func'
         else:
-            decision = 'terminal'
-        return decision
+            decision = 'term'
     else:
-        decision = np.random.choice(['terminal', 'function'])
+        decision = np.random.choice(['term', 'func'])
 
     return decision
 
@@ -160,12 +159,12 @@ def tree_parsimony(tree, origin_tree=None, parsimony_distance='ted'):
         raise Exception('Parsimony distance not specified!')
 
 
-def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dict, op_array, min_depth=0):
+def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, action_dict, func_array, min_depth=0):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
     """
-    todo_xtypes = [xtype]
+    todo_xtypes = [xtype_root]
     result_label_list = []
     result_arity_list = []
 
@@ -173,35 +172,32 @@ def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dic
     for depth in range(min_depth, depth_goal):
         next_xtype_list = []
 
-        if depth == depth_goal - 1:  # now, we are on the lowest dim_y.
+        if depth < depth_goal - 1:
+            for xtype in todo_xtypes:
 
-            for t in todo_xtypes:  # Build terminals now.
-                label = xtype_choose_term_v2(t, variables_dict)
-                arity = 0
-
-                # Add the label to the result list
-                result_label_list.append(label)
-                result_arity_list.append(arity)
-
-        else:
-            for t in todo_xtypes:
-
-                # Randomly choose a new label
-
-                if insert_function_or_term(depth, depth_goal) == 'terminal':
-                    label = xtype_choose_term_v2(t, variables_dict)
+                if insert_function_or_term(depth, depth_goal) == 'term' and depth >= min_depth:
+                    label = xtype_choose_term_v2(xtype, variables_dict)
                     arity = 0
                 else:
-                    label, arity = xtype_choose_func_v2(op_array, xtype=t)
+                    label, arity = xtype_choose_func_v2(func_array, xtype=xtype, arity=None)
 
                 # xtype-'To-do' list for the next depth to give values to these functions
                 if label == 'Ifte':
                     next_xtype_list.extend(['2b', '2f', '2f'])
                 else:
-                    tmp_xtype = xtype_get_v2(label, variables_dict=variables_dict, action_dict=action_dict)
+                    tmp_xtype = xtype_get_v2(label, variables_dict=variables_dict)
                     child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
                     for _ in range(0, arity):  # when arity==2, add 2 times
                         next_xtype_list.append(child_type)
+
+                # Add the label to the result list
+                result_label_list.append(label)
+                result_arity_list.append(arity)
+        else:  # now, we are on the lowest dim_y.
+
+            for xtype in todo_xtypes:  # Build terminals now.
+                label = xtype_choose_term_v2(xtype, variables_dict)
+                arity = 0
 
                 # Add the label to the result list
                 result_label_list.append(label)
@@ -213,14 +209,78 @@ def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dic
     return result_label_list, result_arity_list
 
 
-def invent_label_list_nodes(xtype, max_nodes, variables_dict, action_dict, op_array):
+def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array):
     """
     build a random, but within itself consistent label list
-    Also, return the arities aswell (they are searched anyways)
+    -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
+    E. g.: 'float', 5 nodes, min_nodes = 2
+    - tbd list: ['2b', '2f']
+    - random term_fun_list: ['func', 'term']
+
     """
     todo_xtypes = [xtype]
+    todo_node_amount = 1
     result_label_list = []
     result_arity_list = []
+    done = False
+
+    while not done:
+
+        functerm_list = ['func']
+        for _ in range(todo_node_amount - 1):  # 1 -> at least one function
+            functerm_list.append(np.random.choice(['func', 'term']))
+        np.random.shuffle(functerm_list)
+
+        tmp_label_list = ['dummy'] * todo_node_amount
+        tmp_arity_list = [8] * todo_node_amount
+
+        func_indices = [i for i, x in enumerate(functerm_list) if x == 'func']
+        term_indices = [i for i, x in enumerate(functerm_list) if x == 'term']
+        np.random.shuffle(func_indices)
+
+        for enum, index in enumerate(func_indices):
+            xtype = todo_xtypes[index]
+
+            label, arity = xtype_choose_func_v2(func_array, xtype=xtype)
+            # print('GG', result_label_list, tmp_label_list, '(', len(result_label_list), todo_node_amount, '>', arity, ')', (len(result_label_list) + todo_node_amount + arity), max_nodes)
+            if max_nodes > (len(result_label_list)+todo_node_amount) + arity + 1:  # +1 = the start node which we must not forget
+                tmp_label_list[index] = label
+                tmp_arity_list[index] = arity
+                todo_node_amount += arity - 1
+            else:
+                term_indices.extend(func_indices[enum:])
+                done = True
+                break
+
+        for index in term_indices:
+            label, arity = xtype_choose_term_v2(xtype, variables_dict), 0
+            tmp_label_list[index] = label
+            tmp_arity_list[index] = arity
+            todo_node_amount -= 1
+
+        if delete_this and tmp_label_list.count('dummy') > 0:
+            print_e('LOL WHYY')
+
+        # prepare next loop
+        todo_xtypes = []
+        for index, label in enumerate(tmp_label_list):
+            if label == 'Ifte':
+                todo_xtypes.extend(['2b', '2f', '2f'])
+            else:
+                xtype = xtype_get_v2(label, variables_dict=variables_dict)
+                child_type = xtype[:2][::-1]  # e. g. 'f2b' requires '2f' input
+                arity = tmp_arity_list[index]
+                todo_xtypes.extend([child_type] * arity)
+
+        result_label_list.extend(tmp_label_list)
+        result_arity_list.extend(tmp_arity_list)
+
+    else:
+        # Fix the last leftover nodes
+        for xtype in todo_xtypes:
+            label, arity = xtype_choose_term_v2(xtype, variables_dict), 0
+            result_label_list.append(label)
+            result_arity_list.append(arity)
 
     return result_label_list, result_arity_list
 
@@ -394,7 +454,7 @@ def tree_expr_sympify(algo_raw=None, tree=None):
         expr_sym = plagih_sympify(algo_raw)
         expr_sym_str = str(expr_sym)
     except:
-        print('w', 'In sympify. Caused by this raw algorithm: ' + str(algo_raw))
+        print_warning('w', 'In sympify. Caused by this raw algorithm: ' + str(algo_raw))
         raise
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
@@ -429,7 +489,7 @@ def tree_set_parsimony(tree, parsimony):
     Store the parsimony within the tree np-array
     """
     if parsimony < 0:
-        print('Warning: Parsimony is: {}'.format(parsimony))
+        print_warning('w', 'Warning: Parsimony is: {}'.format(parsimony))
     tree[T_parsimony][1] = parsimony
     return tree
 
@@ -459,7 +519,7 @@ def tree_node_get_nodekind(tree, node, karoo=False):
                 float(label)
                 nodekind = 'term-float'
             except ValueError:
-                print('No good. This label is completely unknown: {} (or arity {} is not correct).'.format(label, arity))
+                print_e('No good. This label is completely unknown: {} (or arity {} is not correct).'.format(label, arity))
                 raise
     return nodekind
 
@@ -515,7 +575,7 @@ def evolve_node_arity_fix(tree):
 
     for n in range(1, len(tree[N_id])):  # increment through all nodes (exclude 0) in array 'tree'
         if len(tree[N_id]) <= 2:
-            print('FUCK {}'.format(tree))
+            print_warning('ww', 'Tree has <=2 nodes. Change configuration. {}'.format(tree))
         if tree[N_arity][n] == '0':  # check for discrepency
             # tree[N_arity][n] = '0'  # set arity to 0
             tree[N_c1][n] = ''  # wipe 'node_c1'
@@ -670,7 +730,7 @@ def core_from_labels(label_list, arity_list=None):
     tree = tree_core_init_depth(tree, parent_list)
 
     if not tree_test_check_children(tree, karoo=False):
-        print(tree)
+        print_e('Tree from label_list {} is not correct: {}'.format(label_list, tree))
         raise
 
     return tree
@@ -1412,7 +1472,8 @@ def tree_node_get_parent_functype(tree, node_id, karoo=True):
 
 def tree_get_mutatable_layer(tree, level, karoo=True):
     """
-    Returns a list with mutatable ids on the outside
+    Returns a list with mutatable ids which are *level* layers away from non modifiable nodes
+    last_leaves: if you want so save all leave nodes aswell
     """
 
     lvl_count = 0
@@ -1424,6 +1485,8 @@ def tree_get_mutatable_layer(tree, level, karoo=True):
             new_node_ids = []
             for node_id in node_ids:
                 child_list = tree_node_get_childs(tree, node_id)
+                # todo save ALL leave nodes aswell?
+
                 new_node_ids.extend(child_list)
             node_ids = new_node_ids.copy()
         lvl_count += 1

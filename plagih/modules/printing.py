@@ -41,6 +41,11 @@ def print_warning(message_type, text, print_type=None, time_total=0.0):
     printez(message_type, text, print_type=print_type, time_total=time_total)
 
 
+def print_blue(*args):
+    print('{}{}{}'.format(BColors.CYAN, ''.join(args), BColors.RESET))
+    return
+
+
 def printez(message_type, text, print_type=None, time_total=0.0):
     """
     giving prints colours, accessable from everywhere

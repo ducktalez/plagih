@@ -69,7 +69,7 @@ def mountaincar_load_corefiles(config_dict, path):
     gp = plagih.ExplainableGP(config_dict)
     prepared_data = data_load_pickle(path / MountainCarExamples.files['samples_pickle'])
     gp.activate_data(prepared_data)
-    op_array = load_operators_from_csv(path / MountainCarExamples.files['operators_file'])
+    op_array = load_funcarray_from_csv(path / MountainCarExamples.files['operators_file'])
     gp.activate_operators(op_array)
     return gp
 

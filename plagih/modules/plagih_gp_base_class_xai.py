@@ -84,7 +84,7 @@ class ExplainableGP(object):
 
     def plagih_gp_run(self):
         """
-        regular plagih-config run from scratch
+        regular plagih-config run
         """
 
         path_backup = self.path / 'backup.p'
@@ -271,11 +271,11 @@ class ExplainableGP(object):
 
         return
 
-    def activate_operators(self, op_array):
+    def activate_operators(self, func_array):
         """
         operators were loaded already and need to be set in the gp run
         """
-        self.op_array = op_array
+        self.func_array = func_array
         return
 
     def activate_pop(self, pop):
@@ -693,7 +693,7 @@ class ExplainableGP(object):
                                                                     self.config['tree_depth_base'],
                                                                     self.variables_dict,
                                                                     self.action_dict,
-                                                                    self.op_array,
+                                                                    self.func_array,
                                                                     min_depth=self.config['tree_depth_min'])
 
             tree = karoo_tree_from_labellist(label_list)
@@ -761,7 +761,7 @@ class ExplainableGP(object):
 
             if force_convert:
                 self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
-                left_xtype = self.xtype_get(tree_get_label(left_tree, left_id))  # left_tree[N_label][left_id]
+                left_xtype = xtype_get_v2(tree_get_label(left_tree, left_id), variables_dict=self.variables_dict)
                 conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
                 right_labels.insert(0, conv_to_left)
                 right_aritys.insert(0, 1)
@@ -891,15 +891,19 @@ class ExplainableGP(object):
         """
 
         # 1. choose a node
-        node_id = np.random.choice(tree_get_mutatable_nodes(tree))
+        node_ids = tree_get_mutatable_nodes(tree)
+        node_id = np.random.choice(node_ids)
         label = tree_get_label(tree, node_id)
-        arity = label_get_arity(label)  # int(tree[N_arity][node_id])
-        xtype = self.xtype_get(label)  # '>' -> 'f2b'
+        if label == 'Ifte':
+            # TODO. Just try once more for now.
+            label = tree_get_label(tree, node_id)
 
+        arity = label_get_arity(label)  # int(tree[N_arity][node_id])
+        xtype = xtype_get_v2(label, variables_dict=self.variables_dict)  # '>' -> 'f2b'
         if same_arity:
             # 2. perform point mutation on that specific node
             if arity > 0:
-                new_label = xtype_choose_func_pointmutation(self.op_array, xtype=xtype, arity=arity)  # Function is same type, same arity
+                new_label = xtype_choose_func_v2(self.func_array, xtype=xtype, arity=arity)  # Function is same type, same arity
                 tree = tree_node_set_label(tree, node_id, new_label)
             elif arity == 0:  # aka a terminal
                 new_label = self.xtype_choose_term(xtype)  # 3 -> '2f' -> 5
@@ -950,7 +954,7 @@ class ExplainableGP(object):
             node_arity = tree_node_get_arity(tree, node_id, karoo=True)
             if node_depth == max_depth and node_arity > 0:  # replace this node with terminal
                 label = tree_get_label(tree, node_id)
-                node_xtype = self.xtype_get(label)
+                node_xtype = xtype_get_v2(label, variables_dict=self.variables_dict)
                 tree = tree_node_set_arity(tree, node_id, 0)
                 new_term = self.xtype_choose_term(node_xtype)  # replace label
                 tree = tree_node_set_label(tree, node_id, new_term)
@@ -968,13 +972,14 @@ class ExplainableGP(object):
         -> Crossover: Returns a node_id in the partner tree, that can be swapped
         """
 
-        node_xtype = self.xtype_get(function_label)
+        node_xtype = xtype_get_v2(function_label, variables_dict=self.variables_dict)
         node_options = []
 
         if mode == 'same_type':  # only return a node with the same function type
             # for i, label in enumerate(partner_tree[N_label][1:]):
             for i, label in enumerate(tree_iterate_ids(partner_tree, skip_nodes=1)):
-                if self.xtype_get(label) == node_xtype:
+                partner_node_xtype = xtype_get_v2(label, variables_dict=self.variables_dict)
+                if node_xtype == partner_node_xtype:
                     node_options.append(i + 1)  # +1, we skipped the first element
 
             if node_options:
@@ -999,14 +1004,14 @@ class ExplainableGP(object):
         a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
         a_id = np.random.choice(a_ids)
         a_node_label = tree_get_label(a_tree, a_id)
-        a_xtype = self.xtype_get(a_node_label)
+        a_xtype = xtype_get_v2(a_node_label, variables_dict=self.variables_dict)
 
         # create a list from parent b with same xtype
         b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
         b_sametype_ids = b_node_ids[:]
         for b_id in b_node_ids:
             b_label = tree_get_label(b_tree, b_id)
-            b_xtype = self.xtype_get(b_label)
+            b_xtype = xtype_get_v2(b_label, variables_dict=self.variables_dict)
             if not xtype_equi_outcome(b_xtype, a_xtype):
                 b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
@@ -1069,6 +1074,10 @@ class ExplainableGP(object):
         returns: new tree
         """
 
+        # Get information about the top-node we have to replace
+        old_label = tree_get_label(tree, branch_ids[0])
+        old_xtype = xtype_get_v2(old_label, variables_dict=self.variables_dict)
+
         if grow_method == 'depth_base_random':
             """
             We allow base depth (which is a little lower than max)
@@ -1081,12 +1090,8 @@ class ExplainableGP(object):
             depth_upper_bound = self.config['tree_depth_max'] - tree_node_get_depth(tree, branch_ids[0])
             depth_goal = min(self.config['tree_depth_base'], depth_upper_bound)
 
-            # Get information about the top-node we have to replace
-            old_label = tree_get_label(tree, branch_ids[0])
-            old_xtype = self.xtype_get(old_label)
-
             # Build a new tree
-            label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.op_array, min_depth=self.config['tree_depth_min'])
+            label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.func_array, min_depth=self.config['tree_depth_min'])
 
             if not label_list:
                 result_tree = tree
@@ -1102,7 +1107,9 @@ class ExplainableGP(object):
             This could be calculated respectively to the parsimony dim_y
             which the tree might have up his sleeve
             """
-            return None
+            max_nodes = 15  # TODO auslagern
+            root_type = next(iter(self.action_dict.values))
+            label_list = invent_label_list_nodes_grow(old_xtype, max_nodes, root_type, self.func_array)
             # num_new_nodes = np.random.randint(10, 30)
             # max_
 
@@ -1241,65 +1248,6 @@ class ExplainableGP(object):
 
         return pred_label
 
-    def xtype_choose_func(self, xtype=None):
-        """
-        This fills in a function that fits the type of the function/terminal before.
-        terminal  '2f' -> '_2f', arity
-        function 'f2f' -> '_2f', arity
-        function 'b2f2f' -> '_2f', arity
-        > ->
-        """
-        if xtype:
-            if '2f' in xtype:
-                choose_func = sum(self.op_array[f2f] + self.op_array[b2f] + self.op_array[b2f2f], [])
-            elif '2b' in xtype:
-                choose_func = sum(self.op_array[f2b] + self.op_array[b2b], [])
-            else:
-                raise
-        else:
-            choose_func = sum(self.op_array[f2f] +
-                              self.op_array[b2f] +
-                              self.op_array[b2f2f] +
-                              self.op_array[f2b] +
-                              self.op_array[b2b], [])
-
-        # Attention! do not choose out of an dictionary.
-        # every function is inside there only once, so no higher chance for functions that are more often in the list
-        # label = np.random.choice(self.xype_func_dict['2f'])
-
-        # choose out of a list, or add another way. maybe autmatic?
-
-        label = np.random.choice(choose_func)
-
-        return label, op[str(label)]['arity']
-
-    def xtype_get(self, label, node_arity=None):
-        """
-        returns xtype for a label
-        """
-        if not node_arity:
-            node_arity = label_get_arity(label)
-
-        if node_arity == 0:  # arity=0 -> terminal
-            if 'True' in label or 'False' in label:
-                node_xtype = '2b'
-            elif 'observation' in label:
-                term_position = self.variables_dict['all'].index(label)
-                node_xtype = op[self.variables_dict['types'][term_position]]['xtype']
-            elif 'action' in label:
-                print_warning('w', 'Does this happen? Test it!')
-                node_xtype = self.action_dict[label]
-
-            else:  # only 'float' left
-                node_xtype = '2f'
-        elif node_arity > 0:
-            node_xtype = op[label]['xtype']
-        else:
-            self.printpl('e', 'This arity is not known: {}'.format(node_arity))
-            raise
-
-        return node_xtype
-
     def xtype_choose_term(self, node_xtype):
         """
         Returns a terminal of xtype.
@@ -1330,7 +1278,7 @@ class ExplainableGP(object):
         if np.random.choice(['var', 'const']) == 'var':  # our choice is variable
             if terminals_type:  # Is there an entry in the list?
                 return np.random.choice(terminals_type)  # ...so we return one
-        return tree_build_type_constant_get(term_type=the_type)  # otherwise: constant (There are always constants :P)
+        return choose_constant(term_type=the_type)  # otherwise: constant (There are always constants :P)
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Monitoring                                |
@@ -1544,7 +1492,7 @@ def write_config_file(path, config, gen_id, kernel, datetime):
     return
 
 
-def load_operators_from_csv(op_csv_path):
+def load_funcarray_from_csv(op_csv_path):
     """
     Load all operators ready-to-use from a file
     """
@@ -1554,28 +1502,29 @@ def load_operators_from_csv(op_csv_path):
 
     # rows are the function types (f2f)
     # columns are the arity
-    op_array = [[[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []]]
+    func_array = [[[], [], [], []],
+                  [[], [], [], []],
+                  [[], [], [], []],
+                  [[], [], [], []],
+                  [[], [], [], []]]
+
     for fun in functions:
         label = fun[0]
         arity = op[label]['arity']  # arity = int(fun[1])
         xtype = op[label]['xtype']
 
         if xtype == 'f2f':
-            op_array[f2f][arity].append(label)
+            func_array[f2f][arity].append(label)
         elif xtype == 'f2b':
-            op_array[f2b][arity].append(label)
+            func_array[f2b][arity].append(label)
         elif xtype == 'b2b':
-            op_array[b2b][arity].append(label)
+            func_array[b2b][arity].append(label)
         elif xtype == 'b2f':
-            op_array[b2f][arity].append(label)
+            func_array[b2f][arity].append(label)
         elif xtype == 'b2f2f':
-            op_array[b2f2f][arity].append(label)
+            func_array[b2f2f][arity].append(label)
 
-    return op_array
+    return func_array
 
 
 def load_pop_from_csv(pop_csv):

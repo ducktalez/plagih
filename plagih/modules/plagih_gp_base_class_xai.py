@@ -138,7 +138,7 @@ class ExplainableGP(object):
         if self.origin is not None:
             self.pop_first_create_from_origin(self.config['pop_max'] + 1, self.origin['tree'])
         else:
-            self.gen_random_from_scratch(self.config['pop_max'] + 1)
+            self.gen_random_from_scratch(self.config['pop_max'] + 1, None)
         self.gen_finalize()
         file_population_write_karoo(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
 
@@ -156,7 +156,8 @@ class ExplainableGP(object):
                    ('Point Filter', self.gen_mutate_filter),
                    ('Branch nodebased', self.gen_mutate_branch),
                    ('Crossover one Branch', self.gen_crossover_branch),
-                   ('Create Random', self.gen_random_from_origin)]
+                   ('Random Origin', self.gen_random_from_origin),
+                   ('Random', self.gen_random_from_scratch)]
         tourn_size = self.config['gp_tourn_size']
 
         while self.gen_id < self.config['gen_max'] and \
@@ -334,15 +335,15 @@ class ExplainableGP(object):
 
         elif self.pareto:
             file.write('\n No origin was provided')
-            first_pareto = next(iter(self.pareto.values()))
-            fitness_control_best = first_pareto['fitness']
-            fittest_parsimony = int(first_pareto['parsimony'])
-            fittest_algo = first_pareto['expr_sym']
+            fitness_control_best = next(iter(self.pareto.keys()))
+            tree_meta = self.parsimony_best_meta[fitness_control_best]
+            fittest_parsimony = int(tree_meta['parsimony'])
+            fittest_algo = tree_meta['expr_sym']
         else:
             file.write('\n There are no candidates to be mentioned at all. Maybe change your config?')
             return
 
-        for parsimony, tree_hash in self.pareto.items():
+        for parsimony, fitness in self.pareto.items():
             algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
             result = eval_tf(algo_sym, self.data_control, self.eval_parameters, get_pred_labels=True)
             fit_control = result['fitness']
@@ -352,23 +353,33 @@ class ExplainableGP(object):
                 fittest_algo = algo_sym
                 fittest_parsimony = parsimony
 
-            if self.kernel == 'classification':
-                file.write('\n\n Classification fitness score: {}'.format(fitness_control_best))
-                file.write('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
-                file.write('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
+            no_fault = True
+            for todo in result['result']:
+                if todo == float('NaN') or todo == float('inf'):
+                    print('LOIUS', todo)
+                    no_fault = False
 
-            elif self.kernel == 'regression':
-                mse, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
-                file.write('\n\n Regression fitness score: {}'.format(fitness))
-                file.write('\n Mean Squared Error: {}'.format(mse))
+            if no_fault:
+                if self.kernel == 'classification':
+                    file.write('\n\n Classification fitness score: {}'.format(fitness_control_best))
+                    file.write('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
+                    file.write('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
 
-            elif self.kernel == 'regression bounded':
-                mse, fitness = skm.mean_squared_error(result['result'], result['solution']), result['fitness']
-                file.write('\n\n Regression bounded fitness score: {}'.format(fitness))
-                file.write('\n Mean Squared Error: {}'.format(mse))
+                elif self.kernel == 'regression':
+                    mse = skm.mean_squared_error(result['result'], result['solution'])
+                    file.write('\n\n Regression fitness score: {}'.format(result['fitness']))
+                    file.write('\n Mean Squared Error: {}'.format(mse))
 
-            elif self.kernel == 'match':
-                file.write('\n\n Matching fitness score: {}'.format(result['fitness']))
+                elif self.kernel == 'regression bounded':
+                    mse = skm.mean_squared_error(result['result'], result['solution'])
+                    file.write('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
+                    file.write('\n Mean Squared Error: {}'.format(mse))
+
+                elif self.kernel == 'match':
+                    file.write('\n\n Matching fitness score: {}'.format(result['fitness']))
+            else:
+                file.write('\n\n Error in this tree')
+
         else:
             # Info about the best Tree
             file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
@@ -502,7 +513,6 @@ class ExplainableGP(object):
         origin_ids = tree_get_mutatable_nodes(tree_origin, no_root=True)
 
         for tree_id in range(1, pop_size):
-
             branch_top = np.random.choice(origin_ids)
             branch_nodes_ids = tree_get_branch(tree_origin, branch_top)  # [6, 9, 10] select point of mutation and all nodes beneath
             tree = self.tree_insert_branch_random(tree_origin, branch_nodes_ids)
@@ -594,7 +604,7 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):
             tree = self.pop_selection_tournament(tourn_size)
-            tree = self.treegp_reduce_parts(tree, completely=False)
+            tree = treegp_reduce_parts(tree, completely=False)
             self.pop_append(tree, last_modification='point')
 
         return
@@ -653,7 +663,8 @@ class ExplainableGP(object):
         """
 
         """
-        tree_origin = self.origin['tree'].copy()
+        if self.origin is not None:
+            tree_origin = self.origin['tree'].copy()
         for i in range(repro_rate):
             tree = self.tree_random_from_origin(tree_origin)
             tree = tree_set_id(tree, 1)
@@ -662,7 +673,7 @@ class ExplainableGP(object):
 
         return
 
-    def gen_random_from_scratch(self, pop_size):
+    def gen_random_from_scratch(self, pop_size, tourn_size):
         """
         todo make available half ramped
         """
@@ -675,10 +686,11 @@ class ExplainableGP(object):
             raise
         for i in range(1, pop_size):
             label_list, arity_list = invent_label_list_depth_random(result_type,
-                                                        self.config['tree_depth_base'],
-                                                        self.variables_dict,
-                                                        self.action_dict,
-                                                        self.op_array)
+                                                                    self.config['tree_depth_base'],
+                                                                    self.variables_dict,
+                                                                    self.action_dict,
+                                                                    self.op_array,
+                                                                    min_depth=self.config['tree_depth_min'])
 
             tree = karoo_tree_from_labellist(label_list)
             tree = tree_set_id(tree, i)
@@ -704,6 +716,8 @@ class ExplainableGP(object):
 
             tourn_winner = self.pop_selection_tournament(tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_nodes(tourn_winner, no_root=True)
+            if len(node_ids) == 0:
+                print('shit happens', tourn_winner)
             node = np.random.choice(node_ids)
             branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
@@ -772,12 +786,19 @@ class ExplainableGP(object):
         else:
             if self.origin is not None:
                 tree = tree_set_modifyable_nodes(tree, self.origin['tree'])
+            else:
+                tree = tree_set_modifyable_nodes_true(tree)
+
             tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
             tree = tree_normalize_exponentiation(tree)
             tree = tree_set_history(tree, last_modification)
+
             if not tree_test_check_children(tree):
                 print_e('Tree is not consistent:\n{}'.format(tree))
-            self.population_tmp.append(tree)
+            elif tree_node_get_arity(tree, root_id, karoo=True) == 0:
+                print_warning('w', 'Tree is only a root node')
+            else:
+                self.population_tmp.append(tree)
 
         return
 
@@ -888,24 +909,6 @@ class ExplainableGP(object):
             self.printpl('e', 'treegp_mutate_point_evolve dies not know this method to handle the arity: {}'.format(arity))
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
-
-    def treegp_reduce_parts(self, tree, completely=False):
-
-        """
-        Mutate a single mutatable point in any Tree.
-        """
-
-        if completely:
-            # todo test this
-            nodes_lv0 = tree_get_mutatable_layer_lv0(tree, karoo=True)
-            for node_id in nodes_lv0:
-                tree = treegp_reduce_branch(tree, node_id)
-        else:
-            node_ids = tree_get_mutatable_nodes(tree)
-            # todo only functions? maybe always all?
-            node_id = np.random.choice(node_ids)  # choose
-            tree = treegp_reduce_branch(tree, node_id)
-        return tree
 
     def treegp_mutate_filter_one(self, tree):
         """
@@ -1079,7 +1082,7 @@ class ExplainableGP(object):
             old_xtype = self.xtype_get(old_label)
 
             # Build a new tree
-            label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.op_array)
+            label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.op_array, min_depth=self.config['tree_depth_min'])
 
             if not label_list:
                 result_tree = tree
@@ -1178,7 +1181,7 @@ class ExplainableGP(object):
                     raise Exception('Expr could not be sympified: {}.'.format(expr_raw))
 
                 fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
-                print('Nftr', fitness_train)
+                # print('Nftr', fitness_train)
                 tree_meta = {'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_sym': str(expr_sym), 'expr_raw': str(expr_raw)}
                 self.tree_meta[tree_ident] = tree_meta
 
@@ -1600,23 +1603,6 @@ def load_pop_from_csv(pop_csv):
                     population_a.append(tree)  # append complete Tree to population list
 
     return population_a
-
-
-def treegp_reduce_branch(tree, node_id):
-    delete_ids = tree_get_branch(tree, node_id)
-    expr_raw = tree_get_expr_raw(tree, node_id)
-    try:
-        expr_sym = tree_expr_sympify(algo_raw=expr_raw)
-        label_list = ast_convert_from_expr(expr_sym, build=True)
-        arity_list = [label_get_arity(label) for label in label_list]  # todo zeile auslagern?
-        core = core_from_labels(label_list, arity_list)
-        tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
-
-        return tree_sympified
-    except:
-        print_warning('w', 'reducing expr raw: {}'.format(expr_raw))
-        print_warning('w', 'Delete this tree! nan tree or other error.')
-        return None
 
 
 def tree_get_parsimony(tree, parsimony_distance, origin_tree=None):

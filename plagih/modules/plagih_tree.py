@@ -3,6 +3,7 @@ import numpy as np
 from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
+from plagih.modules.plagih_eval import *
 import csv
 
 ### TensorFlow Imports and Definitions ###
@@ -28,6 +29,20 @@ class Plagih_node():
 
     def __init__(self, n_id, depth, n_type, label, parent, arity, c1, c2, c3):
         return
+
+
+def tree_set_modifyable_nodes_true(tree, karoo=True):
+    """
+
+    """
+    if karoo:
+        start = 1
+    else:
+        start = 0
+
+    for node_id in range(start, len(tree[N_modify])):
+        tree[N_modify][node_id] = '1'
+    return tree
 
 
 def tree_set_modifyable_nodes(chosen_tree, origin_tree):
@@ -145,7 +160,7 @@ def tree_parsimony(tree, origin_tree=None, parsimony_distance='ted'):
         raise Exception('Parsimony distance not specified!')
 
 
-def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dict, op_array):
+def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dict, op_array, min_depth=0):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -155,7 +170,7 @@ def invent_label_list_depth_random(xtype, depth_goal, variables_dict, action_dic
     result_arity_list = []
 
     # Build a list with labels in row, and a list with their arities
-    for depth in range(0, depth_goal):
+    for depth in range(min_depth, depth_goal):
         next_xtype_list = []
 
         if depth == depth_goal - 1:  # now, we are on the lowest dim_y.
@@ -983,18 +998,57 @@ def xtype_get_constant(label, node_arity=None, only_float=True):
     return const_xtype
 
 
-def tree_get_mutatable_nodes(tree, no_root=False):
+def treegp_reduce_branch(tree, node_id):
+    delete_ids = tree_get_branch(tree, node_id)
+    expr_raw = tree_get_expr_raw(tree, node_id)
+    try:
+        expr_sym = tree_expr_sympify(algo_raw=expr_raw)
+        label_list = ast_convert_from_expr(expr_sym, build=True)
+        arity_list = [label_get_arity(label) for label in label_list]  # todo zeile auslagern?
+        core = core_from_labels(label_list, arity_list)
+        tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
+
+        return tree_sympified
+    except:
+        print_warning('w', 'reducing expr raw: {}'.format(expr_raw))
+        print_warning('w', 'Delete this tree! nan tree or other error.')
+        return None
+
+
+def treegp_reduce_parts(tree, completely=False):
+
+    """
+    Mutate a single mutatable point in any Tree.
+    """
+
+    if completely:
+        # todo test this
+        nodes_lv0 = tree_get_mutatable_layer_lv0(tree, karoo=True)
+        for node_id in nodes_lv0:
+            tree = treegp_reduce_branch(tree, node_id)
+    else:
+        node_ids = tree_get_mutatable_nodes(tree)
+        # todo only functions? maybe always all?
+        node_id = np.random.choice(node_ids)  # choose
+        tree = treegp_reduce_branch(tree, node_id)
+    return tree
+
+
+def tree_get_mutatable_nodes(tree, no_root=False, karoo=True):
     """
     Returns a list with mutatable ids
     """
 
     node_ids = []
-    for i, node_id in enumerate(tree[N_id]):
-        if tree[N_modify][i] == '1':
+    for node_id in tree_iterate_ids(tree, karoo=karoo):
+        if node_id == 'node_modify':
+            continue
+        if tree[N_modify][node_id] == '1':
             node_ids.append(int(node_id))
 
     if no_root and root_id in node_ids:
         node_ids.remove(root_id)
+
     return node_ids
 
 

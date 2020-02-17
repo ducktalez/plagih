@@ -41,7 +41,7 @@ def create_config_dict():
                          'Point Mutation': 0.05, 'Point Filter': 0.05,
                          'Branch nodebased': 0.1,
                          'Crossover one Branch': 0.45,
-                         'Create Random': 0.20},
+                         'Random Origin': 0.20, 'Random': 0.20},
         'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }
@@ -109,6 +109,8 @@ def mountaincar_v4_scratch(config_dict, path):
     config_dict['gp_tourn_size'] = 3
     config_dict['kernel'] = 'regression bounded'
     config_dict['complexity_measure'] = 'total_count_nodes'
+    config_dict['evolve_rates']['Random'] += config_dict['evolve_rates']['Random Origin']
+    config_dict['evolve_rates']['Random Origin'] = 0
     gp = mountaincar_load_corefiles(config_dict, path)
     return gp
 

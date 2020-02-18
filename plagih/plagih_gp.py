@@ -17,7 +17,7 @@ def create_config_dict():
         'precision': 6,  # rounding the fitness
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'print_type': 'ggewsivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'gggewsivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
         'tree_depth_base': 7,
@@ -28,7 +28,7 @@ def create_config_dict():
         'pop_max': 1000,
         'gen_max': 1000,
         'complexity_measure': 'ted',
-        'gp_tourn_size': 5,  # [7 per 100]		number of trees selected for tournament
+        'gp_tourn_size': 7,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
@@ -41,8 +41,8 @@ def create_config_dict():
         'evolve_rates': {'Reproduce gen': 0.05, 'Reproduce Olymp': 0.05, 'Reproduce reduce': 0.05,
                          'Point Mutation': 0.05, 'Point Filter': 0.05,
                          'Branch nodebased': 0.1,
-                         'Crossover one Branch': 0.45,
-                         'Random Origin': 0.20, 'Random': 0.20},
+                         'Crossover one Branch': 0.40,
+                         'Random Origin': 0.25, 'Random': 0},  # todo auto decide which random fits
         'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }
@@ -105,9 +105,8 @@ def mountaincar_v4_scratch(config_dict, path):
     """
     config_dict['name'] = 'MTC_v4_scratch'
     config_dict['path'] = path
-    config_dict['pop_max'] = 200
-    config_dict['gen_max'] = 8
-    config_dict['gp_tourn_size'] = 3
+    config_dict['pop_max'] = 1000
+    config_dict['gen_max'] = 15
     config_dict['kernel'] = 'regression bounded'
     config_dict['complexity_measure'] = 'total_count_nodes'
     config_dict['evolve_rates']['Random'] += config_dict['evolve_rates']['Random Origin']
@@ -130,7 +129,7 @@ def mountaincar_test(config_dict, path):
 def run(root_dir):
     # create_samples_pickle(root_dir)
     config_dict = create_config_dict()
-    gp = mountaincar_v4_scratch(config_dict, root_dir)
+    # gp = mountaincar_v4_scratch(config_dict, root_dir)
     # gp = mountaincar_test(config_dict, root_dir)
-    # gp = mountaincar_v1(config_dict, root_dir)
+    gp = mountaincar_v1(config_dict, root_dir)
     gp.plagih_gp_run()

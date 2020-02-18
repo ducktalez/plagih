@@ -448,8 +448,6 @@ class ExplainableGP(object):
             else:
                 pass
 
-        print('Had so many fails:', fail_count[0], fail_count[1])
-
         self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
         return gene_pool, population
@@ -817,7 +815,6 @@ class ExplainableGP(object):
 
         self.population_tmp = pop_enum_trees(self.population_tmp)  # pop +tree_id
         gene_pool, self.population_tmp = self.pop_genepool_create(self.population_tmp)
-        print('genepool is', len(gene_pool))
         self.monitor_genepool(gene_pool, self.path, self.gen_id)
         self.pop_parsimony_best_update(gene_pool)
         self.pop_pareto_update()
@@ -1362,9 +1359,6 @@ class ExplainableGP(object):
                     self.best_fitness = fitness
 
         average_fitness = fitness_train_sum / max(count_success, 1)
-        print('avg fit is', average_fitness)
-        print('fitness_train_sum is', fitness_train_sum)
-        print('count_success is', count_success)
         self.monitoring_dict['fitness_average'][gen_id] = average_fitness
         self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
 

@@ -148,7 +148,7 @@ def test_build_tree_grow_nodecount(verbose=False):
                   ('f2b', 12)]
     variables_dict = TestHelpers.variables_dict
     func_array = TestHelpers.func_array
-    for test_case in [('f2f', 6)]:
+    for test_case in test_cases:
         for _ in range(10):
             old_xtype = test_case[0]
             max_nodes = test_case[1]

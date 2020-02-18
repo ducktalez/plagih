@@ -421,7 +421,7 @@ class ExplainableGP(object):
         self.print_g('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
         dominator_count = 0
         gene_pool = {}
-        fail_count = 0
+        fail_count = [0, 0]
 
         for tree_num in range(0, len(population)):  # todo was 1 not from 0
             tree = population[tree_num]
@@ -432,11 +432,11 @@ class ExplainableGP(object):
                     tree_ident, tree_meta = self.tree_get_meta(tree)
             except Exception as ex:
                 printez('www', 'Error while getting meta Info: {}'.format(ex), self.print_type)
-                fail_count += 1
+                fail_count[0] += 1
                 continue
 
             if tree_meta['fitness_train'] != tree_meta['fitness_train'] or tree_meta['fitness_train'] == float('inf'):
-                fail_count += 1
+                fail_count[1] += 1
                 continue
 
             population[tree_num] = tree_set_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
@@ -448,7 +448,7 @@ class ExplainableGP(object):
             else:
                 pass
 
-        print('Had so many fails:', fail_count)
+        print('Had so many fails:', fail_count[0], fail_count[1])
 
         self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
 
@@ -692,7 +692,7 @@ class ExplainableGP(object):
         else:
             raise
         for i in range(pop_size):
-            max_nodes = np.random.randint(3, self.config['tree_parsimony_min_max'][1])  # todo 3 auslagern und testen ob 3 entstehen kann
+            max_nodes = np.random.randint(10, self.config['tree_parsimony_min_max'][1])  # todo 3 auslagern und testen ob 3 entstehen kann
             label_list, arity_list = invent_label_list_nodes_grow(xtype, max_nodes, self.variables_dict, self.func_array)
             tree = karoo_tree_from_labellist(label_list)
             tree = tree_set_id(tree, i)
@@ -1355,7 +1355,7 @@ class ExplainableGP(object):
         fitness_train_sum, count_fails = 0, 0
         for _, meta in gene_pool.items():
             fitness = float(meta['fitness_train'])
-            if fitness == fitness and fitness is not float('inf'):  # weird comparison is NaN Test
+            if fitness != fitness or fitness is float('inf'):  # weird comparison is NaN Test
                 count_fails += 1
                 fitness_train_sum += fitness  # for fitness average
                 if self.fitness_compare(fitness, self.best_fitness):

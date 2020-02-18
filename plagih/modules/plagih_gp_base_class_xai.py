@@ -481,7 +481,7 @@ class ExplainableGP(object):
                         self.printpl('a', 'Updated pareto at {}. New fitness is: {}, old was: {}'.format(parsim, fit, best_fit))
                 else:
                     self.pareto[parsim] = fit
-                    self.printpl('a', 'New pareto entry at {} with fitness: {}'.format(parsim, fit))
+                    self.printpl('a', 'New pareto entry at {} with fitness: {:4.2f}'.format(parsim, fit))
                 best_fit = fit
         return
 
@@ -1352,19 +1352,19 @@ class ExplainableGP(object):
             else:
                 self.best_fitness = next(iter(gene_pool.values()))['fitness_train']
 
-        fitness_train_sum, count_fails = 0, 0
+        fitness_train_sum, count_success = 0, 0
         for _, meta in gene_pool.items():
             fitness = float(meta['fitness_train'])
-            if fitness != fitness or fitness is float('inf'):  # weird comparison is NaN Test
-                count_fails += 1
+            if fitness == fitness and fitness is not float('inf'):  # weird comparison is NaN Test
+                count_success += 1
                 fitness_train_sum += fitness  # for fitness average
                 if self.fitness_compare(fitness, self.best_fitness):
                     self.best_fitness = fitness
 
-        average_fitness = fitness_train_sum / max(count_fails, 1)
+        average_fitness = fitness_train_sum / max(count_success, 1)
         print('avg fit is', average_fitness)
         print('fitness_train_sum is', fitness_train_sum)
-        print('count_fails is', count_fails)
+        print('count_success is', count_success)
         self.monitoring_dict['fitness_average'][gen_id] = average_fitness
         self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
 

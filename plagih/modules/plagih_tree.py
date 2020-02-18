@@ -25,6 +25,23 @@ class Plagih_Tree():
         pass
 
 
+def karoo_tree_from_labellist(label_list, modify_list=None):
+    """
+    create a tree from user input
+    """
+    arity_list = [label_get_arity(label) for label in label_list]
+    core = core_from_labels(label_list, arity_list)
+    if modify_list:
+        for i, val in enumerate(modify_list):
+            core[N_modify][i] = val
+    else:  # all can be modified
+        for i, val in enumerate(label_list):
+            core[N_modify][i] = '1'
+    tree = tree_convert_plagih_to_karoo(core)
+
+    return tree
+
+
 class Plagih_node():
 
     def __init__(self, n_id, depth, n_type, label, parent, arity, c1, c2, c3):
@@ -1311,23 +1328,6 @@ def tree_check_all(tree, karoo=True):
         return False
 
     return result
-
-
-def karoo_tree_from_labellist(label_list, modify_list=None):
-    """
-    create a tree from user input
-    """
-    arity_list = [label_get_arity(label) for label in label_list]
-    core = core_from_labels(label_list, arity_list)
-    if modify_list:
-        for i, val in enumerate(modify_list):
-            core[N_modify][i] = val
-    else:  # all can be modified
-        for i, val in enumerate(label_list):
-            core[N_modify][i] = '1'
-    tree = tree_convert_plagih_to_karoo(core)
-
-    return tree
 
 
 def test_trees(number):

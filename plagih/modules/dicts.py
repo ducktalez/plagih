@@ -132,7 +132,8 @@ op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       'Ftob': {'name': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool},
       'Btof': {'name': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32},
 
-      'Power': {'name': 'Power', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä'},
+      'Power': {'name': 'Power', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä'},  # todo
+      'odb': {'name': 'odb', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä'},  # 1/float. important for squareroots. todo
 
       'Ifte': {'name': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where},
       'Mini': {'name': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum},

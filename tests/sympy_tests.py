@@ -37,6 +37,14 @@ print(plagih_sympify('a & True'))
 print(plagih_sympify('(-0.09*(a**2))+0.03'))
 print(plagih_sympify('5 + (+6)'))
 print(plagih_sympify('5 + (-6)'))
+print(plagih_sympify('(-1)**(-0.5)'))
+print(plagih_sympify('(0**(-1.13))'))
+print(plagih_sympify('(a<b)'), '--a < b')
+print(plagih_sympify('(b>a)'), '--a < b')
+print(plagih_sympify('((-a)>(-b))'), '--a < b')
+print(plagih_sympify('((a<=b) & (a!=b))'), '--a < b')
 
 print('\nNew try:')
-print(plagih_sympify('(-1)**(-0.5)'))
+
+expr = ''
+print(plagih_sympify(expr))

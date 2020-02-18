@@ -17,12 +17,13 @@ def create_config_dict():
         'precision': 6,  # rounding the fitness
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'print_type': 'ggggewsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'ggewsivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
         'tree_depth_base': 7,
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 5,
+        'invent_branch_max_nodes': 32,
         'tree_parsimony_min_max': [15, 200],  # [3 to 2^(bas +1) - 1]	minimum number of nodes
         'pop_max': 1000,
         'gen_max': 1000,

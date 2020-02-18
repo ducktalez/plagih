@@ -130,7 +130,7 @@ def test_all():
     test_rebuild_loop_tree()
     test_tree_build()
     test_choose_function()
-    test_build_tree_grow_nodecount
+    test_build_tree_grow_nodecount()
     print('Testing procedure is done!')
 
 

@@ -354,10 +354,12 @@ class ExplainableGP(object):
                 fittest_parsimony = parsimony
 
             no_fault = True
-            for todo in result['result']:
+            for enum, todo in enumerate(result['result']):
                 if todo != todo or todo == float('inf'):
-                    print('LOIUS', todo)
-                    no_fault = False
+
+                    no_fault = True
+                    # todo we handle this now...
+                    result['result'][enum] = 1
 
             if no_fault:
                 if self.kernel == 'classification':
@@ -428,8 +430,8 @@ class ExplainableGP(object):
                     tree_ident, tree_meta = self.tree_get_meta(tree, tree_origin=self.origin['tree'])
                 else:
                     tree_ident, tree_meta = self.tree_get_meta(tree)
-
-            except:
+            except Exception as ex:
+                printez('www', 'Error while getting meta Info: {}'.format(ex), self.print_type)
                 fail_count += 1
                 continue
 
@@ -681,21 +683,17 @@ class ExplainableGP(object):
         """
         todo make available half ramped
         """
+
         action_type_one = next(iter(self.action_dict.values()))
         if action_type_one == 'float':
-            result_type = '2f'
+            xtype = '2f'
         elif action_type_one == 'bool':
-            result_type = '2b'
+            xtype = '2b'
         else:
             raise
-        for i in range(1, pop_size):
-            label_list, arity_list = invent_label_list_depth_random(result_type,
-                                                                    self.config['tree_depth_base'],
-                                                                    self.variables_dict,
-                                                                    self.action_dict,
-                                                                    self.func_array,
-                                                                    min_depth=self.config['tree_depth_min'])
-
+        for i in range(pop_size):
+            max_nodes = np.random.randint(3, self.config['tree_parsimony_min_max'][1])  # todo 3 auslagern und testen ob 3 entstehen kann
+            label_list, arity_list = invent_label_list_nodes_grow(xtype, max_nodes, self.variables_dict, self.func_array)
             tree = karoo_tree_from_labellist(label_list)
             tree = tree_set_id(tree, i)
 
@@ -903,7 +901,7 @@ class ExplainableGP(object):
         if same_arity:
             # 2. perform point mutation on that specific node
             if arity > 0:
-                new_label = xtype_choose_func_v2(self.func_array, xtype=xtype, arity=arity)  # Function is same type, same arity
+                new_label, new_arity = xtype_choose_func_v2(self.func_array, xtype=xtype, arity=arity)  # Function is same type, same arity
                 tree = tree_node_set_label(tree, node_id, new_label)
             elif arity == 0:  # aka a terminal
                 new_label = self.xtype_choose_term(xtype)  # 3 -> '2f' -> 5
@@ -917,6 +915,29 @@ class ExplainableGP(object):
             self.printpl('e', 'treegp_mutate_point_evolve dies not know this method to handle the arity: {}'.format(arity))
 
         return tree, node_id  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
+
+    def treegp_mutate_point_insert_evolve(self, tree, same_arity=True):
+        """
+
+        """
+
+        node_ids = tree_get_mutatable_nodes(tree)
+        insert_id = None
+        for node_id in node_ids:
+            label = tree_get_label(tree, node_id)
+            xtype = xtype_get_v2(label, variables_dict=self.variables_dict)  # '>' -> 'f2b'
+            if label == '**' and tree_node_get_child(tree, node_id, 1, karoo=True) != 'Power':  # todo
+                insert_id = node_id
+                break
+
+        if insert_id:
+            old_ids, old_labels, old_aritys = tree_get_branch_plus(tree, insert_id)
+            new_labels = ['Power'] + old_labels
+            new_aritys = [1] + old_aritys
+            insert_core = core_from_labels(new_labels, new_aritys)
+            tree_insert_subtree(tree, insert_core, old_ids, karoo=False)
+
+        return tree
 
     def treegp_mutate_filter_one(self, tree):
         """
@@ -1093,12 +1114,6 @@ class ExplainableGP(object):
             # Build a new tree
             label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.func_array, min_depth=self.config['tree_depth_min'])
 
-            if not label_list:
-                result_tree = tree
-            else:
-                core_insert = core_from_labels(label_list, arity_list)
-                result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
-
         elif grow_method == 'num_nodes':
             return None
         elif grow_method == 'nodes_max_uniform':
@@ -1107,15 +1122,19 @@ class ExplainableGP(object):
             This could be calculated respectively to the parsimony dim_y
             which the tree might have up his sleeve
             """
-            max_nodes = 15  # TODO auslagern
-            root_type = next(iter(self.action_dict.values))
-            label_list = invent_label_list_nodes_grow(old_xtype, max_nodes, root_type, self.func_array)
-            # num_new_nodes = np.random.randint(10, 30)
-            # max_
+            max_nodes = self.config['invent_branch_max_nodes']
+            # todo anpassen, ausrechnen
+            label_list, arity_list = invent_label_list_nodes_grow(old_xtype, max_nodes, self.variables_dict, self.func_array)
 
         else:
             print_e('That did not work')
             return None
+
+        if not label_list:
+            result_tree = tree
+        else:
+            core_insert = core_from_labels(label_list, arity_list)
+            result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
 
         return result_tree
 
@@ -1188,8 +1207,8 @@ class ExplainableGP(object):
                 # print('Algo raw:', str(expr_raw))  # importantprint 2 for expr_raw
                 try:  # 3. With tensorflow
                     expr_sym = tree_expr_sympify(algo_raw=str(expr_raw))
-                except:
-                    raise Exception('Expr could not be sympified: {}.'.format(expr_raw))
+                except Exception as ex:
+                    raise Exception('Expr could not be sympified: {}. Ex: {}'.format(expr_raw, ex))
 
                 fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
                 # print('Nftr', fitness_train)
@@ -1331,19 +1350,19 @@ class ExplainableGP(object):
             else:
                 self.best_fitness = next(iter(gene_pool.values()))['fitness_train']
 
-        fitness_train_sum, count = 0, 0
+        fitness_train_sum, count_fails = 0, 0
         for _, meta in gene_pool.items():
             fitness = float(meta['fitness_train'])
             if fitness == fitness and fitness is not float('inf'):  # weird comparison is NaN Test
-                count += 1
+                count_fails += 1
                 fitness_train_sum += fitness  # for fitness average
                 if self.fitness_compare(fitness, self.best_fitness):
                     self.best_fitness = fitness
 
-        average_fitness = fitness_train_sum / max(count, 1)
+        average_fitness = fitness_train_sum / max(count_fails, 1)
         print('avg fit is', average_fitness)
         print('fitness_train_sum is', fitness_train_sum)
-        print('count is', count)
+        print('count_fails is', count_fails)
         self.monitoring_dict['fitness_average'][gen_id] = average_fitness
         self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
 

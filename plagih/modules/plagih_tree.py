@@ -447,19 +447,20 @@ def tree_expr_sympify(algo_raw=None, tree=None):
     """
     returns the sympifyed expression
     """
-    if not algo_raw:  # If we got a tree, we generate the expression
+    if tree is None and algo_raw is None:
+        print_e('Either tree or algo raw have to be set.')
+    if algo_raw is None:  # If we got a tree, we generate the expression
         algo_raw = str(tree_get_expr_raw(tree, root_id))
 
     try:
         expr_sym = plagih_sympify(algo_raw)
         expr_sym_str = str(expr_sym)
-    except:
-        print_warning('w', 'In sympify. Caused by this raw algorithm: ' + str(algo_raw))
-        raise
+    except Exception as ex:
+        print_warning('w', 'In sympify. Caused by this raw algorithm: {}. Ex: {}'.format(algo_raw, ex))
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym_str:
-            raise
+            raise Exception('Sympify failed due to a fail reason: {}.'.format(fail_reason))
     return expr_sym_str
 
 

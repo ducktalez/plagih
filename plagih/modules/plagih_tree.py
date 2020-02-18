@@ -1247,6 +1247,34 @@ def tree_test_check_children(tree, karoo=True):
         return False
 
 
+def tree_check_child_xtype(tree, karoo=True, variables_dict=None):
+    """
+    A method to check if a tree is plausible. aka:
+    - do the values in c1, c2, c3 link to correct
+    """
+    if not karoo:
+        tree = tree_convert_plagih_to_karoo(tree)
+
+    for node_id in range(1, len(tree[3])):
+        label = tree_get_label(tree, node_id)
+        xtype = xtype_get_v2(label, variables_dict=variables_dict)
+        arity = label_get_arity()
+        xtype_rev = xtype[:2][::-1]
+        if c_label == 'Ifte':
+            test_xtype = ['2b', '2f', '2f']
+        else:
+            test_xtype = [xtype_rev] * arity
+        for c in range(0, 3):
+            if tree[N_c1 + c][node_id] != '':
+                c_label = tree[N_c1 + c][node_id]
+                c_xtype = xtype_get_v2(c_label, variables_dict=variables_dict)
+                c_arity = label_get_arity(c_label)
+                if c_xtype != test_xtype[c]:
+                    return False
+
+    return True
+
+
 def tree_delete_nodes(tree, node_list):
     tree = np.delete(tree, node_list, axis=1)  # delete all branches below
     return tree

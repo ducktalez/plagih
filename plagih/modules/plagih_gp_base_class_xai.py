@@ -797,6 +797,8 @@ class ExplainableGP(object):
 
             if not tree_test_check_children(tree):
                 print_e('Tree is not consistent:\n{}'.format(tree))
+            elif tree_check_child_xtype(tree):
+                print_e('Tree children are not correct:\n{}'.format(tree))
             elif tree_node_get_arity(tree, root_id, karoo=True) == 0:
                 print_warning('w', 'Tree is only a root node')
             else:

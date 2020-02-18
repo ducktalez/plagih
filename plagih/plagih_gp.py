@@ -17,7 +17,7 @@ def create_config_dict():
         'precision': 6,  # rounding the fitness
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'print_type': 'gggewsivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'gggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
         'tree_depth_base': 7,

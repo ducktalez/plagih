@@ -253,13 +253,10 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array):
                 break
 
         for index in term_indices:
-            label, arity = xtype_choose_term_v2(xtype, variables_dict), 0
+            label, arity = xtype_choose_term_v2(todo_xtypes[index], variables_dict), 0
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
             todo_node_amount -= 1
-
-        if delete_this and tmp_label_list.count('dummy') > 0:
-            print_e('LOL WHYY')
 
         # prepare next loop
         todo_xtypes = []
@@ -1258,18 +1255,17 @@ def tree_check_child_xtype(tree, karoo=True, variables_dict=None):
     for node_id in range(1, len(tree[3])):
         label = tree_get_label(tree, node_id)
         xtype = xtype_get_v2(label, variables_dict=variables_dict)
-        arity = label_get_arity()
-        xtype_rev = xtype[:2][::-1]
-        if c_label == 'Ifte':
-            test_xtype = ['2b', '2f', '2f']
-        else:
-            test_xtype = [xtype_rev] * arity
+        arity = label_get_arity(label)
+        test_xtype = xtype_get_child_todos(label, arity, variables_dict=variables_dict)
+
         for c in range(0, 3):
             if tree[N_c1 + c][node_id] != '':
-                c_label = tree[N_c1 + c][node_id]
+                c_node_id = tree[N_c1 + c][node_id]
+                c_label = tree_get_label(tree, c_node_id)
                 c_xtype = xtype_get_v2(c_label, variables_dict=variables_dict)
-                c_arity = label_get_arity(c_label)
-                if c_xtype != test_xtype[c]:
+                # if c_xtype != test_xtype[c]:
+                if not xtype_equi_outcome(c_xtype, test_xtype[c]):
+                    print_blue('Label {}, child {} with c_label {} does not match xtype {}. It is c_xtype {}.\ntree labels: {}'.format(label, c, c_label, xtype, c_xtype, tree[N_label]))
                     return False
 
     return True

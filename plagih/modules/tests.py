@@ -148,7 +148,7 @@ def test_build_tree_grow_nodecount(verbose=False):
                   ('f2b', 12)]
     variables_dict = TestHelpers.variables_dict
     func_array = TestHelpers.func_array
-    for test_case in test_cases:
+    for test_case in [('f2f', 6)]:
         for _ in range(10):
             old_xtype = test_case[0]
             max_nodes = test_case[1]
@@ -161,7 +161,11 @@ def test_build_tree_grow_nodecount(verbose=False):
                 print_warning('w', 'This is wrong: {}!={} {}>{}'.format(sum(arity_list) + 1, len(arity_list), len(label_list), max_nodes))
                 worked_fine = False
 
+            tree = karoo_tree_from_labellist(label_list)
+            if not tree_check_child_xtype(tree, variables_dict=variables_dict):
+                print('WHYY', tree[N_label])
+
     return worked_fine
 
 
-test_build_tree_grow_nodecount()
+test_build_tree_grow_nodecount(verbose=True)

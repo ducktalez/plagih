@@ -60,6 +60,17 @@ def xtype_get_converters(xtype):
         raise
 
 
+def xtype_get_child_todos(label, node_arity, variables_dict=None):
+    """
+    reverse stuff
+    """
+    xtype = xtype_get_v2(label, variables_dict=variables_dict)
+    if xtype == 'b2f2f':
+        return ['2b', '2f', '2f']
+    else:
+        return [xtype[:2][::-1]] * node_arity
+
+
 def xtype_choose_term_v2(node_xtype, variables_dict):
     """
     Returns a terminal of xtype.

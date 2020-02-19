@@ -1356,10 +1356,10 @@ class ExplainableGP(object):
         self.plot_end(data_tuples, path_plots, plt_title='Number of created Trees', plt_y_label='Amount', linestyle='')
 
         data_tuples = sorted(list(self.pareto.items()))
-        self.plot_end(data_tuples, path_plots, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness', linestyle='dashed', step=True)
+        self.plot_end(data_tuples, path_plots, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness', linestyle='dashed', step_where='pre')
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='Best candidate', plt_x_label='Generation', plt_y_label='Fitness', linestyle='dashed', step=True)
+        self.plot_end(data_tuples, path_plots, plt_title='Best candidate', plt_x_label='Generation', plt_y_label='Fitness', linestyle='dashed', step_where='post')
 
         return
 
@@ -1409,26 +1409,18 @@ class ExplainableGP(object):
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def plot_end(self, data_2d, path,
-                 plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', step=True,
-                 linestyle='None', color='', variance=None):
+                 plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', step_where='', plt_xparam='',
+                 linestyle='None', color=''):
 
         x, y = [], []
         for a, b in data_2d:
             x.append(a)
             y.append(b)
 
-        # fmt = '[marker][line][color]'
-
-        if variance:
-            print_e('variance not available')
-            means = np.mean(y, axis=0)
-            stds = np.std(y, axis=0)
-            n = means.size
-
-        if step:
-            plt.step(x, y, linestyle=linestyle, marker='.', label=plt_curve_label)
+        if step_where:
+            plt.step(x, y, plt_xparam, linestyle=linestyle, marker='.', label=plt_curve_label, where=step_where)
         else:
-            plt.plot(x, y, linestyle=linestyle, marker='.', label=plt_curve_label)
+            plt.plot(x, y, plt_xparam, linestyle=linestyle, marker='.', label=plt_curve_label)
 
         plt.xlabel(plt_x_label)
         plt.ylabel(plt_y_label)

@@ -110,7 +110,7 @@ def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_out
         """
 
         if len(action_dict) > 1:
-            print_e('TODO multidimensional input. To be done, there is no solution yet.')
+            print_e('TODO multidimensional input. To be custom_done, there is no solution yet.')
 
         skew = (unique_outputs_num / 2) - 1
 

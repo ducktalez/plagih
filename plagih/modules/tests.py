@@ -131,7 +131,7 @@ def test_all():
     test_tree_build()
     test_choose_function()
     test_build_tree_grow_nodecount()
-    print('Testing procedure is done!')
+    print('Testing procedure is custom_done!')
 
 
 def test_build_tree_grow_nodecount(verbose=False):

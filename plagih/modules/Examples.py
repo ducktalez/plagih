@@ -43,4 +43,3 @@ class MountainCarExamples:
                     'bl': tf.constant(True, dtype=tf.bool)}
 
     expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, observation0) > -0.97, 0.0, 2.0)'
-

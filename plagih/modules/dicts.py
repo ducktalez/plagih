@@ -29,9 +29,10 @@ T_num_lines = 15
 P_first_node = 1
 root_id = 1
 
-path_runs = 'runs'
-path_autosave = 'autosave'
-path_plots = 'plots'
+PATH_runs = 'runs'
+PATH_autosave = 'autosave'
+PATH_plots = ''  # in main folder
+PATH_backup_pickle = Path(PATH_autosave) / 'backup.p'  # backup-version is set here
 
 delete_this = True
 

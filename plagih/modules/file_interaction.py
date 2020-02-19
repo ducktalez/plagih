@@ -80,7 +80,7 @@ def write_config_file(path, config, gen_id, kernel, datetime):
     file.write('\n precision: {}\n'.format(config['precision']))
     file.write('\n tree depth max: ' + str(config['tree_depth_max']))
     file.write('\n')
-    file.write('\n tournament size: ' + str(config['gp_tourn_size']))
+    file.write('\n tournament size: ' + str(config['tourn_size']))
     file.write('\n population: ' + str(config['pop_max']))
     file.write('\n number of generations: ' + str(gen_id))
     file.write('\n\n')

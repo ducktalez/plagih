@@ -276,7 +276,7 @@ def pause(menu_dict):
 		print('\n\t Current generation:', menu_dict['gen_id'])
 
 	elif menu == 'dir':
-		print('\n\t Current working directory:', menu_dict['path'])
+		print('\n\t Current working directory:', menu_dict['root_dir'])
 
 	# NEED TO REBUILD
 	# elif menu == 'load': # load population_s to replace population_a

@@ -5,7 +5,7 @@ This extra file was added to make the program start from command line. (Path pro
 from pathlib import Path
 from plagih import plagih_gp
 import sys
-# sys.path = sys.path / 'plagih'
+# sys.root_dir = sys.root_dir / 'plagih'
 sys.path.append('plagih/')
 sys.path.append('plagih/modules')
 sys.path.append('mountaincar/')

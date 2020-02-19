@@ -24,6 +24,7 @@ from pathlib import Path
 from plagih.modules.plagih_eval import *
 from plagih.modules.printing import *
 from plagih.modules.plagih_pop import *
+from plagih.modules.file_interaction import *
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -80,7 +81,7 @@ class ExplainableGP(object):
                                 'best_candidate': {},
                                 'total_found_trees': {}}
 
-        self.file_directories_create(self.config['path'])
+        self.file_directories_create(self.config['root_dir'])
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
@@ -90,7 +91,7 @@ class ExplainableGP(object):
         regular plagih-config run
         """
 
-        path_backup = self.path / PATH_backup_pickle
+        path_backup = self.root_dir / file_backup_pickle
         if Path.is_file(path_backup) and not self.config['force_new_run']:
             self.print_g('g', 'Restarting old run now...')
             try:
@@ -102,14 +103,10 @@ class ExplainableGP(object):
         if self.gen_id == 0:
             self.main_generation_first()
 
-        write_config_file(self.path, self.config, self.gen_id, self.kernel, self.datetime)
+        write_config_file(self.root_dir, self.config, self.gen_id, self.kernel, self.datetime)
 
         self.main_generation_loop()
-
-        self.file_autowrite(self.path, 'f')
-        self.auto_plots(self.path)
-        self.print_g('gg', 'Completely. Exit. \tTime: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-        sys.exit()
+        self.terminate_run(self.root_dir)
 
     def file_directories_create(self, path_cwd):
         """
@@ -118,11 +115,12 @@ class ExplainableGP(object):
 
         # self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
         self.datetime = datetime.now().strftime('%H%M%S')
-        cwd = path_cwd
-        self.path = cwd / 'runs' / '{}'.format(self.config['name'])
-        # self.path = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
-        if not Path.is_dir(self.path):
-            Path.mkdir(self.path)
+
+        self.root_dir = path_cwd / folder_runs / '{}'.format(self.config['name'])
+        # self.root_dir = cwd / 'runs' / '{}{}'.format(self.config['name'], self.datetime)
+
+        if not Path.is_dir(self.root_dir):
+            Path.mkdir(self.root_dir)
 
         return
 
@@ -145,7 +143,7 @@ class ExplainableGP(object):
         else:
             self.gen_random_from_scratch(self.config['pop_max'] + 1, None)
         self.gen_finalize()
-        file_population_write_karoo(self.population_base, '1_first', self.path, self.gen_id)  # first gen only
+        file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
 
     def main_generation_loop(self):
         """
@@ -171,7 +169,7 @@ class ExplainableGP(object):
 
             for name, gp_function in gp_list:
                 time_evolve = time.perf_counter()
-                self.print_g('ggg', '{} took: {:4.2f}.'.format(name, time.perf_counter() - time_evolve))
+                self.print_g('ggg', '-->Evolve: ({}) took: {:4.2f}sec.'.format(name, time.perf_counter() - time_evolve))
 
                 evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(evolve_num)
@@ -185,6 +183,7 @@ class ExplainableGP(object):
             self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
         else:
             printez('g', 'Done after Generation {}. Time passed: {:4.2f}sec. Done: {}'.format(self.gen_id, time.perf_counter() - self.time_start, self.custom_done), print_type=self.print_type)
+            return
 
     def origin_exists(self):
         if self.origin is not None:
@@ -192,18 +191,17 @@ class ExplainableGP(object):
         else:
             return False
 
-    def periodical_procedures(self, overwrite=True):
+    def periodical_procedures(self):
         """
         Every few generations, save the current status
         """
-        if overwrite:
-            path_auto = self.path / PATH_autosave
-            auto_enumname = 'tmp'
+        if self.config['overwrite periodic files']:
+            tmp_path = self.root_dir
         else:
-            path_auto = self.path / 'Gen-{}'.format(self.gen_id)
-            auto_enumname = str(self.gen_id)
-        if not Path.is_dir(path_auto):
-            Path.mkdir(path_auto)
+            tmp_path = self.root_dir / folder_steps / 'Gen-{}'.format(self.gen_id)
+
+        if not Path.is_dir(tmp_path):
+            Path.mkdir(tmp_path)
 
         time_now = time.perf_counter()
         plots_show, save_run = False, False
@@ -231,23 +229,25 @@ class ExplainableGP(object):
                 save_run = True
 
         if plots_show:
-            self.auto_plots(self.path)
+            self.auto_plots(tmp_path)
+
         if save_run:
             self.run_save_pickle()
-            self.file_autowrite(path_auto, auto_enumname)
+            self.file_save_files(tmp_path)
 
         self.printpl('ii', 'Done with auto-procedures')
 
         return 0
 
-    def file_autowrite(self, path, gen):
+    def file_save_files(self, root_path, pop_name=''):
         """
         writes all important files
 
         """
-        self.file_conclusion(path, datetime=self.datetime)
-        self.file_pareto(self.pareto, path)
-        file_population_write_karoo(self.population_tmp, str(gen), path, self.gen_id)  # save the final generation of Trees to disk
+        self.file_conclusion(root_path, datetime=self.datetime)
+        self.file_pareto(self.pareto, root_path)
+        file_population_karoo(self.population_tmp, pop_name, root_path, self.gen_id)  # save the final generation of Trees to disk
+
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -329,7 +329,7 @@ class ExplainableGP(object):
         - save the last generation (custom_done)
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
-        path_backup = self.path / PATH_backup_pickle
+        path_backup = self.root_dir / file_backup_pickle
 
         run_data = {'self.restart_count': self.restart_count,
                     'self.gen_id': self.gen_id,
@@ -346,8 +346,11 @@ class ExplainableGP(object):
         """
         write the performance of the config to disc
         """
+        path_conclusion = path / folder_info
+        if not Path.is_dir(path_conclusion):
+            Path.mkdir(path_conclusion)
 
-        file = Path.open(path / 'conclusion.txt', 'w')
+        file = Path.open(path_conclusion / file_conclusion, 'w')
         file.write('Plagih GP\n launched: {}'.format(str(datetime)))
 
         if self.origin_exists():
@@ -417,11 +420,17 @@ class ExplainableGP(object):
 
         return
 
-    def file_pareto(self, pareto, path):
+    def file_pareto(self, pareto, root_path):
         """
         Save all the pareto efficient candidates to file
         """
-        file = Path.open(path / 'pareto.txt', 'w')
+
+        path_pareto = root_path / folder_info
+        if not Path.is_dir(path_pareto):
+            Path.mkdir(path_pareto)
+
+        file = Path.open(path_pareto / file_pareto, 'w')
+
         file.write('\nParsimony: \t<num> Fitness: \t<fitness> Expr: \t<expression>')
 
         for parsim, fit in sorted(list(pareto.items())):
@@ -838,11 +847,11 @@ class ExplainableGP(object):
 
         self.population_tmp = pop_enum_trees(self.population_tmp)  # pop +tree_id
         gene_pool, self.population_tmp = self.pop_genepool_create(self.population_tmp)
-        self.monitor_genepool(gene_pool, self.path, self.gen_id)
+        self.analyze_genepool(gene_pool, self.root_dir, self.gen_id)
         self.pop_parsimony_best_update(gene_pool)
         self.pop_pareto_update()
         self.population_base = pop_copy_genepool(self.population_tmp, gene_pool, self.gen_id)
-        file_population_write_karoo(self.population_tmp, 'tmp', self.path, self.gen_id)
+        file_population_karoo(self.population_tmp, 'tmp', self.root_dir, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
@@ -1169,7 +1178,7 @@ class ExplainableGP(object):
         """
         This loads the 'origin' and evaluates it
         Two loading options:
-            - path to csv with tree (outdated)
+            - root_dir to csv with tree (outdated)
             - an array with labels ['+','1','observation0']. optional, the permanent nodes as separate array
 
         returns: tree
@@ -1326,32 +1335,35 @@ class ExplainableGP(object):
     #   Monitoring                                |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def auto_plots(self, path, post_path=None):
+    def auto_plots(self, path):
         """
         Make all plots
-        Helper:
-        def plot_end(self, data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', step_linestyle='', plot_linestyle='', variance=None, color='c'
         """
+
+        path_plots = path / folder_plots
+        if not Path.is_dir(path_plots):
+            Path.mkdir(path_plots)
+
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
-            self.plot_end(data_tuples, path, plt_title='Average Fitness', plt_y_label='Fitness')
+            self.plot_end(data_tuples, path_plots, plt_title='Average Fitness', plt_y_label='Fitness', linestyle='')
 
         if self.monitor_dict['genepool_size'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['genepool_size'].items()))
-            self.plot_end(data_tuples, path, plt_title='Genepool size', plt_y_label='Amount')
+            self.plot_end(data_tuples, path_plots, plt_title='Genepool size', plt_y_label='Amount', linestyle='')
 
         data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
-        self.plot_end(data_tuples, path, plt_title='Number of created Trees', plt_y_label='Amount')
+        self.plot_end(data_tuples, path_plots, plt_title='Number of created Trees', plt_y_label='Amount', linestyle='')
 
         data_tuples = sorted(list(self.pareto.items()))
-        self.plot_end(data_tuples, path, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness', linestyle='dashed', step=True)
+        self.plot_end(data_tuples, path_plots, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness', linestyle='dashed', step=True)
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
-        self.plot_end(data_tuples, path, plt_title='Best candidate', plt_x_label='Generation', plt_y_label='Fitness')
+        self.plot_end(data_tuples, path_plots, plt_title='Best candidate', plt_x_label='Generation', plt_y_label='Fitness', linestyle='dashed', step=True)
 
         return
 
-    def monitor_genepool(self, gene_pool, path, gen_id):
+    def analyze_genepool(self, gene_pool, root_path, gen_id):
         """
         Give the user some feedback
         """
@@ -1362,9 +1374,7 @@ class ExplainableGP(object):
             self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool)))
         else:
             self.printpl('e', 'There are no Trees in the gene pool.')
-            self.file_autowrite(path, gen_id)
-            self.auto_plots(path)
-            sys.exit()
+            self.terminate_run(root_path)
 
         if not self.best_fitness:
             if self.origin_exists():
@@ -1387,13 +1397,20 @@ class ExplainableGP(object):
 
         return
 
+    def terminate_run(self, path):
+
+        self.file_save_files(path)
+        self.auto_plots(path)
+        self.print_g('gg', ' Terminate this run. \tTotal time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        sys.exit()
+
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to print_type output information     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def plot_end(self, data_2d, path_runs,
+    def plot_end(self, data_2d, path,
                  plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', step=True,
-                 linestyle='None', color='c', variance=None):
+                 linestyle='None', color='', variance=None):
 
         x, y = [], []
         for a, b in data_2d:
@@ -1409,9 +1426,9 @@ class ExplainableGP(object):
             n = means.size
 
         if step:
-            plt.step(x, y, linestyle=linestyle, label=plt_curve_label, color=color)
+            plt.step(x, y, linestyle=linestyle, marker='.', label=plt_curve_label)
         else:
-            plt.plot(x, y, linestyle=linestyle, label=plt_curve_label, color=color)
+            plt.plot(x, y, linestyle=linestyle, marker='.', label=plt_curve_label)
 
         plt.xlabel(plt_x_label)
         plt.ylabel(plt_y_label)
@@ -1421,11 +1438,8 @@ class ExplainableGP(object):
         plt.yscale(yscale)
         plt.ylim(0)
         plt.xlim(0)
-        path_plot = path_runs / PATH_plots
 
-        if not Path.is_dir(path_plot):
-            Path.mkdir(path_plot)
-        plt.savefig(path_plot / '{}-plot.jpg'.format(plt_title))
+        plt.savefig(path / '{}.jpg'.format(plt_title))
         plt.close()
         return
 
@@ -1474,24 +1488,7 @@ def pop_enum_trees(population):
     return population
 
 
-def file_population_write_plagih(population, pop_name, path, gen_id):
-    file_path = path / 'population_plagih_{}.csv'.format(str(pop_name))
-
-    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but file gets too big over time.
-        target = csv.writer(csv_file, delimiter=',')
-        if gen_id != 0:
-            target.writerows([''])  # empty row before each generation
-        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
-
-        for tree in range(1, len(population)):
-            target.writerows([''])  # empty row before each Tree
-            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[tree][row]])
-
-    return
-
-
-def file_population_write_karoo(population, pop_name, path, gen_id):
+def file_population_karoo(population, pop_name, path, gen_id):
     """
     Save population_* to disk.
 
@@ -1517,7 +1514,12 @@ def write_config_file(path, config, gen_id, kernel, datetime):
     write the parameters to a file
     """
 
-    file = Path.open(path / 'config.txt', 'a')
+    path_config = path / folder_info
+
+    if not Path.is_dir(path_config):
+        Path.mkdir(path_config)
+
+    file = Path.open(path_config / file_config, 'a')
     file.write('This config is not complete, sfeh!')
     file.write('\n launched: {}'.format(datetime))
     file.write('\n kernel: {}'.format(kernel))

@@ -29,11 +29,6 @@ T_num_lines = 15
 P_first_node = 1
 root_id = 1
 
-PATH_runs = 'runs'
-PATH_autosave = 'autosave'
-PATH_plots = ''  # in main folder
-PATH_backup_pickle = Path(PATH_autosave) / 'backup.p'  # backup-version is set here
-
 delete_this = True
 
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')

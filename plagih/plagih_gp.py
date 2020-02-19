@@ -1,6 +1,6 @@
 import sys
 sys.path = ['..'] + sys.path
-sys.path.append('modules/')  # add directory 'modules' to the current path
+sys.path.append('modules/')  # add directory 'modules' to the current root_dir
 
 import plagih.modules.plagih_gp_base_class_xai as plagih
 from plagih.modules.plagih_gp_base_class_xai import *
@@ -11,7 +11,7 @@ from plagih.modules.plagih_data import *
 
 def create_config_dict():
     config_dict = {
-        'path': Path.cwd(),
+        'root_dir': Path.cwd(),
         'name': 'MTC_tree_',
 
         'kernel': 'regression',  # [regression, regression bounded, classification, match]
@@ -19,6 +19,7 @@ def create_config_dict():
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
         'print_type': 'gggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
         'tree_depth_base': 7,
@@ -82,7 +83,7 @@ def mountaincar_load_corefiles(config_dict, path):
 def run_mountaincar_origin2_fix(config_dict, path):
     description = 'Mountaincar from 2-decision Origin (simple)'
     config_dict['name'] = 'MTC_v1'
-    config_dict['path'] = path
+    config_dict['root_dir'] = path
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list, modify_list=MountainCarExamples.tree_v1_modify)
     return gp
@@ -90,7 +91,7 @@ def run_mountaincar_origin2_fix(config_dict, path):
 
 def run_mountaincar_origin3_fix(config_dict, path):
     config_dict['name'] = 'MTC_v2'
-    config_dict['path'] = path
+    config_dict['root_dir'] = path
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
@@ -98,7 +99,7 @@ def run_mountaincar_origin3_fix(config_dict, path):
 
 def run_mountaincar_originbest_fix(config_dict, path):
     config_dict['name'] = 'MTC_v3'
-    config_dict['path'] = path
+    config_dict['root_dir'] = path
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
     return gp
@@ -106,7 +107,7 @@ def run_mountaincar_originbest_fix(config_dict, path):
 
 def run_mountaincar_scratch_fix(config_dict, path):
     config_dict['name'] = 'MTC_v4_scratch'
-    config_dict['path'] = path
+    config_dict['root_dir'] = path
     config_dict['pop_max'] = 1000
     config_dict['gen_max'] = 15
     config_dict['kernel'] = 'regression bounded'
@@ -120,7 +121,7 @@ def run_mountaincar_scratch_fix(config_dict, path):
 def run_mountaincar_test(config_dict, path):
     print('PATH IN TEST', path)
     config_dict['name'] = 'MTC_test'
-    config_dict['path'] = path
+    config_dict['root_dir'] = path
     config_dict['pop_max'] = 200
     config_dict['gen_max'] = 12
     config_dict['tourn_size'] = 3

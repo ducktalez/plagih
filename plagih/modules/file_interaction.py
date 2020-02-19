@@ -9,6 +9,19 @@ import sklearn.model_selection as skcv
 import numpy as np
 
 
+folder_runs = 'runs/'
+
+folder_save = 'save/'
+folder_plots = 'plots/'
+folder_info = 'info/'
+folder_steps = 'steps/'
+
+file_pareto = 'pareto.txt'
+file_config = 'config.txt'
+file_backup_pickle = 'backup.p'  # backup-version is set here
+file_conclusion = 'conclusion.txt'
+
+
 def data_load_pickle(prepared_data_pickle_path):
     """
     loads a data_csv_path file that was already split with the csv reader
@@ -65,26 +78,6 @@ def file_population_write_karoo(population, pop_name, path, gen_id):
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
                 target.writerows([population[tree][row]])
 
-    return
-
-
-def write_config_file(path, config, gen_id, kernel, datetime):
-    """
-    write the parameters to a file
-    """
-
-    file = Path.open(path / 'config.txt', 'w')
-    file.write('Plagih GP. This config is not complete, sfeh!')
-    file.write('\n launched: {}'.format(datetime))
-    file.write('\n kernel: {}'.format(kernel))
-    file.write('\n precision: {}\n'.format(config['precision']))
-    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
-    file.write('\n')
-    file.write('\n tournament size: ' + str(config['tourn_size']))
-    file.write('\n population: ' + str(config['pop_max']))
-    file.write('\n number of generations: ' + str(gen_id))
-    file.write('\n\n')
-    file.close()
     return
 
 
@@ -239,18 +232,12 @@ def load_pop_from_csv(pop_csv):
     return population_a
 
 
-def plot_end(data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', only_dots=None, variance=None):
+def plot_end(data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', only_dots=None):
 
     x, y = [], []
     for a, b in data_2d:
         x.append(a)
         y.append(b)
-
-    if variance:
-        print_e('variance not available')
-        means = np.mean(y, axis=0)
-        stds = np.std(y, axis=0)
-        n = means.size
 
     if only_dots:
         plt.plot(x, y, linestyle='', marker='o', label=plt_curve_label)

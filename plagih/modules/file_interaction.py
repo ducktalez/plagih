@@ -18,7 +18,7 @@ folder_steps = 'steps/'
 
 file_pareto = 'pareto.txt'
 file_config = 'config.txt'
-file_backup_pickle = 'backup.p'  # backup-version is set here
+file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
 

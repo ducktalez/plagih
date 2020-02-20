@@ -173,7 +173,7 @@ def choose_constant(term_type='', mode='float-1to1', uniform_range=None):
 #     return label, op[str(label)]['arity']
 
 
-def xtype_choose_func_v2(func_array, xtype=None, arity=None):
+def xtype_choose_func(func_array, xtype=None, arity=None):
     """
     chooses a function that fits at the spot randomly. func array is created from user functions
     - get a list with potantial functions: ['+', '-', '*']

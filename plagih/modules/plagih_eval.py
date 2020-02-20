@@ -2,6 +2,138 @@ from plagih.modules.printing import *
 from plagih.modules.dicts import *
 from plagih.modules.plagih_types import xtype_get_v2
 
+import sklearn.metrics as skm
+
+
+class FitnessKernel:
+
+    def __init__(self, kernel_name):
+        self.kernel = kernel_name
+
+    def fitness_compare(self, fitness1, fitness2, mode='better'):
+        """
+        Compares the fitness of two candidates according to the kernel
+
+        Example:
+            >
+            fitness_compare
+        """
+        if fitness2 is None:
+            return True
+        elif self.kernel == 'regression' and fitness1 < fitness2:
+            return True
+        elif self.kernel == 'regression bounded' and fitness1 < fitness2:
+            return True
+        elif self.kernel == 'classification' and fitness1 > fitness2:
+            return True
+        elif self.kernel == 'match' and fitness1 > fitness2:
+            return True
+        elif fitness1 == fitness2 and mode == 'better_or_equal':
+            return True
+        else:
+            return False
+
+    def conclusion_info(self, result, fitness_control_best):
+        result_str = ''
+        if self.kernel == 'classification':
+            result_str += ('\n\n Classification fitness score: {}'.format(fitness_control_best))
+            result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
+            result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
+
+        elif self.kernel == 'regression':
+            mse = skm.mean_squared_error(result['result'], result['solution'])
+            result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
+            result_str += ('\n Mean Squared Error: {}'.format(mse))
+
+        elif self.kernel == 'regression bounded':
+            mse = skm.mean_squared_error(result['result'], result['solution'])
+            result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
+            result_str += ('\n Mean Squared Error: {}'.format(mse))
+
+        elif self.kernel == 'match':
+            result_str += ('\n\n Matching fitness score: {}'.format(result['fitness']))
+        return result_str
+
+    def tf_get_pairwise_fitness(self, solution, tf_result, action_dict, unique_outputs_num, action_min_max=None):
+        # 3- Add fitness computation into TF graph
+
+        if self.kernel == 'classification':  # CLASSIFY kernel
+
+            """
+            This multiclass classifer compares each row of a given Tree to the known solution.
+            The left-most (class?) bin includes -inf. The right-most bin includes +inf. Those inbetween are 
+            by default confined to the spacing of 1.0 each, as defined by:
+
+                (solution - 1) < result <= solution
+
+            The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
+            origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
+            side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
+            negative and positive result.
+            """
+
+            if len(action_dict) > 1:
+                print_e('TODO multidimensional input. To be custom_done, there is no solution yet.')
+
+            skew = (unique_outputs_num / 2) - 1
+
+            rule11 = tf.equal(solution, 0)
+            rule12 = tf.less_equal(tf_result, 0 - skew)
+            rule13 = tf.logical_and(rule11, rule12)
+
+            rule21 = tf.equal(solution, unique_outputs_num - 1)
+            rule22 = tf.greater(tf_result, solution - 1 - skew)
+            rule23 = tf.logical_and(rule21, rule22)
+
+            rule31 = tf.less(solution - 1 - skew, tf_result)
+            rule32 = tf.less_equal(tf_result, solution - skew)
+            rule33 = tf.logical_and(rule31, rule32)
+
+            pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
+
+        elif self.kernel == 'regression':
+
+            """
+            A very, very basic  kernel which is not designed to perform well in the real world. It requires
+            that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
+            integrating a more sophisticated kernel.
+            """
+
+            pairwise_fitness = tf.abs(solution - tf_result)
+
+        elif self.kernel == 'regression bounded':
+            """
+            special regression for float solutions and discrete labels
+            - if the solution is between labels, the difference is added
+            - if the solution > bound_pop (the highest possible label), difference 0 is added
+            ---
+            suitable for:
+            - not fitting labels beforehand
+            - small amount of labels
+            - orderable amount of labels
+            """
+
+            # TODO adjust this stuff
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            new_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
+            pairwise_fitness = tf.abs(solution - new_result)
+
+        elif self.kernel == 'match':  # MATCH kernel
+
+            """
+            This is used for demonstration purposes only.
+            """
+
+            # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+            rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
+            pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), atol + rtol * tf.abs(tf_result)), tf.int32)
+
+        else:
+            raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
+
+        return pairwise_fitness
+
 
 def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
@@ -30,7 +162,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
     """
     # eval_parameters = self.eval_parameters
-    kernel = eval_parameters['kernel']
+    kernel = eval_parameters['kernel_name']
     action_dict = eval_parameters['action_dict']
     variables_dict = eval_parameters['variables_dict']
     tf_device_log = eval_parameters['tf_device_log']
@@ -57,7 +189,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
             solution = tensors['action0']
 
-            pairwise_fitness = tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, action_min_max=action_min_max)
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, action_dict, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if get_pred_labels:
@@ -89,89 +221,6 @@ def tensors_leaves(tensors, data, variables_dict, action_dict):
         else:
             print_e('action_dict type for {} is: {}.'.format(action, py_type))
     return tensors
-
-
-def tf_get_pairwise_fitness(kernel, solution, tf_result, action_dict, unique_outputs_num, action_min_max=None):
-    # 3- Add fitness computation into TF graph
-
-    if kernel == 'classification':  # CLASSIFY kernel
-
-        """
-        This multiclass classifer compares each row of a given Tree to the known solution.
-        The left-most (class?) bin includes -inf. The right-most bin includes +inf. Those inbetween are 
-        by default confined to the spacing of 1.0 each, as defined by:
-
-            (solution - 1) < result <= solution
-
-        The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
-        origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
-        side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
-        negative and positive result.
-        """
-
-        if len(action_dict) > 1:
-            print_e('TODO multidimensional input. To be custom_done, there is no solution yet.')
-
-        skew = (unique_outputs_num / 2) - 1
-
-        rule11 = tf.equal(solution, 0)
-        rule12 = tf.less_equal(tf_result, 0 - skew)
-        rule13 = tf.logical_and(rule11, rule12)
-
-        rule21 = tf.equal(solution, unique_outputs_num - 1)
-        rule22 = tf.greater(tf_result, solution - 1 - skew)
-        rule23 = tf.logical_and(rule21, rule22)
-
-        rule31 = tf.less(solution - 1 - skew, tf_result)
-        rule32 = tf.less_equal(tf_result, solution - skew)
-        rule33 = tf.logical_and(rule31, rule32)
-
-        pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
-
-    elif kernel == 'regression':  # REGRESSION kernel
-
-        """
-        A very, very basic REGRESSION kernel which is not designed to perform well in the real world. It requires
-        that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
-        integrating a more sophisticated kernel.
-        """
-
-        pairwise_fitness = tf.abs(solution - tf_result)
-
-    elif kernel == 'match':  # MATCH kernel
-
-        """
-        This is used for demonstration purposes only.
-        """
-
-        # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-        rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-        pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), atol + rtol * tf.abs(tf_result)), tf.int32)
-
-    elif kernel == 'regression bounded':
-        """
-        special regression for float solutions and discrete labels
-        - if the solution is between labels, the difference is added
-        - if the solution > bound_pop (the highest possible label), difference 0 is added
-        ---
-        suitable for:
-        - not fitting labels beforehand
-        - small amount of labels
-        - orderable amount of labels
-        """
-
-        # TODO adjust this stuff
-        act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-        act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-        new_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
-        pairwise_fitness = tf.abs(solution - new_result)
-    elif kernel == 'regression discrete bounded penalise':
-        # 1. Check if correct: (float) Results are mapped to a decision.
-        raise
-    else:
-        raise Exception('Kernel type is wrong or missing. You entered {}'.format(kernel))
-
-    return pairwise_fitness
 
 
 def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):

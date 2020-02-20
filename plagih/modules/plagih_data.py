@@ -93,6 +93,8 @@ def data_from_csv(samples_file, test_size=0.2):
         data_act_one = [x[0] for x in data_act]
         action_min_max[0] = min(data_act_one)
         action_min_max[1] = max(data_act_one)
+    else:
+        raise Exception('Currently, only float actions are supported.')
 
     data_train_rows, data_train, data_control = data_load_data_split(data_obs, data_act, test_size=test_size)
 

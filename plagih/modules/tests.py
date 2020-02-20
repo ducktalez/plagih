@@ -168,4 +168,13 @@ def test_build_tree_grow_nodecount(verbose=False):
     return worked_fine
 
 
-test_build_tree_grow_nodecount(verbose=True)
+def test_tree_layers():
+
+    label_list = MountainCarExamples.tree_v2_list
+    modify_list = MountainCarExamples.tree_v2_modify
+    tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
+    layer_ids = tree_get_mutatable_layer(tree, 1, sum_layers=False)
+    print(layer_ids)  # should be [2, 7]
+
+
+test_tree_layers()

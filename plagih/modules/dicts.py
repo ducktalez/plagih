@@ -28,6 +28,7 @@ T_parsimony = 14
 T_num_lines = 15
 P_first_node = 1
 root_id = 1
+node_is_modifiable = '1'
 
 delete_this = True
 

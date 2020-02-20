@@ -795,7 +795,7 @@ class ExplainableGP(object):
             if not tree_test_check_children(tree):
                 print_e('Tree is not consistent:\n{}'.format(tree))
             elif not tree_check_child_xtype(tree, variables_dict=self.variables_dict):
-                print_e('Tree childrens xtypes are not correct:\n{}'.format(tree[N_label]))
+                print_e('Tree childrens xtypes are not correct:\n{}'.format(tree_labels(tree)))
             elif tree_node_get_arity(tree, root_id) == 0:
                 print_warning('w', 'Tree is only a root node')
             else:
@@ -989,7 +989,6 @@ class ExplainableGP(object):
         node_options = []
 
         if mode == 'same_type':  # only return a node with the same function type
-            # for i, label in enumerate(partner_tree[N_label][1:]):
             for i, label in enumerate(tree_get_ids(partner_tree, karoo=True, skip_nodes=1)):
                 partner_node_xtype = xtype_get(label, variables_dict=self.variables_dict)
                 if node_xtype == partner_node_xtype:
@@ -1036,38 +1035,6 @@ class ExplainableGP(object):
             success = False
 
         return a_id, b_id, success
-
-    # def treegp_crossover_insert(self, left_parent, left_ids, right_parent, right_ids):
-    #
-    #     """
-    #     Perform a crossover between nodes that are crossoverable in terms of function types
-    #     get: parent x, y and their branches
-    #     return: puts right_ids into parent_x
-    #     """
-    #
-    #     right_top_id = int(right_ids[0])
-    #     left_top_id = int(left_ids[0])
-    #
-    #     r_labels, r_aritys = tree_branch_get_label_list(right_parent, right_ids, tests=True)
-    #
-    #     if len(right_ids) == 1:
-    #         # if branch of new parent contains only one node (terminal)
-    #         # Remember: if a conversion was needed, a terminal would now have a function in front of it!
-    #
-    #         new_label = right_parent[N_label][right_top_id]
-    #         left_parent[N_label][left_top_id] = new_label  # replace label with that of a particular node in 'right_ids'
-    #         left_parent[N_arity][left_top_id] = 0  # set terminal arity
-    #
-    #         left_parent = np.delete(left_parent, left_ids[1:], axis=1)  # delete all nodes beneath point of mutation ('branch_top')
-    #         left_parent = tree_fix_link_child_karoo(left_parent)  # fix all child links
-    #         left_parent = evolve_node_renum_karoo(left_parent)  # renumber all 'node_id's
-    #     else:
-    #
-    #         right_core = core_from_labels(r_labels, r_aritys)
-    #         left_parent = tree_insert_subtree(left_parent, right_core, left_ids, tests=True)
-    #         left_parent = self.treegp_crossover_tree_prune(left_parent, self.config['tree_depth_max'])  # sfeh: not sure if this is necessary?
-    #
-    #     return left_parent
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Utility  functions to evolve a tree       |
@@ -1471,6 +1438,7 @@ def file_population_karoo(population, pop_name, path, gen_id):
 
     file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
 
+    # todo function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')
         if gen_id != 0:
@@ -1590,7 +1558,7 @@ def tree_get_parsimony(tree, parsimony_distance, origin_tree=None):
     if parsimony_distance == 'total_count_nodes':  # number of nodes
         return tree_get_last_nodeid(tree)  # returns the number of nodes
     elif parsimony_distance == 'total_tree_depth':
-        return tree[N_depth][1]  # returns the tree depth
+        return 0
 
     if parsimony_distance == 'ted':
         return tree_parsimony_ted(tree, origin_tree)

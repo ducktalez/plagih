@@ -35,39 +35,39 @@ delete_this = True
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4  #
 
-# TODO replace this with the op file down there
-ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b
-                   ast.Sub: tf.subtract,  # e.g., a - b
-                   ast.Mult: tf.multiply,  # e.g., a * b
-                   ast.Div: tf.divide,  # e.g., a / b
-                   ast.Pow: tf.pow,  # e.g., a ** 2
-                   ast.USub: tf.negative,  # e.g., -a
-                   ast.And: tf.logical_and,  # e.g., a and b
-                   ast.Or: tf.logical_or,  # e.g., a or b
-                   ast.Not: tf.logical_not,  # e.g., not a
-                   ast.Eq: tf.equal,  # e.g., a == b
-                   ast.NotEq: tf.not_equal,  # e.g., a != b
-                   ast.Lt: tf.less,  # e.g., a < b
-                   ast.LtE: tf.less_equal,  # e.g., a <= b
-                   ast.Gt: tf.greater,  # e.g., a > b
-                   ast.GtE: tf.greater_equal,  # e.g., a >= 1
-                   ast.BitAnd: tf.logical_and,  # DON'T USE tf.bitwise.bitwise_and
-                   'abs': tf.abs,  # e.g., abs(a)
-                   'sign': tf.sign,  # e.g., sign(a)
-                   'square': tf.square,  # e.g., square(a)
-                   'sqrt': tf.sqrt,  # e.g., sqrt(a)
-                   'pow': tf.pow,  # e.g., pow(a, b)
-                   'log': tf.math.log,  # e.g., log(a)
-                   'log1p': tf.math.log1p,  # e.g., log1p(a)
-                   'cos': tf.cos,  # e.g., cos(a)
-                   'sin': tf.sin,  # e.g., sin(a)
-                   'tan': tf.tan,  # e.g., tan(a)
-                   'acos': tf.acos,  # e.g., acos(a)
-                   'asin': tf.asin,  # e.g., asin(a)
-                   'atan': tf.atan,  # e.g., atan(a)
-                   'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
-                   'Mini': tf.math.minimum,  # if reduce_min does not work...
-                   'Maxi': tf.math.maximum}
+# # DONE replace this with the op file down there
+# ast_tensor_dict = {ast.Add: tf.add,  # e.g., a + b
+#                    ast.Sub: tf.subtract,  # e.g., a - b
+#                    ast.Mult: tf.multiply,  # e.g., a * b
+#                    ast.Div: tf.divide,  # e.g., a / b
+#                    ast.Pow: tf.pow,  # e.g., a ** 2
+#                    ast.USub: tf.negative,  # e.g., -a
+#                    ast.And: tf.logical_and,  # e.g., a and b
+#                    ast.Or: tf.logical_or,  # e.g., a or b
+#                    ast.Not: tf.logical_not,  # e.g., not a
+#                    ast.Eq: tf.equal,  # e.g., a == b
+#                    ast.NotEq: tf.not_equal,  # e.g., a != b
+#                    ast.Lt: tf.less,  # e.g., a < b
+#                    ast.LtE: tf.less_equal,  # e.g., a <= b
+#                    ast.Gt: tf.greater,  # e.g., a > b
+#                    ast.GtE: tf.greater_equal,  # e.g., a >= 1
+#                    ast.BitAnd: tf.logical_and,  # DON'T USE tf.bitwise.bitwise_and
+#                    'abs': tf.abs,  # e.g., abs(a)
+#                    'sign': tf.sign,  # e.g., sign(a)
+#                    'square': tf.square,  # e.g., square(a)
+#                    'sqrt': tf.sqrt,  # e.g., sqrt(a)
+#                    'pow': tf.pow,  # e.g., pow(a, b)
+#                    'log': tf.math.log,  # e.g., log(a)
+#                    'log1p': tf.math.log1p,  # e.g., log1p(a)
+#                    'cos': tf.cos,  # e.g., cos(a)
+#                    'sin': tf.sin,  # e.g., sin(a)
+#                    'tan': tf.tan,  # e.g., tan(a)
+#                    'acos': tf.acos,  # e.g., acos(a)
+#                    'asin': tf.asin,  # e.g., asin(a)
+#                    'atan': tf.atan,  # e.g., atan(a)
+#                    'Ifte': tf.compat.v2.where,  # e.g., Ifte(a, b, c)
+#                    'Mini': tf.math.minimum,  # if reduce_min does not work...
+#                    'Maxi': tf.math.maximum}
 
 op = {'float': {'name': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},
       'int': {'name': 'int', 'arity': 0, 'xtype': '2f', 'tf': 'ä'},

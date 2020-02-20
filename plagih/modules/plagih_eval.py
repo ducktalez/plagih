@@ -308,7 +308,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                 # return ['-', ['0', ast_convert_from_expr_recursive(node.operand, build=True)]]
             return [op[type(node.op)]['name'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
         else:
-            return ast_tensor_dict[type(node.op)](
+            return op[type(node.op)]['tf'](
                 ast_convert_from_expr_recursive(node.operand, tensors=tensors))
 
     # Arity 2
@@ -323,7 +323,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                     [ast_convert_from_expr_recursive(node.left, build=True),
                      ast_convert_from_expr_recursive(node.right, build=True)]]
         else:
-            return ast_tensor_dict[type(node.op)](
+            return op[type(node.op)]['tf'](
                 ast_convert_from_expr_recursive(node.left, tensors=tensors),
                 ast_convert_from_expr_recursive(node.right, tensors=tensors))
 
@@ -333,7 +333,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
         if build:
             return ast_chain_bool(node.values, op[type(node.op)]['name'], build=True)
         else:
-            return ast_chain_bool(node.values, ast_tensor_dict[type(node.op)], tensors=tensors)
+            return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
         if prnt:
@@ -358,7 +358,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                          ast_convert_from_expr_recursive(node.args[1], build=True),
                          ast_convert_from_expr_recursive(node.args[2], build=True)]]
             else:
-                return ast_tensor_dict[node.func.id](tf.dtypes.cast(
+                return op[node.func.id]['tf'](tf.dtypes.cast(
                     ast_convert_from_expr_recursive(node.args[0], tensors=tensors), tf.bool),
                     ast_convert_from_expr_recursive(node.args[1], tensors=tensors),
                     ast_convert_from_expr_recursive(node.args[2], tensors=tensors))
@@ -369,7 +369,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             if build:
                 return [node.func.id, [ast_convert_from_expr_recursive(node.args[0], build=True)]]
             else:
-                return tf.dtypes.cast(*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args], dtype=ast_tensor_dict[node.func.id])
+                return tf.dtypes.cast(*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args], dtype=op[node.func.id]['tf'])
 
         elif len(node.args) <= 2:
             if prnt:
@@ -395,7 +395,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                 else:
                     raise Exception('This arity is not supported')
             else:
-                return ast_tensor_dict[node.func.id](*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args])
+                return op[node.func.id]['tf'](*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args])
 
             # If nothing matched
         else:
@@ -446,11 +446,11 @@ def ast_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):
 
     if len(comparators) > 2:
         print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')
-        return tf.logical_and(ast_tensor_dict[type(ops[0])](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
+        return tf.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if prnt:
             return '({} {} {})'.format(x, op[type(ops[0])]['name'], y)
         if build:
             return [op[type(ops[0])]['name'], [x, y]]
         else:
-            return ast_tensor_dict[type(ops[0])](x, y)
+            return op[type(ops[0])]['tf'](x, y)

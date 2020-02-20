@@ -11,23 +11,22 @@ from plagih.modules.plagih_data import *
 def create_config_dict():
     config_dict = {
         'root_dir': Path.cwd(),
-        'name': 'MTC_tree_',
+        'name': 'Plagih_tree',
 
         'kernel_name': 'regression',  # [regression, regression bounded, classification, match]
         'precision': 3,  # rounding the fitness
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'print_type': 'gggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'ggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
         'tree_depth_base': 7,
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 5,
-        'invent_branch_max_nodes': 32,  # This is the amount of max nodes
         'parsimony_tmp': 15,
         'gen_id_max_parsimony': 50,
-        'parsimony_max': 200,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
+        'parsimony_max': 80,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
         'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
         'gen_max': 1000,  # Maximum amount of generations
         'complexity_measure': 'ted',
@@ -43,11 +42,12 @@ def create_config_dict():
                    'gen_monitor': 1,        # in gen counts
                    'gen_save': 1},          # in gen counts
         'evolve_rates': {'repro one': 0.05, 'repro pareto': 0.05, 'repro reduced one': 0.05,
+                         'filter floats': 0.05,
                          'point mutate function': 0.05,
                          'branch mutate insert': 0.1,
                          'crossover branches': 0.40,
                          'random from origin': 0.25, 'random from scratch': 0,
-                         'filter floats': 0.05},
+                         },
         'time_max': int(60 * 60 * 12),  # 60 = 1 min
         'float_accuracy': 200
     }

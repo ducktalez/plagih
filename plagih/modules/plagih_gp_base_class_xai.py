@@ -75,7 +75,8 @@ class ExplainableGP(object):
         self.monitoring_dict = {'genepool_size': {},
                                 'fitness_average': {},
                                 'best_candidate': {},
-                                'total_found_trees': {}}
+                                'total_found_trees': {},
+                                'complexity_average': {}}
 
         self.file_directories_create(self.config['root_dir'])
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
@@ -636,7 +637,6 @@ class ExplainableGP(object):
 
         for tree_id in range(pop_size):
             tree = self.tree_evolve_branch_multiple(tree_origin)
-            tree = tree_set_id(tree, 1)
 
             self.pop_append(tree, last_modification='first')
 
@@ -650,13 +650,17 @@ class ExplainableGP(object):
         num_new_branches = len(node_ids)
         if num_new_branches > 3:
             print_warning('w', 'That is a lot of new branches: {}'.format(num_new_branches))
+
+        each_nodes = int(self.parsimony_max / num_new_branches)
+
         for i in range(num_new_branches):
+            # todo could gat last non modify layer instead
             node_ids = tree_get_mutatable_layer(tree, 0)
             node_id = node_ids[i]
             old_branch = tree_get_branch(tree, node_id, karoo=True)
-            tree = self.tree_insert_branch_random(tree_origin, old_branch)  # tree with new branch
 
-        tree = tree_set_id(tree, 1)
+            tree = self.tree_insert_branch_random(tree_origin, old_branch, max_nodes=each_nodes)  # tree with new branch
+
         return tree
 
     def gen_random_from_origin(self, repro_rate):
@@ -667,7 +671,6 @@ class ExplainableGP(object):
             tree_origin = self.origin['tree'].copy()
             for i in range(repro_rate):
                 tree = self.tree_evolve_branch_multiple(tree_origin)
-                tree = tree_set_id(tree, 1)
 
                 self.pop_append(tree, last_modification='miss(br)')
 
@@ -712,10 +715,8 @@ class ExplainableGP(object):
 
             tourn_winner = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_nodes(tourn_winner, no_root=True)
-            if len(node_ids) == 0:
-                print_warning('ww', 'shit happens', tourn_winner)
             node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_branch(tourn_winner, node)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_ids = tree_get_branch(tourn_winner, node, karoo=True)  # select point of mutation and all nodes beneath [6, 9, 10]
             tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
 
             self.pop_append(tourn_winner, last_modification='branch')
@@ -753,7 +754,7 @@ class ExplainableGP(object):
 
             if force_convert:
                 self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
-                left_xtype = xtype_get_v2(tree_get_label(left_tree, left_id), variables_dict=self.variables_dict)
+                left_xtype = xtype_get(tree_get_label(left_tree, left_id), variables_dict=self.variables_dict)
                 conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
                 right_labels.insert(0, conv_to_left)
                 right_aritys.insert(0, 1)
@@ -793,7 +794,7 @@ class ExplainableGP(object):
                 print_e('Tree is not consistent:\n{}'.format(tree))
             elif not tree_check_child_xtype(tree, variables_dict=self.variables_dict):
                 print_e('Tree childrens xtypes are not correct:\n{}'.format(tree[N_label]))
-            elif tree_node_get_arity(tree, root_id, karoo=True) == 0:
+            elif tree_node_get_arity(tree, root_id) == 0:
                 print_warning('w', 'Tree is only a root node')
             else:
                 self.population_tmp.append(tree)
@@ -914,7 +915,7 @@ class ExplainableGP(object):
         insert_id = None
         for node_id in node_ids:
             label = tree_get_label(tree, node_id)
-            xtype = xtype_get_v2(label, variables_dict=self.variables_dict)  # '>' -> 'f2b'
+            xtype = xtype_get(label, variables_dict=self.variables_dict)  # '>' -> 'f2b'
             if label == '**' and tree_node_get_child(tree, node_id, 1) != 'Power':  # todo
                 insert_id = node_id
                 break
@@ -961,10 +962,10 @@ class ExplainableGP(object):
         for node_id in range(root_id, len(tree[3])):
 
             node_depth = tree_get_label(tree, node_id)
-            node_arity = tree_node_get_arity(tree, node_id, karoo=True)
+            node_arity = tree_node_get_arity(tree, node_id)
             if node_depth == max_depth and node_arity > 0:  # replace this node with terminal
                 label = tree_get_label(tree, node_id)
-                node_xtype = xtype_get_v2(label, variables_dict=self.variables_dict)
+                node_xtype = xtype_get(label, variables_dict=self.variables_dict)
                 tree = tree_node_set_arity(tree, node_id, 0)
                 new_term = self.xtype_choose_term(node_xtype)  # replace label
                 tree = tree_node_set_label(tree, node_id, new_term)
@@ -982,13 +983,13 @@ class ExplainableGP(object):
         -> Crossover: Returns a node_id in the partner tree, that can be swapped
         """
 
-        node_xtype = xtype_get_v2(function_label, variables_dict=self.variables_dict)
+        node_xtype = xtype_get(function_label, variables_dict=self.variables_dict)
         node_options = []
 
         if mode == 'same_type':  # only return a node with the same function type
             # for i, label in enumerate(partner_tree[N_label][1:]):
-            for i, label in enumerate(tree_iterate_ids(partner_tree, skip_nodes=1)):
-                partner_node_xtype = xtype_get_v2(label, variables_dict=self.variables_dict)
+            for i, label in enumerate(tree_get_ids(partner_tree, karoo=True, skip_nodes=1)):
+                partner_node_xtype = xtype_get(label, variables_dict=self.variables_dict)
                 if node_xtype == partner_node_xtype:
                     node_options.append(i + 1)  # +1, we skipped the first element
 
@@ -1014,14 +1015,14 @@ class ExplainableGP(object):
         a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
         a_id = np.random.choice(a_ids)
         a_node_label = tree_get_label(a_tree, a_id)
-        a_xtype = xtype_get_v2(a_node_label, variables_dict=self.variables_dict)
+        a_xtype = xtype_get(a_node_label, variables_dict=self.variables_dict)
 
         # create a list from parent b with same xtype
         b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
         b_sametype_ids = b_node_ids[:]
         for b_id in b_node_ids:
             b_label = tree_get_label(b_tree, b_id)
-            b_xtype = xtype_get_v2(b_label, variables_dict=self.variables_dict)
+            b_xtype = xtype_get(b_label, variables_dict=self.variables_dict)
             if not xtype_equi_outcome(b_xtype, a_xtype):
                 b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
@@ -1070,7 +1071,7 @@ class ExplainableGP(object):
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def tree_insert_branch_random(self, tree, branch_ids, grow_method='depth_base_random'):
+    def tree_insert_branch_random(self, tree, branch_ids, grow_method='nodes_max_uniform', max_nodes=None):
 
         """
         # TODO would be nicer is this just returned a new branch and insert is separately
@@ -1086,7 +1087,7 @@ class ExplainableGP(object):
 
         # Get information about the top-node we have to replace
         old_label = tree_get_label(tree, branch_ids[0])
-        old_xtype = xtype_get_v2(old_label, variables_dict=self.variables_dict)
+        old_xtype = xtype_get(old_label, variables_dict=self.variables_dict)
 
         if grow_method == 'depth_base_random':
             """
@@ -1103,17 +1104,14 @@ class ExplainableGP(object):
             # Build a new tree
             label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.action_dict, self.func_array, min_depth=self.config['tree_depth_min'])
 
-        elif grow_method == 'num_nodes':
-            return None
         elif grow_method == 'nodes_max_uniform':
             """
             We allow a certain amount of new nodes instead tree depth.
             This could be calculated respectively to the parsimony dim_y
             which the tree might have up his sleeve
             """
-            max_nodes = self.config['invent_branch_max_nodes']
-            max_nodes = self.config['parsimony_max']
-            # todo anpassen, ausrechnen
+            if not max_nodes:
+                max_nodes = self.config['parsimony_max']  # todo too high
             label_list, arity_list = invent_label_list_nodes_grow(old_xtype, max_nodes, self.variables_dict, self.func_array)
 
         else:
@@ -1304,21 +1302,24 @@ class ExplainableGP(object):
 
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='Average Fitness', plt_y_label='Fitness', linestyle='-')
+            self.plot_end(data_tuples, path_plots, plt_title='average fitness', plt_y_label='fitness', linestyle='-')
 
         if self.monitor_dict['genepool_size'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['genepool_size'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='Genepool size', plt_y_label='Amount', linestyle='')
+            self.plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='')
+
+        data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
+        self.plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes', linestyle='-')
 
         data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='Number of created Trees', plt_y_label='Amount', linestyle='')
+        self.plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='')
 
         data_tuples = sorted(list(self.pareto.items()))
-        self.plot_end(data_tuples, path_plots, plt_title='Pareto Dominant Candidates', plt_x_label='Parsimony', plt_y_label='Fitness', linestyle='dashed',
+        self.plot_end(data_tuples, path_plots, plt_title='pareto dominant candidates', plt_x_label='parsimony', plt_y_label='fitness', linestyle='dashed',
                       step_where='pre', max_right=30)  # todo 30 is related to parsimony_max
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='Best candidate', plt_x_label='Generation', plt_y_label='Fitness', linestyle='dashed',
+        self.plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation', plt_y_label='fitness', linestyle='dashed',
                       step_where='post')
 
         return
@@ -1353,7 +1354,14 @@ class ExplainableGP(object):
 
         average_fitness = fitness_train_sum / max(count_success, 1)
         self.monitoring_dict['fitness_average'][gen_id] = average_fitness
+
         self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
+
+        complexity_sum = 0
+        for tree in self.population_tmp:
+            complexity_sum += len(tree_get_ids(tree, karoo=True))
+        avg_complexity = complexity_sum / len(self.population_tmp)
+        self.monitoring_dict['complexity_average'][gen_id] = avg_complexity
 
         return
 

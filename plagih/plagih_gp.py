@@ -17,7 +17,7 @@ def create_config_dict():
         'precision': 3,  # rounding the fitness
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'crossover_type_safety_mode': 'replace_same_types',
-        'print_type': 'ggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'gggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'gene_pool_threshold': 0.5,  # this amount of percent a tree needs to fulfill to be in the gene pool
         'tree_growth': 'depth_base_random',
@@ -117,7 +117,7 @@ def run_mountaincar_scratch_fix(config_dict, path):
 
 
 def run_mountaincar_test(config_dict, path):
-    config_dict['name'] = 'MTC_test r3'
+    config_dict['name'] = 'MTC_test'
     config_dict['root_dir'] = path
     config_dict['pop_max'] = 200
     config_dict['gen_max'] = 12

@@ -64,7 +64,7 @@ def xtype_get_child_todos(label, node_arity, variables_dict=None):
     """
     reverse stuff
     """
-    xtype = xtype_get_v2(label, variables_dict=variables_dict)
+    xtype = xtype_get(label, variables_dict=variables_dict)
     if xtype == 'b2f2f':
         return ['2b', '2f', '2f']
     else:
@@ -227,7 +227,7 @@ def xtype_get_func_list(func_array, xtype=None, arity=None):
     return func_list
 
 
-def xtype_get_v2(label, variables_dict=None, node_arity=None):
+def xtype_get(label, variables_dict=None, node_arity=None):
     """
     returns xtype for a label
     variables_dict and action_dict MUST be set

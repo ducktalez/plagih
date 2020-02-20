@@ -652,14 +652,16 @@ class ExplainableGP(object):
             print_warning('w', 'That is a lot of new branches: {}'.format(num_new_branches))
 
         each_nodes = int(self.parsimony_max / num_new_branches)
+        # todo arbitrarily slice the todo nodes into subtrees. check if there are more subtrees than todo nodes possible?
 
         for i in range(num_new_branches):
             # todo could gat last non modify layer instead
             node_ids = tree_get_mutatable_layer(tree, 0)
             node_id = node_ids[i]
             old_branch = tree_get_branch(tree, node_id, karoo=True)
+            this_often = np.random.randint(6, each_nodes)  # todo
 
-            tree = self.tree_insert_branch_random(tree_origin, old_branch, max_nodes=each_nodes)  # tree with new branch
+            tree = self.tree_insert_branch_random(tree_origin, old_branch, max_nodes=this_often)  # tree with new branch
 
         return tree
 

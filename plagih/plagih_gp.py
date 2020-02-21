@@ -118,6 +118,8 @@ def run_mountaincar_scratch_fix(config_dict, path):
 
 def run_mountaincar_test(config_dict, path):
     config_dict['name'] = 'MTC_test'
+    test_run = Path.cwd() / folder_runs / config_dict['name']
+    print('Test dir is:', test_run)
     config_dict['root_dir'] = path
     config_dict['pop_max'] = 200
     config_dict['gen_max'] = 12
@@ -130,11 +132,7 @@ def run_mountaincar_test(config_dict, path):
 
 def run(root_dir):
     # create_samples_pickle(root_dir)
-    # mtc_runs = [mountaincar_v1, mountaincar_v2, mountaincar_v3, mountaincar_v4_scratch]
     config_dict = create_config_dict()
-    gp_test = run_mountaincar_test(config_dict, root_dir)
-    gp_test.plagih_gp_run()
-    # gp_1 = mountaincar_v4_scratch(config_dict, root_dir)
-    # gp_2 = mountaincar_test(config_dict, root_dir)
-    # gp_3 = mountaincar_v1(config_dict, root_dir)
-    # gp_1.plagih_gp_run()
+    gp = run_mountaincar_origin2_fix(config_dict, root_dir)
+    gp.plagih_gp_run()
+

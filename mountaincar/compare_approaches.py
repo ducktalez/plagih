@@ -51,7 +51,6 @@ def mtc_compare_approaches(approach1, approach2):
     env.close()
 
     # rewards = QLearning(env, 0.2, 0.9, 0.8, 0.001, episodes_q, 1000)
-    # # TODO plot nums auslagern
 
     plt.plot(reward_sample_interval * (np.arange(len(episode_rewards1)) + 1), episode_rewards1, label=str(approach1))
     plt.plot(reward_sample_interval * (np.arange(len(episode_rewards1)) + 1), episode_rewards2, label=str(approach2));

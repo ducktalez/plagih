@@ -174,8 +174,8 @@ class ExplainableGP(object):
                 time_evolve = time.perf_counter()
                 self.print_g('ggg', '-->Evolve: ({}) took: {:4.2f}sec.'.format(name, time.perf_counter() - time_evolve))
 
-                evolve_num = int(self.evolve_rates[name] * self.config['pop_max'])
-                gp_function(evolve_num)
+                repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
+                gp_function(repro_rate)
 
             self.gen_finalize()
 
@@ -501,7 +501,6 @@ class ExplainableGP(object):
                 self.pareto.pop(parsim)
                 self.printpl('aa', 'Pareto entry at {} got obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(parsim, last_pareto_fit, fitness))
 
-
         return
 
     def pop_parsimony_best_update(self, gene_pool):
@@ -667,7 +666,7 @@ class ExplainableGP(object):
             for i in range(repro_rate):
                 tree = self.tree_evolve_branch_multiple(tree_origin)
 
-                self.pop_append(tree, last_modification='miss(br)')
+                self.pop_append(tree, last_modification='r(origin)')
 
         return
 
@@ -690,7 +689,7 @@ class ExplainableGP(object):
             tree = p_tree.get_uninstanced_tree()
             tree = tree_set_id(tree, i)
 
-            self.pop_append(tree, last_modification='random')
+            self.pop_append(tree, last_modification='r(scratch)')
 
         return
 

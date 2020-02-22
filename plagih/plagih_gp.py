@@ -24,14 +24,15 @@ def create_config_dict():
         'tree_depth_base': 7,
         'tree_depth_max': 50,  # [3...10]			maximum Tree depth for entire run
         'tree_depth_min': 5,
-        'branch_nodes_base': 32,
+        'tree_branch_nodes_base': 32,
         'parsimony_tmp': 15,
         'gen_id_max_parsimony': 50,
         'parsimony_max': 80,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
         'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
         'gen_max': 1000,  # Maximum amount of generations
         'complexity_measure': 'ted',
-        'force_new_run': False,  # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again # todo delete old files?
+        'force_new_run': False,  # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
+        'delete_old_file': False,  # todo delete old files. be very careful
         'tourn_size': 7,  # [7 per 100]		number of trees selected for tournament
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
@@ -134,6 +135,6 @@ def run_mountaincar_test(config_dict, path):
 def run(root_dir):
     # create_samples_pickle(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_v1(config_dict, root_dir)
+    gp = run_mountaincar_v4(config_dict, root_dir)
     gp.plagih_gp_run()
 

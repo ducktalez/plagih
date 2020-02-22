@@ -383,7 +383,7 @@ def pop_tree_choose(population):
     """
     Returns a random tree_id from a population
     """
-    return np.random.randint(1, len(population))
+    return np.random.randint(1, len(population))  # 1-len is correct. Tested it several times now.
 
 
 def pop_copy_genepool(population_tmp, gene_pool, gen_id):
@@ -525,15 +525,12 @@ def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, d
 
 def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     """
-    todo test this function
-    todo the layer on a new tree is always root
     # todo could get last non modify layer instead
     insert a (random) number of branches at the first possible "layer"
     (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
     - get these nodes, randomly choose a subset of those
     - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
     - split the amount of nodes up (randomly) and add these new branches to the tree
-    # todo idea crossover with same layer functions? backpropagated?
     """
 
     tree_origin = tree.copy()
@@ -1726,6 +1723,34 @@ def tree_normalize_exponentiation(tree):
     return tree
 
 
+def tree_get_layer_fix(tree):
+    """
+    Returns the last layer with fix nodes
+    """
+
+    node_ids = []
+    fix_ids = tree_get_fix_nodes(tree)
+    print('all fix ids', fix_ids)
+    if len(fix_ids) == 0:
+        node_ids = [None]  # todo is this correct?
+    else:
+        for node_id in fix_ids:
+
+            only_fix_childs = True  # we assume this
+            child_ids = tree_node_get_childs(tree, node_id)
+            for child_id in child_ids:
+                print('node {} has child: {}, which is Modifiable? {}'.format(node_id, child_id, tree_node_is_modifiable(tree, child_id)))
+                if tree_node_is_modifiable(tree, child_id):
+                    only_fix_childs = False
+
+            if not only_fix_childs:  #
+                node_ids.append(node_id)
+
+    print('asd', node_ids)
+
+    return node_ids
+
+
 def tree_get_mutatable_layer_lv0(tree):
     """
     Returns a list with mutatable ids on the outside
@@ -1769,7 +1794,7 @@ def tree_get_mutatable_extendables(tree):
     return core_ids
 
 
-def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=False):
+def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True):
     """
     Returns a list with mutatable ids which are *lvl_goal* layers away from non modifiable nodes
     last_leaves: if you want so save all leave nodes aswell
@@ -1792,6 +1817,8 @@ def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=False
 
     if get_closest:
         lvl_best = min(lvl_count, lvl_goal)
+    elif lvl_count > lvl_goal:  # want to get nodes on layer 20 no matter what?
+        return []
     else:
         lvl_best = lvl_goal
 

@@ -168,13 +168,43 @@ def test_build_tree_grow_nodecount(verbose=False):
     return worked_fine
 
 
-def test_tree_layers():
+def get_two_sample_trees():
 
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
-    tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
-    layer_ids = tree_get_mutatable_layer(tree, 1, sum_layers=False)
-    print(layer_ids)  # should be [2, 7]
+    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    tree1 = p_tree.get_uninstanced_tree()
+
+    p_tree = Plagih_Tree(label_list)
+    tree2 = p_tree.get_uninstanced_tree()
+    return tree1, tree2
+
+
+def test_tree_layers():
+
+    tree1, tree2 = get_two_sample_trees()
+    print(tree1, '\n\n', tree2)
+
+    for tree in [tree1, tree2]:
+
+        print('\nnew tree')
+        layer_ids = tree_get_layer_fix(tree)
+        print('Last non-modifiable layer:', layer_ids)  # should be [2, 7]
+        layer_ids = tree_get_mutatable_layer_lv0(tree)
+        print('Fist modifiable layer:', layer_ids)  # should be [2, 7]
+        layer_ids = tree_get_mutatable_layer(tree, 0, sum_layers=False)
+        print('Layer dist = 0:', layer_ids)  # should be [2, 7]
+        layer_ids = tree_get_mutatable_layer(tree, 1, sum_layers=False)
+        print('Layer dist = 1:', layer_ids)  # should be [2, 7]
+        layer_ids = tree_get_mutatable_layer(tree, 2, sum_layers=False)
+
+        print('Layer dist = 2:', layer_ids)  # should be [2, 7]
+        layer_ids = tree_get_mutatable_layer(tree, 0, sum_layers=True)
+        print('Layer dist = 0, sum:', layer_ids)  # should be [2, 7]
+        layer_ids = tree_get_mutatable_layer(tree, 1, sum_layers=True)
+        print('Layer dist = 1, sum:', layer_ids)  # should be [2, 7]
+        layer_ids = tree_get_mutatable_layer(tree, 2, sum_layers=True)
+        print('Layer dist = 2, sum:', layer_ids)  # should be [2, 7]
 
 
 def test_tree_evolve_branch_multiple():
@@ -191,4 +221,4 @@ def test_tree_evolve_branch_multiple():
     print(tree)
 
 
-test_tree_evolve_branch_multiple()
+test_tree_layers()

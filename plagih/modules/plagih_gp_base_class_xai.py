@@ -670,7 +670,7 @@ class ExplainableGP(object):
         else:
             raise
         for i in range(pop_size):
-            max_nodes = np.random.randint(10, self.config['parsimony_max'][1])  # todo 3 auslagern und testen ob 3 entstehen kann
+            max_nodes = np.random.randint(self.config['tree_branch_nodes_base'], self.parsimony_max)  # todo 3 auslagern und testen ob 3 entstehen kann
             label_list, arity_list = invent_label_list_nodes_grow(xtype, max_nodes, self.variables_dict, self.func_array)
             p_tree = Plagih_Tree(label_list)
             tree = p_tree.get_uninstanced_tree()
@@ -706,7 +706,7 @@ class ExplainableGP(object):
                                                             depth_goal=self.config['tree_depth_base'])
             elif self.config['tree_growth'] == 'v2':
                 tourn_winner = tree_evolve_insert_branch_v2(tourn_winner, branch_nodes_ids, self.variables_dict, self.func_array,
-                                                            self.config['branch_nodes_base'])
+                                                            self.config['tree_branch_nodes_base'])
             else:
                 raise Exception('Not known')
 

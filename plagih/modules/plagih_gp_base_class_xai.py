@@ -10,7 +10,7 @@ Explaination:
 Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
 """
-
+import random
 import sys
 import sklearn.metrics as skm
 from datetime import datetime
@@ -129,10 +129,19 @@ class ExplainableGP(object):
         self.print_g('gg', 'Preparing to evolve first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        if self.origin_exists():
-            self.pop_first_create_from_origin(self.config['pop_max'], self.origin['tree'])
+        rate_o = self.evolve_rates['random from origin']
+        rate_s = self.evolve_rates['random from scratch']
+        pop_max = self.config['pop_max']
+
+        if self.origin_exists() and rate_o > 0:
+            rate_sum = rate_s + rate_o
+            rate_s = (rate_s / rate_sum) * pop_max
+            rate_o = (rate_o / rate_sum) * pop_max
+            self.gen_random_from_origin(rate_o)
         else:
-            self.gen_random_from_scratch(self.config['pop_max'])
+            rate_s = pop_max
+
+        self.gen_random_from_scratch(rate_s)
 
         self.gen_finalize()
         file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
@@ -438,7 +447,7 @@ class ExplainableGP(object):
         gene_pool = {}
         fail_count = [0, 0]
 
-        for tree_num in range(0, len(population)):  # todo was 1 not from 0
+        for tree_num in range(len(population)):
             tree = population[tree_num]
             try:
                 if self.origin_exists():
@@ -621,6 +630,51 @@ class ExplainableGP(object):
 
         return
 
+    def tree_evolve_branch_multiple(self, tree, max_nodes):
+        """
+        todo test this function
+        todo the layer on a new tree is always root
+        # todo could get last non modify layer instead
+        insert a (random) number of branches at the first possible "layer"
+        (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
+        - get these nodes, randomly choose a subset of those
+        - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
+        - split the amount of nodes up (randomly) and add these new branches to the tree
+        # todo idea crossover with same layer functions? backpropagated?
+        """
+
+        tree_origin = tree.copy()
+
+        node_ids = tree_get_mutatable_layer(tree, 0)
+        max_branches = len(node_ids)
+        print('sdf', max_branches)
+        num_branches = np.random.randint(1, max_branches)
+
+        insert_ids = []
+        num_del_nodes = 0
+        insert_indices = random.sample(range(0, max_branches), num_branches)
+        for index in insert_indices:
+            insert_id = node_ids.pop(index)
+            insert_ids.append(insert_id)
+            num_del_nodes += len(tree_get_branch(tree, insert_id, karoo=True))
+
+        new_nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - num_del_nodes)
+        num_nodes = []
+        for i in range(num_branches-1):
+            num_new_nodes = np.random.randint(1, (1/i)*new_nodes_left)
+            new_nodes_left -= num_new_nodes
+            num_nodes.append(num_new_nodes)
+        else:
+            num_nodes.append(new_nodes_left)
+
+        for i in insert_ids:
+            node_ids = tree_get_mutatable_layer(tree, 0)
+            node_id = node_ids[i]
+            old_branch = tree_get_branch(tree, node_id, karoo=True)
+            tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, self.variables_dict, self.func_array, max_nodes=num_nodes[i])  # tree with new branch
+
+        return tree
+
     def pop_first_create_from_origin(self, pop_size, tree_origin):
         """
         Constructs the first generation
@@ -631,31 +685,10 @@ class ExplainableGP(object):
         tree_origin = tree_origin.copy()
 
         for tree_id in range(pop_size):
-            tree = self.tree_evolve_branch_multiple(tree_origin)
+            tree = self.tree_evolve_branch_multiple(tree_origin, self.parsimony_max)
             self.pop_append(tree, last_modification='first')
 
         self.print_g('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
-
-    def tree_evolve_branch_multiple(self, tree):
-        """
-        """
-        tree_origin = tree.copy()
-        node_ids = tree_get_mutatable_layer(tree, 0)
-        num_new_branches = len(node_ids)
-
-        each_nodes = int(self.parsimony_max / num_new_branches)
-        # todo arbitrarily slice the todo nodes into subtrees. check if there are more subtrees than todo nodes possible?
-
-        for i in range(num_new_branches):
-            # todo could gat last non modify layer instead
-            node_ids = tree_get_mutatable_layer(tree, 0)
-            node_id = node_ids[i]
-            old_branch = tree_get_branch(tree, node_id, karoo=True)
-            this_often = np.random.randint(6, each_nodes)  # todo
-
-            tree = self.tree_insert_branch_random(tree_origin, old_branch, max_nodes=this_often)  # tree with new branch
-
-        return tree
 
     def gen_random_from_origin(self, repro_rate):
         """
@@ -664,8 +697,7 @@ class ExplainableGP(object):
         if self.origin_exists():
             tree_origin = self.origin['tree'].copy()
             for i in range(repro_rate):
-                tree = self.tree_evolve_branch_multiple(tree_origin)
-
+                tree = self.tree_evolve_branch_multiple(tree_origin, self.parsimony_max)
                 self.pop_append(tree, last_modification='r(origin)')
 
         return
@@ -712,7 +744,16 @@ class ExplainableGP(object):
             node_ids = tree_get_mutatable_nodes(tourn_winner, no_root=True)
             node = np.random.choice(node_ids)
             branch_nodes_ids = tree_get_branch(tourn_winner, node, karoo=True)  # select point of mutation and all nodes beneath [6, 9, 10]
-            tourn_winner = self.tree_insert_branch_random(tourn_winner, branch_nodes_ids)
+            if self.config['tree_growth'] == 'v1':
+                tourn_winner = tree_evolve_insert_branch_v1(tourn_winner, branch_nodes_ids, self.variables_dict, self.func_array,
+                                                            depth_max=self.config['tree_depth_max'],
+                                                            depth_min=self.config['tree_depth_min'],
+                                                            depth_goal=self.config['tree_depth_base'])
+            elif self.config['tree_growth'] == 'v2':
+                tourn_winner = tree_evolve_insert_branch_v2(tourn_winner, branch_nodes_ids, self.variables_dict, self.func_array,
+                                                            self.config['branch_nodes_base'])
+            else:
+                raise Exception('Not known')
 
             self.pop_append(tourn_winner, last_modification='branch')
 
@@ -749,7 +790,7 @@ class ExplainableGP(object):
 
             if force_convert:
                 self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
-                left_xtype = xtype_get(tree_get_label(left_tree, left_id), self.variables_dict)
+                left_xtype = xtype_get(tree_node_get_label(left_tree, left_id), self.variables_dict)
                 conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
                 right_labels.insert(0, conv_to_left)
                 right_aritys.insert(0, 1)
@@ -852,31 +893,6 @@ class ExplainableGP(object):
 
         return tourn_winner
 
-    def tree_evolve_crossover_get_partner_node_id(self, function_label, partner_tree, partner_branch_id, mode='same_type'):
-        """
-        -> Crossover: Returns a node_id in the partner tree, that can be swapped
-        """
-
-        node_xtype = xtype_get(function_label, self.variables_dict)
-        node_options = []
-
-        if mode == 'same_type':  # only return a node with the same function type
-            for i, label in enumerate(tree_get_ids(partner_tree, karoo=True, skip_nodes=1)):
-                partner_node_xtype = xtype_get(label, self.variables_dict)
-                if node_xtype == partner_node_xtype:
-                    node_options.append(i + 1)  # +1, we skipped the first element
-
-            if node_options:
-                np.random.shuffle(node_options)  # otherwise, the first closest element is always taken (-> smallest)
-                return min(node_options, key=lambda x: abs(x - partner_branch_id))  # return closest node
-            else:
-                return 0  # No matching node found :(
-        elif mode == 'random':
-            self.printpl('e', 'mode: Do the same as in the upper function, but choose randomly?')
-        else:
-            self.printpl('e', 'Mode not found {}'.format(mode))
-            raise
-
     def tree_try_get_swapids(self, a_tree, b_tree):
         """
         Returns two branches (node ids) that can be replaced and a converter (if needed)
@@ -887,14 +903,14 @@ class ExplainableGP(object):
         # choose a node from parent a
         a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
         a_id = np.random.choice(a_ids)
-        a_node_label = tree_get_label(a_tree, a_id)
+        a_node_label = tree_node_get_label(a_tree, a_id)
         a_xtype = xtype_get(a_node_label, self.variables_dict)
 
         # create a list from parent b with same xtype
         b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
         b_sametype_ids = b_node_ids[:]
         for b_id in b_node_ids:
-            b_label = tree_get_label(b_tree, b_id)
+            b_label = tree_node_get_label(b_tree, b_id)
             b_xtype = xtype_get(b_label, self.variables_dict)
             if not xtype_equi_outcome(b_xtype, a_xtype):
                 b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
@@ -912,60 +928,6 @@ class ExplainableGP(object):
     #   Utility  functions to evolve a tree       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def tree_insert_branch_random(self, tree, branch_ids, grow_method='nodes_max_uniform', max_nodes=None):
-
-        """
-        # TODO would be nicer is this just returned a new branch and insert is separately
-        replaces the branch_ids in a tree with a new branch
-        Given: Tree and a list of node ids
-        - checks how far to build down
-        - checks the old nodes xtype, etc.
-        - checks if we are not too far down the tree
-        -
-
-        returns: new tree
-        """
-
-        # Get information about the top-node we have to replace
-        old_label = tree_get_label(tree, branch_ids[0])
-        old_xtype = xtype_get(old_label, self.variables_dict)
-
-        if grow_method == 'depth_base_random':
-            """
-            We allow base depth (which is a little lower than max)
-            but every node has 0.5 chance to become a terminal
-            - iterate over depths
-            - fill with as many funcs as possible
-
-            """
-            # calculate depth restriction
-            depth_upper_bound = self.config['tree_depth_max'] - tree_node_get_depth(tree, branch_ids[0])
-            depth_goal = min(self.config['tree_depth_base'], depth_upper_bound)
-
-            # Build a new tree
-            label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, self.variables_dict, self.func_array, min_depth=self.config['tree_depth_min'])
-
-        elif grow_method == 'nodes_max_uniform':
-            """
-            We allow a certain amount of new nodes instead tree depth.
-            This could be calculated respectively to the parsimony dim_y
-            which the tree might have up his sleeve
-            """
-            if not max_nodes:
-                max_nodes = self.config['parsimony_max']  # todo too high
-            label_list, arity_list = invent_label_list_nodes_grow(old_xtype, max_nodes, self.variables_dict, self.func_array)
-
-        else:
-            print_e('That did not work')
-            return None
-
-        if not label_list:
-            result_tree = tree
-        else:
-            core_insert = core_from_labels(label_list, arity_list)
-            result_tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
-
-        return result_tree
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Work with trees                           |

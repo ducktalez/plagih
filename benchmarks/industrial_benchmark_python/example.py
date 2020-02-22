@@ -38,7 +38,9 @@ data_cost = np.zeros((n_trajectories, T))
 for k in range(n_trajectories):
     env = IDS(p=100)
     for t in range(T):
-        at = 2 * np.random.rand(3) - 1
+        at = np.array([0, 0, 0])
+        # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
+        # at = 2 * np.random.rand(3) - 1
         markovStates = env.step(at)
         data[k, t] = env.visibleState()[-1]
 

@@ -177,4 +177,17 @@ def test_tree_layers():
     print(layer_ids)  # should be [2, 7]
 
 
-test_tree_layers()
+def test_tree_evolve_branch_multiple():
+
+    label_list = MountainCarExamples.tree_v2_list
+    modify_list = MountainCarExamples.tree_v2_modify
+    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    tree = p_tree.get_uninstanced_tree()
+    max_nodes = 50
+    variables_dict = TestHelpers.variables_dict
+    func_array = TestHelpers.func_array
+    tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
+    print(tree)
+
+
+test_tree_evolve_branch_multiple()

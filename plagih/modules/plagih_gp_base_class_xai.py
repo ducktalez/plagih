@@ -135,8 +135,8 @@ class ExplainableGP(object):
 
         if self.origin_exists() and rate_o > 0:
             rate_sum = rate_s + rate_o
-            rate_s = (rate_s / rate_sum) * pop_max
-            rate_o = (rate_o / rate_sum) * pop_max
+            rate_s = int((rate_s / rate_sum) * pop_max)
+            rate_o = pop_max - rate_s
             self.gen_random_from_origin(rate_o)
         else:
             rate_s = pop_max
@@ -630,51 +630,6 @@ class ExplainableGP(object):
 
         return
 
-    def tree_evolve_branch_multiple(self, tree, max_nodes):
-        """
-        todo test this function
-        todo the layer on a new tree is always root
-        # todo could get last non modify layer instead
-        insert a (random) number of branches at the first possible "layer"
-        (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
-        - get these nodes, randomly choose a subset of those
-        - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
-        - split the amount of nodes up (randomly) and add these new branches to the tree
-        # todo idea crossover with same layer functions? backpropagated?
-        """
-
-        tree_origin = tree.copy()
-
-        node_ids = tree_get_mutatable_layer(tree, 0)
-        max_branches = len(node_ids)
-        print('sdf', max_branches)
-        num_branches = np.random.randint(1, max_branches)
-
-        insert_ids = []
-        num_del_nodes = 0
-        insert_indices = random.sample(range(0, max_branches), num_branches)
-        for index in insert_indices:
-            insert_id = node_ids.pop(index)
-            insert_ids.append(insert_id)
-            num_del_nodes += len(tree_get_branch(tree, insert_id, karoo=True))
-
-        new_nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - num_del_nodes)
-        num_nodes = []
-        for i in range(num_branches-1):
-            num_new_nodes = np.random.randint(1, (1/i)*new_nodes_left)
-            new_nodes_left -= num_new_nodes
-            num_nodes.append(num_new_nodes)
-        else:
-            num_nodes.append(new_nodes_left)
-
-        for i in insert_ids:
-            node_ids = tree_get_mutatable_layer(tree, 0)
-            node_id = node_ids[i]
-            old_branch = tree_get_branch(tree, node_id, karoo=True)
-            tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, self.variables_dict, self.func_array, max_nodes=num_nodes[i])  # tree with new branch
-
-        return tree
-
     def pop_first_create_from_origin(self, pop_size, tree_origin):
         """
         Constructs the first generation
@@ -685,7 +640,7 @@ class ExplainableGP(object):
         tree_origin = tree_origin.copy()
 
         for tree_id in range(pop_size):
-            tree = self.tree_evolve_branch_multiple(tree_origin, self.parsimony_max)
+            tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
             self.pop_append(tree, last_modification='first')
 
         self.print_g('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
@@ -697,7 +652,7 @@ class ExplainableGP(object):
         if self.origin_exists():
             tree_origin = self.origin['tree'].copy()
             for i in range(repro_rate):
-                tree = self.tree_evolve_branch_multiple(tree_origin, self.parsimony_max)
+                tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
                 self.pop_append(tree, last_modification='r(origin)')
 
         return
@@ -1088,7 +1043,7 @@ class ExplainableGP(object):
 
         data_tuples = sorted(list(self.pareto.items()))
         self.plot_end(data_tuples, path_plots, plt_title='pareto dominant candidates', plt_x_label='parsimony', plt_y_label='fitness', linestyle='dashed',
-                      step_where='pre', max_right=self.parsimony_max)  # todo 30 is related to parsimony_max
+                      step_where='post', max_right=self.parsimony_max)  # todo 30 is related to parsimony_max
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
         self.plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation', plt_y_label='fitness', linestyle='dashed',

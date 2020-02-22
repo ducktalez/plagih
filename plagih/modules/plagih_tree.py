@@ -4,6 +4,7 @@ from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
 from plagih.modules.plagih_eval import *
+import random
 import csv
 
 ### TensorFlow Imports and Definitions ###
@@ -285,6 +286,55 @@ def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, d
 
 def tree_node_get_xtype(tree, node_id):
     return tree[N_type][node_id]
+
+
+def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
+    """
+    todo test this function
+    todo the layer on a new tree is always root
+    # todo could get last non modify layer instead
+    insert a (random) number of branches at the first possible "layer"
+    (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
+    - get these nodes, randomly choose a subset of those
+    - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
+    - split the amount of nodes up (randomly) and add these new branches to the tree
+    # todo idea crossover with same layer functions? backpropagated?
+    """
+
+    tree_origin = tree.copy()
+
+    node_ids = tree_get_mutatable_layer(tree, 0)
+    max_branches = len(node_ids)
+    num_branches = np.random.randint(1, max_branches)
+
+    # get the node ids where we can insert new branches
+    insert_ids = []
+    num_del_nodes = 0
+    insert_indices = random.sample(range(0, max_branches), num_branches)
+    for index in insert_indices:
+        insert_id = node_ids.pop(index)
+        insert_ids.append(insert_id)
+        num_del_nodes += len(tree_get_branch(tree, insert_id, karoo=True))
+
+    # split the total amount of nodes we can insert up in several branches
+    new_nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - num_del_nodes)
+    num_nodes = []
+    for i in range(num_branches-1):
+        num_new_nodes = np.random.randint(1, (1/i)*new_nodes_left)
+        new_nodes_left -= num_new_nodes
+        num_nodes.append(num_new_nodes)
+    else:
+        num_nodes.append(new_nodes_left)
+
+    # finally, insert branches. need to get layer every time as node ids might have changed.
+    for enum, i in enumerate(insert_ids):
+        node_ids = tree_get_mutatable_layer(tree, 0)
+        index = node_ids.index(i)
+        node_id = node_ids[index]
+        old_branch = tree_get_branch(tree, node_id, karoo=True)
+        tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, variables_dict, func_array, max_nodes=num_nodes[enum])  # tree with new branch
+
+    return tree
 
 
 def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, max_nodes):

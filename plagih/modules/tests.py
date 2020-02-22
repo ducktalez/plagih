@@ -189,22 +189,27 @@ def test_tree_layers():
 
         print('\nnew tree')
         layer_ids = tree_get_layer_fix(tree)
-        print('Last non-modifiable layer:', layer_ids)  # should be [2, 7]
+        print('Last non-modifiable layer:', layer_ids)
+        layer_ids = tree_get_layer_fix(tree, get_all_leaves=True)
+        print('Last non-modifiable layer, all:', layer_ids)
         layer_ids = tree_get_mutatable_layer_lv0(tree)
-        print('Fist modifiable layer:', layer_ids)  # should be [2, 7]
+        print('Fist modifiable layer:', layer_ids)
         layer_ids = tree_get_mutatable_layer(tree, 0, sum_layers=False)
-        print('Layer dist = 0:', layer_ids)  # should be [2, 7]
+        print('Layer dist = 0:', layer_ids)
         layer_ids = tree_get_mutatable_layer(tree, 1, sum_layers=False)
-        print('Layer dist = 1:', layer_ids)  # should be [2, 7]
+        print('Layer dist = 1:', layer_ids)
         layer_ids = tree_get_mutatable_layer(tree, 2, sum_layers=False)
 
-        print('Layer dist = 2:', layer_ids)  # should be [2, 7]
+        print('Layer dist = 2:', layer_ids)
         layer_ids = tree_get_mutatable_layer(tree, 0, sum_layers=True)
-        print('Layer dist = 0, sum:', layer_ids)  # should be [2, 7]
+        print('Layer dist = 0, sum:', layer_ids)
         layer_ids = tree_get_mutatable_layer(tree, 1, sum_layers=True)
-        print('Layer dist = 1, sum:', layer_ids)  # should be [2, 7]
+        print('Layer dist = 1, sum:', layer_ids)
         layer_ids = tree_get_mutatable_layer(tree, 2, sum_layers=True)
-        print('Layer dist = 2, sum:', layer_ids)  # should be [2, 7]
+        print('Layer dist = 2, sum:', layer_ids)
+
+        layer_ids = tree_get_mutatable_layer(tree, 1, sum_layers=True, get_closest=False, return_all_layers=True)
+        print('All Layers till 1:', layer_ids)
 
 
 def test_tree_evolve_branch_multiple():

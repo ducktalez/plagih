@@ -1723,25 +1723,28 @@ def tree_normalize_exponentiation(tree):
     return tree
 
 
-def tree_get_layer_fix(tree):
+def tree_get_layer_fix(tree, get_all_leaves=False):
     """
-    Returns the last layer with fix nodes
+    Returns the last layer with fix nodes that have children which are modifiable
+
     """
 
     node_ids = []
     fix_ids = tree_get_fix_nodes(tree)
-    print('all fix ids', fix_ids)
+
     if len(fix_ids) == 0:
-        node_ids = [None]  # todo is this correct?
+        node_ids = []
     else:
         for node_id in fix_ids:
 
             only_fix_childs = True  # we assume this
             child_ids = tree_node_get_childs(tree, node_id)
             for child_id in child_ids:
-                print('node {} has child: {}, which is Modifiable? {}'.format(node_id, child_id, tree_node_is_modifiable(tree, child_id)))
                 if tree_node_is_modifiable(tree, child_id):
                     only_fix_childs = False
+
+            if get_all_leaves and len(child_ids) == 0:  # e. g. fix constants
+                node_ids.append(node_id)
 
             if not only_fix_childs:  #
                 node_ids.append(node_id)
@@ -1794,7 +1797,7 @@ def tree_get_mutatable_extendables(tree):
     return core_ids
 
 
-def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True):
+def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True, return_all_layers=False):
     """
     Returns a list with mutatable ids which are *lvl_goal* layers away from non modifiable nodes
     last_leaves: if you want so save all leave nodes aswell
@@ -1814,6 +1817,9 @@ def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True)
         else:
             break
         lvl_count += 1
+
+    if return_all_layers:
+        return layer_lists
 
     if get_closest:
         lvl_best = min(lvl_count, lvl_goal)

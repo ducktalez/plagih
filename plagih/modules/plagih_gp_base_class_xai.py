@@ -836,7 +836,7 @@ class ExplainableGP(object):
         # Get several values
         for n in range(tourn_size):
 
-            tree_id = pop_random(self.population_base)
+            tree_id = pop_tree_choose(self.population_base)
             tree = self.population_base[tree_id]
             fitness = tree_get_fitness(tree, precision=self.config['precision'])  # extract the fitness from the array
 
@@ -844,7 +844,7 @@ class ExplainableGP(object):
                 best_id = tree_id
                 best_fitness = fitness
 
-        tourn_winner = util_tree_copy(self.population_base, best_id)
+        tourn_winner = pop_tree_copy(self.population_base, best_id)
 
         return tourn_winner
 
@@ -1169,7 +1169,7 @@ def pop_util_copy(population_x, title):
     population_y = [title]  # an empty list stores a copy of the prior generation
 
     for tree_id in range(1, len(population_x)):  # increment through each Tree in the current population
-        tree_copy = util_tree_copy(population_x, tree_id)  # copy each array in the current population
+        tree_copy = pop_tree_copy(population_x, tree_id)  # copy each array in the current population
         population_y.append(tree_copy)  # add each copied Tree to the new population list
 
     return population_y

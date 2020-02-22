@@ -80,7 +80,7 @@ def mountaincar_load_corefiles(config_dict, path):
     return gp
 
 
-def run_mountaincar_origin2_fix(config_dict, path):
+def run_mountaincar_v1(config_dict, path):
     description = 'Mountaincar from 2-decision Origin (simple)'
     config_dict['name'] = 'MTC_v1'
     config_dict['root_dir'] = path
@@ -89,7 +89,7 @@ def run_mountaincar_origin2_fix(config_dict, path):
     return gp
 
 
-def run_mountaincar_origin3_fix(config_dict, path):
+def run_mountaincar_v2(config_dict, path):
     config_dict['name'] = 'MTC_v2'
     config_dict['root_dir'] = path
     gp = mountaincar_load_corefiles(config_dict, path)
@@ -97,7 +97,7 @@ def run_mountaincar_origin3_fix(config_dict, path):
     return gp
 
 
-def run_mountaincar_originbest_fix(config_dict, path):
+def run_mountaincar_v3(config_dict, path):
     config_dict['name'] = 'MTC_v3'
     config_dict['root_dir'] = path
     gp = mountaincar_load_corefiles(config_dict, path)
@@ -105,7 +105,7 @@ def run_mountaincar_originbest_fix(config_dict, path):
     return gp
 
 
-def run_mountaincar_scratch_fix(config_dict, path):
+def run_mountaincar_v4(config_dict, path):
     config_dict['name'] = 'MTC_v4_scratch'
     config_dict['root_dir'] = path
     config_dict['gen_max'] = 15
@@ -134,6 +134,6 @@ def run_mountaincar_test(config_dict, path):
 def run(root_dir):
     # create_samples_pickle(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_test(config_dict, root_dir)
+    gp = run_mountaincar_v1(config_dict, root_dir)
     gp.plagih_gp_run()
 

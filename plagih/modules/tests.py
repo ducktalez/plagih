@@ -182,8 +182,9 @@ def test_tree_evolve_branch_multiple():
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    p_tree = Plagih_Tree(label_list)
     tree = p_tree.get_uninstanced_tree()
-    max_nodes = 50
+    max_nodes = 35
     variables_dict = TestHelpers.variables_dict
     func_array = TestHelpers.func_array
     tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)

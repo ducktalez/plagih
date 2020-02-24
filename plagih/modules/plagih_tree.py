@@ -591,38 +591,32 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     layer0_ids = tree_get_mutatable_layer(tree, 0)
     num_branches = np.random.randint(1, len(layer0_ids) + 1)
 
-    # node_ids, insert_indices
-    insert_ids = []
-    del_amount = 0
+    # list of layer0 node indizes
     layer0_indices = random.sample(range(0, len(layer0_ids)), num_branches)
+
+    # check how many nodes we can insert in total
+    del_amount = 0
     for index in layer0_indices:
         # insert_id = node_ids.pop(index)
         insert_id = layer0_ids[index]
-        insert_ids.append(insert_id)
         del_amount += len(tree_get_branch(tree, insert_id, karoo=True))
 
     # split the total amount of nodes we can insert up in several branches
     nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - del_amount)
-    num_nodes = []
+    branch_nodes_goal = []
     for i in range(1, num_branches):
-        num_new_nodes = np.random.randint(1, (1/i)*nodes_left)
+        num_new_nodes = np.random.randint(1, (i/num_branches)*nodes_left)
         nodes_left -= num_new_nodes
-        num_nodes.append(num_new_nodes)
+        branch_nodes_goal.append(num_new_nodes)
     else:
-        num_nodes.append(nodes_left)
-    print('c', num_nodes, del_amount)
+        branch_nodes_goal.append(nodes_left)
 
     # finally, insert branches. need to get layer every time as node ids might have changed.
-    for enum, i in enumerate(insert_ids):
-        print('asd', tree)
-        print('d', enum, i, 'insert id', insert_ids,'layer0 ids', layer0_ids)
+    for enum, i in enumerate(layer0_indices):
         layer0_ids = tree_get_mutatable_layer_lv0(tree)
-        print('e', layer0_ids)
-        node_id = layer0_ids.index(i)
-        print('f', node_id)
+        node_id = layer0_ids[i]
         old_branch = tree_get_branch(tree, node_id, karoo=True)
-        print('g', old_branch)
-        tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, variables_dict, func_array, max_nodes=num_nodes[enum])  # tree with new branch
+        tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, variables_dict, func_array, max_nodes=branch_nodes_goal[enum])  # tree with new branch
 
     return tree
 

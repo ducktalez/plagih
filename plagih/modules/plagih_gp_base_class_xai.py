@@ -33,8 +33,9 @@ class ExplainableGP(object):
 
     def __init__(self, config_dict):
 
+        print('Initializing XAP GP run. Name: {}.'.format(config_dict['name']))
         self.time_start = time.perf_counter()
-        self.restart_vers = 'v0.7'
+        self.restart_vers = 'v0.75'
 
         # init values with dummies (just to have all self values here for overview)
         self.tree_meta = {}  # LUT to save all expressions with their corresponding meta data (e.g. fitness). needs memory.
@@ -550,10 +551,11 @@ class ExplainableGP(object):
         self.time_genstart = time.perf_counter()
         self.debug_warnings = {}
         self.population_tmp = ['Plagih GP - Evolving Generation']  # initialise population_tmp to host the next generation
-        self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_id_max_parsimony']) * self.parsimony_max, self.parsimony_max)
+        self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)
 
         return
 
+    # random todo, save last sympify expr in debug info...
     def gen_reproduce(self, repro_rate):
 
         """
@@ -593,7 +595,7 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):
             tree = self.pop_selection_tournament(self.tourn_size)
-            tree = tree_evolve_reduce_parts(tree, completely=False)
+            tree = tree_evolve_reduce(tree, completely=False)
             self.pop_append(tree, last_modification='point')
 
         return
@@ -756,11 +758,11 @@ class ExplainableGP(object):
             right_core = core_from_labels(right_labels, right_aritys)
 
             left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-            left_offspring = tree_evolve_tree_prune(left_offspring, self.config['tree_depth_max'], self.variables_dict)
+            left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.variables_dict)
             self.pop_append(left_offspring, last_modification='cross')
 
             right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-            right_offspring = tree_evolve_tree_prune(right_offspring, self.config['tree_depth_max'], self.variables_dict)
+            right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.variables_dict)
             self.pop_append(right_offspring, last_modification='cross')
 
         return
@@ -1270,42 +1272,6 @@ def load_funcarray_from_csv(op_csv_path):
             func_array[b2f2f][arity].append(label)
 
     return func_array
-
-
-def load_pop_from_csv(pop_csv):
-    """
-    This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
-    replaces population_a in the karoo_gp/runs/[date-time]/ directory.
-    """
-
-    with Path.open(pop_csv, 'r') as csv_file:
-        target = csv.reader(csv_file, delimiter=',')
-        n = 0  # track row count
-
-        for row in target:
-
-            n = n + 1
-            if n == 1:
-                pass  # skip first empty row
-
-            elif n == 2:
-                population_a = [row]  # write header to population_a
-
-            else:
-                if not row:
-                    tree = np.array([[]])  # initialise Tree array
-
-                else:
-                    if tree.shape[1] == 0:
-                        tree = np.append(tree, [row], axis=1)  # append first row to Tree
-
-                    else:
-                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
-
-                if tree.shape[0] == T_num_lines:
-                    population_a.append(tree)  # append complete Tree to population list
-
-    return population_a
 
 
 def tree_get_parsimony(tree, parsimony_distance, origin_tree=None):

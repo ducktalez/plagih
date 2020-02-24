@@ -66,11 +66,58 @@ class Plagih_Tree():
         pass
 
 
-
 class Plagih_node():
 
     def __init__(self, n_id, depth, n_type, label, parent, arity, c1, c2, c3):
         return
+
+
+def tree_save_csv(tree, path_csv):
+    """
+    Writing one tree to a .csv file. As it is appended, many can be added.
+    """
+    with Path.open(path_csv, 'a', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        target = csv.writer(csv_file, delimiter=',')
+
+        target.writerows([''])  # empty row before each Tree
+        for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
+            target.writerows([tree][row])
+
+
+def load_pop_from_csv(pop_csv):
+    """
+    This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
+    replaces population_a in the karoo_gp/runs/[date-time]/ directory.
+    """
+
+    with Path.open(pop_csv, 'r') as csv_file:
+        target = csv.reader(csv_file, delimiter=',')
+        n = 0  # track row count
+
+        for row in target:
+
+            n = n + 1
+            if n == 1:
+                pass  # skip first empty row
+
+            elif n == 2:
+                tree_list = [row]  # write header to population_a
+
+            else:
+                if not row:
+                    tree = np.array([[]])  # initialise Tree array
+
+                else:
+                    if tree.shape[1] == 0:
+                        tree = np.append(tree, [row], axis=1)  # append first row to Tree
+
+                    else:
+                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
+
+                if tree.shape[0] == T_num_lines:
+                    tree_list.append(tree)  # append complete Tree to population list
+
+    return tree_list
 
 
 def tree_get_size(tree, karoo=True):
@@ -501,7 +548,13 @@ def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, func_
 def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, depth_max=None, depth_min=None, depth_goal=None):
 
     """
-    The old depth based version
+    # The old depth based version
+    # Not used anymore, as the amount of nodes is much more useful
+    Given: Tree and a list of node ids
+    - checks how far to build down
+    - checks the old nodes xtype, etc.
+    - checks if we are not too far down the tree
+    -
 
     """
 
@@ -525,7 +578,6 @@ def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, d
 
 def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     """
-    # todo could get last non modify layer instead
     insert a (random) number of branches at the first possible "layer"
     (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
     - get these nodes, randomly choose a subset of those
@@ -535,35 +587,41 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
 
     tree_origin = tree.copy()
 
-    node_ids = tree_get_mutatable_layer(tree, 0)
-    max_branches = len(node_ids)
-    num_branches = np.random.randint(1, max_branches + 1)
+    # num_branches
+    layer0_ids = tree_get_mutatable_layer(tree, 0)
+    num_branches = np.random.randint(1, len(layer0_ids) + 1)
 
-    # get the node ids where we can insert new branches
+    # node_ids, insert_indices
     insert_ids = []
-    num_del_nodes = 0
-    insert_indices = random.sample(range(0, max_branches), num_branches)
-    for index in insert_indices:
-        insert_id = node_ids.pop(index)
+    del_amount = 0
+    layer0_indices = random.sample(range(0, len(layer0_ids)), num_branches)
+    for index in layer0_indices:
+        # insert_id = node_ids.pop(index)
+        insert_id = layer0_ids[index]
         insert_ids.append(insert_id)
-        num_del_nodes += len(tree_get_branch(tree, insert_id, karoo=True))
+        del_amount += len(tree_get_branch(tree, insert_id, karoo=True))
 
     # split the total amount of nodes we can insert up in several branches
-    new_nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - num_del_nodes)
+    nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - del_amount)
     num_nodes = []
-    for i in range(num_branches-1):
-        num_new_nodes = np.random.randint(1, (1/i)*new_nodes_left)
-        new_nodes_left -= num_new_nodes
+    for i in range(1, num_branches):
+        num_new_nodes = np.random.randint(1, (1/i)*nodes_left)
+        nodes_left -= num_new_nodes
         num_nodes.append(num_new_nodes)
     else:
-        num_nodes.append(new_nodes_left)
+        num_nodes.append(nodes_left)
+    print('c', num_nodes, del_amount)
 
     # finally, insert branches. need to get layer every time as node ids might have changed.
     for enum, i in enumerate(insert_ids):
-        node_ids = tree_get_mutatable_layer(tree, 0)
-        index = node_ids.index(i)
-        node_id = node_ids[index]
+        print('asd', tree)
+        print('d', enum, i, 'insert id', insert_ids,'layer0 ids', layer0_ids)
+        layer0_ids = tree_get_mutatable_layer_lv0(tree)
+        print('e', layer0_ids)
+        node_id = layer0_ids.index(i)
+        print('f', node_id)
         old_branch = tree_get_branch(tree, node_id, karoo=True)
+        print('g', old_branch)
         tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, variables_dict, func_array, max_nodes=num_nodes[enum])  # tree with new branch
 
     return tree
@@ -572,13 +630,8 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
 def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, max_nodes):
 
     """
-    # TODO would be nicer is this just returned a new branch and insert it separately
+
     replaces the branch_ids in a tree with a new branch
-    Given: Tree and a list of node ids
-    - checks how far to build down
-    - checks the old nodes xtype, etc.
-    - checks if we are not too far down the tree
-    -
 
     returns: new tree
 
@@ -1306,7 +1359,7 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
     try:
         expr_sym = tree_expr_sympify(algo_raw=expr_raw)
         label_list = ast_convert_from_expr(expr_sym, build=True)
-        arity_list = [label_get_arity(label) for label in label_list]  # todo zeile auslagern?
+        arity_list = [label_get_arity(label) for label in label_list]
         core = core_from_labels(label_list, arity_list)
         tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
 
@@ -1338,13 +1391,14 @@ def tree_evolve_mutate_point(tree, func_array, variables_dict):
     return tree  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
 
-def tree_evolve_reduce_parts(tree, completely=True):
+def tree_evolve_reduce(tree, completely=True):
 
     """
-    Mutate a single mutatable point in any Tree.
+    Reducing a tree to its most basic form with sympify.
+    (completely = False: reduce just one branch. if you wanted to have more complexity)
     """
     if completely:  # reduce the complete tree
-        nodes_lv0 = tree_get_mutatable_layer_lv0(tree)
+        nodes_lv0 = tree_get_mutatable_layer(tree, 0)
         for node_id in nodes_lv0:
             tree = treegp_reduce_branch(tree, node_id, karoo=True)
     else:  # only choose one node to be reduced
@@ -1657,7 +1711,8 @@ def tree_evolve_mutate_filter_one(tree):
         raise Exception('No mutatable node found!')
         # return None
 
-def tree_evolve_tree_prune(tree, max_depth, variables_dict):
+
+def tree_prune_depth(tree, max_depth, variables_dict):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
@@ -1667,7 +1722,7 @@ def tree_evolve_tree_prune(tree, max_depth, variables_dict):
 
     for node_id in range(root_id, len(tree[3])):
 
-        node_depth = tree_node_get_label(tree, node_id)
+        node_depth = tree_node_get_depth(tree, node_id)
         node_arity = tree_node_get_arity(tree, node_id)
         if node_depth == max_depth and node_arity > 0:  # replace this node with terminal
             label = tree_node_get_label(tree, node_id)
@@ -1756,7 +1811,7 @@ def tree_get_layer_fix(tree, get_all_leaves=False):
 
 def tree_get_mutatable_layer_lv0(tree):
     """
-    Returns a list with mutatable ids on the outside
+    Returns a list with mutatable ids on layer 0
     """
 
     node_ids = []
@@ -1823,8 +1878,8 @@ def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True,
 
     if get_closest:
         lvl_best = min(lvl_count, lvl_goal)
-    elif lvl_count > lvl_goal:  # want to get nodes on layer 20 no matter what?
-        return []
+    elif lvl_count > lvl_goal:  # really want to get nodes on layer 20? no matter what?
+        return []  # Now you do not have any nodes.
     else:
         lvl_best = lvl_goal
 
@@ -1832,7 +1887,6 @@ def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True,
         result_ids = sum(layer_lists[:lvl_best+1], [])
     else:
         result_ids = layer_lists[lvl_best]
-
     return result_ids
 
 

@@ -576,6 +576,34 @@ def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, d
     return tree
 
 
+def randomly_split_range(range_max, num_splits):
+    """
+    split a integer range randomly into parts
+    [1..100] -> 33, 15, 52 (0 is allowed)
+    """
+
+    # tmp_distributions = random.sample(range(1, range_max), num_splits)
+    # d_sum = sum(tmp_distributions)
+    # d_list = [int(round(range_max*(x/d_sum), 0)) for x in tmp_distributions]
+    sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
+    d_sum = sum(sample_dist)  # 1.5
+    sample_dist = [x/d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
+    sample_dist = [x*range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
+    sample_dist = [int(round(x, 0)) for x in sample_dist]  # make them useable ints
+
+    # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
+    helper_diff = range_max-sum(sample_dist)
+    if sum(sample_dist) < range_max:
+        smallest = sample_dist.index(min(sample_dist))
+        sample_dist[smallest] += helper_diff
+
+    if sum(sample_dist) > range_max:
+        greatest = sample_dist.index(max(sample_dist))
+        sample_dist[greatest] += helper_diff
+
+    return sample_dist
+
+
 def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     """
     insert a (random) number of branches at the first possible "layer"
@@ -589,40 +617,26 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
 
     # num_branches
     layer0_ids = tree_get_mutatable_layer(tree, 0)
-    num_branches = np.random.randint(1, len(layer0_ids) + 1)
+    # num_branches = np.random.randint(1, len(layer0_ids) + 1)
+    # print('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
 
     # node_ids, insert_indices
     insert_ids = []
     del_amount = 0
-    layer0_indices = random.sample(range(0, len(layer0_ids)), num_branches)
-    for index in layer0_indices:
-        # insert_id = node_ids.pop(index)
-        insert_id = layer0_ids[index]
-        insert_ids.append(insert_id)
-        del_amount += len(tree_get_branch(tree, insert_id, karoo=True))
 
     # split the total amount of nodes we can insert up in several branches
     nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - del_amount)
-    num_nodes = []
-    for i in range(1, num_branches):
-        num_new_nodes = np.random.randint(1, (1/i)*nodes_left)
-        nodes_left -= num_new_nodes
-        num_nodes.append(num_new_nodes)
-    else:
-        num_nodes.append(nodes_left)
-    print('c', num_nodes, del_amount)
+    # print('Which lets us replace {} amount of old nodes'.format(nodes_left))
+
+    num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
+    # print('We split this up like this: {}'.format(num_nodes_split))
 
     # finally, insert branches. need to get layer every time as node ids might have changed.
     for enum, i in enumerate(insert_ids):
-        print('asd', tree)
-        print('d', enum, i, 'insert id', insert_ids,'layer0 ids', layer0_ids)
         layer0_ids = tree_get_mutatable_layer_lv0(tree)
-        print('e', layer0_ids)
         node_id = layer0_ids.index(i)
-        print('f', node_id)
         old_branch = tree_get_branch(tree, node_id, karoo=True)
-        print('g', old_branch)
-        tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, variables_dict, func_array, max_nodes=num_nodes[enum])  # tree with new branch
+        tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, variables_dict, func_array, max_nodes=num_nodes_split[enum])  # tree with new branch
 
     return tree
 
@@ -1741,6 +1755,10 @@ def tree_prune_depth(tree, max_depth, variables_dict):
 
 
 def tree_get_ids(tree, skip_nodes=0, karoo=True):
+    """
+    returns all node ids as list
+    skip_nodes: extra parameter whic (was) used, i dont remember why. maybe useful in the future
+    """
     if karoo:
         start = 1 + skip_nodes
     else:
@@ -1890,3 +1908,17 @@ def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True,
     return result_ids
 
 
+def tree_visualisation_infos(tree):
+    """
+    Returns nodes, edges and labels to visualize a tree later
+
+    """
+    # iteratte over all nodes
+    # save nodes in list, all edges in list
+    node_list, edge_list, label_list = [], [], []
+    for node_id in tree_get_ids(tree):
+        node_list.append(node_id)  # node id
+        for child_id in tree_node_get_childs(tree, node_id):
+            edge_list.append([node_id, child_id])
+        label_list.append(tree_node_get_label(tree, node_id))
+    return node_list, edge_list, label_list

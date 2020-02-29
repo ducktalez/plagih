@@ -212,6 +212,15 @@ def test_tree_layers():
         print('All Layers till 1:', layer_ids)
 
 
+def test_tree_viz():
+
+    tree1, tree2 = get_two_sample_trees()
+    a, b, c, = tree_visualisation_infos(tree1)
+    print(a)
+    print(b)
+    print(c)
+
+
 def test_tree_evolve_branch_multiple():
 
     label_list = MountainCarExamples.tree_v2_list
@@ -223,17 +232,28 @@ def test_tree_evolve_branch_multiple():
     variables_dict = TestHelpers.variables_dict
     func_array = TestHelpers.func_array
     tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    print(tree)
     tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    print(tree)
     tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    print(tree)
     tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    print(tree)
     tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    print(tree)
     tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
     print(tree)
 
 
+def test_list_split():
+
+    fail_cnt = 0
+
+    for sample_size in range(10, 100):
+        x = randomly_split_range(sample_size, 3)
+        print(x)
+        if sum(x) < sample_size:
+            fail_cnt += 1
+        elif sum(x) > sample_size:
+            fail_cnt += 1
+    print('test_list_split failed {} times.'.format(fail_cnt))
+
+
+# test_tree_viz()
+# test_list_split()
 test_tree_evolve_branch_multiple()

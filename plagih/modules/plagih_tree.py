@@ -6,6 +6,8 @@ from plagih.modules.plagih_types import *
 from plagih.modules.plagih_eval import *
 import random
 import csv
+import matplotlib.pyplot as plt
+import networkx as nx
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -70,6 +72,15 @@ class Plagih_node():
 
     def __init__(self, n_id, depth, n_type, label, parent, arity, c1, c2, c3):
         return
+
+
+def karoo_tree_from_labellist(label_list, modify_list=None):
+    """
+    deprecated! DELETE! sfeh
+    """
+    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    tree = p_tree.get_uninstanced_tree()
+    return tree
 
 
 def tree_save_csv(tree, path_csv):
@@ -377,6 +388,17 @@ def tree_node_get_child(tree, node_id, child_num):
     return child_id
 
 
+def tree_get_ids_depthfirst(tree, node_id=root_id):
+    """
+    returns tree ids depth-first wise.
+    """
+    result = [node_id]
+    child_ids = tree_node_get_childs(tree, node_id)
+    for child_id in child_ids:
+        result.extend(tree_get_ids_depthfirst(tree, child_id))
+    return result
+
+
 def tree_node_get_childs(tree, node_id):
     """
 
@@ -579,7 +601,7 @@ def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, d
 def randomly_split_range(range_max, num_splits):
     """
     split a integer range randomly into parts
-    [1..100] -> 33, 15, 52 (0 is allowed)
+    [1..100] -> [33, 15, 52] (0 is allowed)
     """
 
     # tmp_distributions = random.sample(range(1, range_max), num_splits)
@@ -1908,6 +1930,27 @@ def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True,
     return result_ids
 
 
+def tree_get_depth(tree):
+    """
+    depth can be found in the last node for sure
+    """
+    max_depth = tree_node_get_depth(tree, -1)
+
+
+def tree_get_depth_ids(tree):
+    """
+    [[1],[2,3,4],[5,6]]
+    """
+    depth_id_list = [[]]
+    depth = 0
+    for node_id in tree_get_ids(tree):
+        if tree_node_get_depth(tree, node_id) == depth:
+            depth_id_list[depth].append(node_id)
+        else:
+            depth += 1
+            depth_id_list.append([node_id])
+    return depth_id_list
+
 def tree_visualisation_infos(tree):
     """
     Returns nodes, edges and labels to visualize a tree later
@@ -1922,3 +1965,47 @@ def tree_visualisation_infos(tree):
             edge_list.append([node_id, child_id])
         label_list.append(tree_node_get_label(tree, node_id))
     return node_list, edge_list, label_list
+
+
+def tree_viz_tikz(tree, node_id=root_id):
+    """
+    creates a tex file with a tikz figure of a tree.
+    # todo texity-$$-version in op array?
+    """
+    label = tree_node_get_label(tree, node_id)
+    arity = tree_node_get_arity(tree, node_id)
+    if arity > 0:
+        extras = ',nonterminal'
+    else:
+        extras = ''
+    result = '{}{}'.format(label, extras)
+
+    child_ids = tree_node_get_childs(tree, node_id)
+    for child_id in child_ids:
+        result += (tree_viz_tikz(tree, child_id))
+    else:
+        result = '[{}]'.format(result)
+
+    return result
+
+
+def tree_viz_latex_wrap(bracket_tree, stand_alone=False):
+    latex_forest_wrap = '\n\\begin{{forest}}' \
+                        '\n  point/.style={{coordinate,}},' \
+                        '\n  symbol/.style={{draw=black,text height=1.5ex,text depth=.25ex,}},' \
+                        '\n  terminal/.style={{symbol,}},' \
+                        '\n  nonterminal/.style={{rectangle, symbol, rounded corners,}},' \
+                        '\n  operation/.style={{symbol, rounded rectangle,}},' \
+                        '\n  for tree={{rounded rectangle,}}' \
+                        '\n {}' \
+                        '\n\\end{{forest}}'.format(bracket_tree)
+
+    if stand_alone:
+        standalone_wrap = '\\documentclass{{standalone}}' \
+                 '\n\\usepackage{{forest}}' \
+                 '\n\\begin{{document}}' \
+                 '\n{}' \
+                 '\n\\end{{document}}'.format(latex_forest_wrap)
+        return standalone_wrap
+    else:
+        return latex_forest_wrap

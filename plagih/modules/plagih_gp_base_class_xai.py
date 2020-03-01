@@ -19,6 +19,8 @@ import time
 from plagih.modules.plagih_eval import *
 from plagih.modules.file_interaction import *
 
+import tikzplotlib
+
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -1107,7 +1109,7 @@ class ExplainableGP(object):
 
     def plot_end(self, data_2d, path,
                  plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', step_where='', plt_xparam='',
-                 linestyle='None', max_right=None):
+                 linestyle='None', max_right=None, save_tikz=True):
 
         x, y = [], []
         for a, b in data_2d:
@@ -1138,6 +1140,12 @@ class ExplainableGP(object):
         plt.margins(x=0, y=0)
 
         plt.savefig(path / '{}.jpg'.format(plt_title))
+        if save_tikz:
+            try:
+                tikzplotlib.save(path / '{}.tex'.format(plt_title))
+            except:
+                print_e('Need to install matplotlib2tikz')
+
         plt.close()
         return
 

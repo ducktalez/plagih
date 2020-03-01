@@ -6,10 +6,10 @@ from plagih.modules.Examples import *
 class TestHelpers:
     # example func_array. Note that (for the random choice) functions can be included more often
     func_array = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
-                  [[], ['Ftob'],            ['<', '>', '==', '!='],         []],
-                  [[], ['Not', 'Not'],      ['&', 'Xor'],                   []],
-                  [[], ['Btof'],            [],                             []],
-                  [[], [],                  [],                             ['Ifte']]]
+                  [[], ['Ftob'], ['<', '>', '==', '!='], []],
+                  [[], ['Not', 'Not'], ['&', 'Xor'], []],
+                  [[], ['Btof'], [], []],
+                  [[], [], [], ['Ifte']]]
 
     variables_dict = {'all': ['observation0', 'observation1'],
                       'types': ['float', 'float'],
@@ -69,7 +69,8 @@ def test_rebuild_loop_tree():
 
 
 def test_tree_build():
-    label_list = ['Ifte', '<', 0.0, 2.0, 'observation1', 'Maxi', 'Mini', 'Mini', 'observation1', '-', 'Mini', '~', 'Mini', 0.855, 'observation0', '**', 0.455, 0.927014714644712, 'observation1', 'observation1', 'observation1']
+    label_list = ['Ifte', '<', 0.0, 2.0, 'observation1', 'Maxi', 'Mini', 'Mini', 'observation1', '-', 'Mini', '~', 'Mini', 0.855, 'observation0', '**', 0.455, 0.927014714644712, 'observation1',
+                  'observation1', 'observation1']
     tree = karoo_tree_from_labellist(label_list)
     print(tree)
 
@@ -169,7 +170,6 @@ def test_build_tree_grow_nodecount(verbose=False):
 
 
 def get_two_sample_trees():
-
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
@@ -181,12 +181,10 @@ def get_two_sample_trees():
 
 
 def test_tree_layers():
-
     tree1, tree2 = get_two_sample_trees()
     print(tree1, '\n\n', tree2)
 
     for tree in [tree1, tree2]:
-
         print('\nnew tree')
         layer_ids = tree_get_layer_fix(tree)
         print('Last non-modifiable layer:', layer_ids)
@@ -212,17 +210,7 @@ def test_tree_layers():
         print('All Layers till 1:', layer_ids)
 
 
-def test_tree_viz():
-
-    tree1, tree2 = get_two_sample_trees()
-    a, b, c, = tree_visualisation_infos(tree1)
-    print(a)
-    print(b)
-    print(c)
-
-
 def test_tree_evolve_branch_multiple():
-
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
@@ -241,7 +229,6 @@ def test_tree_evolve_branch_multiple():
 
 
 def test_list_split():
-
     fail_cnt = 0
 
     for sample_size in range(10, 100):
@@ -254,6 +241,26 @@ def test_list_split():
     print('test_list_split failed {} times.'.format(fail_cnt))
 
 
-# test_tree_viz()
-# test_list_split()
-test_tree_evolve_branch_multiple()
+def test_tree_get_ids_deepsearch():
+    label_list = MountainCarExamples.tree_test_plus_list
+    modify_list = MountainCarExamples.tree_test_plus_modify_v1
+    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    tree = p_tree.get_uninstanced_tree()
+    print('tree:', tree)
+
+    nodes_deepsearch = tree_get_ids_depthfirst(tree)
+    print('nodes_deepsearch', nodes_deepsearch)
+
+
+def test_tree_visualisation_pdf():
+    label_list = MountainCarExamples.tree_test_plus_list
+    modify_list = MountainCarExamples.tree_test_plus_modify_v1
+    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    tree3 = p_tree.get_uninstanced_tree()
+
+    bracket_tree = tree_viz_tikz(tree3)
+    result = tree_viz_latex_wrap(bracket_tree)
+    print(result)
+
+
+test_tree_visualisation_pdf()

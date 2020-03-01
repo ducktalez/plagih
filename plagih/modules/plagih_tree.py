@@ -8,6 +8,7 @@ import random
 import csv
 import matplotlib.pyplot as plt
 import networkx as nx
+from plagih.modules.file_interaction import make_dir, folder_trees
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -146,6 +147,26 @@ def tree_set_id(tree, tree_id):
 
 def tree_set_history(tree, last_modification):
     tree[TR_type][1] = last_modification
+    return tree
+
+
+def tree_node_set_xtype(tree, node_id, xtype):
+    tree[N_type][node_id] = xtype
+    return tree
+
+
+def tree_set_xtypes(tree, variables_dict):
+    """
+    Ser xtype for all nodes in the tree.
+    Faster than 'looking up' the xtype every time with xtype_get which needs extra dicts
+    :param tree:
+    :param variables_dict:
+    :return:
+    """
+    for node_id in tree_get_ids(tree):
+        label = tree_node_get_label(tree, node_id)
+        xtype = xtype_get(label, variables_dict)
+        tree = tree_node_set_xtype(tree, node_id, xtype)
     return tree
 
 
@@ -418,7 +439,6 @@ def tree_node_get_parent(tree, node_id):
 
 
 def tree_node_get_modify(tree, node_id):
-
     return tree[N_modify][node_id]
 
 
@@ -568,7 +588,6 @@ def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, func_
 
 
 def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, depth_max=None, depth_min=None, depth_goal=None):
-
     """
     # The old depth based version
     # Not used anymore, as the amount of nodes is much more useful
@@ -609,12 +628,12 @@ def randomly_split_range(range_max, num_splits):
     # d_list = [int(round(range_max*(x/d_sum), 0)) for x in tmp_distributions]
     sample_dist = np.random.rand(num_splits)  # [0.2, 0.8, 0.5] -> random samples
     d_sum = sum(sample_dist)  # 1.5
-    sample_dist = [x/d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
-    sample_dist = [x*range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
+    sample_dist = [x / d_sum for x in sample_dist]  # [0.12, 0.6, 0.28] -> fittet to sum of 1
+    sample_dist = [x * range_max for x in sample_dist]  # [12, 60, 28] -> for 100 nodes
     sample_dist = [int(round(x, 0)) for x in sample_dist]  # make them useable ints
 
     # sfeh workaround, this makes exactly the correct range by changing the most extreme entry
-    helper_diff = range_max-sum(sample_dist)
+    helper_diff = range_max - sum(sample_dist)
     if sum(sample_dist) < range_max:
         smallest = sample_dist.index(min(sample_dist))
         sample_dist[smallest] += helper_diff
@@ -640,7 +659,7 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     # num_branches
     layer0_ids = tree_get_mutatable_layer(tree, 0)
     # num_branches = np.random.randint(1, len(layer0_ids) + 1)
-    # print('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
+    # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
 
     # node_ids, insert_indices
     insert_ids = []
@@ -648,10 +667,10 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
 
     # split the total amount of nodes we can insert up in several branches
     nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - del_amount)
-    # print('Which lets us replace {} amount of old nodes'.format(nodes_left))
+    # ('Which lets us replace {} amount of old nodes'.format(nodes_left))
 
     num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
-    # print('We split this up like this: {}'.format(num_nodes_split))
+    # ('We split this up like this: {}'.format(num_nodes_split))
 
     # finally, insert branches. need to get layer every time as node ids might have changed.
     for enum, i in enumerate(insert_ids):
@@ -664,7 +683,6 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
 
 
 def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, max_nodes):
-
     """
 
     replaces the branch_ids in a tree with a new branch
@@ -722,8 +740,8 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array):
             xtype = todo_xtypes[index]
 
             label, arity = xtype_choose_func(func_array, xtype=xtype)
-            # print('GG', result_label_list, tmp_label_list, '(', len(result_label_list), todo_node_amount, '>', arity, ')', (len(result_label_list) + todo_node_amount + arity), max_nodes)
-            if max_nodes > (len(result_label_list)+todo_node_amount) + arity + 1:  # +1 = the start node which we must not forget
+            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), todo_node_amount, '>', arity, ')', (len(result_label_list) + todo_node_amount + arity), max_nodes)
+            if max_nodes > (len(result_label_list) + todo_node_amount) + arity + 1:  # +1 = the start node which we must not forget
                 tmp_label_list[index] = label
                 tmp_arity_list[index] = arity
                 todo_node_amount += arity - 1
@@ -1143,7 +1161,7 @@ def core_from_labels(label_list, arity_list=None):
     tree = tree_core_init_c(tree)
     tree = tree_core_init_depth(tree, parent_list)
 
-    if not tree_test_check_children(tree, karoo=False):
+    if not tree_check_children(tree, karoo=False):
         print_e('Tree from label_list {} is not correct: {}'.format(label_list, tree))
         raise
 
@@ -1407,7 +1425,6 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
 
 
 def tree_evolve_mutate_point(tree, func_array, variables_dict):
-
     """
     Mutate a single mutatable point in any Tree.
     """
@@ -1428,7 +1445,6 @@ def tree_evolve_mutate_point(tree, func_array, variables_dict):
 
 
 def tree_evolve_reduce(tree, completely=True):
-
     """
     Reducing a tree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)
@@ -1546,7 +1562,12 @@ def tree_labels(tree):
     return label_list
 
 
-def tree_test_check_children(tree, karoo=True):
+def tree_delete_nodes(tree, node_list):
+    tree = np.delete(tree, node_list, axis=1)  # delete all branches below
+    return tree
+
+
+def tree_check_children(tree, karoo=True):
     """
     A method to check if a tree is plausible. aka:
     - do the values in c1, c2, c3 link to correct
@@ -1567,41 +1588,11 @@ def tree_test_check_children(tree, karoo=True):
         return False
 
 
-def tree_check_child_xtype(tree, variables_dict, karoo=True):
+def tree_check_rebuild(tree, karoo=True):
     """
-    A method to check if a tree is plausible. aka:
-    - do the values in c1, c2, c3 link to correct
-    """
-    if not karoo:
-        tree = tree_convert_plagih_to_karoo(tree)
-
-    for node_id in range(1, len(tree[3])):
-        label = tree_node_get_label(tree, node_id)
-        xtype = xtype_get(label, variables_dict)
-        arity = label_get_arity(label)
-        test_xtype = xtype_get_child_todos(label, arity, variables_dict)
-
-        for c in range(0, 3):
-            if tree[N_c1 + c][node_id] != '':
-                c_node_id = tree[N_c1 + c][node_id]
-                c_label = tree_node_get_label(tree, c_node_id)
-                c_xtype = xtype_get(c_label, variables_dict)
-                # if c_xtype != test_xtype[c]:
-                if not xtype_equi_outcome(c_xtype, test_xtype[c]):
-                    print_blue('Label {}, child {} with c_label {} does not match xtype {}. It is c_xtype {}.\ntree labels: {}'.format(label, c, c_label, xtype, c_xtype, tree[N_label]))
-                    return False
-
-    return True
-
-
-def tree_delete_nodes(tree, node_list):
-    tree = np.delete(tree, node_list, axis=1)  # delete all branches below
-    return tree
-
-
-def tree_check_expression(tree, karoo=True):
-    """
-    Check if a valid tree can be built from the expression
+    Check if a valid tree can be rebuilt from its expression
+    todo: the expression must currently not be equal.
+    The expression can include separate '~' (usub) nodes, which makes expressions not completely equal
     """
 
     label_list = tree[N_label]
@@ -1614,9 +1605,35 @@ def tree_check_expression(tree, karoo=True):
     try:
         core = core_from_labels(label_list, arity_list)
         if core:
-            return True
+            tree_works = True
     except:
-        return False
+        tree_works = False
+
+    return tree_works
+
+
+def tree_check_child_xtype(tree, variables_dict, karoo=True):
+    """
+    A method to check if a tree is plausible. aka:
+    - do the values in c1, c2, c3 link to correct
+    """
+    if not karoo:
+        tree = tree_convert_plagih_to_karoo(tree)
+
+    for node_id in range(1, len(tree[3])):
+        label, arity, xtype = tree_node_get_lax(tree, node_id, variables_dict)
+
+        children_xtypes = xtype_label_get_child_xtypes(label, arity, variables_dict)
+
+        for c in range(0, 3):
+            if tree[N_c1 + c][node_id] != '':
+                c_node_id = tree[N_c1 + c][node_id]
+                c_label = tree_node_get_label(tree, c_node_id)
+                c_xtype = xtype_get(c_label, variables_dict)
+                # if c_xtype != test_xtype[c]:
+                if not xtype_equi_outcome(c_xtype, children_xtypes[c]):
+                    print_e('Label {}, child {} with c_label {} does not match xtype {}. It is c_xtype {}.\ntree labels: {}'.format(label, c, c_label, xtype, c_xtype, tree[N_label]))
+                    return False
 
     return True
 
@@ -1631,7 +1648,7 @@ def tree_check_all(tree, karoo=True):
 
     try:
         core = core_from_labels(label_list, arity_list)
-        result = tree_test_check_children(core, karoo=False)
+        result = tree_check_children(core, karoo=False)
     except:
         return False
 
@@ -1663,6 +1680,8 @@ def test_trees(number):
 
     core = core_from_labels(label_list, arity_list)
     return core
+
+
 #
 # def tree_node_get_arity(tree, node_id, tests=False):
 #     node_id = int(node_id) - 1
@@ -1724,6 +1743,7 @@ def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter')
         # random by 50:50?
 
     return constant
+
 
 def tree_evolve_mutate_filter_one(tree):
     """
@@ -1804,7 +1824,6 @@ def tree_iterate_range(tree, karoo=True):
 
 
 def tree_normalize_exponentiation(tree):
-
     # 1. ** should have an int as second number
     for node_id in tree_get_ids(tree, karoo=True):
         if tree_node_get_label(tree, node_id) == '**':
@@ -1844,8 +1863,6 @@ def tree_get_layer_fix(tree, get_all_leaves=False):
             if not only_fix_childs:  #
                 node_ids.append(node_id)
 
-    print('asd', node_ids)
-
     return node_ids
 
 
@@ -1879,10 +1896,10 @@ def tree_get_mutatable_extendables(tree):
 
         arity = tree_node_get_arity(tree, node_id)
         for c in range(0, arity):
-            child_id = int(tree[N_c1+c][node_id])
+            child_id = int(tree[N_c1 + c][node_id])
             # if tree_node_modifiable(tree, node_id):
             if int(tree[N_modify][child_id]) == 1:
-                leaf_ids.append(int(tree[N_c1+c][node_id]))
+                leaf_ids.append(int(tree[N_c1 + c][node_id]))
 
     core_ids = []
     core_ids.extend(fix_ids)
@@ -1924,7 +1941,7 @@ def tree_get_mutatable_layer(tree, lvl_goal, sum_layers=False, get_closest=True,
         lvl_best = lvl_goal
 
     if sum_layers:
-        result_ids = sum(layer_lists[:lvl_best+1], [])
+        result_ids = sum(layer_lists[:lvl_best + 1], [])
     else:
         result_ids = layer_lists[lvl_best]
     return result_ids
@@ -1951,10 +1968,29 @@ def tree_get_depth_ids(tree):
             depth_id_list.append([node_id])
     return depth_id_list
 
-def tree_visualisation_infos(tree):
-    """
-    Returns nodes, edges and labels to visualize a tree later
 
+def file_tree_save_latex(tree, root_path):
+    """
+    Creates LaTeX Tree Visualisation
+    """
+    # save tex files
+    tikz_code = tree_viz_get_forest(tree)
+
+    path_trees = make_dir(root_path / folder_trees)
+
+    file = Path.open(path_trees / 'tree-{}.tex', 'w')
+    file.write(tikz_code)
+    file.close()
+    return
+
+
+def tree_viz_get_nel(tree):
+    """
+    Deprecated.
+    Returns nodes, edges and labels to visualize a tree with NetworkX or pygraphviz. Similar to deap gp visualisation.
+    Deprecated? -> Used for NetworkX- which is not used as pygrapviz could not be installed on windows. Latex is used now.
+    E. g. the tree with labels [+, 1, 2]
+    -> node_list = [1, 2, 3], edge_list = [[1, 2],[1, 3]], label_list = [x, 1, 2]
     """
     # iteratte over all nodes
     # save nodes in list, all edges in list
@@ -1967,7 +2003,7 @@ def tree_visualisation_infos(tree):
     return node_list, edge_list, label_list
 
 
-def tree_viz_tikz(tree, node_id=root_id):
+def tree_viz_get_forest(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
     # todo texity-$$-version in op array?
@@ -1982,14 +2018,21 @@ def tree_viz_tikz(tree, node_id=root_id):
 
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
-        result += (tree_viz_tikz(tree, child_id))
+        result += (tree_viz_get_forest(tree, child_id))
     else:
         result = '[{}]'.format(result)
 
     return result
 
 
-def tree_viz_latex_wrap(bracket_tree, stand_alone=False):
+def tree_viz_get_latex(tree, stand_alone=False):
+    """
+    Creates forest tree representation (based on tikz) for LaTeX.
+    The file can easily ne included in a .tex file with '\input{file_name}'
+    optional: stand_alone = True for a complete latex file
+    """
+    bracket_tree = tree_viz_get_forest(tree)
+
     latex_forest_wrap = '\n\\begin{{forest}}' \
                         '\n  point/.style={{coordinate,}},' \
                         '\n  symbol/.style={{draw=black,text height=1.5ex,text depth=.25ex,}},' \
@@ -2002,10 +2045,10 @@ def tree_viz_latex_wrap(bracket_tree, stand_alone=False):
 
     if stand_alone:
         standalone_wrap = '\\documentclass{{standalone}}' \
-                 '\n\\usepackage{{forest}}' \
-                 '\n\\begin{{document}}' \
-                 '\n{}' \
-                 '\n\\end{{document}}'.format(latex_forest_wrap)
+                          '\n\\usepackage{{forest}}' \
+                          '\n\\begin{{document}}' \
+                          '\n{}' \
+                          '\n\\end{{document}}'.format(latex_forest_wrap)
         return standalone_wrap
     else:
         return latex_forest_wrap

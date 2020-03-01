@@ -15,6 +15,7 @@ folder_save = 'save/'
 folder_plots = 'plots/'
 folder_info = 'info/'
 folder_steps = 'steps/'
+folder_trees = 'trees/'
 
 file_pareto = 'pareto.txt'
 file_config = 'config.txt'
@@ -22,9 +23,19 @@ file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
 
+def make_dir(path):
+    """
+    Checks if the folders for the specified path exist and creates them otherwise.
+    Apparently, this procedure is used often.
+    """
+    if not Path.is_dir(path):
+        Path.mkdir(path)
+    return path
+
+
 def data_load_pickle(prepared_data_pickle_path):
     """
-    loads a data_csv_path file that was already split with the csv reader
+    Loads a data_csv_path file that was already split with the csv reader
     """
     with Path.open(prepared_data_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
@@ -39,7 +50,7 @@ def save_data_pickle(prepared_data, data_pickle_path):
     """
 
     with Path.open(data_pickle_path, 'wb') as file:
-        pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)  # not sure if the protocol matters
     return
 
 

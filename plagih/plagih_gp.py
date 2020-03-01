@@ -140,6 +140,6 @@ def run_mountaincar_test(config_dict, path):
 def run(root_dir):
     # create_samples_pickle(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_v3(config_dict, root_dir)
+    gp = run_mountaincar_test(config_dict, root_dir)
     gp.plagih_gp_run()
 

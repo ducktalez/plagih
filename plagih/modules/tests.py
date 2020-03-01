@@ -258,8 +258,8 @@ def test_tree_visualisation_pdf():
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
     tree3 = p_tree.get_uninstanced_tree()
 
-    bracket_tree = tree_viz_tikz(tree3)
-    result = tree_viz_latex_wrap(bracket_tree)
+    bracket_tree = tree_viz_get_forest(tree3)
+    result = tree_viz_get_latex(bracket_tree)
     print(result)
 
 

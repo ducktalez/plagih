@@ -1087,7 +1087,7 @@ class ExplainableGP(object):
 
         data_tuples = sorted(list(self.pareto.items()))
         self.plot_end(data_tuples, path_plots, plt_title='pareto dominant candidates', plt_x_label='parsimony', plt_y_label='fitness', linestyle='dashed',
-                      step_where='post', max_right=self.parsimony_max, beyond_lines=True, save_tikz=True)  # todo 30 is related to parsimony_max
+                      step_where='post', max_right=self.parsimony_max, beyond_lines=True, save_tikz=True)  # todo beyond_lines
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
         self.plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation', plt_y_label='fitness', linestyle='dashed',
@@ -1184,16 +1184,38 @@ class ExplainableGP(object):
         :return:
         """
 
-        # todo sklearn can split this nicer
+        # todo sklearn can split this nicer split data in x and y values
         x, y = [], []
         for a, b in data_2d:
             x.append(a)
             y.append(b)
 
+        # bottom, top = plt.ylim()
+        # left, right = plt.xlim()
+
+        top, bottom, left, right = max(y), min(y), min(x), max(x)
+
+        new_top = (top - min(bottom, 0)) * 1.05  # todo beautify plots...
+        if max_right:
+            right = max(right, max_right)
+        new_right = right * 1.05
+
+        if beyond_lines:
+            x = [x[0]] + x + [new_right+1]
+            y = [new_top+1] + y + [y[-1]]
+
         if step_where:
             plt.step(x, y, plt_xparam, linestyle=linestyle, marker='.', label=plt_curve_label, where=step_where)
         else:
             plt.plot(x, y, plt_xparam, linestyle=linestyle, marker='.', label=plt_curve_label)
+
+
+
+        # let it start at (0,0) but +5% margin to the top and right
+        plt.yscale(yscale)
+        plt.ylim(min(bottom, 0), new_top)
+        plt.xlim(min(left, 0), new_right)
+        plt.margins(x=0, y=0)
 
         plt.xlabel(plt_x_label)
         plt.ylabel(plt_y_label)
@@ -1201,36 +1223,21 @@ class ExplainableGP(object):
 
         # plt.legend()
 
-        # let it start at (0,0) but +5% margin to the top and right
-        plt.yscale(yscale)
-        bottom, top = plt.ylim()
-        new_top = (top - min(bottom, 0)) * 1.05  # todo beautify plots...
-        plt.ylim(min(bottom, 0), new_top)
-        left, right = plt.xlim()
-        if max_right:
-            right = max(right, max_right)
-        new_right = right * 1.05
-        plt.xlim(min(left, 0), new_right)
-        plt.margins(x=0, y=0)
-
-        if beyond_lines:
-            x = [x[0]] + x + [new_right]
-            y = [new_top] + y + [y[-1]]
-
         plt.savefig(path / '{}.jpg'.format(plt_title))
         if save_tikz:
             try:
                 tikzplotlib.save(path / '{}.tex'.format(plt_title))
-            except:
-                print_e('Need to install matplotlib2tikz')
+            except Exception as ex:
+                print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
 
         plt.close()
         return
 
     def printpl(self, message_type, text):
-
         """
-
+        Lightweight print function.
+        Instead of checking if you should print every time, this is done here.
+        :param message_type: 'gggiiiivvv...' options can be found in config
         """
 
         if message_type in self.print_type:

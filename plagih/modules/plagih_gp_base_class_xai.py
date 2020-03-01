@@ -439,11 +439,12 @@ class ExplainableGP(object):
         """
 
         for parsim, fit in sorted(list(pareto.items())):
-            expr_raw = self.parsimony_best_meta[parsim]['expr_raw']
+            tree_meta = self.parsimony_best_meta[parsim]
+            expr_raw = tree_meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
             tree = karoo_tree_from_labellist(label_list)
             tree = self.tree_enrich(tree, last_evolution='')
-            tree_viz_get_latex(tree, self.root_dir)
+            file_tree_save_latex(tree, root_path, str(tree_meta['parsimony']))
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1167,6 +1168,7 @@ class ExplainableGP(object):
         """
         Make all plots in the same style - and also saving space.
         - Makes pyplots
+
 
         :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
         :param path: where to save the result

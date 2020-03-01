@@ -252,15 +252,27 @@ def test_tree_get_ids_deepsearch():
     print('nodes_deepsearch', nodes_deepsearch)
 
 
-def test_tree_visualisation_pdf():
+def test_tree_viz_latex():
     label_list = MountainCarExamples.tree_test_plus_list
     modify_list = MountainCarExamples.tree_test_plus_modify_v1
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
     tree3 = p_tree.get_uninstanced_tree()
 
-    bracket_tree = tree_viz_get_forest(tree3)
-    result = tree_viz_get_latex(bracket_tree)
+    result = tree_viz_get_latex(tree3)
     print(result)
 
 
-test_tree_visualisation_pdf()
+def test_tree_set_modifyable_nodes():
+
+    variables_dict = TestHelpers.variables_dict
+    func_array = TestHelpers.func_array
+    origin, tree2 = get_two_sample_trees()
+    print('a origin', origin[N_modify])
+    tree_new = tree_evolve_branch_multiple(origin.copy(), 25, variables_dict, func_array)
+    print('b origin', origin[N_modify])
+    tree_new = tree_set_modifyable_nodes(tree_new, origin)
+    print('c origin', origin)
+    print(tree_new)
+
+
+test_tree_viz_latex()

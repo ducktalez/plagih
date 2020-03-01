@@ -34,7 +34,9 @@ T_parsimony = 14
 T_num_lines = 15
 P_first_node = 1
 root_id = 1
-node_is_modifiable = '1'
+node_is_modifiable = 1
+
+observation_n = 'observation'
 
 
 class Plagih_Tree():
@@ -198,33 +200,32 @@ def tree_set_modifyable_nodes_true(tree, karoo=True):
     """
 
     """
-    if karoo:
-        start = 1
-    else:
-        start = 0
 
-    for node_id in range(start, len(tree[N_modify])):
-        tree[N_modify][node_id] = '1'
+    for node_id in tree_get_ids(tree, karoo=karoo):
+        tree[N_modify][node_id] = 1
     return tree
 
 
-def tree_set_modifyable_nodes(chosen_tree, origin_tree):
+def tree_set_modifyable_nodes(tree, origin_tree):
     """
     Sets all the origin core nodes back to non-modifyable
     """
     # Set all nodes to be modifiable (=1)
-    for i, tmp in enumerate(chosen_tree[N_modify][1:]):
-        chosen_tree[N_modify][i + 1] = '1'
+    tree = tree_set_modifyable_nodes_true(tree)
 
-    # Find no-modifyables in Origin
+    # Find non-modifyable in Origin
+    non_modifiable_nodes_v2 = tree_get_fix_nodes(origin_tree)
+
     non_modifiable_nodes = []
-    if origin_tree[N_modify][1] == '0':  # check is modifiable nodes are specified
-        non_modifiable_nodes.extend(tree_permanent_nodes_get(1, chosen_tree, 1, origin_tree))
+    if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
+        non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
+
+    print('lets see', non_modifiable_nodes_v2, non_modifiable_nodes)
 
     for non_modifiable in non_modifiable_nodes:
-        chosen_tree[N_modify][non_modifiable] = '0'
+        tree = tree_node_set_modify(tree, non_modifiable, 0)
 
-    return chosen_tree
+    return tree
 
 
 def tree_node_set_childs_ids(tree, node_id, c_buffer, karoo=False):
@@ -293,12 +294,13 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
     Returns a list of nodes that are not supposed to be modified
     """
 
-    if origin_tree[N_modify][origin_node] == '0':
-        permanent_nodes = [int(chosen_tree[N_id][chosen_node])]
-        for child in [N_c1, N_c2, N_c3]:
-            if origin_tree[child][origin_node] != '':
-                next_origin_node = int(origin_tree[child][origin_node])
-                next_chosen_node = int(chosen_tree[child][chosen_node])
+    if tree_node_get_modify(origin_tree, origin_node) == 0:
+
+        permanent_nodes = [chosen_node]
+        for c in [N_c1, N_c2, N_c3]:
+            if origin_tree[c][origin_node] != '':  # aka a child exists
+                next_origin_node = int(origin_tree[c][origin_node])
+                next_chosen_node = int(chosen_tree[c][chosen_node])
                 tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
                 if tmp is not None:
                     permanent_nodes.extend(tmp)
@@ -398,6 +400,16 @@ def tree_node_get_lax(tree, node_id, variables_dict):
     return label, arity, xtype
 
 
+def tree_node_get_lax_v3(tree, node_id):
+    """
+    no need for variables dict!
+    """
+    label = tree_node_get_label(tree, node_id)
+    arity = tree_node_get_arity(tree, node_id)
+    xtype = tree_node_get_xtype(tree, node_id)
+    return label, arity, xtype
+
+
 def tree_node_get_child(tree, node_id, child_num):
     """
     returns ONE specified child of a node.
@@ -439,12 +451,37 @@ def tree_node_get_parent(tree, node_id):
 
 
 def tree_node_get_modify(tree, node_id):
-    return tree[N_modify][node_id]
+    """
+
+    """
+    modify = tree[N_modify][node_id]
+    if modify == '':
+        modify = 1
+    else:
+        modify = float(modify)
+    return modify
+
+
+def tree_node_set_modify(tree, node_id, value):
+    """
+
+    """
+    tree[N_modify][node_id] = value
+
+    return tree
+
+
+def tree_node_is_variable(tree, node_id):
+    label = tree_node_get_label(tree, node_id)
+    return observation_n in label
 
 
 def tree_node_is_modifiable(tree, node_id):
+    """
+    returns True if modifiable is 1
+    """
     modify = tree_node_get_modify(tree, node_id)
-    return modify == node_is_modifiable
+    return modify == 1
 
 
 def tree_node_get_parent_functype(tree, node_id, variables_dict):
@@ -654,7 +691,7 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     - split the amount of nodes up (randomly) and add these new branches to the tree
     """
 
-    tree_origin = tree.copy()
+    tree_base = tree.copy()
 
     # num_branches
     layer0_ids = tree_get_mutatable_layer(tree, 0)
@@ -662,7 +699,6 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
 
     # node_ids, insert_indices
-    insert_ids = []
     del_amount = 0
 
     # split the total amount of nodes we can insert up in several branches
@@ -673,11 +709,11 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     # ('We split this up like this: {}'.format(num_nodes_split))
 
     # finally, insert branches. need to get layer every time as node ids might have changed.
-    for enum, i in enumerate(insert_ids):
+    for i in range(len(layer0_ids)):
         layer0_ids = tree_get_mutatable_layer_lv0(tree)
-        node_id = layer0_ids.index(i)
+        node_id = layer0_ids[i]
         old_branch = tree_get_branch(tree, node_id, karoo=True)
-        tree = tree_evolve_insert_branch_v2(tree_origin, old_branch, variables_dict, func_array, max_nodes=num_nodes_split[enum])  # tree with new branch
+        tree = tree_evolve_insert_branch_v2(tree_base, old_branch, variables_dict, func_array, max_nodes=num_nodes_split[i])  # tree with new branch
 
     return tree
 
@@ -1969,16 +2005,14 @@ def tree_get_depth_ids(tree):
     return depth_id_list
 
 
-def file_tree_save_latex(tree, root_path):
+def file_tree_save_latex(tree, root_path, name):
     """
     Creates LaTeX Tree Visualisation
     """
-    # save tex files
-    tikz_code = tree_viz_get_forest(tree)
+    tikz_code = tree_viz_get_latex(tree)
 
     path_trees = make_dir(root_path / folder_trees)
-
-    file = Path.open(path_trees / 'tree-{}.tex', 'w')
+    file = Path.open(path_trees / 'tree-{}.tex'.format(name), 'w')
     file.write(tikz_code)
     file.close()
     return
@@ -2006,23 +2040,42 @@ def tree_viz_get_nel(tree):
 def tree_viz_get_forest(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
-    # todo texity-$$-version in op array?
     """
-    label = tree_node_get_label(tree, node_id)
-    arity = tree_node_get_arity(tree, node_id)
+    extras = ''
+    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
+    latex_label = None
+
+    # Get the best math-like representation
+    if label in op:
+        latex_label = op[label]['latex']
+    if latex_label is None:
+        latex_label = label
+
+    latex_label = '{{{}}}'.format(latex_label)  # {12} because
+
+    # custom node design
     if arity > 0:
-        extras = ',nonterminal'
+        extras += ',nonterminal'
     else:
-        extras = ''
-    result = '{}{}'.format(label, extras)
+        extras += ',terminal'
+
+        if tree_node_is_variable(tree, node_id):
+            extras += ',variable'
+        else:
+            extras += ',constant'
+
+    if not tree_node_is_modifiable(tree, node_id):
+        extras += ',fixnode'
+
+    latex_label += extras
 
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
-        result += (tree_viz_get_forest(tree, child_id))
+        latex_label += (tree_viz_get_forest(tree, child_id))
     else:
-        result = '[{}]'.format(result)
+        latex_label = '[{}]'.format(latex_label)
 
-    return result
+    return latex_label
 
 
 def tree_viz_get_latex(tree, stand_alone=False):

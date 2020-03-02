@@ -211,21 +211,21 @@ def tree_set_modifyable_nodes(tree, origin_tree):
     """
     Sets all the origin core nodes back to non-modifyable
     """
-    # Set all nodes to be modifiable (=1)
+
     tree = tree_set_modifyable_nodes_true(tree)
 
     # Find non-modifyable in Origin
-    non_modifiable_nodes_v2 = tree_get_fix_nodes(origin_tree)
+    non_modifiable_nodes_v2 = tree_get_fix_nodes(origin_tree)  # delete
 
     non_modifiable_nodes = []
     if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
         non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
 
-    if non_modifiable_nodes_v2 != non_modifiable_nodes:
-        # todo if this did not raise for quite a time, use v2 please
-        print(origin_tree)
-        print('...how?', non_modifiable_nodes_v2, non_modifiable_nodes)
-        raise
+    # if non_modifiable_nodes_v2 != non_modifiable_nodes:
+    #     # todo if this did not raise for quite a time, use v2 please
+    #     print(origin_tree)
+    #     print('...how?', non_modifiable_nodes_v2, non_modifiable_nodes)
+    #     raise
 
     for non_modifiable in non_modifiable_nodes:
         tree = tree_node_set_modify(tree, non_modifiable, 0)

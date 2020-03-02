@@ -1169,6 +1169,8 @@ class ExplainableGP(object):
         self.plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation', plt_y_label='fitness', linestyle='dashed',
                       step_where='post')
 
+        # todo https://github.com/linkedin/naarad/issues/114 UserWarning: Attempting to set identical bottom==top results
+
         return
 
     def check_value_is_real(self, fitness):

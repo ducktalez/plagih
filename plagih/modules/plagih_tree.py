@@ -165,7 +165,7 @@ def tree_set_xtypes(tree, variables_dict):
     :param variables_dict:
     :return:
     """
-    for node_id in tree_get_ids(tree):
+    for node_id in tree_nodes_get_ids(tree):
         label = tree_node_get_label(tree, node_id)
         xtype = xtype_get(label, variables_dict)
         tree = tree_node_set_xtype(tree, node_id, xtype)
@@ -177,9 +177,10 @@ def tree_set_fitness(tree, fitness, precision=6):
     Store the fitness within the tree np-array
 
     """
+    if fitness != '':
 
-    fitness = float(fitness)
-    fitness = round(fitness, precision)
+        fitness = float(fitness)
+        fitness = round(fitness, precision)
 
     tree[T_fitness][1] = fitness  # store the fitness with each tree
 
@@ -201,7 +202,7 @@ def tree_set_modifyable_nodes_true(tree, karoo=True):
 
     """
 
-    for node_id in tree_get_ids(tree, karoo=karoo):
+    for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         tree[N_modify][node_id] = 1
     return tree
 
@@ -220,7 +221,9 @@ def tree_set_modifyable_nodes(tree, origin_tree):
     if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
         non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
 
-    print('lets see', non_modifiable_nodes_v2, non_modifiable_nodes)
+    if non_modifiable_nodes_v2 != non_modifiable_nodes:
+        # todo if this did not raise for quite a time, use v2 please
+        raise
 
     for non_modifiable in non_modifiable_nodes:
         tree = tree_node_set_modify(tree, non_modifiable, 0)
@@ -510,20 +513,6 @@ def pop_tree_choose(population):
     Returns a random tree_id from a population
     """
     return np.random.randint(1, len(population))  # 1-len is correct. Tested it several times now.
-
-
-def pop_copy_genepool(population_tmp, gene_pool, gen_id):
-    """
-    Copy the genepool of a gen
-    """
-    pop_y = ['Population Selection in Generation {}.'.format(str(gen_id))]  # empty list
-
-    for i, (tree_num, tree_meta) in enumerate(gene_pool.items()):
-        tree_copy = pop_tree_copy(population_tmp, tree_num)
-        tree_copy = tree_set_id(tree_copy, i + 1)
-        pop_y.append(tree_copy)
-
-    return pop_y
 
 
 def tree_init_core(node_amount):
@@ -868,6 +857,9 @@ def tree_round_constants(tree, accuracy, karoo=True):
 
 
 def tree_get_fitness(tree, precision=None, karoo=True):
+    """
+    Get the fitness of a tree
+    """
     if not karoo:
         raise
     fitness = float(tree[T_fitness][1])
@@ -875,6 +867,44 @@ def tree_get_fitness(tree, precision=None, karoo=True):
     if precision:
         fitness = round(fitness, precision)
     return fitness
+
+
+def tree_set_meta(tree, tree_meta):
+    """
+    When having the meta data, save it in the tree.
+    """
+    parsimony = tree_meta['parsimony']
+    fitness_train = tree_meta['fitness_train']
+    expr_sym = tree_meta['expr_sym']
+    expr_raw = tree_meta['expr_raw']
+
+    tree = tree_set_parsimony(tree, parsimony)
+    tree = tree_set_fitness(tree, fitness_train)
+    # tree = tree_set_expr_sym(tree, expr_sym) # todo, also at get method
+    # tree = tree_set_expr_raw(tree, expr_raw) # todo
+    return tree
+
+
+def tree_get_meta(tree):
+    tree_meta = {}
+    parsimony = tree_get_parsimony(tree)
+    fitness_train = tree_get_fitness(tree)
+    expr_raw = tree_get_expr_raw(tree, root_id)
+    expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
+
+    tree_meta['parsimony'] = parsimony
+    tree_meta['fitness_train'] = fitness_train
+    tree_meta['expr_raw'] = expr_raw
+    tree_meta['expr_sym'] = expr_sym
+    return tree_meta
+
+
+def tree_get_parsimony(tree):
+    parsimony = tree[T_parsimony][root_id]
+    if parsimony == '':
+        raise
+    else:
+        return float(parsimony)  # todo check if it is useable? fitness aswell
 
 
 def tree_get_expr_raw(tree, node_id):
@@ -943,20 +973,20 @@ def tree_parsimony_relari(tree, origin_tree):
     return max(distance, 1)  # make sure, it does not return 0
 
 
-def tree_expr_sympify(algo_raw=None, tree=None):
+def tree_get_expr_sympify(expr_raw=None, tree=None):
     """
     returns the sympifyed expression
     """
-    if tree is None and algo_raw is None:
+    if tree is None and expr_raw is None:
         print_e('Either tree or algo raw have to be set.')
-    if algo_raw is None:  # If we got a tree, we generate the expression
-        algo_raw = str(tree_get_expr_raw(tree, root_id))
+    if expr_raw is None:  # If we got a tree, we generate the expression
+        expr_raw = str(tree_get_expr_raw(tree, root_id))
 
     try:
-        expr_sym = plagih_sympify(algo_raw)
+        expr_sym = plagih_sympify(expr_raw)
         expr_sym_str = str(expr_sym)
     except Exception as ex:
-        raise Exception('In sympify. Caused by this raw algorithm: {}. Ex: {}'.format(algo_raw, ex))
+        raise Exception('In sympify. Caused by this raw algorithm: {}. Ex: {}'.format(expr_raw, ex))
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym_str:
@@ -1447,7 +1477,7 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
     delete_ids = tree_get_branch(tree, node_id, karoo=karoo)
     expr_raw = tree_get_expr_raw(tree, node_id)
     try:
-        expr_sym = tree_expr_sympify(algo_raw=expr_raw)
+        expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
         label_list = ast_convert_from_expr(expr_sym, build=True)
         arity_list = [label_get_arity(label) for label in label_list]
         core = core_from_labels(label_list, arity_list)
@@ -1487,7 +1517,9 @@ def tree_evolve_reduce(tree, completely=True):
     """
     if completely:  # reduce the complete tree
         nodes_lv0 = tree_get_mutatable_layer(tree, 0)
-        for node_id in nodes_lv0:
+        for i in range(len(nodes_lv0)):
+            nodes_lv0 = tree_get_mutatable_layer(tree, 0)
+            node_id = nodes_lv0[i]
             tree = treegp_reduce_branch(tree, node_id, karoo=True)
     else:  # only choose one node to be reduced
         node_ids = tree_get_mutatable_nodes(tree)
@@ -1504,7 +1536,7 @@ def tree_get_mutatable_nodes(tree, no_root=False, karoo=True):
     """
 
     node_ids = []
-    for node_id in tree_get_ids(tree, karoo=karoo):
+    for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         if node_id == 'node_modify':
             continue
         if tree[N_modify][node_id] == '1':
@@ -1523,7 +1555,7 @@ def tree_get_fix_nodes(tree, karoo=True):
 
     node_ids = []
 
-    for node_id in tree_get_ids(tree, karoo=karoo):
+    for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         if not tree_node_is_modifiable(tree, node_id):
             node_ids.append(int(node_id))
 
@@ -1832,7 +1864,13 @@ def tree_prune_depth(tree, max_depth, variables_dict):
     return tree
 
 
-def tree_get_ids(tree, skip_nodes=0, karoo=True):
+def tree_get_id(tree, karoo=True):
+    if not karoo:
+        raise
+    return tree[TR_ID][1]
+
+
+def tree_nodes_get_ids(tree, skip_nodes=0, karoo=True):
     """
     returns all node ids as list
     skip_nodes: extra parameter whic (was) used, i dont remember why. maybe useful in the future
@@ -1861,7 +1899,7 @@ def tree_iterate_range(tree, karoo=True):
 
 def tree_normalize_exponentiation(tree):
     # 1. ** should have an int as second number
-    for node_id in tree_get_ids(tree, karoo=True):
+    for node_id in tree_nodes_get_ids(tree, karoo=True):
         if tree_node_get_label(tree, node_id) == '**':
             child_id = tree_node_get_child(tree, node_id, 1)  # get second argument
             old_power = tree_node_get_label(tree, child_id)
@@ -1996,7 +2034,7 @@ def tree_get_depth_ids(tree):
     """
     depth_id_list = [[]]
     depth = 0
-    for node_id in tree_get_ids(tree):
+    for node_id in tree_nodes_get_ids(tree):
         if tree_node_get_depth(tree, node_id) == depth:
             depth_id_list[depth].append(node_id)
         else:
@@ -2029,7 +2067,7 @@ def tree_viz_get_nel(tree):
     # iteratte over all nodes
     # save nodes in list, all edges in list
     node_list, edge_list, label_list = [], [], []
-    for node_id in tree_get_ids(tree):
+    for node_id in tree_nodes_get_ids(tree):
         node_list.append(node_id)  # node id
         for child_id in tree_node_get_childs(tree, node_id):
             edge_list.append([node_id, child_id])
@@ -2087,12 +2125,16 @@ def tree_viz_get_latex(tree, stand_alone=False):
     bracket_tree = tree_viz_get_forest(tree)
 
     latex_forest_wrap = '\n\\begin{{forest}}' \
+                        '\n  for tree={{symbol, rounded corners,draw=black!100, fill=green!20}}' \
                         '\n  point/.style={{coordinate,}},' \
                         '\n  symbol/.style={{draw=black,text height=1.5ex,text depth=.25ex,}},' \
                         '\n  terminal/.style={{symbol,}},' \
-                        '\n  nonterminal/.style={{rectangle, symbol, rounded corners,}},' \
+                        '\n  nonterminal/.style={{rectangle, symbol, rounded corners,fill=green!20}},' \
                         '\n  operation/.style={{symbol, rounded rectangle,}},' \
-                        '\n  for tree={{rounded rectangle,}}' \
+                        '\n  fixnode/.style={{draw=black!100, fill=red!20,}},' \
+                        '\n  terminal/.style={{rectangle, symbol,draw=black!100, fill=green!20,}},' \
+                        '\n  variable/.style={{rounded corners, symbol,draw=black!100, fill=green!20,}},' \
+                        '\n  constant/.style={{rectangle, symbol,}},' \
                         '\n {}' \
                         '\n\\end{{forest}}'.format(bracket_tree)
 

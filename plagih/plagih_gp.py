@@ -24,7 +24,7 @@ def create_config_dict():
         'precision': 3,  # rounding the fitness
         'float_accuracy': 200,
         'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-        'print_type': 'ggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'ggggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'force_new_run': False,  # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
         'delete_old_file': False,  # todo delete old files. be very careful
@@ -128,10 +128,11 @@ def run_mountaincar_test(config_dict, path):
     test_run = Path.cwd() / folder_runs / config_dict['name']
     print('Test dir is:', test_run)
     config_dict['root_dir'] = path
-    config_dict['pop_max'] = 200
+    config_dict['pop_max'] = 100
     config_dict['gen_max'] = 12
     config_dict['tourn_size'] = 3
     config_dict['kernel_name'] = 'regression'
+    config_dict['parsimony_max'] = 50
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp

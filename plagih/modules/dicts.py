@@ -11,7 +11,6 @@ fitt_dict = {'classification': 'max',
 FIRST_TREE = 1
 first_action = 'action0'
 
-
 delete_this = True
 
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')

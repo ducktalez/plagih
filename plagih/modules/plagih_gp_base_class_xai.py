@@ -40,7 +40,7 @@ class ExplainableGP(object):
         self.restart_vers = 'v0.75'
 
         # init values with dummies (just to have all self values here for overview)
-        self.tree_meta = {}  # LUT to save all expressions with their corresponding meta data (e.g. fitness). needs memory.
+        self.tree_meta = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw', 'gen+nr'}
         self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}  # a dict with all pareto candidates. key is complexity, value is tree meta
         self.population_base = []  # population that is taken to the next generation
@@ -54,6 +54,7 @@ class ExplainableGP(object):
         self.restart_count = 0
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
+        self.pop_next = None
 
         # some config_dict values have to be used quite often...
         self.config = config_dict
@@ -72,7 +73,7 @@ class ExplainableGP(object):
         self.tf_device_log = False  # TF device usage logging (for debugging)
 
         # some useful stuff
-        self.monitoring_dict = {'genepool_size': {},
+        self.monitoring_dict = {'population_tmp_done-size': {},
                                 'fitness_average': {},
                                 'best_candidate': {},
                                 'total_found_trees': {},
@@ -87,10 +88,6 @@ class ExplainableGP(object):
         """
         regular plagih-config run
         """
-
-        print('Below, some paths')
-        print(self.root_dir)
-        print(file_backup_pickle)
 
         path_backup = self.root_dir / file_backup_pickle
         if Path.is_file(path_backup) and not self.config['force_new_run']:
@@ -144,6 +141,7 @@ class ExplainableGP(object):
         else:
             rate_s = pop_max
 
+
         self.gen_random_from_scratch(rate_s)
 
         self.gen_finalize()
@@ -182,12 +180,14 @@ class ExplainableGP(object):
 
             self.gen_reset_parameters()
 
+            # Creating a new generation ############
             for name, gp_function in gp_list:
                 time_evolve = time.perf_counter()
                 self.print_g('ggg', '-->Evolve: ({}) took: {:4.2f}sec.'.format(name, time.perf_counter() - time_evolve))
 
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
+            # ######################################
 
             self.gen_finalize()
 
@@ -389,7 +389,7 @@ class ExplainableGP(object):
 
             no_fault = True
             for enum, open_xtypes in enumerate(result['result']):
-                if not self.eval_value_is_useable(open_xtypes):
+                if not self.check_value_is_real(open_xtypes):
                     no_fault = False
                     # todo this is a bad workaround
                     result['result'][enum] = 1
@@ -451,59 +451,72 @@ class ExplainableGP(object):
     #   Population specific                       |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def pop_genepool_create(self, population):
+    def pop_eval_remaining(self):
 
         """
-        Create the gene pool
-        - Add a candidate if its parsimony is within the threshold
-
+        Evaluate all trees in self.population_tmp_eval
         """
-        self.print_g('gggg', 'Gene Pool for Generation: {}...'.format(self.gen_id))
-        dominator_count = 0
-        gene_pool = {}
-        fail_count = [0, 0]
 
-        for tree_num in range(len(population)):
-            tree = population[tree_num]
+        for tree_id in pop_iterate_trees(self.population_tmp_eval):
+
+            tree = self.population_tmp_eval[tree_id]
+
+            # if tree_get_id(tree) != tree_id:
+            #     print('delete this:', tree_get_id(tree), tree_id)
+            #     raise
+
             try:
-                if self.origin_exists():
-                    tree_ident, tree_meta = self.tree_get_meta(tree, tree_origin=self.origin['tree'])
-                else:
-                    tree_ident, tree_meta = self.tree_get_meta(tree)
+                fitness_train = self.tree_eval_fitness_train(tree)
+                tree = tree_set_fitness(tree, fitness_train)
             except Exception as ex:
-                printez('www', 'Error while getting meta Info: {}'.format(ex), self.print_type)
-                fail_count[0] += 1
+                printez('www', 'Error while getting meta Info: {} {}'.format(ex, self.print_type))
                 continue
 
-            if not self.eval_value_is_useable(tree_meta['fitness_train']):
-                fail_count[1] += 1
-                continue
+            self.pop_append_late(tree)  # todo the appendix appendaroo
 
-            population[tree_num] = tree_set_fitness(tree, tree_meta['fitness_train'], precision=self.config['precision'])
-            gene_pool[tree_num] = tree_meta
+        return
 
-            if self.origin_exists():
-                if self.kernel.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
-                    dominator_count += 1
-            else:
-                pass
-
-        self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.gen_id, dominator_count))
-
-        return gene_pool, population
-
-    def pop_pareto_update(self):
+    def origin_tree_get(self):
         """
-        Builds up the pareto front
-        1. adds new entries from parsimony_best_meta
-        2. deletes entries that are now obsolete
+        Safely return an origin tree
+        """
+        if self.origin_exists():
+            tree_origin = self.origin['tree']
+        else:
+            tree_origin = None
+        return tree_origin
+
+    def pop_add_tree_midrun(self, tree):
+        """
+        Trying to add another tree to the current population
+        - evaluate the tree
+        - append to population
+        - update gene_pool
+        -
         """
 
+        # tree = self.tree_enrich(tree, last_evolution='p-sym')  # todo test added trees
+        print('delete soon\n', tree)
+        if self.tree_check_core_all(tree):
+            self.population_tmp_done.append(tree)
+
+        self.parsimony_best_update()
+        self.pareto_update_insert()
+
+        return
+
+    def pareto_update_insert(self):
+        """
+        update new entries in the pareto dict
+        """
         sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
         best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
 
-        for parsim, meta in sorted_parsimony_best:
-            fitness = meta['fitness_train']
+        for tree_id in pop_iterate_trees(self.population_tmp_done):
+            tree = self.population_tmp_done[tree_id]
+            fitness = tree_get_fitness(tree)
+            parsim = tree_get_parsimony(tree)
+            pareto_improved = None
 
             if self.kernel.fitness_compare(fitness, best_fit):
                 if self.pareto.get(parsim):
@@ -511,12 +524,26 @@ class ExplainableGP(object):
                     if self.kernel.fitness_compare(fitness, pareto_fit):
                         self.pareto[parsim] = fitness
                         self.printpl('a', 'Pareto update at {}, with new fitness: {}. Old was: {}.'.format(parsim, fitness, best_fit))
-
+                        pareto_improved = True
                 else:
                     self.pareto[parsim] = fitness
                     self.printpl('a', 'Pareto new entry at {} with fitness: {:4.2f}.'.format(parsim, fitness))
+                    pareto_improved = True
                 best_fit = fitness
 
+            if pareto_improved:
+                sym_tree = tree_evolve_reduce(tree, completely=True)
+                if tree_get_expr_raw(sym_tree, node_id=root_id) != tree_get_expr_raw(tree, node_id=root_id):
+                    self.printpl('aa', 'Pareto entry could be further sympified!')
+                    self.pop_add_tree_midrun(sym_tree)
+                else:
+                    print_warning('w', 'not sure if tis happens')
+        return
+
+    def pareto_update_clean(self):
+        """
+        remove superfluous pareto entries
+        """
         sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
         last_pareto_fit = next(iter(sorted_pareto))[1]
         for parsim, fitness in sorted_pareto[1:]:
@@ -525,29 +552,44 @@ class ExplainableGP(object):
             else:
                 self.pareto.pop(parsim)
                 self.printpl('aa', 'Pareto entry at {} got obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(parsim, last_pareto_fit, fitness))
+        return
+
+    def pareto_update(self):
+        """
+        Builds up the pareto front
+        1. adds new entries from parsimony_best_meta
+        2. deletes entries that are now obsolete
+        """
+
+        self.pareto_update_insert()
+        self.pareto_update_clean()
 
         return
 
-    def pop_parsimony_best_update(self, gene_pool):
+    def parsimony_best_update(self):
         """
-
+        Updates a list with the best candidates for each parsimony.
+        Do not confuse with pareto
         """
 
         # 1. Check every potential candidate
-        for key, meta in gene_pool.items():
+        for tree_id in pop_iterate_trees(self.population_tmp_done):
 
-            parsim = meta['parsimony']
-            fitness_train = meta['fitness_train']
+            tree = self.population_tmp_done[tree_id]
+
+            print('wer', tree)
+            parsim = tree_get_parsimony(tree)  # todo random is eval parsimony used correctly everywhere?
+            fitness_train = tree_get_fitness(tree)
 
             # 3. is the tree better than the current best at this parsimony dim_y?
             if parsim in self.parsimony_best_meta:
                 comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
                 if self.kernel.fitness_compare(fitness_train, comp_fit):
                     self.printpl('aa', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
-                    self.parsimony_best_meta[parsim] = meta
+                    self.parsimony_best_meta[parsim] = tree_get_meta(tree)
             else:
                 self.printpl('aa', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
-                self.parsimony_best_meta[parsim] = meta
+                self.parsimony_best_meta[parsim] = tree_get_meta(tree)
 
         return
 
@@ -558,15 +600,16 @@ class ExplainableGP(object):
     def gen_reset_parameters(self):
         """
         Sets the parameters for the generation
-        - reset population_tmp
+        - reset population_tmp_done
         - Linearly increase threshold for parsimony
         """
 
         self.gen_id += 1
         self.time_genstart = time.perf_counter()
         self.debug_warnings = {}
-        self.population_tmp = ['Plagih GP - Evolving Generation']  # initialise population_tmp to host the next generation
+        self.population_tmp_done = ['Plagih GP - Evolving Generation']  # initialise population_tmp_done to host the next generation
         self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)
+        self.population_tmp_eval = ['Trees to evaluate']
 
         return
 
@@ -588,7 +631,7 @@ class ExplainableGP(object):
         """
         Copy an entry from the pareto candidates into the population
         """
-        # print('before olymp:', len(self.population_tmp))
+        # print('before olymp:', len(self.population_tmp_done))
         for n in range(repro_rate):  # quantity of Trees to be copied without mutation
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
@@ -598,7 +641,7 @@ class ExplainableGP(object):
                 label_list = ast_convert_from_expr(expr_raw, build=True)
                 p_tree = Plagih_Tree(label_list)
                 olymp_winner = p_tree.get_uninstanced_tree()
-                self.pop_append(olymp_winner, last_evolution='repro')
+                self.pop_append(olymp_winner, last_evolution='r(oly)')
 
         return
 
@@ -666,11 +709,14 @@ class ExplainableGP(object):
         """
 
         """
+
         if self.origin_exists():
+
             tree_origin = self.origin['tree'].copy()
             for i in range(repro_rate):
+
                 tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
-                self.pop_append(tree, last_evolution='r(origin)')
+                self.pop_append(tree, last_evolution='new(o)')
 
         return
 
@@ -794,6 +840,7 @@ class ExplainableGP(object):
         -> set last evolution (for analysing gp operators. e.g. if no good trees originate from crossover, something might be wrong)
         -> set xtype for all nodes. todo make this when the node is added
         """
+
         if tree is None:
             print_e('Tree from last_evolution: {} failed.'.format(last_evolution))
             raise Exception('Tree is None')
@@ -810,7 +857,7 @@ class ExplainableGP(object):
 
         return tree
 
-    def tree_check_all(self, tree):
+    def tree_check_core_all(self, tree):
         """
         Performs all checks that we currently have
         """
@@ -828,6 +875,32 @@ class ExplainableGP(object):
 
         return tree_works
 
+    def pop_append_late(self, tree):
+        """
+        Everything is done, as we filled all the other information in pop_append()
+        - enumerate
+        """
+        if tree_get_id(tree) != '':
+            print('delete this', tree, tree_get_id(tree))
+        else:
+            tree = tree_set_id(tree, len(self.population_tmp_done))
+        self.population_tmp_done.append(tree)
+        return
+
+    def pop_base_transfer(self):
+        """
+        Copy the genepool of a gen
+        """
+        self.population_base = ['Population Selection in Generation {}.'.format(str(self.gen_id))]  # empty list
+
+        for tree_id, tree in enumerate(self.population_tmp_done):
+            tree_copy = pop_tree_copy(self.population_tmp_done, tree_id)  # what about entry #1?
+            tree_copy = tree_set_id(tree_copy, tree_id)  # todo +1`??
+            self.population_base.append(tree_copy)
+            # todo could enum trees here again
+
+        return
+
     def pop_append(self, tree, last_evolution=''):
         """
         Safely append a tree to the population.
@@ -838,37 +911,52 @@ class ExplainableGP(object):
         - check if the tree is actually valid
         ->
         """
-        if tree is None:
-            return
-        else:
 
-            tree = self.tree_enrich(tree, last_evolution=last_evolution)
+        tree = self.tree_enrich(tree, last_evolution=last_evolution)
 
-            if self.tree_check_all(tree):
-                self.population_tmp.append(tree)
+        if self.tree_check_core_all(tree):
+            tree_ident = tree_get_ident(tree)
+
+            if tree_ident in self.tree_meta:
+
+                tree_meta = self.tree_meta[tree_ident]
+                tree = tree_set_meta(tree, tree_meta)
+                tree = tree_set_id(tree, len(self.population_tmp_done))  # todo test and find better solution
+                self.population_tmp_done.append(tree)
+            else:
+                parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
+                if parsimony <= self.parsimony_max:
+                    tree = tree_set_parsimony(tree, parsimony)
+                    tree = tree_set_fitness(tree, '')
+                    tree = tree_set_id(tree, '')  # todo test and find better solution
+                    self.population_tmp_eval.append(tree)
 
         return
 
     def gen_finalize(self):
 
         """
-        From raw population_tmp to new population_genepool
+        From raw population_tmp_done to new population_genepool
         - Gene_pool with tree's parsimony (and store info in the tree)
         -
 
         """
 
-        self.population_tmp = pop_enum_trees(self.population_tmp)  # pop +tree_id
-        gene_pool, self.population_tmp = self.pop_genepool_create(self.population_tmp)
-        self.analyze_genepool(gene_pool, self.root_dir, self.gen_id)
-        self.pop_parsimony_best_update(gene_pool)
-        self.pop_pareto_update()
-        self.population_base = pop_copy_genepool(self.population_tmp, gene_pool, self.gen_id)
-        file_population_karoo(self.population_tmp, 'tmp', self.root_dir, self.gen_id)
+        # self.population_tmp_done = pop_enum_trees(self.population_tmp_done)  # todo not neccessary?
+
+        # gene_pool = self.pop_genepool_create()
+        self.pop_eval_remaining()
+
+        self.parsimony_best_update()
+        self.pareto_update()  # todo todo save sympified tree
+
+        self.pop_base_transfer()
+        self.pop_analyze()
+        file_population_karoo(self.population_tmp_done, 'tmp', self.root_dir, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
-            len(set(gene_pool.keys())),
+            len(self.population_tmp_done),
             self.config['pop_max'],
             self.gen_id,
             time.perf_counter() - self.time_genstart))
@@ -963,7 +1051,7 @@ class ExplainableGP(object):
         expr_raw = tree_get_expr_raw(tree, P_first_node)
 
         try:
-            expr_sym = tree_expr_sympify(algo_raw=expr_raw)
+            expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
         except:
             raise Exception('Your origin algorithm could not be sympified. Aborting.')
         if expr_sym != expr_raw:  # todo check if both expressions have the same structure, not if they are equal
@@ -971,54 +1059,40 @@ class ExplainableGP(object):
 
         self.origin = {'tree': tree, 'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
         try:
-            origin_hash, origin_meta = self.tree_get_meta(tree, tree_origin=self.origin['tree'])
+            fitness_train = self.tree_eval_fitness_train(tree)
+            tree = tree_set_fitness(tree, fitness_train)
         except Exception:
             raise Exception('Your origin algorithm already caused an exception!')
 
-        self.origin['fitness_train'] = origin_meta['fitness_train']
-        self.parsimony_best_meta[0] = origin_meta
+        self.origin['fitness_train'] = fitness_train
+        self.parsimony_best_meta[0] = self.origin
         self.pareto[0] = self.origin['fitness_train']
 
-        self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(origin_meta['fitness_train'], time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(fitness_train, time.perf_counter() - self.time_start))
 
         return
 
-    def tree_get_meta(self, tree, tree_origin=None):
+    def tree_eval_fitness_train(self, tree):
         """
-        gets all the main tree information
-        1. tree_identifier (expr_raw)
-        2. expr_sym
-        3. parsimony
-        4. fitness_train
+
         """
-        # 1. get expr_raw - what is needed to compute the tree identifier
-        expr_raw = tree_get_expr_raw(tree, root_id)
-        tree_ident = hash(expr_raw)  # sfeh: potential for improvement- use expr_sym in separate dict as identifier.
 
-        # 2 Did we have this tree already? -> Nice, we have everything
-        if tree_ident in self.tree_meta:
-            tree_meta = self.tree_meta[tree_ident]
+        expr_raw = tree_get_expr_raw(tree, node_id=root_id)
 
-        else:  # 2.2 New tree, but still skip fitness eval for complex trees
-            parsimony = tree_get_parsimony(tree, self.config['complexity_measure'], origin_tree=tree_origin)
-            if parsimony < self.parsimony_max:
-                # print('Algo raw:', str(expr_raw))  # importantprint 2 for expr_raw
-                try:  # 3. With tensorflow
-                    expr_sym = tree_expr_sympify(algo_raw=expr_raw)
-                except Exception as ex:
-                    raise Exception('Expr could not be sympified: {}. Ex: {}'.format(expr_raw, ex))
+        try:
+            expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
+        except Exception as ex:
+            raise Exception('Expr could not be sympified: {}. Ex: {}'.format(expr_raw, ex))
 
-                fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
-                tree_meta = {'parsimony': float(parsimony), 'fitness_train': float(fitness_train), 'expr_sym': str(expr_sym), 'expr_raw': str(expr_raw)}
-                self.tree_meta[tree_ident] = tree_meta
+        fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
 
-            else:
-                raise Exception('Tree too complex, parsimony {} > {}.'.format(parsimony, self.parsimony_max))
+        if not self.check_value_is_real(fitness_train):
+            raise Exception('fitness_train is not a real number: {}'.format(fitness_train))
 
-        return tree_ident, tree_meta
+        return fitness_train
 
     def remove_this_tree(self):
-        self.printpl('ww', 'This still is a todo')
+        self.printpl('ww', 'This still is a sfeh')
         """
         If a tree makes problems, delete it somehow.
         - set parsimony very high?
@@ -1076,8 +1150,8 @@ class ExplainableGP(object):
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
             self.plot_end(data_tuples, path_plots, plt_title='average fitness', plt_y_label='fitness', linestyle='-')
 
-        if self.monitor_dict['genepool_size'] == 'y':
-            data_tuples = sorted(list(self.monitoring_dict['genepool_size'].items()))
+        if self.monitor_dict['population_tmp_done-size'] == 'y':
+            data_tuples = sorted(list(self.monitoring_dict['population_tmp_done-size'].items()))
             self.plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='')
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
@@ -1096,7 +1170,7 @@ class ExplainableGP(object):
 
         return
 
-    def eval_value_is_useable(self, fitness):
+    def check_value_is_real(self, fitness):
         """
         Returns bool value if we can use the calculated fitness
         Fitness values might evaluate to weird stuff
@@ -1106,44 +1180,54 @@ class ExplainableGP(object):
         """
         return fitness == fitness and fitness is not float('inf')
 
-    def analyze_genepool(self, gene_pool, root_path, gen_id):
+    def pop_analyze(self):
         """
-        Give the user some feedback
+        Analysing this generation
+        - amount of trees
+        - fittest tree
+        - average fitness
+        - average tree complexity
+        # todo len(self.population_tmp_done) is used too often
         """
 
         # How many survived in the selection?
-        self.monitoring_dict['genepool_size'][int(gen_id)] = len(gene_pool)
-        if len(gene_pool) > 0:
-            self.print_g('ggg', 'The generation`s population is: {}'.format(len(gene_pool)))
-        else:
-            self.printpl('e', 'There are no Trees in the gene pool.')
-            self.terminate_run(root_path)
+        self.monitoring_dict['population_tmp_done-size'][int(self.gen_id)] = len(self.population_tmp_done)
 
-        if not self.best_fitness:
-            if self.origin_exists():
-                self.best_fitness = self.origin['fitness_train']
-            else:
-                self.best_fitness = next(iter(gene_pool.values()))['fitness_train']
+        if len(self.population_tmp_done) <= 0:
+            self.terminate_run(self.root_dir)
 
-        fitness_train_sum, count_success = 0, 0
-        for _, meta in gene_pool.items():
-            fitness = float(meta['fitness_train'])
-            if self.eval_value_is_useable(fitness):  # weird comparison is NaN Test
-                count_success += 1
+        # Find the fittest tree, also average fitness
+        self.best_fitness = self.population_tmp_done[FIRST_TREE]
+
+        fitness_train_sum = 0
+
+        # dominator_count = 0
+
+        for tree in self.population_tmp_done:
+            fitness = tree_get_fitness(tree)
+            if self.check_value_is_real(fitness):  # todo take care of this earlier
                 fitness_train_sum += fitness  # for fitness average
                 if self.kernel.fitness_compare(fitness, self.best_fitness):
                     self.best_fitness = fitness
 
-        average_fitness = fitness_train_sum / max(count_success, 1)
-        self.monitoring_dict['fitness_average'][gen_id] = average_fitness
+        #     # Count dominators # todo why
+        #     if self.origin_exists():
+        #         if self.kernel.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
+        #             dominator_count += 1
+        #     else:
+        #         pass
+        # self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.self.gen_id, dominator_count))
 
-        self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
+        average_fitness = fitness_train_sum / max(len(self.population_tmp_done), 1)
+        self.monitoring_dict['fitness_average'][self.gen_id] = average_fitness
+        self.monitoring_dict['best_candidate'][self.gen_id] = self.best_fitness
 
+        # Tree complexity
         complexity_sum = 0
-        for tree in self.population_tmp:
-            complexity_sum += len(tree_get_ids(tree, karoo=True))
-        avg_complexity = complexity_sum / len(self.population_tmp)
-        self.monitoring_dict['complexity_average'][gen_id] = avg_complexity
+        for tree in self.population_tmp_done:
+            complexity_sum += len(tree_nodes_get_ids(tree, karoo=True))
+        avg_complexity = complexity_sum / len(self.population_tmp_done)
+        self.monitoring_dict['complexity_average'][self.gen_id] = avg_complexity
 
         return
 
@@ -1282,6 +1366,15 @@ def pop_enum_trees(population):
     return population
 
 
+def pop_iterate_trees(population):
+    """
+    """
+    tree_ids = []
+    for tree_id in range(FIRST_TREE, len(population)):  #
+        tree_ids.append(tree_id)
+    return tree_ids
+
+
 def file_population_karoo(population, pop_name, path, gen_id):
     """
     Save population_* to disk.
@@ -1364,7 +1457,24 @@ def load_funcarray_from_csv(op_csv_path):
     return func_array
 
 
-def tree_get_parsimony(tree, parsimony_distance, origin_tree=None):
+def tree_get_ident(tree):
+    """
+    What is used as identificator for a tree...
+    - hash(expr_raw)
+    """
+    expr_raw = tree_get_expr_raw(tree, root_id)
+    tree_ident = hash(expr_raw)
+    return tree_ident
+
+
+def tree_get_parsimony(tree):
+    parsimony = tree[T_parsimony][1]
+    if parsimony != '':
+        parsimony = float(parsimony)
+    return parsimony
+
+
+def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None):
     """
     parsimony_distance: compute the chosen distance by the user.
 

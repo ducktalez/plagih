@@ -893,7 +893,8 @@ class ExplainableGP(object):
         """
         self.population_base = ['Population Selection in Generation {}.'.format(str(self.gen_id))]  # empty list
 
-        for tree_id, tree in enumerate(self.population_tmp_done):
+        for tree_id in pop_iterate_trees(self.population_tmp_done):
+            tree = self.population_tmp_done[tree_id]
             tree_copy = pop_tree_copy(self.population_tmp_done, tree_id)  # what about entry #1?
             tree_copy = tree_set_id(tree_copy, tree_id)  # todo +1`??
             self.population_base.append(tree_copy)
@@ -1197,16 +1198,18 @@ class ExplainableGP(object):
             self.terminate_run(self.root_dir)
 
         # Find the fittest tree, also average fitness
-        self.best_fitness = self.population_tmp_done[FIRST_TREE]
+        self.best_fitness = tree_get_fitness(self.population_tmp_done[FIRST_TREE])
 
         fitness_train_sum = 0
 
         # dominator_count = 0
 
-        for tree in self.population_tmp_done:
+        for tree_id in pop_iterate_trees(self.population_tmp_done):
+            tree = self.population_tmp_done[tree_id]
             fitness = tree_get_fitness(tree)
             if self.check_value_is_real(fitness):  # todo take care of this earlier
                 fitness_train_sum += fitness  # for fitness average
+                print('lelele', fitness, self.best_fitness)
                 if self.kernel.fitness_compare(fitness, self.best_fitness):
                     self.best_fitness = fitness
 
@@ -1368,6 +1371,7 @@ def pop_enum_trees(population):
 
 def pop_iterate_trees(population):
     """
+    Ich schwöre welcher Hurensohn hat diese Kopfzeile gemacht?
     """
     tree_ids = []
     for tree_id in range(FIRST_TREE, len(population)):  #

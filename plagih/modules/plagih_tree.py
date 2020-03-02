@@ -223,6 +223,8 @@ def tree_set_modifyable_nodes(tree, origin_tree):
 
     if non_modifiable_nodes_v2 != non_modifiable_nodes:
         # todo if this did not raise for quite a time, use v2 please
+        print(origin_tree)
+        print('...how?', non_modifiable_nodes_v2, non_modifiable_nodes)
         raise
 
     for non_modifiable in non_modifiable_nodes:

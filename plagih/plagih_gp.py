@@ -31,7 +31,7 @@ def create_config_dict():
         'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
                     'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
-                    'genepool_size': 'y'
+                    'population_tmp_done-size': 'y'
                     },
         'period': {'time_monitor': None,    # in sec
                    'time_save': None,       # in sec

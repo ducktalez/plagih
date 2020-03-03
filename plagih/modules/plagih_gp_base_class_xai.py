@@ -35,7 +35,7 @@ class ExplainableGP(object):
 
     def __init__(self, config_dict):
 
-        print('Initializing XAP GP run. Name: {}.'.format(config_dict['name']))
+        print('\n\tInitializing XAP GP run. Name: {}{}{}.'.format(BColors.MAGENTA, config_dict['name'], BColors.RESET))
         self.time_start = time.perf_counter()
         self.restart_vers = 'v0.75'
 
@@ -84,6 +84,23 @@ class ExplainableGP(object):
 
         return
 
+    def plagih_update_files(self):
+        """
+        Without starting a new run, get the most important files
+        """
+
+        path_backup = self.root_dir / file_backup_pickle
+        if Path.is_file(path_backup):
+            self.print_g('g', 'Backup file for updating analysis files exists...')
+            try:
+                self.plagih_load_backup(path_backup)
+            except Exception as ex:
+                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}\nStarting a new run.'.format(ex))
+                raise
+            self.terminate_run(self.root_dir)
+        else:
+            raise IOError('Backup file does not exist!')
+
     def plagih_gp_run(self):
         """
         regular plagih-config run
@@ -93,17 +110,17 @@ class ExplainableGP(object):
         if Path.is_file(path_backup) and not self.config['force_new_run']:
             self.print_g('g', 'Restarting old run now...')
             try:
-                self.run_load_backup(path_backup)
+                self.plagih_load_backup(path_backup)
             except Exception as ex:
                 print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}\nStarting a new run.'.format(ex))
                 # todo delete old plots, append to old config,
 
         if self.gen_id == 0:
-            self.main_generation_first()
+            self.gen_create_first()
 
         write_config_file(self.root_dir, self.config, self.gen_id, self.kernel, self.datetime)
 
-        self.main_generation_loop()
+        self.gen_create_loop()
         self.terminate_run(self.root_dir)
 
     def file_directories_create(self, path_cwd):
@@ -118,7 +135,7 @@ class ExplainableGP(object):
 
         return
 
-    def main_generation_first(self):
+    def gen_create_first(self):
         """
         Everything that needs to be custom_done for the first generation
         - Extracts "origin Tree" from file
@@ -126,7 +143,7 @@ class ExplainableGP(object):
         - Evaluate the first Generation
         - Monitoring initialisation and monitoring
         """
-        self.print_g('gg', 'Preparing to evolve first Generation. Gen {}.'.format(self.gen_id))
+        self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
         rate_o = self.evolve_rates['random from origin']
@@ -141,25 +158,12 @@ class ExplainableGP(object):
         else:
             rate_s = pop_max
 
-
         self.gen_random_from_scratch(rate_s)
 
         self.gen_finalize()
         file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
 
-    def run_continues(self):
-        """
-        checks if the run can continue
-        """
-        cond_1 = self.gen_id >= self.config['gen_max']
-        cond_2 = time.perf_counter() - self.time_start > self.config['time_max']
-        cond_3 = self.custom_done
-        if cond_1 or cond_2 or cond_3:
-            return False
-        else:
-            return True
-
-    def main_generation_loop(self):
+    def gen_create_loop(self):
         """
         Creates all new Generations.
         - adjust parameters for this generation (parsimony threshold)
@@ -175,6 +179,18 @@ class ExplainableGP(object):
                    ('crossover branches', self.gen_crossover_branch),
                    ('random from origin', self.gen_random_from_origin),
                    ('random from scratch', self.gen_random_from_scratch)]
+
+        gp_list_mutate = [('repro one', self.gen_reproduce),
+                       ('repro pareto', self.gen_reproduce_olymp),
+                       ('repro reduced one', self.gen_reproduce_reduce),
+                       ('point mutate function', self.gen_mutate_point),
+                       ('filter floats', self.gen_mutate_filter),
+                       ('branch mutate insert', self.gen_mutate_branch),
+                       ('random from origin', self.gen_random_from_origin)]
+
+        gp_list_create = [('random from scratch', self.gen_random_from_scratch)]
+
+        gp_list_two_parents = [('crossover branches', self.gen_crossover_branch)]
 
         while self.run_continues():  # max generation, max time, done...
 
@@ -198,6 +214,18 @@ class ExplainableGP(object):
             printez('g', 'Done after Generation {}.'.format(self.gen_id), print_type=self.print_type)
             return
 
+    def run_continues(self):
+        """
+        checks if the run can continue
+        """
+        cond_1 = self.gen_id >= self.config['gen_max']
+        cond_2 = time.perf_counter() - self.time_start > self.config['time_max']
+        cond_3 = self.custom_done
+        if cond_1 or cond_2 or cond_3:
+            return False
+        else:
+            return True
+
     def origin_exists(self):
         if self.origin is not None:
             return True
@@ -206,7 +234,8 @@ class ExplainableGP(object):
 
     def periodical_procedures(self):
         """
-        Every few generations, save the current status
+        Every few generations, update the created files
+        - default is in every generation, but saving every n-th gen or after time passed is possible aswell
         """
         if self.config['overwrite periodic files']:
             tmp_path = make_dir(self.root_dir)
@@ -298,7 +327,7 @@ class ExplainableGP(object):
         self.func_array = func_array
         return
 
-    def run_load_backup(self, path_backup):
+    def plagih_load_backup(self, path_backup):
         """
 
         """
@@ -314,6 +343,12 @@ class ExplainableGP(object):
 
         with Path.open(path_backup, 'rb') as file:
             run_data = pickle.load(file)
+
+        try:
+            self.monitoring_dict['population_tmp_done-size'] = run_data['genepool_size']
+            print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
+        except:
+            print_warning('w', 'Delete this. This is a newer version where gene_pool was kicked out')
 
         self.restart_count = run_data['self.restart_count']  # counting how often this was restarted
         self.gen_id = run_data['self.gen_id']
@@ -388,11 +423,11 @@ class ExplainableGP(object):
                 fittest_parsimony = parsimony
 
             no_fault = True
-            for enum, open_xtypes in enumerate(result['result']):
-                if not self.check_value_is_real(open_xtypes):
+            for enum, entry in enumerate(result['tf_result']):
+                if not self.check_value_is_real(entry):
                     no_fault = False
                     # todo this is a bad workaround
-                    result['result'][enum] = 1
+                    result['tf_result'][enum] = 1
 
             if no_fault:
                 kernel_result = self.kernel.conclusion_get_text(result, fitness_control_best)
@@ -409,6 +444,7 @@ class ExplainableGP(object):
             file.close()
 
         return
+
     # todo wenn ein gp lauf immer wieder dieselben Lösungen findet, verbiete einige Grundstrukturen.
     # todo ...oder andere einschränkungen. sin verbieten. wenn nichts besseres gefunden wird, weiter
 
@@ -438,13 +474,33 @@ class ExplainableGP(object):
         - create trees from pareto expressions
         """
 
+        # todo delete old entries? -> Maybe start visualisation separately?
+
+        forest_grouped = []
+        path_trees = make_dir(root_path / folder_trees)
+
         for parsim, fit in sorted(list(pareto.items())):
             tree_meta = self.parsimony_best_meta[parsim]
             expr_raw = tree_meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
             tree = karoo_tree_from_labellist(label_list)
             tree = self.tree_enrich(tree, last_evolution='')
-            file_tree_save_latex(tree, root_path, str(tree_meta['parsimony']))
+
+            # save the small forest inputs
+            tikz_code = tree_viz_get_tex_forest(tree)
+
+            file = Path.open(path_trees / 'tree-{}.tex'.format(str(tree_meta['parsimony'])), 'w')
+            file.write(tikz_code)
+            file.close()
+
+            # save a ready-to-use tex file with all pareto trees
+            forest_grouped.append('Pareto entry at parsimony {} with fitness {}.\n{}\n\\newpage'.format(parsim, fit, tree_viz_get_tex_forest(tree)))  # todo this kind of is latex aswell
+
+        latex_full_doc = latex_standalone_doc_forest(forest_grouped)
+        file = Path.open(path_trees / '#all_trees.tex', 'w')
+        file.write(latex_full_doc)
+        file.close()
+
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -454,25 +510,27 @@ class ExplainableGP(object):
     def pop_eval_remaining(self):
 
         """
-        Evaluate all trees in self.population_tmp_eval
+        Evaluate all trees in self.population_tmp_eval.
+        This is the part of the population that could not be found in the dict.
         """
+
+        count_fails = 0
 
         for tree_id in pop_iterate_trees(self.population_tmp_eval):
 
             tree = self.population_tmp_eval[tree_id]
 
-            # if tree_get_id(tree) != tree_id:
-            #     print('delete this:', tree_get_id(tree), tree_id)
-            #     raise
-
             try:
                 fitness_train = self.tree_eval_fitness_train(tree)
                 tree = tree_set_fitness(tree, fitness_train)
             except Exception as ex:
-                printez('www', 'Error while getting meta Info: {} {}'.format(ex, self.print_type))
+                print_warning('www', 'Error while getting meta Info: {} {}'.format(ex, self.print_type), print_type=self.print_type)
+                count_fails += 1
                 continue
 
             self.pop_append_late(tree)  # todo the appendix appendaroo
+
+        print_warning('ww', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(len(self.population_tmp_eval), self.gen_id, count_fails), print_type=self.print_type)
 
         return
 
@@ -494,9 +552,9 @@ class ExplainableGP(object):
         - update gene_pool
         -
         """
+        self.printpl('i', 'Trying to add tree mid-run...')
 
         # tree = self.tree_enrich(tree, last_evolution='p-sym')  # todo test added trees
-        print('delete soon\n', tree)
         if self.tree_check_core_all(tree):
             self.population_tmp_done.append(tree)
 
@@ -537,7 +595,7 @@ class ExplainableGP(object):
                     self.printpl('aa', 'Pareto entry could be further sympified!')
                     self.pop_add_tree_midrun(sym_tree)
                 else:
-                    print_warning('w', 'not sure if tis happens')
+                    print_warning('iii', 'The found pareto entry was already in its sympified version')
         return
 
     def pareto_update_clean(self):
@@ -577,7 +635,6 @@ class ExplainableGP(object):
 
             tree = self.population_tmp_done[tree_id]
 
-            print('wer', tree)
             parsim = tree_get_parsimony(tree)  # todo random is eval parsimony used correctly everywhere?
             fitness_train = tree_get_fitness(tree)
 
@@ -668,7 +725,6 @@ class ExplainableGP(object):
         for i in range(repro_rate):  # quantity of Trees to be generated through mutation
             tree = self.pop_selection_tournament(self.tourn_size)
             tree = tree_evolve_mutate_point(tree, self.func_array, self.variables_dict)
-
             self.pop_append(tree, last_evolution='point')
 
         return
@@ -681,7 +737,6 @@ class ExplainableGP(object):
         for i in range(repro_rate):
             tree = self.pop_selection_tournament(self.tourn_size)
             try:
-                self.debug_warnings['824 tree'] = tree
                 new_tree = tree_evolve_mutate_filter_one(tree)
                 if len(new_tree) > 1:
                     self.pop_append(new_tree, last_evolution='filter')
@@ -707,14 +762,13 @@ class ExplainableGP(object):
 
     def gen_random_from_origin(self, repro_rate):
         """
-
+        
         """
 
         if self.origin_exists():
 
             tree_origin = self.origin['tree'].copy()
             for i in range(repro_rate):
-
                 tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
                 self.pop_append(tree, last_evolution='new(o)')
 
@@ -1052,11 +1106,12 @@ class ExplainableGP(object):
         expr_raw = tree_get_expr_raw(tree, P_first_node)
 
         try:
-            expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
+            expr_sym = expr_sympify(expr_raw=expr_raw)
         except:
             raise Exception('Your origin algorithm could not be sympified. Aborting.')
-        if expr_sym != expr_raw:  # todo check if both expressions have the same structure, not if they are equal
-            print_warning('ww', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}'.format(expr_raw, expr_sym))
+
+        if expr_sym != expr_raw:  # todo check if both expressions have the same structure, not if they are equal. try eval=False?
+            print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}'.format(expr_raw, expr_sym))
 
         self.origin = {'tree': tree, 'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
         try:
@@ -1075,13 +1130,16 @@ class ExplainableGP(object):
 
     def tree_eval_fitness_train(self, tree):
         """
-
+        Evaluating the fitness of a tree.
+        - extract the expression the tree is holding
+        - sympify the expression
+        - (if sympify fails, evaluating does not make sense! Check sympify errors)
         """
 
         expr_raw = tree_get_expr_raw(tree, node_id=root_id)
 
         try:
-            expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
+            expr_sym = expr_sympify(expr_raw=expr_raw)
         except Exception as ex:
             raise Exception('Expr could not be sympified: {}. Ex: {}'.format(expr_raw, ex))
 
@@ -1144,6 +1202,8 @@ class ExplainableGP(object):
         """
         Make all plots
         """
+        import warnings
+        warnings.filterwarnings('error')
 
         path_plots = make_dir(path / folder_plots)
 
@@ -1212,7 +1272,6 @@ class ExplainableGP(object):
             fitness = tree_get_fitness(tree)
             if self.check_value_is_real(fitness):  # todo take care of this earlier
                 fitness_train_sum += fitness  # for fitness average
-                print('lelele', fitness, pop_best_fitness)
                 if self.kernel.fitness_compare(fitness, pop_best_fitness):
                     pop_best_fitness = fitness
 
@@ -1251,8 +1310,8 @@ class ExplainableGP(object):
         """
         self.file_save_files(path)
         self.auto_plots(path)
-        self.print_g('gg', ' Terminating this run. \tTotal time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
-        sys.exit()
+        self.print_g('gg', ' Terminating. \tTotal time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        # sys.exit()  # todo sys.exit prevents further stuff
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to print_type output information     |
@@ -1282,6 +1341,10 @@ class ExplainableGP(object):
         :return:
         """
 
+        if len(data_2d) == 0:
+            print_e('Plotting empty array is not possible! Data={}'.format(data_2d))
+            return
+
         # todo sklearn can split this nicer split data in x and y values
         x, y = [], []
         for a, b in data_2d:
@@ -1299,15 +1362,13 @@ class ExplainableGP(object):
         new_right = right * 1.05
 
         if beyond_lines:
-            x = [x[0]] + x + [new_right+1]
-            y = [new_top+1] + y + [y[-1]]
+            x = [x[0]] + x + [new_right + 1]
+            y = [new_top + 1] + y + [y[-1]]
 
         if step_where:
             plt.step(x, y, plt_xparam, linestyle=linestyle, marker='.', label=plt_curve_label, where=step_where)
         else:
             plt.plot(x, y, plt_xparam, linestyle=linestyle, marker='.', label=plt_curve_label)
-
-
 
         # let it start at (0,0) but +5% margin to the top and right
         plt.yscale(yscale)

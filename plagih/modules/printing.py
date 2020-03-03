@@ -34,7 +34,7 @@ def print_e(text, print_type=None, time_total=0.0):
 
 def print_warning(message_type, text, print_type=None, time_total=0.0):
     """
-
+    Printing warnings
     """
     message_style = BColors.WARNING
     message_pretxt = 'Warning: '  # Warning-yellow
@@ -58,7 +58,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
     message_posttxt = BColors.RESET
     if 'i' in message_type:
         message_style = BColors.CYAN
-        message_pretxt = 'Info: '
+        message_pretxt = ''
     elif 'e' in message_type:
         message_style = BColors.RED
         message_pretxt = 'ERROR: '
@@ -80,7 +80,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = 'Func: '
     elif 'a' in message_type:  # Timer
         message_style = BColors.GREEN
-        message_pretxt = 'Alert: '
+        message_pretxt = ''
     else:
         message_style = ''
         printez('w', 'print_type-mode {} not known.'.format(message_type))

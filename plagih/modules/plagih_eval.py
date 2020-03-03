@@ -197,7 +197,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
             tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
 
-    return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
+    return {'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
             'pairwise_fitness': pairwise_fitness}
 
 

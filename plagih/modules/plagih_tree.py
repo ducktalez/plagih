@@ -9,6 +9,7 @@ import csv
 import matplotlib.pyplot as plt
 import networkx as nx
 from plagih.modules.file_interaction import make_dir, folder_trees
+from plagih.modules.viz_with_latex import *
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -892,7 +893,7 @@ def tree_get_meta(tree):
     parsimony = tree_get_parsimony(tree)
     fitness_train = tree_get_fitness(tree)
     expr_raw = tree_get_expr_raw(tree, root_id)
-    expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
+    expr_sym = expr_sympify(expr_raw=expr_raw)
 
     tree_meta['parsimony'] = parsimony
     tree_meta['fitness_train'] = fitness_train
@@ -975,25 +976,34 @@ def tree_parsimony_relari(tree, origin_tree):
     return max(distance, 1)  # make sure, it does not return 0
 
 
-def tree_get_expr_sympify(expr_raw=None, tree=None):
+def expr_sympify(expr_raw):
     """
-    returns the sympifyed expression
+    Returns a simplified expression using sympify.
+    - sympify the expression
+    - If sympify evaluates to one of these errors: 'zoo', 'inf', '*I', 'nan', stop evaluation
+
+    Sympify is a python core module which reduced mathematical expressions.
+    Example: sympify('a+a+a+a') -> a*4
+    Note that the sympify was extended in plagih_sympify_extras.py with extra functions
+
+    Sympify fails: The results are, or contain, expressions that should/can not be evaluated
+    'zoo': (Complex infinity) E.g. when a int-number is divided by zero
+    'inf': (Regular infinity) E.g. when a float-number is divided by zero (...i know, why are there two infinities?)
+    '*I': (Complex number) E.g. when putting a number to the power of negative fractals, 1**(-0.5)
+    'nan': (Not a number) when Evaluation fails, E.g. types contradict, expression is empty, 'Mini(a, zoo' ...
+    # todo dividing by zero: For those trees, create save division? (TF tf.math.divide_no_nan)
     """
-    if tree is None and expr_raw is None:
-        print_e('Either tree or algo raw have to be set.')
-    if expr_raw is None:  # If we got a tree, we generate the expression
-        expr_raw = str(tree_get_expr_raw(tree, root_id))
 
     try:
-        expr_sym = plagih_sympify(expr_raw)
-        expr_sym_str = str(expr_sym)
+        expr_sym = str(plagih_sympify(expr_raw))
     except Exception as ex:
-        raise Exception('In sympify. Caused by this raw algorithm: {}. Ex: {}'.format(expr_raw, ex))
+        raise Exception('Sympify: Fail caused by this raw algorithm: {}. Ex: {}'.format(expr_raw, ex))
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
-        if fail_reason in expr_sym_str:
-            raise Exception('Sympify failed due to a fail reason: {}.'.format(fail_reason))
-    return expr_sym_str
+        if fail_reason in expr_sym:
+            raise Exception('Sympify: Failed due to a fail reason: {}.'.format(fail_reason))
+
+    return expr_sym
 
 
 def tree_raw_depth_prefix(tree, node_id):
@@ -1479,7 +1489,7 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
     delete_ids = tree_get_branch(tree, node_id, karoo=karoo)
     expr_raw = tree_get_expr_raw(tree, node_id)
     try:
-        expr_sym = tree_get_expr_sympify(expr_raw=expr_raw)
+        expr_sym = expr_sympify(expr_raw=expr_raw)
         label_list = ast_convert_from_expr(expr_sym, build=True)
         arity_list = [label_get_arity(label) for label in label_list]
         core = core_from_labels(label_list, arity_list)
@@ -2045,19 +2055,6 @@ def tree_get_depth_ids(tree):
     return depth_id_list
 
 
-def file_tree_save_latex(tree, root_path, name):
-    """
-    Creates LaTeX Tree Visualisation
-    """
-    tikz_code = tree_viz_get_latex(tree)
-
-    path_trees = make_dir(root_path / folder_trees)
-    file = Path.open(path_trees / 'tree-{}.tex'.format(name), 'w')
-    file.write(tikz_code)
-    file.close()
-    return
-
-
 def tree_viz_get_nel(tree):
     """
     Deprecated.
@@ -2118,34 +2115,14 @@ def tree_viz_get_forest(tree, node_id=root_id):
     return latex_label
 
 
-def tree_viz_get_latex(tree, stand_alone=False):
+def tree_viz_get_tex_forest(tree):
     """
     Creates forest tree representation (based on tikz) for LaTeX.
     The file can easily ne included in a .tex file with '\input{file_name}'
     optional: stand_alone = True for a complete latex file
     """
+
     bracket_tree = tree_viz_get_forest(tree)
+    forest_viz = latex_wrap_forest(bracket_tree)
 
-    latex_forest_wrap = '\n\\begin{{forest}}' \
-                        '\n  for tree={{symbol, rounded corners,draw=black!100, fill=green!20}}' \
-                        '\n  point/.style={{coordinate,}},' \
-                        '\n  symbol/.style={{draw=black,text height=1.5ex,text depth=.25ex,}},' \
-                        '\n  terminal/.style={{symbol,}},' \
-                        '\n  nonterminal/.style={{rectangle, symbol, rounded corners,fill=green!20}},' \
-                        '\n  operation/.style={{symbol, rounded rectangle,}},' \
-                        '\n  fixnode/.style={{draw=black!100, fill=red!20,}},' \
-                        '\n  terminal/.style={{rectangle, symbol,draw=black!100, fill=green!20,}},' \
-                        '\n  variable/.style={{rounded corners, symbol,draw=black!100, fill=green!20,}},' \
-                        '\n  constant/.style={{rectangle, symbol,}},' \
-                        '\n {}' \
-                        '\n\\end{{forest}}'.format(bracket_tree)
-
-    if stand_alone:
-        standalone_wrap = '\\documentclass{{standalone}}' \
-                          '\n\\usepackage{{forest}}' \
-                          '\n\\begin{{document}}' \
-                          '\n{}' \
-                          '\n\\end{{document}}'.format(latex_forest_wrap)
-        return standalone_wrap
-    else:
-        return latex_forest_wrap
+    return forest_viz

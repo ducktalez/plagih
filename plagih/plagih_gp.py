@@ -11,7 +11,8 @@ from plagih.modules.plagih_data import *
 def create_config_dict():
     config_dict = {
         'root_dir': Path.cwd(),
-        'name': 'Plagih_tree',
+        'name': 'Plagih_name_dummy',  # please set a name
+        'mode': 'run',  # ['run', 'analyze']
 
         # (!) Relevant for result
         'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
@@ -21,15 +22,14 @@ def create_config_dict():
 
         # rather irrelevant
         'parsimony_tmp': 15,
-        'precision': 3,  # rounding the fitness
+        'precision': 3,                 # rounding the fitness
         'float_accuracy': 200,
-        'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-        'print_type': 'ggggewwsiivoa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'swim': 'p',                    # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
+        'print_type': 'gggewwsiivoaa',    # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
-        'force_new_run': False,  # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
-        'delete_old_file': False,  # todo delete old files. be very careful
-        'monitor': {'verbosity': 'end',  # every [generation] or at the [end]
-                    'gen_fitness_average': 'y',
+        'force_new_run': False,         # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
+        'delete_old_file': False,       # todo, delete old files. be very careful
+        'monitor': {'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
                     'population_tmp_done-size': 'y'
                     },
@@ -40,13 +40,13 @@ def create_config_dict():
 
         # GP-evolve specific parameters
         'crossover_type_safety_mode': 'replace_same_types',
-        'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
+        'gen_num_max_parsimony': 50,    # Increase tmp_parsim to this generation
         'tree_growth': 'v2',
         'tree_depth_base': 7,
-        'tree_depth_max': 50,  # maximum Tree depth for entire run
+        'tree_depth_max': 50,           # maximum Tree depth for entire run
         'tree_depth_min': 5,
         'tree_branch_nodes_base': 32,
-        'tourn_size': 7,  # [7 per 100]		number of trees selected for tournament
+        'tourn_size': 7,                # [7 per 100]		number of trees selected for tournament
         'evolve_rates': {'repro one': 0.05, 'repro pareto': 0.05, 'repro reduced one': 0.05,
                          'filter floats': 0.05,
                          'point mutate function': 0.05,
@@ -105,6 +105,14 @@ def run_mountaincar_v2(config_dict, path):
 
 
 def run_mountaincar_v3(config_dict, path):
+    config_dict['name'] = 'MTC_v3'
+    config_dict['root_dir'] = path
+    gp = mountaincar_load_corefiles(config_dict, path)
+    gp.load_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
+    return gp
+
+
+def run_mountaincar_v3_test(config_dict, path):
     config_dict['name'] = 'MTC_v3_test'  # todo update name
     config_dict['root_dir'] = path
     gp = mountaincar_load_corefiles(config_dict, path)
@@ -123,6 +131,18 @@ def run_mountaincar_v4(config_dict, path):
     return gp
 
 
+def mountaincar_update_analysis_files(config_dict, path):
+    all_runs = ['MTC_v1', 'MTC_v2', 'MTC_v3', 'MTC_v4']
+
+    config_dict['root_dir'] = path
+    config_dict['mode'] = 'analyse'
+
+    config_dict['name'] = 'MTC_v4_scratch'
+    gp = mountaincar_load_corefiles(config_dict, path)
+    gp.plagih_update_files()
+    return
+
+
 def run_mountaincar_test(config_dict, path):
     config_dict['name'] = 'MTC_test'
     test_run = Path.cwd() / folder_runs / config_dict['name']
@@ -138,9 +158,15 @@ def run_mountaincar_test(config_dict, path):
     return gp
 
 
-def run(root_dir):
-    # create_samples_pickle(root_dir)
+def analyse_old_run(root_dir):
     config_dict = create_config_dict()
-    gp = run_mountaincar_v3(config_dict, root_dir)
+    mountaincar_update_analysis_files(config_dict, root_dir)
+
+
+def run(root_dir):
+    # create_samples_pickle(root_dir)  # todo outsource
+    # analyse_old_run(root_dir)
+    config_dict = create_config_dict()
+    gp = run_mountaincar_v2(config_dict, root_dir)
     gp.plagih_gp_run()
 

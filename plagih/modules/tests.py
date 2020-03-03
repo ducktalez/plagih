@@ -21,8 +21,8 @@ def test_plagih_eval():
     label_list = MountainCarExamples.tree_v3_list
 
     tree = karoo_tree_from_labellist(label_list)
-    expr_sym = tree_get_expr_sympify(tree=tree)
     expr_raw = tree_get_expr_raw(tree, root_id)
+    expr_sym = expr_sympify(expr_raw=expr_raw)
 
     print(expr_sym)
     graph = ast_convert_from_expr(expr_raw, build=True)
@@ -55,12 +55,12 @@ def test_rebuild_loop_tree():
     # tree = karoo_tree_from_labellist(MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
     tree = karoo_tree_from_labellist(MountainCarExamples.tree_v3_list)
     algo_raw = tree_get_expr_raw(tree, P_first_node)
-    algo_sym_1 = tree_get_expr_sympify(expr_raw=algo_raw)
+    algo_sym_1 = expr_sympify(expr_raw=algo_raw)
     label_list_1 = ast_convert_from_expr(algo_sym_1, build=True)
     print('1 Label List:', label_list_1)
     tree2 = karoo_tree_from_labellist(label_list_1)
     algo_raw2 = tree_get_expr_raw(tree2, P_first_node)
-    algo_sym_2 = tree_get_expr_sympify(expr_raw=algo_raw2)
+    algo_sym_2 = expr_sympify(expr_raw=algo_raw2)
     label_list_2 = ast_convert_from_expr(algo_sym_2, build=True)
     print('2 Label List:', label_list_2)
 
@@ -258,7 +258,7 @@ def test_tree_viz_latex():
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
     tree3 = p_tree.get_uninstanced_tree()
 
-    result = tree_viz_get_latex(tree3)
+    result = tree_viz_get_tex_forest(tree3)
     print(result)
 
 

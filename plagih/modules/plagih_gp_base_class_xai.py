@@ -10,6 +10,7 @@ Explaination:
 Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
 """
+import copy
 import random
 import sys
 import sklearn.metrics as skm
@@ -35,7 +36,7 @@ class ExplainableGP(object):
 
     def __init__(self, config_dict):
 
-        print('\n\tInitializing XAP GP run. Name: {}{}{}.'.format(BColors.MAGENTA, config_dict['name'], BColors.RESET))
+        print('\n\tInitializing Plagih. Name: {}{}{}.\n'.format(BColors.CYAN, config_dict['name'], BColors.RESET))
         self.time_start = time.perf_counter()
         self.restart_vers = 'v0.75'
 
@@ -55,6 +56,7 @@ class ExplainableGP(object):
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
         self.pop_next = None
+        self.output_xtype = None
 
         # some config_dict values have to be used quite often...
         self.config = config_dict
@@ -154,11 +156,14 @@ class ExplainableGP(object):
             rate_sum = rate_s + rate_o
             rate_s = int((rate_s / rate_sum) * pop_max)
             rate_o = pop_max - rate_s
-            self.gen_random_from_origin(rate_o)
+            self.pop_random_from_origin(rate_o)
         else:
             rate_s = pop_max
 
-        self.gen_random_from_scratch(rate_s)
+        self.pop_random_from_scratch(rate_s)
+
+        # if delete_this and self.gen_id != 0:
+        #     print('why is this gen id:', self.gen_id)
 
         self.gen_finalize()
         file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
@@ -169,37 +174,47 @@ class ExplainableGP(object):
         - adjust parameters for this generation (parsimony threshold)
         - Create a gene pool (kick out too complex candidates)
         """
+        # todo da lässt sich doch was machen...
+        # All gp creators: name, function, num of trees from tournament selection
 
-        gp_list = [('repro one', self.gen_reproduce),
-                   ('repro pareto', self.gen_reproduce_olymp),
-                   ('repro reduced one', self.gen_reproduce_reduce),
-                   ('point mutate function', self.gen_mutate_point),
-                   ('filter floats', self.gen_mutate_filter),
-                   ('branch mutate insert', self.gen_mutate_branch),
-                   ('crossover branches', self.gen_crossover_branch),
-                   ('random from origin', self.gen_random_from_origin),
-                   ('random from scratch', self.gen_random_from_scratch)]
+        gp_list = [  # name of the function,    implementation in plagih,       number of tournament selections needed
+            ('repro one', self.pop_reproduce, 1),
+            ('repro pareto', self.pop_reproduce_olymp, 0),
+            ('repro reduced one', self.pop_reproduce_reduce, 1),
+            ('point mutate function', self.pop_mutate_point, 1),
+            ('filter floats', self.pop_mutate_filter, 1),
+            ('branch mutate insert', self.pop_mutate_branch, 1),
+            ('crossover branches', self.pop_crossover_branch, 2),
+            ('random from origin', self.pop_random_from_origin, 0),
+            ('random from scratch', self.pop_random_from_scratch, 0)]
 
-        gp_list_mutate = [('repro one', self.gen_reproduce),
-                       ('repro pareto', self.gen_reproduce_olymp),
-                       ('repro reduced one', self.gen_reproduce_reduce),
-                       ('point mutate function', self.gen_mutate_point),
-                       ('filter floats', self.gen_mutate_filter),
-                       ('branch mutate insert', self.gen_mutate_branch),
-                       ('random from origin', self.gen_random_from_origin)]
+        if self.origin_exists():
+            origin_tree = self.origin['tree']
+        else:
+            origin_tree = None
 
-        gp_list_create = [('random from scratch', self.gen_random_from_scratch)]
-
-        gp_list_two_parents = [('crossover branches', self.gen_crossover_branch)]
+        gp_dict = {  # name of the function,    implementation in plagih,       number of tournament selections needed
+            'repro one': (self.pop_reproduce, 1, None),
+            'repro pareto': (self.pop_reproduce_olymp, 0, None),
+            'repro reduced one': (self.pop_reproduce_reduce, 1, None),
+            'point mutate function': (self.pop_mutate_point, 1, None),
+            'filter floats': (self.pop_mutate_filter, 1, None),
+            'branch mutate insert': (self.pop_mutate_branch, 1, None),
+            'crossover branches': (self.pop_crossover_branch, 2, None),
+            'random from origin': (self.pop_random_from_origin, 0, origin_tree),
+            'random from scratch': (self.pop_random_from_scratch, 0, None)}
 
         while self.run_continues():  # max generation, max time, done...
 
             self.gen_reset_parameters()
 
-            # Creating a new generation ############
-            for name, gp_function in gp_list:
+            # Creating a new population ############
+            for name, gp_function, tourn_rep in gp_list:
                 time_evolve = time.perf_counter()
-
+                count_tries = 0
+                while count_tries < self.evolve_rates[name] * self.config['pop_max']:
+                    break
+                    # smallest inserted rate
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
                 self.print_g('ggg', '-->Evolve: ({}) took: {:4.2f}sec.'.format(name, time.perf_counter() - time_evolve))
@@ -294,7 +309,7 @@ class ExplainableGP(object):
     #   Load and Archive Data                     |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def activate_data(self, data_prepared):
+    def activate_dataset(self, data_prepared):
         """
         separate loading the prepared data into the main class.
         Why like this? I needed to find a bug in the data_from_csv file and
@@ -317,6 +332,8 @@ class ExplainableGP(object):
             'unique_outputs_num': self.unique_outputs_num,
             'tf_classify_labels_map': self.tf_classify_labels_map,
             'action_min_max': self.action_min_max}
+
+        self.output_xtype = self.output_get_xtype()
 
         return
 
@@ -348,7 +365,7 @@ class ExplainableGP(object):
             self.monitoring_dict['population_tmp_done-size'] = run_data['genepool_size']
             print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
         except:
-            print_warning('w', 'Delete this. This is a newer version where gene_pool was kicked out')
+            print_warning('w', 'Success, delete this. This is a newer version where gene_pool was kicked out')
 
         self.restart_count = run_data['self.restart_count']  # counting how often this was restarted
         self.gen_id = run_data['self.gen_id']
@@ -356,6 +373,11 @@ class ExplainableGP(object):
         self.pareto = run_data['self.pareto']
         self.population_base = run_data['self.population_base']
         self.monitoring_dict = run_data['self.monitoring_dict']
+
+        if type(next(iter(run_data['self.pareto']))) == type(0.6):
+            self.pareto = None
+            self.pareto_update()
+            raise Exception('TODO pareto is outdated')
 
         self.restart_count += 1
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
@@ -479,9 +501,8 @@ class ExplainableGP(object):
         forest_grouped = []
         path_trees = make_dir(root_path / folder_trees)
 
-        for parsim, fit in sorted(list(pareto.items())):
-            tree_meta = self.parsimony_best_meta[parsim]
-            expr_raw = tree_meta['expr_raw']
+        for parsim, meta in sorted(list(pareto.items())):
+            expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
             tree = karoo_tree_from_labellist(label_list)
             tree = self.tree_enrich(tree, last_evolution='')
@@ -489,12 +510,13 @@ class ExplainableGP(object):
             # save the small forest inputs
             tikz_code = tree_viz_get_tex_forest(tree)
 
-            file = Path.open(path_trees / 'tree-{}.tex'.format(str(tree_meta['parsimony'])), 'w')
+            file = Path.open(path_trees / 'tree-{}.tex'.format(str(meta['parsimony'])), 'w')
             file.write(tikz_code)
             file.close()
 
             # save a ready-to-use tex file with all pareto trees
-            forest_grouped.append('Pareto entry at parsimony {} with fitness {}.\n{}\n\\newpage'.format(parsim, fit, tree_viz_get_tex_forest(tree)))  # todo this kind of is latex aswell
+            forest_grouped.append(
+                'Pareto entry at parsimony {} with fitness {}.\n{}\n\\newpage'.format(parsim, meta['fitness_train'], tree_viz_get_tex_forest(tree)))  # todo this kind of is latex aswell
 
         latex_full_doc = latex_standalone_doc_forest(forest_grouped)
         file = Path.open(path_trees / '#all_trees.tex', 'w')
@@ -523,12 +545,14 @@ class ExplainableGP(object):
             try:
                 fitness_train = self.tree_eval_fitness_train(tree)
                 tree = tree_set_fitness(tree, fitness_train)
+                self.tree_meta_update(tree, fitness_train=fitness_train)
+                self.pop_append(tree)  # todo the appendix appendaroo
             except Exception as ex:
-                print_warning('www', 'Error while getting meta Info: {} {}'.format(ex, self.print_type), print_type=self.print_type)
+                print_warning('ww', 'Error while getting meta Info: {}'.format(ex), print_type=self.print_type)
                 count_fails += 1
                 continue
 
-            self.pop_append_late(tree)  # todo the appendix appendaroo
+
 
         print_warning('ww', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(len(self.population_tmp_eval), self.gen_id, count_fails), print_type=self.print_type)
 
@@ -544,6 +568,29 @@ class ExplainableGP(object):
             tree_origin = None
         return tree_origin
 
+    def tree_meta_update(self, tree, fitness_train=None, parsimony=None, expr_raw=None, expr_sym=None):
+        """
+        update self.tree_meta
+        # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw', 'gen+nr'}
+        """
+        if not fitness_train:
+            fitness_train = tree_get_fitness(tree)
+        if not parsimony:
+            parsimony = tree_get_parsimony(tree)
+        if not expr_raw:
+            expr_raw = tree_get_expr_raw(tree, node_id=root_id)
+        if not expr_sym:
+            expr_sym = expr_sympify(expr_raw)
+
+        meta = {'fitness_train': fitness_train,
+                'parsimony': parsimony,
+                'expr_raw': expr_raw,
+                'expr_sym': expr_sym}
+
+        tree_ident = tree_get_ident(tree)
+
+        self.tree_meta[tree_ident] = meta
+
     def pop_add_tree_midrun(self, tree):
         """
         Trying to add another tree to the current population
@@ -556,43 +603,54 @@ class ExplainableGP(object):
 
         # tree = self.tree_enrich(tree, last_evolution='p-sym')  # todo test added trees
         if self.tree_check_core_all(tree):
-            self.population_tmp_done.append(tree)
 
-        self.parsimony_best_update()
-        self.pareto_update_insert()
+            tree = self.tree_enrich(tree, last_evolution='ps')
+            parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
+            tree = tree_set_parsimony(tree, parsimony)
+            self.tree_meta_update(tree, parsimony=parsimony)
+            self.population_tmp_done.append(tree)  # todo, if we late insert a tree, will the pop-loop find it?
+
+            self.parsimony_best_update()
+            self.pareto_update_insert()
 
         return
 
     def pareto_update_insert(self):
         """
-        update new entries in the pareto dict
+        update new entries in the pareto dict (part of the whole update process)
+        Requires: self.parsimony_best_meta entries
+        # todo this whole parsimony_best thing seems bad
         """
         sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
         best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
 
-        for tree_id in pop_iterate_trees(self.population_tmp_done):
-            tree = self.population_tmp_done[tree_id]
-            fitness = tree_get_fitness(tree)
-            parsim = tree_get_parsimony(tree)
+        for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
+            # todo idea delete self.parsimony_best??
+            # tree = self.population_tmp_done[tree_id]
+            fitness = meta['fitness_train']
+            parsim = meta['parsimony']
             pareto_improved = None
 
             if self.kernel.fitness_compare(fitness, best_fit):
                 if self.pareto.get(parsim):
                     pareto_fit = self.pareto.get(parsim)
                     if self.kernel.fitness_compare(fitness, pareto_fit):
-                        self.pareto[parsim] = fitness
+                        self.pareto[parsim] = meta
                         self.printpl('a', 'Pareto update at {}, with new fitness: {}. Old was: {}.'.format(parsim, fitness, best_fit))
                         pareto_improved = True
                 else:
-                    self.pareto[parsim] = fitness
+                    self.pareto[parsim] = meta
                     self.printpl('a', 'Pareto new entry at {} with fitness: {:4.2f}.'.format(parsim, fitness))
                     pareto_improved = True
                 best_fit = fitness
 
             if pareto_improved:
+                expr_raw = meta['expr_raw']
+                tree = karoo_tree_from_expr(expr_raw)
                 sym_tree = tree_evolve_reduce(tree, completely=True)
                 if tree_get_expr_raw(sym_tree, node_id=root_id) != tree_get_expr_raw(tree, node_id=root_id):
                     self.printpl('aa', 'Pareto entry could be further sympified!')
+                    sym_tree = tree_set_fitness(sym_tree, fitness)
                     self.pop_add_tree_midrun(sym_tree)
                 else:
                     print_warning('iii', 'The found pareto entry was already in its sympified version')
@@ -627,12 +685,10 @@ class ExplainableGP(object):
     def parsimony_best_update(self):
         """
         Updates a list with the best candidates for each parsimony.
-        Do not confuse with pareto
+        Do not confuse with pareto-entries
         """
 
-        # 1. Check every potential candidate
-        for tree_id in pop_iterate_trees(self.population_tmp_done):
-
+        for tree_id in pop_iterate_trees(self.population_tmp_done):  # todo, these are not ordered in parsimony nor fitness
             tree = self.population_tmp_done[tree_id]
 
             parsim = tree_get_parsimony(tree)  # todo random is eval parsimony used correctly everywhere?
@@ -664,32 +720,32 @@ class ExplainableGP(object):
         self.gen_id += 1
         self.time_genstart = time.perf_counter()
         self.debug_warnings = {}
-        self.population_tmp_done = ['Plagih GP - Evolving Generation']  # initialise population_tmp_done to host the next generation
+        self.population_tmp_done = ['DELETE THIS']  # todo pop-delete initialise population_tmp_done to host the next generation
         self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)
-        self.population_tmp_eval = ['Trees to evaluate']
+        self.population_tmp_eval = ['DELETE THIS']  # todo pop-delete
 
         return
 
     # random todo, save last sympify expr in debug info...
-    def gen_reproduce(self, repro_rate):
+    def pop_reproduce(self, repro_rate):
 
         """
         A single Tree from the prior generation is copied without mutation
         """
 
-        for n in range(repro_rate):  # quantity of Trees to be copied without mutation
+        for _ in range(repro_rate):  # quantity of Trees to be copied without mutation
             tourn_winner = self.pop_selection_tournament(self.tourn_size)
-            self.pop_append(tourn_winner, last_evolution='repro')  # i know, tests are not necessary...
+            self.pop_append(tourn_winner, last_evolution='r1')  # i know, tests are not necessary...
 
         return
 
-    def gen_reproduce_olymp(self, repro_rate):
+    def pop_reproduce_olymp(self, repro_rate):
 
         """
         Copy an entry from the pareto candidates into the population
         """
-        # print('before olymp:', len(self.population_tmp_done))
-        for n in range(repro_rate):  # quantity of Trees to be copied without mutation
+
+        for _ in range(repro_rate):  # quantity of Trees to be copied without mutation
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
                 # expr_sym = meta['expr_sym']; print('sym', expr_sym)
@@ -702,39 +758,39 @@ class ExplainableGP(object):
 
         return
 
-    def gen_reproduce_reduce(self, repro_rate):
+    def pop_reproduce_reduce(self, repro_rate):
 
         """
         copy a tree from the last population and sympify parts of it
         """
 
-        for i in range(repro_rate):
+        for _ in range(repro_rate):
             tree = self.pop_selection_tournament(self.tourn_size)
             tree = tree_evolve_reduce(tree, completely=False)
             self.pop_append(tree, last_evolution='point')
 
         return
 
-    def gen_mutate_point(self, repro_rate):
+    def pop_mutate_point(self, repro_rate):
 
         """
         One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
 
-        for i in range(repro_rate):  # quantity of Trees to be generated through mutation
+        for _ in range(repro_rate):  # quantity of Trees to be generated through mutation
             tree = self.pop_selection_tournament(self.tourn_size)
             tree = tree_evolve_mutate_point(tree, self.func_array, self.variables_dict)
             self.pop_append(tree, last_evolution='point')
 
         return
 
-    def gen_mutate_filter(self, repro_rate):
+    def pop_mutate_filter(self, repro_rate):
         """
 
         """
 
-        for i in range(repro_rate):
+        for _ in range(repro_rate):
             tree = self.pop_selection_tournament(self.tourn_size)
             try:
                 new_tree = tree_evolve_mutate_filter_one(tree)
@@ -745,59 +801,36 @@ class ExplainableGP(object):
 
         return
 
-    def pop_first_create_from_origin(self, pop_size, tree_origin):
-        """
-        Constructs the first generation
-        - loads the origin-tree from file
-        - constructs the first generation from this tree with branc. mutation
+    def pop_random_from_origin(self, repro_rate):
         """
 
-        tree_origin = tree_origin.copy()
-
-        for tree_id in range(pop_size):
-            tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
-            self.pop_append(tree, last_evolution='first')
-
-        self.print_g('ggg', 'We have constructed the first population of {} trees, saved to disk'.format(self.config['pop_max']))
-
-    def gen_random_from_origin(self, repro_rate):
-        """
-        
         """
 
         if self.origin_exists():
-
             tree_origin = self.origin['tree'].copy()
-            for i in range(repro_rate):
+            for _ in range(repro_rate):
                 tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
                 self.pop_append(tree, last_evolution='new(o)')
 
         return
 
-    def gen_random_from_scratch(self, pop_size):
+    def pop_random_from_scratch(self, repro_rate):
         """
         todo make available half ramped
         """
 
-        action_type_one = next(iter(self.action_dict.values()))
-        if action_type_one == 'float':
-            xtype = '2f'
-        elif action_type_one == 'bool':
-            xtype = '2b'
-        else:
-            raise
-        for i in range(pop_size):
+        for i in range(repro_rate):
             max_nodes = np.random.randint(self.config['tree_branch_nodes_base'], self.parsimony_max)  # todo 3 auslagern und testen ob 3 entstehen kann
-            label_list, arity_list = invent_label_list_nodes_grow(xtype, max_nodes, self.variables_dict, self.func_array)
+            label_list, arity_list = invent_label_list_nodes_grow(self.output_xtype, max_nodes, self.variables_dict, self.func_array)
             p_tree = Plagih_Tree(label_list)
             tree = p_tree.get_uninstanced_tree()
             tree = tree_set_id(tree, i)
 
-            self.pop_append(tree, last_evolution='r(scratch)')
+            self.pop_append(tree, last_evolution='0s')
 
         return
 
-    def gen_mutate_branch(self, repro_rate):
+    def pop_mutate_branch(self, repro_rate, last_evolution='mb'):
 
         """
         Mutates a whole tree branch.
@@ -810,28 +843,28 @@ class ExplainableGP(object):
 
         """
 
-        for i in range(repro_rate):  # quantity of Trees to be generated through mutation
+        for _ in range(repro_rate):  # quantity of Trees to be generated through mutation
 
-            tourn_winner = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
-            node_ids = tree_get_mutatable_nodes(tourn_winner, no_root=True)
+            tree = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
+            node_ids = tree_get_mutatable_nodes(tree, no_root=True)
             node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_branch(tourn_winner, node, karoo=True)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_ids = tree_get_branch(tree, node, karoo=True)  # select point of mutation and all nodes beneath [6, 9, 10]
             if self.config['tree_growth'] == 'v1':
-                tourn_winner = tree_evolve_insert_branch_v1(tourn_winner, branch_nodes_ids, self.variables_dict, self.func_array,
-                                                            depth_max=self.config['tree_depth_max'],
-                                                            depth_min=self.config['tree_depth_min'],
-                                                            depth_goal=self.config['tree_depth_base'])
+                tree = tree_evolve_insert_branch_v1(tree, branch_nodes_ids, self.variables_dict, self.func_array,
+                                                    depth_max=self.config['tree_depth_max'],
+                                                    depth_min=self.config['tree_depth_min'],
+                                                    depth_goal=self.config['tree_depth_base'])
             elif self.config['tree_growth'] == 'v2':
-                tourn_winner = tree_evolve_insert_branch_v2(tourn_winner, branch_nodes_ids, self.variables_dict, self.func_array,
-                                                            self.config['tree_branch_nodes_base'])
+                tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array,
+                                                    self.config['tree_branch_nodes_base'])
             else:
-                raise Exception('Not known')
+                raise Exception('Tree growth version not known')
 
-            self.pop_append(tourn_winner, last_evolution='branch')
+            self.pop_append(tree, last_evolution=last_evolution)
 
         return
 
-    def gen_crossover_branch(self, repro_rate):
+    def pop_crossover_branch(self, repro_rate):
         """
         swap branches of two trees
         - select parent a and b
@@ -882,6 +915,19 @@ class ExplainableGP(object):
 
         return
 
+    def output_get_xtype(self):
+        """
+        Return the xtype of the action we want to create.
+        """
+        action_type_one = next(iter(self.action_dict.values()))
+        if action_type_one == 'float':
+            xtype = '2f'
+        elif action_type_one == 'bool':
+            xtype = '2b'
+        else:
+            raise
+        return xtype
+
     # todo sarsa policy performance
     # todo decision plot (wie bei sarsa) für alle bei MTC
 
@@ -914,16 +960,22 @@ class ExplainableGP(object):
     def tree_check_core_all(self, tree):
         """
         Performs all checks that we currently have
+        # todo do not use this if trees are sefely generated
+        # todo check meta values in separate method? update those aswell?
         """
+
         if not tree_check_children(tree):
             print_e('Tree is not consistent:\n{}'.format(tree))
             tree_works = False
-        elif not tree_check_child_xtype(tree, self.variables_dict):
+        elif not tree_check_typed(tree, self.variables_dict):
             print_e('Tree children xtypes are not correct:\n{}'.format(tree_labels(tree)))
             tree_works = False
         elif tree_node_get_arity(tree, root_id) == 0:
             print_warning('w', 'Tree is only a root node')
             tree_works = False
+        # elif tree_get_meta(tree):
+        #     print_warning('w', 'Could not get meta from tree.')
+        #     tree_works = False
         else:
             tree_works = True
 
@@ -935,7 +987,7 @@ class ExplainableGP(object):
         - enumerate
         """
         if tree_get_id(tree) != '':
-            print('delete this', tree, tree_get_id(tree))
+            print('todo? delete this', tree, tree_get_id(tree))
         else:
             tree = tree_set_id(tree, len(self.population_tmp_done))
         self.population_tmp_done.append(tree)
@@ -945,10 +997,10 @@ class ExplainableGP(object):
         """
         Copy the genepool of a gen
         """
-        self.population_base = ['Population Selection in Generation {}.'.format(str(self.gen_id))]  # empty list
+        self.population_base = ['Population Selection in Generation {}.'.format(str(self.gen_id))]  # todo pop_delete
 
         for tree_id in pop_iterate_trees(self.population_tmp_done):
-            tree = self.population_tmp_done[tree_id]
+            # tree = self.population_tmp_done[tree_id]
             tree_copy = pop_tree_copy(self.population_tmp_done, tree_id)  # what about entry #1?
             tree_copy = tree_set_id(tree_copy, tree_id)  # todo +1`??
             self.population_base.append(tree_copy)
@@ -985,15 +1037,16 @@ class ExplainableGP(object):
                     tree = tree_set_fitness(tree, '')
                     tree = tree_set_id(tree, '')  # todo test and find better solution
                     self.population_tmp_eval.append(tree)
+                else:
+                    print_warning('w', 'Tree was too complex!')
 
         return
 
     def gen_finalize(self):
 
         """
-        From raw population_tmp_done to new population_genepool
-        - Gene_pool with tree's parsimony (and store info in the tree)
-        -
+        From raw population_tmp_done
+        - Evaluate leftover
 
         """
 
@@ -1028,23 +1081,24 @@ class ExplainableGP(object):
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
 
         """
+        # todo idea layerwise-mutations not only for layer0?
 
-        # Start with dummies
         best_id = None
         best_fitness = None
 
-        # Get several values
         for n in range(tourn_size):
 
             tree_id = pop_tree_choose(self.population_base)
             tree = self.population_base[tree_id]
-            fitness = tree_get_fitness(tree, precision=self.config['precision'])  # extract the fitness from the array
+            print('last--tree\n', tree)
+            fitness = tree_get_fitness(tree, precision=self.config['precision'])
 
             if self.kernel.fitness_compare(fitness, best_fitness, mode='better'):
                 best_id = tree_id
                 best_fitness = fitness
 
-        tourn_winner = pop_tree_copy(self.population_base, best_id)
+        tourn_winner = copy.deepcopy(self.population_base[best_id])
+        tourn_winner = tree_set_meta_wipe(tourn_winner)
 
         return tourn_winner
 
@@ -1103,7 +1157,7 @@ class ExplainableGP(object):
             print_warning('w', 'No origin provided. starting from scratch with random generation?')
             tree = None
 
-        expr_raw = tree_get_expr_raw(tree, P_first_node)
+        expr_raw = tree_get_expr_raw(tree, node_id=root_id)
 
         try:
             expr_sym = expr_sympify(expr_raw=expr_raw)
@@ -1116,13 +1170,12 @@ class ExplainableGP(object):
         self.origin = {'tree': tree, 'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
         try:
             fitness_train = self.tree_eval_fitness_train(tree)
-            tree = tree_set_fitness(tree, fitness_train)
         except Exception:
             raise Exception('Your origin algorithm already caused an exception!')
-
         self.origin['fitness_train'] = fitness_train
+
         self.parsimony_best_meta[0] = self.origin
-        self.pareto[0] = self.origin['fitness_train']
+        self.pareto[0] = copy.deepcopy(self.origin)
 
         self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(fitness_train, time.perf_counter() - self.time_start))
 
@@ -1198,6 +1251,15 @@ class ExplainableGP(object):
     #   Monitoring                                |
     # +++++++++++++++++++++++++++++++++++++++++++++
 
+    def get_pareto_plot_values(self):
+        """
+        todo i think there is a more beautiful solution?
+        """
+        tuples = []
+        for key in sorted(self.pareto):
+            tuples.append((key, self.pareto[key]['fitness_train']))
+        return tuples
+
     def auto_plots(self, path):
         """
         Make all plots
@@ -1209,19 +1271,19 @@ class ExplainableGP(object):
 
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='average fitness', plt_y_label='fitness', linestyle='-')
+            self.plot_end(data_tuples, path_plots, plt_title='average fitness', plt_y_label='fitness', linestyle='-', min_left=data_tuples[0][0])
 
         if self.monitor_dict['population_tmp_done-size'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['population_tmp_done-size'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='')
+            self.plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='', min_left=data_tuples[0][0])
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes', linestyle='-')
+        self.plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes', linestyle='-', min_left=data_tuples[0][0])
 
         data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='')
+        self.plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='', min_left=data_tuples[0][0])
 
-        data_tuples = sorted(list(self.pareto.items()))
+        data_tuples = self.get_pareto_plot_values()
         self.plot_end(data_tuples, path_plots, plt_title='pareto dominant candidates', plt_x_label='parsimony', plt_y_label='fitness', linestyle='dashed',
                       step_where='post', max_right=self.parsimony_max, beyond_lines=True, save_tikz=True)  # todo beyond_lines
 
@@ -1295,7 +1357,8 @@ class ExplainableGP(object):
 
         # Tree complexity
         complexity_sum = 0
-        for tree in self.population_tmp_done:
+        for tree_id in pop_iterate_trees(self.population_tmp_done):
+            tree = self.population_tmp_done[tree_id]
             complexity_sum += len(tree_nodes_get_ids(tree, karoo=True))
         avg_complexity = complexity_sum / len(self.population_tmp_done)
         self.monitoring_dict['complexity_average'][self.gen_id] = avg_complexity
@@ -1319,7 +1382,7 @@ class ExplainableGP(object):
 
     def plot_end(self, data_2d, path,
                  plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', step_where='', plt_xparam='',
-                 linestyle='None', max_right=None, beyond_lines=False, save_tikz=False):
+                 linestyle='None', min_left=None, max_right=None, beyond_lines=False, save_tikz=False):
         """
         Make all plots in the same style - and also saving space.
         - Makes pyplots
@@ -1335,6 +1398,7 @@ class ExplainableGP(object):
         :param step_where: makes 'step' plots- can be 'post', 'pre' or [pls google]
         :param plt_xparam: not in use, the same adjustment can be done with optional parameters
         :param linestyle: E. g. 'None', 'dashed', '-', ''
+        :param min_left: Smallest left value
         :param max_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40
         :param beyond_lines: in step plots, draw the line further to the left and right
         :param save_tikz: Also save the plot as tikzpicture (for Latex)
@@ -1355,7 +1419,8 @@ class ExplainableGP(object):
         # left, right = plt.xlim()
 
         top, bottom, left, right = max(y), min(y), min(x), max(x)
-
+        if min_left:
+            left = min_left
         new_top = (top - min(bottom, 0)) * 1.05  # todo beautify plots...
         if max_right:
             right = max(right, max_right)
@@ -1536,7 +1601,7 @@ def tree_get_ident(tree):
     What is used as identificator for a tree...
     - hash(expr_raw)
     """
-    expr_raw = tree_get_expr_raw(tree, root_id)
+    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
     tree_ident = hash(expr_raw)
     return tree_ident
 

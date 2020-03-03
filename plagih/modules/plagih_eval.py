@@ -41,12 +41,12 @@ class FitnessKernel:
             result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
 
         elif self.kernel == 'regression':
-            mse = skm.mean_squared_error(result['result'], result['solution'])
+            mse = skm.mean_squared_error(result['tf-result'], result['solution'])
             result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
 
         elif self.kernel == 'regression bounded':
-            mse = skm.mean_squared_error(result['result'], result['solution'])
+            mse = skm.mean_squared_error(result['tf-result'], result['solution'])
             result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
 
@@ -154,7 +154,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
     Returns:
         A dict mapping keys to the following outputs:
-            'result'            - array of the results of applying given expression to the data_csv_path
+            'tf-result'            - array of the results of applying given expression to the data_csv_path
             'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
             'solution'          - array of the solution values extracted from the data_csv_path (variable 's' in the dataset)
             'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function

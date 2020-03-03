@@ -27,8 +27,8 @@ def print_e(text, print_type=None, time_total=0.0):
     """
     Printing errors
     """
-    message_style = BColors.RED
-    message_pretxt = 'ERROR: '
+    message_style = BColors.MAGENTA  # not red anymore
+    message_pretxt = '{}ERROR: {}'.format(BColors.FAIL, BColors.RESET)
     print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
 
 

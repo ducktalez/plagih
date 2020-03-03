@@ -21,7 +21,7 @@ def test_plagih_eval():
     label_list = MountainCarExamples.tree_v3_list
 
     tree = karoo_tree_from_labellist(label_list)
-    expr_raw = tree_get_expr_raw(tree, root_id)
+    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
     expr_sym = expr_sympify(expr_raw=expr_raw)
 
     print(expr_sym)
@@ -54,12 +54,12 @@ def test_rebuild_loop_tree():
     """
     # tree = karoo_tree_from_labellist(MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
     tree = karoo_tree_from_labellist(MountainCarExamples.tree_v3_list)
-    algo_raw = tree_get_expr_raw(tree, P_first_node)
+    algo_raw = tree_get_expr_raw(tree, node_id=root_id)
     algo_sym_1 = expr_sympify(expr_raw=algo_raw)
     label_list_1 = ast_convert_from_expr(algo_sym_1, build=True)
     print('1 Label List:', label_list_1)
     tree2 = karoo_tree_from_labellist(label_list_1)
-    algo_raw2 = tree_get_expr_raw(tree2, P_first_node)
+    algo_raw2 = tree_get_expr_raw(tree2, node_id=root_id)
     algo_sym_2 = expr_sympify(expr_raw=algo_raw2)
     label_list_2 = ast_convert_from_expr(algo_sym_2, build=True)
     print('2 Label List:', label_list_2)
@@ -124,7 +124,7 @@ def test_choose_function():
 
 
 def test_all():
-    print('Starting several tests!')
+    print('Starting several tests, NOT all!')
     test_plagih_eval()
     test_sympify()
     test_plagih_tree()
@@ -163,7 +163,7 @@ def test_build_tree_grow_nodecount(verbose=False):
                 worked_fine = False
 
             tree = karoo_tree_from_labellist(label_list)
-            if not tree_check_child_xtype(tree, variables_dict=variables_dict):
+            if not tree_check_typed(tree, variables_dict=variables_dict):
                 print('WHYY', tree[N_label])
 
     return worked_fine

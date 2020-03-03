@@ -81,7 +81,7 @@ def create_samples_pickle(path):
 def mountaincar_load_corefiles(config_dict, path):
     gp = plagih.ExplainableGP(config_dict)
     prepared_data = data_load_pickle(path / MountainCarExamples.files['samples_pickle'])
-    gp.activate_data(prepared_data)
+    gp.activate_dataset(prepared_data)
     op_array = load_funcarray_from_csv(path / MountainCarExamples.files['operators_file'])
     gp.activate_operators(op_array)
     return gp
@@ -149,10 +149,11 @@ def run_mountaincar_test(config_dict, path):
     print('Test dir is:', test_run)
     config_dict['root_dir'] = path
     config_dict['pop_max'] = 100
-    config_dict['gen_max'] = 12
+    config_dict['gen_max'] = 50
     config_dict['tourn_size'] = 3
     config_dict['kernel_name'] = 'regression'
     config_dict['parsimony_max'] = 50
+    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt',    # To print_type absolutely all: ewaaaiiiiggggvvvpppttt
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp
@@ -167,6 +168,6 @@ def run(root_dir):
     # create_samples_pickle(root_dir)  # todo outsource
     # analyse_old_run(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_v2(config_dict, root_dir)
+    gp = run_mountaincar_test(config_dict, root_dir)
     gp.plagih_gp_run()
 

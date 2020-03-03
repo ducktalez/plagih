@@ -183,10 +183,10 @@ class ExplainableGP(object):
             # Creating a new generation ############
             for name, gp_function in gp_list:
                 time_evolve = time.perf_counter()
-                self.print_g('ggg', '-->Evolve: ({}) took: {:4.2f}sec.'.format(name, time.perf_counter() - time_evolve))
 
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
+                self.print_g('ggg', '-->Evolve: ({}) took: {:4.2f}sec.'.format(name, time.perf_counter() - time_evolve))
             # ######################################
 
             self.gen_finalize()
@@ -1200,7 +1200,8 @@ class ExplainableGP(object):
             self.terminate_run(self.root_dir)
 
         # Find the fittest tree, also average fitness
-        self.best_fitness = tree_get_fitness(self.population_tmp_done[FIRST_TREE])
+
+        pop_best_fitness = tree_get_fitness(self.population_tmp_done[FIRST_TREE])
 
         fitness_train_sum = 0
 
@@ -1211,9 +1212,15 @@ class ExplainableGP(object):
             fitness = tree_get_fitness(tree)
             if self.check_value_is_real(fitness):  # todo take care of this earlier
                 fitness_train_sum += fitness  # for fitness average
-                print('lelele', fitness, self.best_fitness)
-                if self.kernel.fitness_compare(fitness, self.best_fitness):
-                    self.best_fitness = fitness
+                print('lelele', fitness, pop_best_fitness)
+                if self.kernel.fitness_compare(fitness, pop_best_fitness):
+                    pop_best_fitness = fitness
+
+        if self.best_fitness is None:
+            self.best_fitness = pop_best_fitness
+        else:
+            if self.best_fitness < pop_best_fitness:
+                self.best_fitness = pop_best_fitness
 
         #     # Count dominators # todo why
         #     if self.origin_exists():

@@ -169,19 +169,25 @@ def test_build_tree_grow_nodecount(verbose=False):
     return worked_fine
 
 
-def get_two_sample_trees():
+def get_three_sample_trees():
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
-    tree1 = p_tree.get_uninstanced_tree()
+    tree_fix = p_tree.get_uninstanced_tree()
 
     p_tree = Plagih_Tree(label_list)
-    tree2 = p_tree.get_uninstanced_tree()
-    return tree1, tree2
+    tree_modifyable = p_tree.get_uninstanced_tree()
+
+    label_list = MountainCarExamples.tree_test_plus_list
+    modify_list = MountainCarExamples.tree_test_plus_modify_v1
+    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    tree_plus = p_tree.get_uninstanced_tree()
+
+    return tree_fix, tree_modifyable, tree_plus
 
 
 def test_tree_layers():
-    tree1, tree2 = get_two_sample_trees()
+    tree1, tree2, _ = get_three_sample_trees()
     print(tree1, '\n\n', tree2)
 
     for tree in [tree1, tree2]:
@@ -263,10 +269,9 @@ def test_tree_viz_latex():
 
 
 def test_tree_set_modifyable_nodes():
-
     variables_dict = TestHelpers.variables_dict
     func_array = TestHelpers.func_array
-    origin, tree2 = get_two_sample_trees()
+    origin, tree2, _ = get_three_sample_trees()
     print('a origin', origin[N_modify])
     tree_new = tree_evolve_branch_multiple(origin.copy(), 25, variables_dict, func_array)
     print('b origin', origin[N_modify])
@@ -275,4 +280,17 @@ def test_tree_set_modifyable_nodes():
     print(tree_new)
 
 
-test_tree_viz_latex()
+def test_tree_reduce_parts():
+    _, _, tree_plus = get_three_sample_trees()
+    tree = tree_evolve_reduce(tree_plus)
+    tree = tree_set_modifyable_nodes(tree, tree_plus)
+    print('First try', tree_check_reproduce_loop(tree))
+
+    label_list = ['+', '-', '~', '1', '2', '3']
+    modify_list = [0, 0, 1, 1, 1, 1]
+    tree_test = karoo_tree_from_labellist(label_list)
+    print('tree_test check', tree_check_all(tree_test))
+    tree_test = karoo_tree_from_labellist(label_list, modify_list=modify_list)
+    print('tree_test check', tree_check_all(tree_test))
+
+test_tree_reduce_parts()

@@ -375,7 +375,7 @@ class ExplainableGP(object):
         self.monitoring_dict = run_data['self.monitoring_dict']
 
         if type(next(iter(run_data['self.pareto']))) == type(0.6):
-            self.pareto = None
+            self.pareto = {}  # todo does origin miss?
             self.pareto_update()
             raise Exception('TODO pareto is outdated')
 
@@ -408,62 +408,62 @@ class ExplainableGP(object):
         """
         write the performance of the config to disc
         """
-        path_conclusion = path / folder_info
-        if not Path.is_dir(path_conclusion):
-            Path.mkdir(path_conclusion)
-
-        file = Path.open(path_conclusion / file_conclusion, 'w')
-        file.write('Plagih GP\n launched: {}'.format(str(date_time)))
-
-        if self.origin_exists():
-            origin_result = eval_tf(self.origin['expr_sym'], self.data_control, self.eval_parameters, get_pred_labels=True)
-            fitness_control_best = origin_result['fitness']
-
-            fittest_algo = self.origin['expr_sym']
-            fittest_parsimony = 0
-
-            file.write('\n\t Origin fitness score: {}'.format(origin_result['fitness']))
-
-        elif self.pareto:
-            file.write('\n No origin was provided')
-            fitness_control_best = next(iter(self.pareto.keys()))
-            tree_meta = self.parsimony_best_meta[fitness_control_best]
-            fittest_parsimony = int(tree_meta['parsimony'])
-            fittest_algo = tree_meta['expr_sym']
-        else:
-            file.write('\n There are no candidates to be mentioned at all. Maybe change your config?')
-            return
-
-        for parsimony, fitness in self.pareto.items():
-            algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
-            result = eval_tf(algo_sym, self.data_control, self.eval_parameters, get_pred_labels=True)
-            fit_control = result['fitness']
-
-            if self.kernel.fitness_compare(fit_control, fitness_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
-                fitness_control_best = fit_control
-                fittest_algo = algo_sym
-                fittest_parsimony = parsimony
-
-            no_fault = True
-            for enum, entry in enumerate(result['tf_result']):
-                if not self.check_value_is_real(entry):
-                    no_fault = False
-                    # todo this is a bad workaround
-                    result['tf_result'][enum] = 1
-
-            if no_fault:
-                kernel_result = self.kernel.conclusion_get_text(result, fitness_control_best)
-                file.write(kernel_result)
-            else:
-                file.write('\n\n Error in this tree')
-
-        else:
-            # Info about the best Tree
-            file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
-            file.write('\n With fitness: {}'.format(fitness_control_best))
-            file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
-            file.write('\n\n')
-            file.close()
+        # path_conclusion = path / folder_info
+        # if not Path.is_dir(path_conclusion):
+        #     Path.mkdir(path_conclusion)
+        #
+        # file = Path.open(path_conclusion / file_conclusion, 'w')
+        # file.write('Plagih GP\n launched: {}'.format(str(date_time)))
+        #
+        # if self.origin_exists():
+        #     origin_fitness = eval_tf(self.origin['expr_sym'], self.data_control, self.eval_parameters, get_pred_labels=True)['fitness']
+        #     # fitness_control_best = origin_result['fitness']
+        #
+        #     fittest_algo = self.origin['expr_sym']
+        #     fittest_parsimony = 0
+        #
+        #     file.write('\n\t Origin fitness score: {}'.format(origin_fitness))
+        #
+        # elif self.pareto:
+        #     file.write('\n No origin was provided')
+        #     meta = next(iter(self.pareto.items()))[1]
+        #     fittest_parsimony = int(meta['parsimony'])
+        #     fittest_algo = meta['expr_sym']
+        #     return  # todo fittest_parsimony must be set, do not return
+        # else:
+        #     file.write('\n There are no candidates to be mentioned at all. Maybe change your config?')
+        #     return
+        #
+        # for parsimony, fitness in self.pareto.items():
+        #     algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
+        #     result = eval_tf(algo_sym, self.data_control, self.eval_parameters, get_pred_labels=True)
+        #     fit_control = result['fitness']
+        #
+        #     if self.kernel.fitness_compare(fit_control, fitness_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
+        #         fitness_control_best = fit_control
+        #         fittest_algo = algo_sym
+        #         fittest_parsimony = parsimony
+        #
+        #     no_fault = True
+        #     for enum, entry in enumerate(result['tf_result']):
+        #         if not self.check_value_is_real(entry):
+        #             no_fault = False
+        #             # todo this is a bad workaround
+        #             result['tf_result'][enum] = 1
+        #
+        #     if no_fault:
+        #         kernel_result = self.kernel.conclusion_get_text(result, fitness_control_best)
+        #         file.write(kernel_result)
+        #     else:
+        #         file.write('\n\n Error in this tree')
+        #
+        # else:
+        #     # Info about the best Tree
+        #     file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
+        #     file.write('\n With fitness: {}'.format(fitness_control_best))
+        #     file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
+        #     file.write('\n\n')
+        #     file.close()
 
         return
 
@@ -481,10 +481,9 @@ class ExplainableGP(object):
 
         file = Path.open(path_pareto / file_pareto, 'w')
 
-        for parsim, fit in sorted(list(pareto.items())):
-            tree_meta = self.parsimony_best_meta[parsim]
-            fitness = tree_meta['fitness_train']
-            algo_sym = tree_meta['expr_raw']  # save raw version, not the sympified one
+        for parsim, meta in sorted(list(pareto.items())):
+            fitness = meta['fitness_train']
+            algo_sym = meta['expr_raw']  # save raw version, not the sympified one
             #  todo automatically sympify pareto candidates?
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(str(parsim), str(fitness), str(algo_sym)))
 
@@ -552,8 +551,6 @@ class ExplainableGP(object):
                 count_fails += 1
                 continue
 
-
-
         print_warning('ww', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(len(self.population_tmp_eval), self.gen_id, count_fails), print_type=self.print_type)
 
         return
@@ -603,7 +600,6 @@ class ExplainableGP(object):
 
         # tree = self.tree_enrich(tree, last_evolution='p-sym')  # todo test added trees
         if self.tree_check_core_all(tree):
-
             tree = self.tree_enrich(tree, last_evolution='ps')
             parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
             tree = tree_set_parsimony(tree, parsimony)
@@ -633,7 +629,7 @@ class ExplainableGP(object):
 
             if self.kernel.fitness_compare(fitness, best_fit):
                 if self.pareto.get(parsim):
-                    pareto_fit = self.pareto.get(parsim)
+                    pareto_fit = self.pareto.get(parsim)['fitness_train']
                     if self.kernel.fitness_compare(fitness, pareto_fit):
                         self.pareto[parsim] = meta
                         self.printpl('a', 'Pareto update at {}, with new fitness: {}. Old was: {}.'.format(parsim, fitness, best_fit))
@@ -661,8 +657,9 @@ class ExplainableGP(object):
         remove superfluous pareto entries
         """
         sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
-        last_pareto_fit = next(iter(sorted_pareto))[1]
-        for parsim, fitness in sorted_pareto[1:]:
+        last_pareto_fit = next(iter(sorted_pareto))[1]['fitness_train']
+        for parsim, meta in sorted_pareto[1:]:
+            fitness = meta['fitness_train']
             if self.kernel.fitness_compare(fitness, last_pareto_fit):
                 last_pareto_fit = fitness
             else:
@@ -730,10 +727,10 @@ class ExplainableGP(object):
     def pop_reproduce(self, repro_rate):
 
         """
-        A single Tree from the prior generation is copied without mutation
+        A single Tree from the prior generation is copied as is
         """
 
-        for _ in range(repro_rate):  # quantity of Trees to be copied without mutation
+        for _ in range(repro_rate):
             tourn_winner = self.pop_selection_tournament(self.tourn_size)
             self.pop_append(tourn_winner, last_evolution='r1')  # i know, tests are not necessary...
 
@@ -745,7 +742,7 @@ class ExplainableGP(object):
         Copy an entry from the pareto candidates into the population
         """
 
-        for _ in range(repro_rate):  # quantity of Trees to be copied without mutation
+        for _ in range(repro_rate):
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
                 # expr_sym = meta['expr_sym']; print('sym', expr_sym)
@@ -767,14 +764,14 @@ class ExplainableGP(object):
         for _ in range(repro_rate):
             tree = self.pop_selection_tournament(self.tourn_size)
             tree = tree_evolve_reduce(tree, completely=False)
-            self.pop_append(tree, last_evolution='point')
+            self.pop_append(tree, last_evolution='reduce')
 
         return
 
     def pop_mutate_point(self, repro_rate):
 
         """
-        One point (terminal or function) gets mutated.
+        Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
 
@@ -855,8 +852,8 @@ class ExplainableGP(object):
                                                     depth_min=self.config['tree_depth_min'],
                                                     depth_goal=self.config['tree_depth_base'])
             elif self.config['tree_growth'] == 'v2':
-                tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array,
-                                                    self.config['tree_branch_nodes_base'])
+                max_insert_nodes = min(self.config['tree_branch_nodes_base'], (self.parsimony_max-tree_get_size(tree, karoo=True)))
+                tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, max_insert_nodes)
             else:
                 raise Exception('Tree growth version not known')
 
@@ -1038,7 +1035,7 @@ class ExplainableGP(object):
                     tree = tree_set_id(tree, '')  # todo test and find better solution
                     self.population_tmp_eval.append(tree)
                 else:
-                    print_warning('w', 'Tree was too complex!')
+                    print_warning('w', 'Tree was too complex! Last Evolution: {}'.format(last_evolution))
 
         return
 
@@ -1090,7 +1087,6 @@ class ExplainableGP(object):
 
             tree_id = pop_tree_choose(self.population_base)
             tree = self.population_base[tree_id]
-            print('last--tree\n', tree)
             fitness = tree_get_fitness(tree, precision=self.config['precision'])
 
             if self.kernel.fitness_compare(fitness, best_fitness, mode='better'):

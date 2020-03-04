@@ -36,8 +36,6 @@ def print_warning(message_type, text, print_type=None, time_total=0.0):
     """
     Printing warnings
     """
-    message_style = BColors.WARNING
-    message_pretxt = 'Warning: '  # Warning-yellow
     printez(message_type, text, print_type=print_type, time_total=time_total)
 
 

@@ -300,4 +300,5 @@ def test_tree_reduce_parts():
             if not (tree_check_all(tree, karoo=True)):
                 print('test_tree_reduce_parts ERROR', tree)
 
-test_tree_reduce_parts()
+
+test_tree_viz_latex()

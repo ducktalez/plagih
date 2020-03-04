@@ -151,7 +151,7 @@ def run_mountaincar_test(config_dict, path):
     print('Test dir is:', test_run)
     config_dict['root_dir'] = path
     config_dict['pop_max'] = 100
-    config_dict['gen_max'] = 50
+    config_dict['gen_max'] = 500
     config_dict['tourn_size'] = 3
     config_dict['kernel_name'] = 'regression bounded'
     config_dict['parsimony_max'] = 50
@@ -170,6 +170,6 @@ def run(root_dir):
     # create_samples_pickle(root_dir)  # todo outsource
     # analyse_old_run(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_test(config_dict, root_dir)
+    gp = run_mountaincar_v2(config_dict, root_dir)
     gp.plagih_gp_run()
 

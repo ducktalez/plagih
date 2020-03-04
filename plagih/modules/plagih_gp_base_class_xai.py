@@ -695,10 +695,10 @@ class ExplainableGP(object):
             if parsim in self.parsimony_best_meta:
                 comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
                 if self.kernel.fitness_compare(fitness_train, comp_fit):
-                    self.printpl('aa', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
+                    self.printpl('iii', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
                     self.parsimony_best_meta[parsim] = tree_get_meta(tree)
             else:
-                self.printpl('aa', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
+                self.printpl('iii', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
                 self.parsimony_best_meta[parsim] = tree_get_meta(tree)
 
         return
@@ -1035,7 +1035,7 @@ class ExplainableGP(object):
                     tree = tree_set_id(tree, '')  # todo test and find better solution
                     self.population_tmp_eval.append(tree)
                 else:
-                    print_warning('w', 'Tree was too complex! Last Evolution: {}'.format(last_evolution))
+                    print_warning('www', 'Tree was too complex! Last Evolution: {}'.format(last_evolution), print_type=self.print_type)
 
         return
 
@@ -1190,7 +1190,7 @@ class ExplainableGP(object):
         try:
             expr_sym = expr_sympify(expr_raw=expr_raw)
         except Exception as ex:
-            raise Exception('Expr could not be sympified: {}. Ex: {}'.format(expr_raw, ex))
+            raise Exception('Expr could not be sympified: {}. Ex: {}'.format(ex))
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
 

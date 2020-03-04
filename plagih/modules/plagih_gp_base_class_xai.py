@@ -1464,7 +1464,6 @@ class ExplainableGP(object):
         return
 
     def print_g(self, message_type, text):
-
         """
 
         """

@@ -153,9 +153,9 @@ def run_mountaincar_test(config_dict, path):
     config_dict['pop_max'] = 100
     config_dict['gen_max'] = 50
     config_dict['tourn_size'] = 3
-    config_dict['kernel_name'] = 'regression'
+    config_dict['kernel_name'] = 'regression bounded'
     config_dict['parsimony_max'] = 50
-    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt',    # To print_type absolutely all: ewaaaiiiiggggvvvpppttt
+    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt'    # To print_type absolutely all: ewaaaiiiiggggvvvpppttt
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
     return gp

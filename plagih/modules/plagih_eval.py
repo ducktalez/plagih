@@ -33,20 +33,21 @@ class FitnessKernel:
         else:
             return False
 
-    def conclusion_info(self, result, fitness_control_best):
+    def conclusion_get_text(self, result, fitness_control_best):
         result_str = ''
+
         if self.kernel == 'classification':
             result_str += ('\n\n Classification fitness score: {}'.format(fitness_control_best))
             result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
             result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
 
         elif self.kernel == 'regression':
-            mse = skm.mean_squared_error(result['result'], result['solution'])
+            mse = skm.mean_squared_error(result['tf_result'], result['solution'])
             result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
 
         elif self.kernel == 'regression bounded':
-            mse = skm.mean_squared_error(result['result'], result['solution'])
+            mse = skm.mean_squared_error(result['tf_result'], result['solution'])
             result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
 
@@ -154,7 +155,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
     Returns:
         A dict mapping keys to the following outputs:
-            'result'            - array of the results of applying given expression to the data_csv_path
+            'tf_result'         - array of the results of applying given expression to the data_csv_path
             'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
             'solution'          - array of the solution values extracted from the data_csv_path (variable 's' in the dataset)
             'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
@@ -187,7 +188,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
             pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-            solution = tensors['action0']
+            solution = tensors['action0']  # todo
 
             pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, action_dict, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
@@ -197,7 +198,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
             tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
 
-    return {'result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
+    return {'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
             'pairwise_fitness': pairwise_fitness}
 
 
@@ -225,7 +226,12 @@ def tensors_leaves(tensors, data, variables_dict, action_dict):
 
 def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
     """
-    Extract expression tree from the string algo_sym and transform into TensorFlow (TF) graph.
+    Extract expression tree from the string algo_sym.
+    Please provide ONE of the following if you want to get...
+    ...tensors: All variables (observation0, ...) as tensors.
+    ...prnt: True
+    ...build: True
+    More information in ast_convert_from_expr_recursive()
 
     """
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
@@ -235,15 +241,16 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
 
     if build:
         # print('before:', graph)
-        graph = labels_from_graphlist(graph, [])
+        graph = labels_from_nestedexpr(graph, [])
         # graph = [str(x).replace('~', '-') for x in graph]
 
     return graph
 
 
-def labels_from_graphlist(expr_array, expr):
+def labels_from_nestedexpr(expr_array, expr):
     """
-    Returns a list
+    Returns a label list from the nested list which ast_convert_from_expr_recursive() created
+    [+, [a], [/, [b, c]]]]  -> [+, a, /, b, c]
     """
 
     for x in expr_array:  # all elements, that are not lists themselves
@@ -255,15 +262,21 @@ def labels_from_graphlist(expr_array, expr):
     if only_lists:
         from itertools import chain
         lists_removed = list(chain(*only_lists))
-        expr = labels_from_graphlist(lists_removed, expr)
+        expr = labels_from_nestedexpr(lists_removed, expr)
     return expr
 
 
 def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
     """
-    Recursively transforms parsed expression tree into TensorFlow (TF) graph.
-    One of the three must be filled
+    Returns (recursively) a (tensorflow) graph from a (raw or sympified) math expression.
+    please use by calling labels_from_graphlist()
 
+    Used to be for tensorflow only, but was modified to save 'sympified' trees.
+
+    One of [tensors, prnt, build] must be set
+    -> tensors: Creates a tensorflow graph for evaluation
+    -> prnt: creates a string expression of the tree (I think I tried this before 'build' worked)
+    -> build: creates a nested expr-list, e.g. a+(b/c) -> [+, [a], [/, [b, c]]]] (at least I think so)
     """
 
     # Arity 0

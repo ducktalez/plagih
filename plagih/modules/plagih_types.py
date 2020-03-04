@@ -60,7 +60,7 @@ def xtype_get_converters(xtype):
         raise
 
 
-def xtype_get_child_todos(label, node_arity, variables_dict):
+def xtype_label_get_child_xtypes(label, node_arity, variables_dict):
     """
     reverse stuff
     """

@@ -360,7 +360,7 @@ class ExplainableGP(object):
 
         with Path.open(path_backup, 'rb') as file:
             run_data = pickle.load(file)
-
+            file.close()  # todo is this needed?
         try:
             self.monitoring_dict['population_tmp_done-size'] = run_data['genepool_size']
             print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
@@ -1260,8 +1260,6 @@ class ExplainableGP(object):
         """
         Make all plots
         """
-        import warnings
-        warnings.filterwarnings('error')
 
         path_plots = make_dir(path / folder_plots)
 

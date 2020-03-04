@@ -281,7 +281,7 @@ def test_tree_set_modifyable_nodes():
 
 
 def test_tree_reduce_parts():
-    _, _, tree_plus = get_three_sample_trees()
+    tree1, tree2, tree_plus = get_three_sample_trees()
     tree = tree_evolve_reduce(tree_plus)
     tree = tree_set_modifyable_nodes(tree, tree_plus)
     print('First try', tree_check_reproduce_loop(tree))
@@ -292,5 +292,12 @@ def test_tree_reduce_parts():
     print('tree_test check', tree_check_all(tree_test))
     tree_test = karoo_tree_from_labellist(label_list, modify_list=modify_list)
     print('tree_test check', tree_check_all(tree_test))
+
+    for tree_base in [tree1, tree2, tree_plus]:
+        print('New try')
+        for _ in range(20):
+            tree = tree_evolve_reduce(tree_base)
+            if not (tree_check_all(tree, karoo=True)):
+                print('test_tree_reduce_parts ERROR', tree)
 
 test_tree_reduce_parts()

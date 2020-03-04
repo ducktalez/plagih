@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from plagih.modules.file_interaction import make_dir, folder_trees
 from plagih.modules.viz_with_latex import *
+from sympy import sympify
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -1578,13 +1579,12 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
         label_list = ast_convert_from_expr(expr_sym, build=True)
         arity_list = [label_get_arity(label) for label in label_list]
         core = core_from_labels(label_list, arity_list)
-        tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=True)
+        tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
 
         return tree_sympified
-    except:
-        print_warning('w', 'reducing expr raw: {}'.format(expr_raw))
-        print_warning('w', 'Delete this tree! nan tree or other error.')
-        raise
+    except Exception as ex:
+        print_warning('w', 'reducing expr raw: {}\n{}'.format(expr_raw, tree))
+        raise Exception('Reducing branch failed! Ex: {}'.format(ex))
 
 
 def tree_evolve_mutate_point(tree, func_array, variables_dict):
@@ -1624,7 +1624,7 @@ def tree_evolve_reduce(tree, completely=True):
         node_ids = tree_get_mutatable_nodes(tree)
         func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
         if len(func_ids) > 0:
-            node_id = np.random.choice(node_ids)  # choose
+            node_id = np.random.choice(node_ids)
             tree = treegp_reduce_branch(tree, node_id, karoo=True)
     return tree
 
@@ -1684,10 +1684,10 @@ def tree_get_branch(tree, node, karoo=False):
 
     # 2. Also return all child nodes
     branch_eval = tree_nodes_get_ids_string(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
-    branch_symp = plagih_sympify(branch_eval)  # convert string into something useful
+    branch_symp = sympify(branch_eval)  # convert string into something useful
 
     branch = np.append(branch, branch_symp)
-    branch = np.sort(branch)  # sort nodes in branch for Crossover.
+    branch = np.sort(branch)
 
     return branch
 

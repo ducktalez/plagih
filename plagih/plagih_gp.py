@@ -7,6 +7,8 @@ from plagih.modules.plagih_gp_base_class_xai import *
 from plagih.modules.Examples import *
 from plagih.modules.plagih_data import *
 
+# import warnings
+# warnings.filterwarnings('error')
 
 def create_config_dict():
     config_dict = {

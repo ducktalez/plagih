@@ -2,6 +2,7 @@
 from benchmarks.industrial_benchmark_python.IDS import IDS
 import numpy as np
 import matplotlib.pyplot as plt
+import collections.deque
 
 '''
 The MIT License (MIT)
@@ -28,6 +29,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
+
+class Agent_simple():
+
+    def __init__(self):
+        self.remember = {'v': np.zeros(6),
+                         'f': np.zeros(4),
+                         'p': np.zeros(1),
+                         'h': np.zeros(5)}
+
+        self.f = np.zeros(4)
+        self.p = np.zeros(4)
+        self.h = np.zeros(4)}
+
+    def decide(self, observation):
+        observation0, observation1 = observation
+        if -observation1 + min(observation1, observation0 + 1.025) > observation1:
+            return 0
+        else:
+            return 2
 
 n_trajectories = 10
 T = 1000

@@ -172,4 +172,3 @@ def run(root_dir):
     config_dict = create_config_dict()
     gp = run_mountaincar_v2(config_dict, root_dir)
     gp.plagih_gp_run()
-

@@ -515,7 +515,7 @@ class ExplainableGP(object):
 
             # save a ready-to-use tex file with all pareto trees
             forest_grouped.append(
-                'Pareto entry at parsimony {} with fitness {}.\n{}\n\\newpage'.format(parsim, meta['fitness_train'], tree_viz_get_tex_forest(tree)))  # todo this kind of is latex aswell
+                'Pareto entry at parsimony {} with fitness {}.\n{}\n\\newpage\n'.format(parsim, meta['fitness_train'], tree_viz_get_tex_forest(tree)))  # todo this kind of is latex aswell
 
         latex_full_doc = latex_standalone_doc_forest(forest_grouped)
         file = Path.open(path_trees / '#all_trees.tex', 'w')
@@ -538,7 +538,6 @@ class ExplainableGP(object):
         count_fails = 0
 
         for tree_id in pop_iterate_trees(self.population_tmp_eval):
-
             tree = self.population_tmp_eval[tree_id]
 
             try:
@@ -547,7 +546,7 @@ class ExplainableGP(object):
                 self.tree_meta_update(tree, fitness_train=fitness_train)
                 self.pop_append(tree)  # todo the appendix appendaroo
             except Exception as ex:
-                print_warning('ww', 'Error while getting meta Info: {}'.format(ex), print_type=self.print_type)
+                print_warning('www', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
                 count_fails += 1
                 continue
 
@@ -657,14 +656,14 @@ class ExplainableGP(object):
         remove superfluous pareto entries
         """
         sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
-        last_pareto_fit = next(iter(sorted_pareto))[1]['fitness_train']
+        last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
         for parsim, meta in sorted_pareto[1:]:
             fitness = meta['fitness_train']
-            if self.kernel.fitness_compare(fitness, last_pareto_fit):
-                last_pareto_fit = fitness
+            if self.kernel.fitness_compare(fitness, last_fitness):
+                last_fitness = fitness
             else:
                 self.pareto.pop(parsim)
-                self.printpl('aa', 'Pareto entry at {} got obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(parsim, last_pareto_fit, fitness))
+                self.printpl('aa', 'Pareto entry at {} became obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(parsim, last_fitness, fitness))
         return
 
     def pareto_update(self):
@@ -1190,7 +1189,7 @@ class ExplainableGP(object):
         try:
             expr_sym = expr_sympify(expr_raw=expr_raw)
         except Exception as ex:
-            raise Exception('Expr could not be sympified: {}. Ex: {}'.format(ex))
+            raise Exception('Expr could not be sympified: {}'.format(ex))
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
 

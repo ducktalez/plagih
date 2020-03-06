@@ -6,7 +6,10 @@ Visualising Trees with latex.
 def latex_standalone_doc_forest(tikz_forest_list, preamble=''):
     """
     Latex standalone document of forest trees.
-    - todo test standalone, article, beamer
+    Possible \documentclass options:
+    [varwidth,convert]{standalone}
+    {article}
+    {beamer}
     """
 
     tikz_combined = ''
@@ -14,6 +17,7 @@ def latex_standalone_doc_forest(tikz_forest_list, preamble=''):
     for tikz in tikz_forest_list:
         tikz_combined += tikz
 
+    # \documentclass[varwidth,convert]{standalone}
     latex_doc_forest = '\\documentclass{{beamer}}' \
                        '\n\\usepackage{{forest}}' \
                        '\n\\begin{{document}}' \
@@ -47,5 +51,5 @@ def latex_wrap_forest(tikz_forest_tree):
                         '\n  variable/.style={{rounded corners, symbol,draw=black!100, fill=green!20,}},' \
                         '\n  constant/.style={{rectangle, symbol,}},' \
                         '\n {}' \
-                        '\n\\end{{forest}}'.format(tikz_forest_tree)
+                        '\n\\end{{forest}}\n'.format(tikz_forest_tree)
     return latex_tikz_forest

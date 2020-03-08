@@ -44,6 +44,8 @@ class ExplainableGP(object):
         self.tree_meta = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw', 'gen+nr'}
         self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}  # a dict with all pareto candidates. key is complexity, value is tree meta
+        self.population_tmp_done = []
+        self.population_tmp_eval = []
         self.population_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
         self.action_min_max = [None, None]  # list with [0] = min and [1] = max, For kernel "regression bounded" (or so)
@@ -86,7 +88,7 @@ class ExplainableGP(object):
 
         return
 
-    def plagih_update_files(self):
+    def plagih_update_analysis(self):
         """
         Without starting a new run, get the most important files
         """
@@ -97,7 +99,7 @@ class ExplainableGP(object):
             try:
                 self.plagih_load_backup(path_backup)
             except Exception as ex:
-                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}\nStarting a new run.'.format(ex))
+                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
                 raise
             self.terminate_run(self.root_dir)
         else:
@@ -344,19 +346,35 @@ class ExplainableGP(object):
         self.func_array = func_array
         return
 
+    def pop_fix_trees(self, population):
+        """
+        Some old runs are now inconsistent as the trees now hold some important information
+        """
+
+        # Fix the tree node's xtypes (old node's 'type', e.g. 'Term', ...) with 'f2f', ...
+        cnt = 0
+        for tree_id in pop_iterate_trees(population):
+            tree = population[tree_id]
+            if tree_node_get_xtype(tree, root_id) == '':
+                cnt += 1
+                population[tree_id] = tree_set_xtypes(tree, self.variables_dict)
+        print_warning('ww', 'Amount of trees with node_xtype inconsistency: {}.'.format(cnt))
+
+        # Fix the trees missing parsimony
+        cnt = 0
+        for tree_id in pop_iterate_trees(population):
+            tree = population[tree_id]
+            if tree_get_parsimony(tree) == '':
+                cnt += 1
+                parsimony = self.tree_get_parsimony_easywrapper(tree)
+                population[tree_id] = tree_set_parsimony(tree, parsimony)
+        print_warning('ww', 'Amount of trees without parsimony: {}.'.format(cnt))
+        return
+
     def plagih_load_backup(self, path_backup):
         """
 
         """
-
-        # restart_vers = '0.7'  # change this version is backups change. Or dont. Fiilures will come anyways.
-        # run_info = [('self.restart_count', self.restart_count),
-        #                       ('self.restart_vers', self.restart_vers),
-        #                       ('self.gen_id', self.gen_id),
-        #                       ('self.parsimony_best_meta', self.parsimony_best_meta),
-        #                       ('self.pareto', self.pareto),
-        #                       ('self.population_base', self.population_base),
-        #                       ('self.monitoring_dict', self.monitoring_dict)]
 
         with Path.open(path_backup, 'rb') as file:
             run_data = pickle.load(file)
@@ -374,15 +392,20 @@ class ExplainableGP(object):
         self.population_base = run_data['self.population_base']
         self.monitoring_dict = run_data['self.monitoring_dict']
 
-        if type(next(iter(run_data['self.pareto']))) == type(0.6):
-            self.pareto = {}  # todo does origin miss?
+        # force fix of all trees if they are incorrect in last versions
+        self.pop_fix_trees(self.population_base)
+
+        first_pareto = next(iter(self.pareto.items()))
+        if isinstance(first_pareto[1], float):  # todo idea branch mutation und point eher in unteren teilbäumen? <> durch ast-tausch?
+            self.pareto = {}
             self.pareto_update()
-            raise Exception('TODO pareto is outdated')
 
         self.restart_count += 1
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
 
         return
+
+    # todo entwickler gibt Funktionen als eigene ops an (fun1, fun2, ...) kann all seine ideen einbringen!
 
     def run_save_pickle(self):
         """
@@ -587,6 +610,10 @@ class ExplainableGP(object):
 
         self.tree_meta[tree_ident] = meta
 
+    def tree_get_parsimony_easywrapper(self, tree):
+        parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
+        return parsimony
+
     def pop_add_tree_midrun(self, tree):
         """
         Trying to add another tree to the current population
@@ -600,27 +627,52 @@ class ExplainableGP(object):
         # tree = self.tree_enrich(tree, last_evolution='p-sym')  # todo test added trees
         if self.tree_check_core_all(tree):
             tree = self.tree_enrich(tree, last_evolution='ps')
-            parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
+            parsimony = self.tree_get_parsimony_easywrapper(tree)
             tree = tree_set_parsimony(tree, parsimony)
             self.tree_meta_update(tree, parsimony=parsimony)
             self.population_tmp_done.append(tree)  # todo, if we late insert a tree, will the pop-loop find it?
 
-            self.parsimony_best_update()
             self.pareto_update_insert()
 
         return
+
+    def pareto_update_try(self):
+        """
+        todo this might be a better idea than the other update function
+        # todo this whole parsimony_best thing seems bad, needs much memory, why not update pareto entries directly?
+            # todo idea delete self.parsimony_best??
+        """
+        for tree_id in pop_iterate_trees(self.population_tmp_done):
+            tree = self.population_tmp_done[tree_id]
+            fitness = tree_get_fitness(tree, precision=self.precision)
+            parsimony = tree_get_parsimony(tree)
+            meta = tree_get_meta(tree)
+            for p_fit, p_meta in self.pareto.items():
+                p_parsim = p_meta['parsimony']
+                if self.kernel.fitness_compare(fitness, p_fit):
+                    if parsimony < p_parsim:
+                        # Found a new entry on pareto
+                        # 1. insert new entry
+                        self.pareto[parsimony] = meta
+                        # 2. clean pareto
+                        self.pareto_update_clean()
+
+                    else:
+                        # pareto is already sufficient
+                        break
 
     def pareto_update_insert(self):
         """
         update new entries in the pareto dict (part of the whole update process)
         Requires: self.parsimony_best_meta entries
-        # todo this whole parsimony_best thing seems bad
         """
+
+        self.parsimony_best_update()
+
         sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
         best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
 
         for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-            # todo idea delete self.parsimony_best??
             # tree = self.population_tmp_done[tree_id]
             fitness = meta['fitness_train']
             parsim = meta['parsimony']
@@ -1027,7 +1079,7 @@ class ExplainableGP(object):
                 tree = tree_set_id(tree, len(self.population_tmp_done))  # todo test and find better solution
                 self.population_tmp_done.append(tree)
             else:
-                parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
+                parsimony = self.tree_get_parsimony_easywrapper(tree)
                 if parsimony <= self.parsimony_max:
                     tree = tree_set_parsimony(tree, parsimony)
                     tree = tree_set_fitness(tree, '')
@@ -1046,12 +1098,9 @@ class ExplainableGP(object):
 
         """
 
-        # self.population_tmp_done = pop_enum_trees(self.population_tmp_done)  # todo not neccessary?
-
         # gene_pool = self.pop_genepool_create()
         self.pop_eval_remaining()
 
-        self.parsimony_best_update()
         self.pareto_update()  # todo todo save sympified tree
 
         self.pop_base_transfer()
@@ -1497,8 +1546,15 @@ def pop_enum_trees(population):
 
 
 def pop_iterate_trees(population):
-    """
+    """ todo iterate is doing simple stuff complex... gets list [1, 2, 3, 4, 5, 6, 7, ...]
     Ich schwöre welcher Hurensohn hat diese Kopfzeile gemacht?
+    ...population besteht aus:
+    ['Kopfzeile mit unnötiger Scheißinfo, FUCK TODO DELETE THIS',
+      Baum1,
+      Baum2,
+      ...]
+      todo kopfzeile entfernen
+    iterating over a pop in regular manner results in dumb errors. why. would. anyone. do. this.
     """
     tree_ids = []
     for tree_id in range(FIRST_TREE, len(population)):  #

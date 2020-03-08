@@ -243,7 +243,7 @@ def tree_set_parsimony(tree, parsimony):
     Store the parsimony within the tree np-array
     """
     if parsimony == '':
-        pass
+        pass  # This is actually done when 'wiping' the tree's data
     elif parsimony < 0:
         print_warning('w', 'Warning: Parsimony is: {}'.format(parsimony))
 
@@ -1585,6 +1585,19 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
     except Exception as ex:
         print_warning('w', 'reducing expr raw: {}\n{}'.format(expr_raw, tree))
         raise Exception('Reducing branch failed! Ex: {}'.format(ex))
+
+
+def tree_check_meta_exists(tree):
+    """
+
+    """
+    cond1 = tree_get_fitness(tree) == ''
+    cond2 = tree_get_parsimony(tree) == ''
+    cond3 = tree_get_id(tree) == ''
+    if cond1 or cond2 or cond3:
+        return False
+    else:
+        return True
 
 
 def tree_evolve_mutate_point(tree, func_array, variables_dict):

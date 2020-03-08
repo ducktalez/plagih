@@ -141,7 +141,7 @@ def mountaincar_update_analysis_files(config_dict, path):
 
     config_dict['name'] = 'MTC_v4_scratch'
     gp = mountaincar_load_corefiles(config_dict, path)
-    gp.plagih_update_files()
+    gp.plagih_update_analysis()
     return
 
 
@@ -170,5 +170,5 @@ def run(root_dir):
     # create_samples_pickle(root_dir)  # todo outsource
     # analyse_old_run(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_v2(config_dict, root_dir)
+    gp = run_mountaincar_v3(config_dict, root_dir)
     gp.plagih_gp_run()

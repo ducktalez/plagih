@@ -380,11 +380,6 @@ class ExplainableGP(object):
         with Path.open(path_backup, 'rb') as file:
             run_data = pickle.load(file)
             file.close()  # todo is this needed?
-        try:
-            self.monitoring_dict['population_tmp_done-size'] = run_data['genepool_size']
-            print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
-        except:
-            print_warning('w', 'Success, delete this. This is a newer version where gene_pool was kicked out')
 
         self.restart_count = run_data['self.restart_count']  # counting how often this was restarted
         self.gen_id = run_data['self.gen_id']
@@ -396,10 +391,16 @@ class ExplainableGP(object):
         # force fix of all trees if they are incorrect in last versions
         self.pop_fix_trees(self.population_base)
 
+        try:
+            self.monitoring_dict['population_tmp_done-size'] = run_data['self.monitoring_dict']['genepool_size']
+            print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
+        except:
+            print_warning('w', 'Success, delete this. This is a newer version where gene_pool was kicked out')
+
         first_pareto = next(iter(self.pareto.items()))
         if isinstance(first_pareto[1], float):
             self.pareto = {}
-            self.pareto_update()
+            self.pareto_update()  # todo adding entries midrun is now very tricky i guess. new evaluation and analysis?
 
         self.restart_count += 1
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)

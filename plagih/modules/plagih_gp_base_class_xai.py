@@ -537,16 +537,16 @@ class ExplainableGP(object):
             tree = karoo_tree_from_labellist(label_list)
             tree = self.tree_enrich(tree, last_evolution='')
 
-            # save the small forest inputs
-            tikz_code = tree_viz_get_tex_forest(tree)
+            tikz_code = tree_viz_get_tex_forest(tree)  # generate the small forest inputs
 
-            file = Path.open(path_trees / 'tree-{}.tex'.format(str(meta['parsimony'])), 'w')
-            file.write(tikz_code)
-            file.close()
+            # SFEH: This saves all forest parts separately, but it is a mess
+            # file = Path.open(path_trees / 'tree-{}.tex'.format(str(meta['parsimony'])), 'w')
+            # file.write(tikz_code)
+            # file.close()
 
             # save a ready-to-use tex file with all pareto trees
             forest_grouped.append(
-                'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, meta['fitness_train'], tree_viz_get_tex_forest(tree), tree_sep))  # todo this kind of is latex aswell
+                'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, meta['fitness_train'], tikz_code, tree_sep))  # todo this kind of is latex aswell
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
         file = Path.open(path_trees / '#all_trees.tex', 'w')

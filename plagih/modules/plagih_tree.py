@@ -721,8 +721,9 @@ def tree_evolve_insert_branch_v1(tree, branch_ids, variables_dict, func_array, d
     depth_upper_bound = depth_max - tree_node_get_depth(tree, branch_ids[0])
     depth_goal = min(depth_goal, depth_upper_bound)
 
+    build_mode = np.random.choice(['full', 'grow'])  # todo test full method
     # Build a new tree
-    label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, variables_dict, func_array, min_depth=depth_min)
+    label_list, arity_list = invent_label_list_depth_random(old_xtype, depth_goal, variables_dict, func_array, min_depth=depth_min, build_mode=build_mode)
 
     if label_list:
         core_insert = core_from_labels(label_list, arity_list)

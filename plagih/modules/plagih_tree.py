@@ -125,7 +125,7 @@ def tree_get_labellist(tree):
 
 def karoo_tree_from_expr(expr, modify_list=None):
     """
-    deprecated! DELETE! sfeh
+    DELETE later sfeh
     Generate tree from a raw or sympified expression
     """
     label_list = ast_convert_from_expr(expr, build=True)
@@ -964,6 +964,26 @@ def tree_set_meta(tree, tree_meta):
     return tree
 
 
+def tree_get_ident(tree):
+    """
+    What is used as identificator for a tree...
+    - hash(expr_raw)
+    """
+    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
+    tree_ident = hash(expr_raw)
+    return tree_ident
+
+
+def tree_get_parsimony(tree):
+    """
+    Get parsimony from value in tree
+    """
+    parsimony = tree[T_parsimony][root_id]
+    if parsimony != '':
+        parsimony = float(parsimony)
+    return parsimony
+
+
 def tree_get_meta(tree):
     """
     Get the meta information from a tree
@@ -980,17 +1000,6 @@ def tree_get_meta(tree):
     tree_meta['expr_raw'] = expr_raw
     tree_meta['expr_sym'] = expr_sym
     return tree_meta
-
-
-def tree_get_parsimony(tree):
-    """
-    Get parsimony from value in tree
-    """
-    parsimony = tree[T_parsimony][root_id]
-    if parsimony == '':
-        raise
-    else:
-        return float(parsimony)  # todo check if it is useable? fitness aswell
 
 
 def tree_get_expr_raw(tree, node_id):
@@ -1591,9 +1600,9 @@ def tree_check_meta_exists(tree):
     """
 
     """
-    cond1 = tree_get_fitness(tree) == ''
-    cond2 = tree_get_parsimony(tree) == ''
-    cond3 = tree_get_id(tree) == ''
+    cond1 = str(tree_get_fitness(tree)) == ''
+    cond2 = str(tree_get_parsimony(tree)) == ''
+    cond3 = str(tree_get_id(tree)) == ''
     if cond1 or cond2 or cond3:
         return False
     else:

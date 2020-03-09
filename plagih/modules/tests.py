@@ -301,4 +301,4 @@ def test_tree_reduce_parts():
                 print('test_tree_reduce_parts ERROR', tree)
 
 
-test_tree_viz_latex()
+test_plagih_eval()

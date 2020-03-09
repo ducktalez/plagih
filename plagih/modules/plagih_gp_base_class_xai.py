@@ -99,7 +99,7 @@ class ExplainableGP(object):
             try:
                 self.plagih_load_backup(path_backup)
             except Exception as ex:
-                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
+                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))  # todo uncomment
                 raise
             self.terminate_run(self.root_dir)
         else:
@@ -116,7 +116,8 @@ class ExplainableGP(object):
             try:
                 self.plagih_load_backup(path_backup)
             except Exception as ex:
-                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}\nStarting a new run.'.format(ex))
+                # print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}\nStarting a new run.'.format(ex))
+                raise
                 # todo delete old plots, append to old config,
 
         if self.gen_id == 0:
@@ -364,7 +365,7 @@ class ExplainableGP(object):
         cnt = 0
         for tree_id in pop_iterate_trees(population):
             tree = population[tree_id]
-            if tree_get_parsimony(tree) == '':
+            if str(tree_get_parsimony(tree)) == '':
                 cnt += 1
                 parsimony = self.tree_get_parsimony_easywrapper(tree)
                 population[tree_id] = tree_set_parsimony(tree, parsimony)
@@ -396,7 +397,7 @@ class ExplainableGP(object):
         self.pop_fix_trees(self.population_base)
 
         first_pareto = next(iter(self.pareto.items()))
-        if isinstance(first_pareto[1], float):  # todo idea branch mutation und point eher in unteren teilbäumen? <> durch ast-tausch?
+        if isinstance(first_pareto[1], float):
             self.pareto = {}
             self.pareto_update()
 
@@ -406,6 +407,7 @@ class ExplainableGP(object):
         return
 
     # todo entwickler gibt Funktionen als eigene ops an (fun1, fun2, ...) kann all seine ideen einbringen!
+    # todo idea branch mutation und point eher in unteren teilbäumen? <> durch ast-tausch?
 
     def run_save_pickle(self):
         """
@@ -1208,7 +1210,7 @@ class ExplainableGP(object):
         except:
             raise Exception('Your origin algorithm could not be sympified. Aborting.')
 
-        if expr_sym != expr_raw:  # todo check if both expressions have the same structure, not if they are equal. try eval=False?
+        if not compare_expressions_as_labels(expr_raw, expr_sym):
             print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}'.format(expr_raw, expr_sym))
 
         self.origin = {'tree': tree, 'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
@@ -1242,7 +1244,7 @@ class ExplainableGP(object):
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.eval_parameters)['fitness']
 
-        if not self.check_value_is_real(fitness_train):
+        if not check_value_is_real(fitness_train):
             raise Exception('fitness_train is not a real number: {}'.format(fitness_train))
 
         return fitness_train
@@ -1337,16 +1339,6 @@ class ExplainableGP(object):
 
         return
 
-    def check_value_is_real(self, fitness):
-        """
-        Returns bool value if we can use the calculated fitness
-        Fitness values might evaluate to weird stuff
-        e.g. 'nan' after dividing by zero or (inf) after 20**1234
-        nan: fitness == fitness -> False
-        inf: fitness is not float('inf') -> False
-        """
-        return fitness == fitness and fitness is not float('inf')
-
     def pop_analyze(self):
         """
         Analysing this generation
@@ -1374,7 +1366,7 @@ class ExplainableGP(object):
         for tree_id in pop_iterate_trees(self.population_tmp_done):
             tree = self.population_tmp_done[tree_id]
             fitness = tree_get_fitness(tree)
-            if self.check_value_is_real(fitness):  # todo take care of this earlier
+            if check_value_is_real(fitness):  # todo take care of this earlier
                 fitness_train_sum += fitness  # for fitness average
                 if self.kernel.fitness_compare(fitness, pop_best_fitness):
                     pop_best_fitness = fitness
@@ -1644,23 +1636,6 @@ def load_funcarray_from_csv(op_csv_path):
     return func_array
 
 
-def tree_get_ident(tree):
-    """
-    What is used as identificator for a tree...
-    - hash(expr_raw)
-    """
-    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
-    tree_ident = hash(expr_raw)
-    return tree_ident
-
-
-def tree_get_parsimony(tree):
-    parsimony = tree[T_parsimony][1]
-    if parsimony != '':
-        parsimony = float(parsimony)
-    return parsimony
-
-
 def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None):
     """
     parsimony_distance: compute the chosen distance by the user.
@@ -1672,10 +1647,33 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None):
     elif parsimony_distance == 'total_tree_depth':
         return 0
 
-    if parsimony_distance == 'ted':
+    if parsimony_distance == 'ted':  # tree edit distance, tree-edit-distance
         return tree_parsimony_ted(tree, origin_tree)
     elif parsimony_distance == 'rel_ari_1':  # Does this work?
         return tree_parsimony_relari(tree, origin_tree)
     else:
         print_e('Complexity measurement not available: {}'.format(parsimony_distance))
         raise
+
+
+def compare_expressions_as_labels(expr_raw, expr_syx):
+    """
+    Label list from expression
+    """
+    raw_labels = ast_convert_from_expr(expr_raw, build=True)
+    sym_labels = ast_convert_from_expr(expr_syx, build=True)
+    if raw_labels == sym_labels:
+        return False  # todo return true but correctify this pls. sympify tree without core.
+    else:
+        return False
+
+
+def check_value_is_real(fitness):
+    """
+    Returns bool value if we can use the calculated fitness
+    Fitness values might evaluate to weird stuff
+    e.g. 'nan' after dividing by zero or (inf) after 20**1234
+    nan: fitness == fitness -> False
+    inf: fitness is not float('inf') -> False
+    """
+    return fitness == fitness and fitness is not float('inf')

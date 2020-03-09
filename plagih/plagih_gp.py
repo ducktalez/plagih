@@ -30,7 +30,7 @@ def create_config_dict():
         'print_type': 'gggewwsiivoaa',    # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'force_new_run': False,         # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
-        'delete_old_file': False,       # todo, delete old files. be very careful
+        'delete_old_file': False,       # sfeh, delete old files. be very careful
         'monitor': {'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
                     'population_tmp_done-size': 'y'

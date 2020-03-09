@@ -99,7 +99,7 @@ class ExplainableGP(object):
             try:
                 self.plagih_load_backup(path_backup)
             except Exception as ex:
-                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))  # todo uncomment
+                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
                 raise
             self.terminate_run(self.root_dir)
         else:
@@ -379,7 +379,6 @@ class ExplainableGP(object):
 
         with Path.open(path_backup, 'rb') as file:
             run_data = pickle.load(file)
-            file.close()  # todo is this needed?
 
         self.restart_count = run_data['self.restart_count']  # counting how often this was restarted
         self.gen_id = run_data['self.gen_id']
@@ -388,27 +387,32 @@ class ExplainableGP(object):
         self.population_base = run_data['self.population_base']
         self.monitoring_dict = run_data['self.monitoring_dict']
 
+        # updating the population header line (removing it)
+        if isinstance(self.population_base[0], str):
+            self.population_base.pop(0)
+
         # force fix of all trees if they are incorrect in last versions
         self.pop_fix_trees(self.population_base)
-        # todo idea network layers as genetic programming solution?
+
+        # update monitoring dict name (genepool_size -> population_tmp_done-size)
         try:
             self.monitoring_dict['population_tmp_done-size'] = run_data['self.monitoring_dict']['genepool_size']
             print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
         except:
             print_warning('w', 'Success, delete this. This is a newer version where gene_pool was kicked out')
 
+        # update pareto entries (pareto now contains meta data)
         first_pareto = next(iter(self.pareto.items()))
         if isinstance(first_pareto[1], float):
             self.pareto = {}
-            self.pareto_update()  # todo adding entries midrun is now very tricky i guess. new evaluation and analysis?
+            self.pareto_update()
+
 
         self.restart_count += 1
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
 
         return
 
-    # todo entwickler gibt Funktionen als eigene ops an (fun1, fun2, ...) kann all seine ideen einbringen!
-    # todo idea branch mutation und point eher in unteren teilbäumen? <> durch ast-tausch?
 
     def run_save_pickle(self):
         """
@@ -559,20 +563,19 @@ class ExplainableGP(object):
     def pop_eval_remaining(self):
 
         """
-        Evaluate all trees in self.population_tmp_eval.
+        Evaluate all trees in population_tmp_eval.
         This is the part of the population that could not be found in the dict.
         """
 
         count_fails = 0
 
-        for tree_id in pop_iterate_trees(self.population_tmp_eval):
-            tree = self.population_tmp_eval[tree_id]
+        for tree in self.population_tmp_eval:
 
             try:
                 fitness_train = self.tree_eval_fitness_train(tree)
                 tree = tree_set_fitness(tree, fitness_train)
                 self.tree_meta_update(tree, fitness_train=fitness_train)
-                self.pop_append(tree)  # todo the appendix appendaroo
+                self.pop_append(tree)
             except Exception as ex:
                 print_warning('www', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
                 count_fails += 1
@@ -647,8 +650,7 @@ class ExplainableGP(object):
         # todo this whole parsimony_best thing seems bad, needs much memory, why not update pareto entries directly?
             # todo idea delete self.parsimony_best??
         """
-        for tree_id in pop_iterate_trees(self.population_tmp_done):
-            tree = self.population_tmp_done[tree_id]
+        for i, tree in enumerate(self.population_tmp_done):
             fitness = tree_get_fitness(tree, precision=self.precision)
             parsimony = tree_get_parsimony(tree)
             meta = tree_get_meta(tree)
@@ -678,7 +680,6 @@ class ExplainableGP(object):
         best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
 
         for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-            # tree = self.population_tmp_done[tree_id]
             fitness = meta['fitness_train']
             parsim = meta['parsimony']
             pareto_improved = None
@@ -741,8 +742,7 @@ class ExplainableGP(object):
         Do not confuse with pareto-entries
         """
 
-        for tree_id in pop_iterate_trees(self.population_tmp_done):  # todo, these are not ordered in parsimony nor fitness
-            tree = self.population_tmp_done[tree_id]
+        for ii, tree in enumerate(self.population_tmp_done):  # todo, these are not ordered in parsimony nor fitness
 
             parsim = tree_get_parsimony(tree)  # todo random is eval parsimony used correctly everywhere?
             fitness_train = tree_get_fitness(tree)
@@ -773,9 +773,9 @@ class ExplainableGP(object):
         self.gen_id += 1
         self.time_genstart = time.perf_counter()
         self.debug_warnings = {}
-        self.population_tmp_done = ['DELETE THIS']  # todo pop-delete initialise population_tmp_done to host the next generation
+        self.population_tmp_done = []
+        self.population_tmp_eval = []
         self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)
-        self.population_tmp_eval = ['DELETE THIS']  # todo pop-delete
 
         return
 
@@ -1039,25 +1039,21 @@ class ExplainableGP(object):
         Everything is done, as we filled all the other information in pop_append()
         - enumerate
         """
-        if tree_get_id(tree) != '':
-            print('todo? delete this', tree, tree_get_id(tree))
-        else:
-            tree = tree_set_id(tree, len(self.population_tmp_done))
+        tree = tree_set_id(tree, len(self.population_tmp_done))
+        # todo set last modification already done?
         self.population_tmp_done.append(tree)
         return
 
     def pop_base_transfer(self):
         """
-        Copy the genepool of a gen
-        """
-        self.population_base = ['Population Selection in Generation {}.'.format(str(self.gen_id))]  # todo pop_delete
 
-        for tree_id in pop_iterate_trees(self.population_tmp_done):
-            # tree = self.population_tmp_done[tree_id]
-            tree_copy = pop_tree_copy(self.population_tmp_done, tree_id)  # what about entry #1?
-            tree_copy = tree_set_id(tree_copy, tree_id)  # todo +1`??
+        """
+        self.population_base = []
+
+        for i, tree in enumerate(self.population_tmp_done):
+            tree_copy = np.copy(tree)
+            tree_copy = tree_set_id(tree_copy, i)  # sfeh delete this?
             self.population_base.append(tree_copy)
-            # todo could enum trees here again
 
         return
 
@@ -1131,7 +1127,6 @@ class ExplainableGP(object):
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
 
         """
-        # todo idea layerwise-mutations not only for layer0?
 
         best_id = None
         best_fitness = None
@@ -1349,7 +1344,6 @@ class ExplainableGP(object):
         - fittest tree
         - average fitness
         - average tree complexity
-        # todo len(self.population_tmp_done) is used too often
         """
 
         # How many survived in the selection?
@@ -1359,18 +1353,15 @@ class ExplainableGP(object):
             self.terminate_run(self.root_dir)
 
         # Find the fittest tree, also average fitness
-
         pop_best_fitness = tree_get_fitness(self.population_tmp_done[FIRST_TREE])
-
         fitness_train_sum = 0
+        tree_cnt = 0
 
-        # dominator_count = 0
-
-        for tree_id in pop_iterate_trees(self.population_tmp_done):
-            tree = self.population_tmp_done[tree_id]
+        for ii, tree in enumerate(self.population_tmp_done):
             fitness = tree_get_fitness(tree)
             if check_value_is_real(fitness):  # todo take care of this earlier
                 fitness_train_sum += fitness  # for fitness average
+                tree_cnt += 1
                 if self.kernel.fitness_compare(fitness, pop_best_fitness):
                     pop_best_fitness = fitness
 
@@ -1388,16 +1379,15 @@ class ExplainableGP(object):
         #         pass
         # self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.self.gen_id, dominator_count))
 
-        average_fitness = fitness_train_sum / max(len(self.population_tmp_done), 1)
+        average_fitness = fitness_train_sum / max(tree_cnt, 1)
         self.monitoring_dict['fitness_average'][self.gen_id] = average_fitness
         self.monitoring_dict['best_candidate'][self.gen_id] = self.best_fitness
 
         # Tree complexity
         complexity_sum = 0
-        for tree_id in pop_iterate_trees(self.population_tmp_done):
-            tree = self.population_tmp_done[tree_id]
+        for ii, tree in enumerate(self.population_tmp_done):
             complexity_sum += len(tree_nodes_get_ids(tree, karoo=True))
-        avg_complexity = complexity_sum / len(self.population_tmp_done)
+        avg_complexity = complexity_sum / tree_cnt
         self.monitoring_dict['complexity_average'][self.gen_id] = avg_complexity
 
         return
@@ -1533,6 +1523,7 @@ def pop_util_copy(population_x, title):
 def pop_enum_trees(population):
     """
     outsourced enumeration of trees in a population
+    trees are no longer iterated
     """
     for tree_id in range(FIRST_TREE, len(population)):  #
         tree = population[tree_id]
@@ -1551,10 +1542,8 @@ def pop_iterate_trees(population):
       todo kopfzeile entfernen
     iterating over a pop in regular manner results in dumb errors. why. would. anyone. do. this.
     """
-    tree_ids = []
-    for tree_id in range(FIRST_TREE, len(population)):  #
-        tree_ids.append(tree_id)
-    return tree_ids
+
+    return range(FIRST_TREE, len(population))
 
 
 def file_population_karoo(population, pop_name, path, gen_id):

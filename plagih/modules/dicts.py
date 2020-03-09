@@ -8,7 +8,7 @@ fitt_dict = {'classification': 'max',
              'regression bounded': 'min',
              'match': 'max'}
 
-FIRST_TREE = 1
+FIRST_TREE = 0
 first_action = 'action0'
 first_gen_id = 1  # maybe take care to make this 0 for base gen
 input_name = 'observation'

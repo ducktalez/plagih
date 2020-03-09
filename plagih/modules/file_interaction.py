@@ -1,6 +1,7 @@
 from pathlib import Path
 import pickle
 from plagih.modules.dicts import *
+from plagih.modules.plagih_tree import *
 from plagih.modules.printing import *
 import csv
 import matplotlib.pyplot as plt
@@ -15,16 +16,29 @@ folder_save = 'save/'
 folder_plots = 'plots/'
 folder_info = 'info/'
 folder_steps = 'steps/'
+folder_trees = 'trees/'
 
 file_pareto = 'pareto.txt'
 file_config = 'config.txt'
 file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
+T_num_lines = 15  # todo this var is not found otherwise
+
+
+def make_dir(path):
+    """
+    Checks if the folders for the specified path exist and creates them otherwise.
+    Apparently, this procedure is used often.
+    """
+    if not Path.is_dir(path):
+        Path.mkdir(path)
+    return path
+
 
 def data_load_pickle(prepared_data_pickle_path):
     """
-    loads a data_csv_path file that was already split with the csv reader
+    Loads a data_csv_path file that was already split with the csv reader
     """
     with Path.open(prepared_data_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
@@ -39,45 +53,7 @@ def save_data_pickle(prepared_data, data_pickle_path):
     """
 
     with Path.open(data_pickle_path, 'wb') as file:
-        pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-    return
-
-
-def file_population_write_plagih(population, pop_name, path, gen_id):
-    file_path = path / 'population_plagih_{}.csv'.format(str(pop_name))
-
-    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a (-> file too large)
-        target = csv.writer(csv_file, delimiter=',')
-        if gen_id != 0:
-            target.writerows([''])  # empty row before each generation
-        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
-
-        for tree in range(1, len(population)):
-            target.writerows([''])  # empty row before each Tree
-            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[tree][row]])
-
-    return
-
-
-def file_population_write_karoo(population, pop_name, path, gen_id):
-    """
-    Save population_* to disk.
-
-    """
-    file_path = path / 'population_{}.csv'.format(str(pop_name))
-
-    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. (-> file too large)
-        target = csv.writer(csv_file, delimiter=',')
-        if gen_id != 0:
-            target.writerows([''])  # empty row before each generation
-        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
-
-        for tree in range(1, len(population)):
-            target.writerows([''])  # empty row before each Tree
-            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[tree][row]])
-
+        pickle.dump(prepared_data, file, protocol=pickle.HIGHEST_PROTOCOL)  # not sure if the protocol matters
     return
 
 
@@ -123,6 +99,53 @@ def data_load_data_split(data_x, data_y, test_size):
     data_train_rows = len(data_train[:, 0])
 
     return data_train_rows, data_train, data_control
+
+
+def write_config_file(path, config, gen_id, kernel, date_time):
+    """
+    write the parameters to a file
+    """
+
+    path_config = make_dir(path / folder_info)
+
+    file = Path.open(path_config / file_config, 'a')
+    file.write('This config is not complete, sfeh!')
+    file.write('\n launched: {}'.format(date_time))
+    file.write('\n kernel: {}'.format(kernel))
+    file.write('\n precision: {}\n'.format(config['precision']))
+    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
+    file.write('\n')
+    file.write('\n tournament size: ' + str(config['tourn_size']))
+    file.write('\n population: ' + str(config['pop_max']))
+    file.write('\n number of generations: ' + str(gen_id))
+    file.write('\n\n')
+    file.close()
+    return
+
+
+def file_population_karoo(population, pop_name, path, gen_id):
+    """
+    Save population_* to disk.
+
+    """
+
+    pop_path = make_dir(path / folder_info)
+
+    file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
+
+    # todo function to tree_ and append each tree
+    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        target = csv.writer(csv_file, delimiter=',')
+        if gen_id != 0:
+            target.writerows([''])  # empty row before each generation
+        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
+
+        for ii, tree in enumerate(population):
+            target.writerows([''])  # empty row before each Tree
+            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
+                target.writerows([population[ii][row]])
+
+    return
 
 
 def data_from_csv(samples_file):
@@ -196,68 +219,3 @@ def data_from_csv(samples_file):
     return input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 
-def load_pop_from_csv(pop_csv):
-    """
-    This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
-    replaces population_a in the karoo_gp/runs/[date-time]/ directory.
-    """
-
-    with Path.open(pop_csv, 'r') as csv_file:
-        target = csv.reader(csv_file, delimiter=',')
-        n = 0  # track row count
-
-        for row in target:
-
-            n = n + 1
-            if n == 1:
-                pass  # skip first empty row
-
-            elif n == 2:
-                population_a = [row]  # write header to population_a
-
-            else:
-                if not row:
-                    tree = np.array([[]])  # initialise Tree array
-
-                else:
-                    if tree.shape[1] == 0:
-                        tree = np.append(tree, [row], axis=1)  # append first row to Tree
-
-                    else:
-                        tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
-
-                if tree.shape[0] == T_num_lines:
-                    population_a.append(tree)  # append complete Tree to population list
-
-    return population_a
-
-
-def plot_end(data_2d, path, plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear', only_dots=None):
-
-    x, y = [], []
-    for a, b in data_2d:
-        x.append(a)
-        y.append(b)
-
-    if only_dots:
-        plt.plot(x, y, linestyle='', marker='o', label=plt_curve_label)
-    else:
-        plt.plot(x, y, label=plt_curve_label)
-
-    if plt_x_label and plt_y_label:
-        plt.xlabel(plt_x_label)
-        plt.ylabel(plt_y_label)
-
-    if plt_title:
-        plt.title(plt_title)
-
-    # plt.legend()
-    plt.yscale(yscale)
-    plt.ylim(0)
-    plt.xlim(0)
-    path_plot = path / 'plots'
-    if not Path.is_dir(path_plot):
-        Path.mkdir(path_plot)
-    plt.savefig(path_plot / '{}-plot.jpg'.format(plt_title))
-    plt.close()
-    return

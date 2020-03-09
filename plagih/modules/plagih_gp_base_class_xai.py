@@ -512,7 +512,6 @@ class ExplainableGP(object):
         for parsim, meta in sorted(list(pareto.items())):
             fitness = meta['fitness_train']
             algo_sym = meta['expr_raw']  # save raw version, not the sympified one
-            #  todo automatically sympify pareto candidates?
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(str(parsim), str(fitness), str(algo_sym)))
 
         file.close()
@@ -522,8 +521,6 @@ class ExplainableGP(object):
         Save all pareto entries as latex files
         - create trees from pareto expressions
         """
-
-        # todo delete old entries? -> Maybe start visualisation separately?
 
         forest_grouped = []
         path_trees = make_dir(root_path / folder_trees)
@@ -872,7 +869,7 @@ class ExplainableGP(object):
             label_list, arity_list = invent_label_list_nodes_grow(self.output_xtype, max_nodes, self.variables_dict, self.func_array)
             p_tree = Plagih_Tree(label_list)
             tree = p_tree.get_uninstanced_tree()
-            tree = tree_set_id(tree, i)
+            # tree = tree_set_id(tree, i)
 
             self.pop_append(tree, last_evolution='0s')
 
@@ -1034,7 +1031,7 @@ class ExplainableGP(object):
         Everything is done, as we filled all the other information in pop_append()
         - enumerate
         """
-        tree = tree_set_id(tree, len(self.population_tmp_done))
+        # tree = tree_set_id(tree, len(self.population_tmp_done))
         # todo set last modification already done?
         self.population_tmp_done.append(tree)
         return
@@ -1047,7 +1044,7 @@ class ExplainableGP(object):
 
         for i, tree in enumerate(self.population_tmp_done):
             tree_copy = np.copy(tree)
-            tree_copy = tree_set_id(tree_copy, i)  # sfeh delete this?
+            # tree_copy = tree_set_id(tree_copy, i)  # sfeh delete this?
             self.population_base.append(tree_copy)
 
         return
@@ -1072,14 +1069,14 @@ class ExplainableGP(object):
 
                 tree_meta = self.tree_meta[tree_ident]
                 tree = tree_set_meta(tree, tree_meta)
-                tree = tree_set_id(tree, len(self.population_tmp_done))  # todo test and find better solution
+                # tree = tree_set_id(tree, len(self.population_tmp_done))
                 self.population_tmp_done.append(tree)
             else:
                 parsimony = self.tree_get_parsimony_easywrapper(tree)
                 if parsimony <= self.parsimony_max:
                     tree = tree_set_parsimony(tree, parsimony)
                     tree = tree_set_fitness(tree, '')
-                    tree = tree_set_id(tree, '')  # todo test and find better solution
+                    # tree = tree_set_id(tree, '')  # todo test and find better solution
                     self.population_tmp_eval.append(tree)
                 else:
                     print_warning('www', 'Tree was too complex! Last Evolution: {}'.format(last_evolution), print_type=self.print_type)

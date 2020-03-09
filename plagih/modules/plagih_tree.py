@@ -196,7 +196,13 @@ def tree_get_history(tree):
 
 
 def tree_set_id(tree, tree_id):
-    tree[TR_ID][1] = tree_id
+    """
+    Set the tree's id, aka the number in the population.
+    But we could also enumerate over  the population. not needed.
+    sfeh delete this?
+    """
+    # tree[TR_ID][1] = tree_id
+    print_warning('w', 'This function is not in use!')
     return tree
 
 
@@ -1111,12 +1117,6 @@ def tree_get_branch_lax(tree, node_id, karoo=True):
     return ids, labels, aritys
 
 
-def tree_get_id(tree, karoo=True):
-    if not karoo:
-        raise
-    return tree[TR_ID][1]
-
-
 def tree_get_layer_fix(tree, get_all_leaves=False):
     """
     Returns the last layer with fix nodes that have children which are modifiable
@@ -1796,8 +1796,8 @@ def tree_check_meta_exists(tree):
     """
     cond1 = str(tree_get_fitness(tree)) == ''
     cond2 = str(tree_get_parsimony(tree)) == ''
-    cond3 = str(tree_get_id(tree)) == ''
-    if cond1 or cond2 or cond3:
+    # cond3 = str(tree_get_id(tree)) == ''
+    if cond1 or cond2:
         return False
     else:
         return True
@@ -2146,7 +2146,7 @@ def tree_set_meta_wipe(tree):
     """
     tree = tree_set_fitness(tree, '')
     tree = tree_set_parsimony(tree, '')
-    tree = tree_set_id(tree, 'tourn win')
+    # tree = tree_set_id(tree, 'tourn win')
     return tree
 
 

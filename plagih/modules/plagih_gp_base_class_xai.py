@@ -390,7 +390,7 @@ class ExplainableGP(object):
 
         # force fix of all trees if they are incorrect in last versions
         self.pop_fix_trees(self.population_base)
-
+        # todo idea network layers as genetic programming solution?
         try:
             self.monitoring_dict['population_tmp_done-size'] = run_data['self.monitoring_dict']['genepool_size']
             print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
@@ -526,6 +526,8 @@ class ExplainableGP(object):
         forest_grouped = []
         path_trees = make_dir(root_path / folder_trees)
 
+        tree_sep = ''  # ''\\newpage'
+
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
@@ -541,9 +543,9 @@ class ExplainableGP(object):
 
             # save a ready-to-use tex file with all pareto trees
             forest_grouped.append(
-                'Pareto entry at parsimony {} with fitness {}.\n{}\n\\newpage\n'.format(parsim, meta['fitness_train'], tree_viz_get_tex_forest(tree)))  # todo this kind of is latex aswell
+                'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, meta['fitness_train'], tree_viz_get_tex_forest(tree), tree_sep))  # todo this kind of is latex aswell
 
-        latex_full_doc = latex_standalone_doc_forest(forest_grouped)
+        latex_full_doc = latex_complete_tree_summary(forest_grouped)
         file = Path.open(path_trees / '#all_trees.tex', 'w')
         file.write(latex_full_doc)
         file.close()
@@ -633,7 +635,7 @@ class ExplainableGP(object):
             parsimony = self.tree_get_parsimony_easywrapper(tree)
             tree = tree_set_parsimony(tree, parsimony)
             self.tree_meta_update(tree, parsimony=parsimony)
-            self.population_tmp_done.append(tree)  # todo, if we late insert a tree, will the pop-loop find it?
+            self.population_tmp_done.append(tree)  # todo, if we late insert a tree, will the population-loop find it?
 
             self.pareto_update_insert()
 
@@ -686,11 +688,11 @@ class ExplainableGP(object):
                     pareto_fit = self.pareto.get(parsim)['fitness_train']
                     if self.kernel.fitness_compare(fitness, pareto_fit):
                         self.pareto[parsim] = meta
-                        self.printpl('a', 'Pareto update at {}, with new fitness: {}. Old was: {}.'.format(parsim, fitness, best_fit))
+                        self.printpl('a', 'Pareto update at {}, with new fitness: {}. Old was: {}!'.format(parsim, fitness, best_fit))
                         pareto_improved = True
                 else:
                     self.pareto[parsim] = meta
-                    self.printpl('a', 'Pareto new entry at {} with fitness: {:4.2f}.'.format(parsim, fitness))
+                    self.printpl('a', 'New pareto entry at {} with fitness: {:4.2f}!'.format(parsim, fitness))
                     pareto_improved = True
                 best_fit = fitness
 
@@ -1104,7 +1106,7 @@ class ExplainableGP(object):
         # gene_pool = self.pop_genepool_create()
         self.pop_eval_remaining()
 
-        self.pareto_update()  # todo todo save sympified tree
+        self.pareto_update()
 
         self.pop_base_transfer()
         self.pop_analyze()

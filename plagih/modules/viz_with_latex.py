@@ -3,13 +3,13 @@ Visualising Trees with latex.
 """
 
 
-def latex_standalone_doc_forest(tikz_forest_list, preamble=''):
+def latex_complete_tree_summary(tikz_forest_list, preamble=''):
     """
     Latex standalone document of forest trees.
     Possible \documentclass options:
-    [varwidth,convert]{standalone}
-    {article}
-    {beamer}
+    [varwidth,convert]{{standalone}}  # -> newpage does not exist
+    {{article}}     # -> tree_sep should be \newpage
+    {{beamer}}      # -> tree_sep should be \newpage
     """
 
     tikz_combined = ''
@@ -18,7 +18,7 @@ def latex_standalone_doc_forest(tikz_forest_list, preamble=''):
         tikz_combined += tikz
 
     # \documentclass[varwidth,convert]{standalone}
-    latex_doc_forest = '\\documentclass{{beamer}}' \
+    latex_doc_forest = '\\documentclass[varwidth,convert]{{standalone}}' \
                        '\n\\usepackage{{forest}}' \
                        '\n\\begin{{document}}' \
                        '\n{}' \

@@ -114,14 +114,6 @@ def run_mountaincar_v3(config_dict, path):
     return gp
 
 
-def run_mountaincar_v3_test(config_dict, path):
-    config_dict['name'] = 'MTC_v3_test'  # todo update name
-    config_dict['root_dir'] = path
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.load_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
-    return gp
-
-
 def run_mountaincar_v4(config_dict, path):
     config_dict['name'] = 'MTC_v4_scratch'
     config_dict['root_dir'] = path
@@ -170,5 +162,5 @@ def run(root_dir):
     # create_samples_pickle(root_dir)  # todo outsource
     # analyse_old_run(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_test(config_dict, root_dir)
+    gp = run_mountaincar_v1(config_dict, root_dir)
     gp.plagih_gp_run()

@@ -792,7 +792,6 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
 
 def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, max_nodes):
     """
-
     replaces the branch_ids in a tree with a new branch
 
     returns: new tree
@@ -806,7 +805,7 @@ def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, m
     old_label = tree_node_get_label(tree, branch_ids[0])
     old_xtype = xtype_get(old_label, variables_dict)
 
-    label_list, arity_list = invent_label_list_nodes_grow(old_xtype, max_nodes, variables_dict, func_array)
+    label_list, arity_list = invent_label_list_nodes_grow(old_xtype, max_nodes, variables_dict, func_array, build_type='grow')
 
     if label_list:
         core_insert = core_from_labels(label_list, arity_list)
@@ -815,9 +814,9 @@ def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, m
     return tree
 
 
-def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array):
+def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, build_type='grow'):
     """
-    build a random, function (as label list)
+    build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
     E. g.: 'float', 5 nodes, min_nodes = 2
     - tbd list: ['2b', '2f']
@@ -834,7 +833,12 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array):
 
         functerm_list = ['func']
         for _ in range(todo_node_amount - 1):  # 1 -> at least one function
-            functerm_list.append(np.random.choice(['func', 'term']))
+            if build_type == 'grow':
+                functerm_list.append(np.random.choice(['func', 'term']))
+            elif build_type == 'full':
+                functerm_list.append('func')
+            else:
+                raise
         np.random.shuffle(functerm_list)
 
         tmp_label_list = ['dummy'] * todo_node_amount
@@ -1928,6 +1932,8 @@ def tree_check_rebuild(tree, karoo=True):
         core = core_from_labels(label_list, arity_list)
         if core:
             tree_works = True
+        else:
+            tree_works = False
     except:
         tree_works = False
 

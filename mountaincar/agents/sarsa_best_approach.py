@@ -11,6 +11,9 @@ from pathlib import Path, PurePath
 import pickle
 
 
+sarsa_file_75 = 'sarsa_agent_75.p'
+sarsa_file_200 = 'sarsa_agent_200.p'
+
 class TileCoder:
     def __init__(self, layers, features):
         """
@@ -127,8 +130,8 @@ def play_sarsa(env, agent, train=False, render=False, save=False):
             agent.learn(observation, action, reward, observation_next, done, action_next)
         observation, action = observation_next, action_next
 
-    if save == True:
-        with open('./resources/agent.pkl', 'wb') as file:
+    if save is True:
+        with open('sarsa_agent.p', 'wb') as file:
             pickle.dump(agent, file)
 
     return episode_reward
@@ -184,9 +187,10 @@ def plagih_get_behaviour_samples(env, agent, episodes, train=False, render=False
     return plagih_state_actions
 
 
-def create_behaviour_samples_file(seed=0):
+def train_sarsa_agent_pickle(seed=0):
     env = gym.make('MountainCar-v0')
     env.seed(seed)
+
     agent = SARSALambdaAgent(env)
 
     # perform training
@@ -196,10 +200,26 @@ def create_behaviour_samples_file(seed=0):
         episode_reward = play_sarsa(env, agent, train=True)
         episode_rewards.append(episode_reward)
 
+    with open(sarsa_file_75, 'wb') as file:
+        pickle.dump(agent, file)
+
+    for episode in range(125):
+        episode_reward = play_sarsa(env, agent, train=True)
+        episode_rewards.append(episode_reward)
+
+    with open(sarsa_file_200, 'wb') as file:
+        pickle.dump(agent, file)
+
     # plt.plot(episode_rewards);
     # plt.show()
+    return
 
-    print("Working on trained model now, no training, epsilon=0")
+
+def create_samples_dataset(seed=0):
+    env = gym.make('MountainCar-v0')
+    env.seed(seed)
+    with Path.open(sarsa_file_75, 'rb') as file:
+        agent = pickle.load(file)
 
     plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=20, train=False)
     print(sys.getsizeof(plagih_behaviour_samples))
@@ -234,4 +254,4 @@ if __name__ == "__main__":
     # dothis = input('Please press: create (s)amples, run coming later: ')
     # if dothis == 's':
     #     create_behaviour_samples_file()
-    sarsa_start_frommodel()
+    train_sarsa_agent_pickle()

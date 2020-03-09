@@ -10,14 +10,8 @@ Explaination:
 Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
 """
-import copy
-import random
-import sys
-import sklearn.metrics as skm
 from datetime import datetime
-from plagih.modules.plagih_tree import *
 import time
-from plagih.modules.plagih_eval import *
 from plagih.modules.file_interaction import *
 
 import tikzplotlib
@@ -116,9 +110,8 @@ class ExplainableGP(object):
             try:
                 self.plagih_load_backup(path_backup)
             except Exception as ex:
-                # print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}\nStarting a new run.'.format(ex))
+                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
                 raise
-                # todo delete old plots, append to old config,
 
         if self.gen_id == 0:
             self.gen_create_first()
@@ -358,7 +351,8 @@ class ExplainableGP(object):
             if tree_node_get_xtype(tree, root_id) == '':
                 cnt += 1
                 population[ii] = tree_set_xtypes(tree, self.variables_dict)
-        print_warning('ww', 'Amount of trees with node_xtype inconsistency: {}.'.format(cnt))
+        if cnt > 0:
+            print_warning('ww', 'Amount of trees with node_xtype inconsistency: {}.'.format(cnt))
 
         # Fix the trees missing parsimony
         cnt = 0
@@ -367,7 +361,9 @@ class ExplainableGP(object):
                 cnt += 1
                 parsimony = self.tree_get_parsimony_easywrapper(tree)
                 population[ii] = tree_set_parsimony(tree, parsimony)
-        print_warning('ww', 'Amount of trees without parsimony: {}.'.format(cnt))
+        if cnt > 0:
+            print_warning('ww', 'Amount of trees without parsimony: {}.'.format(cnt))
+
         return
 
     def plagih_load_backup(self, path_backup):
@@ -397,7 +393,7 @@ class ExplainableGP(object):
             self.monitoring_dict['population_tmp_done-size'] = run_data['self.monitoring_dict']['genepool_size']
             print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
         except:
-            print_warning('w', 'Success, delete this. This is a newer version where gene_pool was kicked out')
+            pass
 
         # update pareto entries (pareto now contains meta data)
         first_pareto = next(iter(self.pareto.items()))
@@ -405,12 +401,10 @@ class ExplainableGP(object):
             self.pareto = {}
             self.pareto_update()
 
-
         self.restart_count += 1
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
 
         return
-
 
     def run_save_pickle(self):
         """
@@ -573,7 +567,7 @@ class ExplainableGP(object):
                 count_fails += 1
                 continue
 
-        print_warning('ww', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(len(self.population_tmp_eval), self.gen_id, count_fails), print_type=self.print_type)
+        print_warning('www', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(len(self.population_tmp_eval), self.gen_id, count_fails), print_type=self.print_type)
 
         return
 
@@ -973,9 +967,6 @@ class ExplainableGP(object):
             raise
         return xtype
 
-    # todo sarsa policy performance
-    # todo decision plot (wie bei sarsa) für alle bei MTC
-
     def tree_enrich(self, tree, last_evolution=''):
         """
         The np-tree needs more information than only the expression.
@@ -1005,7 +996,7 @@ class ExplainableGP(object):
     def tree_check_core_all(self, tree):
         """
         Performs all checks that we currently have
-        # todo do not use this if trees are sefely generated
+        # todo do not use this if trees are safely generated
         # todo check meta values in separate method? update those aswell?
         """
 
@@ -1201,7 +1192,8 @@ class ExplainableGP(object):
             raise Exception('Your origin algorithm could not be sympified. Aborting.')
 
         if not tree_check_is_sympified(tree):
-            print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}'.format(expr_raw, expr_sym))
+            print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
+                                 ''.format(expr_raw, expr_sym))
 
         self.origin = {'tree': tree, 'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
         try:

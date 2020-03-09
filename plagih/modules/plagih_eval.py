@@ -68,8 +68,8 @@ class FitnessKernel:
                 (solution - 1) < result <= solution
 
             The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
-            origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
-            side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
+            origin_meta. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
+            side of origin_meta as it has not yet been determined the effect of enabling the middle bin to include both a 
             negative and positive result.
             """
 

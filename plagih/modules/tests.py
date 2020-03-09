@@ -272,11 +272,11 @@ def test_tree_set_modifyable_nodes():
     variables_dict = TestHelpers.variables_dict
     func_array = TestHelpers.func_array
     origin, tree2, _ = get_three_sample_trees()
-    print('a origin', origin[N_modify])
+    print('a origin_meta', origin[N_modify])
     tree_new = tree_evolve_branch_multiple(origin.copy(), 25, variables_dict, func_array)
-    print('b origin', origin[N_modify])
+    print('b origin_meta', origin[N_modify])
     tree_new = tree_set_modifyable_nodes(tree_new, origin)
-    print('c origin', origin)
+    print('c origin_meta', origin)
     print(tree_new)
 
 

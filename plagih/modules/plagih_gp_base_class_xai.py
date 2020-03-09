@@ -43,7 +43,8 @@ class ExplainableGP(object):
         self.population_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
         self.action_min_max = [None, None]  # list with [0] = min and [1] = max, For kernel "regression bounded" (or so)
-        self.origin = None
+        self.origin_meta = None
+        self.origin_tree = None
         self.gene_pool = {}
         self.debug_warnings = {}
         self.gen_id = 0
@@ -136,15 +137,15 @@ class ExplainableGP(object):
     def gen_create_first(self):
         """
         Everything that needs to be custom_done for the first generation
-        - Extracts "origin Tree" from file
-        - Creates all other trees: origin tree + branch mutation
+        - Extracts "origin_meta Tree" from file
+        - Creates all other trees: origin_meta tree + branch mutation
         - Evaluate the first Generation
         - Monitoring initialisation and monitoring
         """
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        rate_o = self.evolve_rates['random from origin']
+        rate_o = self.evolve_rates['random from origin_meta']
         rate_s = self.evolve_rates['random from scratch']
         pop_max = self.config['pop_max']
 
@@ -181,11 +182,11 @@ class ExplainableGP(object):
             ('filter floats', self.pop_mutate_filter, 1),
             ('branch mutate insert', self.pop_mutate_branch, 1),
             ('crossover branches', self.pop_crossover_branch, 2),
-            ('random from origin', self.pop_random_from_origin, 0),
+            ('random from origin_meta', self.pop_random_from_origin, 0),
             ('random from scratch', self.pop_random_from_scratch, 0)]
 
         if self.origin_exists():
-            origin_tree = self.origin['tree']
+            origin_tree = self.origin_tree
         else:
             origin_tree = None
 
@@ -197,7 +198,7 @@ class ExplainableGP(object):
             'filter floats': (self.pop_mutate_filter, 1, None),
             'branch mutate insert': (self.pop_mutate_branch, 1, None),
             'crossover branches': (self.pop_crossover_branch, 2, None),
-            'random from origin': (self.pop_random_from_origin, 0, origin_tree),
+            'random from origin_meta': (self.pop_random_from_origin, 0, origin_tree),
             'random from scratch': (self.pop_random_from_scratch, 0, None)}
 
         while self.run_continues():  # max generation, max time, done...
@@ -238,7 +239,7 @@ class ExplainableGP(object):
             return True
 
     def origin_exists(self):
-        if self.origin is not None:
+        if self.origin_meta is not None:
             return True
         else:
             return False
@@ -438,16 +439,16 @@ class ExplainableGP(object):
         # file.write('Plagih GP\n launched: {}'.format(str(date_time)))
         #
         # if self.origin_exists():
-        #     origin_fitness = eval_tf(self.origin['expr_sym'], self.data_control, self.eval_parameters, get_pred_labels=True)['fitness']
+        #     origin_fitness = eval_tf(self.origin_meta['expr_sym'], self.data_control, self.eval_parameters, get_pred_labels=True)['fitness']
         #     # fitness_control_best = origin_result['fitness']
         #
-        #     fittest_algo = self.origin['expr_sym']
+        #     fittest_algo = self.origin_meta['expr_sym']
         #     fittest_parsimony = 0
         #
         #     file.write('\n\t Origin fitness score: {}'.format(origin_fitness))
         #
         # elif self.pareto:
-        #     file.write('\n No origin was provided')
+        #     file.write('\n No origin_meta was provided')
         #     meta = next(iter(self.pareto.items()))[1]
         #     fittest_parsimony = int(meta['parsimony'])
         #     fittest_algo = meta['expr_sym']
@@ -573,10 +574,10 @@ class ExplainableGP(object):
 
     def origin_tree_get(self):
         """
-        Safely return an origin tree
+        Safely return an origin_meta tree
         """
         if self.origin_exists():
-            tree_origin = self.origin['tree']
+            tree_origin = self.origin_tree
         else:
             tree_origin = None
         return tree_origin
@@ -700,6 +701,8 @@ class ExplainableGP(object):
         remove superfluous pareto entries
         """
         sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
+        # for row in sorted_pareto:
+        #     print('pareto:', row)
         last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
         for parsim, meta in sorted_pareto[1:]:
             fitness = meta['fitness_train']
@@ -846,7 +849,7 @@ class ExplainableGP(object):
         """
 
         if self.origin_exists():
-            tree_origin = self.origin['tree'].copy()
+            tree_origin = self.origin_tree.copy()
             for _ in range(repro_rate):
                 tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
                 self.pop_append(tree, last_evolution='new(o)')
@@ -982,7 +985,7 @@ class ExplainableGP(object):
             raise Exception('Tree is None')
         else:
             if self.origin_exists():
-                tree = tree_set_modifyable_nodes(tree, self.origin['tree'])
+                tree = tree_set_modifyable_nodes(tree, self.origin_tree)
             else:
                 tree = tree_set_modifyable_nodes_true(tree)
 
@@ -1166,7 +1169,7 @@ class ExplainableGP(object):
 
     def load_origin_tree(self, origin_tree_file_path=None, label_list=None, modify_list=None):
         """
-        This loads the 'origin' and evaluates it
+        This loads the 'origin_meta' and evaluates it
         Two loading options:
             - root_dir to csv with tree (outdated)
             - an array with labels ['+','1','observation0']. optional, the permanent nodes as separate array
@@ -1174,14 +1177,14 @@ class ExplainableGP(object):
         returns: tree
         """
 
-        # Check if the user provided an origin
+        # Check if the user provided an origin_meta
         if origin_tree_file_path:
             tree = tree_single_from_csv(origin_tree_file_path)
         elif label_list:
             p_tree = Plagih_Tree(label_list, modify_list=modify_list)
             tree = p_tree.get_uninstanced_tree()
         else:
-            print_warning('w', 'No origin provided. starting from scratch with random generation?')
+            print_warning('w', 'No origin_meta provided. starting from scratch with random generation?')
             tree = None
 
         expr_raw = tree_get_expr_raw(tree, node_id=root_id)
@@ -1189,23 +1192,24 @@ class ExplainableGP(object):
         try:
             expr_sym = expr_sympify(expr_raw=expr_raw)
         except:
-            raise Exception('Your origin algorithm could not be sympified. Aborting.')
+            raise Exception('Your origin_meta algorithm could not be sympified. Aborting.')
 
         if not tree_check_is_sympified(tree):
             print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
                                  ''.format(expr_raw, expr_sym))
 
-        self.origin = {'tree': tree, 'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
+        self.origin_tree = copy.deepcopy(tree)
+        self.origin_meta = {'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
         try:
             fitness_train = self.tree_eval_fitness_train(tree)
         except Exception:
-            raise Exception('Your origin algorithm already caused an exception!')
-        self.origin['fitness_train'] = fitness_train
+            raise Exception('Your origin_meta algorithm already caused an exception!')
+        self.origin_meta['fitness_train'] = fitness_train
 
-        self.parsimony_best_meta[0] = self.origin
-        self.pareto[0] = copy.deepcopy(self.origin)
+        self.parsimony_best_meta[0] = self.origin_meta
+        self.pareto[0] = copy.deepcopy(self.origin_meta)
 
-        self.print_g('gg', 'Loading origin, fitness {}. Time: {:4.2f}s'.format(fitness_train, time.perf_counter() - self.time_start))
+        self.print_g('gg', 'Loading origin_meta, fitness {}. Time: {:4.2f}s'.format(fitness_train, time.perf_counter() - self.time_start))
 
         return
 
@@ -1252,7 +1256,7 @@ class ExplainableGP(object):
 
         For comparison, the original (pre-TensorFlow) cod follows:
 
-            skew = (self.unique_outputs_num / 2) - 1 # '-1' keeps a binary classification splitting over the origin
+            skew = (self.unique_outputs_num / 2) - 1 # '-1' keeps a binary classification splitting over the origin_meta
             if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
             elif solution == self.unique_outputs_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
             elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
@@ -1357,11 +1361,11 @@ class ExplainableGP(object):
 
         #     # Count dominators # todo why
         #     if self.origin_exists():
-        #         if self.kernel.fitness_compare(tree_meta['fitness_train'], self.origin['fitness_train']):
+        #         if self.kernel.fitness_compare(tree_meta['fitness_train'], self.origin_meta['fitness_train']):
         #             dominator_count += 1
         #     else:
         #         pass
-        # self.print_g('gg', 'Generation {}, {} Candidates were better than the origin.'.format(self.self.gen_id, dominator_count))
+        # self.print_g('gg', 'Generation {}, {} Candidates were better than the origin_meta.'.format(self.self.gen_id, dominator_count))
 
         average_fitness = fitness_train_sum / max(tree_cnt, 1)
         self.monitoring_dict['fitness_average'][self.gen_id] = average_fitness

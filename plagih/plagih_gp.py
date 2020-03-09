@@ -54,7 +54,7 @@ def create_config_dict():
                          'point mutate function': 0.1,
                          'branch mutate insert': 0.10,
                          'crossover branches': 0.40,
-                         'random from origin': 0.25, 'random from scratch': 0,
+                         'random from origin_meta': 0.25, 'random from scratch': 0,
                          },
 
         # When to stop the run
@@ -118,8 +118,8 @@ def run_mountaincar_v4(config_dict, path):
     config_dict['name'] = 'MTC_v4_scratch'
     config_dict['root_dir'] = path
     config_dict['kernel_name'] = 'regression bounded'
-    config_dict['evolve_rates']['random from scratch'] += config_dict['evolve_rates']['random from origin']
-    config_dict['evolve_rates']['random from origin'] = 0
+    config_dict['evolve_rates']['random from scratch'] += config_dict['evolve_rates']['random from origin_meta']
+    config_dict['evolve_rates']['random from origin_meta'] = 0
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list)
     return gp
@@ -162,5 +162,5 @@ def run(root_dir):
     # create_samples_pickle(root_dir)  # todo outsource
     # analyse_old_run(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_v2(config_dict, root_dir)
+    gp = run_mountaincar_test(config_dict, root_dir)
     gp.plagih_gp_run()

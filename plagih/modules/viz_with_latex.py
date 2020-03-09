@@ -42,7 +42,7 @@ def latex_wrap_forest(tikz_forest_tree):
             - constant
         - non-terminal
         - fixnode: If user specified this as fix node
-        - originalnode: todo, if node is the same as in origin (exactly the same, changed variable?, ...)
+        - originalnode: todo, if node is the same as in origin_meta (exactly the same, changed variable?, ...)
         - point: sfeh, guess this is currently not used
     """
     latex_tikz_forest = '\n\\begin{{forest}}' \

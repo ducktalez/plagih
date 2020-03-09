@@ -261,7 +261,7 @@ def tree_set_modifyable_nodes_true(tree, karoo=True):
 
 def tree_set_modifyable_nodes(tree, origin_tree):
     """
-    Sets all the origin core nodes back to non-modifyable
+    Sets all the origin_meta core nodes back to non-modifyable
     """
 
     tree = tree_set_modifyable_nodes_true(tree)
@@ -903,7 +903,7 @@ def round_constant(constant, accuracy):
 
 
 def tree_single_from_csv(origin_tree_file_path):
-    # Load origin from file
+    # Load origin_meta from file
     with Path.open(origin_tree_file_path, 'r') as csv_file:
         target = csv.reader(csv_file, delimiter=',')
         tree = np.array([[]])
@@ -1253,7 +1253,7 @@ def tree_get_depth_ids(tree):
 def tree_parsimony_ted(tree1, tree2):
     """
     The Tree Edit distance (TED) ('coolest' distance)
-    - the amount of changes that have to be applied to the origin to equality are counted
+    - the amount of changes that have to be applied to the origin_meta to equality are counted
     """
     apted_tree1 = tree_raw_depth_prefix(tree1, 1)
     apted_tree2 = tree_raw_depth_prefix(tree2, 1)

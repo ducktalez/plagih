@@ -4,11 +4,7 @@ from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
 from plagih.modules.plagih_eval import *
-import random
 import csv
-import matplotlib.pyplot as plt
-import networkx as nx
-from plagih.modules.file_interaction import make_dir, folder_trees
 from plagih.modules.viz_with_latex import *
 from sympy import sympify
 import copy

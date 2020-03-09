@@ -3,7 +3,10 @@ FYI:
 pos = observation0
 velocity = observation1
 """
+import time
 
+from mountaincar.agents.agents import *
+import matplotlib.pyplot as plt
 import itertools
 import pickle
 from pathlib import Path
@@ -12,194 +15,29 @@ import numpy as np
 import gym
 
 
-sarsa_file_75 = 'sarsa_agent_75.p'
-sarsa_file_200 = 'sarsa_agent_200.p'
+def plot_decisions(env, agent, name):
+    # Creates the plot which displays current position/speed and the corresponding action
 
+    poses = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, 256)
+    vels = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, 256)
+    positions, velocities = np.meshgrid(poses, vels)
 
-class TileCoder:
-    def __init__(self, layers, features):
-        """
-        Parameters
-        - layers: int, the number of layers in tile coding
-        - features: int, the number of features, also the shape of weights
-        """
-        self.layers = layers
-        self.features = features
-        self.codebook = {}
+    @np.vectorize
+    def decide(position, velocity):
+        return agent.decide((position, velocity))
 
-    def get_feature(self, codeword):
-        if codeword in self.codebook:
-            return self.codebook[codeword]
-        count = len(self.codebook)
-        if count >= self.features:  # collide when codebook is full
-            return hash(codeword) % self.features
-        else:
-            self.codebook[codeword] = count
-            return count
+    action_values = decide(positions, velocities)
 
-    def __call__(self, floats=(), ints=()):
-        """
-        Parameters
-        - floats: tuple of floats, each of which is within [0., 1.]
-        - ints: tuple of ints
-        Returns
-        - features : list of ints
-        """
-        dim = len(floats)
-        scaled_floats = tuple(f * self.layers * self.layers for f in floats)
-        features = []
-        for layer in range(self.layers):
-            codeword = (layer,) + tuple(int((f + (1 + dim * i) * layer) / self.layers) \
-                                        for i, f in enumerate(scaled_floats)) + ints
-            feature = self.get_feature(codeword)
-            features.append(feature)
-        return features
-
-
-class SARSAAgent:
-    def __init__(self, env, layers=8, features=2000, gamma=1.,
-                 learning_rate=0.03, epsilon=0.001):
-        self.action_n = env.action_space.n
-        self.obs_low = env.observation_space.low
-        self.obs_scale = env.observation_space.high - env.observation_space.low
-        self.encoder = TileCoder(layers, features)
-        self.w = np.zeros(features)
-        self.gamma = gamma
-        self.learning_rate = learning_rate
-        self.epsilon = epsilon
-
-    def encode(self, observation, action):
-        states = tuple((observation - self.obs_low) / self.obs_scale)
-        actions = (action,)
-        return self.encoder(states, actions)
-
-    def get_q(self, observation, action):
-        features = self.encode(observation, action)
-        return self.w[features].sum()
-
-    def decide(self, observation):
-        if np.random.rand() < self.epsilon:
-            return np.random.randint(self.action_n)
-        else:
-            qs = [self.get_q(observation, action) for action in range(self.action_n)]
-            return np.argmax(qs)
-
-    def learn(self, observation, action, reward, observation_next, done, action_next=None):
-        u = reward
-        if not done:
-            u += (self.gamma * self.get_q(observation_next, action_next))
-        delta = u - self.get_q(observation, action)
-        features = self.encode(observation, action)
-        self.w[features] += (self.learning_rate * delta)
-
-
-class SARSALambdaAgent(SARSAAgent):
-    def __init__(self, env, layers=8, features=2000, gamma=1.,
-                 learning_rate=0.03, epsilon=0.001, lambd=0.9):
-        super().__init__(env=env, layers=layers, features=features,
-                         gamma=gamma, learning_rate=learning_rate, epsilon=epsilon)
-        self.lambd = lambd
-        self.z = np.zeros(features)
-
-    def learn(self, observation, action, reward, observation_next, done, action_next=None):
-        u = reward
-        if not done:
-            u += (self.gamma * self.get_q(observation_next, action_next))
-            self.z *= (self.gamma * self.lambd)
-            features = self.encode(observation, action)
-            self.z[features] = 1.  # replacement trace
-        delta = u - self.get_q(observation, action)
-        self.w += (self.learning_rate * delta * self.z)
-        if done:
-            self.z = np.zeros_like(self.z)
-
-
-class PlagihAgent_A:
-
-    def decide(self, observation):
-        observation0, observation1 = observation
-        if -observation1 + min(observation1, observation0 + 1.025) > observation1:
-            return 0
-        else:
-            return 2
-
-
-class SimpleAgent:
-
-    def decide(self, observation):
-        observation0, observation1 = observation
-        if observation1 < 0:
-            return 0
-        else:
-            return 2
-
-
-class FixAgent:
-
-    def decide(self, observation):
-        pos, velocity = observation
-        lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03,
-                 0.3 * (pos + 0.9) ** 4 - 0.008)
-        ub = -0.07 * (pos + 0.38) ** 2 + 0.07
-        if lb < velocity < ub:
-            action = 2  # push right
-        else:
-            action = 0  # push left
-        return action
-
-
-class TestAgent:
-
-    def decide(self, observation):
-        pos, velocity = observation
-        if (velocity <= 0.7 - 0.07 * (pos + 0.38) ** 2) \
-                & \
-                (min(
-                    0.03 - 0.09 * (pos + 0.25)**2,
-                    0.3*(pos + 0.9)**4 - 0.008) <= velocity):
-            return 2
-        else:
-            return 0
-
-
-class TestFixNoLowerbound:
-    """
-    I randomly found out, that the upper bound is not good for anything
-    """
-    def decide(self, observation):
-        pos, velocity = observation
-        lb = min(-0.09 * (pos + 0.25)**2 + 0.03,
-                 0.3*(pos + 0.9)**4 - 0.008)
-
-        if lb < velocity:
-            return 2
-        else:
-            return 0
-
-
-class TestCombined:
-    """
-    I found this candidate within 1 minute of gp
-    """
-    def decide(self, observation):
-        pos, velocity = observation
-        if (velocity <= 0.63) and (min(-0.09*(pos + 0.25)**2.0 + 0.03, 0.3*(pos + 0.9)**4.0 - 0.01) <= velocity):
-            return 2
-        else:
-            return 0
-
-
-class TestTmp:
-    """
-    random test
-    """
-
-    def decide(self, observation):
-        pos, velocity = observation
-        if (velocity <= 0.63) and (min(-0.09 * (pos + 0.25) ** 2.0 + 0.03, 0.3 * (pos + 0.9) ** 4.0 - 0.01) <= velocity):
-            return 2
-        else:
-            return 0
+    fig, ax = plt.subplots()
+    c = ax.pcolormesh(positions, velocities, action_values)
+    ax.set_xlabel('position')
+    ax.set_ylabel('velocity')
+    fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
+    plt.title(name)
+    fig.show()
+    plt.savefig(Path('img/{}.jpg'.format(name)))
+    plt.close()
+    return
 
 
 def play_once(env, agent, render=False, verbose=False):
@@ -220,19 +58,18 @@ def play_once(env, agent, render=False, verbose=False):
 
 
 def compare_simple(agents):
-    for agent in agents:
-
+    for name, agent in agents.items():
         np.random.seed(0)
         env = gym.make('MountainCar-v0')
         env.seed(0)
-
+        time_start = time.perf_counter()
         episode_rewards = [play_once(env, agent) for _ in range(100)]
-        print('average episode rewards = {}'.format(np.mean(episode_rewards)))
+        print('{} \thad average episode rewards = {}. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards), time.perf_counter()-time_start))
         env.close()
 
 
-def render_simple():
-    for agent in agents:
+def render_simple(agents):
+    for name, agent in agents.items():
         np.random.seed(0)
         env = gym.make('MountainCar-v0')
         env.seed(0)
@@ -241,17 +78,41 @@ def render_simple():
         env.close()
 
 
+def plot_simple(agents):
+    for name, agent in agents.items():
+        np.random.seed(0)
+        env = gym.make('MountainCar-v0')
+        env.seed(0)
+
+        plot_decisions(env, agent, 'agent_{}'.format(name))
+        env.close()
+
+
 with Path.open(Path(sarsa_file_75), 'rb') as file:
     sarsa_agent_75 = pickle.load(file)
     print('Loaded sarsa 75')
-
 
 with Path.open(Path(sarsa_file_200), 'rb') as file:
     sarsa_agent_200 = pickle.load(file)
     print('Loaded sarsa 200')
 
+with Path.open(Path(sarsa_file_1000), 'rb') as file:
+    sarsa_agent_1000 = pickle.load(file)
+    print('Loaded sarsa 1000')
 
-all_agents = [SimpleAgent(), PlagihAgent_A(), FixAgent(), TestAgent(), TestFixNoLowerbound(), TestTmp()]
-agents = [SimpleAgent(), FixAgent(), TestTmp(), sarsa_agent_75, sarsa_agent_200]
+with Path.open(Path(sarsa_file_10000), 'rb') as file:
+    sarsa_agent_10000 = pickle.load(file)
+    print('Loaded sarsa 10000')
 
-compare_simple(agents)
+all_agents = {'v1_simple__': SimpleAgent(),
+              'v1_improved': PlagihAgent_A(),
+              'xiao_base__': FixAgent(),
+              'xiao_short_': TestFixNoLowerbound(),
+              'sarsa_75___': sarsa_agent_75,
+              'sarsa_200__': sarsa_agent_200,
+              'sarsa_1000_': sarsa_agent_1000,
+              'sarsa_10000': sarsa_agent_10000,
+              'test_tmp': TestTmp()}
+
+compare_simple(all_agents)
+# plot_simple(all_agents)

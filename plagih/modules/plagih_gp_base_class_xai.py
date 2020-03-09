@@ -505,8 +505,8 @@ class ExplainableGP(object):
 
         for parsim, meta in sorted(list(pareto.items())):
             fitness = meta['fitness_train']
-            algo_sym = meta['expr_raw']  # save raw version, not the sympified one
-            file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(str(parsim), str(fitness), str(algo_sym)))
+            algo_sym = meta['expr_sym']  # save raw version, not the sympified one
+            file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
 
         file.close()
 

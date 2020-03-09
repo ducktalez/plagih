@@ -7,31 +7,6 @@ from mountaincar.agents.move_directions import move_towards_direction
 from mountaincar.agents.plagih_1 import improved_v1
 
 
-def plot_whatsthat(env, agent):
-
-    # Creates the plot which displays current position/speed and the corresponding action
-
-    poses = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, 256)
-    vels = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, 256)
-    positions, velocities = np.meshgrid(poses, vels)
-
-    @np.vectorize
-    def decide(position, velocity):
-        return agent.decide((position, velocity))
-
-    action_values = decide(positions, velocities)
-
-    fig, ax = plt.subplots()
-    c = ax.pcolormesh(positions, velocities, action_values)
-    ax.set_xlabel('position')
-    ax.set_ylabel('velocity')
-    fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
-    fig.show()
-
-    with open('./resources/agent.pkl', 'wb') as file:
-        pickle.dump(agent, file)
-
-
 def mtc_compare_approaches(approach1, approach2):
     env = gym.make('MountainCar-v0')
     env.seed(1)

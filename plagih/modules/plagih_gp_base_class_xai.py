@@ -362,12 +362,11 @@ class ExplainableGP(object):
 
         # Fix the trees missing parsimony
         cnt = 0
-        for tree_id in pop_iterate_trees(population):
-            tree = population[tree_id]
+        for ii, tree in enumerate(population):
             if str(tree_get_parsimony(tree)) == '':
                 cnt += 1
                 parsimony = self.tree_get_parsimony_easywrapper(tree)
-                population[tree_id] = tree_set_parsimony(tree, parsimony)
+                population[ii] = tree_set_parsimony(tree, parsimony)
         print_warning('ww', 'Amount of trees without parsimony: {}.'.format(cnt))
         return
 
@@ -529,8 +528,6 @@ class ExplainableGP(object):
         forest_grouped = []
         path_trees = make_dir(root_path / folder_trees)
 
-        tree_sep = ''  # ''\\newpage'
-
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
@@ -545,8 +542,7 @@ class ExplainableGP(object):
             # file.close()
 
             # save a ready-to-use tex file with all pareto trees
-            forest_grouped.append(
-                'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, meta['fitness_train'], tikz_code, tree_sep))  # todo this kind of is latex aswell
+            forest_grouped.append(latex_get_sepline(parsim, meta['fitness_train'], tikz_code, tree_sep))
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
         file = Path.open(path_trees / '#all_trees.tex', 'w')

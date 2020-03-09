@@ -2,6 +2,12 @@
 Visualising Trees with latex.
 """
 
+tree_sep = ''  # ''\\newpage'
+
+
+def latex_get_sepline(parsim, fitness, tikz_code, tree_sep):
+    return 'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, fitness, tikz_code, tree_sep)
+
 
 def latex_complete_tree_summary(tikz_forest_list, preamble=''):
     """

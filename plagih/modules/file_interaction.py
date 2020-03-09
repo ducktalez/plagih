@@ -1,6 +1,7 @@
 from pathlib import Path
 import pickle
 from plagih.modules.dicts import *
+from plagih.modules.plagih_tree import *
 from plagih.modules.printing import *
 import csv
 import matplotlib.pyplot as plt
@@ -21,6 +22,8 @@ file_pareto = 'pareto.txt'
 file_config = 'config.txt'
 file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
+
+T_num_lines = 15  # todo this var is not found otherwise
 
 
 def make_dir(path):
@@ -137,10 +140,10 @@ def file_population_karoo(population, pop_name, path, gen_id):
             target.writerows([''])  # empty row before each generation
         target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
 
-        for tree in range(1, len(population)):
+        for ii, tree in enumerate(population):
             target.writerows([''])  # empty row before each Tree
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[tree][row]])
+                target.writerows([population[ii][row]])
 
     return
 

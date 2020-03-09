@@ -11,6 +11,7 @@ import networkx as nx
 from plagih.modules.file_interaction import make_dir, folder_trees
 from plagih.modules.viz_with_latex import *
 from sympy import sympify
+import copy
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -2146,6 +2147,41 @@ def tree_set_meta_wipe(tree):
     tree = tree_set_parsimony(tree, '')
     tree = tree_set_id(tree, 'tourn win')
     return tree
+
+
+def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None):
+    """
+    parsimony_distance: compute the chosen distance by the user.
+
+    """
+
+    if parsimony_distance == 'total_count_nodes':  # number of nodes
+        return tree_get_last_nodeid(tree)  # returns the number of nodes
+    elif parsimony_distance == 'total_tree_depth':
+        return 0
+
+    if parsimony_distance == 'ted':  # tree edit distance, tree-edit-distance
+        return tree_parsimony_ted(tree, origin_tree)
+    elif parsimony_distance == 'rel_ari_1':  # Does this work?
+        return tree_parsimony_relari(tree, origin_tree)
+    else:
+        print_e('Complexity measurement not available: {}'.format(parsimony_distance))
+        raise
+
+
+def tree_check_is_sympified(tree):
+    """
+    Label list from expression
+    """
+    tree_raw = copy.deepcopy(tree)
+    tree_sym = tree_evolve_reduce(tree, completely=True)
+
+    labellist_raw = tree_get_labellist(tree_raw)
+    labellist_sym = tree_get_labellist(tree_sym)
+    if list(labellist_raw) == list(labellist_sym):
+        return True
+    else:
+        return False
 
 
 def tree_viz_get_nel(tree):

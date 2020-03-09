@@ -354,11 +354,10 @@ class ExplainableGP(object):
 
         # Fix the tree node's xtypes (old node's 'type', e.g. 'Term', ...) with 'f2f', ...
         cnt = 0
-        for tree_id in pop_iterate_trees(population):
-            tree = population[tree_id]
+        for ii, tree in enumerate(population):
             if tree_node_get_xtype(tree, root_id) == '':
                 cnt += 1
-                population[tree_id] = tree_set_xtypes(tree, self.variables_dict)
+                population[ii] = tree_set_xtypes(tree, self.variables_dict)
         print_warning('ww', 'Amount of trees with node_xtype inconsistency: {}.'.format(cnt))
 
         # Fix the trees missing parsimony
@@ -638,7 +637,7 @@ class ExplainableGP(object):
             parsimony = self.tree_get_parsimony_easywrapper(tree)
             tree = tree_set_parsimony(tree, parsimony)
             self.tree_meta_update(tree, parsimony=parsimony)
-            self.population_tmp_done.append(tree)  # todo, if we late insert a tree, will the population-loop find it?
+            self.population_tmp_done.append(tree)
 
             self.pareto_update_insert()
 
@@ -1208,7 +1207,7 @@ class ExplainableGP(object):
         except:
             raise Exception('Your origin algorithm could not be sympified. Aborting.')
 
-        if not compare_expressions_as_labels(expr_raw, expr_sym):
+        if not tree_check_is_sympified(tree):
             print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}'.format(expr_raw, expr_sym))
 
         self.origin = {'tree': tree, 'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
@@ -1507,92 +1506,6 @@ class ExplainableGP(object):
         return
 
 
-def pop_util_copy(population_x, title):
-    """
-    Copy one population to another.
-    """
-    population_y = [title]  # an empty list stores a copy of the prior generation
-
-    for tree_id in range(1, len(population_x)):  # increment through each Tree in the current population
-        tree_copy = pop_tree_copy(population_x, tree_id)  # copy each array in the current population
-        population_y.append(tree_copy)  # add each copied Tree to the new population list
-
-    return population_y
-
-
-def pop_enum_trees(population):
-    """
-    outsourced enumeration of trees in a population
-    trees are no longer iterated
-    """
-    for tree_id in range(FIRST_TREE, len(population)):  #
-        tree = population[tree_id]
-        population[tree_id] = tree_set_id(tree, tree_id)
-    return population
-
-
-def pop_iterate_trees(population):
-    """ todo iterate is doing simple stuff complex... gets list [1, 2, 3, 4, 5, 6, 7, ...]
-    Ich schwöre welcher Hurensohn hat diese Kopfzeile gemacht?
-    ...population besteht aus:
-    ['Kopfzeile mit unnötiger Scheißinfo, FUCK TODO DELETE THIS',
-      Baum1,
-      Baum2,
-      ...]
-      todo kopfzeile entfernen
-    iterating over a pop in regular manner results in dumb errors. why. would. anyone. do. this.
-    """
-
-    return range(FIRST_TREE, len(population))
-
-
-def file_population_karoo(population, pop_name, path, gen_id):
-    """
-    Save population_* to disk.
-
-    """
-
-    pop_path = make_dir(path / folder_info)
-
-    file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
-
-    # todo function to tree_ and append each tree
-    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-        target = csv.writer(csv_file, delimiter=',')
-        if gen_id != 0:
-            target.writerows([''])  # empty row before each generation
-        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
-
-        for tree in range(1, len(population)):
-            target.writerows([''])  # empty row before each Tree
-            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[tree][row]])
-
-    return
-
-
-def write_config_file(path, config, gen_id, kernel, date_time):
-    """
-    write the parameters to a file
-    """
-
-    path_config = make_dir(path / folder_info)
-
-    file = Path.open(path_config / file_config, 'a')
-    file.write('This config is not complete, sfeh!')
-    file.write('\n launched: {}'.format(date_time))
-    file.write('\n kernel: {}'.format(kernel))
-    file.write('\n precision: {}\n'.format(config['precision']))
-    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
-    file.write('\n')
-    file.write('\n tournament size: ' + str(config['tourn_size']))
-    file.write('\n population: ' + str(config['pop_max']))
-    file.write('\n number of generations: ' + str(gen_id))
-    file.write('\n\n')
-    file.close()
-    return
-
-
 def load_funcarray_from_csv(op_csv_path):
     """
     Load all operators ready-to-use from a file
@@ -1626,38 +1539,6 @@ def load_funcarray_from_csv(op_csv_path):
             func_array[b2f2f][arity].append(label)
 
     return func_array
-
-
-def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None):
-    """
-    parsimony_distance: compute the chosen distance by the user.
-
-    """
-
-    if parsimony_distance == 'total_count_nodes':  # number of nodes
-        return tree_get_last_nodeid(tree)  # returns the number of nodes
-    elif parsimony_distance == 'total_tree_depth':
-        return 0
-
-    if parsimony_distance == 'ted':  # tree edit distance, tree-edit-distance
-        return tree_parsimony_ted(tree, origin_tree)
-    elif parsimony_distance == 'rel_ari_1':  # Does this work?
-        return tree_parsimony_relari(tree, origin_tree)
-    else:
-        print_e('Complexity measurement not available: {}'.format(parsimony_distance))
-        raise
-
-
-def compare_expressions_as_labels(expr_raw, expr_syx):
-    """
-    Label list from expression
-    """
-    raw_labels = ast_convert_from_expr(expr_raw, build=True)
-    sym_labels = ast_convert_from_expr(expr_syx, build=True)
-    if raw_labels == sym_labels:
-        return False  # todo return true but correctify this pls. sympify tree without core.
-    else:
-        return False
 
 
 def check_value_is_real(fitness):

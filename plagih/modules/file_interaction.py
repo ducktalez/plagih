@@ -98,6 +98,53 @@ def data_load_data_split(data_x, data_y, test_size):
     return data_train_rows, data_train, data_control
 
 
+def write_config_file(path, config, gen_id, kernel, date_time):
+    """
+    write the parameters to a file
+    """
+
+    path_config = make_dir(path / folder_info)
+
+    file = Path.open(path_config / file_config, 'a')
+    file.write('This config is not complete, sfeh!')
+    file.write('\n launched: {}'.format(date_time))
+    file.write('\n kernel: {}'.format(kernel))
+    file.write('\n precision: {}\n'.format(config['precision']))
+    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
+    file.write('\n')
+    file.write('\n tournament size: ' + str(config['tourn_size']))
+    file.write('\n population: ' + str(config['pop_max']))
+    file.write('\n number of generations: ' + str(gen_id))
+    file.write('\n\n')
+    file.close()
+    return
+
+
+def file_population_karoo(population, pop_name, path, gen_id):
+    """
+    Save population_* to disk.
+
+    """
+
+    pop_path = make_dir(path / folder_info)
+
+    file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
+
+    # todo function to tree_ and append each tree
+    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        target = csv.writer(csv_file, delimiter=',')
+        if gen_id != 0:
+            target.writerows([''])  # empty row before each generation
+        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
+
+        for tree in range(1, len(population)):
+            target.writerows([''])  # empty row before each Tree
+            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
+                target.writerows([population[tree][row]])
+
+    return
+
+
 def data_from_csv(samples_file):
     """
     loads the goal-data_csv_path from .csv file. first observations then actions.

@@ -145,22 +145,17 @@ def load_pop_from_csv(pop_csv):
         n = 0  # track row count
 
         for row in target:
-
             n = n + 1
             if n == 1:
                 pass  # skip first empty row
-
             elif n == 2:
                 tree_list = [row]  # write header to population_a
-
             else:
                 if not row:
                     tree = np.array([[]])  # initialise Tree array
-
                 else:
                     if tree.shape[1] == 0:
                         tree = np.append(tree, [row], axis=1)  # append first row to Tree
-
                     else:
                         tree = np.append(tree, [row], axis=0)  # append subsequent rows to Tree
 
@@ -317,30 +312,6 @@ def tree_node_set_childs_ids(tree, node_id, c_buffer, karoo=False):
 
     for i in range(arity, 3):
         tree[N_c1 + i][node_id] = ''
-    #
-    # if arity == 0:  # if arity = 0
-    #     tree[N_c1][node_id] = ''
-    #     tree[N_c2][node_id] = ''
-    #     tree[N_c3][node_id] = ''
-    #
-    # elif arity == 1:  # if arity = 1
-    #     tree[N_c1][node_id] = c_buffer
-    #     tree[N_c2][node_id] = ''
-    #     tree[N_c3][node_id] = ''
-    #
-    # elif arity == 2:  # if arity = 2
-    #     tree[N_c1][node_id] = c_buffer
-    #     tree[N_c2][node_id] = c_buffer + 1
-    #     tree[N_c3][node_id] = ''
-    #
-    # elif arity == 3:  # if arity = 3
-    #     tree[N_c1][node_id] = c_buffer
-    #     tree[N_c2][node_id] = c_buffer + 1
-    #     tree[N_c3][node_id] = c_buffer + 2
-    #
-    # else:
-    #     print_e('evolve_child_link: node_id {} has arity {}.'.format(node_id, tree[N_arity][node_id]))
-    #     raise
 
     if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
@@ -626,29 +597,6 @@ def insert_function_or_term(depth, depth_goal):
     return decision
 
 
-def tree_parsimony(tree, origin_tree=None, parsimony_distance='ted'):
-    """
-    parsimony_distance: compute the chosen distance by the user.
-
-    """
-    if parsimony_distance == 'ted':
-        return tree_parsimony_ted(tree, origin_tree)
-    elif parsimony_distance == 'total_count_nodes':
-        return int(tree[3][-1:])  # returns the tree size
-    elif parsimony_distance == 'total_tree_depth':
-        return tree[N_depth][1]  # returns the tree size
-    elif parsimony_distance == 'total_karoo_original':  # do not use with long variable names
-        algo_raw_str = str(tree_get_expr_raw(tree, node_id=root_id))
-        return len(str(algo_raw_str))
-    # elif parsimony_distance == 'total_simplified':
-    #     algo_sym = self.tree_expr_sympify(tree=tree)
-    #     return count_ops(algo_sym)
-    elif parsimony_distance == 'rel_ari_1':  # Does this work?
-        return tree_parsimony_relari(tree, origin_tree)
-    else:
-        raise Exception('Parsimony distance not specified!')
-
-
 def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, func_array, min_depth=0, build_mode='grow'):
     """
     build a random, but within itself consistent label list
@@ -820,7 +768,7 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
 
     """
     todo_xtypes = [xtype]
-    todo_node_amount = 1
+    tbd_node_amount = 1
     result_label_list = []
     result_arity_list = []
     done = False
@@ -828,7 +776,7 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
     while not done:
 
         functerm_list = ['func']
-        for _ in range(todo_node_amount - 1):  # 1 -> at least one function
+        for _ in range(tbd_node_amount - 1):  # 1 -> at least one function
             if build_type == 'grow':
                 functerm_list.append(np.random.choice(['func', 'term']))
             elif build_type == 'full':
@@ -837,8 +785,8 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
                 raise
         np.random.shuffle(functerm_list)
 
-        tmp_label_list = ['dummy'] * todo_node_amount
-        tmp_arity_list = [8] * todo_node_amount
+        tmp_label_list = ['dummy'] * tbd_node_amount
+        tmp_arity_list = [8] * tbd_node_amount
 
         func_indices = [i for i, x in enumerate(functerm_list) if x == 'func']
         term_indices = [i for i, x in enumerate(functerm_list) if x == 'term']
@@ -848,11 +796,11 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
             xtype = todo_xtypes[index]
 
             label, arity = xtype_choose_func(func_array, xtype=xtype)
-            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), todo_node_amount, '>', arity, ')', (len(result_label_list) + todo_node_amount + arity), max_nodes)
-            if max_nodes > (len(result_label_list) + todo_node_amount) + arity + 1:  # +1 = the start node which we must not forget
+            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), max_nodes)
+            if max_nodes > (len(result_label_list) + tbd_node_amount) + arity + 1:  # +1 = the start node which we must not forget
                 tmp_label_list[index] = label
                 tmp_arity_list[index] = arity
-                todo_node_amount += arity - 1
+                tbd_node_amount += arity - 1
             else:
                 term_indices.extend(func_indices[enum:])
                 done = True
@@ -862,7 +810,7 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
             label, arity = xtype_choose_term_v2(todo_xtypes[index], variables_dict), 0
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
-            todo_node_amount -= 1
+            tbd_node_amount -= 1
 
         # prepare next loop
         todo_xtypes = []
@@ -1259,7 +1207,7 @@ def tree_parsimony_ted(tree1, tree2):
     apted_tree2 = tree_raw_depth_prefix(tree2, 1)
     distance, mapping = apted_distance(apted_tree1, apted_tree2)
     # sfeh the mapping could be handy somewhere
-    return distance
+    return distance, mapping
 
 
 def tree_parsimony_relari(tree, origin_tree):
@@ -1701,7 +1649,7 @@ def tree_fix_link_child(tree):
 
     for node in range(0, len(tree[N_id])):
         c_buffer = evolve_c_buffer(tree, node)  # generate c_buffer for each node
-        tree = tree_node_set_childs_ids(tree, node, c_buffer)  # update child links for each node
+        tree = tree_node_set_childs_ids(tree, node, c_buffer)  # update child links for each node # todo karoo=True??
 
     return tree
 
@@ -2152,7 +2100,7 @@ def tree_set_meta_wipe(tree):
     return tree
 
 
-def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None):
+def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None):
     """
     parsimony_distance: compute the chosen distance by the user.
 
@@ -2162,9 +2110,13 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None):
         return tree_get_last_nodeid(tree)  # returns the number of nodes
     elif parsimony_distance == 'total_tree_depth':
         return 0
-
     if parsimony_distance == 'ted':  # tree edit distance, tree-edit-distance
-        return tree_parsimony_ted(tree, origin_tree)
+        distance, mapping = tree_parsimony_ted(tree, origin_tree)
+        if weights is None:
+            return distance
+        else:
+            pass
+            # TODO weights
     elif parsimony_distance == 'rel_ari_1':  # Does this work?
         return tree_parsimony_relari(tree, origin_tree)
     else:

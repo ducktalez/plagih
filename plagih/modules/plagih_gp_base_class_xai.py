@@ -490,9 +490,6 @@ class ExplainableGP(object):
 
         return
 
-    # todo wenn ein gp lauf immer wieder dieselben Lösungen findet, verbiete einige Grundstrukturen.
-    # todo ...oder andere einschränkungen. sin verbieten. wenn nichts besseres gefunden wird, weiter
-
     def file_pareto(self, pareto, root_path):
         """
         Save all the pareto efficient candidates to file
@@ -619,7 +616,6 @@ class ExplainableGP(object):
         """
         self.printpl('i', 'Trying to add tree mid-run...')
 
-        # tree = self.tree_enrich(tree, last_evolution='p-sym')  # todo test added trees
         if self.tree_check_core_all(tree):
             tree = self.tree_enrich(tree, last_evolution='ps')
             parsimony = self.tree_get_parsimony_easywrapper(tree)
@@ -733,7 +729,7 @@ class ExplainableGP(object):
 
         for ii, tree in enumerate(self.population_tmp_done):  # todo, these are not ordered in parsimony nor fitness
 
-            parsim = tree_get_parsimony(tree)  # todo random is eval parsimony used correctly everywhere?
+            parsim = tree_get_parsimony(tree)
             fitness_train = tree_get_fitness(tree)
 
             # 3. is the tree better than the current best at this parsimony dim_y?
@@ -768,7 +764,6 @@ class ExplainableGP(object):
 
         return
 
-    # random todo, save last sympify expr in debug info...
     def pop_reproduce(self, repro_rate):
 
         """
@@ -862,7 +857,7 @@ class ExplainableGP(object):
         """
 
         for i in range(repro_rate):
-            max_nodes = np.random.randint(self.config['tree_branch_nodes_base'], self.parsimony_max)  # todo 3 auslagern und testen ob 3 entstehen kann
+            max_nodes = np.random.randint(self.config['tree_branch_nodes_base'], self.parsimony_max)
             label_list, arity_list = invent_label_list_nodes_grow(self.output_xtype, max_nodes, self.variables_dict, self.func_array)
             p_tree = Plagih_Tree(label_list)
             tree = p_tree.get_uninstanced_tree()
@@ -1429,6 +1424,8 @@ class ExplainableGP(object):
         for a, b in data_2d:
             x.append(a)
             y.append(b)
+
+        # x, y = data_2d.reshape(-1, 2).T  # todo this could be a more pythonic  way
 
         # bottom, top = plt.ylim()
         # left, right = plt.xlim()

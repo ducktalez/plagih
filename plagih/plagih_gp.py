@@ -7,6 +7,8 @@ from plagih.modules.plagih_gp_base_class_xai import *
 from plagih.modules.Examples import *
 from plagih.modules.plagih_data import *
 
+# todo clean up this class... make extra class or folder (!) with all cases to be tested
+
 # import warnings
 # warnings.filterwarnings('error')
 
@@ -162,5 +164,5 @@ def run(root_dir):
     # create_samples_pickle(root_dir)  # todo outsource
     # analyse_old_run(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_test(config_dict, root_dir)
+    gp = run_mountaincar_v4(config_dict, root_dir)
     gp.plagih_gp_run()

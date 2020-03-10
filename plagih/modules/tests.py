@@ -301,4 +301,10 @@ def test_tree_reduce_parts():
                 print('test_tree_reduce_parts ERROR', tree)
 
 
-test_plagih_eval()
+def test_tree_parsimony_ted():
+    tree1, tree2, tree3 = get_three_sample_trees()
+    distance, mapping = tree_parsimony_ted(tree1, tree3)
+    print('dist:', distance)
+    print('mapping', mapping)
+
+test_tree_parsimony_ted()

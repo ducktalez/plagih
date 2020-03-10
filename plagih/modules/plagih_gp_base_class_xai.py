@@ -228,12 +228,12 @@ class ExplainableGP(object):
             for name, gp_function, tourn_rep in gp_list:
                 time_evolve = time.perf_counter()
                 count_tries = 0
-                while count_tries < self.evolve_rates[name] * self.config['pop_max']:
-                    break
-                    # smallest inserted rate
+                # while count_tries < self.evolve_rates[name] * self.config['pop_max']:
+                #     break
+
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
-                self.print_g('ggg', '-->Evolve: ({}) took: {:4.2f}sec.'.format(name, time.perf_counter() - time_evolve))
+                self.print_g('ggg', '-->Evolve: ({}) x{} took: {:4.2f}sec.'.format(name, repro_rate, time.perf_counter() - time_evolve))
             # ######################################
 
             self.gen_finalize()
@@ -907,7 +907,7 @@ class ExplainableGP(object):
         """
 
         for _ in range(repro_rate):  # quantity of Trees to be generated through mutation
-
+            # time_start = time.perf_counter()
             tree = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_nodes(tree, no_root=True)
             node = np.random.choice(node_ids)
@@ -918,14 +918,13 @@ class ExplainableGP(object):
                                                     depth_min=self.config['tree_depth_min'],
                                                     depth_goal=self.config['tree_depth_base'])
             elif self.config['tree_growth'] == 'node-based':
-                print('wutt', self.parsimony_max, tree_get_size(tree), self.parsimony_max-tree_get_size(tree))
-                goal_nodes = np.random.randint(1, 1 + min(self.config['tree branch: base nodes'], self.parsimony_max-tree_get_parsimony(tree)))
+                goal_nodes = np.random.randint(1, 1 + max(min(self.config['tree branch: base nodes'], self.parsimony_max-tree_get_parsimony(tree)), 1))  # max just for safety reasons
                 tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, goal_nodes)
             else:
                 raise Exception('Tree growth version not known')
 
             self.pop_append(tree, last_evolution='m-bra')
-
+            # print('Mutated a trees branch. Took {:4.2f} sec'.format(time.perf_counter()-time_start))
         return
 
     def pop_crossover_branch(self, repro_rate):
@@ -1004,8 +1003,7 @@ class ExplainableGP(object):
         """
 
         if tree is None:
-            print_warning('Tree from last_evolution: {} failed. Continuing.'.format(last_evolution))
-
+            print_warning('ww', 'Tree from last_evolution: {} failed. probably sympify. Continuing.'.format(last_evolution))
         else:
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
 
@@ -1141,6 +1139,7 @@ class ExplainableGP(object):
 
             tree_id = pop_tree_choose(self.population_base)
             tree = self.population_base[tree_id]
+
             fitness = tree_get_fitness(tree, precision=self.config['precision'])
 
             if self.kernel.fitness_compare(fitness, best_fitness, mode='better'):

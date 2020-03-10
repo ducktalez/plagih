@@ -521,8 +521,6 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
         permanent_nodes = [chosen_node]
         for c in [N_c1, N_c2, N_c3]:
             if origin_tree[c][origin_node] != '':  # aka a child exists
-                # print('Chosen Tree', tree_node_debug_print(chosen_tree, chosen_node))
-                # print('Origin Tree', tree_node_debug_print(origin_tree, origin_node))
                 next_origin_node = int(origin_tree[c][origin_node])
                 next_chosen_node = int(chosen_tree[c][chosen_node])
                 tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
@@ -2107,8 +2105,8 @@ def tree_set_meta_wipe(tree):
     What should not be deleted?
     - modifiable nodes
     """
-    tree = tree_set_fitness(tree, '')
-    tree = tree_set_parsimony(tree, '')
+    # tree = tree_set_fitness(tree, '')  # todo just randomly kick this out aswell
+    # tree = tree_set_parsimony(tree, '')  # todo if we wipe this, parsimony can not be checked anymore
     # tree = tree_set_id(tree, 'tourn win')
     return tree
 

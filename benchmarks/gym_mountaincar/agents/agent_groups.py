@@ -17,16 +17,6 @@ class PlagihAgent_A:
             return 2
 
 
-class PlagihAgent_A:
-
-    def decide(self, observation):
-        observation0, observation1 = observation
-        if -observation1 + min(observation1, observation0 + 1.025) > observation1:
-            return 0
-        else:
-            return 2
-
-
 class SimpleAgent:
 
     def decide(self, observation):

@@ -43,5 +43,5 @@ class TestIB(unittest.TestCase):
 
             compare_file_markovStates = np.genfromtxt('test_data/markovStates' + str(i) + '.csv', delimiter=',')
 
-            # test if test files and original files are equal
+            # test if test gp_files and original gp_files are equal
             np.testing.assert_array_almost_equal(compare_file_markovStates, markovStates_all)

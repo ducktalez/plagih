@@ -1,9 +1,7 @@
 import numpy as np
 import gym
 import matplotlib.pyplot as plt
-from mountaincar.agents.sarsa_best_approach import sarsa_start_training
-from mountaincar.agents.move_directions import move_towards_direction
-from mountaincar.agents.plagih_1 import improved_v1
+
 
 def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_avg, approach):
 

@@ -5,7 +5,7 @@ velocity = observation1
 """
 import time
 
-from mountaincar.agents.agents import *
+from benchmarks.gym_mountaincar.agents.agent_groups import *
 import matplotlib.pyplot as plt
 import itertools
 import pickle

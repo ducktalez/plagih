@@ -2124,7 +2124,7 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
         if weights is None:
             return distance
         else:
-            pass
+            raise
             # TODO weights
     elif parsimony_distance == 'rel_ari_1':  # Does this work?
         return tree_parsimony_relari(tree, origin_tree)

@@ -12,6 +12,7 @@ from plagih.modules.plagih_data import *
 # import warnings
 # warnings.filterwarnings('error')
 
+
 def create_config_dict():
     config_dict = {
         'root_dir': Path.cwd(),
@@ -30,9 +31,9 @@ def create_config_dict():
         'float_accuracy': 200,
         'swim': 'p',                    # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         'print_type': 'ggewwsiivoaa',    # To print_type absolutely all: ewggggsiiiivvvtopppttt
-        'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
+        'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'force_new_run': False,         # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
-        'delete_old_file': False,       # sfeh, delete old files. be very careful
+        'delete_old_file': False,       # sfeh, delete old gp_files. be very careful
         'monitor': {'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
                     'population_tmp_done-size': 'y'
@@ -67,19 +68,13 @@ def create_config_dict():
     return config_dict
 
 
-def fast_run(config):
-    config['pop_max'] = 200
-    config['gen_max'] = 18
-    config['tourn_size'] = 3
-    return config
-
-
-def create_samples_pickle(path):
+def create_samples_pickle_prepared(path, behaviour_samples_file, pickle_file='prepared_samples.p'):
     """
     Saving your data file
     """
-    prepared_data = data_from_csv(path / MountainCarExamples.files['samples_file'])
-    data_save_pickle(prepared_data, path / MountainCarExamples.files['samples_pickle'])
+    prepared_data = data_from_csv(path / behaviour_samples_file)
+    data_save_pickle(prepared_data, path / pickle_file)
+    return
 
 
 def mountaincar_load_corefiles(config_dict, path):
@@ -87,6 +82,15 @@ def mountaincar_load_corefiles(config_dict, path):
     prepared_data = data_load_pickle(path / MountainCarExamples.files['samples_pickle'])
     gp.activate_dataset(prepared_data)
     op_array = load_funcarray_from_csv(path / MountainCarExamples.files['operators_file'])
+    gp.activate_operators(op_array)
+    return gp
+
+
+def cartpole_load_corefiles(config_dict, path):
+    gp = plagih.ExplainableGP(config_dict)
+    prepared_data = data_load_pickle(path / CartpoleExamples.files['samples_pickle'])
+    gp.activate_dataset(prepared_data)
+    op_array = load_funcarray_from_csv(path / CartpoleExamples.files['operators_file'])
     gp.activate_operators(op_array)
     return gp
 
@@ -127,6 +131,11 @@ def run_mountaincar_v4(config_dict, path):
     return gp
 
 
+def analyse_old_run(root_dir):
+    config_dict = create_config_dict()
+    mountaincar_update_analysis_files(config_dict, root_dir)
+
+
 def mountaincar_update_analysis_files(config_dict, path):
     all_runs = ['MTC_v1', 'MTC_v2', 'MTC_v3', 'MTC_v4']
 
@@ -141,8 +150,8 @@ def mountaincar_update_analysis_files(config_dict, path):
 
 def run_mountaincar_test(config_dict, path):
     config_dict['name'] = 'MTC_test'
-    test_run = Path.cwd() / folder_runs / config_dict['name']
-    print('Test dir is:', test_run)
+    # test_run = Path.cwd() / folder_runs / config_dict['name']
+    # print('Test dir is:', test_run)
     config_dict['root_dir'] = path
     config_dict['pop_max'] = 100
     config_dict['gen_max'] = 500
@@ -155,14 +164,42 @@ def run_mountaincar_test(config_dict, path):
     return gp
 
 
-def analyse_old_run(root_dir):
-    config_dict = create_config_dict()
-    mountaincar_update_analysis_files(config_dict, root_dir)
+def run_cartpole_v1(config_dict, path):
+    config_dict['name'] = 'cartpole_v1'
+    config_dict['root_dir'] = path
+    config_dict['parsimony_max'] = 150
+    gp = cartpole_load_corefiles(config_dict, path)
+    gp.load_origin_tree(label_list=CartpoleExamples.label_list, modify_list=CartpoleExamples.modify_list)
+    return gp
+
+
+def run_cartpole_v1_scratch(config_dict, path):
+    config_dict['name'] = 'cartpole_v1_scratch'
+    config_dict['root_dir'] = path
+    config_dict['parsimony_max'] = 150
+    gp = cartpole_load_corefiles(config_dict, path)
+    gp.load_origin_tree(label_list=CartpoleExamples.label_list, modify_list=CartpoleExamples.modify_list)
+    return gp
+
+
+def run_cartpole_test(config_dict, path):
+    config_dict['name'] = 'cartpole_test'
+    config_dict['root_dir'] = path
+    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt'    # To print_type absolutely all: ewaaaiiiiggggvvvpppttt
+    config_dict['parsimony_max'] = 150
+    gp = cartpole_load_corefiles(config_dict, path)
+    gp.load_origin_tree(label_list=CartpoleExamples.label_list, modify_list=CartpoleExamples.modify_list)
+    return gp
+
+
+# todo idea: force building smaller trees? give optimal size?
 
 
 def run(root_dir):
-    # create_samples_pickle(root_dir)  # todo outsource
+    # create_samples_pickle_prepared(root_dir, CartpoleExamples.files['samples_file'])  # todo outsource
+
     # analyse_old_run(root_dir)
+
     config_dict = create_config_dict()
-    gp = run_mountaincar_test(config_dict, root_dir)
+    gp = run_cartpole_test(config_dict, root_dir)
     gp.plagih_gp_run()

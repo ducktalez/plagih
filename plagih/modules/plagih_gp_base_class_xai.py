@@ -89,12 +89,12 @@ class ExplainableGP(object):
 
     def plagih_update_analysis(self):
         """
-        Without starting a new run, get the most important files
+        Without starting a new run, get the most important gp_files
         """
 
         path_backup = self.root_dir / file_backup_pickle
         if Path.is_file(path_backup):
-            self.print_g('g', 'Backup file for updating analysis files exists...')
+            self.print_g('g', 'Backup file for updating analysis gp_files exists...')
             try:
                 self.plagih_load_backup(path_backup)
             except Exception as ex:
@@ -121,14 +121,32 @@ class ExplainableGP(object):
         if self.gen_id == 0:
             self.gen_create_first()
 
-        write_config_file(self.root_dir, self.config, self.gen_id, self.kernel, self.datetime)
+        self.write_config_file()
 
         self.gen_create_loop()
         self.terminate_run(self.root_dir)
 
+    # todo idea: only allow variables in a specific subtree? for capsulation.
+
+    def write_config_file(self):
+        """
+        write the parameters to a .csv file which can also be loaded
+        """
+
+        # path_config = make_dir(self.root_dir / folder_info)
+        # file = Path.open(path_config / file_config, 'w+')
+        #
+        # with Path.open(file, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        #     target = csv.writer(csv_file, delimiter=',')
+        #
+        #     for ii, (key, value) in enumerate(self.config.items()):
+        #         target.writerows(key, value)
+
+        return
+
     def file_directories_create(self, path_cwd):
         """
-        Create all files that will be saved after all
+        Create all gp_files that will be saved after all
         """
 
         # self.datetime = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -250,10 +268,10 @@ class ExplainableGP(object):
 
     def periodical_procedures(self):
         """
-        Every few generations, update the created files
+        Every few generations, update the created gp_files
         - default is in every generation, but saving every n-th gen or after time passed is possible aswell
         """
-        if self.config['overwrite periodic files']:
+        if self.config['overwrite periodic gp_files']:
             tmp_path = make_dir(self.root_dir)
         else:
             tmp_path = make_dir(self.root_dir / folder_steps / 'Gen-{}'.format(self.gen_id))
@@ -296,7 +314,7 @@ class ExplainableGP(object):
 
     def file_save_files(self, root_path, pop_name=''):
         """
-        writes all important files
+        writes all important gp_files
 
         """
         self.file_conclusion(root_path, date_time=self.datetime)
@@ -364,7 +382,7 @@ class ExplainableGP(object):
         for ii, tree in enumerate(population):
             if str(tree_get_parsimony(tree)) == '':
                 cnt += 1
-                parsimony = self.tree_get_parsimony_easywrapper(tree)
+                parsimony = self.tree_eval_parsimony_easywrapper(tree)
                 population[ii] = tree_set_parsimony(tree, parsimony)
         if cnt > 0:
             print_warning('ww', 'Amount of trees without parsimony: {}.'.format(cnt))
@@ -514,7 +532,7 @@ class ExplainableGP(object):
 
     def file_pareto_latex(self, pareto, root_path, save_all_forests=False):
         """
-        Save all pareto entries as latex files
+        Save all pareto entries as latex gp_files
         - build tree from expression
         - fill tree meta-data, just in case we want to visualise anything of it
         - create latex-forest representation
@@ -615,7 +633,7 @@ class ExplainableGP(object):
 
         self.tree_meta[tree_ident] = meta
 
-    def tree_get_parsimony_easywrapper(self, tree):
+    def tree_eval_parsimony_easywrapper(self, tree):
         parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
         return parsimony
 
@@ -631,7 +649,7 @@ class ExplainableGP(object):
 
         if self.tree_check_core_all(tree):
             tree = self.tree_beautify(tree, last_evolution='par-s')
-            parsimony = self.tree_get_parsimony_easywrapper(tree)
+            parsimony = self.tree_eval_parsimony_easywrapper(tree)
             tree = tree_set_parsimony(tree, parsimony)
             self.tree_meta_update(tree, parsimony=parsimony)
             self.population_tmp_done.append(tree)
@@ -1073,7 +1091,7 @@ class ExplainableGP(object):
                 # tree = tree_set_id(tree, len(self.population_tmp_done))
                 self.population_tmp_done.append(tree)
             else:
-                parsimony = self.tree_get_parsimony_easywrapper(tree)
+                parsimony = self.tree_eval_parsimony_easywrapper(tree)
                 if parsimony <= self.parsimony_max:
                     tree = tree_set_parsimony(tree, parsimony)
                     tree = tree_set_fitness(tree, '')
@@ -1343,6 +1361,8 @@ class ExplainableGP(object):
         self.plot_end(dist_fit, path_plots, plt_title='population distribution Gen {}'.format(self.gen_id), plt_y_label='fitness',
                       linestyle='-',
                       marker='',
+                      set_right=self.config['pop_max'],
+                      right_padding=1,
                       subfolder=folder_pop_analysis)
 
         data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
@@ -1425,7 +1445,7 @@ class ExplainableGP(object):
 
     def terminate_run(self, path):
         """
-        Program is done after writing all files one last time.
+        Program is done after writing all gp_files one last time.
         :param path:
         :return:
         """

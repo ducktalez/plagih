@@ -71,7 +71,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = 'Verbose: '
     elif 'p' in message_type:  # pause
         message_style = BColors.YELLOW
-        message_pretxt = 'Pause(TODO): '  # Yellow
+        message_pretxt = 'Pause(TO-DO): '  # Yellow
         pause = True
     elif 'f' in message_type:  # function
         message_style = BColors.MAGENTA  # Magenta

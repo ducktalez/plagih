@@ -602,7 +602,7 @@ def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, func_
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
     """
-    todo_xtypes = [xtype_root]
+    tbdo_xtypes = [xtype_root]
     result_label_list = []
     result_arity_list = []
 
@@ -611,7 +611,7 @@ def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, func_
         next_xtype_list = []
 
         if depth < depth_goal - 1:
-            for xtype in todo_xtypes:
+            for xtype in tbdo_xtypes:
                 if build_mode == 'grow':
                     if insert_function_or_term(depth, depth_goal) == 'term' and depth >= min_depth:
                         label = xtype_choose_term_v2(xtype, variables_dict)
@@ -637,7 +637,7 @@ def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, func_
                 result_arity_list.append(arity)
         else:  # now, we are on the lowest dim_y.
 
-            for xtype in todo_xtypes:  # Build terminals now.
+            for xtype in tbdo_xtypes:  # Build terminals now.
                 label = xtype_choose_term_v2(xtype, variables_dict)
                 arity = 0
 
@@ -646,7 +646,7 @@ def invent_label_list_depth_random(xtype_root, depth_goal, variables_dict, func_
                 result_arity_list.append(arity)
 
         # Finally, update the list for the next round
-        todo_xtypes = next_xtype_list[:]
+        tbdo_xtypes = next_xtype_list[:]
 
     return result_label_list, result_arity_list
 
@@ -767,7 +767,7 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
     - random term_fun_list: ['func', 'term']
 
     """
-    todo_xtypes = [xtype]
+    tbdo_xtypes = [xtype]
     tbd_node_amount = 1
     result_label_list = []
     result_arity_list = []
@@ -793,7 +793,7 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
         np.random.shuffle(func_indices)
 
         for enum, index in enumerate(func_indices):
-            xtype = todo_xtypes[index]
+            xtype = tbdo_xtypes[index]
 
             label, arity = xtype_choose_func(func_array, xtype=xtype)
             # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), max_nodes)
@@ -807,28 +807,28 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
                 break
 
         for index in term_indices:
-            label, arity = xtype_choose_term_v2(todo_xtypes[index], variables_dict), 0
+            label, arity = xtype_choose_term_v2(tbdo_xtypes[index], variables_dict), 0
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
             tbd_node_amount -= 1
 
         # prepare next loop
-        todo_xtypes = []
+        tbdo_xtypes = []
         for index, label in enumerate(tmp_label_list):
             if label == 'Ifte':
-                todo_xtypes.extend(['2b', '2f', '2f'])
+                tbdo_xtypes.extend(['2b', '2f', '2f'])
             else:
                 xtype = xtype_get(label, variables_dict)
                 child_type = xtype[:2][::-1]  # e. g. 'f2b' requires '2f' input
                 arity = tmp_arity_list[index]
-                todo_xtypes.extend([child_type] * arity)
+                tbdo_xtypes.extend([child_type] * arity)
 
         result_label_list.extend(tmp_label_list)
         result_arity_list.extend(tmp_arity_list)
 
     else:
         # Fix the last leftover nodes
-        for xtype in todo_xtypes:
+        for xtype in tbdo_xtypes:
             label, arity = xtype_choose_term_v2(xtype, variables_dict), 0
             result_label_list.append(label)
             result_arity_list.append(arity)

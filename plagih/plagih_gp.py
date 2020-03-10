@@ -29,7 +29,7 @@ def create_config_dict():
         'precision': 3,                 # rounding the fitness
         'float_accuracy': 200,
         'swim': 'p',                    # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-        'print_type': 'gggewwsiivoaa',    # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'ggewwsiivoaa',    # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'force_new_run': False,         # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
         'delete_old_file': False,       # sfeh, delete old files. be very careful

@@ -45,8 +45,10 @@ class MountainCarExamples:
 
 
 class CartpoleExamples:
+
     files = {
         'samples_file': '../benchmarks/gym_cartpole/gp_files/behaviour_samples.csv',
+        'samples_pickle': '../benchmarks/gym_cartpole/gp_files/prepared_samples.p',
         'operators_file': '../benchmarks/gym_cartpole/gp_files/operators.csv'}
 
     label_list = ['Ifte', 'True', 0, 1]

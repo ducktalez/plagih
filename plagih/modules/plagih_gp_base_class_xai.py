@@ -181,9 +181,6 @@ class ExplainableGP(object):
 
         self.pop_random_from_scratch(rate_s)
 
-        # if delete_this and self.gen_id != 0:
-        #     print('why is this gen id:', self.gen_id)
-
         self.gen_finalize()
         file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
 
@@ -729,8 +726,6 @@ class ExplainableGP(object):
         remove superfluous pareto entries
         """
         sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
-        # for row in sorted_pareto:
-        #     print('pareto:', row)
         last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
         for parsim, meta in sorted_pareto[1:]:
             fitness = meta['fitness_train']
@@ -804,7 +799,8 @@ class ExplainableGP(object):
         if self.origin_exists():
             tree_origin = self.origin_tree.copy()
             for _ in range(repro_rate):
-                tree = tree_evolve_branch_multiple(tree_origin, self.parsimony_max, self.variables_dict, self.func_array)
+                goal_nodes = np.random.randint(self.config['tree from scratch: min_nodes'], 1 + self.config['tree from scratch: max_nodes'])
+                tree = tree_evolve_branch_multiple(tree_origin, goal_nodes, self.variables_dict, self.func_array)
                 self.pop_append(tree, last_evolution='new-o')
 
         return
@@ -815,8 +811,8 @@ class ExplainableGP(object):
         """
 
         for i in range(repro_rate):
-            max_nodes = np.random.randint(self.config['tree_branch_nodes_base'], self.parsimony_max)
-            label_list, arity_list = invent_label_list_nodes_grow(self.output_xtype, max_nodes, self.variables_dict, self.func_array)
+            goal_nodes = np.random.randint(self.config['tree from scratch: min_nodes'], 1 + self.config['tree from scratch: max_nodes'])
+            label_list, arity_list = invent_label_list_nodes_grow(self.output_xtype, goal_nodes, self.variables_dict, self.func_array)
             p_tree = Plagih_Tree(label_list)
             tree = p_tree.get_uninstanced_tree()
             # tree = tree_set_id(tree, i)
@@ -846,9 +842,7 @@ class ExplainableGP(object):
         for _ in range(repro_rate):
             if self.parsimony_best_meta:
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
-                # expr_sym = meta['expr_sym']; print('sym', expr_sym)
                 expr_raw = meta['expr_raw']
-                # label_list = ast_convert_from_expr(expr_sym, build=True); print('label_list', label_list)
                 label_list = ast_convert_from_expr(expr_raw, build=True)
                 p_tree = Plagih_Tree(label_list)
                 olymp_winner = p_tree.get_uninstanced_tree()
@@ -918,14 +912,15 @@ class ExplainableGP(object):
             node_ids = tree_get_mutatable_nodes(tree, no_root=True)
             node = np.random.choice(node_ids)
             branch_nodes_ids = tree_get_branch(tree, node, karoo=True)  # select point of mutation and all nodes beneath [6, 9, 10]
-            if self.config['tree_growth'] == 'v1':
+            if self.config['tree_growth'] == 'depth-based':
                 tree = tree_evolve_insert_branch_v1(tree, branch_nodes_ids, self.variables_dict, self.func_array,
                                                     depth_max=self.config['tree_depth_max'],
                                                     depth_min=self.config['tree_depth_min'],
                                                     depth_goal=self.config['tree_depth_base'])
-            elif self.config['tree_growth'] == 'v2':
-                max_insert_nodes = min(self.config['tree_branch_nodes_base'], (self.parsimony_max - tree_get_size(tree, karoo=True)))
-                tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, max_insert_nodes)
+            elif self.config['tree_growth'] == 'node-based':
+                print('wutt', self.parsimony_max, tree_get_size(tree), self.parsimony_max-tree_get_size(tree))
+                goal_nodes = np.random.randint(1, 1 + min(self.config['tree branch: base nodes'], self.parsimony_max-tree_get_parsimony(tree)))
+                tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, goal_nodes)
             else:
                 raise Exception('Tree growth version not known')
 
@@ -1009,8 +1004,8 @@ class ExplainableGP(object):
         """
 
         if tree is None:
-            print_e('Tree from last_evolution: {} failed.'.format(last_evolution))
-            raise Exception('Tree is None')
+            print_warning('Tree from last_evolution: {} failed. Continuing.'.format(last_evolution))
+
         else:
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
 

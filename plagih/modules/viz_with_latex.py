@@ -13,9 +13,10 @@ def latex_complete_tree_summary(tikz_forest_list, preamble=''):
     """
     Latex standalone document of forest trees.
     Possible \documentclass options:
-    [varwidth=\\maxdimen,convert]{{standalone}}  # -> newpage does not exist
+    [varwidth=\\maxdimen,convert,border=5pt]{{standalone}}  # -> newpage does not exist
     {{article}}     # -> tree_sep should be \newpage
     {{beamer}}      # -> tree_sep should be \newpage
+    todo schow tex plots aswell?
     """
 
     tikz_combined = ''
@@ -24,7 +25,7 @@ def latex_complete_tree_summary(tikz_forest_list, preamble=''):
         tikz_combined += tikz
 
     # \documentclass[varwidth,convert]{standalone}
-    latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert]{{standalone}}' \
+    latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{{standalone}}' \
                        '\n\\usepackage{{forest}}' \
                        '\n\\begin{{document}}' \
                        '\n{}' \

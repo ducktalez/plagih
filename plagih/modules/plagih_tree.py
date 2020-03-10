@@ -197,7 +197,7 @@ def tree_set_id(tree, tree_id):
     return tree
 
 
-def tree_set_history(tree, last_modification):
+def tree_set_last_evolution(tree, last_modification):
     tree[TR_type][1] = last_modification
     return tree
 
@@ -251,23 +251,6 @@ def tree_set_modifyable_nodes_true(tree, karoo=True):
 
     for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         tree[N_modify][node_id] = 1
-    return tree
-
-
-def tree_set_modifyable_nodes(tree, origin_tree):
-    """
-    Sets all the origin_meta core nodes back to non-modifyable
-    """
-
-    tree = tree_set_modifyable_nodes_true(tree)
-
-    non_modifiable_nodes = []
-    if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
-        non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
-
-    for non_modifiable in non_modifiable_nodes:
-        tree = tree_node_set_modify(tree, non_modifiable, 0)
-
     return tree
 
 
@@ -508,6 +491,24 @@ def tree_node_debug_print(tree, node_id):
                   'Tree_labels: {}\n' \
                   'Tree-modify:'.format(node_id, tree_node_all_info(tree, node_id), node_parent, tree_get_labellist(tree), tree[N_modify])
     return debug_print
+
+
+def tree_set_modifyable_nodes(tree, origin_tree=None):
+    """
+    Sets all the origin_meta core nodes back to non-modifyable
+    """
+
+    tree = tree_set_modifyable_nodes_true(tree)
+
+    if origin_tree is not None:  # todo loop is unneccessary if there are no set fix nodes
+        non_modifiable_nodes = []
+        if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
+            non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
+
+        for non_modifiable in non_modifiable_nodes:
+            tree = tree_node_set_modify(tree, non_modifiable, 0)
+
+    return tree
 
 
 def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree):
@@ -921,6 +922,14 @@ def tree_get_ident(tree):
     expr_raw = tree_get_expr_raw(tree, node_id=root_id)
     tree_ident = hash(expr_raw)
     return tree_ident
+
+
+def tree_get_last_evolution(tree):
+    """
+    return a tree's last genetic modification
+    """
+    last_modi = tree[TR_type][1]
+    return last_modi
 
 
 def tree_get_parsimony(tree):
@@ -2210,3 +2219,17 @@ def tree_viz_get_tex_forest(tree):
     forest_viz = latex_wrap_forest(bracket_tree)
 
     return forest_viz
+
+
+def tree_remove_minus_workaround(tree):
+    """
+    The ~ operator should be removed and replaced with a
+    """
+
+
+def tree_group_branch_expressions(tree):
+    """
+    E.g. combine a mathematical expression
+    - from leaf to root: give info whether you are a inline math-op
+    """
+

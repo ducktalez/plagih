@@ -233,7 +233,7 @@ class ExplainableGP(object):
 
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
-                self.print_g('ggg', '-->Evolve: ({}) x{} took: {:4.2f}sec.'.format(name, repro_rate, time.perf_counter() - time_evolve))
+                self.print_g('ggg', '-->Evolve {}x \t({})\ttook: {:4.2f}sec.'.format(repro_rate, name, time.perf_counter() - time_evolve))
             # ######################################
 
             self.gen_finalize()
@@ -400,6 +400,12 @@ class ExplainableGP(object):
         self.pareto = run_data['self.pareto']
         self.population_base = run_data['self.population_base']
         self.monitoring_dict = run_data['self.monitoring_dict']
+
+        # check if entries exist
+        if self.monitoring_dict.get('complexity_variance') is None:
+            self.monitoring_dict['complexity_variance'] = {}
+        if self.monitoring_dict.get('fitness_variance') is None:
+            self.monitoring_dict['fitness_variance'] = {}
 
         # updating the population header line (removing it)
         if isinstance(self.population_base[0], str):
@@ -1428,12 +1434,12 @@ class ExplainableGP(object):
         self.monitoring_dict['complexity_average'][self.gen_id] = avg_complexity
 
         # fitness variance
-        variance_fitness = np.var([x['fitness'] for x in pop_tree_analysis])
-        self.monitoring_dict['fitness_variance'][self.gen_id] = variance_fitness
+        fitness_variance = np.var([x['fitness'] for x in pop_tree_analysis])
+        self.monitoring_dict['fitness_variance'][self.gen_id] = fitness_variance
 
         # complexity variance
-        variance_parsimony = np.var([x['complexity'] for x in pop_tree_analysis])
-        self.monitoring_dict['complexity_variance'][self.gen_id] = variance_parsimony
+        parsimony_variance = np.var([x['complexity'] for x in pop_tree_analysis])
+        self.monitoring_dict['complexity_variance'][self.gen_id] = parsimony_variance
 
         return
 

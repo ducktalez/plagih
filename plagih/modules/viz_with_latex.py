@@ -2,14 +2,20 @@
 Visualising Trees with latex.
 """
 
+tree_sep = ''  # ''\\newpage'
 
-def latex_standalone_doc_forest(tikz_forest_list, preamble=''):
+
+def latex_get_sepline(parsim, fitness, tikz_code, tree_sep):
+    return 'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, fitness, tikz_code, tree_sep)
+
+
+def latex_complete_tree_summary(tikz_forest_list, preamble=''):
     """
     Latex standalone document of forest trees.
     Possible \documentclass options:
-    [varwidth,convert]{standalone}
-    {article}
-    {beamer}
+    [varwidth=\\maxdimen,convert]{{standalone}}  # -> newpage does not exist
+    {{article}}     # -> tree_sep should be \newpage
+    {{beamer}}      # -> tree_sep should be \newpage
     """
 
     tikz_combined = ''
@@ -18,7 +24,7 @@ def latex_standalone_doc_forest(tikz_forest_list, preamble=''):
         tikz_combined += tikz
 
     # \documentclass[varwidth,convert]{standalone}
-    latex_doc_forest = '\\documentclass{{beamer}}' \
+    latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert]{{standalone}}' \
                        '\n\\usepackage{{forest}}' \
                        '\n\\begin{{document}}' \
                        '\n{}' \
@@ -36,7 +42,7 @@ def latex_wrap_forest(tikz_forest_tree):
             - constant
         - non-terminal
         - fixnode: If user specified this as fix node
-        - originalnode: todo, if node is the same as in origin (exactly the same, changed variable?, ...)
+        - originalnode: todo, if node is the same as in origin_meta (exactly the same, changed variable?, ...)
         - point: sfeh, guess this is currently not used
     """
     latex_tikz_forest = '\n\\begin{{forest}}' \

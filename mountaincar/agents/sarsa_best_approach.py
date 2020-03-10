@@ -2,111 +2,14 @@ import csv
 
 import numpy as np
 
+from mountaincar.agents.agents import *
+
 np.random.seed(0)
 import gym
-import matplotlib.pyplot as plt
 import sys
 from pathlib import Path, PurePath
 
 import pickle
-
-
-class TileCoder:
-    def __init__(self, layers, features):
-        """
-        Parameters
-        - layers: int, the number of layers in tile coding
-        - features: int, the number of features, also the shape of weights
-        """
-        self.layers = layers
-        self.features = features
-        self.codebook = {}
-
-    def get_feature(self, codeword):
-        if codeword in self.codebook:
-            return self.codebook[codeword]
-        count = len(self.codebook)
-        if count >= self.features:  # collide when codebook is full
-            return hash(codeword) % self.features
-        else:
-            self.codebook[codeword] = count
-            return count
-
-    def __call__(self, floats=(), ints=()):
-        """
-        Parameters
-        - floats: tuple of floats, each of which is within [0., 1.]
-        - ints: tuple of ints
-        Returns
-        - features : list of ints
-        """
-        dim = len(floats)
-        scaled_floats = tuple(f * self.layers * self.layers for f in floats)
-        features = []
-        for layer in range(self.layers):
-            codeword = (layer,) + tuple(int((f + (1 + dim * i) * layer) / self.layers) \
-                                        for i, f in enumerate(scaled_floats)) + ints
-            feature = self.get_feature(codeword)
-            features.append(feature)
-        return features
-
-
-class SARSAAgent:
-    def __init__(self, env, layers=8, features=2000, gamma=1.,
-                 learning_rate=0.03, epsilon=0.001):
-        self.action_n = env.action_space.n
-        self.obs_low = env.observation_space.low
-        self.obs_scale = env.observation_space.high - env.observation_space.low
-        self.encoder = TileCoder(layers, features)
-        self.w = np.zeros(features)
-        self.gamma = gamma
-        self.learning_rate = learning_rate
-        self.epsilon = epsilon
-
-    def encode(self, observation, action):
-        states = tuple((observation - self.obs_low) / self.obs_scale)
-        actions = (action,)
-        return self.encoder(states, actions)
-
-    def get_q(self, observation, action):
-        features = self.encode(observation, action)
-        return self.w[features].sum()
-
-    def decide(self, observation):
-        if np.random.rand() < self.epsilon:
-            return np.random.randint(self.action_n)
-        else:
-            qs = [self.get_q(observation, action) for action in range(self.action_n)]
-            return np.argmax(qs)
-
-    def learn(self, observation, action, reward, observation_next, done, action_next=None):
-        u = reward
-        if not done:
-            u += (self.gamma * self.get_q(observation_next, action_next))
-        delta = u - self.get_q(observation, action)
-        features = self.encode(observation, action)
-        self.w[features] += (self.learning_rate * delta)
-
-
-class SARSALambdaAgent(SARSAAgent):
-    def __init__(self, env, layers=8, features=2000, gamma=1.,
-                 learning_rate=0.03, epsilon=0.001, lambd=0.9):
-        super().__init__(env=env, layers=layers, features=features,
-                         gamma=gamma, learning_rate=learning_rate, epsilon=epsilon)
-        self.lambd = lambd
-        self.z = np.zeros(features)
-
-    def learn(self, observation, action, reward, observation_next, done, action_next=None):
-        u = reward
-        if not done:
-            u += (self.gamma * self.get_q(observation_next, action_next))
-            self.z *= (self.gamma * self.lambd)
-            features = self.encode(observation, action)
-            self.z[features] = 1.  # replacement trace
-        delta = u - self.get_q(observation, action)
-        self.w += (self.learning_rate * delta * self.z)
-        if done:
-            self.z = np.zeros_like(self.z)
 
 
 def play_sarsa(env, agent, train=False, render=False, save=False):
@@ -127,8 +30,8 @@ def play_sarsa(env, agent, train=False, render=False, save=False):
             agent.learn(observation, action, reward, observation_next, done, action_next)
         observation, action = observation_next, action_next
 
-    if save == True:
-        with open('./resources/agent.pkl', 'wb') as file:
+    if save is True:
+        with open('sarsa_agent.p', 'wb') as file:
             pickle.dump(agent, file)
 
     return episode_reward
@@ -184,22 +87,59 @@ def plagih_get_behaviour_samples(env, agent, episodes, train=False, render=False
     return plagih_state_actions
 
 
-def create_behaviour_samples_file(seed=0):
+def train_sarsa_agent_pickle(seed=0):
     env = gym.make('MountainCar-v0')
     env.seed(seed)
-    agent = SARSALambdaAgent(env)
 
-    # perform training
-    episodes_training = 75
+    agent = SARSALambdaAgent(env)
+    # steps_done = 0
+    # for training_steps in [75, 200, 1000, 10000]:
+    #     episode_rewards = []
+    #     steps_left = training_steps - steps_done
+    #     for episode in range(steps_left):
+    #         episode_reward = play_sarsa(env, agent, train=True)
+    #         episode_rewards.append(episode_reward)
+    #
+    #     with open(Path('pickle/sarsa_agent_{}.p'.format(str(training_steps))), 'wb') as file:
+    #         pickle.dump(agent, file)
+
     episode_rewards = []
-    for episode in range(episodes_training):
+    for episode in range(75):
         episode_reward = play_sarsa(env, agent, train=True)
         episode_rewards.append(episode_reward)
+    with open(sarsa_file_75, 'wb') as file:
+        pickle.dump(agent, file)
+    print('...saved agent pickle')
 
-    # plt.plot(episode_rewards);
-    # plt.show()
+    for episode in range(125):
+        episode_reward = play_sarsa(env, agent, train=True)
+        episode_rewards.append(episode_reward)
+    with open(sarsa_file_200, 'wb') as file:
+        pickle.dump(agent, file)
+    print('...saved agent pickle')
 
-    print("Working on trained model now, no training, epsilon=0")
+    for episode in range(800):
+        episode_reward = play_sarsa(env, agent, train=True)
+        episode_rewards.append(episode_reward)
+    with open(sarsa_file_1000, 'wb') as file:
+        pickle.dump(agent, file)
+    print('...saved agent pickle')
+
+    for episode in range(9000):
+        episode_reward = play_sarsa(env, agent, train=True)
+        episode_rewards.append(episode_reward)
+    with open(sarsa_file_10000, 'wb') as file:
+        pickle.dump(agent, file)
+    print('...saved agent pickle')
+
+    return
+
+
+def create_samples_dataset(seed=0):
+    env = gym.make('MountainCar-v0')
+    env.seed(seed)
+    with Path.open(sarsa_file_75, 'rb') as file:
+        agent = pickle.load(file)
 
     plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=20, train=False)
     print(sys.getsizeof(plagih_behaviour_samples))
@@ -234,4 +174,4 @@ if __name__ == "__main__":
     # dothis = input('Please press: create (s)amples, run coming later: ')
     # if dothis == 's':
     #     create_behaviour_samples_file()
-    sarsa_start_frommodel()
+    train_sarsa_agent_pickle()

@@ -7,6 +7,8 @@ from plagih.modules.plagih_gp_base_class_xai import *
 from plagih.modules.Examples import *
 from plagih.modules.plagih_data import *
 
+# todo clean up this class... make extra class or folder (!) with all cases to be tested
+
 # import warnings
 # warnings.filterwarnings('error')
 
@@ -27,10 +29,10 @@ def create_config_dict():
         'precision': 3,                 # rounding the fitness
         'float_accuracy': 200,
         'swim': 'p',                    # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-        'print_type': 'gggewwsiivoaa',    # To print_type absolutely all: ewggggsiiiivvvtopppttt
+        'print_type': 'ggewwsiivoaa',    # To print_type absolutely all: ewggggsiiiivvvtopppttt
         'overwrite periodic files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
         'force_new_run': False,         # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
-        'delete_old_file': False,       # todo, delete old files. be very careful
+        'delete_old_file': False,       # sfeh, delete old files. be very careful
         'monitor': {'gen_fitness_average': 'y',
                     'sympify_errors': 'y',
                     'population_tmp_done-size': 'y'
@@ -48,18 +50,18 @@ def create_config_dict():
         'tree_depth_max': 50,           # maximum Tree depth for entire run
         'tree_depth_min': 5,
         'tree_branch_nodes_base': 32,
-        'tourn_size': 7,                # [7 per 100]		number of trees selected for tournament
-        'evolve_rates': {'repro one': 0.05, 'repro pareto': 0.05, 'repro reduced one': 0.05,
+        'tourn_size': 4,                # [7 per 100]		number of trees selected for tournament
+        'evolve_rates': {'repro one': 0.03, 'repro pareto': 0.04, 'repro reduced one': 0.03,
                          'filter floats': 0.05,
-                         'point mutate function': 0.05,
-                         'branch mutate insert': 0.1,
+                         'point mutate function': 0.1,
+                         'branch mutate insert': 0.10,
                          'crossover branches': 0.40,
-                         'random from origin': 0.25, 'random from scratch': 0,
+                         'random from origin_meta': 0.25, 'random from scratch': 0,
                          },
 
         # When to stop the run
         'time_max': int(60 * 60 * 12),  # 60 = 1 min
-        'gen_max': 500,  # Maximum amount of generations
+        'gen_max': 800,  # Maximum amount of generations
     }
 
     return config_dict
@@ -114,20 +116,12 @@ def run_mountaincar_v3(config_dict, path):
     return gp
 
 
-def run_mountaincar_v3_test(config_dict, path):
-    config_dict['name'] = 'MTC_v3_test'  # todo update name
-    config_dict['root_dir'] = path
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.load_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
-    return gp
-
-
 def run_mountaincar_v4(config_dict, path):
     config_dict['name'] = 'MTC_v4_scratch'
     config_dict['root_dir'] = path
     config_dict['kernel_name'] = 'regression bounded'
-    config_dict['evolve_rates']['random from scratch'] += config_dict['evolve_rates']['random from origin']
-    config_dict['evolve_rates']['random from origin'] = 0
+    config_dict['evolve_rates']['random from scratch'] += config_dict['evolve_rates']['random from origin_meta']
+    config_dict['evolve_rates']['random from origin_meta'] = 0
     gp = mountaincar_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=MountainCarExamples.tree_v1_list)
     return gp
@@ -141,7 +135,7 @@ def mountaincar_update_analysis_files(config_dict, path):
 
     config_dict['name'] = 'MTC_v4_scratch'
     gp = mountaincar_load_corefiles(config_dict, path)
-    gp.plagih_update_files()
+    gp.plagih_update_analysis()
     return
 
 
@@ -170,5 +164,5 @@ def run(root_dir):
     # create_samples_pickle(root_dir)  # todo outsource
     # analyse_old_run(root_dir)
     config_dict = create_config_dict()
-    gp = run_mountaincar_v2(config_dict, root_dir)
+    gp = run_mountaincar_v4(config_dict, root_dir)
     gp.plagih_gp_run()

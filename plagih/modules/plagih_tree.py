@@ -197,7 +197,7 @@ def tree_set_id(tree, tree_id):
     return tree
 
 
-def tree_set_history(tree, last_modification):
+def tree_set_last_evolution(tree, last_modification):
     tree[TR_type][1] = last_modification
     return tree
 
@@ -251,23 +251,6 @@ def tree_set_modifyable_nodes_true(tree, karoo=True):
 
     for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         tree[N_modify][node_id] = 1
-    return tree
-
-
-def tree_set_modifyable_nodes(tree, origin_tree):
-    """
-    Sets all the origin_meta core nodes back to non-modifyable
-    """
-
-    tree = tree_set_modifyable_nodes_true(tree)
-
-    non_modifiable_nodes = []
-    if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
-        non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
-
-    for non_modifiable in non_modifiable_nodes:
-        tree = tree_node_set_modify(tree, non_modifiable, 0)
-
     return tree
 
 
@@ -510,6 +493,24 @@ def tree_node_debug_print(tree, node_id):
     return debug_print
 
 
+def tree_set_modifyable_nodes(tree, origin_tree=None):
+    """
+    Sets all the origin_meta core nodes back to non-modifyable
+    """
+
+    tree = tree_set_modifyable_nodes_true(tree)
+
+    if origin_tree is not None:  # todo loop is unneccessary if there are no set fix nodes
+        non_modifiable_nodes = []
+        if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
+            non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
+
+        for non_modifiable in non_modifiable_nodes:
+            tree = tree_node_set_modify(tree, non_modifiable, 0)
+
+    return tree
+
+
 def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree):
     """
     Returns a list of nodes that are not supposed to be modified
@@ -520,8 +521,6 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
         permanent_nodes = [chosen_node]
         for c in [N_c1, N_c2, N_c3]:
             if origin_tree[c][origin_node] != '':  # aka a child exists
-                # print('Chosen Tree', tree_node_debug_print(chosen_tree, chosen_node))
-                # print('Origin Tree', tree_node_debug_print(origin_tree, origin_node))
                 next_origin_node = int(origin_tree[c][origin_node])
                 next_chosen_node = int(chosen_tree[c][chosen_node])
                 tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
@@ -710,7 +709,7 @@ def randomly_split_range(range_max, num_splits):
     return sample_dist
 
 
-def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
+def tree_evolve_branch_multiple(tree, goal_nodes, variables_dict, func_array):
     """
     insert a (random) number of branches at the first possible "layer"
     (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
@@ -722,19 +721,19 @@ def tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array):
     tree_base = tree.copy()
     layer0_ids = tree_get_mutatable_layer(tree, 0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
     del_amount = 0
-    nodes_left = max_nodes - (tree_get_size(tree, karoo=True) - del_amount)  # ('Which lets us replace {} amount of old nodes'.format(nodes_left))
+    nodes_left = goal_nodes - (tree_get_size(tree, karoo=True) - del_amount)  # ('Which lets us replace {} amount of old nodes'.format(nodes_left))
     num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
 
     for i in range(len(layer0_ids)):  # finally, insert branches. need to get layer every time as node ids might have changed.
         layer0_ids = tree_get_mutatable_layer_lv0(tree)
         node_id = layer0_ids[i]
         old_branch = tree_get_branch(tree, node_id, karoo=True)
-        tree = tree_evolve_insert_branch_v2(tree_base, old_branch, variables_dict, func_array, max_nodes=num_nodes_split[i])  # tree with new branch
+        tree = tree_evolve_insert_branch_v2(tree_base, old_branch, variables_dict, func_array, goal_nodes=num_nodes_split[i])  # tree with new branch
 
     return tree
 
 
-def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, max_nodes):
+def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, goal_nodes):
     """
     replaces the branch_ids in a tree with a new branch
 
@@ -749,7 +748,7 @@ def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, m
     old_label = tree_node_get_label(tree, branch_ids[0])
     old_xtype = xtype_get(old_label, variables_dict)
 
-    label_list, arity_list = invent_label_list_nodes_grow(old_xtype, max_nodes, variables_dict, func_array, build_type='grow')
+    label_list, arity_list = invent_label_list_nodes_grow(old_xtype, goal_nodes, variables_dict, func_array, build_type='grow')
 
     if label_list:
         core_insert = core_from_labels(label_list, arity_list)
@@ -758,7 +757,7 @@ def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, m
     return tree
 
 
-def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, build_type='grow'):
+def invent_label_list_nodes_grow(xtype, goal_nodes, variables_dict, func_array, build_type='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -796,8 +795,8 @@ def invent_label_list_nodes_grow(xtype, max_nodes, variables_dict, func_array, b
             xtype = tbdo_xtypes[index]
 
             label, arity = xtype_choose_func(func_array, xtype=xtype)
-            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), max_nodes)
-            if max_nodes > (len(result_label_list) + tbd_node_amount) + arity + 1:  # +1 = the start node which we must not forget
+            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), goal_nodes)
+            if goal_nodes > (len(result_label_list) + tbd_node_amount) + arity + 1:  # +1 = the start node which we must not forget
                 tmp_label_list[index] = label
                 tmp_arity_list[index] = arity
                 tbd_node_amount += arity - 1
@@ -921,6 +920,14 @@ def tree_get_ident(tree):
     expr_raw = tree_get_expr_raw(tree, node_id=root_id)
     tree_ident = hash(expr_raw)
     return tree_ident
+
+
+def tree_get_last_evolution(tree):
+    """
+    return a tree's last genetic modification
+    """
+    last_modi = tree[TR_type][1]
+    return last_modi
 
 
 def tree_get_parsimony(tree):
@@ -1778,19 +1785,23 @@ def tree_evolve_reduce(tree, completely=True):
     Reducing a tree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)
     """
-    if completely:  # reduce the complete tree
-        nodes_lv0 = tree_get_mutatable_layer(tree, 0)
-        for i in range(len(nodes_lv0)):
+    try:
+        if completely:  # reduce the complete tree
             nodes_lv0 = tree_get_mutatable_layer(tree, 0)
-            node_id = nodes_lv0[i]
-            tree = treegp_reduce_branch(tree, node_id, karoo=True)
-    else:  # only choose one node to be reduced
-        node_ids = tree_get_mutatable_nodes(tree)
-        func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
-        if len(func_ids) > 0:
-            node_id = np.random.choice(node_ids)
-            tree = treegp_reduce_branch(tree, node_id, karoo=True)
-    return tree
+            for i in range(len(nodes_lv0)):
+                nodes_lv0 = tree_get_mutatable_layer(tree, 0)
+                node_id = nodes_lv0[i]
+                tree = treegp_reduce_branch(tree, node_id, karoo=True)
+        else:  # only choose one node to be reduced
+            node_ids = tree_get_mutatable_nodes(tree)
+            func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
+            if len(func_ids) > 0:
+                node_id = np.random.choice(node_ids)
+                tree = treegp_reduce_branch(tree, node_id, karoo=True)
+        return tree
+    except Exception as ex:
+        print_warning('ww', 'Could not reduce tree/branch due to Exception: {}'.format(ex))
+        return
 
 
 def labels_get_aritys_list(label_list, karoo=False):
@@ -2094,8 +2105,8 @@ def tree_set_meta_wipe(tree):
     What should not be deleted?
     - modifiable nodes
     """
-    tree = tree_set_fitness(tree, '')
-    tree = tree_set_parsimony(tree, '')
+    # tree = tree_set_fitness(tree, '')  # todo just randomly kick this out aswell
+    # tree = tree_set_parsimony(tree, '')  # todo if we wipe this, parsimony can not be checked anymore
     # tree = tree_set_id(tree, 'tourn win')
     return tree
 
@@ -2115,7 +2126,7 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
         if weights is None:
             return distance
         else:
-            pass
+            raise
             # TODO weights
     elif parsimony_distance == 'rel_ari_1':  # Does this work?
         return tree_parsimony_relari(tree, origin_tree)
@@ -2210,3 +2221,17 @@ def tree_viz_get_tex_forest(tree):
     forest_viz = latex_wrap_forest(bracket_tree)
 
     return forest_viz
+
+
+def tree_remove_minus_workaround(tree):
+    """
+    The ~ operator should be removed and replaced with a
+    """
+
+
+def tree_group_branch_expressions(tree):
+    """
+    E.g. combine a mathematical expression
+    - from leaf to root: give info whether you are a inline math-op
+    """
+

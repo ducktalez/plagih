@@ -2,12 +2,12 @@ import csv
 
 import numpy as np
 
-from mountaincar.agents.agents import *
+from benchmarks.gym_mountaincar.agents.agent_groups import *
 
 np.random.seed(0)
 import gym
 import sys
-from pathlib import Path, PurePath
+from pathlib import Path
 
 import pickle
 
@@ -146,7 +146,7 @@ def create_samples_dataset(seed=0):
     print('Amount of samples: ' + str(len(plagih_behaviour_samples)))
     env.close()
 
-    # samples_file = Path('../karoo_files/behaviour_samples.p')
+    # samples_file = Path('../gp_files/behaviour_samples.p')
     # with open(samples_file, "wb") as fp:  # Pickling
     #     pickle.dump(plagih_behaviour_samples, fp)
 
@@ -160,7 +160,7 @@ def create_samples_dataset(seed=0):
         samples_csv_ready.append(row[:])
     print(samples_csv_ready)
 
-    file_csv = Path('../karoo_files/behaviour_samples.csv')
+    file_csv = Path('../gp_files/behaviour_samples.csv')
     with open(file_csv, 'w+', newline='') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(samples_csv_ready)

@@ -4,10 +4,9 @@ from pathlib import Path
 
 class MountainCarExamples:
     files = {
-        'samples_file': '../mountaincar/karoo_files/data_samples/behaviour_samples.csv',
-        'samples_pickle': '../mountaincar/karoo_files/data_samples/plagih_data_prepared.p',
-        'operators_file': '../mountaincar/karoo_files/operators/operators.csv',
-        'backup_pop': 'runs/Best_of/old_v1/population_tmp_done.csv'}
+        'samples_file': '../benchmarks/gym_mountaincar/gp_files/data_samples/behaviour_samples.csv',
+        'samples_pickle': '../benchmarks/gym_mountaincar/gp_files/data_samples/plagih_data_prepared.p',
+        'operators_file': '../benchmarks/gym_mountaincar/gp_files/operators/operators.csv'}
 
     tree_v1_list = ['Ifte', '<', '0.0', '2.0', 'observation1', '0.0']
     tree_v1_modify = [0, 1, 0, 0, 1, 1]
@@ -43,4 +42,16 @@ class MountainCarExamples:
                     'bl': tf.constant(True, dtype=tf.bool)}
 
     expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, observation0) > -0.97, 0.0, 2.0)'
+
+
+class CartpoleExamples:
+
+    files = {
+        'samples_file': '../benchmarks/gym_cartpole/gp_files/behaviour_samples.csv',
+        'samples_pickle': '../benchmarks/gym_cartpole/gp_files/prepared_samples.p',
+        'operators_file': '../benchmarks/gym_cartpole/gp_files/operators.csv'}
+
+    label_list = ['Ifte', 'True', 0, 1]
+    modify_list = [0, 1, 0, 0]
+
 

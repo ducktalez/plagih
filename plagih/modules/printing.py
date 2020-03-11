@@ -52,7 +52,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         if message_type not in print_type:
             return
 
-    message_pretxt = BColors.RESET  # default color
+    message_pretxt = BColors.RESET
     message_posttxt = BColors.RESET
     if 'i' in message_type:
         message_style = BColors.CYAN
@@ -60,23 +60,23 @@ def printez(message_type, text, print_type=None, time_total=0.0):
     elif 'e' in message_type:
         message_style = BColors.RED
         message_pretxt = 'ERROR: '
-    elif 'w' in message_type:  # warning
+    elif 'w' in message_type:
         message_style = BColors.WARNING
-        message_pretxt = 'Warning: '  # Warning-yellow
+        message_pretxt = 'Warning: '
     elif 'g' in message_type:
         message_style = BColors.BLUE
-        message_pretxt = '{:5.1f}: '.format(time_total)  # green
-    elif 'v' in message_type:  # verbose
-        message_style = BColors.WHITE  # white
+        message_pretxt = '{:5.0f}: '.format(time_total)
+    elif 'v' in message_type:
+        message_style = BColors.WHITE
         message_pretxt = 'Verbose: '
-    elif 'p' in message_type:  # pause
+    elif 'p' in message_type:
         message_style = BColors.YELLOW
-        message_pretxt = 'Pause(TO-DO): '  # Yellow
+        message_pretxt = 'Pause(TO-DO): '
         pause = True
-    elif 'f' in message_type:  # function
-        message_style = BColors.MAGENTA  # Magenta
+    elif 'f' in message_type:
+        message_style = BColors.MAGENTA
         message_pretxt = 'Func: '
-    elif 'a' in message_type:  # Timer
+    elif 'a' in message_type:
         message_style = BColors.GREEN
         message_pretxt = ''
     else:

@@ -275,7 +275,7 @@ def test_tree_set_modifyable_nodes():
     print('a origin_meta', origin[N_modify])
     tree_new = tree_evolve_branch_multiple(origin.copy(), 25, variables_dict, func_array)
     print('b origin_meta', origin[N_modify])
-    tree_new = tree_set_modifyable_nodes(tree_new, origin)
+    tree_new = tree_set_modifyable_nodes(tree_new, origin_tree=origin)
     print('c origin_meta', origin)
     print(tree_new)
 
@@ -283,7 +283,7 @@ def test_tree_set_modifyable_nodes():
 def test_tree_reduce_parts():
     tree1, tree2, tree_plus = get_three_sample_trees()
     tree = tree_evolve_reduce(tree_plus)
-    tree = tree_set_modifyable_nodes(tree, tree_plus)
+    tree = tree_set_modifyable_nodes(tree, origin_tree=tree_plus)
     print('First try', tree_check_reproduce_loop(tree))
 
     label_list = ['+', '-', '~', '1', '2', '3']
@@ -302,9 +302,18 @@ def test_tree_reduce_parts():
 
 
 def test_tree_parsimony_ted():
-    tree1, tree2, tree3 = get_three_sample_trees()
-    distance, mapping = tree_parsimony_ted(tree1, tree3)
+    tree1 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 4])
+    tree2 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 3])
+    distance, mapping = tree_parsimony_ted(tree1, tree2)
     print('dist:', distance)
     print('mapping', mapping)
+    dist2 = tree_eval_parsimony(tree1, 'ted', origin_tree=tree2)
+    print('dist 2:', dist2)
+
+    tree1 = karoo_tree_from_labellist(['Ifte', 'True', 0, 1])
+    tree2 = karoo_tree_from_labellist(['Ifte', 'False', 0, 1])
+    dist2 = tree_eval_parsimony(tree1, 'ted', origin_tree=tree2)
+    print('dist 3:', dist2)
+
 
 test_tree_parsimony_ted()

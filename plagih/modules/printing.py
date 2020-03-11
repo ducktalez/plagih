@@ -65,7 +65,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = 'Warning: '
     elif 'g' in message_type:
         message_style = BColors.BLUE
-        message_pretxt = '{:5f}: '.format(time_total)
+        message_pretxt = '{:5.0f}: '.format(time_total)
     elif 'v' in message_type:
         message_style = BColors.WHITE
         message_pretxt = 'Verbose: '

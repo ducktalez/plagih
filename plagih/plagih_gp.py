@@ -8,6 +8,7 @@ from plagih.modules.Examples import *
 from plagih.modules.plagih_data import *
 
 # todo clean up this class... make extra class or folder (!) with all cases to be tested
+# todo idee: nach generationen alle mit einem gen sterben lassen! epidemie!
 
 # import warnings
 # warnings.filterwarnings('error')

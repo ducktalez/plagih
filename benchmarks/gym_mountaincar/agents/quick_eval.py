@@ -104,15 +104,18 @@ with Path.open(Path(sarsa_file_10000), 'rb') as file:
     sarsa_agent_10000 = pickle.load(file)
     print('Loaded sarsa 10000')
 
-all_agents = {'v1_simple__': SimpleAgent(),
+all_agents = {'v1_simple': SimpleAgent(),
               'v1_improved': PlagihAgent_A(),
-              'xiao_base__': FixAgent(),
-              'xiao_short_': TestFixNoLowerbound(),
-              'sarsa_75___': sarsa_agent_75,
-              'sarsa_200__': sarsa_agent_200,
-              'sarsa_1000_': sarsa_agent_1000,
+              'xiao_base': FixAgent(),
+              'xiao_short': TestFixNoLowerbound(),
+              'sarsa_75': sarsa_agent_75,
+              'sarsa_200': sarsa_agent_200,
+              'sarsa_1000': sarsa_agent_1000,
               'sarsa_10000': sarsa_agent_10000,
-              'test_tmp': TestTmp()}
+              'test_tmp': TestTmp(),
+              'AgentV1p40': AgentV1p40()}
 
-compare_simple(all_agents)
-# plot_simple(all_agents)
+eval_agents = {'AgentV1p40': all_agents['AgentV1p40']}  # all_agents['v1_simple'], all_agents['AgentV1p40']]
+
+compare_simple(eval_agents)
+# plot_simple(eval_agents)

@@ -1,10 +1,34 @@
 import numpy as np
-
+import math
 
 sarsa_file_75 = 'sarsa_agent_75.p'
 sarsa_file_200 = 'sarsa_agent_200.p'
 sarsa_file_1000 = 'sarsa_agent_1000.p'
 sarsa_file_10000 = 'sarsa_agent_10000.p'
+
+
+def safe_division(n, d):
+    return n / d if d else 0
+# todo idee: statt fitness prozentuale Verbesserung?
+
+
+class AgentV1p40:
+
+    def decide(self, observation):
+        observation0, observation1 = observation
+        if safe_division(1.945, observation1) < -observation1:
+            sum1 = -observation1
+        else:
+            sum1 = math.sin(observation0 - 0.325)
+        if safe_division((-observation1 + math.sin(observation0 + 0.325)), observation1) < -observation0 * observation1 + 1.945:
+            sum2 = 0.265
+        else:
+            sum2 = math.sin(observation0 - 0.295)
+
+        if safe_division((0.975 + sum1 + sum2), observation1) < observation0:
+            return 0
+        else:
+            return 2
 
 
 class PlagihAgent_A:

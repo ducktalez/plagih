@@ -14,7 +14,10 @@ from plagih.modules.plagih_data import *
 # warnings.filterwarnings('error')
 
 
-def create_config_dict():
+def create_config_dict_default():
+    """
+    This returns the default config dict
+    """
     config_dict = {
         'root_dir': Path.cwd(),
         'name': 'Plagih_name_dummy',  # please set a name
@@ -54,21 +57,38 @@ def create_config_dict():
         'tree from scratch: min_nodes': 3,
         'tree from scratch: max_nodes': 50,
         'tree branch: base nodes': 20,
-        'tourn_size': 4,                # [7 per 100]		number of trees selected for tournament
-        'evolve_rates': {'repro one': 0.03, 'repro pareto': 0.04, 'repro reduced one': 0.03,
+        'tourn_size': 4,                    # [7 per 100] number of trees selected for tournament
+        'evolve_rates': {'repro one': 0.03,
+                         'repro pareto': 0.04,
+                         'repro reduced one': 0.03,
                          'filter floats': 0.05,
                          'point mutate function': 0.1,
                          'branch mutate insert': 0.10,
                          'crossover branches': 0.40,
-                         'random from origin_meta': 0.25, 'random from scratch': 0,
+                         'random from origin_meta': 0.15,
+                         'random from scratch': 0.15,
                          },
 
         # When to stop the run
-        'time_max': int(60 * 60 * 12),  # 60 = 1 min
+        'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
         'gen_max': 800,  # Maximum amount of generations
     }
 
     return config_dict
+
+
+def config_update_from_csv(config_path):
+
+    config = create_config_dict_default()
+
+    with Path.open(config_path) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            if len(row) == 3:
+                if not (row[0] == 'evolve_rates' or row[0] == 'monitor' or row[0] == 'period'):
+                    print('The config-csv could not be interpreted')
+
+                config[row[1]] = row[2]
 
 
 def create_samples_pickle_prepared(path, behaviour_samples_file, pickle_file='prepared_samples.p'):
@@ -135,7 +155,7 @@ def run_mountaincar_v4(config_dict, path):
 
 
 def analyse_old_run(root_dir):
-    config_dict = create_config_dict()
+    config_dict = create_config_dict_default()
     mountaincar_update_analysis_files(config_dict, root_dir)
 
 
@@ -188,14 +208,11 @@ def run_cartpole_v1_scratch(config_dict, path):
 def run_cartpole_test(config_dict, path):
     config_dict['name'] = 'cartpole_test'
     config_dict['root_dir'] = path
-    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt'    # To print_type absolutely all: ewaaaiiiiggggvvvpppttt
+    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt'
     config_dict['parsimony_max'] = 150
     gp = cartpole_load_corefiles(config_dict, path)
     gp.load_origin_tree(label_list=CartpoleExamples.label_list, modify_list=CartpoleExamples.modify_list)
     return gp
-
-
-# todo idea: force building smaller trees? give optimal size?
 
 
 def run(root_dir):
@@ -203,6 +220,7 @@ def run(root_dir):
 
     # analyse_old_run(root_dir)
 
-    config_dict = create_config_dict()
-    gp = run_mountaincar_v2(config_dict, root_dir)
+    config_dict = create_config_dict_default()
+    gp = run_cartpole_v1_scratch(config_dict, root_dir)
     gp.plagih_gp_run()
+    sys.exit()

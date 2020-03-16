@@ -1281,7 +1281,7 @@ def tree_raw_depth_prefix(tree, node_id):
     node_id = int(node_id)
 
     if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-        return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
+        return '{' + tree[N_label, node_id] + '}'  # '{{{}}}'
 
     elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
         return '{' + tree[N_label, node_id] + tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'

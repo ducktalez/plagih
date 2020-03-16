@@ -21,7 +21,7 @@ folder_pop_analysis = 'pop_dist/'
 
 file_pareto = 'pareto.txt'
 complete_file_pareto = 'pareto.txt'
-file_config = 'config.txt'
+file_config = 'config.csv'
 file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
@@ -42,7 +42,7 @@ def get_path(gen_id='tmp'):
     """
     ! Only used for population plots right now
     Returns the path where a file is located
-    get_path('config') -> *root_dir*/info/config.txt
+    get_path('config') -> *root_dir*/info/config.csv
     """
     path = 'plots/pop_dist/fitness_{}.jpg'
 

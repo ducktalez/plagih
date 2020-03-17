@@ -196,10 +196,9 @@ class ExplainableGP(object):
         # file = Path.open(path_config / file_config, 'w+')
         #
         # with open(filename, 'w') as f:
-        #     json.dump(self.config, f)
+        #     json.dump(self.config, f, indent = 4)
 
         return
-
 
     def gen_create_first(self):
         """
@@ -1071,7 +1070,7 @@ class ExplainableGP(object):
         if tree is None:
             print_warning('ww', 'Tree from last_evolution: {} failed. probably sympify. Continuing.'.format(last_evolution))
         else:
-            print('meff', tree)
+            # print('meff', tree)
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
 
             tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
@@ -1087,6 +1086,9 @@ class ExplainableGP(object):
         # sfeh do not use this if trees are safely generated
         # sfeh check meta values in separate method? update those aswell?
         """
+
+        if tree is None:
+            return False
 
         if not tree_check_children(tree):
             print_e('Tree is not consistent:\n{}'.format(tree))

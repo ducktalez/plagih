@@ -127,7 +127,7 @@ def file_population_karoo(population, pop_name, path, gen_id):
     pop_path = make_dir(path / folder_info)
 
     file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
-
+    print('WHERE', file_path)
     # todo function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')

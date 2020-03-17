@@ -4,6 +4,7 @@ This extra file was added to make the program start from command line. (Path pro
 """
 from pathlib import Path
 from plagih import plagih_gp
+from plagih.modules.file_interaction import folder_runs
 import sys
 import argparse
 
@@ -12,7 +13,7 @@ sys.path.append('plagih/')
 sys.path.append('plagih/modules')
 sys.path.append('mountaincar/')
 
-root_dir = Path.cwd() / 'plagih'
+root_dir = Path.cwd() / folder_runs / 'example1_cartpole/'  # / 'plagih'
 
 
 if __name__ == "__main__":

@@ -334,7 +334,7 @@ samples_csv_ready = [['observation0:float', 'observation1:float', 'observation2:
 for row in observation_samples:
     samples_csv_ready.append([row[0][0], row[0][1], row[0][2], row[0][3], row[1]])
 
-file_csv = Path('behaviour_samples.csv')
+file_csv = Path('samples.csv')
 with open(file_csv, 'w+', newline='') as csvFile:
     writer = csv.writer(csvFile)
     writer.writerows(samples_csv_ready)

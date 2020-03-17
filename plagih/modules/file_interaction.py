@@ -1,10 +1,7 @@
-from pathlib import Path
 import pickle
-from plagih.modules.dicts import *
 from plagih.modules.plagih_tree import *
 from plagih.modules.printing import *
 import csv
-import matplotlib.pyplot as plt
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 import sklearn.model_selection as skcv
 import numpy as np
@@ -24,6 +21,16 @@ complete_file_pareto = 'pareto.txt'
 file_config = 'config.csv'
 file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
+
+run_files = 'run_files'
+config_json = 'config.json'
+samples_ready = 'samples_ready.p'
+samples_csv = 'samples.csv'
+operators = 'operators.csv'
+tree_expr_txt = 'tree_expr.txt'
+tree_labels_csv = 'tree_labels.csv'
+tree_numpy_csv = 'tree_labels.csv'
+
 
 T_num_lines = 15  # todo this var is not found otherwise
 
@@ -54,7 +61,6 @@ def data_load_pickle(prepared_data_pickle_path):
     with Path.open(prepared_data_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
 
-    # self.printplg('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
     return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 

@@ -31,12 +31,12 @@ class ExplainableGP(object):
 
     def __init__(self, root_dir, config=None):
 
-        self.name = root_dir.parent
-        print('\n\tInitializing Plagih. Name: {}{}{}.\n'.format(BColors.CYAN, root_dir, BColors.RESET))
+        self.name = root_dir.name
+        print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET, root_dir))
         self.time_start = time.perf_counter()
         self.restart_vers = 'v0.8'
 
-        self.root_dir = make_dir(Path.cwd() / folder_runs / '{}'.format(root_dir.parent.name))
+        self.root_dir = root_dir
         print(self.root_dir)
 
         self.config = {
@@ -874,6 +874,10 @@ class ExplainableGP(object):
         """
         sfeh
         """
+        if self.origin_exists():
+            if not tree_node_get_modify(self.origin_tree, root_id) == node_is_modifiable:
+                print_warning('w', 'You can not create new trees from scratch when origin has fix nodes!')
+                return
 
         for i in range(repro_rate):
             goal_nodes = np.random.randint(self.config['tree from scratch: min_nodes'], 1 + self.config['tree from scratch: max_nodes'])

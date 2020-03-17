@@ -1770,7 +1770,6 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
 
         return tree_sympified
     except Exception as ex:
-        print_warning('w', 'reducing expr raw: {}\n{}'.format(expr_raw, tree))
         raise Exception('Reducing branch failed! Ex: {}'.format(ex))
 
 

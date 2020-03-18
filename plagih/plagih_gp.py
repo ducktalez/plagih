@@ -96,7 +96,7 @@ def mountaincar_update_analysis_files(config_dict, path):
 
 def run_mountaincar_test(config_dict, path):
     config_dict['name'] = 'MTC_test'
-    # test_run = Path.cwd() / folder_runs / config_dict['name']
+    # test_run = Path.cwd() / example_runs / config_dict['name']
     # print('Test dir is:', test_run)
     config_dict['root_dir'] = path
     config_dict['pop_max'] = 100
@@ -198,6 +198,6 @@ def run(root_dir):
 
 
 if __name__ == "__main__":
-    runs_dir = Path.cwd() / '../{}'.format(folder_runs)
-    root_dir = runs_dir / 'example1_cartpole/'
+    runs_dir = Path.cwd() / '../{}'.format(example_runs)
+    root_dir = runs_dir / 'cartpole_v1/'
     run(root_dir)

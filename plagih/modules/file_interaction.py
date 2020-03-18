@@ -7,7 +7,7 @@ import sklearn.model_selection as skcv
 import numpy as np
 
 
-folder_runs = 'runs/'
+example_runs = 'example_runs/'
 
 folder_save = 'save/'
 folder_plots = 'plots/'

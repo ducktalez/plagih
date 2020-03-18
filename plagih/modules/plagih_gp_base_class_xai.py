@@ -296,7 +296,7 @@ class ExplainableGP(object):
 
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
-                self.print_g('ggg', '-->Evolve ({}) \t{}x \ttook: {:4.2f}s.'.format(name, repro_rate, time.perf_counter() - time_evolve))
+                self.print_g('ggg', '-->Evolve ({}) {}x. Took: {:4.2f}s.'.format(name, repro_rate, time.perf_counter() - time_evolve))
             # ######################################
 
             self.gen_finalize()

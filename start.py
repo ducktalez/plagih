@@ -30,7 +30,7 @@ def main(argv):
             print('start_run.py -i <input FOLDER>')
             sys.exit(2)
         elif opt in ("-i", "--ifile"):
-            run_folder = arg
+            run_folder = Path(arg)
         elif opt in ("-o", "--ofile"):
             outputfile = arg
             print('Your input -o {} is not used'.format(outputfile))

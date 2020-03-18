@@ -110,44 +110,6 @@ def run_mountaincar_test(config_dict, path):
     return gp
 
 
-def run_cartpole_v1(config_dict, path):
-    config_dict['name'] = 'cartpole_v1'
-    config_dict['root_dir'] = path
-    config_dict['parsimony_max'] = 150
-    gp = cartpole_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=CartpoleExamples.label_list, modify_list=CartpoleExamples.modify_list)
-    return gp
-
-
-def run_cartpole_v1_scratch(config_dict, path):
-    config_dict['name'] = 'cartpole_v1_scratch'
-    config_dict['root_dir'] = path
-    config_dict['parsimony_max'] = 150
-    gp = cartpole_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=CartpoleExamples.label_list, modify_list=CartpoleExamples.modify_list)
-    return gp
-
-
-
-
-
-
-
-
-
-def run_cartpole_example(path):
-    print('path 1', path)
-    print('path 2', Path.cwd())
-    sys.exit()
-    config_dict['name'] = 'example1_cartpole'
-    config_dict['root_dir'] = path
-    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt'
-    config_dict['parsimony_max'] = 150
-    gp = cartpole_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=CartpoleExamples.label_list, modify_list=CartpoleExamples.modify_list)
-    return gp
-
-
 def plagih_config_update_from_json(config_json='config.json'):
     """
     The config gets updated

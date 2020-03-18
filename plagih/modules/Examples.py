@@ -1,6 +1,8 @@
 import tensorflow as tf
 from pathlib import Path
 
+# todo: this file seems outdated, as runs are started within a folder now.
+
 
 class MountainCarExamples:
     files = {

@@ -1,6 +1,7 @@
-# PLAGIH Genetic Programming (Name is still needed)
+# PLAGIH Genetic Programming (Name will change (soon?))
 
-Genetic programming framework.
+...is a genetic programming framework.
+
 Its main goal is to improve a human written program without making too many changes.
 
 *Please note that a lot of stuff is about to change in the future (last update 18.03.2020)*
@@ -10,7 +11,7 @@ Its main goal is to improve a human written program without making too many chan
 ### Example run
 Run `start.py`
  
-This will automatically start the run in `runs/example1_cartpole/`.
+This will automatically start the run in `/runs/example1_cartpole/`.
 
 ### Starting your own run
 
@@ -43,6 +44,12 @@ The .csv must (currently) have a header line that looks like this example:
 - One action, called `action0`
 - types (`float`, `bool`) are separated with `:`
 
+In the initial run, the entries are split in train- and test-data.
+Also, the structure of the entries are analysed for the gp-process.
+
+The result is then saved as `samples_ready.p`.
+If this file exists, it is loaded instead of the .csv file.
+
 ### How to: operators.csv
 
 This file contains all possible operators (one per line).
@@ -61,7 +68,7 @@ Possible operators are:
 ### How to: tree_labels.csv
 
 (More convenient way coming soon)
-1. Write a computer program to solve the problem. (At least a logical structure)
+1. Write a computer program to solve the problem. (At least, provide a logical structure)
 2. Display it as computational tree (functions: see below or in `op`-array in `plagih/modules/dicts`)
 3. Breadth-first search the tree, align the labels as list. Types must match.
 
@@ -70,21 +77,24 @@ Possible operators are:
 Code:
 ```
 if (observation0 < 0):
-    return 0
+    return 1
 else:
     return 2
 ```
 `tree_labels.csv`:
 ```
-label_list,Ifte, <, 0, 2, observation0, 0
+label_list,Ifte, <, 1, 2, observation0, 0
 ```
 
-`tree_labels.csv` (with `if`,`return 0`,`return 2` as fix nodes):
+`tree_labels.csv` (with `if`,`return 1`,`return 2` as fix nodes):
 ```
-label_list,Ifte, <, 0, 2, observation0, 0
+label_list,Ifte, <, 1, 2, observation0, 0
 modify_list,0,1,0,0,1,1
 ```
 
+...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
+
+## ====Everything below here is garbage====
 
 ## ideas for names
 - The Elves and the Shoemaker

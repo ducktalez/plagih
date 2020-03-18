@@ -7,7 +7,7 @@ import sklearn.model_selection as skcv
 import numpy as np
 
 
-example_runs = 'example_runs/'
+example_runs = 'run_examples/'
 
 folder_save = 'save/'
 folder_plots = 'plots/'
@@ -29,7 +29,7 @@ samples_csv = 'samples.csv'
 operators = 'operators.csv'
 tree_expr_txt = 'tree_expr.txt'
 tree_labels_csv = 'tree_labels.csv'
-tree_numpy_csv = 'tree_labels.csv'
+tree_numpy_csv = 'tree_numpy.csv'
 
 
 T_num_lines = 15  # todo this var is not found otherwise

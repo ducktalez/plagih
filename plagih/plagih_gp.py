@@ -137,8 +137,6 @@ def run(root_dir):
     tree_labels_csv_path = run_files_path / tree_labels_csv
     tree_numpy_csv_path = run_files_path / tree_numpy_csv
 
-    print('Run is located in folder: {}'.format(run_files_path))
-
     if not Path.is_dir(run_files_path):
         raise FileNotFoundError('Folder does not exist: {}.'.format(run_files_path))
 

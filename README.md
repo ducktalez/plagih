@@ -20,7 +20,7 @@ This will automatically start the run in `/runs/example1_cartpole/`.
 
 ### Run folder structure
 
-The input parameter must be a folder with the following structure:
+The input parameter must be a folder with the following content:
 - `/run_files/operators.csv`: Set of mathematical operators to build programs with
 - `/run_files/samples.csv`: Target-data with states + actions. (Caution, weird syntax)
 - `/run_files/tree_labels.csv`: Self-written program (as label-list)
@@ -94,7 +94,15 @@ modify_list,0,1,0,0,1,1
 
 ...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
 
-## ====Everything below here is garbage====
+### How I analyse results:
+- `plots/average-fitness.jpg` - to see if there was an improvement
+- `plots/best_candidate.jpg` - for the current best solution
+- `plots/pareto.jpg` - showing the best candidates related to the complexity. Find your prefered combination of performance and complexity
+- `info/pareto.txt` - pareto-efficient candidates in math-expression
+- `trees/#all_trees.tex` - A Latex file with all computational trees visualized
+
+
+## ====Everything from here is garbage====
 
 ## ideas for names
 - The Elves and the Shoemaker

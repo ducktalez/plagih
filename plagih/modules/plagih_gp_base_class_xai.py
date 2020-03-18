@@ -42,6 +42,7 @@ class ExplainableGP(object):
         self.config = {
             'root_dir': Path.cwd() / '../../runs/',  # TODO
             'mode': 'run',  # ['run', 'analyze']
+            'description': 'No description set',
 
             # (!) Relevant for result
             'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
@@ -54,7 +55,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 200,
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-            'print_type': 'gggewwsiivoaa',  # To print_type absolutely all: ewggggsiiiivvvtopppttt
+            'print_type': 'gggwwsivoaa',  # To print_type absolutely all: wggggsiiiivvvtopppttt
             'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,  # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
             'delete_old_file': False,  # sfeh, delete old gp_files. be very careful
@@ -68,16 +69,6 @@ class ExplainableGP(object):
                        'gen_save': 1},  # in gen counts
 
             # GP-evolve specific parameters
-            'crossover_type_safety_mode': 'replace_same_types',
-            'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
-            'tree_growth': 'node-based',  # node-based, depth-based
-            'tree_depth_base': 7,  # [3..10]
-            'tree_depth_max': 25,  # maximum Tree depth for entire run
-            'tree_depth_min': 5,
-            'tree from scratch: min_nodes': 3,
-            'tree from scratch: max_nodes': 50,
-            'tree branch: base nodes': 20,
-            'tourn_size': 4,  # [7 per 100] number of trees selected for tournament
             'evolve_rates': {'repro one': 0.03,
                              'repro pareto': 0.04,
                              'repro reduced one': 0.03,
@@ -88,11 +79,23 @@ class ExplainableGP(object):
                              'random from origin_tree': 0.15,
                              'random from scratch': 0.15,
                              },
+            'crossover_type_safety_mode': 'replace_same_types',
+            'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
+            'tree_growth': 'node-based',  # node-based, depth-based
+            'tree_depth_base': 7,  # [3..10]
+            'tree_depth_max': 25,  # maximum Tree depth for entire run
+            'tree_depth_min': 5,
+            'tree from scratch: min_nodes': 3,
+            'tree from scratch: max_nodes': 50,
+            'tree branch: base nodes': 20,
+            'tourn_size': 4,  # [7 per 100] number of trees selected for tournament
 
             # When to stop the run
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
             'gen_max': 800,  # Maximum amount of generations
         }
+
+        # sfeh: check for 'random from scratch' + 'origin has fix nodes' fail?
 
         self.config.update(config)  # todo check if config is correct
 
@@ -293,7 +296,7 @@ class ExplainableGP(object):
 
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
-                self.print_g('ggg', '-->Evolve ({}) \t{}x \ttook: {:4.2f}s.'.format(repro_rate, name, time.perf_counter() - time_evolve))
+                self.print_g('ggg', '-->Evolve ({}) \t{}x \ttook: {:4.2f}s.'.format(name, repro_rate, time.perf_counter() - time_evolve))
             # ######################################
 
             self.gen_finalize()
@@ -875,7 +878,7 @@ class ExplainableGP(object):
         sfeh
         """
         if self.origin_exists():
-            if not tree_node_get_modify(self.origin_tree, root_id) == node_is_modifiable:
+            if repro_rate > 0 and tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
                 print_warning('w', 'You can not create new trees from scratch when origin has fix nodes!')
                 return
 

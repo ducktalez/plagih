@@ -38,7 +38,7 @@ def main(argv):
     if run_folder is None:
         print('No run-folder provided. Starting an example run.')
         run_folder = Path.cwd() / example_runs / 'cartpole_v1/'  # / 'plagih'
-    print('Starting plagih-run in {}'.format(Path(run_folder)))
+    # print('Starting plagih-run in {}'.format(Path(run_folder)))
     plagih_gp.run(run_folder)
 
 

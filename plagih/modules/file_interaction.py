@@ -1,27 +1,36 @@
-from pathlib import Path
 import pickle
-from plagih.modules.dicts import *
 from plagih.modules.plagih_tree import *
 from plagih.modules.printing import *
 import csv
-import matplotlib.pyplot as plt
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 import sklearn.model_selection as skcv
 import numpy as np
 
 
-folder_runs = 'runs/'
+example_runs = 'run_examples/'
 
 folder_save = 'save/'
 folder_plots = 'plots/'
 folder_info = 'info/'
 folder_steps = 'steps/'
 folder_trees = 'trees/'
+folder_pop_analysis = 'pop_dist/'
 
 file_pareto = 'pareto.txt'
-file_config = 'config.txt'
+complete_file_pareto = 'pareto.txt'
+file_config = 'config.csv'
 file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
+
+run_files = 'run_files'
+config_json = 'config.json'
+samples_ready = 'samples_ready.p'
+samples_csv = 'samples.csv'
+operators = 'operators.csv'
+tree_expr_txt = 'tree_expr.txt'
+tree_labels_csv = 'tree_labels.csv'
+tree_numpy_csv = 'tree_numpy.csv'
+
 
 T_num_lines = 15  # todo this var is not found otherwise
 
@@ -36,6 +45,15 @@ def make_dir(path):
     return path
 
 
+def get_path(gen_id='tmp'):
+    """
+    ! Only used for population plots right now
+    Returns the path where a file is located
+    get_path('config') -> *root_dir*/info/config.csv
+    """
+    path = 'plots/pop_dist/fitness_{}.jpg'
+
+
 def data_load_pickle(prepared_data_pickle_path):
     """
     Loads a data_csv_path file that was already split with the csv reader
@@ -43,7 +61,6 @@ def data_load_pickle(prepared_data_pickle_path):
     with Path.open(prepared_data_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
 
-    # self.printplg('g', 'Pickle-loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
     return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 
@@ -101,28 +118,6 @@ def data_load_data_split(data_x, data_y, test_size):
     return data_train_rows, data_train, data_control
 
 
-def write_config_file(path, config, gen_id, kernel, date_time):
-    """
-    write the parameters to a file
-    """
-
-    path_config = make_dir(path / folder_info)
-
-    file = Path.open(path_config / file_config, 'a')
-    file.write('This config is not complete, sfeh!')
-    file.write('\n launched: {}'.format(date_time))
-    file.write('\n kernel: {}'.format(kernel))
-    file.write('\n precision: {}\n'.format(config['precision']))
-    file.write('\n tree depth max: ' + str(config['tree_depth_max']))
-    file.write('\n')
-    file.write('\n tournament size: ' + str(config['tourn_size']))
-    file.write('\n population: ' + str(config['pop_max']))
-    file.write('\n number of generations: ' + str(gen_id))
-    file.write('\n\n')
-    file.close()
-    return
-
-
 def file_population_karoo(population, pop_name, path, gen_id):
     """
     Save population_* to disk.
@@ -132,7 +127,6 @@ def file_population_karoo(population, pop_name, path, gen_id):
     pop_path = make_dir(path / folder_info)
 
     file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
-
     # todo function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')

@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
 
-import tikzplotlib
+# import tikzplotlib
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"

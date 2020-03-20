@@ -1,10 +1,12 @@
 import tensorflow as tf
 from pathlib import Path
 
+# todo: this file seems outdated, as runs are started within a folder now.
+
 
 class MountainCarExamples:
     files = {
-        'samples_file': '../benchmarks/gym_mountaincar/gp_files/data_samples/behaviour_samples.csv',
+        'samples_file': '../benchmarks/gym_mountaincar/gp_files/data_samples/samples.csv',
         'samples_pickle': '../benchmarks/gym_mountaincar/gp_files/data_samples/plagih_data_prepared.p',
         'operators_file': '../benchmarks/gym_mountaincar/gp_files/operators/operators.csv'}
 
@@ -47,7 +49,7 @@ class MountainCarExamples:
 class CartpoleExamples:
 
     files = {
-        'samples_file': '../benchmarks/gym_cartpole/gp_files/behaviour_samples.csv',
+        'samples_file': '../benchmarks/gym_cartpole/gp_files/samples.csv',
         'samples_pickle': '../benchmarks/gym_cartpole/gp_files/prepared_samples.p',
         'operators_file': '../benchmarks/gym_cartpole/gp_files/operators.csv'}
 

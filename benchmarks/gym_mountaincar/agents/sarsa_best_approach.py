@@ -160,7 +160,7 @@ def create_samples_dataset(seed=0):
         samples_csv_ready.append(row[:])
     print(samples_csv_ready)
 
-    file_csv = Path('../gp_files/behaviour_samples.csv')
+    file_csv = Path('../gp_files/samples.csv')
     with open(file_csv, 'w+', newline='') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(samples_csv_ready)

@@ -9,7 +9,39 @@ sarsa_file_10000 = 'sarsa_agent_10000.p'
 
 def safe_division(n, d):
     return n / d if d else 0
-# todo idee: statt fitness prozentuale Verbesserung?
+
+
+class SimonsGpFriendly:
+
+    def decide(self, observation):
+        pos, vel = observation
+
+        # return
+        if pos < -1 or (pos < 0.1 and vel < -0.05):
+            # print('----------->>')
+            return 2
+        if (pos > -0.45 and pos < -0.05) and vel < 0.02:
+            # print('<<-----------')
+            return 0
+
+        if vel < 0:
+            return 0
+        else:
+            return 2
+
+
+
+class SimonsCheckpoints:
+
+    def decide(self, observation):
+        return 0
+
+
+class SimonsDummy:
+
+    def decide(self, observation):
+        return 0
+
 
 
 class AgentV1p40:
@@ -54,11 +86,11 @@ class SimpleAgent:
 class FixAgent:
 
     def decide(self, observation):
-        pos, velocity = observation
+        pos, vel = observation
         lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03,
                  0.3 * (pos + 0.9) ** 4 - 0.008)
         ub = -0.07 * (pos + 0.38) ** 2 + 0.07
-        if lb < velocity < ub:
+        if lb < vel < ub:
             action = 2  # push right
         else:
             action = 0  # push left
@@ -70,11 +102,11 @@ class TestFixNoLowerbound:
     I randomly found out, that the upper bound is not good for anything
     """
     def decide(self, observation):
-        pos, velocity = observation
+        pos, vel = observation
         lb = min(-0.09 * (pos + 0.25)**2 + 0.03,
                  0.3*(pos + 0.9)**4 - 0.008)
 
-        if lb < velocity:
+        if lb < vel:
             return 2
         else:
             return 0
@@ -85,8 +117,8 @@ class TestCombined:
     I found this candidate within 1 minute of gp
     """
     def decide(self, observation):
-        pos, velocity = observation
-        if (velocity <= 0.63) and (min(-0.09*(pos + 0.25)**2.0 + 0.03, 0.3*(pos + 0.9)**4.0 - 0.01) <= velocity):
+        pos, vel = observation
+        if (vel <= 0.63) and (min(-0.09*(pos + 0.25)**2.0 + 0.03, 0.3*(pos + 0.9)**4.0 - 0.01) <= vel):
             return 2
         else:
             return 0
@@ -98,8 +130,8 @@ class TestTmp:
     """
 
     def decide(self, observation):
-        pos, velocity = observation
-        if (velocity <= 0.63) and (min(-0.09 * (pos + 0.25) ** 2.0 + 0.03, 0.3 * (pos + 0.9) ** 4.0 - 0.01) <= velocity):
+        pos, vel = observation
+        if (vel <= 0.63) and (min(-0.09 * (pos + 0.25) ** 2.0 + 0.03, 0.3 * (pos + 0.9) ** 4.0 - 0.01) <= vel):
             return 2
         else:
             return 0

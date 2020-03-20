@@ -33,6 +33,7 @@ T_parsimony = 14
 
 T_num_lines = 15
 root_id = 1
+
 node_is_modifiable = 1
 
 observation_n = 'observation'
@@ -104,7 +105,7 @@ class Plagih_node():
 
 def karoo_tree_from_labellist(label_list, modify_list=None):
     """
-    deprecated! DELETE! sfeh
+    returns: tree, from label_list (newest version)
     """
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
     tree = p_tree.get_uninstanced_tree()
@@ -122,6 +123,20 @@ def karoo_tree_from_expr(expr, modify_list=None):
     return tree
 
 
+def tree_from_load_numpycsv(origin_tree_file_path=None):
+    """
+    returns: tree, old karoo version
+    """
+
+    if origin_tree_file_path:
+        tree = tree_single_from_csv(origin_tree_file_path)
+    else:
+        print_warning('ww', 'No origin provided. Starting from scratch with random generation.')
+        tree = None
+
+    return tree
+
+
 def tree_save_csv(tree, path_csv):
     """
     Writing one tree to a .csv file. As it is appended, many can be added.
@@ -132,6 +147,20 @@ def tree_save_csv(tree, path_csv):
         target.writerows([''])  # empty row before each Tree
         for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
             target.writerows([tree][row])
+
+
+def tree_check_expr(tree):
+    """
+    todo make this look better later...
+    """
+    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
+
+    try:
+        expr_sym = expr_sympify(expr_raw=expr_raw)
+    except:
+        raise Exception('Your tree\'s algorithm could not be sympified. Aborting.')
+
+    return
 
 
 def load_pop_from_csv(pop_csv):
@@ -459,7 +488,7 @@ def tree_node_get_modify(tree, node_id):
     if modify == '':
         modify = 1
     else:
-        modify = float(modify)
+        modify = int(modify)
     return modify
 
 
@@ -1020,7 +1049,7 @@ def tree_get_mutatable_nodes(tree, no_root=False, karoo=True):
     for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         if node_id == 'node_modify':
             continue
-        if tree[N_modify][node_id] == '1':
+        if float(tree[N_modify][node_id]) == node_is_modifiable:
             node_ids.append(int(node_id))
 
     if no_root and root_id in node_ids:
@@ -1281,7 +1310,7 @@ def tree_raw_depth_prefix(tree, node_id):
     node_id = int(node_id)
 
     if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-        return '{' + tree[N_label, node_id] + '}'  # 'node_label' (function or terminal)
+        return '{' + tree[N_label, node_id] + '}'  # '{{{}}}'
 
     elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
         return '{' + tree[N_label, node_id] + tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
@@ -1332,7 +1361,7 @@ def evolve_node_arity_fix(tree):
             tree[N_c1][n] = ''  # wipe 'node_c1'
             tree[N_c2][n] = ''  # wipe 'node_c2'
             tree[N_c3][n] = ''  # wipe 'node_c3'
-            tree[N_modify][n] = '1'
+            tree[N_modify][n] = node_is_modifiable
 
     return tree
 
@@ -1741,7 +1770,6 @@ def treegp_reduce_branch(tree, node_id, karoo=False):
 
         return tree_sympified
     except Exception as ex:
-        print_warning('w', 'reducing expr raw: {}\n{}'.format(expr_raw, tree))
         raise Exception('Reducing branch failed! Ex: {}'.format(ex))
 
 

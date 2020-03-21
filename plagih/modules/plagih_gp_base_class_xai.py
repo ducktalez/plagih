@@ -1037,7 +1037,7 @@ class ExplainableGP(object):
                 left_labels.insert(0, conv_to_right)
                 left_aritys.insert(0, 1)
 
-            left_core = core_from_labels(left_labels, left_aritys)
+            left_core = core_from_labels(left_labels, left_aritys)  # todo this is not necessary, switch branches
             right_core = core_from_labels(right_labels, right_aritys)
 
             left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
@@ -1225,6 +1225,7 @@ class ExplainableGP(object):
 
         # choose a node from parent a
         a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
+        # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
         a_id = np.random.choice(a_ids)
         a_node_label = tree_node_get_label(a_tree, a_id)
         a_xtype = xtype_get(a_node_label, self.variables_dict)

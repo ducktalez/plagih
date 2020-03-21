@@ -41,7 +41,7 @@ def plot_decisions(env, agent, name):
     return
 
 
-def play_once(env, agent, render=False, verbose=False, sleep=0):
+def play_once(env, agent, render=False, verbose=False, sleep=0.0):
     observation = env.reset()
     episode_reward = 0.
     if verbose:
@@ -53,8 +53,8 @@ def play_once(env, agent, render=False, verbose=False, sleep=0):
         time.sleep(sleep)
         observation, reward, done, _ = env.step(action)
         episode_reward += reward
-        if verbose:
-            print('{:1.2f} {:1.2f} {}'.format(observation[0], observation[1], '--->' if action == 2 else '<---' if action == 0 else '___'))
+        # if verbose:
+        #     print('{:1.2f} {:1.2f} {}'.format(observation[0], observation[1], '--->' if action == 2 else '<---' if action == 0 else '___'))
         if done:
             break
     # if verbose:
@@ -75,7 +75,7 @@ def compare_simple(agents):
         env.close()
 
 
-def render_ntimes(agents, n, verbose=False, sleep=0):
+def render_ntimes(agents, n, verbose=False, sleep=0.0):
     for name, agent in agents:
         np.random.seed(0)
         env = gym.make('MountainCar-v0')
@@ -117,27 +117,27 @@ def load_sarsas():
 
 
 sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
-# sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
+sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
 # sarsa_agent_75, _, _, _ = load_sarsas()
 
 
-lawl_agents = {1: ('v1_simple', SimpleAgent()),
-               2: ('v1_improved', PlagihAgent_A()),
-               3: ('xiao_base', FixAgent()),
-               4: ('xiao_short', TestFixNoLowerbound()),
-               5: ('sarsa_75', sarsa_agent_75),
-               6: ('sarsa_200', sarsa_agent_200),
-               7: ('sarsa_1000', sarsa_agent_1000),
-               8: ('sarsa_10000', sarsa_agent_10000),
-               9: ('test_tmp', TestTmp()),
-               10: ('AgentV1p40', AgentV1p40()),
-               11: ('SimonsBest', SimonsGpFriendly()),
-               12: ('SimonsCheckpoints', SimonsCheckpoints()),
-               13: ('SimonsDummy', SimonsDummy()),
-               14: ('TestCombined', TestCombined())}
+mountain_agents = {1: ('v1_simple', SimpleAgent()),
+                   2: ('v1_improved', PlagihAgent_A()),
+                   3: ('xiao_base', FixAgent()),
+                   4: ('xiao_short', TestFixNoLowerbound()),
+                   5: ('sarsa_75', sarsa_agent_75),
+                   6: ('sarsa_200', sarsa_agent_200),
+                   7: ('sarsa_1000', sarsa_agent_1000),
+                   8: ('sarsa_10000', sarsa_agent_10000),
+                   9: ('test_tmp', TestTmp()),
+                   10: ('AgentV1p40', AgentV1p40()),
+                   11: ('SimonsBest', SimonsGpFriendly()),
+                   12: ('SimonsCheckpoints', SimonsCheckpoints()),
+                   13: ('TestCombined', TestCombined()),
+                   14: ('SimonTesting', SimonsTesting()),}
 
-oneAgent = {lawl_agents[11]}
-twoAgents = {lawl_agents[1], lawl_agents[11]}
+oneAgent = {mountain_agents[14]}
+twoAgents = {mountain_agents[14], mountain_agents[11]}
 
 # plot_simple(oneAgent)
 # compare_simple(twoAgents)

@@ -30,14 +30,31 @@ class SimonsGpFriendly:
             return 2
 
 
+# todo idee: programm that works has some space to make random decisions. nn analyses, finds best version
 
-class SimonsCheckpoints:
+
+class SimonsTesting:
 
     def decide(self, observation):
-        return 0
+        pos, vel = observation
+
+        # return
+        if pos < -0.88 or (pos < -0.7 and (vel < -0.2 or vel > 0.1)):
+            print('      <|-->')
+            return 2
+        if (pos > -0.45 and pos < -0.05) and vel < 0.02:
+            print('   <--|>')
+            return 0
+
+        if vel < 0:
+            print('<------|')
+            return 0
+        else:
+            print('       |------>')
+            return 2
 
 
-class SimonsDummy:
+class SimonsCheckpoints:
 
     def decide(self, observation):
         return 0

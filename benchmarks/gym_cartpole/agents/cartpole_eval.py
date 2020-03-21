@@ -14,7 +14,7 @@ def compare_simple(agents, verbose=False):
         env = gym.make('CartPole-v0')
         env.seed(0)
         time_start = time.perf_counter()
-        episode_rewards = [play_once(env, agent) for _ in range(1000)]
+        episode_rewards = [play_once(env, agent) for _ in range(100)]
         failcount = sum([1 for x in episode_rewards if x < 195])
         print('{} \thad average episode rewards = {}. Failed {} times. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards), failcount, time.perf_counter() - time_start))
         env.close()
@@ -36,17 +36,20 @@ def play_once(env, agent, render=False, verbose=False, sleep=0):
     episode_reward = 0.
     if verbose:
         print('New agent')
-    for step in itertools.count():
+    # for step in itertools.count():
+    for step in range(2000):
         if render:
             env.render()
         action = agent.decide(observation, verbose=verbose)
         time.sleep(sleep)
         observation, reward, done, _ = env.step(action)
         episode_reward += reward
-        if verbose:
-            print('cart_pos {:1.2f} cart_vel {:1.2f} \tangle {:1.2f} pole_vel {:1.2f} {}'.format(observation[0], observation[1], observation[2], observation[3], '--->' if action == 1 else '<---'))
+        # if verbose:
+        #     print('cart_pos {:1.2f} cart_vel {:1.2f} \tangle {:1.2f} pole_vel {:1.2f} {}'.format(observation[0], observation[1], observation[2], observation[3], '--->' if action == 1 else '<---'))
         if done:
-            break
+            pass
+            # break
+
     # if verbose:
     #     print('get {} rewards in {} steps'.format(
     #         episode_reward, step + 1))
@@ -102,35 +105,42 @@ class SimonsBest:
 
         if abs(pole_vel) > 0.1:
             if pole_vel < 0:
+                if verbose:
+                    print('<-----|   ')
                 return 0
             else:
+                if verbose:
+                    print('      |---->')
                 return 1
 
         # move_dir =
         if abs(cart_vel) > 0.1:
             if cart_vel < 0:
                 if verbose:
-                    print('<-----')
+                    print('  <---|    ')
                 return 0
             else:
                 if verbose:
-                    print('----->')
+                    print('      |--->')
                 return 1
-        if verbose:
-            print('TRIGGGGERED')
+
         if cart_pos > 0:
+            if verbose:
+                print('    <-|    ')
             return 0
         else:
+            if verbose:
+                print('      |->')
             return 1
 
 
 cartpole_agents = {1: ('angle_only', angle_only()),
                    2: ('poleVel_only', poleVel_only()),
-                   2: ('SimonsFirst200', SimonsFirst200()),
-                   3: ('SimonsBest', SimonsBest())}
+                   3: ('SimonsFirst200', SimonsFirst200()),
+                   4: ('SimonsBest', SimonsBest())}
 
 oneAgent = {cartpole_agents[3]}
-twoAgents = {cartpole_agents[2], cartpole_agents[3]}
+twoAgents = {cartpole_agents[4], cartpole_agents[3]}
 
-compare_simple(cartpole_agents.values())
-# render_ntimes(oneAgent, 1, verbose=True, sleep=0.1)
+# compare_simple(oneAgent)
+render_ntimes(oneAgent, 1, verbose=True, sleep=0.0)

@@ -114,7 +114,6 @@ class FitnessKernel:
             - orderable amount of labels
             """
 
-            # TODO adjust this stuff
             act_min = tf.constant(action_min_max[0], dtype=tf.float32)
             act_max = tf.constant(action_min_max[1], dtype=tf.float32)
             new_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)

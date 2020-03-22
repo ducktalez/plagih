@@ -4,8 +4,8 @@ Explaination:
    f2b means float to boolean, e. g. '<' takes 'float' and returns a 'bool'
 > node_modify (0 or 1), specifies, whether this node is supposed to be
 
-
-
+# todo todo creating random trees is mandatory!! to find base genes... or is it?
+# todo idea: split up population after convergence to a certain structure?
 
 Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
@@ -40,7 +40,7 @@ class ExplainableGP(object):
         print(self.root_dir)
 
         self.config = {
-            'root_dir': Path.cwd() / '../../runs/',  # TODO
+            # 'root_dir': root_dir,  # TODO
             'mode': 'run',  # ['run', 'analyze']
             'description': 'No description set',
 
@@ -85,7 +85,7 @@ class ExplainableGP(object):
             'tree_depth_base': 7,  # [3..10]
             'tree_depth_max': 25,  # maximum Tree depth for entire run
             'tree_depth_min': 5,
-            'tree from scratch: min_nodes': 3,
+            'tree from scratch: min_nodes': 8,
             'tree from scratch: max_nodes': 50,
             'tree branch: base nodes': 20,
             'tourn_size': 4,  # [7 per 100] number of trees selected for tournament
@@ -94,8 +94,6 @@ class ExplainableGP(object):
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
             'gen_max': 800,  # Maximum amount of generations
         }
-
-        # sfeh: check for 'random from scratch' + 'origin has fix nodes' fail?
 
         self.config.update(config)  # todo check if config is correct
 
@@ -181,6 +179,14 @@ class ExplainableGP(object):
                 print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
                 raise
 
+        # check for 'random from scratch' + 'origin has fix nodes' fail?
+        if self.origin_exists():
+            if tree_node_is_modifiable(self.origin_tree, root_id):  # Modify-nodes is not "activated"
+                self.config['evolve_rates']['random from origin_tree'] += float(self.config['evolve_rates']['random from scratch'])
+                self.config['evolve_rates']['random from scratch'] = 0
+        else:
+            if self.config['complexity_measure'] in ['ted', 'rel_ari_1']:  # sfeh make 'ted', 'rel_ari_1' variables
+                raise Exception('Can not use relative distance without providing a reference/origin tree!')
         if self.gen_id == 0:
             self.gen_create_first()
 
@@ -214,22 +220,10 @@ class ExplainableGP(object):
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        rate_o = self.evolve_rates['random from origin_tree']
-        rate_s = self.evolve_rates['random from scratch']
-        pop_max = self.config['pop_max']
+        rate_o = int(self.config['pop_max']*self.evolve_rates['random from origin_tree'])
+        rate_s = int(self.config['pop_max']*self.evolve_rates['random from scratch'])
 
-        if self.origin_exists():
-            rate_sum = rate_s + rate_o
-            if tree_node_is_modifiable(self.origin_tree, root_id):  # Modify-nodes is not "activated"
-                if rate_o > 0:
-                    rate_s = int((rate_s / rate_sum) * pop_max)
-                    rate_o = pop_max - rate_s
-            else:
-                rate_o = pop_max
-                rate_s = 0  # Otherwise, the modifiable nodes can not be set
-            self.pop_random_from_origin(rate_o)
-        else:
-            rate_s = pop_max
+        self.pop_random_from_origin(rate_o)
 
         self.pop_random_from_scratch(rate_s)
 
@@ -597,7 +591,7 @@ class ExplainableGP(object):
 
         file.close()
 
-    def file_pareto_latex(self, pareto, root_path, save_all_forests=False):
+    def file_pareto_latex(self, pareto, root_path):
         """
         Save all pareto entries as latex gp_files
         - build tree from expression
@@ -614,13 +608,7 @@ class ExplainableGP(object):
             tree = karoo_tree_from_labellist(label_list)
             tree = self.tree_beautify(tree, last_evolution='none')
 
-            tikz_code = tree_viz_get_tex_forest(tree)  # generate the small forest inputs
-
-            # SFEH: This saves all forest parts separately, but it is a mess
-            if save_all_forests:
-                file = Path.open(path_trees / 'tree-{}.tex'.format(str(meta['parsimony'])), 'w')
-                file.write(tikz_code)
-                file.close()
+            tikz_code = tree_get_latex_forest(tree)  # generate the small forest inputs
 
             # save a ready-to-use tex file with all pareto trees
             forest_grouped.append(latex_get_sepline(parsim, meta['fitness_train'], tikz_code, tree_sep))
@@ -1016,26 +1004,23 @@ class ExplainableGP(object):
             left_tree = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for 'a_parent'
             right_tree = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for 'b_parent'
 
-            force_convert = False
-
             # 2. search nodes for left and right that can be exchanged. convert_needed
             left_id, right_id, success = self.tree_try_get_swapids(left_tree, right_tree)
             if not success:
                 right_id, left_id, success = self.tree_try_get_swapids(right_tree, left_tree)
-            if not success:
-                force_convert = True
 
             left_ids, left_labels, left_aritys = tree_get_branch_lax(left_tree, left_id)
             right_ids, right_labels, right_aritys = tree_get_branch_lax(right_tree, right_id)
 
-            if force_convert:
-                self.printpl('w', 'Crossover conversion between trees forced. \n{}\n{}'.format(left_tree, right_tree))
-                left_xtype = xtype_get(tree_node_get_label(left_tree, left_id), self.variables_dict)
-                conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
-                right_labels.insert(0, conv_to_left)
-                right_aritys.insert(0, 1)
-                left_labels.insert(0, conv_to_right)
-                left_aritys.insert(0, 1)
+            if not success:
+                print_warning('ww', 'Crossover conversion between trees not possible: \n{}\n{}'.format(left_tree, right_tree))
+                # left_xtype = xtype_get(tree_node_get_label(left_tree, left_id), self.variables_dict)
+                # conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
+                # right_labels.insert(0, conv_to_left)
+                # right_aritys.insert(0, 1)
+                # left_labels.insert(0, conv_to_right)
+                # left_aritys.insert(0, 1)
+                return
 
             left_core = core_from_labels(left_labels, left_aritys)  # todo this is not necessary, switch branches
             right_core = core_from_labels(right_labels, right_aritys)
@@ -1216,37 +1201,39 @@ class ExplainableGP(object):
 
         return tourn_winner
 
-    def tree_try_get_swapids(self, a_tree, b_tree):
+    def tree_try_get_swapids(self, a_tree, b_tree, version='default'):
         """
-        Returns two branches (node ids) that can be replaced and a converter (if needed)
+        Try to return two branches (aka ids) [for crossover] that can be crossed
 
-        # same position & node, same node, same type, reversed type | convert_needed type
         """
+        if version == 'default':
+            # choose a node from parent a
+            a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
+            # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
+            a_id = np.random.choice(a_ids)
+            a_node_label = tree_node_get_label(a_tree, a_id)
+            a_xtype = xtype_get(a_node_label, self.variables_dict)
 
-        # choose a node from parent a
-        a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
-        # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
-        a_id = np.random.choice(a_ids)
-        a_node_label = tree_node_get_label(a_tree, a_id)
-        a_xtype = xtype_get(a_node_label, self.variables_dict)
+            # create a list from parent b with same xtype
+            b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
+            b_sametype_ids = b_node_ids[:]
+            for b_id in b_node_ids:
+                b_label = tree_node_get_label(b_tree, b_id)
+                b_xtype = xtype_get(b_label, self.variables_dict)
+                if not xtype_equi_outcome(b_xtype, a_xtype):
+                    b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
-        # create a list from parent b with same xtype
-        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
-        b_sametype_ids = b_node_ids[:]
-        for b_id in b_node_ids:
-            b_label = tree_node_get_label(b_tree, b_id)
-            b_xtype = xtype_get(b_label, self.variables_dict)
-            if not xtype_equi_outcome(b_xtype, a_xtype):
-                b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
+            if b_sametype_ids:  # if entries were found, choose one. we are custom_done
+                b_id = np.random.choice(b_sametype_ids)
+                success = True
+            else:
+                b_id = np.random.choice(b_node_ids)
+                success = False
 
-        if b_sametype_ids:  # if entries were found, choose one. we are custom_done
-            b_id = np.random.choice(b_sametype_ids)
-            success = True
+            return a_id, b_id, success
         else:
-            b_id = np.random.choice(b_node_ids)
-            success = False
-
-        return a_id, b_id, success
+            print('asdfasdf fail sfeh')
+            raise
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Work with trees                           |
@@ -1260,12 +1247,15 @@ class ExplainableGP(object):
 
         expr_raw = tree_get_expr_raw(tree, node_id=root_id)
         expr_sym = expr_sympify(expr_raw=expr_raw)
-
         tree_check_expr(tree)
 
         if not tree_check_is_sympified(tree):
             print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
                                  ''.format(expr_raw, expr_sym))
+
+        if not self.tree_check_core_all(tree):
+            print('TODO', tree_labels(tree))
+            raise
 
         self.origin_tree = copy.deepcopy(tree)
         self.origin_meta = {'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}

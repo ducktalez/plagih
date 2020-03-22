@@ -745,12 +745,13 @@ def tree_evolve_branch_multiple(tree, goal_nodes, variables_dict, func_array):
     - get these nodes, randomly choose a subset of those
     - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
     - split the amount of nodes up (randomly) and add these new branches to the tree
+    todo fix min and max border
     """
 
     tree_base = tree.copy()
     layer0_ids = tree_get_mutatable_layer(tree, 0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
-    del_amount = 0
-    nodes_left = goal_nodes - (tree_get_size(tree, karoo=True) - del_amount)  # ('Which lets us replace {} amount of old nodes'.format(nodes_left))
+    nodes_left = goal_nodes  # sfeh - max_nodes-tree_get_size(tree, karoo=True))  # ('Which lets us replace {} amount of old nodes'.format(nodes_left))
+
     num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
 
     for i in range(len(layer0_ids)):  # finally, insert branches. need to get layer every time as node ids might have changed.
@@ -758,7 +759,6 @@ def tree_evolve_branch_multiple(tree, goal_nodes, variables_dict, func_array):
         node_id = layer0_ids[i]
         old_branch = tree_get_branch(tree, node_id, karoo=True)
         tree = tree_evolve_insert_branch_v2(tree_base, old_branch, variables_dict, func_array, goal_nodes=num_nodes_split[i])  # tree with new branch
-
     return tree
 
 
@@ -786,14 +786,14 @@ def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, g
     return tree
 
 
-def invent_label_list_nodes_grow(xtype, goal_nodes, variables_dict, func_array, build_type='grow'):
+def invent_label_list_nodes_grow(xtype, goal_max_nodes, variables_dict, func_array, build_type='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
     E. g.: 'float', 5 nodes, min_nodes = 2
     - tbd list: ['2b', '2f']
     - random term_fun_list: ['func', 'term']
-
+    todo test till works
     """
     tbdo_xtypes = [xtype]
     tbd_node_amount = 1
@@ -824,8 +824,8 @@ def invent_label_list_nodes_grow(xtype, goal_nodes, variables_dict, func_array, 
             xtype = tbdo_xtypes[index]
 
             label, arity = xtype_choose_func(func_array, xtype=xtype)
-            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), goal_nodes)
-            if goal_nodes > (len(result_label_list) + tbd_node_amount) + arity + 1:  # +1 = the start node which we must not forget
+            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), goal_max_nodes)
+            if goal_max_nodes > (len(result_label_list) + tbd_node_amount) + arity + 1:  # +1 = the start node which we must not forget
                 tmp_label_list[index] = label
                 tmp_arity_list[index] = arity
                 tbd_node_amount += arity - 1
@@ -1829,6 +1829,7 @@ def tree_evolve_reduce(tree, completely=True):
         return tree
     except Exception as ex:
         print_warning('ww', 'Could not reduce tree/branch due to Exception: {}'.format(ex))
+        raise
         return
 
 
@@ -2238,7 +2239,7 @@ def tree_viz_get_forest(tree, node_id=root_id):
     return latex_label
 
 
-def tree_viz_get_tex_forest(tree):
+def tree_get_latex_forest(tree):
     """
     Creates forest tree representation (based on tikz) for LaTeX.
     The file can easily ne included in a .tex file with '\input{file_name}'

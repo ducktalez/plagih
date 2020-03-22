@@ -21,7 +21,7 @@ f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
 """
 op: Dict to work as 'Database' for every expression-bit and its features
 - KEY: expression-bit: can occur in various forms, which group into following uses:
-    - ast.KEY: Found by pythons 'ast' when an inline ops like [+, -, *, ...] occurs
+    - ast.KEY: Found by pythons 'ast' when inline op like [+, -, *, ...] occurs
     - 'KEY': Found by pythons 'ast' when non-inline functions are found as string
     -> some operators are identical, but occur several times, e. g. ('And', '&', ast.BitAnd)
 - VALUE: several features that have to be regarded. Some are irrelevant or have to be done.
@@ -33,6 +33,7 @@ op: Dict to work as 'Database' for every expression-bit and its features
 
 Features should always be defined, even though they might not occur at all. If not used, they CAN be filled with dummy values like äöü
 Some, which are known of not being used yet are commented with '# not tested' or '# not used'
+todo: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 """
 op = {      # 'f2f': Classical mathematical operators, evaluate from float to float
       '+':      {'name': '+',       'arity': 2,     'xtype': 'f2f', 	'tf': tf.add, 				'gpbp': ['ö'], 	'latex': '$+$'},  # not tested
@@ -60,6 +61,7 @@ op = {      # 'f2f': Classical mathematical operators, evaluate from float to fl
       'acos':   {'name': 'acos',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.acos, 				'gpbp': ['ö'], 	'latex': None},
       'asin':   {'name': 'asin',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.asin, 				'gpbp': ['ö'], 	'latex': None},
       'atan':   {'name': 'atan',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.atan, 				'gpbp': [1], 	'latex': None},
+      # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
             # 'b2b' Classical logical operators, evaluate from bool to bool
       'And':    {'name': 'And',     'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
@@ -68,6 +70,9 @@ op = {      # 'f2f': Classical mathematical operators, evaluate from float to fl
       ast.BitAnd: {'name': '&',     'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_and, 		'gpbp': ['ö'], 	'latex': None},  # DON'T USE tf.bitwise.bitwise_and
       'Or':     {'name': 'Or',      'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$\\lor$'},
       ast.Or:   {'name': 'Or',      'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_or, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a or b
+      '|':       {'name': '|',      'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_or, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a or b
+      ast.BitOr: {'name': '|',      'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_or, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a or b
+# ast.BitOr
       'Xor':    {'name': 'Xor',     'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
       'Nand':   {'name': 'Nand',    'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
       'Xand':   {'name': 'Xand',    'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
@@ -122,7 +127,7 @@ op = {      # 'f2f': Classical mathematical operators, evaluate from float to fl
 
 # print([x for x in op.keys() if type(x) == type('asd')])  # retreive a list with all non-ast ops:
 
-functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&']
+functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&', '|']
 
 function_infix_to_prefix = {  # currently obsolete
     '+': 'add',

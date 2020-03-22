@@ -122,6 +122,26 @@ def plagih_config_update_from_json(config_json='config.json'):
 # create_samples_pickle_prepared(root_dir, CartpoleExamples.files['samples_file'])  # todo outsource
 # analyse_old_run(root_dir)
 
+def labellists_from_csv(csv_path):
+    modify_list = []
+    with Path.open(csv_path, newline='') as csvFile:
+        reader = csv.reader(csvFile, delimiter=',')
+        for row in reader:
+            if len(row) > 0:
+                if row[0] == 'label_list':
+                    label_list = row[1:]
+                elif row[0] == 'modify_list':
+                    modify_list = [int(x) for x in row[1:]]  # N_modify sfeh
+                elif row[0] == '':
+                    pass
+                else:
+                    print_warning('ww', 'Unexpected row start: {}'.format(row[0]))
+
+    if label_list is None:
+        raise Exception('Labels could not be created from file.')
+
+    return label_list, modify_list
+
 
 def run(root_dir):
     """
@@ -163,17 +183,7 @@ def run(root_dir):
 
     origin_tree = None
     if Path.is_file(tree_labels_csv_path):
-        modify_list = []
-        with Path.open(tree_labels_csv_path, newline='') as csvFile:
-            reader = csv.reader(csvFile, delimiter=',')
-            for row in reader:
-                if len(row) > 0:
-                    if row[0] == 'label_list':
-                        label_list = row[1:]
-                    elif row[0] == 'modify_list':
-                        modify_list = [int(x) for x in row[1:]]  # N_modify sfeh
-                    else:
-                        print_warning('ww', 'Unexpected row: {}'.format(row))
+        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)
 
         origin_tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
@@ -193,6 +203,24 @@ def run(root_dir):
 
     gp.plagih_gp_run()
     sys.exit()
+
+
+def visualize_labellist(csv_file, output_file=None):
+    """
+    visualize a label list
+    e.g. if you want to check, if you made your tree correctly
+    """
+    if Path.is_file(csv_file):
+        label_list, modify_list = labellists_from_csv(csv_file)
+        tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
+        forest_input = tree_get_latex_forest(tree)
+        latex_full_doc = latex_complete_tree_summary(forest_input)
+        if not output_file:
+            output_file = csv_file.with_suffix('.tex')
+        with Path.open(output_file, 'w') as csv_file:
+            csv_file.write(latex_full_doc)
+    else:
+        print_e('File {}  does not exist!'.format(csv_file))
 
 
 if __name__ == "__main__":

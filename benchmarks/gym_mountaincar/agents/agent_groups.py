@@ -20,14 +20,15 @@ class SimonsGpFriendly:
         if pos < -1 or (pos < 0.1 and vel < -0.05):
             # print('----------->>')
             return 2
-        if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-            # print('<<-----------')
-            return 0
-
-        if vel < 0:
-            return 0
         else:
-            return 2
+            if (pos > -0.45 and pos < -0.05) and vel < 0.02:
+                # print('<<-----------')
+                return 0
+
+            if vel < 0:
+                return 0
+            else:
+                return 2
 
 
 # todo idee: programm that works has some space to make random decisions. nn analyses, finds best version

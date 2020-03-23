@@ -134,6 +134,16 @@ class SimonsBest:
             return 1
 
 
+class Gp1_asdads:
+
+    def decide(self, observation, verbose=False):
+        cart_pos, cart_vel, pole_angle, pole_vel = observation[0], observation[1], observation[2], observation[3]
+        if pole_vel < 0:
+            return 0
+        else:
+            return 1
+
+
 cartpole_agents = {1: ('angle_only', angle_only()),
                    2: ('poleVel_only', poleVel_only()),
                    3: ('SimonsFirst200', SimonsFirst200()),

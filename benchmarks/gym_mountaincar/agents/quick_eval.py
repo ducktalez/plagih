@@ -136,7 +136,7 @@ mountain_agents = {1: ('v1_simple', SimpleAgent()),
                    13: ('TestCombined', TestCombined()),
                    14: ('SimonTesting', SimonsTesting()),}
 
-oneAgent = {mountain_agents[14]}
+oneAgent = {mountain_agents[11]}
 twoAgents = {mountain_agents[14], mountain_agents[11]}
 
 # plot_simple(oneAgent)

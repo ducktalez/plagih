@@ -48,7 +48,10 @@ def main(argv):
     elif task == 'tree-latex':
         print('Creating a Latex-file from tree (label list) csv-file...')
         plagih_gp.visualize_labellist(ipath)
-
+    elif task == 'show-default_config':
+        plagih_gp.show_default_config(ipath)
+    elif task == 'show-default_operators':
+        plagih_gp.show_default_operators(ipath)
     # todo: options for file input
     # todo: options for other functions? run, visualise_tree, analyse_run, check_files, tests
 

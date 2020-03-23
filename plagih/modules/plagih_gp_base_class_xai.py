@@ -202,11 +202,11 @@ class ExplainableGP(object):
         write the parameters to a .csv file which can also be loaded
         """
 
-        # path_config = make_dir(self.root_dir / folder_info)
-        # file = Path.open(path_config / file_config, 'w+')
-        #
-        # with open(filename, 'w') as f:
-        #     json.dump(self.config, f, indent = 4)
+        path_config = make_dir(self.root_dir / folder_info)
+        filename = path_config / file_config
+
+        with Path.open(filename, 'w') as f:
+            json.dump(self.config, f, indent=4)
 
         return
 
@@ -375,6 +375,8 @@ class ExplainableGP(object):
         self.file_conclusion(root_path)
         self.file_pareto(self.pareto, root_path)
         self.file_pareto_latex(self.pareto, root_path)
+        self.file_pareto_pycode(self.pareto, root_path)
+
         file_population_karoo(self.population_base, pop_name, root_path, self.gen_id)  # save the final generation of Trees to disk
 
         return
@@ -618,6 +620,41 @@ class ExplainableGP(object):
         file = Path.open(path_trees / '#all_trees.tex', 'w')
         file.write(latex_full_doc)
         file.close()
+
+        return
+
+    def file_pareto_pycode(self, pareto, root_path):
+        """
+
+        """
+        try:
+            path_trees = make_dir(root_path / folder_trees)
+
+            all_agents = []
+            all_agent_names = []
+
+            for enum, parsim, meta in enumerate(sorted(list(pareto.items()))):
+                agent_name = 'dummyname_{}'.format(enum)
+
+                expr_raw = meta['expr_raw']
+                expr_sym = expr_sympify(expr_raw)
+                label_list_sym = ast_convert_from_expr(expr_sym, build=True)
+                tree = karoo_tree_from_labellist(label_list_sym)
+                pycode = tree_get_pycode(tree)
+                self.printpl('ii', 'pycode (test)\n{}'.format(pycode))
+
+                all_agent_names.append(agent_name)
+                code_tmp = 'def {} ({}):\nreturn {}\n'.format(agent_name, name_observation, textwrap.indent(pycode, '\t'))  # sfeh: maybe cast
+                all_agents.append(code_tmp)
+
+            complete_file = 'import math;\nall_agents = [{}]\n' \
+                            ''.format(all_agents)
+
+            file = Path.open(path_trees / file_pycode, 'w')
+            file.write(complete_file)
+            file.close()
+        except Exception as ex:
+            print_e('Wooops! no py-files created. sfeh-todo? ex: {}'.format(ex))
 
         return
 

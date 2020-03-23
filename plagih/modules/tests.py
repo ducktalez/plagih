@@ -315,4 +315,11 @@ def test_tree_parsimony_ted():
     print('dist 3:', dist2)
 
 
-test_tree_parsimony_ted()
+def test_tree_get_pycode():
+    tree1 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 4])
+    print(tree_get_pycode(tree1))
+    tree1 = karoo_tree_from_labellist(['Ifte', '<', 'Ifte', 'Ifte', 'abs', 0.1, '<', 0, 1, '<', 0, 1, 'observation3', 'observation3', 0, 'observation1', 0])
+    print(tree_get_pycode(tree1))
+
+
+test_tree_get_pycode()

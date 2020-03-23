@@ -2,6 +2,7 @@
 FYI:
 pos = observation0
 velocity = observation1
+pos, vel = observation
 """
 import time
 
@@ -40,15 +41,20 @@ def plot_decisions(env, agent, name):
     return
 
 
-def play_once(env, agent, render=False, verbose=False):
+def play_once(env, agent, render=False, verbose=False, sleep=0.0):
     observation = env.reset()
     episode_reward = 0.
+    if verbose:
+        print('New agent')
     for step in itertools.count():
         if render:
             env.render()
         action = agent.decide(observation)
+        time.sleep(sleep)
         observation, reward, done, _ = env.step(action)
         episode_reward += reward
+        # if verbose:
+        #     print('{:1.2f} {:1.2f} {}'.format(observation[0], observation[1], '--->' if action == 2 else '<---' if action == 0 else '___'))
         if done:
             break
     # if verbose:
@@ -58,28 +64,30 @@ def play_once(env, agent, render=False, verbose=False):
 
 
 def compare_simple(agents):
-    for name, agent in agents.items():
+    for name, agent in agents:
         np.random.seed(0)
         env = gym.make('MountainCar-v0')
         env.seed(0)
         time_start = time.perf_counter()
         episode_rewards = [play_once(env, agent) for _ in range(100)]
-        print('{} \thad average episode rewards = {}. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards), time.perf_counter()-time_start))
+        failcount = sum([1 for x in episode_rewards if x == -200])
+        print('{} \thad average episode rewards = {}. Failed {} times. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards),failcount, time.perf_counter() - time_start))
         env.close()
 
 
-def render_simple(agents):
-    for name, agent in agents.items():
+def render_ntimes(agents, n, verbose=False, sleep=0.0):
+    for name, agent in agents:
         np.random.seed(0)
         env = gym.make('MountainCar-v0')
         env.seed(0)
-
-        play_once(env, agent, render=True)
+        for _ in range(n):
+            episode_rewards = play_once(env, agent, render=True, verbose=verbose, sleep=sleep)
+            print('episode_rewards', episode_rewards)
         env.close()
 
 
 def plot_simple(agents):
-    for name, agent in agents.items():
+    for name, agent in agents:
         np.random.seed(0)
         env = gym.make('MountainCar-v0')
         env.seed(0)
@@ -88,34 +96,52 @@ def plot_simple(agents):
         env.close()
 
 
-with Path.open(Path(sarsa_file_75), 'rb') as file:
-    sarsa_agent_75 = pickle.load(file)
-    print('Loaded sarsa 75')
+def load_sarsas():
 
-with Path.open(Path(sarsa_file_200), 'rb') as file:
-    sarsa_agent_200 = pickle.load(file)
-    print('Loaded sarsa 200')
+    with Path.open(Path(sarsa_file_75), 'rb') as file:
+        sarsa_agent_75 = pickle.load(file)
+        print('Loaded sarsa 75')
 
-with Path.open(Path(sarsa_file_1000), 'rb') as file:
-    sarsa_agent_1000 = pickle.load(file)
-    print('Loaded sarsa 1000')
+    with Path.open(Path(sarsa_file_200), 'rb') as file:
+        sarsa_agent_200 = pickle.load(file)
+        print('Loaded sarsa 200')
 
-with Path.open(Path(sarsa_file_10000), 'rb') as file:
-    sarsa_agent_10000 = pickle.load(file)
-    print('Loaded sarsa 10000')
+    with Path.open(Path(sarsa_file_1000), 'rb') as file:
+        sarsa_agent_1000 = pickle.load(file)
+        print('Loaded sarsa 1000')
 
-all_agents = {'v1_simple': SimpleAgent(),
-              'v1_improved': PlagihAgent_A(),
-              'xiao_base': FixAgent(),
-              'xiao_short': TestFixNoLowerbound(),
-              'sarsa_75': sarsa_agent_75,
-              'sarsa_200': sarsa_agent_200,
-              'sarsa_1000': sarsa_agent_1000,
-              'sarsa_10000': sarsa_agent_10000,
-              'test_tmp': TestTmp(),
-              'AgentV1p40': AgentV1p40()}
+    with Path.open(Path(sarsa_file_10000), 'rb') as file:
+        sarsa_agent_10000 = pickle.load(file)
+        print('Loaded sarsa 10000')
+    return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
 
-eval_agents = {'AgentV1p40': all_agents['AgentV1p40']}  # all_agents['v1_simple'], all_agents['AgentV1p40']]
 
-compare_simple(eval_agents)
-# plot_simple(eval_agents)
+sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
+sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
+# sarsa_agent_75, _, _, _ = load_sarsas()
+
+
+mountain_agents = {1: ('v1_simple', SimpleAgent()),
+                   2: ('v1_improved', PlagihAgent_A()),
+                   3: ('xiao_base', FixAgent()),
+                   4: ('xiao_short', TestFixNoLowerbound()),
+                   5: ('sarsa_75', sarsa_agent_75),
+                   6: ('sarsa_200', sarsa_agent_200),
+                   7: ('sarsa_1000', sarsa_agent_1000),
+                   8: ('sarsa_10000', sarsa_agent_10000),
+                   9: ('test_tmp', TestTmp()),
+                   10: ('AgentV1p40', AgentV1p40()),
+                   11: ('SimonsBest', SimonsGpFriendly()),
+                   12: ('SimonsCheckpoints', SimonsCheckpoints()),
+                   13: ('TestCombined', TestCombined()),
+                   14: ('SimonTesting', SimonsTesting()),}
+
+oneAgent = {mountain_agents[11]}
+twoAgents = {mountain_agents[14], mountain_agents[11]}
+
+# plot_simple(oneAgent)
+# compare_simple(twoAgents)
+render_ntimes(oneAgent, 3, verbose=True, sleep=0.1)
+
+
+# todo idee: gp vs. nn entscheidungen clustern.

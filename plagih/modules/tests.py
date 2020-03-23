@@ -17,9 +17,20 @@ class TestHelpers:
                       'bool': []}
 
 
+def test_all():
+    print('Starting several tests, NOT all!')
+    test_plagih_eval()
+    test_sympify()
+    test_plagih_tree()
+    test_rebuild_loop_tree()
+    test_tree_build()
+    test_choose_function()
+    test_build_tree_grow_nodecount()
+    print('Testing procedure is custom_done!')
+
+
 def test_plagih_eval():
     label_list = MountainCarExamples.tree_v3_list
-
     tree = karoo_tree_from_labellist(label_list)
     expr_raw = tree_get_expr_raw(tree, node_id=root_id)
     expr_sym = expr_sympify(expr_raw=expr_raw)
@@ -121,18 +132,6 @@ def test_choose_function():
         print('test_choose_function() successful!')
 
     return worked_fine
-
-
-def test_all():
-    print('Starting several tests, NOT all!')
-    test_plagih_eval()
-    test_sympify()
-    test_plagih_tree()
-    test_rebuild_loop_tree()
-    test_tree_build()
-    test_choose_function()
-    test_build_tree_grow_nodecount()
-    print('Testing procedure is custom_done!')
 
 
 def test_build_tree_grow_nodecount(verbose=False):
@@ -264,7 +263,7 @@ def test_tree_viz_latex():
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
     tree3 = p_tree.get_uninstanced_tree()
 
-    result = tree_viz_get_tex_forest(tree3)
+    result = tree_get_latex_forest(tree3)
     print(result)
 
 
@@ -316,4 +315,11 @@ def test_tree_parsimony_ted():
     print('dist 3:', dist2)
 
 
-test_tree_parsimony_ted()
+def test_tree_get_pycode():
+    tree1 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 4])
+    print(tree_get_pycode(tree1))
+    tree1 = karoo_tree_from_labellist(['Ifte', '<', 'Ifte', 'Ifte', 'abs', 0.1, '<', 0, 1, '<', 0, 1, 'observation3', 'observation3', 0, 'observation1', 0])
+    print(tree_get_pycode(tree1))
+
+
+test_tree_get_pycode()

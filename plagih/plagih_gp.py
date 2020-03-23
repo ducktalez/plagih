@@ -41,75 +41,6 @@ def cartpole_load_corefiles(config_dict, path):
     return gp
 
 
-def run_mountaincar_v1(config_dict, path):
-    description = 'Mountaincar from 2-decision Origin (simple)'
-    config_dict['name'] = 'MTC_v1'
-    config_dict['root_dir'] = path
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=MountainCarExamples.tree_v1_list, modify_list=MountainCarExamples.tree_v1_modify)
-    return gp
-
-
-def run_mountaincar_v2(config_dict, path):
-    config_dict['name'] = 'MTC_v2'
-    config_dict['root_dir'] = path
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
-    return gp
-
-
-def run_mountaincar_v3(config_dict, path):
-    config_dict['name'] = 'MTC_v3'
-    config_dict['root_dir'] = path
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=MountainCarExamples.tree_v3_list, modify_list=MountainCarExamples.tree_v3_modify)
-    return gp
-
-
-def run_mountaincar_v4(config_dict, path):
-    config_dict['name'] = 'MTC_v4_scratch'
-    config_dict['root_dir'] = path
-    config_dict['kernel_name'] = 'regression bounded'
-    config_dict['evolve_rates']['random from scratch'] += config_dict['evolve_rates']['random from origin_tree']
-    config_dict['evolve_rates']['random from origin_tree'] = 0
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=MountainCarExamples.tree_v1_list)
-    return gp
-
-
-def analyse_old_run(root_dir):
-    config_dict = create_config_dict_default()
-    mountaincar_update_analysis_files(config_dict, root_dir)
-
-
-def mountaincar_update_analysis_files(config_dict, path):
-    all_runs = ['MTC_v1', 'MTC_v2', 'MTC_v3', 'MTC_v4']
-
-    config_dict['root_dir'] = path
-    config_dict['mode'] = 'analyse'
-
-    config_dict['name'] = 'MTC_v4_scratch'
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.plagih_update_analysis()
-    return
-
-
-def run_mountaincar_test(config_dict, path):
-    config_dict['name'] = 'MTC_test'
-    # test_run = Path.cwd() / example_runs / config_dict['name']
-    # print('Test dir is:', test_run)
-    config_dict['root_dir'] = path
-    config_dict['pop_max'] = 100
-    config_dict['gen_max'] = 500
-    config_dict['tourn_size'] = 3
-    config_dict['kernel_name'] = 'regression bounded'
-    config_dict['parsimony_max'] = 50
-    config_dict['print_type'] = 'ewaaaggggsiiiivvvtopppttt'    # To print_type absolutely all: ewaaaiiiiggggvvvpppttt
-    gp = mountaincar_load_corefiles(config_dict, path)
-    gp.activate_origin_tree(label_list=MountainCarExamples.tree_v2_list, modify_list=MountainCarExamples.tree_v2_modify)
-    return gp
-
-
 def plagih_config_update_from_json(config_json='config.json'):
     """
     The config gets updated
@@ -121,6 +52,45 @@ def plagih_config_update_from_json(config_json='config.json'):
 
 # create_samples_pickle_prepared(root_dir, CartpoleExamples.files['samples_file'])  # todo outsource
 # analyse_old_run(root_dir)
+
+def labellists_from_csv(csv_path):
+    modify_list = []
+    with Path.open(csv_path, newline='') as csvFile:
+        reader = csv.reader(csvFile, delimiter=',')
+        for row in reader:
+            if len(row) > 0:
+                if row[0] == 'label_list':
+                    label_list = row[1:]
+                elif row[0] == 'modify_list':
+                    modify_list = [int(x) for x in row[1:]]  # N_modify sfeh
+                elif row[0] == '':
+                    pass
+                else:
+                    print_warning('ww', 'Unexpected row start: {}'.format(row[0]))
+
+    if label_list is None:
+        raise Exception('Labels could not be created from file.')
+
+    return label_list, modify_list
+
+
+def show_default_config(output_file):
+    """
+    - config.json
+    """
+    if not Path.is_dir(output_file.parent):
+        raise Exception('Will not make the path with Path.mkdir(output_file.parent): {}'.format(output_file))
+    print('Coming soon! sfeh.')
+
+
+def show_default_operators(output_file=None):
+    """
+    - operators.csv
+    """
+
+    if not Path.is_dir(output_file.parent):
+        raise Exception('Will not make the path with Path.mkdir(output_file.parent): {}'.format(output_file))
+    print('Coming soon! sfeh.')
 
 
 def run(root_dir):
@@ -163,17 +133,7 @@ def run(root_dir):
 
     origin_tree = None
     if Path.is_file(tree_labels_csv_path):
-        modify_list = []
-        with Path.open(tree_labels_csv_path, newline='') as csvFile:
-            reader = csv.reader(csvFile, delimiter=',')
-            for row in reader:
-                if len(row) > 0:
-                    if row[0] == 'label_list':
-                        label_list = row[1:]
-                    elif row[0] == 'modify_list':
-                        modify_list = [int(x) for x in row[1:]]  # N_modify sfeh
-                    else:
-                        print_warning('ww', 'Unexpected row: {}'.format(row))
+        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)
 
         origin_tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
@@ -193,6 +153,24 @@ def run(root_dir):
 
     gp.plagih_gp_run()
     sys.exit()
+
+
+def visualize_labellist(csv_file, output_file=None):
+    """
+    visualize a label list
+    e.g. if you want to check, if you made your tree correctly
+    """
+    if Path.is_file(csv_file):
+        label_list, modify_list = labellists_from_csv(csv_file)
+        tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
+        forest_input = tree_get_latex_forest(tree)
+        latex_full_doc = latex_complete_tree_summary(forest_input)
+        if not output_file:
+            output_file = csv_file.with_suffix('.tex')
+        with Path.open(output_file, 'w') as csv_file:
+            csv_file.write(latex_full_doc)
+    else:
+        print_e('File {}  does not exist!'.format(csv_file))
 
 
 if __name__ == "__main__":

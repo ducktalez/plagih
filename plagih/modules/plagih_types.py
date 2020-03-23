@@ -10,6 +10,7 @@ Be careful with if-then-else though. This needs boolean and two float inputs to 
 from plagih.modules.dicts import *
 from plagih.modules.printing import *
 import numpy as np
+from plagih.modules.dicts import name_observation
 
 
 def op_label_get_basictype(node_label):
@@ -239,7 +240,7 @@ def xtype_get(label, variables_dict, node_arity=None):
     if node_arity == 0:  # arity=0 -> terminal
         if 'True' in label or 'False' in label:
             node_xtype = '2b'
-        elif 'observation' in label:
+        elif name_observation in label:
             term_position = variables_dict['all'].index(label)
             node_xtype = op[variables_dict['types'][term_position]]['xtype']
 

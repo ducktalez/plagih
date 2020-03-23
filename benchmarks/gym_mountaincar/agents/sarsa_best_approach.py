@@ -8,6 +8,7 @@ np.random.seed(0)
 import gym
 import sys
 from pathlib import Path
+from plagih.modules.dicts import name_observation, name_action
 
 import pickle
 
@@ -151,7 +152,7 @@ def create_samples_dataset(seed=0):
     #     pickle.dump(plagih_behaviour_samples, fp)
 
     # pickle-version does make too much trouble for now... need to switch to .csv
-    samples_csv_ready = [['observation0:' + 'float', 'observation1:' + 'float', 'action0:' + 'int']]
+    samples_csv_ready = [[name_observation + '0:' + 'float', name_observation + '1:' + 'float', name_action + '0:' + 'int']]
     for sample in plagih_behaviour_samples:
         row = []
         row.append(sample[0][0])

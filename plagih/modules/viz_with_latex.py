@@ -47,7 +47,7 @@ def latex_wrap_forest(tikz_forest_tree):
         - point: sfeh, guess this is currently not used
     """
     latex_tikz_forest = '\n\\begin{{forest}}' \
-                        '\n  for tree={{symbol, rounded corners,draw=black!100, fill=green!20}}' \
+                        '\n  for tree={{symbol, rounded corners,draw=black!100}}' \
                         '\n  point/.style={{coordinate,}},' \
                         '\n  symbol/.style={{draw=black,text height=1.5ex,text depth=.25ex,}},' \
                         '\n  terminal/.style={{symbol,}},' \

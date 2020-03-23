@@ -36,8 +36,6 @@ root_id = 1
 
 node_is_modifiable = 1
 
-observation_n = 'observation'
-
 
 class Plagih_Tree():
     """
@@ -78,7 +76,7 @@ class Plagih_Tree():
         """
         create a tree from user input
         """
-        arity_list = [label_get_arity(label) for label in label_list]
+        arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
         core = core_from_labels(label_list, arity_list)
         if modify_list:
             for i, val in enumerate(modify_list):
@@ -233,7 +231,7 @@ def tree_set_last_evolution(tree, last_modification):
 
 def tree_set_xtypes(tree, variables_dict):
     """
-    Ser xtype for all nodes in the tree.
+    Set xtype for all nodes in the tree.
     Faster than 'looking up' the xtype every time with xtype_get which needs extra dicts
     :param tree:
     :param variables_dict:
@@ -397,6 +395,7 @@ def tree_node_get_arity(tree, node_id):
 
 def tree_node_get_nodekind(tree, node):
     """
+    special node-type 'nodekind'
     'func', 'term-variable', 'term-float', 'term-bool'
     """
     arity = tree_node_get_arity(tree, node)
@@ -404,7 +403,7 @@ def tree_node_get_nodekind(tree, node):
         nodekind = 'func'
     else:
         label = tree[N_label][node]
-        if input_name in label:  # 'observation'
+        if name_observation in label:  # 'observation'
             nodekind = 'term-variable'
         elif 'True' in label or 'False' in label:
             nodekind = 'term-bool'
@@ -562,7 +561,7 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
 
 def tree_node_is_variable(tree, node_id):
     label = tree_node_get_label(tree, node_id)
-    return observation_n in label
+    return name_observation in label
 
 
 def tree_node_is_modifiable(tree, node_id):
@@ -745,12 +744,13 @@ def tree_evolve_branch_multiple(tree, goal_nodes, variables_dict, func_array):
     - get these nodes, randomly choose a subset of those
     - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
     - split the amount of nodes up (randomly) and add these new branches to the tree
+    todo fix min and max border
     """
 
     tree_base = tree.copy()
     layer0_ids = tree_get_mutatable_layer(tree, 0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
-    del_amount = 0
-    nodes_left = goal_nodes - (tree_get_size(tree, karoo=True) - del_amount)  # ('Which lets us replace {} amount of old nodes'.format(nodes_left))
+    nodes_left = goal_nodes  # sfeh - max_nodes-tree_get_size(tree, karoo=True))  # ('Which lets us replace {} amount of old nodes'.format(nodes_left))
+
     num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
 
     for i in range(len(layer0_ids)):  # finally, insert branches. need to get layer every time as node ids might have changed.
@@ -758,7 +758,6 @@ def tree_evolve_branch_multiple(tree, goal_nodes, variables_dict, func_array):
         node_id = layer0_ids[i]
         old_branch = tree_get_branch(tree, node_id, karoo=True)
         tree = tree_evolve_insert_branch_v2(tree_base, old_branch, variables_dict, func_array, goal_nodes=num_nodes_split[i])  # tree with new branch
-
     return tree
 
 
@@ -786,14 +785,14 @@ def tree_evolve_insert_branch_v2(tree, branch_ids, variables_dict, func_array, g
     return tree
 
 
-def invent_label_list_nodes_grow(xtype, goal_nodes, variables_dict, func_array, build_type='grow'):
+def invent_label_list_nodes_grow(xtype, goal_max_nodes, variables_dict, func_array, build_type='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
     E. g.: 'float', 5 nodes, min_nodes = 2
     - tbd list: ['2b', '2f']
     - random term_fun_list: ['func', 'term']
-
+    todo test till works
     """
     tbdo_xtypes = [xtype]
     tbd_node_amount = 1
@@ -824,8 +823,8 @@ def invent_label_list_nodes_grow(xtype, goal_nodes, variables_dict, func_array, 
             xtype = tbdo_xtypes[index]
 
             label, arity = xtype_choose_func(func_array, xtype=xtype)
-            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), goal_nodes)
-            if goal_nodes > (len(result_label_list) + tbd_node_amount) + arity + 1:  # +1 = the start node which we must not forget
+            # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), tbd_node_amount, '>', arity, ')', (len(result_label_list) + tbd_node_amount + arity), goal_max_nodes)
+            if goal_max_nodes > (len(result_label_list) + tbd_node_amount) + arity + 1:  # +1 = the start node which we must not forget
                 tmp_label_list[index] = label
                 tmp_arity_list[index] = arity
                 tbd_node_amount += arity - 1
@@ -993,26 +992,67 @@ def tree_get_expr_raw(tree, node_id):
     The large amount of () is required doe to some sympify errors. But feel free to reduce them.
     """
     node_id = int(node_id)
+    arity = tree[N_arity, node_id]
+    label = tree[N_label, node_id]
+    if arity == '0':  # arity of 0 for the pattern '[term]'
+        return '({})'.format(label)  # 'node_label' (function or terminal)
 
-    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-        return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
-
-    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        fun = tree[N_label, node_id]
+    elif arity == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        fun = label
         if fun == '~':  # ~- workaround
             return '(-({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]))
         else:
-            return '(' + fun + tree_get_expr_raw(tree, tree[9, node_id]) + ')'
+            return '({}{})'.format(fun, tree_get_expr_raw(tree, tree[9, node_id]))
 
-    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-        # This if case is for 2-ary ops that is prefix. like Min(a, b)
-        if tree[N_label, node_id] not in functions_infix_dict:
-            return '(' + tree[N_label, node_id] + '(' + tree_get_expr_raw(tree, tree[9, node_id]) + ', ' + tree_get_expr_raw(tree, tree[10, node_id]) + '))'
+    elif arity == '2':
+        if label not in functions_infix_dict:
+            return '({}({}, {}))'.format(label, tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]))
         else:
-            return '(' + tree_get_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_get_expr_raw(tree, tree[10, node_id]) + ')'
+            return '({}{}{})'.format(tree_get_expr_raw(tree, tree[9, node_id]), label, tree_get_expr_raw(tree, tree[10, node_id]))
 
-    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-        return '(Ifte(' + tree_get_expr_raw(tree, tree[9, node_id]) + ', ' + tree_get_expr_raw(tree, tree[10, node_id]) + ', ' + tree_get_expr_raw(tree, tree[11, node_id]) + '))'
+    elif arity == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '(Ifte({}, {}, {}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))
+
+
+def tree_get_pycode(tree, node_id=root_id):
+    """
+    returns python (one-lined) code from a tree
+    """
+    node_id = int(node_id)
+    arity = tree[N_arity, node_id]
+    label = tree_node_get_label(tree, node_id)
+
+    if arity == '0':
+        return '{}'.format(label)
+    else:
+        childs = tree_node_get_childs(tree, node_id)
+        results = []
+        for child in childs:
+            results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
+        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
+
+
+def tree_raw_depth_prefix(tree, node_id):
+    """
+    Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
+
+    """
+
+    node_id = int(node_id)
+    arity = tree[N_arity, node_id]
+    label = tree[N_label, node_id]
+
+    if arity == '0':  # arity of 0 for the pattern '[term]'
+        return '{{{}}}'.format(label)  # '{{{}}}'
+
+    elif arity == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        return '{{{}{}}}'.format(label, tree_raw_depth_prefix(tree, tree[9, node_id]))
+
+    elif arity == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
+        return '{{{}{}{}}}'.format(label, tree_raw_depth_prefix(tree, tree[9, node_id]), tree_raw_depth_prefix(tree, tree[10, node_id]))
+
+    elif arity == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '{{Ifte{}{}{}}}'.format(tree_raw_depth_prefix(tree, tree[9, node_id]), tree_raw_depth_prefix(tree, tree[10, node_id]), tree_raw_depth_prefix(tree, tree[11, node_id]))
 
 
 def tree_get_last_nodeid(tree):
@@ -1299,27 +1339,6 @@ def expr_sympify(expr_raw):
             raise Exception('Sympify: Failed due to a fail reason: {}.'.format(fail_reason))
 
     return expr_sym
-
-
-def tree_raw_depth_prefix(tree, node_id):
-    """
-    Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
-
-    """
-
-    node_id = int(node_id)
-
-    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-        return '{' + tree[N_label, node_id] + '}'  # '{{{}}}'
-
-    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        return '{' + tree[N_label, node_id] + tree_raw_depth_prefix(tree, tree[9, node_id]) + '}'
-
-    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[eval] [func] [eval]'
-        return '{' + tree[N_label, node_id] + '' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + '' + '}'
-
-    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-        return '{Ifte' + tree_raw_depth_prefix(tree, tree[9, node_id]) + tree_raw_depth_prefix(tree, tree[10, node_id]) + tree_raw_depth_prefix(tree, tree[11, node_id]) + '' + '}'
 
 
 def tree_branch_get_label_list(tree, node_ids, karoo=False):
@@ -1746,7 +1765,7 @@ def xtype_get_constant(label, node_arity=None, only_float=True):
         if 'True' in label or 'False' in label:
             if not only_float:
                 const_xtype = '2b'
-        elif 'observation' in label or 'action' in label:
+        elif name_observation in label or name_action in label:
             pass
         else:
             # now it MUST be float
@@ -1829,6 +1848,7 @@ def tree_evolve_reduce(tree, completely=True):
         return tree
     except Exception as ex:
         print_warning('ww', 'Could not reduce tree/branch due to Exception: {}'.format(ex))
+        raise
         return
 
 
@@ -2200,6 +2220,8 @@ def tree_viz_get_nel(tree):
 def tree_viz_get_forest(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
+
+    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
     """
     extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
@@ -2238,7 +2260,7 @@ def tree_viz_get_forest(tree, node_id=root_id):
     return latex_label
 
 
-def tree_viz_get_tex_forest(tree):
+def tree_get_latex_forest(tree):
     """
     Creates forest tree representation (based on tikz) for LaTeX.
     The file can easily ne included in a .tex file with '\input{file_name}'

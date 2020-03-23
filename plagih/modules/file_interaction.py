@@ -7,7 +7,7 @@ import sklearn.model_selection as skcv
 import numpy as np
 
 
-example_runs = 'run_examples/'
+example_runs = 'examples/'
 
 folder_save = 'save/'
 folder_plots = 'plots/'
@@ -21,6 +21,7 @@ complete_file_pareto = 'pareto.txt'
 file_config = 'config.csv'
 file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
+file_pycode = 'agents.py'
 
 run_files = 'run_files'
 config_json = 'config.json'

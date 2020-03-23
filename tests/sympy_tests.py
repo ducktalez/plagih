@@ -1,11 +1,11 @@
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.dicts import input_name
+from plagih.modules.dicts import name_observation
 import re
 
 
 def help_reduce_expr(expr):
-    a = input_name + '0'
-    b = input_name + '1'
+    a = name_observation + '0'
+    b = name_observation + '1'
 
     replacements = [(a, 'a'), (b, 'b'), ('(True)', 'True'), ('(False)', 'False'), ('(a)', 'a'), ('sina', 'sin(a)')]
     for repl in replacements:
@@ -85,10 +85,11 @@ def test_sympify_many():
     print(plagih_sympify('a*a*a*a*a'))
     print(plagih_sympify('N(2.345, 2)'))
     print(plagih_sympify('Or(True, False)'))
+    print(plagih_sympify('(Ifte((Or(((b)<(1)), (((b)<(0.1))&((a)<(-0.01))))), (2), (Ifte((((a)<(0.01))&(((b)>(-0.1))&((b)<(-0.01)))), (0), (Ifte(((a)<(0)), (0), (2)))))))'))
 
 print('\nNew try:\n')
 
-expr = '(Ifte((Or(((b)<(1)), (((b)<(0.1))&((a)<(-0.01))))), (2), (Ifte((((a)<(0.01))&(((b)>(-0.1))&((b)<(-0.01)))), (0), (Ifte(((a)<(0)), (0), (2)))))))'
+expr = 'tanh(1)'
 # new_expr = help_reduce_expr(expr)
 # print('Expression was strongly changed to: \n{}\n'.format(new_expr))
 print(plagih_sympify(expr))

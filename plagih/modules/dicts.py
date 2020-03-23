@@ -2,16 +2,16 @@ import tensorflow as tf
 import ast
 from pathlib import Path
 
-
 fitt_dict = {'classification': 'max',
              'regression': 'min',
              'regression bounded': 'min',
              'match': 'max'}
 
 FIRST_TREE = 0
-first_action = 'action0'
+name_action = 'action'
+first_action = name_action + str(0)
+name_observation = 'observation'
 first_gen_id = 1  # maybe take care to make this 0 for base gen
-input_name = 'observation'
 
 delete_this = True
 
@@ -35,95 +35,99 @@ Features should always be defined, even though they might not occur at all. If n
 Some, which are known of not being used yet are commented with '# not tested' or '# not used'
 todo: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 """
-op = {      # 'f2f': Classical mathematical operators, evaluate from float to float
-      '+':      {'name': '+',       'arity': 2,     'xtype': 'f2f', 	'tf': tf.add, 				'gpbp': ['ö'], 	'latex': '$+$'},  # not tested
-      ast.Add:  {'name': '+',       'arity': 2,     'xtype': 'f2f', 	'tf': tf.add, 				'gpbp': ['ö'], 	'latex': None},  # e.g., a + b
-      '-':      {'name': '-',       'arity': 2,     'xtype': 'f2f', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$-$'},
-      ast.Sub:  {'name': '-',       'arity': 2,     'xtype': 'f2f', 	'tf': tf.subtract, 			'gpbp': ['ö'], 	'latex': None},  # e.g., a - b
-      '~':      {'name': '~',       'arity': 1,     'xtype': 'f2f', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$-$'},  # todo this is minus again
-      'usub':   {'name': '~',       'arity': 1,     'xtype': 'f2f', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      ast.USub: {'name': '~',       'arity': 1,     'xtype': 'f2f', 	'tf': tf.negative, 			'gpbp': ['ö'], 	'latex': None},  # e.g., -a
-      '*':      {'name': '*',       'arity': 2,     'xtype': 'f2f', 	'tf': tf.multiply, 			'gpbp': ['ö'], 	'latex': '$\\cdot$'},
-      ast.Mult: {'name': '*',       'arity': 2,     'xtype': 'f2f', 	'tf': tf.multiply, 			'gpbp': ['ö'], 	'latex': None},  # e.g., a * b
-      '/':      {'name': '/',       'arity': 2,     'xtype': 'f2f', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$\\div$'},
-      ast.Div:  {'name': '/',       'arity': 2,     'xtype': 'f2f', 	'tf': tf.math.divide_no_nan, 'gpbp': ['ö'], 'latex': None},  # e.g., a / b  # todo try tf.math.divide_no_nan
-      '**':     {'name': '**',      'arity': 2,     'xtype': 'f2f', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$**$'},
-      ast.Pow:  {'name': '**',      'arity': 2,     'xtype': 'f2f', 	'tf': tf.pow, 				'gpbp': ['ö'], 	'latex': None},  # e.g., a ** 2
-      'abs':    {'name': 'abs',     'arity': 1,     'xtype': 'f2f', 	'tf': tf.abs, 				'gpbp': ['ö'], 	'latex': None},
-      'sign':   {'name': 'sign',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.sign, 				'gpbp': ['ö'], 	'latex': None},
-      'square': {'name': 'square',  'arity': 1,     'xtype': 'f2f', 	'tf': tf.square, 			'gpbp': ['ö'], 	'latex': None},
-      'sqrt':   {'name': 'sqrt',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.sqrt, 				'gpbp': ['ö'], 	'latex': None},
-      'log':    {'name': 'log',     'arity': 1,     'xtype': 'f2f', 	'tf': tf.math.log, 			'gpbp': ['ö'], 	'latex': None},
-      'log1p':  {'name': 'log1p',   'arity': 1,     'xtype': 'f2f', 	'tf': tf.math.log1p, 		'gpbp': ['ö'], 	'latex': None},
-      'cos':    {'name': 'cos',     'arity': 1,     'xtype': 'f2f', 	'tf': tf.cos, 				'gpbp': ['ö'], 	'latex': None},
-      'sin':    {'name': 'sin',     'arity': 1,     'xtype': 'f2f', 	'tf': tf.sin, 				'gpbp': ['ö'], 	'latex': '$\\sin$'},
-      'tan':    {'name': 'tan',     'arity': 1,     'xtype': 'f2f', 	'tf': tf.atan, 				'gpbp': ['ö'], 	'latex': None},
-      'acos':   {'name': 'acos',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.acos, 				'gpbp': ['ö'], 	'latex': None},
-      'asin':   {'name': 'asin',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.asin, 				'gpbp': ['ö'], 	'latex': None},
-      'atan':   {'name': 'atan',    'arity': 1,     'xtype': 'f2f', 	'tf': tf.atan, 				'gpbp': [1], 	'latex': None},
-      # todo round operation! sympify: N(1.2345, decimals). e.g. Int
+op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
+    '+': 	{'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'gpbp': ['ö'], 'latex': '$+$', 'call': 'inline', 				'pycode': '({}+{})'},
+    ast.Add: 	{'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 				    'pycode': None},
+    '-': 	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$-$', 'call': 'inline', 			    	'pycode': '({}-{})'},
+    ast.Sub: 	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 			'pycode': None},
+    '~': 	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$-$', 'call': 'inline', 				    'pycode': '(-{})'},  # todo this is minus again
+    'usub': 	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			      	'pycode': None},
+    ast.USub: 	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'gpbp': ['ö'], 'latex': None, 'call': None, 	    	'pycode': None},
+    '*': 	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'gpbp': ['ö'], 'latex': '$\\cdot$', 'call': 'inline',   	'pycode': '({}*{})'},
+    ast.Mult: 	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	    'pycode': None},  # a * b
+    '/': 	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$\\div$', 'call': 'inline', 		    	'pycode': '({}/{})'},
+    ast.Div: 	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 'pycode': None},  # a / b  # todo try tf.math.divide_no_nan
+    '**': 	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$**$', 'call': 'inline', 			    	'pycode': '({}*{})'},
+    ast.Pow: 	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 			'pycode': None},  # a ** 2
+    'abs': 	{'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'tf': tf.abs, 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': 'abs({})'},
+    'sign': 	{'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sign, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': None},
+    'square': 	{'fun': 'square', 'arity': 1, 'xtype': 'f2f', 'tf': tf.square, 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': '(({})**2)'},
+    'sqrt': 	{'fun': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sqrt, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'math.sqrt({})'},
+    'log': 	{'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'math.log({})'},
+    'log1p': 	{'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log1p, 'gpbp': ['ö'], 'latex': None, 'call': None, 		'pycode': 'math.log1p()'},
+    'cos': 	{'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.cos, 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': 'math.cos({})'},
+    'sin': 	{'fun': 'sin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sin, 'gpbp': ['ö'], 'latex': '$\\sin$', 'call': None, 				'pycode': 'math.sin({})'},
+    'tan': 	{'fun': 'tan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan, 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': 'math.tan({})'},
+    'acos':     {'fun': 'acos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.acos, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'math.acos({})'},
+    'asin': 	{'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.asin, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'math.asin({})'},
+    'atan': 	{'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan, 'gpbp': [1], 'latex': None, 'call': None, 				'pycode': 'math.atan({})'},
+    'tanh': 	{'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'tf': tf.tanh, 'gpbp': [1], 'latex': None, 'call': None, 				'pycode': 'math.tanh({})'},
+    # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
-            # 'b2b' Classical logical operators, evaluate from bool to bool
-      'And':    {'name': 'And',     'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      ast.And:  {'name': 'And',     'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_and, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a and b
-      '&':      {'name': '&',       'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_and, 		'gpbp': ['ö'], 	'latex': '$\\land$'},
-      ast.BitAnd: {'name': '&',     'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_and, 		'gpbp': ['ö'], 	'latex': None},  # DON'T USE tf.bitwise.bitwise_and
-      'Or':     {'name': 'Or',      'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$\\lor$'},
-      ast.Or:   {'name': 'Or',      'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_or, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a or b
-      '|':       {'name': '|',      'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_or, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a or b
-      ast.BitOr: {'name': '|',      'arity': 2,     'xtype': 'b2b', 	'tf': tf.logical_or, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a or b
-# ast.BitOr
-      'Xor':    {'name': 'Xor',     'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      'Nand':   {'name': 'Nand',    'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      'Xand':   {'name': 'Xand',    'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      'Nor':    {'name': 'Nor',     'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      'Xnor':   {'name': 'Xnor',    'arity': 2,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      'Not':    {'name': 'Not',     'arity': 1,     'xtype': 'b2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},
-      ast.Not:  {'name': 'Not',     'arity': 1,     'xtype': 'b2b', 	'tf': tf.logical_not, 		'gpbp': ['ö'], 	'latex': '$\\neg$'},  # e.g., not a
+    # 'b2b' Classical logical operators, evaluate from bool to bool
+    'And': 	{'fun': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				        'pycode': '({} and {})'},
+    ast.And: 	{'fun': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'gpbp': ['ö'], 'latex': None, 'call': None, 		'pycode': None},  # a and b
+    '&': 	{'fun': 'bitwise', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'gpbp': ['ö'], 'latex': '$\\land$', 'call': 'inline', 	'pycode': '({} & {})'},
+    ast.BitAnd: 	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	'pycode': None},  # DON'T USE tf.bitwise.bitwise_and
+    'Or': 	{'fun': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$\\lor$', 'call': None, 			    	'pycode': '({} or {})'},
+    ast.Or: 	{'fun': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': None},  # a or b
+    '|': 	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 			'pycode': '({} | {})'},  # a or b
+    ast.BitOr: 	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': None},  # a or b
+    # ast.BitOr
+    'Xor': 	{'fun': 'Xor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': '({} ^ {})'},
+    'Nand': 	{'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'not({} and {})'},
+    'Xand': 	{'fun': 'Xand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'not({} ^ {})'},
+    'Nor': 	{'fun': 'Nor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				    'pycode': None},
+    'Xnor': 	{'fun': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': None},
+    'Not': 	{'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				    'pycode': None},
+    ast.Not: 	{'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'gpbp': ['ö'], 'latex': '$\\neg$', 'call': None, 				'pycode': None},  # not a
 
-            # 'f2b' Classical comparative operators, evaluate from float to bool
-      '==':     {'name': '==',      'arity': 2,     'xtype': 'f2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$==$'},
-      ast.Eq:   {'name': '==',      'arity': 2,     'xtype': 'f2b', 	'tf': tf.equal, 			'gpbp': ['ö'], 	'latex': None},  # e.g., a == b
-      '!=':     {'name': '!=',      'arity': 2,     'xtype': 'f2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$\\neg$'},
-      ast.NotEq: {'name': '!=',     'arity': 2,     'xtype': 'f2b', 	'tf': tf.not_equal, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a != b
-      '<':      {'name': '<',       'arity': 2,     'xtype': 'f2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$<$'},
-      ast.Lt:   {'name': '<',       'arity': 2,     'xtype': 'f2b', 	'tf': tf.less, 				'gpbp': ['ö'], 	'latex': None},  # e.g., a < b
-      '<=':     {'name': '<=',      'arity': 2,     'xtype': 'f2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$<=$'},
-      ast.LtE:  {'name': '<=',      'arity': 2,     'xtype': 'f2b', 	'tf': tf.less_equal, 		'gpbp': ['ö'], 	'latex': None},  # e.g., a <= b
-      '>':      {'name': '>',       'arity': 2,     'xtype': 'f2b', 	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$>$'},
-      ast.Gt:   {'name': '>',       'arity': 2,     'xtype': 'f2b', 	'tf': tf.greater, 			'gpbp': ['ö'], 	'latex': None},  # e.g., a > b
-      '>=':     {'name': '>=',      'arity': 2,     'xtype': 'f2b',   	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': '$>=$'},
-      ast.GtE:  {'name': '>=',      'arity': 2,     'xtype': 'f2b',   	'tf': tf.greater_equal, 	'gpbp': ['ö'], 	'latex': None},  # e.g., a >= 1
+    # 'f2b' Classical comparative operators, evaluate from float to bool
+    '==': 	{'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$==$', 'call': 'inline', 				'pycode': '({}=={})'},
+    ast.Eq: 	{'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': '({}=={})'},  # a == b
+    '!=': 	{'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$\\neg$', 'call': 'inline', 			'pycode': '({}!={})'},
+    ast.NotEq: 	{'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.not_equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline',	'pycode': '({}!={})'},  # a != b
+    '<': 	{'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$<$', 'call': 'inline', 				'pycode': '({}<{})'},
+    ast.Lt: 	{'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': '({}<{})'},  # a < b
+    '<=': 	{'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$<=$', 'call': 'inline', 				'pycode': '({}<={})'},
+    ast.LtE: 	{'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less_equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	'pycode': '({}<={})'},  # a <= b
+    '>': 	{'fun': '>', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$>$', 'call': 'inline', 				'pycode': '({}>{})'},
+    ast.Gt: 	{'fun': '>', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': '({}>{})'},  # a > b
+    '>=': 	{'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$>=$', 'call': 'inline', 				'pycode': '({}>={})'},
+    ast.GtE: 	{'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater_equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	'pycode': '({}>={})'},  # a >= 1
 
-      # Functions which need separate handling in sympify
-      'Ifte': {'name': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where, 'gpbp': ['ö'], 'latex': 'if'},
-      'Mini': {'name': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum, 'gpbp': ['ö'], 'latex': '$\\min$'},  # e.g. Mini(a, b)
-      'Maxi': {'name': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum, 'gpbp': ['ö'], 'latex': '$\\max$'},  # e.g. Maxi(a, b)
+    # Functions which need separate handling in sympify
+    'Ifte': 	{'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where, 'gpbp': ['ö'], 'latex': 'if', 'call': None, 'pycode': 'if {}:\n{}\nelse:{}'},
+    'Mini': 	{'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum, 'gpbp': ['ö'], 'latex': '$\\min$', 'call': None, 'pycode': 'min({})'},  # maximum
+    'Maxi': 	{'fun': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum, 'gpbp': ['ö'], 'latex': '$\\max$', 'call': None, 'pycode': 'max({})'},  # minimum
 
-            # Not tested: Converters: Dummy operators that convert between float and bool
-      'Ftob':   {'name': 'Ftob',    'arity': 1,     'xtype': 'f2b',   	'tf': tf.bool, 				'gpbp': ['ö'], 	'latex': None},  # not tested
-      'Btof':   {'name': 'Btof',    'arity': 1,     'xtype': 'b2f',   	'tf': tf.float32, 			'gpbp': ['ö'], 	'latex': None},  # not tested
+    # I think this is only used when trying to get the xtype of type(variable), e.g. 0.3 -> float -> '2f'
+    'float': 	{'fun': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'float({})'},  # not tested
+    'int': 	{'fun': 'int', 'arity': 0, 'xtype': '2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				    'pycode': 'int({})'},  # not tested
+    'bool': 	{'fun': 'bool', 'arity': 0, 'xtype': '2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': 'bool({})'},  # not tested
+}
 
-            # Never used yet, trying to get rid of the ** function
-      'Power':  {'name': 'Power',   'arity': 1,     'xtype': 'f2f',   	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},  # not used # todo # a*a*a -> a**3
-      'inverse': {'name': 'inverse', 'arity': 1,    'xtype': 'f2f',  	'tf': 'ä', 					'gpbp': ['ö'], 	'latex': None},  # not used # 1/float. important for squareroots. todo
+op_test = {
 
-            # I think this is only used when trying to get the xtype of type(variable), e.g. 0.3 -> float -> '2f'
-      'float':  {'name': 'float',   'arity': 0,     'xtype': '2f',      'tf': 'ä',                  'gpbp': ['ö'], 'latex': None},  # not tested
-      'int':    {'name': 'int',     'arity': 0,     'xtype': '2f',      'tf': 'ä',                  'gpbp': ['ö'], 'latex': None},  # not tested
-      'bool':   {'name': 'bool',    'arity': 0,     'xtype': '2b',      'tf': 'ä',                  'gpbp': ['ö'], 'latex': None},  # not tested
+    # Not tested: Converters: Dummy operators that convert between float and bool
+    'Ftob': 	{'fun': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool, 'gpbp': ['ö'], 'latex': None, 'call': 'bool', 			'pycode': None},  # not tested, same as bool
+    'Btof': 	{'fun': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32, 'gpbp': ['ö'], 'latex': None, 'call': 'float', 		'pycode': None},  # not tested
 
-            # Never used yet, todo. Trying to introduce multi-dimensional outputs that should
-      'vector': {'name': 'vector',  'arity': 1, 'xtype': 'ü', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None},  # not tested # sfeh: not working
+    # Never used yet, trying to get rid of the ** function
+    'Power': 	{'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': '(({})**{})', 			'pycode': None},  # not used # todo # a*a*a -> a**3
+    'inverse': 	{'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': None},  # not used # 1/float. important for squareroots. todo
 
-            # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
-            # Also very unclear how they should work.
-            # - Let user specify them completely. Limit use to 1 (or 2) per tree.
-            # - temporary variable(s) must be introduced that change within loop
-            # - Condition must be change within loop
-      'while':  {'name': 'while',   'arity': 2, 'xtype': 'b2?2?',        'tf': 'ä',                 'gpbp': ['ö'], 'latex': None},  # sfeh: not working # Condition must change in loop
-      'repeat_n': {'name': 'repeat_n', 'arity': 2, 'xtype': 'b2?',       'tf': 'ä',                 'gpbp': ['ö'], 'latex': None},  # sfeh: not working # repeat n time, specify n (int) by user?
-      }
+    # Never used yet, todo. Trying to introduce multi-dimensional outputs that should
+    'vector': 	{'fun': 'vector', 'arity': 1, 'xtype': 'ü', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': None},  # not tested # sfeh: not working
+
+    # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
+    # Also very unclear how they should work.
+    # - Let user specify them completely. Limit use to 1 (or 2) per tree.
+    # - temporary variable(s) must be introduced that change within loop
+    # - Condition must be change within loop
+    'while': 	{'fun': 'while', 'arity': 2, 'xtype': 'b2?2?', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': None},  # sfeh: not working # Condition must change in loop
+    'repeat_n': 	{'fun': 'repeat_n', 'arity': 2, 'xtype': 'b2?', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 		'pycode': None},  # sfeh: not working # repeat n time, specify n (int) by user?
+}
 
 # print([x for x in op.keys() if type(x) == type('asd')])  # retreive a list with all non-ast ops:
 

@@ -187,7 +187,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
             pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-            solution = tensors['action0']  # todo
+            solution = tensors[first_action]  # todo
 
             pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, action_dict, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
@@ -203,21 +203,26 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
 def tensors_leaves(tensors, data, variables_dict, action_dict):
     """
-    All the tensors in leaf nodes, aka
+    All the tensors in leaf nodes
+    - variables (observation0, ...)
+    - constants (True, False, 1.234, ...)
     """
     num_terminals = len(variables_dict['all'])
 
     for i in range(num_terminals):
         var = variables_dict['all'][i]
-        if '2f' in xtype_get(var, variables_dict=variables_dict, node_arity=0):
+        xtype = xtype_get(var, variables_dict=variables_dict, node_arity=0)
+        if '2f' in xtype:
             tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
-        else:  # '2b'
+        elif '2b' in xtype:
             tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
+        else:
+            raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
 
     for i, action in enumerate(action_dict):
         py_type = action_dict[action]
         if 'float' in py_type:
-            tensors['action' + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
+            tensors[name_action + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
         else:
             print_e('action_dict type for {} is: {}.'.format(action, py_type))
     return tensors
@@ -312,13 +317,13 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
         if prnt:
             return '({}{})'.format(
-                op[type(node.op)]['name'],
+                op[type(node.op)]['fun'],
                 ast_convert_from_expr_recursive(node.operand, prnt=prnt))
         if build:
             if type(node.op) == ast.USub:
                 return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
                 # return ['-', ['0', ast_convert_from_expr_recursive(node.operand, build=True)]]
-            return [op[type(node.op)]['name'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
+            return [op[type(node.op)]['fun'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
         else:
             return op[type(node.op)]['tf'](
                 ast_convert_from_expr_recursive(node.operand, tensors=tensors))
@@ -328,10 +333,10 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
         if prnt:
             return '({} {} {})'.format(
                 ast_convert_from_expr_recursive(node.left, prnt=True),
-                op[type(node.op)]['name'],
+                op[type(node.op)]['fun'],
                 ast_convert_from_expr_recursive(node.right, prnt=True))
         if build:
-            return [op[type(node.op)]['name'],
+            return [op[type(node.op)]['fun'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
                      ast_convert_from_expr_recursive(node.right, build=True)]]
         else:
@@ -341,9 +346,9 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if prnt:
-            return ast_chain_bool(node.values, op[type(node.op)]['name'], prnt=True)
+            return ast_chain_bool(node.values, op[type(node.op)]['fun'], prnt=True)
         if build:
-            return ast_chain_bool(node.values, op[type(node.op)]['name'], build=True)
+            return ast_chain_bool(node.values, op[type(node.op)]['fun'], build=True)
         else:
             return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
 
@@ -387,21 +392,21 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             if prnt:
                 if len(node.args) == 1:
                     return '({} {})'.format(
-                        op[node.func.id]['name'],
+                        op[node.func.id]['fun'],
                         ast_convert_from_expr_recursive(node.args[0], prnt=True))
                 elif len(node.args) == 2:
                     return '({} ({}, {}))'.format(
-                        op[node.func.id]['name'],
+                        op[node.func.id]['fun'],
                         ast_convert_from_expr_recursive(node.args[0], prnt=True),
                         ast_convert_from_expr_recursive(node.args[1], prnt=True))
                 else:
                     raise Exception('This arity is not supported')
             if build:
                 if len(node.args) == 1:
-                    return [op[node.func.id]['name'],
+                    return [op[node.func.id]['fun'],
                             [ast_convert_from_expr_recursive(node.args[0], build=True)]]
                 elif len(node.args) == 2:
-                    return [op[node.func.id]['name'],
+                    return [op[node.func.id]['fun'],
                             [ast_convert_from_expr_recursive(node.args[0], build=True),
                              ast_convert_from_expr_recursive(node.args[1], build=True)]]
                 else:
@@ -461,8 +466,8 @@ def ast_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):
         return tf.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if prnt:
-            return '({} {} {})'.format(x, op[type(ops[0])]['name'], y)
+            return '({} {} {})'.format(x, op[type(ops[0])]['fun'], y)
         if build:
-            return [op[type(ops[0])]['name'], [x, y]]
+            return [op[type(ops[0])]['fun'], [x, y]]
         else:
             return op[type(ops[0])]['tf'](x, y)

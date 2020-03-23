@@ -14,9 +14,10 @@ import json
 import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
-
-# import tikzplotlib
-
+try:
+    import tikzplotlib
+except Exception as ex:
+    print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -1232,7 +1233,6 @@ class ExplainableGP(object):
 
             return a_id, b_id, success
         else:
-            print('asdfasdf fail sfeh')
             raise
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1571,7 +1571,7 @@ class ExplainableGP(object):
             try:
                 tikzplotlib.save(path / '{}.tex'.format(plt_title))
             except Exception as ex:
-                print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
+                pass
 
         plt.close()
         return

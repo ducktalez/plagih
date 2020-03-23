@@ -36,8 +36,6 @@ root_id = 1
 
 node_is_modifiable = 1
 
-observation_n = 'observation'
-
 
 class Plagih_Tree():
     """
@@ -78,7 +76,7 @@ class Plagih_Tree():
         """
         create a tree from user input
         """
-        arity_list = [label_get_arity(label) for label in label_list]
+        arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
         core = core_from_labels(label_list, arity_list)
         if modify_list:
             for i, val in enumerate(modify_list):
@@ -233,7 +231,7 @@ def tree_set_last_evolution(tree, last_modification):
 
 def tree_set_xtypes(tree, variables_dict):
     """
-    Ser xtype for all nodes in the tree.
+    Set xtype for all nodes in the tree.
     Faster than 'looking up' the xtype every time with xtype_get which needs extra dicts
     :param tree:
     :param variables_dict:
@@ -397,6 +395,7 @@ def tree_node_get_arity(tree, node_id):
 
 def tree_node_get_nodekind(tree, node):
     """
+    special node-type 'nodekind'
     'func', 'term-variable', 'term-float', 'term-bool'
     """
     arity = tree_node_get_arity(tree, node)
@@ -404,7 +403,7 @@ def tree_node_get_nodekind(tree, node):
         nodekind = 'func'
     else:
         label = tree[N_label][node]
-        if input_name in label:  # 'observation'
+        if name_observation in label:  # 'observation'
             nodekind = 'term-variable'
         elif 'True' in label or 'False' in label:
             nodekind = 'term-bool'
@@ -562,7 +561,7 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
 
 def tree_node_is_variable(tree, node_id):
     label = tree_node_get_label(tree, node_id)
-    return observation_n in label
+    return name_observation in label
 
 
 def tree_node_is_modifiable(tree, node_id):
@@ -995,7 +994,38 @@ def tree_get_expr_raw(tree, node_id):
     node_id = int(node_id)
 
     if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
-        return '(' + tree[N_label, node_id] + ')'  # 'node_label' (function or terminal)
+        return '({})'.format(tree[N_label, node_id])  # 'node_label' (function or terminal)
+
+    elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
+        fun = tree[N_label, node_id]
+        if fun == '~':  # ~- workaround
+            return '(-({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]))
+        else:
+            return '({}{})'.format(fun, tree_get_expr_raw(tree, tree[9, node_id]))
+
+    elif tree[N_arity, node_id] == '2':
+        if tree[N_label, node_id] not in functions_infix_dict:
+            return '(' + tree[N_label, node_id] + '(' + tree_get_expr_raw(tree, tree[9, node_id]) + ', ' + tree_get_expr_raw(tree, tree[10, node_id]) + '))'
+        else:
+            return '(' + tree_get_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_get_expr_raw(tree, tree[10, node_id]) + ')'
+        #
+        # if op[tree[N_label, node_id]]['call'] == 'inline':
+        #     return '({}{}{})' + tree_get_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_get_expr_raw(tree, tree[10, node_id])
+        # else:
+        #     return '({}({}, {}))'.format(tree[N_label, node_id], tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]))
+
+    elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
+        return '(Ifte({}, {}, {}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))
+
+
+def tree_get_pycode(tree, node_id=root_id):
+    """
+
+    """
+    node_id = int(node_id)
+
+    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[term]'
+        return '({})'.format(tree[N_label, node_id])  # 'node_label' (function or terminal)
 
     elif tree[N_arity, node_id] == '1':  # arity of 1 for the explicit pattern 'not [eval]'
         fun = tree[N_label, node_id]
@@ -1746,7 +1776,7 @@ def xtype_get_constant(label, node_arity=None, only_float=True):
         if 'True' in label or 'False' in label:
             if not only_float:
                 const_xtype = '2b'
-        elif 'observation' in label or 'action' in label:
+        elif name_observation in label or name_action in label:
             pass
         else:
             # now it MUST be float
@@ -2201,6 +2231,8 @@ def tree_viz_get_nel(tree):
 def tree_viz_get_forest(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
+
+    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
     """
     extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)

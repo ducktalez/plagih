@@ -1005,14 +1005,9 @@ def tree_get_expr_raw(tree, node_id):
 
     elif tree[N_arity, node_id] == '2':
         if tree[N_label, node_id] not in functions_infix_dict:
-            return '(' + tree[N_label, node_id] + '(' + tree_get_expr_raw(tree, tree[9, node_id]) + ', ' + tree_get_expr_raw(tree, tree[10, node_id]) + '))'
+            return '({}({}, {}))'.format(tree[N_label, node_id], tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]))
         else:
-            return '(' + tree_get_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_get_expr_raw(tree, tree[10, node_id]) + ')'
-        #
-        # if op[tree[N_label, node_id]]['call'] == 'inline':
-        #     return '({}{}{})' + tree_get_expr_raw(tree, tree[9, node_id]) + tree[N_label, node_id] + tree_get_expr_raw(tree, tree[10, node_id])
-        # else:
-        #     return '({}({}, {}))'.format(tree[N_label, node_id], tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]))
+            return '({}{}{})'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree[N_label, node_id], tree_get_expr_raw(tree, tree[10, node_id]))
 
     elif tree[N_arity, node_id] == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
         return '(Ifte({}, {}, {}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))

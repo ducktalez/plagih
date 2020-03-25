@@ -1,17 +1,18 @@
-operator, arity
-+,2
-+,2
-+,2
--,2
--,2
-*,2
-/,2
-<,2
-<=,2
-==,2
-&,2
-Or,2
-Mini,2
-Maxi,2
-Ifte,3
-sin,1
+operator, type
++,op
++,op
++,op
+-,op
+-,op
+*,op
+/,op
+<,op
+<=,op
+==,op
+&,op
+Or,op
+Mini,op
+Maxi,op
+Ifte,op
+sin,op
+cartVel,var

@@ -1,5 +1,6 @@
 {
     "print_type": "waaaggggsiivvvtopppttt",
+    "pop_max": 300,
     "parsimony_max": 60,
     "evolve_rates": {
         "repro one": 0.03,

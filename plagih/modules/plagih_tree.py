@@ -1870,15 +1870,19 @@ def tree_pretty_print(tree, karoo=False):
 
     depth = 0
     layer_labels = []
-    for i, n_depth in enumerate(tree[N_depth]):
-        label = tree_node_get_label(tree, i)
-        if int(n_depth) == depth:
+    print_style = 'Depth{:>3}: {}'  # {:>3} always print 3 letters at least
+    node_depth = '-1'
+
+    for node_id, node_depth in enumerate(tree[N_depth]):
+        label = tree_node_get_label(tree, node_id)
+        if int(node_depth) == depth:
             layer_labels.append(label)
         else:
+            print(print_style.format(node_depth, layer_labels))
             layer_labels = [label]
             depth += 1
     else:
-        print(layer_labels)
+        print(print_style.format(node_depth, layer_labels))
 
     return
 

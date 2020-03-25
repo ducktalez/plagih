@@ -24,7 +24,7 @@ file_conclusion = 'conclusion.txt'
 file_pycode = 'agents.py'
 
 run_files = 'run_files'
-config_json = 'config.json'
+config_yaml = 'config.yaml'
 samples_ready = 'samples_ready.p'
 samples_csv = 'samples.csv'
 operators = 'operators.csv'

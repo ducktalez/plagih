@@ -24,7 +24,7 @@ The input parameter must be a folder with the following content:
 - `/run_files/operators.csv`: Set of mathematical operators to build programs with
 - `/run_files/samples.csv`: Target-data with states + actions. (Caution, weird syntax)
 - `/run_files/tree_labels.csv`: Self-written program (as label-list)
-- `Config.json` (Optional): GP parameters like `pop_size`, `evolve_rates`
+- `Config.yaml` (Optional): GP parameters like `pop_size`, `evolve_rates`
 
 
 ### How to: behaviour_samples.csv

@@ -10,10 +10,10 @@ Explaination:
 Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
 """
-import json
 import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
+import yaml
 try:
     import tikzplotlib
 except Exception as ex:
@@ -44,7 +44,12 @@ class ExplainableGP(object):
             # 'root_dir': root_dir,  # TODO
             'mode': 'run',  # ['run', 'analyze']
             'description': 'No description set',
-
+            'choose': {
+                'choose rules': ['first', 'choose', 'random'],
+                'operators': ['random', 'from distribution'],
+                'constants': ['gauss', 'random', 'observation samples'],
+                'default': 'random'
+            },
             # (!) Relevant for result
             'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
             'parsimony_max': 100,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
@@ -86,9 +91,9 @@ class ExplainableGP(object):
             'tree_depth_base': 7,  # [3..10]
             'tree_depth_max': 25,  # maximum Tree depth for entire run
             'tree_depth_min': 5,
-            'tree from scratch: min_nodes': 8,
-            'tree from scratch: max_nodes': 50,
-            'tree branch: base nodes': 20,
+            'tree from scratch min_nodes': 8,
+            'random from scratch max nodes': 50,
+            'tree branch base nodes': 20,
             'tourn_size': 4,  # [7 per 100] number of trees selected for tournament
 
             # When to stop the run
@@ -205,8 +210,8 @@ class ExplainableGP(object):
         path_config = make_dir(self.root_dir / folder_info)
         filename = path_config / file_config
 
-        with Path.open(filename, 'w') as f:
-            json.dump(self.config, f, indent=4)
+        with Path.open(filename, 'w') as file:
+            _ = yaml.dump(self.config, file, indent=4)
 
         return
 
@@ -633,8 +638,8 @@ class ExplainableGP(object):
             all_agents = []
             all_agent_names = []
 
-            for enum, parsim, meta in enumerate(sorted(list(pareto.items()))):
-                agent_name = 'dummyname_{}'.format(enum)
+            for parsim, meta in sorted(list(pareto.items())):
+                agent_name = 'dummyname_{:.0f}'.format(parsim)
 
                 expr_raw = meta['expr_raw']
                 expr_sym = expr_sympify(expr_raw)
@@ -644,11 +649,21 @@ class ExplainableGP(object):
                 self.printpl('ii', 'pycode (test)\n{}'.format(pycode))
 
                 all_agent_names.append(agent_name)
-                code_tmp = 'def {} ({}):\nreturn {}\n'.format(agent_name, name_observation, textwrap.indent(pycode, '\t'))  # sfeh: maybe cast
+                code_tmp = 'def {}({}):\n\treturn {}\n\n'.format(agent_name, name_observation, pycode)  # sfeh: maybe cast
                 all_agents.append(code_tmp)
 
-            complete_file = 'import math;\nall_agents = [{}]\n' \
-                            ''.format(all_agents)
+            pycode_names = 'all_agents = [{}'.format(all_agent_names[0])
+            pycode_agents = '{}'.format(all_agents[0])
+            for ii, agent_name in enumerate(all_agent_names):
+                if ii == 0:
+                    continue
+                pycode_names += ', {}'.format(agent_name)
+                pycode_agents += all_agents[ii]
+            else:
+                pycode_names += ']\n'
+            complete_file = 'import math;\n\n' \
+                            '{}\n\n' \
+                            '{}'.format(pycode_agents, pycode_names)
 
             file = Path.open(path_trees / file_pycode, 'w')
             file.write(complete_file)
@@ -893,7 +908,7 @@ class ExplainableGP(object):
         if self.origin_exists():
             tree_origin = self.origin_tree.copy()
             for _ in range(repro_rate):
-                goal_nodes = np.random.randint(self.config['tree from scratch: min_nodes'], 1 + self.config['tree from scratch: max_nodes'])
+                goal_nodes = np.random.randint(self.config['tree from scratch min_nodes'], 1 + self.config['random from scratch max nodes'])
                 tree = tree_evolve_branch_multiple(tree_origin, goal_nodes, self.variables_dict, self.func_array)
                 self.pop_append(tree, last_evolution='new-o')
 
@@ -909,7 +924,7 @@ class ExplainableGP(object):
                 return
 
         for i in range(repro_rate):
-            goal_nodes = np.random.randint(self.config['tree from scratch: min_nodes'], 1 + self.config['tree from scratch: max_nodes'])
+            goal_nodes = np.random.randint(self.config['tree from scratch min_nodes'], 1 + self.config['random from scratch max nodes'])
             label_list, arity_list = invent_label_list_nodes_grow(self.output_xtype, goal_nodes, self.variables_dict, self.func_array)
             p_tree = Plagih_Tree(label_list)
             tree = p_tree.get_uninstanced_tree()
@@ -1016,7 +1031,7 @@ class ExplainableGP(object):
                                                     depth_min=self.config['tree_depth_min'],
                                                     depth_goal=self.config['tree_depth_base'])
             elif self.config['tree_growth'] == 'node-based':
-                goal_nodes = np.random.randint(1, 1 + max(min(self.config['tree branch: base nodes'], self.parsimony_max-tree_get_parsimony(tree)), 1))  # max just for safety reasons
+                goal_nodes = np.random.randint(1, 1 + max(min(self.config['tree branch base nodes'], self.parsimony_max-tree_get_parsimony(tree)), 1))  # max just for safety reasons
                 tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, goal_nodes)
             else:
                 raise Exception('Tree growth version not known')
@@ -1636,13 +1651,10 @@ class ExplainableGP(object):
         return
 
 
-def load_funcarray_from_csv(op_csv_path):
+def load_funcarray_from_list(functions):
     """
     Load all operators ready-to-use from a file
     """
-
-    functions = np.loadtxt(op_csv_path, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-    # Part 3.5: Split the functions in 5 types
 
     # rows are the function types (f2f)
     # columns are the arity

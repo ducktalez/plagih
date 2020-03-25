@@ -67,11 +67,11 @@ def test_sympify_many():
     print(plagih_sympify('a<zoo'))  # nan
     print(plagih_sympify('a/0'))  # zoo*a
     print(plagih_sympify('a/0.0'))  # inf*a
-    print(plagih_sympify('observation0+(-0.09)**4'))  # observation0 + 6.561e-5
+    print(plagih_sympify('obs0+(-0.09)**4'))  # obs0 + 6.561e-5
     print(plagih_sympify('And(a<2,b<3)'))
     print(plagih_sympify('(a<2) & (b<3)'))
     print(plagih_sympify('(-1)**(-0.5)'))
-    print(plagih_sympify('(Ifte((And(((Mini((((((observation0)+(0.25))**(2))*(-0.09))+(0.03)), ((((observation0)+(-0.09))**(4))*(0.03))))<=(observation1)), ((observation1)<=(((-0.07)*(((observation0)+(0.38))**(2)))+(0.7))))), (0), (2)))'))
+    print(plagih_sympify('(Ifte((And(((Mini((((((obs0)+(0.25))**(2))*(-0.09))+(0.03)), ((((obs0)+(-0.09))**(4))*(0.03))))<=(obs1)), ((obs1)<=(((-0.07)*(((obs0)+(0.38))**(2)))+(0.7))))), (0), (2)))'))
     print(plagih_sympify('a & True'))  # a
     print(plagih_sympify('(-0.09*(a**2))+0.03'))  # -0.09*a**2 + 0.03
     print(plagih_sympify('5 + (+6)'))

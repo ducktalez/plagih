@@ -2,11 +2,11 @@ import sys
 sys.path = ['..'] + sys.path
 sys.path.append('modules/')  # add directory 'modules' to the current root_dir
 
-import json
 import plagih.modules.plagih_gp_base_class_xai as plagih
 from plagih.modules.plagih_gp_base_class_xai import *
 from plagih.modules.Examples import *
 from plagih.modules.plagih_data import *
+import yaml
 
 # todo clean up this class... make extra class or folder (!) with all cases to be tested
 # todo idee: nach generationen alle mit einem gen sterben lassen! epidemie!
@@ -23,30 +23,21 @@ def create_samples_pickle_prepared(path, behaviour_samples_file, pickle_file='pr
     return
 
 
-def mountaincar_load_corefiles(config_dict, path):
-    gp = plagih.ExplainableGP(config_dict)
-    prepared_data = data_load_pickle(path / MountainCarExamples.files['samples_pickle'])
-    gp.activate_dataset(prepared_data)
-    op_array = load_funcarray_from_csv(path / MountainCarExamples.files['operators_file'])
-    gp.activate_operators(op_array)
-    return gp
-
-
-def cartpole_load_corefiles(config_dict, path):
-    gp = plagih.ExplainableGP(config_dict)
-    prepared_data = data_load_pickle(path / CartpoleExamples.files['samples_pickle'])
-    gp.activate_dataset(prepared_data)
-    op_array = load_funcarray_from_csv(path / CartpoleExamples.files['operators_file'])
-    gp.activate_operators(op_array)
-    return gp
-
-
-def plagih_config_update_from_json(config_json='config.json'):
+def plagih_config_update_from_yaml(config_yaml='config.yaml'):
     """
     The config gets updated
     """
-    with Path.open(config_json, 'r') as f:
-        config = json.load(f)
+    with Path.open(config_yaml, 'r') as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+    return config
+
+
+def plagih_config_update_from_yaml(config_yaml='config.yaml'):
+    """
+    The config gets updated
+    """
+    with Path.open(config_yaml, 'r') as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
     return config
 
 
@@ -76,7 +67,7 @@ def labellists_from_csv(csv_path):
 
 def show_default_config(output_file):
     """
-    - config.json
+    - config.yaml
     """
     if not Path.is_dir(output_file.parent):
         raise Exception('Will not make the path with Path.mkdir(output_file.parent): {}'.format(output_file))
@@ -96,25 +87,31 @@ def show_default_operators(output_file=None):
 def run(root_dir):
     """
     Loads important files in your run-folder
+    - load config.yaml
+    - load samples_ready.p or samples.csv
+    - load operators.csv
+    - load tree
     """
-    run_files_path = root_dir / run_files
 
-    config_json_path = root_dir / config_json
-    samples_ready_path = run_files_path / samples_ready
-    samples_csv_path = run_files_path / samples_csv
-    operators_path = run_files_path /operators
-    tree_expr_txt_path = run_files_path / tree_expr_txt
-    tree_labels_csv_path = run_files_path / tree_labels_csv
-    tree_numpy_csv_path = run_files_path / tree_numpy_csv
+    config_yaml_path = root_dir / config_yaml
 
-    if not Path.is_dir(run_files_path):
-        raise FileNotFoundError('Folder does not exist: {}.'.format(run_files_path))
+    samples_ready_path = root_dir / samples_ready
+    samples_csv_path = root_dir / samples_csv
 
-    if Path.is_file(config_json_path):  # Load config.json
-        with open(config_json_path, 'r') as f:
-            config = json.load(f)
+    operators_csv = root_dir /operators
+
+    tree_expr_txt_path = root_dir / tree_expr_txt
+    tree_labels_csv_path = root_dir / tree_labels_csv
+    tree_numpy_csv_path = root_dir / tree_numpy_csv
+
+    if not Path.is_dir(root_dir):
+        raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
+
+    if Path.is_file(config_yaml_path):  # Load config.yaml
+        with open(config_yaml_path, 'r') as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
     else:
-        print_warning('w', 'You should have a {} here:\n{}'.format(config_json, config_json_path))
+        print_warning('w', 'You should have a {} here:\n{}'.format(config_yaml, config_yaml_path))
         config = {}
 
     if Path.is_file(samples_ready_path):
@@ -126,10 +123,11 @@ def run(root_dir):
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready, samples_csv))
 
-    if Path.is_file(operators_path):  # Load operators.csv
-        op_array = load_funcarray_from_csv(operators_path)
+    if Path.is_file(operators_csv):  # Load operators.csv
+        functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+        op_array = load_funcarray_from_list(functions)
     else:
-        raise FileNotFoundError('File does not exist: {}.'.format(operators_path))
+        raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
 
     origin_tree = None
     if Path.is_file(tree_labels_csv_path):
@@ -144,6 +142,8 @@ def run(root_dir):
         raise
     else:
         print_warning('ww', 'No origin-tree file was provided. Continuing.')
+
+    # config, prepared_data, op_array
 
     gp = ExplainableGP(root_dir, config=config)
     gp.activate_dataset(prepared_data)

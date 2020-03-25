@@ -52,7 +52,8 @@ def main(argv):
         plagih_gp.show_default_config(ipath)
     elif task == 'show-default_operators':
         plagih_gp.show_default_operators(ipath)
-    # todo: options for file input
+    else:
+        print('Task not known: {}'.format(task))
     # todo: options for other functions? run, visualise_tree, analyse_run, check_files, tests
 
 

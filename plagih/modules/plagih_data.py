@@ -18,6 +18,37 @@ def data_load_data_split(data_x, data_y, test_size):
     return data_train_rows, data_train, data_control
 
 
+def data_first_line(row):
+    var_types = []
+
+    for col_header in row:
+        col_split = col_header.split('|')
+
+        term = col_split[0]
+        term_type = col_split[1]
+        if term_type != 'float' and term_type != 'bool':
+            raise Exception('Data-type in your samples not expected: {}'.format(term_type))
+
+        var_types.append(term_type)
+
+        if col_header.startswith('o'):  # found an observation
+            num_observations += 1
+            input_dict[term] = term_type
+            variables_dict['all'].append(term)
+            variables_dict['types'].append(term_type)
+            variables_dict[term_type].append(term)
+
+        elif col_header.startswith('a'):  # found an action
+            num_actions += 1
+            action_dict[term] = term_type  # Do not use this:# '2b' if 'bool' in action_type else '2f'
+
+        else:
+            print_e('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(col_header))
+            raise
+
+    data_obs, data_act = [], []
+
+
 def data_from_csv(samples_file, test_size=0.2):
     """
     loads the goal-data_csv_path from .csv file. first observations then actions.
@@ -31,7 +62,6 @@ def data_from_csv(samples_file, test_size=0.2):
     """
 
     num_observations, num_actions = 0, 0
-    var_types = []
     input_dict = {'all': {},
                   'float': {},
                   'bool': {}}
@@ -51,31 +81,7 @@ def data_from_csv(samples_file, test_size=0.2):
 
         for i, row in enumerate(reader):
             if i == 0:  # variable identifiers
-                # all_variables = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
-                for var_name in row:
-                    var_types.append(var_name.split(':', 1)[1])
-                    term = var_name.rsplit(':', 1)[0]
-                    term_type = var_name.split(':', 1)[1]
-
-                    if term_type != 'float' and term_type != 'bool':
-                        raise Exception(str(term_type))
-
-                    if var_name.startswith('o'):  # found an observation
-                        num_observations += 1
-                        input_dict[term] = term_type
-                        variables_dict['all'].append(term)
-                        variables_dict['types'].append(term_type)
-                        variables_dict[term_type].append(term)
-
-                    elif var_name.startswith('a'):  # found an action
-                        num_actions += 1
-                        action_dict[term] = term_type  # Do not use this:# '2b' if 'bool' in action_type else '2f'
-
-                    else:
-                        print_e('Behaviour samples first line: Variables have to start with "o" or "a" to be recognized. Is actually: {}'.format(var_name))
-                        raise
-
-                data_obs, data_act = [], []
+                data_first_line(row)
 
             else:  # convert every 'string' element to its data_csv_path type
                 row_as_data = [locate(var_types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123

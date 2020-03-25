@@ -1,6 +1,9 @@
 from plagih.modules.plagih_eval import *
 from plagih.modules.plagih_tree import *
 from plagih.modules.Examples import *
+from plagih.modules.plagih_gp_base_class_xai import load_funcarray_from_list
+
+#todo slowly make all of those random tests worth something
 
 
 class TestHelpers:
@@ -315,6 +318,20 @@ def test_tree_parsimony_ted():
     print('dist 3:', dist2)
 
 
+def pycode_wrap():
+    complete_file = 'import math;\n\n' \
+                    'all_agents = [{}]\n\n\n' \
+                    '{}'
+
+
+def pycode_agent_wrap(agent_name, pycode):
+    """
+    textwrap.indent(pycode, '\t')
+    """
+    agent_code = 'def {}({}):\n\treturn {}\n\n\n'.format(agent_name, name_observation, pycode)
+    return agent_code
+
+
 def test_tree_get_pycode():
     tree1 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 4])
     print(tree_get_pycode(tree1))
@@ -322,4 +339,34 @@ def test_tree_get_pycode():
     print(tree_get_pycode(tree1))
 
 
-test_tree_get_pycode()
+def check_op_names():
+
+    # check if the fun-names are correct
+    for key, value in op.items():
+        if not value['fun'] in op:
+            print('The op-dict has an entry: {} with fun: {} Which is not in op.'.format(key, value['fun']))
+            return False
+
+    # check if the pycode-functions are working with this arity
+    return True
+
+
+def test_create_random_tree(verbose=False):
+    """
+    create random trees out of the complete dictionary
+    """
+    xtype = '2f'
+    goal_max_nodes = 15
+    variables_dict = TestHelpers.variables_dict
+    all_functions = [(value['fun'], value['arity']) for key, value in op.items()]
+    func_array = load_funcarray_from_list(all_functions)
+    label_list, arity_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, variables_dict, func_array, build_type='grow')
+    print(label_list)
+    tree = karoo_tree_from_labellist(label_list)
+    print('regular print:\n', tree)
+    tree_pretty_print(tree, karoo=True)
+    return
+
+
+check_op_names()
+test_create_random_tree()

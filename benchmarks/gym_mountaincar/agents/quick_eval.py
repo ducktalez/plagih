@@ -116,7 +116,7 @@ def load_sarsas():
     return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
 
 
-sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
+# sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
 sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
 # sarsa_agent_75, _, _, _ = load_sarsas()
 
@@ -141,7 +141,7 @@ twoAgents = {mountain_agents[14], mountain_agents[11]}
 
 # plot_simple(oneAgent)
 # compare_simple(twoAgents)
-render_ntimes(oneAgent, 3, verbose=True, sleep=0.1)
+render_ntimes(mountain_agents.values(), 3, verbose=True, sleep=0.0)
 
 
 # todo idee: gp vs. nn entscheidungen clustern.

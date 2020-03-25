@@ -3,5 +3,5 @@
     "parsimony_max": 100,
     "kernel_name": "regression bounded",
     "complexity_measure": "ted",
-    "tree from scratch: max_nodes": 20
+    "random from scratch max nodes": 20
 }

@@ -1,6 +1,6 @@
 from plagih.modules.printing import *
 from plagih.modules.dicts import *
-from plagih.modules.plagih_types import xtype_get
+from plagih.modules.plagih_types import xtype_get_from_label
 
 import sklearn.metrics as skm
 
@@ -211,7 +211,7 @@ def tensors_leaves(tensors, data, variables_dict, action_dict):
 
     for i in range(num_terminals):
         var = variables_dict['all'][i]
-        xtype = xtype_get(var, variables_dict=variables_dict, node_arity=0)
+        xtype = xtype_get_from_label(var, variables_dict=variables_dict, node_arity=0)
         if '2f' in xtype:
             tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
         elif '2b' in xtype:

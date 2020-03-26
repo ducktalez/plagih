@@ -99,6 +99,13 @@ class ExplainableGP(object):
             # When to stop the run
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
             'gen_max': 800,  # Maximum amount of generations
+
+            'env': {
+                'name': None,
+                'observations': {
+
+                }
+            }
         }
 
         self.config.update(config)  # todo check if config is correct
@@ -396,10 +403,11 @@ class ExplainableGP(object):
         Why like this? I needed to find a bug in the data_from_csv file and
         did not want to start the whole stuff everytime
         """
-        input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max = data_prepared
-        self.input_dict = input_dict
-        self.variables_dict = variables_dict
-        self.action_dict = action_dict
+        # _, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max = data_prepared
+        observations_bundle, actions, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max = data_prepared
+
+        self.variables_dict = observations_bundle  # todo remane
+        self.action_dict = actions
         self.unique_outputs_num = unique_outputs_num
         self.data_train_rows, self.data_train, self.data_control = data_train_rows, data_train, data_control
         self.action_min_max = action_min_max
@@ -425,7 +433,7 @@ class ExplainableGP(object):
         self.func_array = func_array
         return
 
-    def pop_fix_trees(self, population):
+    def version_pop_fix_trees(self, population):
         """
         Some old runs are now inconsistent as the trees now hold some important information
         """
@@ -477,7 +485,7 @@ class ExplainableGP(object):
             self.population_base.pop(0)
 
         # force fix of all trees if they are incorrect in last versions
-        self.pop_fix_trees(self.population_base)
+        self.version_pop_fix_trees(self.population_base)
 
         # update monitoring dict name (genepool_size -> population_tmp_done-size)
         try:
@@ -646,10 +654,11 @@ class ExplainableGP(object):
                 label_list_sym = ast_convert_from_expr(expr_sym, build=True)
                 tree = karoo_tree_from_labellist(label_list_sym)
                 pycode = tree_get_pycode(tree)
-                self.printpl('ii', 'pycode (test)\n{}'.format(pycode))
 
                 all_agent_names.append(agent_name)
-                code_tmp = 'def {}({}):\n\treturn {}\n\n'.format(agent_name, name_observation, pycode)  # sfeh: maybe cast
+                code_tmp = 'class {}:\n\n\n' \
+                           '\tdef decide({}):\n\t' \
+                           'return {}\n\n'.format(agent_name, name_observation, pycode)  # sfeh: maybe cast
                 all_agents.append(code_tmp)
 
             pycode_names = 'all_agents = [{}'.format(all_agent_names[0])
@@ -1032,7 +1041,7 @@ class ExplainableGP(object):
                                                     depth_goal=self.config['tree_depth_base'])
             elif self.config['tree_growth'] == 'node-based':
                 goal_nodes = np.random.randint(1, 1 + max(min(self.config['tree branch base nodes'], self.parsimony_max-tree_get_parsimony(tree)), 1))  # max just for safety reasons
-                tree = tree_evolve_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, goal_nodes)
+                tree = tree_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, goal_nodes)
             else:
                 raise Exception('Tree growth version not known')
 
@@ -1067,7 +1076,7 @@ class ExplainableGP(object):
 
             if not success:
                 print_warning('ww', 'Crossover conversion between trees not possible: \n{}\n{}'.format(left_tree, right_tree))
-                # left_xtype = xtype_get(tree_node_get_label(left_tree, left_id), self.variables_dict)
+                # left_xtype = xtype_get_from_label(tree_node_get_label(left_tree, left_id), self.variables_dict)
                 # conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
                 # right_labels.insert(0, conv_to_left)
                 # right_aritys.insert(0, 1)
@@ -1092,7 +1101,7 @@ class ExplainableGP(object):
         """
         Return the xtype of the action we want to create.
         """
-        action_type_one = next(iter(self.action_dict.values()))
+        action_type_one = next(iter(self.action_dict.values()))['type']
         if action_type_one == 'float':
             xtype = '2f'
         elif action_type_one == 'bool':
@@ -1121,7 +1130,8 @@ class ExplainableGP(object):
             tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
             tree = tree_normalize_exponentiation(tree)
             tree = tree_set_last_evolution(tree, last_evolution)
-            tree = tree_set_xtypes(tree, self.variables_dict)  # delete if this is made separately
+            tree = tree_check_xtypes(tree)
+            # tree = tree_set_xtypes(tree, self.variables_dict)  # todo
 
         return tree
 
@@ -1264,15 +1274,14 @@ class ExplainableGP(object):
             a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
             # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
             a_id = np.random.choice(a_ids)
-            a_node_label = tree_node_get_label(a_tree, a_id)
-            a_xtype = xtype_get(a_node_label, self.variables_dict)
+            a_label = tree_node_get_label(a_tree, a_id)
+            a_label, _, a_xtype = tree_node_get_lax(a_tree, a_id)
 
             # create a list from parent b with same xtype
             b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
             b_sametype_ids = b_node_ids[:]
             for b_id in b_node_ids:
-                b_label = tree_node_get_label(b_tree, b_id)
-                b_xtype = xtype_get(b_label, self.variables_dict)
+                b_label, _, b_xtype = tree_node_get_lax(b_tree, b_id)
                 if not xtype_equi_outcome(b_xtype, a_xtype):
                     b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
@@ -1653,16 +1662,23 @@ class ExplainableGP(object):
 
 def load_funcarray_from_list(functions):
     """
+    load_operators_from_csv
     Load all operators ready-to-use from a file
     """
 
     # rows are the function types (f2f)
     # columns are the arity
-    func_array = [[[], [], [], []],
-                  [[], [], [], []],
-                  [[], [], [], []],
-                  [[], [], [], []],
-                  [[], [], [], []]]
+    op_array = [[[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []],
+                [[], [], [], []]]
+
+    np_array = np.array([[[], [], [], []],
+                         [[], [], [], []],
+                         [[], [], [], []],
+                         [[], [], [], []],
+                         [[], [], [], []]])
 
     for fun in functions:
         label = fun[0]
@@ -1670,17 +1686,22 @@ def load_funcarray_from_list(functions):
         xtype = op[label]['xtype']
 
         if xtype == 'f2f':
-            func_array[f2f][arity].append(label)
+            op_array[f2f][arity].append(label)
+            np_array = np.append(np_array[f2f][arity], label)
         elif xtype == 'f2b':
-            func_array[f2b][arity].append(label)
+            op_array[f2b][arity].append(label)
+            np_array = np.append(np_array[f2b][arity], label)
         elif xtype == 'b2b':
-            func_array[b2b][arity].append(label)
+            op_array[b2b][arity].append(label)
+            np_array = np.append(np_array[b2b][arity], label)
         elif xtype == 'b2f':
-            func_array[b2f][arity].append(label)
+            op_array[b2f][arity].append(label)
+            np_array = np.append(np_array[b2f][arity], label)
         elif xtype == 'b2f2f':
-            func_array[b2f2f][arity].append(label)
+            op_array[b2f2f][arity].append(label)
+            np_array = np.append(np_array[b2f2f][arity], label)
 
-    return func_array
+    return op_array
 
 
 def check_value_is_real(fitness):

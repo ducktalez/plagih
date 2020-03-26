@@ -64,7 +64,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     '&':	{'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'call': 'inline', 'pycode': lambda a, b: '({} & {})'.format(a, b)},  # DON'T USE tf.bitwise.bitwise_and
     'Or':	{'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'call': None, 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     '|':	{'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': None, 'call': 'inline', 'pycode': lambda a, b: '({} | {})'.format(a, b)},  # a or b
-    'Xor':	{'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_xor, 'latex': None, 'call': None, 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
+    'Xor':	{'arity': 2, 'xtype': 'b2b', 'tf': tf.math.logical_xor, 'latex': None, 'call': None, 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
     'Not':	{'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'call': None, 'pycode': None},  # not a
 
     # 'f2b' Classical comparative operators, evaluate from float to bool

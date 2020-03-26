@@ -65,7 +65,7 @@ def xtype_label_get_child_xtypes(label, node_arity, variables_dict):
     """
     reverse stuff
     """
-    xtype = xtype_get(label, variables_dict)
+    xtype = xtype_get_from_label(label, variables_dict)
     if xtype == 'b2f2f':
         return ['2b', '2f', '2f']
     else:
@@ -99,10 +99,12 @@ def xtype_choose_term_v2(node_xtype, variables_dict):
         print_e('Probably, you have to check if your "function" is actually a terminal. xtype: {}'.format(node_xtype))
         raise
 
-    if np.random.choice(['var', 'const']) == 'var':  # 50:50 chance
-        if terminals_type:  # Is there an entry in the list?
-            return np.random.choice(terminals_type)  # ...so we return one
-    return choose_constant(term_type=the_type)  # otherwise: constant (There are always constants :P)
+    if np.random.choice(['var', 'const']) == 'var' and terminals_type:  # Is there an entry in the list? # todo sfeh choice
+        term = np.random.choice(terminals_type)  # ...so we return one
+    else:
+        term = choose_constant(term_type=the_type)  # otherwise: constant (There are always constants :P)
+
+    return term
 
 
 def choose_constant(term_type='', mode='float-1to1', uniform_range=None):
@@ -228,10 +230,9 @@ def xtype_get_func_list(func_array, xtype=None, arity=None):
     return func_list
 
 
-def xtype_get(label, variables_dict, node_arity=None):
+def xtype_get_from_label(label, variables_dict, node_arity=None):
     """
     returns xtype for a label
-    variables_dict and action_dict MUST be set
     if you are not 100% sure that it is a function.
     """
     if not node_arity:

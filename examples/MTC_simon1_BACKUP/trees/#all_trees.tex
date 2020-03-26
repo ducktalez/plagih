@@ -1,0 +1,328 @@
+\documentclass[varwidth=\maxdimen,convert,border=5pt]{standalone}
+\usepackage{forest}
+\begin{document}
+Pareto entry at parsimony 0 with fitness 1305.0.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{if},nonterminal[{$\lor$},nonterminal[{$<$},nonterminal[{observation1},terminal,variable][{1.0},terminal,constant]][{$\land$},nonterminal[{$<$},nonterminal[{observation1},terminal,variable][{0.1},terminal,constant]][{$<$},nonterminal[{observation0},terminal,variable][{$-$},nonterminal[{0.05},terminal,constant]]]]][{2.0},terminal,constant][{if},nonterminal[{$\land$},nonterminal[{$<$},nonterminal[{observation0},terminal,variable][{0.02},terminal,constant]][{$\land$},nonterminal[{$>$},nonterminal[{observation1},terminal,variable][{$-$},nonterminal[{0.45},terminal,constant]]][{$<$},nonterminal[{observation1},terminal,variable][{$-$},nonterminal[{0.05},terminal,constant]]]]][{0.0},terminal,constant][{if},nonterminal[{$<$},nonterminal[{observation0},terminal,variable][{0.0},terminal,constant]][{0.0},terminal,constant][{2.0},terminal,constant]]]]
+\end{forest}
+
+
+Pareto entry at parsimony 26.0 with fitness 369.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{if},nonterminal[{$\land$},nonterminal[{$<$},nonterminal[{observation0},terminal,variable][{observation0},terminal,variable]][{$==$},nonterminal[{observation1},terminal,variable][{observation1},terminal,variable]]][{observation0},terminal,variable][{$\div$},nonterminal[{0.32},terminal,constant][{observation1},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 27.0 with fitness 368.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$\div$},nonterminal[{0.525},terminal,constant][{observation1},terminal,variable]][{if},nonterminal[{$==$},nonterminal[{observation0},terminal,variable][{observation0},terminal,variable]][{$+$},nonterminal[{observation1},terminal,variable][{$\sin$},nonterminal[{0.185},terminal,constant]]][{$+$},nonterminal[{observation0},terminal,variable][{observation1},terminal,variable]]]]
+\end{forest}
+
+
+Pareto entry at parsimony 28.0 with fitness 315.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\sin$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{$\cdot$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]][{$\max$},nonterminal[{$\div$},nonterminal[{observation0},terminal,variable][{observation1},terminal,variable]][{$\div$},nonterminal[{observation1},terminal,variable][{$\div$},nonterminal[{observation1},terminal,variable][{0.635},terminal,constant]]]]][{$\div$},nonterminal[{1.0},terminal,constant][{observation1},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 29.0 with fitness 297.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]][{$\max$},nonterminal[{$\div$},nonterminal[{observation0},terminal,variable][{observation1},terminal,variable]][{$\cdot$},nonterminal[{observation0},terminal,variable][{observation1},terminal,variable]]]][{$\div$},nonterminal[{1.025},terminal,constant][{observation1},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 30.0 with fitness 289.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{observation1},terminal,variable][{$\max$},nonterminal[{$\div$},nonterminal[{observation0},terminal,variable][{observation1},terminal,variable]][{$\div$},nonterminal[{observation0},terminal,variable][{$-$},nonterminal[{0.18},terminal,constant]]]]][{$\div$},nonterminal[{1.025},terminal,constant][{observation1},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 31.0 with fitness 282.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{observation0},terminal,variable][{$\max$},nonterminal[{$\div$},nonterminal[{observation0},terminal,variable][{observation1},terminal,variable]][{$\div$},nonterminal[{observation0},terminal,variable][{$-$},nonterminal[{0.18},terminal,constant]]]]][{$\div$},nonterminal[{1.025},terminal,constant][{observation1},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 32.0 with fitness 279.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.895},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{1.195},terminal,constant]][{$\div$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 34.0 with fitness 270.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.895},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$\div$},nonterminal[{$+$},nonterminal[{observation1},terminal,variable][{0.94},terminal,constant]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 36.0 with fitness 269.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.895},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{$-$},nonterminal[{observation1},terminal,variable]][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$\div$},nonterminal[{$+$},nonterminal[{observation1},terminal,variable][{0.96},terminal,constant]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{$+$},nonterminal[{observation1},terminal,variable][{0.05},terminal,constant]][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 38.0 with fitness 268.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.895},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$\div$},nonterminal[{$+$},nonterminal[{observation1},terminal,variable][{0.94},terminal,constant]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{$\cdot$},nonterminal[{$+$},nonterminal[{observation0},terminal,variable][{0.4},terminal,constant]][{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 39.0 with fitness 257.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{$\div$},nonterminal[{$\min$},nonterminal[{$\max$},nonterminal[{$-$},nonterminal[{observation0},terminal,variable]][{observation1},terminal,variable]][{$+$},nonterminal[{observation0},terminal,variable][{0.945},terminal,constant]]][{observation1},terminal,variable]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]][{$\div$},nonterminal[{1.03},terminal,constant][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 48.0 with fitness 249.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{0.09},terminal,constant][{$\div$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{$\sin$},nonterminal[{observation1},terminal,variable]][{$\max$},nonterminal[{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{$-$},nonterminal[{observation0},terminal,variable][{0.98},terminal,constant]][{$\div$},nonterminal[{1.195},terminal,constant][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation0},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{0.09},terminal,constant][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 53.0 with fitness 246.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{$-$},nonterminal[{0.37},terminal,constant]][{$\div$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{observation1},terminal,variable][{$\max$},nonterminal[{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.37},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{observation0},terminal,variable]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{$-$},nonterminal[{observation0},terminal,variable][{0.98},terminal,constant]][{$\div$},nonterminal[{1.195},terminal,constant][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation0},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 54.0 with fitness 241.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{$-$},nonterminal[{observation0},terminal,variable][{0.98},terminal,constant]][{$\div$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$\max$},nonterminal[{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.41},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$-$},nonterminal[{0.48},terminal,constant]]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{observation1},terminal,variable][{$\div$},nonterminal[{1.195},terminal,constant][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]]][{$\div$},nonterminal[{0.09},terminal,constant][{observation1},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation0},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 59.0 with fitness 238.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{$\div$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.37},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{0.09},terminal,constant][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{1.195},terminal,constant][{$\div$},nonterminal[{$+$},nonterminal[{0.94},terminal,constant][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]]]]][{$\div$},nonterminal[{0.09},terminal,constant][{observation1},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation0},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 62.0 with fitness 235.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{0.0},terminal,constant][{$\div$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.37},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{0.37},terminal,constant][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.95},terminal,constant]]]]][{$\max$},nonterminal[{observation1},terminal,variable][{$\div$},nonterminal[{$+$},nonterminal[{0.94},terminal,constant][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]]]]][{$\div$},nonterminal[{0.09},terminal,constant][{observation1},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation0},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 65.0 with fitness 234.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{0.0},terminal,constant][{$\div$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.54},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{$-$},nonterminal[{0.52},terminal,constant]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.95},terminal,constant]]]]][{$\max$},nonterminal[{$-$},nonterminal[{0.06},terminal,constant]][{$\div$},nonterminal[{$+$},nonterminal[{0.94},terminal,constant][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation1},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{$\max$},nonterminal[{observation0},terminal,variable][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+Pareto entry at parsimony 66.0 with fitness 233.
+
+\begin{forest}
+  for tree={symbol, rounded corners,draw=black!100}
+  point/.style={coordinate,},
+  symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},
+  terminal/.style={symbol,},
+  nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},
+  operation/.style={symbol, rounded rectangle,},
+  fixnode/.style={draw=black!100, fill=red!20,},
+  terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},
+  variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+  constant/.style={rectangle, symbol,},
+ [{$+$},nonterminal[{$+$},nonterminal[{$\max$},nonterminal[{1.015},terminal,constant][{$\div$},nonterminal[{$+$},nonterminal[{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$\max$},nonterminal[{$+$},nonterminal[{$-$},nonterminal[{0.41},terminal,constant]][{$\div$},nonterminal[{$\min$},nonterminal[{$-$},nonterminal[{0.095},terminal,constant]][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]][{observation1},terminal,variable]]][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{0.255},terminal,constant][{observation1},terminal,variable]]][{$\max$},nonterminal[{observation0},terminal,variable][{$+$},nonterminal[{$\sin$},nonterminal[{$\div$},nonterminal[{observation1},terminal,variable][{$\min$},nonterminal[{observation1},terminal,variable][{$+$},nonterminal[{observation0},terminal,variable][{0.94},terminal,constant]]]]][{$\max$},nonterminal[{$\sin$},nonterminal[{observation1},terminal,variable]][{$\div$},nonterminal[{$+$},nonterminal[{0.94},terminal,constant][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.22},terminal,constant]]]]]]]]][{$\div$},nonterminal[{$\max$},nonterminal[{$\cdot$},nonterminal[{0.98},terminal,constant][{observation1},terminal,variable]][{0.09},terminal,constant]][{observation1},terminal,variable]]][{$+$},nonterminal[{observation0},terminal,variable][{1.195},terminal,constant]]]][{$\div$},nonterminal[{0.09},terminal,constant][{observation1},terminal,variable]]][{$\div$},nonterminal[{observation1},terminal,variable][{observation0},terminal,variable]]]
+\end{forest}
+
+
+
+\end{document}

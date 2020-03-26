@@ -14,15 +14,6 @@ import yaml
 # warnings.filterwarnings('error')
 
 
-def create_samples_pickle_prepared(path, behaviour_samples_file, pickle_file='prepared_samples.p'):
-    """
-    Saving your data file
-    """
-    prepared_data = data_from_csv(path / behaviour_samples_file)
-    data_save_pickle(prepared_data, path / pickle_file)
-    return
-
-
 def plagih_config_update_from_yaml(config_yaml='config.yaml'):
     """
     The config gets updated
@@ -93,16 +84,18 @@ def run(root_dir):
     - load tree
     """
 
-    config_yaml_path = root_dir / config_yaml
+    runfiles_dir = root_dir / run_files
 
-    samples_ready_path = root_dir / samples_ready
-    samples_csv_path = root_dir / samples_csv
+    config_yaml_path = runfiles_dir / config_yaml
 
-    operators_csv = root_dir /operators
+    samples_ready_path = runfiles_dir / samples_ready
+    samples_csv_path = runfiles_dir / samples_csv
 
-    tree_expr_txt_path = root_dir / tree_expr_txt
-    tree_labels_csv_path = root_dir / tree_labels_csv
-    tree_numpy_csv_path = root_dir / tree_numpy_csv
+    operators_csv = runfiles_dir /operators
+
+    tree_expr_txt_path = runfiles_dir / tree_expr_txt
+    tree_labels_csv_path = runfiles_dir / tree_labels_csv
+    tree_numpy_csv_path = runfiles_dir / tree_numpy_csv
 
     if not Path.is_dir(root_dir):
         raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
@@ -115,11 +108,11 @@ def run(root_dir):
         config = {}
 
     if Path.is_file(samples_ready_path):
-        prepared_data = data_load_pickle(samples_ready_path)
+        data_prepared = data_load_pickle(samples_ready_path)
     elif Path.is_file(samples_csv_path):
-        prepared_data = data_from_csv(samples_csv_path)
+        data_prepared = data_from_csv(samples_csv_path)
         print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
-        data_save_pickle(prepared_data, samples_ready_path)
+        data_save_pickle(data_prepared, samples_ready_path)
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready, samples_csv))
 
@@ -143,10 +136,10 @@ def run(root_dir):
     else:
         print_warning('ww', 'No origin-tree file was provided. Continuing.')
 
-    # config, prepared_data, op_array
+    # config, data_prepared, op_array, origin_tree
 
     gp = ExplainableGP(root_dir, config=config)
-    gp.activate_dataset(prepared_data)
+    gp.activate_dataset(data_prepared)
     gp.activate_operators(op_array)
     if origin_tree is not None:
         gp.activate_origin_tree(origin_tree)

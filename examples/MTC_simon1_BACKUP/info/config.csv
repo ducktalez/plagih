@@ -1,0 +1,58 @@
+choose:
+    choose rules:
+    - first
+    - choose
+    - random
+    constants:
+    - gauss
+    - random
+    - observation samples
+    default: random
+    operators:
+    - random
+    - from distribution
+complexity_measure: ted
+crossover_type_safety_mode: replace_same_types
+delete_old_file: false
+description: No description set
+evolve_rates:
+    branch mutate insert: 0.1
+    crossover branches: 0.4
+    filter floats: 0.05
+    point mutate function: 0.1
+    random from origin_tree: 0.3
+    random from scratch: 0
+    repro one: 0.03
+    repro pareto: 0.04
+    repro reduced one: 0.03
+float_accuracy: 200
+force_new_run: false
+gen_max: 800
+gen_num_max_parsimony: 50
+kernel_name: regression bounded
+mode: run
+monitor:
+    gen_fitness_average: y
+    population_tmp_done-size: y
+    sympify_errors: y
+overwrite periodic gp_files: true
+parsimony_max: 100
+parsimony_tmp: 15
+period:
+    gen_monitor: 1
+    gen_save: 1
+    time_monitor: null
+    time_save: null
+pop_max: 1000
+precision: 3
+print_type: gggwwsivoaa
+random from scratch max nodes: 20
+swim: p
+time_max: null
+tourn_size: 4
+tree branch base nodes: 20
+tree from scratch min_nodes: 8
+tree_depth_base: 7
+tree_depth_max: 25
+tree_depth_min: 5
+tree_growth: node-based

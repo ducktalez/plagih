@@ -4,40 +4,40 @@ from pathlib import Path
 tree_components = {
 
     'csv samples': {
-        'number of observations': None,
-        'number of actions': 1,
-        'column info': {
-            'cartPos': {
 
-                'use as': 'constant',
-                'type': 'float',
-                'label as': 'cartPos',
-                'z (for future)': {
-                    'insert min': None,
-                    'insert max': 5,
-                    'value box/shape': [-2.4, 2.4],
-                    'time delta': None,
-                    'time delta 0 name': None,
-                    'description': 'The current position of the cart'}
-            },
-            'cartVel': {
-                'type': 'float',
-            },
-            'poleAngle': {
-                'type': 'float',
-            },
-            'poleVel': {
-                'type': 'float',
-            },
-            'someOtherValue': {
-                'use': False
-            },
-            'action0': {
-                'use': 'result',
-                'type': 'float',
-            },
-        }
-    }
+        'cartPos': {
+
+            'use as': 'constant',
+            'type': 'float',
+            'label as': 'cartPos',
+            'z (for future)': {
+                'insert min': None,
+                'insert max': 5,
+                'value box/shape': [-2.4, 2.4],
+                'time delta': None,
+                'time delta 0 name': None,
+                'description': 'The current position of the cart'}
+        },
+        'cartVel': {
+            'type': 'float',
+        },
+        'poleAngle': {
+            'type': 'float',
+        },
+        'poleVel': {
+            'type': 'float',
+        },
+        'someOtherValue': {
+            'use': False
+        },
+        'action0': {
+            'use': 'result',
+            'type': 'float',
+        },
+
+    },
+    'number of observations': None,
+    'number of actions': 1,
 }
 
 config = {
@@ -118,5 +118,5 @@ config = {
 
 print(yaml.dump(tree_components))
 
-# with Path.open(Path.cwd() / 'pltest.yaml', 'w') as file:
-#     yaml.dump(tree_components, file)
+with Path.open(Path.cwd() / 'pltest.yaml', 'w') as file:
+    yaml.dump(tree_components, file)

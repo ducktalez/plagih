@@ -1,0 +1,45 @@
+% This file was created by tikzplotlib v0.9.1.
+\begin{tikzpicture}
+
+\definecolor{color0}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
+
+\begin{axis}[
+tick align=outside,
+tick pos=both,
+title={pareto dominant candidates},
+x grid style={white!69.0196078431373!black},
+xlabel={parsimony},
+xmin=0, xmax=105,
+xtick style={color=black},
+y grid style={white!69.0196078431373!black},
+ylabel={fitness},
+ymin=0, ymax=1370.25,
+ytick style={color=black}
+]
+\addplot [semithick, color0, const plot mark left, dashed, mark=*, mark size=3, mark options={solid}]
+table {%
+0 1371.25
+0 1305
+26 369
+27 368
+28 315
+29 297
+30 289
+31 282
+32 279
+34 270
+36 269
+38 268
+39 257
+48 249
+53 246
+54 241
+59 238
+62 235
+65 234
+66 233
+106 233
+};
+\end{axis}
+
+\end{tikzpicture}

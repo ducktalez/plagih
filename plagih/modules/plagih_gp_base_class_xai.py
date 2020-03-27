@@ -845,9 +845,9 @@ class ExplainableGP(object):
 
             if pareto_improved:
                 expr_raw = meta['expr_sym']
-                tree = karoo_tree_from_expr(expr_raw)
+                tree = karoo_tree_from_expr(expr_raw, self.variables_dict)
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-                sym_tree = tree_evolve_reduce(tree, variables_dict, completely=True)
+                sym_tree = tree_evolve_reduce(tree, self.variables_dict, completely=True)
                 if tree_get_expr_raw(sym_tree, node_id=root_id) != tree_get_expr_raw(tree, node_id=root_id):
                     self.printpl('aa', 'Pareto entry could be further sympified!')
                     sym_tree = tree_set_fitness(sym_tree, fitness)
@@ -1141,14 +1141,13 @@ class ExplainableGP(object):
         if tree is None:
             print_warning('ww', 'Tree from last_evolution: {} failed. probably sympify. Continuing.'.format(last_evolution))
         else:
-            # print('meff', tree)
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
 
             tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
             tree = tree_normalize_exponentiation(tree)
             tree = tree_set_last_evolution(tree, last_evolution)
-            tree = tree_check_xtypes(tree)
-            # tree = tree_set_xtypes(tree, self.variables_dict)  # todo
+            tree_check_xtypes(tree)
+            tree = tree_set_xtypes(tree, self.variables_dict)  # todo
 
         return tree
 
@@ -1202,9 +1201,8 @@ class ExplainableGP(object):
         - check if the tree is actually valid
         ->
         """
-        print('Bef0re tree', tree)
+
         tree = self.tree_beautify(tree, last_evolution=last_evolution)
-        print('aft0r tree', tree)
 
         if self.tree_check_core_all(tree):
             tree_ident = tree_get_ident(tree)

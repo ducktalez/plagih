@@ -110,12 +110,13 @@ def karoo_tree_from_labellist(label_list, xtype_list, modify_list=None):
     return tree
 
 
-def karoo_tree_from_expr(expr, modify_list=None):
+def karoo_tree_from_expr(expr, variables_dict, modify_list=None):
     """
     DELETE later sfeh
     Generate tree from a raw or sympified expression
     """
     label_list = ast_convert_from_expr(expr, build=True)
+    xtype_list = [xtype_get_from_label(label, variables_dict) for label in label_list]
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
     tree = p_tree.get_uninstanced_tree()
     return tree
@@ -232,6 +233,7 @@ def tree_set_last_evolution(tree, last_modification):
 def tree_check_xtypes(tree):
     for node in tree_iterate_range(tree):
         if tree[N_type][node] == '':  # are xtypes set?
+            print_e('xtypes in tree were not set correctly', tree)
             return False
     return True
 
@@ -763,11 +765,8 @@ def tree_evolve_branch_multiple(tree, goal_nodes, variables_dict, func_array):
     """
 
     tree_base = tree.copy()
-    print('tree before layers', tree)
-    layer0_ids = tree_get_mutatable_layer(tree, 0)
-    print('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
-    nodes_left = goal_nodes  # sfeh - max_nodes-tree_get_size(tree, karoo=True))
-    print('Which lets us replace {} amount of old nodes'.format(nodes_left))
+    layer0_ids = tree_get_mutatable_layer(tree, 0)  #('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
+    nodes_left = goal_nodes  # sfeh - max_nodes-tree_get_size(tree, karoo=True))  #('Which lets us replace {} amount of old nodes'.format(nodes_left))
 
     num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
 
@@ -776,7 +775,6 @@ def tree_evolve_branch_multiple(tree, goal_nodes, variables_dict, func_array):
         node_id = layer0_ids[i]
         old_branch = tree_node_get_branch(tree, node_id, karoo=True)
         tree = tree_insert_branch_v2(tree_base, old_branch, variables_dict, func_array, goal_nodes=num_nodes_split[i])  # tree with new branch
-        print('tetetete', tree)
 
     return tree
 
@@ -805,12 +803,10 @@ def tree_insert_branch_v2(tree, branch_ids, variables_dict, func_array, goal_nod
     # old_xtype = xtype_get_from_label(old_label, variables_dict)
 
     label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, goal_nodes, variables_dict, func_array, build_type='grow')
-    print('deeeb', label_list, arity_list, xtype_list)
 
     if label_list:
         core_insert = core_from_labels(label_list, arity_list, xtype_list)
         tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
-        print('deeeb2', tree)
 
     return tree
 
@@ -1977,9 +1973,6 @@ def tree_check_children(tree, karoo=True):
 
     id_list = []
     c_list = []
-    print('tree before chaos', tree)
-    print('asd', tree[3])
-    print('len', len(tree[3]))
     for n in range(1, len(tree[3])):
         for c in range(0, 3):
             if tree[N_c1 + c][n] != '':

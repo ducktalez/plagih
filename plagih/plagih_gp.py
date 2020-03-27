@@ -141,7 +141,7 @@ def run(root_dir):
     gp.activate_operators(op_array)
     if label_list is not None and modify_list is not None:
         observation_bundle = gp.get_observation_bundle()  # todo make dummy available
-        xtype_list = [xtype_get_from_label(label, observation_bundle) for label in label_list]
+        xtype_list = xtypes_from_labels(label_list, observation_bundle)
         origin_tree = karoo_tree_from_labellist(label_list, xtype_list, modify_list=modify_list)
         gp.activate_origin_tree(origin_tree)
 

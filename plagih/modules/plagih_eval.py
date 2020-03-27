@@ -212,11 +212,9 @@ def tensors_leaves(tensors, data, variables_dict, action_dict):
     for i in range(num_columns):
         obs = variables_dict['all'][i]['label']
         xtype = variables_dict['all'][i]['xtype']
-        print('ad', obs, xtype)
         # xtype = xtype_get_from_label(obs, variables_dict=variables_dict, node_arity=0)
 
         if '2f' in xtype:
-            print('the data:', data[:, i], '\nthe obs', obs)
             tensors[obs] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
         elif '2b' in xtype:
             tensors[obs] = tf.constant(data[:, i], dtype=tf.bool)

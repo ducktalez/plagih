@@ -116,8 +116,9 @@ def karoo_tree_from_expr(expr, variables_dict, modify_list=None):
     Generate tree from a raw or sympified expression
     """
     label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = [xtype_get_from_label(label, variables_dict) for label in label_list]
-    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    xtype_list = xtypes_from_labels(label_list, variables_dict)
+    print('label and xtype list\n', label_list, '\n', xtype_list)
+    p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     tree = p_tree.get_uninstanced_tree()
     return tree
 
@@ -233,7 +234,7 @@ def tree_set_last_evolution(tree, last_modification):
 def tree_check_xtypes(tree):
     for node in tree_iterate_range(tree):
         if tree[N_type][node] == '':  # are xtypes set?
-            print_e('xtypes in tree were not set correctly', tree)
+            # print_warning('ww', 'xtypes in tree were not set correctly.\n{}'.format(tree))
             return False
     return True
 
@@ -542,11 +543,11 @@ def tree_set_modifyable_nodes(tree, origin_tree=None):
     """
 
     tree = tree_set_modifyable_nodes_true(tree)
-
     if origin_tree is not None:  # todo loop is unneccessary if there are no set fix nodes
         non_modifiable_nodes = []
         if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
-            non_modifiable_nodes.extend(tree_permanent_nodes_get(1, tree, 1, origin_tree))
+            permanent_nodes = tree_permanent_nodes_get(1, tree, 1, origin_tree)
+            non_modifiable_nodes.extend(permanent_nodes)
 
         for non_modifiable in non_modifiable_nodes:
             tree = tree_node_set_modify(tree, non_modifiable, 0)
@@ -1846,7 +1847,7 @@ def treegp_reduce_branch(tree, node_id, variables_dict, karoo=False):
         expr_sym = expr_sympify(expr_raw=expr_raw)
         label_list = ast_convert_from_expr(expr_sym, build=True)
         arity_list = [label_get_arity(label) for label in label_list]
-        xtype_list = [xtype_get_from_label(label, variables_dict) for label in label_list]
+        xtype_list = xtypes_from_labels(label_list, variables_dict)
         core = core_from_labels(label_list, arity_list, xtype_list)
         tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
 

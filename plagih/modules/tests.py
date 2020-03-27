@@ -234,7 +234,7 @@ def test_tree_evolve_branch_multiple():
     variables_dict = TestHelpers.variables_dict
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
-    xtype_list = [xtype_get_from_label(label, variables_dict) for label in label_list]
+    xtype_list = xtypes_from_labels(label_list, variables_dict)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     # p_tree = Plagih_Tree(label_list)
     tree = p_tree.get_uninstanced_tree()

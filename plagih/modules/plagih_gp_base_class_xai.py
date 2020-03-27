@@ -636,7 +636,7 @@ class ExplainableGP(object):
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']  # sfeh: use raw or sym?
             label_list = ast_convert_from_expr(expr_raw, build=True)
-            xtype_list = [xtype_get_from_label(label, self.variables_dict) for label in label_list]
+            xtype_list = xtypes_from_labels(label_list, self.variables_dict)
             tree = karoo_tree_from_labellist(label_list, xtype_list)
             tree = self.tree_beautify(tree, last_evolution='none')
 
@@ -668,7 +668,7 @@ class ExplainableGP(object):
                 expr_raw = meta['expr_raw']
                 expr_sym = expr_sympify(expr_raw)
                 label_list_sym = ast_convert_from_expr(expr_sym, build=True)
-                xtype_list_sym = [xtype_get_from_label(label, self.variables_dict) for label in label_list_sym]
+                xtype_list_sym = xtypes_from_labels(label_list_sym, self.variables_dict)  # todo sym or raw?
                 tree = karoo_tree_from_labellist(label_list_sym, xtype_list_sym)
                 pycode = tree_get_pycode(tree)
 
@@ -844,7 +844,7 @@ class ExplainableGP(object):
                 best_fit = fitness
 
             if pareto_improved:
-                expr_raw = meta['expr_sym']
+                expr_raw = meta['expr_raw']  # expy_sym will can cause exceptiops while setting fix nodes
                 tree = karoo_tree_from_expr(expr_raw, self.variables_dict)
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
                 sym_tree = tree_evolve_reduce(tree, self.variables_dict, completely=True)
@@ -983,7 +983,8 @@ class ExplainableGP(object):
                 meta = np.random.choice(list(self.parsimony_best_meta.values()))
                 expr_raw = meta['expr_raw']
                 label_list = ast_convert_from_expr(expr_raw, build=True)
-                p_tree = Plagih_Tree(label_list)
+                xtype_list = xtypes_from_labels(label_list, self.variables_dict)
+                p_tree = Plagih_Tree(label_list, xtype_list)
                 olymp_winner = p_tree.get_uninstanced_tree()
                 self.pop_append(olymp_winner, last_evolution='r-par')
 
@@ -997,7 +998,7 @@ class ExplainableGP(object):
 
         for _ in range(repro_rate):
             tree = self.pop_selection_tournament(self.tourn_size)
-            tree = tree_evolve_reduce(tree, completely=False)
+            tree = tree_evolve_reduce(tree, self.variables_dict, completely=False)
             self.pop_append(tree, last_evolution='r-sym')
 
         return

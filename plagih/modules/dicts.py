@@ -114,7 +114,7 @@ op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     # 'b2b' Classical logical operators, evaluate from bool to bool
     'And':{'fun': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'call': None,                        'pycode': lambda a, b: '({} and {})'.format(a, b)},
     ast.And:{'fun': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': None, 'call': None,            'pycode': None},  # a and b
-    '&':{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'call': 'inline', 'pycode': lambda a, b: '({} & {})'.format(a, b)},
+    '&':{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'call': 'inline',       'pycode': lambda a, b: '({} & {})'.format(a, b)},
     ast.BitAnd:{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': None, 'call': 'inline',        'pycode': None},  # DON'T USE tf.bitwise.bitwise_and
     'Or':{'fun': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': '$\\lor$', 'call': None,                    'pycode': lambda a, b: '({} or {})'.format(a, b)},
     ast.Or:{'fun': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': None, 'call': None,                'pycode': None},  # a or b

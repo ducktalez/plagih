@@ -437,7 +437,7 @@ class ExplainableGP(object):
             'tf_classify_labels_map': self.tf_classify_labels_map,
             'action_min_max': self.action_min_max}
 
-        self.output_xtype = self.output_get_xtype()
+        self.output_xtype = self.action_get_xtype()
 
         return
 
@@ -1116,18 +1116,19 @@ class ExplainableGP(object):
 
         return
 
-    def output_get_xtype(self):
+    def action_get_xtype(self):
         """
         Return the xtype of the action we want to create.
+        sfeh: currently only float kernels supported
         """
-        action_type_one = next(iter(self.action_dict.values()))['type']
-        if action_type_one == 'float':
-            xtype = '2f'
-        elif action_type_one == 'bool':
-            xtype = '2b'
-        else:
-            raise
-        return xtype
+        # action_type_one = next(iter(self.action_dict.values()))['type']
+        # if action_type_one == 'float':
+        #     xtype = '2f'
+        # elif action_type_one == 'bool':
+        #     xtype = '2b'
+        # else:
+        #     raise
+        return '2f'
 
     def tree_beautify(self, tree, last_evolution=''):
         """

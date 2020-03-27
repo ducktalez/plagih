@@ -381,5 +381,6 @@ def test_create_random_tree(verbose=False):
     tree_pretty_print(tree, karoo=True)
     return
 
-
-test_tree_evolve_branch_multiple()
+def reduce_trees():
+    label_list = ['+', '1', '2']
+    karoo_tree_from_labellist(label_list, 'ö')

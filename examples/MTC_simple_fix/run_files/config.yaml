@@ -1,0 +1,5 @@
+pop_max: 1000
+parsimony_max: 100
+kernel_name: "regression bounded"
+complexity_measure: "ted"
+random from scratch max nodes: 20

@@ -1,4 +1,4 @@
-cartPos|type=float|role=input,cartVel|type=float,action0|type=float|role=result
+cartPos|type=float|role=input,cartVel|type=float|role=input,action0|type=float|role=result
 -0.5031261704876531,0.0,2
 -0.5022796185120664,0.000846551975586675,2
 -0.5005928512278555,0.0016867672842108814,2

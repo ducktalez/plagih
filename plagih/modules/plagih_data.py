@@ -19,7 +19,7 @@ def data_load_data_split(data_x, data_y, test_size):
 
 
 def samples_header_line(row):
-    observations_bundle = {'info': {}, 'bool': [], 'float': []}  # to identify all observation types
+    observations_bundle = {'info': {}, 'bool': [], 'float': [], 'all': {}}  # to identify all observation types # sfeh remove 'all'
     param_at = {}
     actions = {}  # action: type, xtype,
 
@@ -40,18 +40,21 @@ def samples_header_line(row):
         type = observations_bundle[name]['type']
         xtype = '2b' if 'bool' in type else '2f'
 
-        param_at[ii] = {'name': name, 'type': type, 'xtype': xtype, 'custom label': None}
+        param_at[ii] = {'name': name, 'type': type, 'xtype': xtype, 'label': name}
 
         if any(x in role for x in ['input', 'observation', 'obs']):
             observations_bundle['info'][name] = {'type': type, 'xtype': xtype, 'custom label': None}
             observations_bundle[type].append(name)
         elif any(x in role for x in ['result', 'output', 'out', 'action']):
-            actions[name] = {'type': type, 'xtype': xtype, 'custom label': None}
+            actions[name] = {'type': type, 'xtype': xtype, 'label': name, 'pos': ii}
         else:
             if ii < len(row) - 1:
                 observations_bundle[name]['role'] = 'input'
             else:
                 observations_bundle[name]['role'] = 'action'
+
+        # sfeh solve this later
+        observations_bundle['all'] = param_at
 
     return observations_bundle, actions, param_at
 
@@ -68,6 +71,7 @@ def data_from_csv(samples_file, samples_info=None, test_size=0.2):
     --------------------------------------------------------
     """
 
+    data_obs, data_results = [], []
     # 1. Read file
     with Path.open(samples_file) as csvFile:
         reader = csv.reader(csvFile, delimiter=',')
@@ -86,19 +90,21 @@ def data_from_csv(samples_file, samples_info=None, test_size=0.2):
                 types = [param_at[x]['type'] for x in range(len(row))]
                 row_as_data = [locate(types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
 
-                data_obs, data_results = [], []
-                num_observations = min(len(observations_bundle), len(row) - 1)
+                num_observations = min(len(observations_bundle['all']), len(row) - 1)
+
                 data_obs.append(row_as_data[:num_observations])
                 data_results.append(row_as_data[num_observations:])
+
+    print('DFGFDSFSDFDS')
 
     unique_outputs_num = len(np.unique(data_results))  # load the user defined true labels for classification or solutions for regression
 
     data_train_rows, data_train, data_control = data_load_data_split(data_obs, data_results, test_size=test_size)
     # self.printplg('g', 'Loading samples. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
-    action_min_max = [min(data_results), max(data_results)]
+    action_min_max = (min(data_results), max(data_results))
 
-    return observations_bundle, actions, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max
+    return observations_bundle, actions, param_at, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max
 
 
 def data_load_pickle(data_prepared_pickle_path):
@@ -108,7 +114,7 @@ def data_load_pickle(data_prepared_pickle_path):
     with Path.open(data_prepared_pickle_path, 'rb') as file:
         pickle_data = pickle.load(file)
 
-    return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
+    return pickle_data
 
 
 def data_save_pickle(data_prepared, data_pickle_path):
@@ -118,4 +124,14 @@ def data_save_pickle(data_prepared, data_pickle_path):
 
     with Path.open(data_pickle_path, 'wb') as file:
         pickle.dump(data_prepared, file, protocol=pickle.HIGHEST_PROTOCOL)
+    return
+
+
+def data_save_yaml(data_prepared, data_pickle_path):
+    """
+    saves prepared plagih data to pickle file
+    """
+
+    with Path.open(data_pickle_path, 'wb') as file:
+        yaml.dump(data_prepared, file, protocol=pickle.HIGHEST_PROTOCOL)
     return

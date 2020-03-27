@@ -14,7 +14,7 @@ import yaml
 # warnings.filterwarnings('error')
 
 
-def plagih_config_update_from_yaml(config_yaml='config.yaml'):
+def plagih_config_update_from_yaml(config_yaml=Path('config.yaml')):
     """
     The config gets updated
     """
@@ -23,12 +23,12 @@ def plagih_config_update_from_yaml(config_yaml='config.yaml'):
     return config
 
 
-def plagih_config_update_from_yaml(config_yaml='config.yaml'):
+def plagih_config_update_from_json(config_json=Path('config.json')):
     """
     The config gets updated
     """
-    with Path.open(config_yaml, 'r') as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
+    with Path.open(config_json, 'r') as file:
+        config = json.load(file)
     return config
 
 
@@ -118,15 +118,13 @@ def run(root_dir):
 
     if Path.is_file(operators_csv):  # Load operators.csv
         functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-        op_array = load_funcarray_from_list(functions)
+        op_array = funcarray_from_list(functions)
     else:
         raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
 
-    origin_tree = None
+    label_list = None
     if Path.is_file(tree_labels_csv_path):
         label_list, modify_list = labellists_from_csv(tree_labels_csv_path)
-
-        origin_tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
         print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
         raise
@@ -141,7 +139,10 @@ def run(root_dir):
     gp = ExplainableGP(root_dir, config=config)
     gp.activate_dataset(data_prepared)
     gp.activate_operators(op_array)
-    if origin_tree is not None:
+    if label_list is not None and modify_list is not None:
+        observation_bundle = gp.get_observation_bundle()  # todo make dummy available
+        xtype_list = [xtype_get_from_label(label, observation_bundle) for label in label_list]
+        origin_tree = karoo_tree_from_labellist(label_list, xtype_list, modify_list=modify_list)
         gp.activate_origin_tree(origin_tree)
 
     gp.plagih_gp_run()
@@ -153,17 +154,18 @@ def visualize_labellist(csv_file, output_file=None):
     visualize a label list
     e.g. if you want to check, if you made your tree correctly
     """
-    if Path.is_file(csv_file):
-        label_list, modify_list = labellists_from_csv(csv_file)
-        tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
-        forest_input = tree_get_latex_forest(tree)
-        latex_full_doc = latex_complete_tree_summary(forest_input)
-        if not output_file:
-            output_file = csv_file.with_suffix('.tex')
-        with Path.open(output_file, 'w') as csv_file:
-            csv_file.write(latex_full_doc)
-    else:
-        print_e('File {}  does not exist!'.format(csv_file))
+    print('can not create tree from label list anymore, xtype_list required')
+    # if Path.is_file(csv_file):
+    #     label_list, modify_list = labellists_from_csv(csv_file)
+    #     tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
+    #     forest_input = tree_get_latex_forest(tree)
+    #     latex_full_doc = latex_complete_tree_summary(forest_input)
+    #     if not output_file:
+    #         output_file = csv_file.with_suffix('.tex')
+    #     with Path.open(output_file, 'w') as csv_file:
+    #         csv_file.write(latex_full_doc)
+    # else:
+    #     print_e('File {}  does not exist!'.format(csv_file))
 
 
 if __name__ == "__main__":

@@ -207,24 +207,32 @@ def tensors_leaves(tensors, data, variables_dict, action_dict):
     - variables (observation0, ...)
     - constants (True, False, 1.234, ...)
     """
-    num_terminals = len(variables_dict['all'])
+    num_columns = len(variables_dict['all'])  # sfeh not when entries are not used. which does not happen.
 
-    for i in range(num_terminals):
-        var = variables_dict['all'][i]
-        xtype = xtype_get_from_label(var, variables_dict=variables_dict, node_arity=0)
+    for i in range(num_columns):
+        obs = variables_dict['all'][i]['label']
+        xtype = variables_dict['all'][i]['xtype']
+        print('ad', obs, xtype)
+        # xtype = xtype_get_from_label(obs, variables_dict=variables_dict, node_arity=0)
+
         if '2f' in xtype:
-            tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
+            print('the data:', data[:, i], '\nthe obs', obs)
+            tensors[obs] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
         elif '2b' in xtype:
-            tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
+            tensors[obs] = tf.constant(data[:, i], dtype=tf.bool)
         else:
             raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
 
-    for i, action in enumerate(action_dict):
-        py_type = action_dict[action]
-        if 'float' in py_type:
-            tensors[name_action + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
+    # sfeh: if more than one action is provided...
+    action_for_regression = [0]
+    for action_name, action_info in action_dict.items():
+        action_type = action_info['type']
+        action_label = action_info['label']
+        column = action_info['pos']
+        if 'float' in action_type:
+            tensors[action_label] = tf.constant(data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
         else:
-            print_e('action_dict type for {} is: {}.'.format(action, py_type))
+            print_e('action {} has these infos: {}.'.format(action_name, action_info))
     return tensors
 
 

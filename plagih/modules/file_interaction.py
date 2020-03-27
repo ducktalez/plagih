@@ -18,7 +18,8 @@ folder_pop_analysis = 'pop_dist/'
 
 file_pareto = 'pareto.txt'
 complete_file_pareto = 'pareto.txt'
-file_config = 'config.csv'
+file_config_yaml = 'config.yaml'
+file_config_json = 'config.json'
 file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 file_pycode = 'agents.py'

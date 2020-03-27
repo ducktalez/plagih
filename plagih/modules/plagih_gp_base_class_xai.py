@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
 import yaml
+import json
 try:
     import tikzplotlib
 except Exception as ex:
@@ -203,22 +204,35 @@ class ExplainableGP(object):
         if self.gen_id == 0:
             self.gen_create_first()
 
-        self.write_config_file()
+        self.write_config_yaml()
 
         self.gen_create_loop()
         self.terminate_run(self.root_dir)
         return
 
-    def write_config_file(self):
+    def write_config_yaml(self):
         """
         write the parameters to a .csv file which can also be loaded
         """
 
         path_config = make_dir(self.root_dir / folder_info)
-        filename = path_config / file_config
+        filename = path_config / file_config_yaml
 
         with Path.open(filename, 'w') as file:
             _ = yaml.dump(self.config, file, indent=4)
+
+        return
+
+    def write_config_json(self):
+        """
+        write the parameters to a .csv file which can also be loaded
+        """
+
+        path_config = make_dir(self.root_dir / folder_info)
+        filename = path_config / file_config_json
+
+        with Path.open(filename, 'w') as file:
+            json.dump(self.config, file, indent=4)
 
         return
 
@@ -404,10 +418,11 @@ class ExplainableGP(object):
         did not want to start the whole stuff everytime
         """
         # _, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max = data_prepared
-        observations_bundle, actions, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max = data_prepared
+        observations_bundle, actions, param_at, unique_outputs_num, data_train_rows, data_train, data_control, action_min_max = data_prepared
 
         self.variables_dict = observations_bundle  # todo remane
         self.action_dict = actions
+        self.param_at = param_at
         self.unique_outputs_num = unique_outputs_num
         self.data_train_rows, self.data_train, self.data_control = data_train_rows, data_train, data_control
         self.action_min_max = action_min_max
@@ -621,7 +636,8 @@ class ExplainableGP(object):
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']  # sfeh: use raw or sym?
             label_list = ast_convert_from_expr(expr_raw, build=True)
-            tree = karoo_tree_from_labellist(label_list)
+            xtype_list = [xtype_get_from_label(label, self.variables_dict) for label in label_list]
+            tree = karoo_tree_from_labellist(label_list, xtype_list)
             tree = self.tree_beautify(tree, last_evolution='none')
 
             tikz_code = tree_get_latex_forest(tree)  # generate the small forest inputs
@@ -652,7 +668,8 @@ class ExplainableGP(object):
                 expr_raw = meta['expr_raw']
                 expr_sym = expr_sympify(expr_raw)
                 label_list_sym = ast_convert_from_expr(expr_sym, build=True)
-                tree = karoo_tree_from_labellist(label_list_sym)
+                xtype_list_sym = [xtype_get_from_label(label, self.variables_dict) for label in label_list_sym]
+                tree = karoo_tree_from_labellist(label_list_sym, xtype_list_sym)
                 pycode = tree_get_pycode(tree)
 
                 all_agent_names.append(agent_name)
@@ -827,10 +844,10 @@ class ExplainableGP(object):
                 best_fit = fitness
 
             if pareto_improved:
-                expr_raw = meta['expr_raw']
+                expr_raw = meta['expr_sym']
                 tree = karoo_tree_from_expr(expr_raw)
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-                sym_tree = tree_evolve_reduce(tree, completely=True)
+                sym_tree = tree_evolve_reduce(tree, variables_dict, completely=True)
                 if tree_get_expr_raw(sym_tree, node_id=root_id) != tree_get_expr_raw(tree, node_id=root_id):
                     self.printpl('aa', 'Pareto entry could be further sympified!')
                     sym_tree = tree_set_fitness(sym_tree, fitness)
@@ -934,7 +951,7 @@ class ExplainableGP(object):
 
         for i in range(repro_rate):
             goal_nodes = np.random.randint(self.config['tree from scratch min_nodes'], 1 + self.config['random from scratch max nodes'])
-            label_list, arity_list = invent_label_list_nodes_grow(self.output_xtype, goal_nodes, self.variables_dict, self.func_array)
+            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(self.output_xtype, goal_nodes, self.variables_dict, self.func_array)
             p_tree = Plagih_Tree(label_list)
             tree = p_tree.get_uninstanced_tree()
             # tree = tree_set_id(tree, i)
@@ -1033,7 +1050,7 @@ class ExplainableGP(object):
             tree = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_nodes(tree, no_root=True)
             node = np.random.choice(node_ids)
-            branch_nodes_ids = tree_get_branch(tree, node, karoo=True)  # select point of mutation and all nodes beneath [6, 9, 10]
+            branch_nodes_ids = tree_node_get_branch(tree, node, karoo=True)  # select point of mutation and all nodes beneath [6, 9, 10]
             if self.config['tree_growth'] == 'depth-based':
                 tree = tree_evolve_insert_branch_v1(tree, branch_nodes_ids, self.variables_dict, self.func_array,
                                                     depth_max=self.config['tree_depth_max'],
@@ -1071,8 +1088,8 @@ class ExplainableGP(object):
             if not success:
                 right_id, left_id, success = self.tree_try_get_swapids(right_tree, left_tree)
 
-            left_ids, left_labels, left_aritys = tree_get_branch_lax(left_tree, left_id)
-            right_ids, right_labels, right_aritys = tree_get_branch_lax(right_tree, right_id)
+            left_ids, left_labels, left_aritys, left_xtypes = tree_get_branch_ilax(left_tree, left_id)
+            right_ids, right_labels, right_aritys, right_xtypes = tree_get_branch_ilax(right_tree, right_id)
 
             if not success:
                 print_warning('ww', 'Crossover conversion between trees not possible: \n{}\n{}'.format(left_tree, right_tree))
@@ -1084,8 +1101,8 @@ class ExplainableGP(object):
                 # left_aritys.insert(0, 1)
                 return
 
-            left_core = core_from_labels(left_labels, left_aritys)  # todo this is not necessary, switch branches
-            right_core = core_from_labels(right_labels, right_aritys)
+            left_core = core_from_labels(left_labels, left_aritys, left_xtypes)  # todo this is not necessary, switch branches
+            right_core = core_from_labels(right_labels, right_aritys, right_xtypes)
 
             left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
             left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.variables_dict)
@@ -1148,7 +1165,7 @@ class ExplainableGP(object):
         if not tree_check_children(tree):
             print_e('Tree is not consistent:\n{}'.format(tree))
             tree_works = False
-        elif not tree_check_typed(tree, self.variables_dict):
+        elif not tree_check_types(tree, self.variables_dict):
             print_e('Tree children xtypes are not correct:\n{}'.format(tree_labels(tree)))
             tree_works = False
         elif tree_node_get_arity(tree, root_id) == 0:
@@ -1185,8 +1202,9 @@ class ExplainableGP(object):
         - check if the tree is actually valid
         ->
         """
-
+        print('Bef0re tree', tree)
         tree = self.tree_beautify(tree, last_evolution=last_evolution)
+        print('aft0r tree', tree)
 
         if self.tree_check_core_all(tree):
             tree_ident = tree_get_ident(tree)
@@ -1275,13 +1293,13 @@ class ExplainableGP(object):
             # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
             a_id = np.random.choice(a_ids)
             a_label = tree_node_get_label(a_tree, a_id)
-            a_label, _, a_xtype = tree_node_get_lax(a_tree, a_id)
+            a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
 
             # create a list from parent b with same xtype
             b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
             b_sametype_ids = b_node_ids[:]
             for b_id in b_node_ids:
-                b_label, _, b_xtype = tree_node_get_lax(b_tree, b_id)
+                b_label, _, b_xtype = tree_node_get_lax_v3(b_tree, b_id)
                 if not xtype_equi_outcome(b_xtype, a_xtype):
                     b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
@@ -1310,9 +1328,10 @@ class ExplainableGP(object):
         expr_sym = expr_sympify(expr_raw=expr_raw)
         tree_check_expr(tree)
 
-        if not tree_check_is_sympified(tree):
-            print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
-                                 ''.format(expr_raw, expr_sym))
+        # sfeh, this does not work
+        # if not tree_check_is_sympified(tree):
+        #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
+        #                          ''.format(expr_raw, expr_sym))
 
         if not self.tree_check_core_all(tree):
             print('TODO', tree_labels(tree))
@@ -1530,6 +1549,13 @@ class ExplainableGP(object):
 
         return
 
+    def get_observation_bundle(self):
+        """
+        xtypes_list is required to build trees
+        this helps creating it
+        """
+        return self.variables_dict
+
     def terminate_run(self, path):
         """
         Program is done after writing all gp_files one last time.
@@ -1660,9 +1686,8 @@ class ExplainableGP(object):
         return
 
 
-def load_funcarray_from_list(functions):
+def funcarray_from_list(functions):
     """
-    load_operators_from_csv
     Load all operators ready-to-use from a file
     """
 
@@ -1674,11 +1699,7 @@ def load_funcarray_from_list(functions):
                 [[], [], [], []],
                 [[], [], [], []]]
 
-    np_array = np.array([[[], [], [], []],
-                         [[], [], [], []],
-                         [[], [], [], []],
-                         [[], [], [], []],
-                         [[], [], [], []]])
+    # sfeh make this a np.array
 
     for fun in functions:
         label = fun[0]
@@ -1687,19 +1708,14 @@ def load_funcarray_from_list(functions):
 
         if xtype == 'f2f':
             op_array[f2f][arity].append(label)
-            np_array = np.append(np_array[f2f][arity], label)
         elif xtype == 'f2b':
             op_array[f2b][arity].append(label)
-            np_array = np.append(np_array[f2b][arity], label)
         elif xtype == 'b2b':
             op_array[b2b][arity].append(label)
-            np_array = np.append(np_array[b2b][arity], label)
         elif xtype == 'b2f':
             op_array[b2f][arity].append(label)
-            np_array = np.append(np_array[b2f][arity], label)
         elif xtype == 'b2f2f':
             op_array[b2f2f][arity].append(label)
-            np_array = np.append(np_array[b2f2f][arity], label)
 
     return op_array
 

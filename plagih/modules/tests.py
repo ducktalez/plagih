@@ -1,7 +1,7 @@
 from plagih.modules.plagih_eval import *
 from plagih.modules.plagih_tree import *
 from plagih.modules.Examples import *
-from plagih.modules.plagih_gp_base_class_xai import load_funcarray_from_list
+from plagih.modules.plagih_gp_base_class_xai import funcarray_from_list
 
 #todo slowly make all of those random tests worth something
 
@@ -9,12 +9,19 @@ from plagih.modules.plagih_gp_base_class_xai import load_funcarray_from_list
 class TestHelpers:
     # example func_array. Note that (for the random choice) functions can be included more often
     func_array = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
-                  [[], ['Ftob'], ['<', '>', '==', '!='], []],
-                  [[], ['Not', 'Not'], ['&', 'Xor'], []],
-                  [[], ['Btof'], [], []],
+                  [[], [], ['<', '>', '==', '!='], []],
+                  [[], ['Not', 'Not'], ['&'], []],
+                  [[], [], [], []],
                   [[], [], [], ['Ifte']]]
 
-    variables_dict = {'all': ['observation0', 'observation1'],
+    old_variables_dict = {'all': ['observation0', 'observation1'],
+                      'types': ['float', 'float'],
+                      'float': ['observation0', 'observation1'],
+                      'bool': []}
+
+    variables_dict = {'info': {'observation0': {'label': 'observation0', 'type': 'float', 'xtype': '2f'},
+                              'observation1': {'label': 'observation1', 'type': 'float', 'xtype': '2f'}
+                              },
                       'types': ['float', 'float'],
                       'float': ['observation0', 'observation1'],
                       'bool': []}
@@ -33,6 +40,10 @@ def test_all():
 
 
 def test_plagih_eval():
+    """
+
+    :return:
+    """
     label_list = MountainCarExamples.tree_v3_list
     tree = karoo_tree_from_labellist(label_list)
     expr_raw = tree_get_expr_raw(tree, node_id=root_id)
@@ -42,6 +53,7 @@ def test_plagih_eval():
     graph = ast_convert_from_expr(expr_raw, build=True)
     # expr = labels_from_graphlist(graph, [])
     print(graph)
+    return
 
 
 def test_sympify():
@@ -155,7 +167,7 @@ def test_build_tree_grow_nodecount(verbose=False):
         for _ in range(10):
             old_xtype = test_case[0]
             max_nodes = test_case[1]
-            label_list, arity_list = invent_label_list_nodes_grow(old_xtype, max_nodes, variables_dict, func_array)
+            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, max_nodes, variables_dict, func_array)
             if verbose:
                 print('Received the following list', len(label_list), label_list, arity_list)
 
@@ -165,7 +177,7 @@ def test_build_tree_grow_nodecount(verbose=False):
                 worked_fine = False
 
             tree = karoo_tree_from_labellist(label_list)
-            if not tree_check_typed(tree, variables_dict=variables_dict):
+            if not tree_check_types(tree, variables_dict=variables_dict):
                 print('WHYY', tree[N_label])
 
     return worked_fine
@@ -219,9 +231,11 @@ def test_tree_layers():
 
 
 def test_tree_evolve_branch_multiple():
+    variables_dict = TestHelpers.variables_dict
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
-    p_tree = Plagih_Tree(label_list, modify_list=modify_list)
+    xtype_list = [xtype_get_from_label(label, variables_dict) for label in label_list]
+    p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     # p_tree = Plagih_Tree(label_list)
     tree = p_tree.get_uninstanced_tree()
     max_nodes = 15
@@ -284,7 +298,7 @@ def test_tree_set_modifyable_nodes():
 
 def test_tree_reduce_parts():
     tree1, tree2, tree_plus = get_three_sample_trees()
-    tree = tree_evolve_reduce(tree_plus)
+    tree = tree_evolve_reduce(tree_plus, variables_dict)
     tree = tree_set_modifyable_nodes(tree, origin_tree=tree_plus)
     print('First try', tree_check_reproduce_loop(tree))
 
@@ -359,8 +373,8 @@ def test_create_random_tree(verbose=False):
     goal_max_nodes = 15
     variables_dict = TestHelpers.variables_dict
     all_functions = [(value['fun'], value['arity']) for key, value in op.items()]
-    func_array = load_funcarray_from_list(all_functions)
-    label_list, arity_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, variables_dict, func_array, build_type='grow')
+    func_array = funcarray_from_list(all_functions)
+    label_list, arity_list, xtype_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, variables_dict, func_array, build_type='grow')
     print(label_list)
     tree = karoo_tree_from_labellist(label_list)
     print('regular print:\n', tree)
@@ -368,5 +382,4 @@ def test_create_random_tree(verbose=False):
     return
 
 
-check_op_names()
-test_create_random_tree()
+test_tree_evolve_branch_multiple()

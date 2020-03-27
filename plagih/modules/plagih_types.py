@@ -67,9 +67,10 @@ def xtype_label_get_child_xtypes(label, node_arity, variables_dict):
     """
     xtype = xtype_get_from_label(label, variables_dict)
     if xtype == 'b2f2f':
-        return ['2b', '2f', '2f']
+        xtypes = ['2b', '2f', '2f']
     else:
-        return [xtype[:2][::-1]] * node_arity
+        xtypes = [xtype[:2][::-1]] * node_arity
+    return xtypes
 
 
 def xtype_choose_term_v2(node_xtype, variables_dict):
@@ -176,18 +177,22 @@ def choose_constant(term_type='', mode='float-1to1', uniform_range=None):
 #     return label, op[str(label)]['arity']
 
 
-def xtype_choose_func(func_array, xtype=None, arity=None):
+def xtype_choose_func(func_array, xtype, arity=None):
     """
     chooses a function that fits at the spot randomly. func array is created from user functions
     - get a list with potantial functions: ['+', '-', '*']
     - chooses one: '+'
+
+    notes
+    - xtype was optional. (xtype=None)
     """
     func_list = xtype_get_func_list(func_array, xtype=xtype, arity=arity)
     if not func_list:
         print_e('No function found with xtype={}, arity={}.\nfunc_array:\n{}'.format(xtype, arity, func_array))
     func = np.random.choice(func_list)
     arity = label_get_arity(func)
-    return func, arity
+    xtype = op[func]['xtype']
+    return func, arity, xtype
 
 
 def xtype_get_func_list(func_array, xtype=None, arity=None):
@@ -230,27 +235,26 @@ def xtype_get_func_list(func_array, xtype=None, arity=None):
     return func_list
 
 
-def xtype_get_from_label(label, variables_dict, node_arity=None):
+def xtype_get_from_label(label, variables_dict):
     """
     returns xtype for a label
     if you are not 100% sure that it is a function.
     """
-    if not node_arity:
-        node_arity = label_get_arity(label)
+    if variables_dict == 'ö':
+        print_warning('www', 'Sfeh, we knowingly create a xtype-dummy')
+        return 'ö'
 
-    if node_arity == 0:  # arity=0 -> terminal
-        if 'True' in label or 'False' in label:
-            node_xtype = '2b'
-        elif name_observation in label:
-            term_position = variables_dict['all'].index(label)
-            node_xtype = op[variables_dict['types'][term_position]]['xtype']
-
-        else:  # only 'float' left
-            node_xtype = '2f'
-    elif node_arity > 0:
-        node_xtype = op[label]['xtype']
+    if label in variables_dict['info']:
+        xtype = variables_dict['info'][label]['xtype']
+    elif label in ['True', 'False']:
+        xtype = '2b'
+    elif label in op:
+        xtype = op[label]['xtype']
     else:
-        print_e('This arity is not known: {}'.format(node_arity))
-        raise
+        try:
+            float(label)
+            xtype = '2f'
+        except:
+            raise Exception('This label is not known at all: {}'.format(label))
 
-    return node_xtype
+    return xtype

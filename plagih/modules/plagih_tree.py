@@ -117,7 +117,6 @@ def karoo_tree_from_expr(expr, variables_dict, modify_list=None):
     """
     label_list = ast_convert_from_expr(expr, build=True)
     xtype_list = xtypes_from_labels(label_list, variables_dict)
-    print('label and xtype list\n', label_list, '\n', xtype_list)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     tree = p_tree.get_uninstanced_tree()
     return tree

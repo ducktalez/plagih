@@ -118,6 +118,7 @@ class FitnessKernel:
             act_max = tf.constant(action_min_max[1], dtype=tf.float32)
             new_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
             pairwise_fitness = tf.abs(solution - new_result)
+            # todo fitness anpassen
 
         elif self.kernel == 'match':  # MATCH kernel
 

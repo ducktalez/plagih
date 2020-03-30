@@ -72,11 +72,12 @@ class Plagih_Tree():
     #     self.numpy_nodes = None
 
     # def karoo_tree_from_labellist(label_list, modify_list=None):
-    def __init__(self, label_list, xtype_list, modify_list=None):
+    def __init__(self, label_list, xtype_list, modify_list=None, arity_list=None):
         """
         create a tree from user input
         """
-        arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
+        if not arity_list:
+            arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
         core = core_from_labels(label_list, arity_list, xtype_list)
         if modify_list:
             for i, val in enumerate(modify_list):
@@ -101,12 +102,33 @@ class Plagih_node():
         return
 
 
-def karoo_tree_from_labellist(label_list, xtype_list, modify_list=None):
+def karoo_tree_from_labellist(label_list, xtype_list, modify_list=None, arity_list=None):
     """
     returns: tree, from label_list (newest version)
     """
-    p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
+    p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
+    return tree
+
+
+def vis_tree_from_labellist(label_list, xtype_list, modify_list=None, arity_list=None, force_np_size=None):
+    """
+    returns: tree, from label_list (newest version)
+    """
+
+    if force_np_size:
+        np_dtype_size = 'U' + str(force_np_size)  # todo sfeh
+
+    if not arity_list:
+        arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
+    core = core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=np_dtype_size)
+    if modify_list:
+        for i, val in enumerate(modify_list):
+            core[N_modify][i] = val
+    else:  # all can be modified
+        for i, val in enumerate(label_list):
+            core[N_modify][i] = 1
+    tree = tree_convert_plagih_to_karoo(core)
     return tree
 
 
@@ -203,11 +225,11 @@ def tree_get_labellist(tree):
 
 
 def tree_get_size(tree, karoo=True):
+    size = len(tree[0])
     if karoo:
-        size = len(tree[0])
-        return size
+        return size + 1
     else:
-        return 0
+        return size
 
 
 def tree_get_history(tree):
@@ -447,14 +469,6 @@ def tree_node_get_depth(tree, node_id):
     return int(depth)
 
 
-def tree_node_get_lax_OLD(tree, node_id, variables_dict):
-    label = tree_node_get_label(tree, node_id)
-    arity = tree_node_get_arity(tree, node_id)
-    xtype = xtype_get_from_label(label, variables_dict)
-    # xtype = tree_node_get_xtype(tree, node_id)
-    return label, arity, xtype
-
-
 def tree_node_get_lax_v3(tree, node_id):
     """
     no need for variables dict!
@@ -482,8 +496,8 @@ def tree_node_get_childs(tree, node_id):
     """
     child_list = []
     arity = tree_node_get_arity(tree, node_id)
-    for c in range(arity):
-        child_list.append(tree_node_get_child(tree, node_id, c))
+    for child in range(arity):
+        child_list.append(tree_node_get_child(tree, node_id, child))
     return child_list
 
 
@@ -491,7 +505,20 @@ def tree_node_get_parent(tree, node_id):
     """
 
     """
-    return tree[N_parent][node_id]
+    parent_id = tree[N_parent][node_id]
+    if parent_id == '':
+        return parent_id
+    else:
+        return int(parent_id)
+    return
+
+
+def tree_node_get_parents(tree, node_id):
+    node_list = [node_id]
+    while node_id > root_id:
+        node_id = tree_node_get_parent(tree, node_id)
+        node_list.append(node_id)
+    return node_list
 
 
 def tree_node_get_modify(tree, node_id):
@@ -576,7 +603,16 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
 
 def tree_node_is_variable(tree, node_id):
     label = tree_node_get_label(tree, node_id)
-    return name_observation in label
+
+    try:
+        float(label)
+    except:
+        try:
+            bool(label)
+        except:
+            return True
+    # todo sfeh
+    return False
 
 
 def tree_node_is_modifiable(tree, node_id):
@@ -615,12 +651,13 @@ def pop_tree_choose(population):
     return np.random.randint(FIRST_TREE, len(population))  # 1-len is correct. Tested it several times now.
 
 
-def tree_init_core(node_amount):
+def tree_init_core(node_amount, np_dtype=None):
     """
     returns an empty tree with an amount of nodes, auto fills
     """
-    tree = np.zeros((T_num_lines, node_amount), dtype=np.dtype('U12'))  # U12: longest is observation1
-
+    if np_dtype is None:  # todo sfeh
+        np_dtype = 'U12'
+    tree = np.zeros((T_num_lines, node_amount), dtype=np.dtype(np_dtype))  # U12: longest is observation1
     return tree
 
 
@@ -909,18 +946,22 @@ def round_constant(constant, accuracy):
     """
     Rounding float constants
     """
-    try:
-        constant = float(constant)
-        new_const = round(constant * accuracy) / accuracy
-        if new_const == 0 and constant > 0:
-            new_const = 1 / accuracy
-        elif new_const == 0 and constant < 0:
-            new_const = -1 / accuracy
-    except Exception as ex:
-        # when trying to round a variable
-        new_const = constant
+    if constant == 0:
+        return constant
 
+    try:
+        new_const = float(constant)
+    except Exception:
+        return constant
+
+    new_const = round(new_const * accuracy) / accuracy
+    if new_const == 0:
+        if new_const > 0:
+            new_const = 1 / accuracy
+        else:
+            new_const = -1 / accuracy
     return new_const
+
 
 
 def tree_single_from_csv(origin_tree_file_path):
@@ -952,7 +993,7 @@ def tree_round_constants(tree, accuracy, karoo=True):
     for node_id in tree_get_leaves(tree):
         if tree_node_get_xtype(tree, node_id) == '2f':
             label = tree_node_get_label(tree, node_id)
-            tmp = round_constant(tree[N_label][node_id], accuracy)
+            tmp = round_constant(label, accuracy)
             tree[N_label][node_id] = tmp
 
     if karoo:
@@ -1159,7 +1200,7 @@ def tree_get_fix_nodes(tree, karoo=True):
     return node_ids
 
 
-def tree_node_get_branch(tree, node, karoo=False):
+def tree_node_get_branch(tree, node, karoo=True):
     """
     return all child-nodes as list
     """
@@ -1552,7 +1593,7 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
     return tree
 
 
-def core_from_labels(label_list, arity_list, xtype_list):
+def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     """
     Given the labels (and label infos) as list
     this function builds the core of a tree (no node_modify)
@@ -1566,7 +1607,7 @@ def core_from_labels(label_list, arity_list, xtype_list):
     # if xtype_list is None:
 
     size = len(label_list)
-    tree = tree_init_core(size)
+    tree = tree_init_core(size, np_dtype=force_np_dtype)
 
     # set all the rows that are super easy
     tree = tree_core_init_row(tree, N_id, [x for x in range(0, size)])
@@ -1907,12 +1948,15 @@ def tree_evolve_reduce(tree, variables_dict, completely=True):
             func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
             if len(func_ids) > 0:
                 node_id = np.random.choice(node_ids)
-                tree = treegp_reduce_branch(tree, node_id, variables_dict, karoo=True)
+                try:
+                    tree = treegp_reduce_branch(tree, node_id, variables_dict, karoo=True)
+                except Exception as ex:
+                    print_e('This failed tree should have been kicked out earlier.\nex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
+                    pass
         return tree
     except Exception as ex:
         print_warning('ww', 'Could not reduce tree/branch due to Exception: {}'.format(ex))
         raise
-    return
 
 
 def labels_get_aritys_list(label_list, karoo=False):
@@ -1974,9 +2018,9 @@ def tree_check_children(tree, karoo=True):
     id_list = []
     c_list = []
     for n in range(1, len(tree[3])):
-        for c in range(0, 3):
-            if tree[N_c1 + c][n] != '':
-                c_list.append(int(tree[N_c1 + c][n]))
+        for child in range(0, 3):
+            if tree[N_c1 + child][n] != '':
+                c_list.append(int(tree[N_c1 + child][n]))
         id_list.append(int(tree[N_id][n]))
     if sum(c_list) == sum(id_list) - 1:
         return True
@@ -2298,7 +2342,7 @@ def tree_viz_get_nel(tree):
     return node_list, edge_list, label_list
 
 
-def tree_viz_get_forest(tree, node_id=root_id):
+def latex_tree_node_get_forest(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
 
@@ -2306,15 +2350,15 @@ def tree_viz_get_forest(tree, node_id=root_id):
     """
     extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
-    latex_label = None
 
+    latex_label = label
     # Get the best math-like representation
     if label in op:
-        latex_label = op[label]['latex']
-    if latex_label is None:
-        latex_label = label
+        op_tex = op[label]['latex']
+        if op_tex is not None:
+            latex_label = op_tex
 
-    latex_label = '{{{}}}'.format(latex_label)  # {12} because
+    latex_label = '{{{}}}'.format(latex_label)  # e.g. ->{cartPos}
 
     # custom node design
     if arity > 0:
@@ -2334,24 +2378,139 @@ def tree_viz_get_forest(tree, node_id=root_id):
 
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
-        latex_label += (tree_viz_get_forest(tree, child_id))
+        latex_label += (latex_tree_node_get_forest(tree, child_id))
     else:
         latex_label = '[{}]'.format(latex_label)
 
     return latex_label
 
 
-def tree_get_latex_forest(tree):
+def visualize_tree_node_force_show(tree, node_id):
+    """
+    Check if a node must be displayed as full node
+    changes_xtypes or complex_label or close_to_root or fix_node
+    - if it changes datatypes
+    """
+
+    modifiable = tree_node_get_modify(tree, node_id)
+    fix_node = True if modifiable == 0 else False  # show (at least) the root node as tree?
+    if fix_node:
+        return True
+
+    label = tree_node_get_label(tree, node_id)
+    complex_label = label in ['Ifte', 'Maxi', 'Mini']  # ideas: min, max, if, abs (sfeh: or let the user specify)
+    if complex_label:
+        return True
+
+    xtype = tree_node_get_xtype(tree, node_id)
+    changes_xtypes = 'b' in xtype and 'f' in xtype  # Attention: (xtype in ['f2b', 'b2f', 'b2f2f']) is slower
+    if changes_xtypes:
+        return True
+
+    depth = tree_node_get_depth(tree, node_id)
+    close_to_root = depth < 0  # show (at least) the root node as tree?
+    if close_to_root:
+        return True
+
+    return False
+
+
+def visualize_tree_get_vistree(tree):
+    """
+    reduce
+    # todo idee: alle teil-terme, die eine einzige variable beinhalten?
+    """
+
+    node_dict = dict()  # key: node_id, value: number of nodes to paste
+
+    tree_ids = list(tree_iterate_range(tree))
+    open_sym = []
+    open_fix = tree_ids[:]
+    while open_fix:
+        node_id = open_fix[-1]
+        if visualize_tree_node_force_show(tree, node_id):
+            parents = tree_node_get_parents(tree, node_id)
+            for x in parents:
+                if x in open_fix:
+                    node_dict[x] = 1
+                    open_fix.remove(x)
+        else:
+            open_sym.append(node_id)
+            open_fix.remove(node_id)
+
+    open_sym = sorted(open_sym)
+    while open_sym:
+        node_id = open_sym[0]
+        branch_ids = tree_node_get_branch(tree, node_id)
+        node_dict[node_id] = len(branch_ids)
+        for x in branch_ids:
+            open_sym.remove(x)
+
+    # Building the new tree
+    vis_label_list = []
+    vis_arity_list = []
+    vis_xtype_list = []
+    vis_modify_list = []
+
+    tex_replace = latex_get_replace_tupels()  # sfeh quick code
+
+    for node_id in tree_ids:
+        if node_id in node_dict:
+            arity = 0
+            if node_dict[node_id] == 1:
+                arity = tree_node_get_arity(tree, node_id)
+                label = tree_node_get_label(tree, node_id)
+                # label = latex_string_replace(label, tex_replace)
+                vis_label_list.append(label)
+            elif node_dict[node_id] > 1:
+                expr_raw = tree_get_expr_raw(tree, node_id)
+                label = expr_sympify(expr_raw)
+                # label = latex_string_replace(label, tex_replace)
+                vis_label_list.append(label)
+
+            vis_arity_list.append(arity)
+
+            xtype = tree_node_get_xtype(tree, node_id)
+            vis_xtype_list.append(xtype[-2:])
+
+            modify = tree_node_get_modify(tree, node_id)
+            vis_modify_list.append(modify)
+
+    longest_label = 10
+    for label in vis_label_list:
+        longest_label = max(longest_label, len(label))
+
+    vis_tree = vis_tree_from_labellist(vis_label_list, vis_xtype_list, modify_list=vis_modify_list, arity_list=vis_arity_list, force_np_size=longest_label)
+    return vis_tree
+
+
+def latex_tree_get_forest(tree):
     """
     Creates forest tree representation (based on tikz) for LaTeX.
     The file can easily ne included in a .tex file with '\input{file_name}'
     optional: stand_alone = True for a complete latex file
     """
 
-    bracket_tree = tree_viz_get_forest(tree)
+    bracket_tree = latex_tree_node_get_forest(tree)
     forest_viz = latex_wrap_forest(bracket_tree)
 
     return forest_viz
+
+
+def latex_string_replace(string, replacements):
+    for k, v in replacements.items():
+        string = string.replace(k, v)
+    return string
+
+
+def latex_get_replace_tupels():
+    label_string_replace = {}
+    for key, value in op.items():
+        if isinstance(key, str):
+            latex_replace = value['latex']
+            if latex_replace is not None:
+                label_string_replace[key] = latex_replace
+    return label_string_replace
 
 
 def tree_remove_minus_workaround(tree):

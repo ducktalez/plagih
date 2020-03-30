@@ -75,6 +75,91 @@ def show_default_operators(output_file=None):
     print('Coming soon! sfeh.')
 
 
+def runfolder_exists(root_dir):
+    """
+    If there is no folder, bad times
+    """
+    if not Path.is_dir(root_dir):
+        raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
+
+
+def load_config(runfiles_dir):
+
+    config_yaml_path = runfiles_dir / file_config_yaml
+    if Path.is_file(config_yaml_path):  # Load config.yaml
+        with Path.open(config_yaml_path, 'r') as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
+    else:
+        printez('i', 'Loading json-config, yaml-version was not found...')
+        config_json_path = runfiles_dir / file_config_json
+        if Path.is_file(config_json_path):  # Load config.yaml
+            with Path.open(config_yaml_path, 'r') as file:
+                json.load(file)
+        else:
+            print_warning('w', 'You should have a {} here:\n{}'.format(file_config_yaml, config_yaml_path))
+            config = {}
+    return config
+
+
+def load_data_prepared(runfiles_dir):
+    samples_ready_path = runfiles_dir / samples_ready
+    samples_csv_path = runfiles_dir / samples_csv
+    if Path.is_file(samples_ready_path):
+        data_prepared = data_load_pickle(samples_ready_path)
+    elif Path.is_file(samples_csv_path):
+        data_prepared = data_from_csv(samples_csv_path)
+        print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
+        data_save_pickle(data_prepared, samples_ready_path)
+    else:
+        raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready, samples_csv))
+    return data_prepared
+
+
+def load_oparray(runfiles_dir):
+    operators_csv = runfiles_dir /operators
+    if Path.is_file(operators_csv):  # Load operators.csv
+        functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+        op_array = funcarray_from_list(functions)
+    else:
+        raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
+    return op_array
+
+
+def load_label_list(runfiles_dir):
+    tree_expr_txt_path = runfiles_dir / tree_expr_txt
+    tree_labels_csv_path = runfiles_dir / tree_labels_csv
+    tree_numpy_csv_path = runfiles_dir / tree_numpy_csv
+    label_list = None
+    modify_list = None
+    if Path.is_file(tree_labels_csv_path):
+        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)
+    elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
+        print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
+        raise
+    elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
+        print('SFEH needs to create an option to make trees from expression')
+        raise
+    else:
+        print_warning('ww', 'No origin-tree file was provided. Continuing.')
+    return label_list, modify_list
+
+
+def analyze(root_dir):
+    """
+    write all analysing files.
+    - pareto (txt, latex_trees, agents)
+    - plots (pareto, best)
+    """
+
+    runfiles_dir = root_dir / run_files
+
+    config = load_config(runfiles_dir)
+    gp = ExplainableGP(root_dir, config=config)
+    data_prepared = load_data_prepared(runfiles_dir)
+    gp.activate_dataset(data_prepared)
+    gp.plagih_update_analysis()
+
+
 def run(root_dir):
     """
     Loads important files in your run-folder
@@ -86,59 +171,15 @@ def run(root_dir):
 
     runfiles_dir = root_dir / run_files
 
-    config_yaml_path = runfiles_dir / config_yaml
-
-    samples_ready_path = runfiles_dir / samples_ready
-    samples_csv_path = runfiles_dir / samples_csv
-
-    operators_csv = runfiles_dir /operators
-
-    tree_expr_txt_path = runfiles_dir / tree_expr_txt
-    tree_labels_csv_path = runfiles_dir / tree_labels_csv
-    tree_numpy_csv_path = runfiles_dir / tree_numpy_csv
-
-    if not Path.is_dir(root_dir):
-        raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
-
-    if Path.is_file(config_yaml_path):  # Load config.yaml
-        with open(config_yaml_path, 'r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-    else:
-        print_warning('w', 'You should have a {} here:\n{}'.format(config_yaml, config_yaml_path))
-        config = {}
-
-    if Path.is_file(samples_ready_path):
-        data_prepared = data_load_pickle(samples_ready_path)
-    elif Path.is_file(samples_csv_path):
-        data_prepared = data_from_csv(samples_csv_path)
-        print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
-        data_save_pickle(data_prepared, samples_ready_path)
-    else:
-        raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready, samples_csv))
-
-    if Path.is_file(operators_csv):  # Load operators.csv
-        functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-        op_array = funcarray_from_list(functions)
-    else:
-        raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
-
-    label_list = None
-    if Path.is_file(tree_labels_csv_path):
-        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)
-    elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
-        print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
-        raise
-    elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
-        print('SFEH needs to create an option to make trees from expression')
-        raise
-    else:
-        print_warning('ww', 'No origin-tree file was provided. Continuing.')
-
-    # config, data_prepared, op_array, origin_tree
+    config = load_config(runfiles_dir)
+    data_prepared = load_data_prepared(runfiles_dir)
+    op_array = load_oparray(runfiles_dir)
+    label_list, modify_list = load_label_list(runfiles_dir)
 
     gp = ExplainableGP(root_dir, config=config)
     gp.activate_dataset(data_prepared)
     gp.activate_operators(op_array)
+
     if label_list is not None and modify_list is not None:
         observation_bundle = gp.get_observation_bundle()  # todo make dummy available
         xtype_list = xtypes_from_labels(label_list, observation_bundle)
@@ -158,7 +199,7 @@ def visualize_labellist(csv_file, output_file=None):
     # if Path.is_file(csv_file):
     #     label_list, modify_list = labellists_from_csv(csv_file)
     #     tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
-    #     forest_input = tree_get_latex_forest(tree)
+    #     forest_input = latex_tree_get_forest(tree)
     #     latex_full_doc = latex_complete_tree_summary(forest_input)
     #     if not output_file:
     #         output_file = csv_file.with_suffix('.tex')

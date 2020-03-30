@@ -235,8 +235,8 @@ def xtype_get_func_list(func_array, xtype=None, arity=None):
     return func_list
 
 
-def xtypes_from_labels(label_list, variables_dict):
-    xtype_list = [xtype_get_from_label(label, variables_dict) for label in label_list]
+def xtypes_from_labels(label_list, observations_bundle):
+    xtype_list = [xtype_get_from_label(label, observations_bundle) for label in label_list]
     return xtype_list
 
 

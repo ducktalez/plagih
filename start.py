@@ -45,6 +45,8 @@ def main(argv):
 
     if task == 'run':
         plagih_gp.run(ipath)
+    elif task == 'analyze':
+        plagih_gp.analyze(ipath)
     elif task == 'tree-latex':
         print('Creating a Latex-file from tree (complete tree, todo) csv-file...')
         # plagih_gp.visualize_labellist(ipath)

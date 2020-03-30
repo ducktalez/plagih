@@ -15,6 +15,7 @@ import time
 from plagih.modules.file_interaction import *
 import yaml
 import json
+
 try:
     import tikzplotlib
 except Exception as ex:
@@ -162,36 +163,28 @@ class ExplainableGP(object):
 
         return
 
-    def plagih_update_analysis(self):
+    def load_backup(self):
         """
-        Without starting a new run, get the most important gp_files
+        If a backup-file is found
         """
-
         path_backup = self.root_dir / file_backup_pickle
         if Path.is_file(path_backup):
-            self.print_g('g', 'Backup file for updating analysis gp_files exists...')
+            self.print_g('g', 'Backup-file was found. Loading data...')
             try:
                 self.plagih_load_backup(path_backup)
+                return True
             except Exception as ex:
                 print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
                 raise
-            self.terminate_run(self.root_dir)
         else:
-            raise IOError('Backup file does not exist!')
+            return False
 
     def plagih_gp_run(self):
         """
         regular plagih-config run
         """
-
-        path_backup = self.root_dir / file_backup_pickle
-        if Path.is_file(path_backup) and not self.config['force_new_run']:
-            self.print_g('g', 'Restarting old run now...')
-            try:
-                self.plagih_load_backup(path_backup)
-            except Exception as ex:
-                print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
-                raise
+        if not self.config['force_new_run']:
+            self.load_backup()
 
         # check for 'random from scratch' + 'origin has fix nodes' fail?
         if self.origin_exists():
@@ -204,11 +197,22 @@ class ExplainableGP(object):
         if self.gen_id == 0:
             self.gen_create_first()
 
-        self.write_config_yaml()
+        self.write_config_yaml()  # sfeh or json?
 
         self.gen_create_loop()
         self.terminate_run(self.root_dir)
         return
+
+    def plagih_update_analysis(self):
+        """
+        Without starting a new run, get the most important gp_files
+        """
+
+        loading_done = self.load_backup()
+        if not loading_done:
+            print_e('You need to load a backup file to analyse!')
+        else:
+            self.terminate_run(self.root_dir)
 
     def write_config_yaml(self):
         """
@@ -247,8 +251,8 @@ class ExplainableGP(object):
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        rate_o = int(self.config['pop_max']*self.evolve_rates['random from origin_tree'])
-        rate_s = int(self.config['pop_max']*self.evolve_rates['random from scratch'])
+        rate_o = int(self.config['pop_max'] * self.evolve_rates['random from origin_tree'])
+        rate_s = int(self.config['pop_max'] * self.evolve_rates['random from scratch'])
 
         self.pop_random_from_origin(rate_o)
 
@@ -294,15 +298,15 @@ class ExplainableGP(object):
             'random from scratch': (self.pop_random_from_scratch, 0, None)}
 
         gp_dict2 = {
-            'repro one':            {'fun': self.pop_reproduce,         'tourn_size': 1,    'origin': None},
-            'repro pareto':         {'fun': self.pop_reproduce_olymp,   'tourn_size': 0,    'origin': None},
-            'repro reduced one':    {'fun': self.pop_reproduce_reduce,  'tourn_size': 1,    'origin': None},
-            'point mutate function': {'fun': self.pop_mutate_point,     'tourn_size': 1,    'origin': None},
-            'filter floats':        {'fun': self.pop_mutate_filter,     'tourn_size': 1,    'origin': None},
-            'branch mutate insert': {'fun': self.pop_mutate_branch,     'tourn_size': 1,    'origin': None},
-            'crossover branches':   {'fun': self.pop_crossover_branch,  'tourn_size': 2,    'origin': None},
+            'repro one': {'fun': self.pop_reproduce, 'tourn_size': 1, 'origin': None},
+            'repro pareto': {'fun': self.pop_reproduce_olymp, 'tourn_size': 0, 'origin': None},
+            'repro reduced one': {'fun': self.pop_reproduce_reduce, 'tourn_size': 1, 'origin': None},
+            'point mutate function': {'fun': self.pop_mutate_point, 'tourn_size': 1, 'origin': None},
+            'filter floats': {'fun': self.pop_mutate_filter, 'tourn_size': 1, 'origin': None},
+            'branch mutate insert': {'fun': self.pop_mutate_branch, 'tourn_size': 1, 'origin': None},
+            'crossover branches': {'fun': self.pop_crossover_branch, 'tourn_size': 2, 'origin': None},
             'random from origin_tree': {'fun': self.pop_random_from_origin, 'tourn_size': 0, 'origin': origin_tree},
-            'random from scratch':  {'fun': self.pop_random_from_scratch, 'tourn_size': 0,  'origin': None}}
+            'random from scratch': {'fun': self.pop_random_from_scratch, 'tourn_size': 0, 'origin': None}}
 
         while self.run_continues():  # max generation, max time, done...
 
@@ -383,7 +387,7 @@ class ExplainableGP(object):
                 save_run = True
 
         if plots_show:
-            self.auto_plots(tmp_path)
+            self.file_all_plots(tmp_path)
 
         if save_run:
             self.run_save_pickle()
@@ -399,7 +403,7 @@ class ExplainableGP(object):
 
         """
         self.file_conclusion(root_path)
-        self.file_pareto(self.pareto, root_path)
+        self.file_pareto_text(self.pareto, root_path)
         self.file_pareto_latex(self.pareto, root_path)
         self.file_pareto_pycode(self.pareto, root_path)
 
@@ -549,7 +553,7 @@ class ExplainableGP(object):
         # if not Path.is_dir(path_conclusion):
         #     Path.mkdir(path_conclusion)
         #
-        # file = Path.open(path_conclusion / file_conclusion, 'w')
+        # open(path_conclusion / file_conclusion, 'w')
         # file.write('Plagih GP\n launched: {}'.format(str(date_time)))
         #
         # if self.origin_exists():
@@ -600,11 +604,10 @@ class ExplainableGP(object):
         #     file.write('\n With fitness: {}'.format(fitness_control_best))
         #     file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
         #     file.write('\n\n')
-        #     file.close()
 
         return
 
-    def file_pareto(self, pareto, root_path):
+    def file_pareto_text(self, pareto, root_path):
         """
         Save all the pareto efficient candidates to file
         """
@@ -613,14 +616,12 @@ class ExplainableGP(object):
         if not Path.is_dir(path_pareto):
             Path.mkdir(path_pareto)
 
-        file = Path.open(path_pareto / file_pareto, 'w')
+        with Path.open(path_pareto / file_pareto, 'w') as file:
 
-        for parsim, meta in sorted(list(pareto.items())):
-            fitness = meta['fitness_train']
-            algo_sym = meta['expr_sym']  # save raw version, not the sympified one
-            file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
-
-        file.close()
+            for parsim, meta in sorted(list(pareto.items())):
+                fitness = meta['fitness_train']
+                algo_sym = meta['expr_sym']  # save raw version, not the sympified one
+                file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
 
     def file_pareto_latex(self, pareto, root_path):
         """
@@ -638,17 +639,20 @@ class ExplainableGP(object):
             label_list = ast_convert_from_expr(expr_raw, build=True)
             xtype_list = xtypes_from_labels(label_list, self.variables_dict)
             tree = karoo_tree_from_labellist(label_list, xtype_list)
-            tree = self.tree_beautify(tree, last_evolution='none')
+            tree = self.tree_beautify(tree, last_evolution='texify')
+            ###
+            vistree = visualize_tree_get_vistree(tree)
+            ###
 
-            tikz_code = tree_get_latex_forest(tree)  # generate the small forest inputs
+            tikz_code = latex_tree_get_forest(vistree)  # generate the small forest inputs
 
             # save a ready-to-use tex file with all pareto trees
-            forest_grouped.append(latex_get_sepline(parsim, meta['fitness_train'], tikz_code, tree_sep))
+            forest_grouped.append(latex_get_forest_title(parsim, meta['fitness_train'], tikz_code, tree_sep))
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
-        file = Path.open(path_trees / '#all_trees.tex', 'w')
-        file.write(latex_full_doc)
-        file.close()
+
+        with Path.open(path_trees / '#all_trees.tex', 'w') as file:
+            file.write(latex_full_doc)
 
         return
 
@@ -663,7 +667,7 @@ class ExplainableGP(object):
             all_agent_names = []
 
             for parsim, meta in sorted(list(pareto.items())):
-                agent_name = 'dummyname_{:.0f}'.format(parsim)
+                agent_name = 'agent{:.0f}'.format(parsim)  # todo set better name
 
                 expr_raw = meta['expr_raw']
                 expr_sym = expr_sympify(expr_raw)
@@ -673,17 +677,19 @@ class ExplainableGP(object):
                 pycode = tree_get_pycode(tree)
 
                 all_agent_names.append(agent_name)
-                code_tmp = 'class {}:\n\n\n' \
-                           '\tdef decide({}):\n\t' \
-                           'return {}\n\n'.format(agent_name, name_observation, pycode)  # sfeh: maybe cast
+                code_tmp = 'class {}:\n\n' \
+                           '\tdef decide(self, {}):\n' \
+                           '\t\tcartPos, cartVel = observation[0], observation[1]\n' \
+                           '\t\treturn max(0, min(2, int(round({}))))\n\n'.format(agent_name, name_observation, pycode)  # sfeh: maybe cast
+                # todo
                 all_agents.append(code_tmp)
 
-            pycode_names = 'all_agents = [{}'.format(all_agent_names[0])
+            pycode_names = 'all_agents = [,(\'{}\', {}())'.format(all_agent_names[0], all_agent_names[0])
             pycode_agents = '{}'.format(all_agents[0])
             for ii, agent_name in enumerate(all_agent_names):
                 if ii == 0:
                     continue
-                pycode_names += ', {}'.format(agent_name)
+                pycode_names += '(\'{}\', {}())'.format(agent_name, agent_name)
                 pycode_agents += all_agents[ii]
             else:
                 pycode_names += ']\n'
@@ -691,9 +697,8 @@ class ExplainableGP(object):
                             '{}\n\n' \
                             '{}'.format(pycode_agents, pycode_names)
 
-            file = Path.open(path_trees / file_pycode, 'w')
-            file.write(complete_file)
-            file.close()
+            with Path.open(path_trees / file_pycode, 'w') as file:
+                file.write(complete_file)
         except Exception as ex:
             print_e('Wooops! no py-files created. sfeh-todo? ex: {}'.format(ex))
 
@@ -946,14 +951,14 @@ class ExplainableGP(object):
         """
         if self.origin_exists():
             if repro_rate > 0 and tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
-                print_warning('w', 'You can not create new trees from scratch when origin has fix nodes!')
-                print('TEST: removing a return statement here')
-                # return
+                print_warning('w', 'You can not create new trees from scratch when origin has fix nodes! {} This should be handeled earlier'.format(repro_rate))
+                # print('TEST: removing a return statement here')
+                return
 
         for i in range(repro_rate):
             goal_nodes = np.random.randint(self.config['tree from scratch min_nodes'], 1 + self.config['random from scratch max nodes'])
             label_list, arity_list, xtype_list = invent_label_list_nodes_grow(self.output_xtype, goal_nodes, self.variables_dict, self.func_array)
-            p_tree = Plagih_Tree(label_list)
+            p_tree = Plagih_Tree(label_list, xtype_list)
             tree = p_tree.get_uninstanced_tree()
             # tree = tree_set_id(tree, i)
 
@@ -1059,7 +1064,7 @@ class ExplainableGP(object):
                                                     depth_min=self.config['tree_depth_min'],
                                                     depth_goal=self.config['tree_depth_base'])
             elif self.config['tree_growth'] == 'node-based':
-                goal_nodes = np.random.randint(1, 1 + max(min(self.config['tree branch base nodes'], self.parsimony_max-tree_get_parsimony(tree)), 1))  # max just for safety reasons
+                goal_nodes = np.random.randint(1, 1 + max(min(self.config['tree branch base nodes'], self.parsimony_max - tree_get_parsimony(tree)), 1))  # max just for safety reasons
                 tree = tree_insert_branch_v2(tree, branch_nodes_ids, self.variables_dict, self.func_array, goal_nodes)
             else:
                 raise Exception('Tree growth version not known')
@@ -1145,7 +1150,6 @@ class ExplainableGP(object):
             print_warning('ww', 'Tree from last_evolution: {} failed. probably sympify. Continuing.'.format(last_evolution))
         else:
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-
             tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
             tree = tree_normalize_exponentiation(tree)
             tree = tree_set_last_evolution(tree, last_evolution)
@@ -1235,21 +1239,15 @@ class ExplainableGP(object):
 
         """
 
-        # gene_pool = self.pop_genepool_create()
         self.pop_eval_remaining()
-
         self.pareto_update()
-
         self.pop_base_transfer()
         self.pop_analyze()
         file_population_karoo(self.population_tmp_done, 'tmp', self.root_dir, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
-        self.print_g('gg', 'Monitoring: Created {}/{} unique trees in generation {}. Gen-time: {:4.2f}'.format(
-            len(self.population_tmp_done),
-            self.config['pop_max'],
-            self.gen_id,
-            time.perf_counter() - self.time_genstart))
+        self.print_g('gg', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(
+            len(self.population_tmp_done), self.config['pop_max'], self.gen_id, time.perf_counter() - self.time_genstart))
 
         return
 
@@ -1429,7 +1427,7 @@ class ExplainableGP(object):
             tuples.append((key, self.pareto[key]['fitness_train']))
         return tuples
 
-    def auto_plots(self, path):
+    def file_all_plots(self, path):
         """
         Make all plots
         """
@@ -1564,8 +1562,8 @@ class ExplainableGP(object):
         :return:
         """
         self.file_save_files(path)
-        self.auto_plots(path)
-        self.print_g('gg', ' Terminating. \tTotal time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.file_all_plots(path)
+        self.print_g('gg', ' Terminating. \tTime since start: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to print_type output information     |

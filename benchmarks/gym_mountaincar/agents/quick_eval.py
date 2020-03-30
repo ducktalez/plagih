@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import itertools
 import pickle
 from pathlib import Path
+from benchmarks.gym_mountaincar.agents.generated_agents import *
+from benchmarks.gym_mountaincar.agents.generated_agents2 import *
+from benchmarks.gym_mountaincar.agents.generated_agents3 import *
 
 import numpy as np
 import gym
@@ -25,7 +28,11 @@ def plot_decisions(env, agent, name):
 
     @np.vectorize
     def decide(position, velocity):
-        return agent.decide((position, velocity))
+        try:
+            action = agent.decide((position, velocity))
+        except:
+            action = 1
+        return action
 
     action_values = decide(positions, velocities)
 
@@ -49,7 +56,11 @@ def play_once(env, agent, render=False, verbose=False, sleep=0.0):
     for step in itertools.count():
         if render:
             env.render()
-        action = agent.decide(observation)
+        try:
+            action = agent.decide(observation)
+        except:
+            action = 0
+            # todo sfeh
         time.sleep(sleep)
         observation, reward, done, _ = env.step(action)
         episode_reward += reward
@@ -136,12 +147,16 @@ mountain_agents = {1: ('v1_simple', SimpleAgent()),
                    13: ('TestCombined', TestCombined()),
                    14: ('SimonTesting', SimonsTesting()),}
 
+gen_agents = agnt_dict.values()
+gen_agents2 = tuples
+gen_agents3 = tuples3
+
 oneAgent = {mountain_agents[11]}
 twoAgents = {mountain_agents[14], mountain_agents[11]}
 
-# plot_simple(oneAgent)
-# compare_simple(twoAgents)
-render_ntimes(mountain_agents.values(), 3, verbose=True, sleep=0.0)
+plot_simple(gen_agents3)
+compare_simple(gen_agents3)
+# render_ntimes(mountain_agents.values(), 3, verbose=True, sleep=0.0)
 
 
 # todo idee: gp vs. nn entscheidungen clustern.

@@ -1,13 +1,10 @@
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.dicts import name_observation
 import re
 
 
 def help_reduce_expr(expr):
-    a = name_observation + '0'
-    b = name_observation + '1'
 
-    replacements = [(a, 'a'), (b, 'b'), ('(True)', 'True'), ('(False)', 'False'), ('(a)', 'a'), ('sina', 'sin(a)')]
+    replacements = [('(True)', 'True'), ('(False)', 'False'), ('(a)', 'a'), ('sina', 'sin(a)')]
     for repl in replacements:
         expr = expr.replace(repl[0], repl[1])
 

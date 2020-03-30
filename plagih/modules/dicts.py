@@ -13,6 +13,7 @@ name_action = 'action'
 first_action = name_action + str(0)
 name_observation = 'observation'
 first_gen_id = 1  # maybe take care to make this 0 for base gen
+karoo_skip = 1
 
 delete_this = True
 

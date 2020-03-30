@@ -2,8 +2,10 @@ from plagih.modules.plagih_eval import *
 from plagih.modules.plagih_tree import *
 from plagih.modules.Examples import *
 from plagih.modules.plagih_gp_base_class_xai import funcarray_from_list
+import time
 
-#todo slowly make all of those random tests worth something
+
+# todo slowly make all of those random tests worth something
 
 
 class TestHelpers:
@@ -15,13 +17,13 @@ class TestHelpers:
                   [[], [], [], ['Ifte']]]
 
     old_variables_dict = {'all': ['observation0', 'observation1'],
-                      'types': ['float', 'float'],
-                      'float': ['observation0', 'observation1'],
-                      'bool': []}
+                          'types': ['float', 'float'],
+                          'float': ['observation0', 'observation1'],
+                          'bool': []}
 
     variables_dict = {'info': {'observation0': {'label': 'observation0', 'type': 'float', 'xtype': '2f'},
-                              'observation1': {'label': 'observation1', 'type': 'float', 'xtype': '2f'}
-                              },
+                               'observation1': {'label': 'observation1', 'type': 'float', 'xtype': '2f'}
+                               },
                       'types': ['float', 'float'],
                       'float': ['observation0', 'observation1'],
                       'bool': []}
@@ -33,7 +35,6 @@ def test_all():
     test_sympify()
     test_plagih_tree()
     test_rebuild_loop_tree()
-    test_tree_build()
     test_choose_function()
     test_build_tree_grow_nodecount()
     print('Testing procedure is custom_done!')
@@ -92,13 +93,6 @@ def test_rebuild_loop_tree():
 
     if label_list_1 == label_list_2:
         print('SUCCESS')
-
-
-def test_tree_build():
-    label_list = ['Ifte', '<', 0.0, 2.0, 'observation1', 'Maxi', 'Mini', 'Mini', 'observation1', '-', 'Mini', '~', 'Mini', 0.855, 'observation0', '**', 0.455, 0.927014714644712, 'observation1',
-                  'observation1', 'observation1']
-    tree = karoo_tree_from_labellist(label_list)
-    print(tree)
 
 
 def test_choose_function():
@@ -280,7 +274,7 @@ def test_tree_viz_latex():
     p_tree = Plagih_Tree(label_list, modify_list=modify_list)
     tree3 = p_tree.get_uninstanced_tree()
 
-    result = tree_get_latex_forest(tree3)
+    result = latex_tree_get_forest(tree3)
     print(result)
 
 
@@ -354,7 +348,6 @@ def test_tree_get_pycode():
 
 
 def check_op_names():
-
     # check if the fun-names are correct
     for key, value in op.items():
         if not value['fun'] in op:
@@ -381,6 +374,93 @@ def test_create_random_tree(verbose=False):
     tree_pretty_print(tree, karoo=True)
     return
 
-def reduce_trees():
-    label_list = ['+', '1', '2']
-    karoo_tree_from_labellist(label_list, 'ö')
+
+def test_runtime():
+    xtype_list = ['2f', '2b', 'f2f', 'b2b', 'f2b', 'b2f', 'b2f2f']
+    xtype_list = ['2f']
+
+    range_size = 2000000
+
+    v1_start = time.perf_counter()
+    for xtype in xtype_list:
+        for _ in range(range_size):
+            cond_new_type = xtype in ['f2b', 'b2f', 'b2f2f']
+    v1_end = time.perf_counter() - v1_start
+
+    v2_start = time.perf_counter()
+    for xtype in xtype_list:
+        for _ in range(range_size):
+            cond_node1 = 'b' in xtype and 'f' in xtype
+    v2_end = time.perf_counter() - v2_start
+
+    print('Runtime: (xtype in list) vs. (b and f in str): {:4.4f} {:4.4f}'.format(v1_end, v2_end))
+
+
+def runtime_exception_vs_if():
+    value = '5'  # 5
+    range_size = 2000000
+
+    print('if     exVal  exExc  raw')
+
+    for value in [5, '5', '']:
+
+        v1_start = time.perf_counter()
+        for _ in range(range_size):
+            if value == '':
+                x = value
+            else:
+                x = int(value)
+        v1_end = time.perf_counter() - v1_start
+
+        v2_start = time.perf_counter()
+        for _ in range(range_size):
+            try:
+                x = int(value)
+            except ValueError:
+                x = value
+        v2_end = time.perf_counter() - v2_start
+
+        v3_start = time.perf_counter()
+        for _ in range(range_size):
+            try:
+                x = int(value)
+            except:
+                x = value
+        v3_end = time.perf_counter() - v3_start
+
+        v4_start = time.perf_counter()
+        for _ in range(range_size):
+            x = value
+        v4_end = time.perf_counter() - v4_start
+
+        print('{:4.4f} {:4.4f} {:4.4f} {:4.4f}'.format(v1_end, v2_end, v3_end, v4_end))
+
+
+def test_tree_visualize_reduced():
+    obs_bundle = {'info': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
+                           'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
+                           'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
+                           'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
+                           'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
+                           'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
+                           }}
+
+    labellists = [['+', 'a', '2'],
+                  ['&', '&', '<', 'True', 'bool1', 'Maxi', 4, '+', 1, '*', '/', 'a', 'b', 'c', 3],
+                  ['Maxi', 1, '+', 'a', 'b'],
+                  ['+', '-', 'Maxi', 1, 2, 3, 4]]
+
+    forest_grouped = []
+    for label_list in labellists:
+        xtype_list = xtypes_from_labels(label_list, obs_bundle)
+        tree = karoo_tree_from_labellist(label_list, xtype_list)
+        vistree = visualize_tree_get_vistree(tree)
+        forest_grouped.append(latex_tree_get_forest(tree))
+
+    latex_file = latex_complete_tree_summary(forest_grouped)
+
+    with Path.open(Path('textreetest.tex'), 'w') as file:
+        file.write(latex_file)
+
+
+test_tree_visualize_reduced()

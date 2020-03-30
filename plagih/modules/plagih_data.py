@@ -77,8 +77,7 @@ def data_from_csv(samples_file, samples_info=None, test_size=0.2):
         reader = csv.reader(csvFile, delimiter=',')
 
         for i, row in enumerate(reader):
-            if i == 0:  # variable identifiers
-                # all_variables = [x.rsplit(':', 1)[0] for x in row]  # ['observation0:float'] -> ['observation0']
+            if i == 0:
                 observations_bundle, actions, param_at = samples_header_line(row)
 
                 if len(actions) > 1:
@@ -88,14 +87,12 @@ def data_from_csv(samples_file, samples_info=None, test_size=0.2):
             else:  # convert every 'string' element to its data_csv_path type
 
                 types = [param_at[x]['type'] for x in range(len(row))]
-                row_as_data = [locate(types[i])(x) for i, x in enumerate(row)]  # ['observation0:float'] + ['0.123'] --> float(['0.123']) --> 0.123
+                row_as_data = [locate(types[i])(x) for i, x in enumerate(row)]  # ['varA:float'] + ['0.123'] --> float(['0.123']) --> 0.123
 
                 num_observations = min(len(observations_bundle['all']), len(row) - 1)
 
                 data_obs.append(row_as_data[:num_observations])
                 data_results.append(row_as_data[num_observations:])
-
-    print('DFGFDSFSDFDS')
 
     unique_outputs_num = len(np.unique(data_results))  # load the user defined true labels for classification or solutions for regression
 

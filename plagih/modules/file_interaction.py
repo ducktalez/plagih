@@ -20,7 +20,7 @@ file_pareto = 'pareto.txt'
 complete_file_pareto = 'pareto.txt'
 file_config_yaml = 'config.yaml'
 file_config_json = 'config.json'
-file_backup_pickle = folder_info + 'backup.p'  # backup-version is set here
+file_backup_pickle = 'run_files/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 file_pycode = 'agents.py'
 

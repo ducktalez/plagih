@@ -16,13 +16,10 @@ class SimonsGpFriendly:
     def decide(self, observation):
         pos, vel = observation
 
-        # return
         if pos < -1 or (pos < 0.1 and vel < -0.05):
-            # print('----------->>')
             return 2
         else:
             if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-                # print('<<-----------')
                 return 0
 
             if vel < 0:

@@ -154,8 +154,8 @@ gen_agents3 = tuples3
 oneAgent = {mountain_agents[11]}
 twoAgents = {mountain_agents[14], mountain_agents[11]}
 
-plot_simple(gen_agents3)
-compare_simple(gen_agents3)
+# plot_simple(mountain_agents[11])
+compare_simple(oneAgent)
 # render_ntimes(mountain_agents.values(), 3, verbose=True, sleep=0.0)
 
 

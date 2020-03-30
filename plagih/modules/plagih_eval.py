@@ -343,6 +343,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                 op[type(node.op)]['fun'],
                 ast_convert_from_expr_recursive(node.right, prnt=True))
         if build:
+            print('ssss', op[type(node.op)])
             return [op[type(node.op)]['fun'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
                      ast_convert_from_expr_recursive(node.right, build=True)]]

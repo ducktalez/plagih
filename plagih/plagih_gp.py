@@ -1,4 +1,5 @@
 import sys
+
 sys.path = ['..'] + sys.path
 sys.path.append('modules/')  # add directory 'modules' to the current root_dir
 
@@ -7,6 +8,7 @@ from plagih.modules.plagih_gp_base_class_xai import *
 from plagih.modules.Examples import *
 from plagih.modules.plagih_data import *
 import yaml
+
 
 # todo clean up this class... make extra class or folder (!) with all cases to be tested
 # todo idee: nach generationen alle mit einem gen sterben lassen! epidemie!
@@ -83,15 +85,14 @@ def runfolder_exists(root_dir):
         raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
 
 
-def load_config(runfiles_dir):
-
-    config_yaml_path = runfiles_dir / file_config_yaml
+def load_config(root_dir):
+    config_yaml_path = root_dir / file_config_yaml
     if Path.is_file(config_yaml_path):  # Load config.yaml
         with Path.open(config_yaml_path, 'r') as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
     else:
         printez('i', 'Loading json-config, yaml-version was not found...')
-        config_json_path = runfiles_dir / file_config_json
+        config_json_path = root_dir / file_config_json
         if Path.is_file(config_json_path):  # Load config.yaml
             with Path.open(config_yaml_path, 'r') as file:
                 json.load(file)
@@ -101,34 +102,61 @@ def load_config(runfiles_dir):
     return config
 
 
-def load_data_prepared(runfiles_dir):
-    samples_ready_path = runfiles_dir / samples_ready
-    samples_csv_path = runfiles_dir / samples_csv
-    if Path.is_file(samples_ready_path):
-        data_prepared = data_load_pickle(samples_ready_path)
-    elif Path.is_file(samples_csv_path):
-        data_prepared = data_from_csv(samples_csv_path)
+def load_data_prepared(root_dir):
+    if Path.is_file(root_dir / samples_ready_p):
+        data_prepared = pickle_load(root_dir / samples_ready_p)
+    elif Path.is_file(root_dir / samples_csv):
+        data_prepared = data_from_csv(root_dir / samples_csv)
         print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
-        data_save_pickle(data_prepared, samples_ready_path)
+        pickle_dump(root_dir / samples_ready_p, data_prepared)
+        yaml_dump(root_dir / env_variables_yaml, data_prepared)
     else:
-        raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready, samples_csv))
+        raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
+
+    # if Path.is_file(env_variables_yaml):
+    #     env_variables, param_at = yaml_load(env_variables_yaml)
+    #     pass
+    #     # todo
+
     return data_prepared
 
 
-def load_oparray(runfiles_dir):
-    operators_csv = runfiles_dir /operators
+def load_tree_elements(root_dir):
+
+    # Load operators
+    operators_csv = root_dir / operators
     if Path.is_file(operators_csv):  # Load operators.csv
         functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
-        op_array = funcarray_from_list(functions)
     else:
-        raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
-    return op_array
+        # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
+        print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators.')
+        functions = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2],['Mini', 2], ['Maxi', 2],['<', 2], ['<=', 2],
+                              ['==', 2], ['abs', 2], ['&', 2], ['|', 2], ['Not', 2], ['sin', 2], ['Ifte', 2]])
+        np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
+    choose_oparray = funcarray_from_list(functions)
+
+    # load distributions_file
+    distributions_yaml = root_dir / distributions_file
+    if Path.is_file(distributions_yaml):
+        with Path.open(Path(distributions_yaml), 'r') as file:
+            distributions_as_string = yaml.load(file, Loader=yaml.FullLoader)
+    else:
+        print_warning('w', 'Distributions file does not exist.')
+        distributions_as_string = {'2f': ['lambda: np.random.normal(1,2)', 'lambda: np.random.normal(1,1)', 'lambda: np.random.randint(0, 10)'],
+                                   '2b': ['lambda: np.random.choice([True, False])']}  # sfeh
+        with Path.open(Path(distributions_yaml), 'w') as file:
+            _ = yaml.dump(distributions_as_string, file)
+    distributions = {}
+    distributions['2f'] = [eval(x) for x in distributions_as_string['2f']]
+    distributions['2b'] = [eval(x) for x in distributions_as_string['2b']]
+
+    return choose_oparray, distributions
 
 
-def load_label_list(runfiles_dir):
-    tree_expr_txt_path = runfiles_dir / tree_expr_txt
-    tree_labels_csv_path = runfiles_dir / tree_labels_csv
-    tree_numpy_csv_path = runfiles_dir / tree_numpy_csv
+def load_label_list(root_dir):
+    tree_expr_txt_path = root_dir / tree_expr_txt
+    tree_labels_csv_path = root_dir / tree_labels_csv
+    tree_numpy_csv_path = root_dir / tree_numpy_csv
     label_list = None
     modify_list = None
     if Path.is_file(tree_labels_csv_path):
@@ -151,11 +179,9 @@ def analyze(root_dir):
     - plots (pareto, best)
     """
 
-    runfiles_dir = root_dir / run_files
-
-    config = load_config(runfiles_dir)
+    config = load_config(root_dir)
     gp = ExplainableGP(root_dir, config=config)
-    data_prepared = load_data_prepared(runfiles_dir)
+    data_prepared = load_data_prepared(root_dir)
     gp.activate_dataset(data_prepared)
     gp.plagih_update_analysis()
 
@@ -164,21 +190,19 @@ def run(root_dir):
     """
     Loads important files in your run-folder
     - load config.yaml
-    - load samples_ready.p or samples.csv
+    - load samples_ready_p.p or samples.csv
     - load operators.csv
     - load tree
     """
 
-    runfiles_dir = root_dir / run_files
-
-    config = load_config(runfiles_dir)
-    data_prepared = load_data_prepared(runfiles_dir)
-    op_array = load_oparray(runfiles_dir)
-    label_list, modify_list = load_label_list(runfiles_dir)
+    config = load_config(root_dir)
+    data_prepared = load_data_prepared(root_dir)
+    choose_oparray, distributions = load_tree_elements(root_dir)
+    label_list, modify_list = load_label_list(root_dir)
 
     gp = ExplainableGP(root_dir, config=config)
     gp.activate_dataset(data_prepared)
-    gp.activate_operators(op_array)
+    gp.activate_operators(choose_oparray, distributions)
 
     if label_list is not None and modify_list is not None:
         observation_bundle = gp.get_observation_bundle()  # todo make dummy available

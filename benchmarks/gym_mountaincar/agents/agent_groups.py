@@ -29,7 +29,10 @@ class SimonsGpFriendly:
 
 
 # todo idee: programm that works has some space to make random decisions. nn analyses, finds best version
-
+class Yoyoyo:
+    def decide(self, input):
+        cartPos, cartVel = input
+        action = 0 if (cartVel<0) else 2
 
 class SimonsTesting:
 

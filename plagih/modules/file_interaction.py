@@ -9,30 +9,56 @@ import yaml
 
 example_runs = 'examples/'
 
-folder_save = 'save/'
 folder_plots = 'plots/'
 folder_info = 'info/'
 folder_steps = 'steps/'
-folder_trees = 'trees/'
+folder_solutions = 'trees/'
 folder_pop_analysis = 'pop_dist/'
 
 file_pareto = 'pareto.txt'
-complete_file_pareto = 'pareto.txt'
-file_config_yaml = 'config.yaml'
-file_config_json = 'config.json'
+file_config_yaml = 'run_files/config.yaml'
+file_config_json = 'run_files/config.json'
 file_backup_pickle = 'run_files/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 file_pycode = 'agents.py'
 
-run_files = 'run_files'
-samples_ready = 'samples_ready.p'
-samples_csv = 'samples.csv'
-operators = 'operators.csv'
-tree_expr_txt = 'tree_expr.txt'
-tree_labels_csv = 'tree_labels.csv'
-tree_numpy_csv = 'tree_numpy.csv'
+run_files = 'run_files/'
+samples_ready_p = 'run_files/samples_ready.p'
+env_variables_yaml = 'run_files/env_variables.yaml'
+samples_csv = 'run_files/samples.csv'
+operators = 'run_files/operators.csv'
+distributions_file = 'run_files/distributions_file.yaml'
+tree_expr_txt = 'run_files/tree_expr.txt'
+tree_labels_csv = 'run_files/tree_labels.csv'
+tree_numpy_csv = 'run_files/tree_numpy.csv'
+
+trees_tex = 'solutions/all_trees.tex'
 
 T_num_lines = 15  # todo this var is not found otherwise
+
+get_path = {example_runs: Path('examples/'),
+            folder_plots: Path('plots/'),
+            folder_info: Path('info/'),
+            folder_steps: Path('steps/'),
+            folder_pop_analysis: Path('steps/pop_dist/'),
+
+            file_conclusion: Path('analysis/conclusion.txt'),
+
+            folder_solutions: Path('solutions/'),
+            file_pareto: Path('solutions/pareto.txt'),
+            trees_tex: Path('solutions/all_trees.tex'),
+            file_pycode: Path('solutions/agents.py'),
+
+            run_files: Path('run_files/'),
+            file_config_yaml: Path('run_files/config.yaml'),
+            file_config_json: Path('run_files/config.json'),
+            file_backup_pickle: Path('run_files/backup.p'),
+            samples_ready_p: Path('run_files/samples_ready.p'),
+            samples_csv: Path('run_files/samples.csv'),
+            operators: Path('run_files/operators.csv'),
+            tree_expr_txt: Path('run_files/tree_expr.txt'),
+            tree_labels_csv: Path('run_files/tree_labels.csv'),
+            tree_numpy_csv: Path('run_files/tree_numpy.csv')}
 
 
 def make_dir(path):
@@ -52,16 +78,6 @@ def get_path(gen_id='tmp'):
     get_path('config') -> *root_dir*/info/config.csv
     """
     path = 'plots/pop_dist/fitness_{}.jpg'
-
-
-def data_load_pickle(data_prepared_pickle_path):
-    """
-    Loads a data_csv_path file that was already split with the csv reader
-    """
-    with Path.open(data_prepared_pickle_path, 'rb') as file:
-        pickle_data = pickle.load(file)
-
-    return pickle_data  # input_dict, variables_dict, action_dict, unique_outputs_num, data_train_rows, data_train, data_control
 
 
 def experiment_data(experiment_yaml):
@@ -114,16 +130,6 @@ def save_data_pickle(data_prepared, data_pickle_path):
     return
 
 
-def data_load_data_split(data_x, data_y, test_size):
-    x_train, x_test, y_train, y_test = skcv.train_test_split(data_x, data_y, test_size=test_size)  # 80/20 TRAIN/TEST
-    data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its class label (right column)
-    data_control = np.c_[x_test, y_test]  # recombine each row of data_csv_path with its class label (right column)
-
-    data_train_rows = len(data_train[:, 0])
-
-    return data_train_rows, data_train, data_control
-
-
 def file_population_karoo(population, pop_name, path, gen_id):
     """
     Save population_* to disk.
@@ -145,4 +151,41 @@ def file_population_karoo(population, pop_name, path, gen_id):
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
                 target.writerows([population[ii][row]])
 
+    return
+
+
+def pickle_load(data_prepared_pickle_path):
+    """
+    loads a data_csv_path file that was already split with the csv reader
+    """
+    with Path.open(data_prepared_pickle_path, 'rb') as file:
+        pickle_data = pickle.load(file)
+
+    return pickle_data
+
+
+def pickle_dump(path, data):
+    """
+    saves prepared plagih data to pickle file
+    """
+
+    with Path.open(path, 'wb') as file:
+        pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+    return
+
+
+def yaml_load(yaml_path):
+
+    with Path.open(yaml_path, 'r') as file:
+        loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)
+    return loaded_yaml
+
+
+def yaml_dump(path, data):
+    """
+    saves prepared plagih data to pickle file
+    """
+
+    with Path.open(path, 'w') as file:
+        yaml.dump(data, file, default_flow_style=False, sort_keys=False)
     return

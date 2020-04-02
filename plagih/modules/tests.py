@@ -9,21 +9,17 @@ import time
 
 
 class TestHelpers:
-    # example func_array. Note that (for the random choice) functions can be included more often
-    func_array = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
-                  [[], [], ['<', '>', '==', '!='], []],
-                  [[], ['Not', 'Not'], ['&'], []],
-                  [[], [], [], []],
-                  [[], [], [], ['Ifte']]]
+    # example func_arr_dummy. Note that (for the random choice) functions can be included more often
+    func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
+                      [[], [], ['<', '>', '==', '!='], []],
+                      [[], ['Not', 'Not'], ['&'], []],
+                      [[], [], [], []],
+                      [[], [], [], ['Ifte']]]
 
-    old_variables_dict = {'all': ['observation0', 'observation1'],
-                          'types': ['float', 'float'],
-                          'float': ['observation0', 'observation1'],
-                          'bool': []}
 
-    variables_dict = {'info': {'observation0': {'label': 'observation0', 'type': 'float', 'xtype': '2f'},
+    env_var_dummy = {'obs': {'observation0': {'label': 'observation0', 'type': 'float', 'xtype': '2f'},
                                'observation1': {'label': 'observation1', 'type': 'float', 'xtype': '2f'}
-                               },
+                             },
                       'types': ['float', 'float'],
                       'float': ['observation0', 'observation1'],
                       'bool': []}
@@ -96,8 +92,8 @@ def test_rebuild_loop_tree():
 
 
 def test_choose_function():
-    # example func_array. Note that (for the random choice) functions can be included more often
-    func_array = TestHelpers.func_array
+    # example func_arr_dummy. Note that (for the random choice) functions can be included more often
+    func_array = TestHelpers.func_arr_dummy
     arities = [0, 1, 2, 3]
     xtypes = ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f']
     do_not_forget_this_option = None
@@ -134,8 +130,8 @@ def test_choose_function():
 
     # for arity in [0, 1, 2, 3, None]:
     #     for xtype in ['f2f', 'f2b', 'b2b', 'b2f2f', None]:
-    #         func_list = xtype_get_func_list(func_array, xtype=xtype, arity=arity)
-    #         print('xtype_get_func_list(func_array, arity={} xtype={})= {}'.format(arity, xtype, func_list))
+    #         func_list = xtype_get_func_list(func_arr_dummy, xtype=xtype, arity=arity)
+    #         print('xtype_get_func_list(func_arr_dummy, arity={} xtype={})= {}'.format(arity, xtype, func_list))
 
     if worked_fine:
         print('test_choose_function() successful!')
@@ -155,13 +151,13 @@ def test_build_tree_grow_nodecount(verbose=False):
                   ('2f', 12),
                   ('2b', 12),
                   ('f2b', 12)]
-    variables_dict = TestHelpers.variables_dict
-    func_array = TestHelpers.func_array
+    env_variables = TestHelpers.env_var_dummy
+    func_array = TestHelpers.func_arr_dummy
     for test_case in test_cases:
         for _ in range(10):
             old_xtype = test_case[0]
             max_nodes = test_case[1]
-            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, max_nodes, variables_dict, func_array)
+            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, max_nodes, env_variables, func_array)
             if verbose:
                 print('Received the following list', len(label_list), label_list, arity_list)
 
@@ -171,7 +167,7 @@ def test_build_tree_grow_nodecount(verbose=False):
                 worked_fine = False
 
             tree = karoo_tree_from_labellist(label_list)
-            if not tree_check_types(tree, variables_dict=variables_dict):
+            if not tree_check_types(tree, env_variables=env_variables):
                 print('WHYY', tree[N_label])
 
     return worked_fine
@@ -225,22 +221,22 @@ def test_tree_layers():
 
 
 def test_tree_evolve_branch_multiple():
-    variables_dict = TestHelpers.variables_dict
+    env_variables = TestHelpers.env_var_dummy
     label_list = MountainCarExamples.tree_v2_list
     modify_list = MountainCarExamples.tree_v2_modify
-    xtype_list = xtypes_from_labels(label_list, variables_dict)
+    xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     # p_tree = Plagih_Tree(label_list)
     tree = p_tree.get_uninstanced_tree()
     max_nodes = 15
-    variables_dict = TestHelpers.variables_dict
-    func_array = TestHelpers.func_array
-    tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, variables_dict, func_array)
+    env_variables = TestHelpers.env_var_dummy
+    func_array = TestHelpers.func_arr_dummy
+    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
+    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
+    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
+    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
+    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
+    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
     print(tree)
 
 
@@ -279,11 +275,11 @@ def test_tree_viz_latex():
 
 
 def test_tree_set_modifyable_nodes():
-    variables_dict = TestHelpers.variables_dict
-    func_array = TestHelpers.func_array
+    env_var_dummy = TestHelpers.env_var_dummy
+    func_array = TestHelpers.func_arr_dummy
     origin, tree2, _ = get_three_sample_trees()
     print('a origin_meta', origin[N_modify])
-    tree_new = tree_evolve_branch_multiple(origin.copy(), 25, variables_dict, func_array)
+    tree_new = tree_evolve_branch_multiple(origin.copy(), 25, env_var_dummy, func_array)
     print('b origin_meta', origin[N_modify])
     tree_new = tree_set_modifyable_nodes(tree_new, origin_tree=origin)
     print('c origin_meta', origin)
@@ -292,7 +288,7 @@ def test_tree_set_modifyable_nodes():
 
 def test_tree_reduce_parts():
     tree1, tree2, tree_plus = get_three_sample_trees()
-    tree = tree_evolve_reduce(tree_plus, variables_dict)
+    tree = tree_evolve_reduce(tree_plus, env_var_dummy)
     tree = tree_set_modifyable_nodes(tree, origin_tree=tree_plus)
     print('First try', tree_check_reproduce_loop(tree))
 
@@ -327,7 +323,7 @@ def test_tree_parsimony_ted():
 
 
 def pycode_wrap():
-    complete_file = 'import math;\n\n' \
+    complete_file = 'import math\n\n' \
                     'all_agents = [{}]\n\n\n' \
                     '{}'
 
@@ -364,10 +360,10 @@ def test_create_random_tree(verbose=False):
     """
     xtype = '2f'
     goal_max_nodes = 15
-    variables_dict = TestHelpers.variables_dict
+    env_var_dummy = TestHelpers.env_var_dummy
     all_functions = [(value['fun'], value['arity']) for key, value in op.items()]
     func_array = funcarray_from_list(all_functions)
-    label_list, arity_list, xtype_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, variables_dict, func_array, build_type='grow')
+    label_list, arity_list, xtype_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, env_var_dummy, func_array, build_type='grow')
     print(label_list)
     tree = karoo_tree_from_labellist(label_list)
     print('regular print:\n', tree)
@@ -437,7 +433,7 @@ def runtime_exception_vs_if():
 
 
 def test_tree_visualize_reduced():
-    obs_bundle = {'info': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
+    obs_bundle = {'obs_name': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
                            'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
                            'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
                            'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},

@@ -55,8 +55,9 @@ class FitnessKernel:
             result_str += ('\n\n Matching fitness score: {}'.format(result['fitness']))
         return result_str
 
-    def tf_get_pairwise_fitness(self, solution, tf_result, action_dict, unique_outputs_num, action_min_max=None):
+    def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num, action_min_max=None):
         # 3- Add fitness computation into TF graph
+        # sfeh add action here if needed for multidimensional results
 
         if self.kernel == 'classification':  # CLASSIFY kernel
 
@@ -72,9 +73,6 @@ class FitnessKernel:
             side of origin_meta as it has not yet been determined the effect of enabling the middle bin to include both a 
             negative and positive result.
             """
-
-            if len(action_dict) > 1:
-                print_e('TODO multidimensional input. To be custom_done, there is no solution yet.')
 
             skew = (unique_outputs_num / 2) - 1
 
@@ -95,9 +93,7 @@ class FitnessKernel:
         elif self.kernel == 'regression':
 
             """
-            A very, very basic  kernel which is not designed to perform well in the real world. It requires
-            that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
-            integrating a more sophisticated kernel.
+            Gets the difference to the correct label
             """
 
             pairwise_fitness = tf.abs(solution - tf_result)
@@ -105,8 +101,9 @@ class FitnessKernel:
         elif self.kernel == 'regression bounded':
             """
             special regression for float solutions and discrete labels
-            - if the solution is between labels, the difference is added
-            - if the solution > bound_pop (the highest possible label), difference 0 is added
+            The result is assigned to the closest value
+                - if the result is between labels
+                - if the solution exceeds the minimum or maximum value
             ---
             suitable for:
             - not fitting labels beforehand
@@ -116,9 +113,16 @@ class FitnessKernel:
 
             act_min = tf.constant(action_min_max[0], dtype=tf.float32)
             act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            new_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
-            pairwise_fitness = tf.abs(solution - new_result)
-            # todo fitness anpassen
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - customised_result))
+
+            # # v2
+            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # pairwise_fitness = tf.abs(solution - customised_result)
+            #
+            # # oldest
+            # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
+            # pairwise_fitness = tf.abs(solution - customised_result)
 
         elif self.kernel == 'match':  # MATCH kernel
 
@@ -136,11 +140,10 @@ class FitnessKernel:
         return pairwise_fitness
 
 
-def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
+def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_classify_labels_map, get_pred_labels=False):
 
     """
-    computes config-tree results and fitness scores.
-    - Computes tree expression using TensorFlow (TF)
+    Computes tree expression using TensorFlow (TF)
     - parsing input string 'expression' and converting it into a TF operation graph
     - processing tf graph in an isolated TF session (results and corresponding fitness)
 
@@ -148,8 +151,6 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
         'self.tf_device_log' - controls device placement logging (debug only).
 
     Args:
-        'expr' - a string expression to be computed on the data_csv_path. Variable -> 'self.terminals'
-        'data_csv_path' - an 'n by m' matrix of the data_csv_path points containing n observations like 'self.terminals'.
         'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be
         extracted from the evolved results.
 
@@ -162,16 +163,9 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
             'fitness'           - aggregated scalar fitness score
 
     """
-    # eval_parameters = self.eval_parameters
-    kernel = eval_parameters['kernel_name']
-    action_dict = eval_parameters['action_dict']
-    variables_dict = eval_parameters['variables_dict']
-    tf_device_log = eval_parameters['tf_device_log']
-    tf_device = eval_parameters['tf_device']
-    unique_outputs_num = eval_parameters['unique_outputs_num']
-    tf_classify_labels_map = eval_parameters['tf_classify_labels_map']
-    action_min_max = eval_parameters['action_min_max']
 
+    unique_outputs_num = env_variables['action_at'][0]['unique_outputs_num']
+    action_min_max = env_variables['action_at'][0]['minmax']
     # Initialize TensorFlow session
     tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
     config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log, allow_soft_placement=True)
@@ -182,7 +176,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
             # 1. data_csv_path (observations, actions) to tensors
             tensors = {}
 
-            tensors = tensors_leaves(tensors, data, variables_dict, action_dict)
+            tensors = tensors_leaves(tensors, data, env_variables)
 
             # 2- Transform string expression into TF operation graph
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
@@ -190,7 +184,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
             solution = tensors[first_action]  # todo
 
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, action_dict, unique_outputs_num, action_min_max=action_min_max)
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if get_pred_labels:
@@ -202,36 +196,37 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
             'pairwise_fitness': pairwise_fitness}
 
 
-def tensors_leaves(tensors, data, variables_dict, action_dict):
+def tensors_leaves(tensors, data, env_variables):
     """
     All the tensors in leaf nodes
     - variables (observation0, ...)
-    - constants (True, False, 1.234, ...)
+    - distributions_file (True, False, 1.234, ...)
     """
-    num_columns = len(variables_dict['all'])  # sfeh not when entries are not used. which does not happen.
 
-    for i in range(num_columns):
-        obs = variables_dict['all'][i]['label']
-        xtype = variables_dict['all'][i]['xtype']
-        # xtype = xtype_get_from_label(obs, variables_dict=variables_dict, node_arity=0)
+    # for i in range(num_columns):
+    for obs_name, obs_info in env_variables['obs_name'].items():
+
+        label = obs_info['label']
+        xtype = obs_info['xtype']
+        pos = obs_info['pos']
+        # xtype = xtype_get_from_label(obs, env_var_dummy=env_var_dummy, node_arity=0)
 
         if '2f' in xtype:
-            tensors[obs] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
+            tensors[label] = tf.constant(data[:, pos], dtype=tf.float32)  # converts data_csv_path into vectors
         elif '2b' in xtype:
-            tensors[obs] = tf.constant(data[:, i], dtype=tf.bool)
+            tensors[label] = tf.constant(data[:, pos], dtype=tf.bool)
         else:
             raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
 
     # sfeh: if more than one action is provided...
-    action_for_regression = [0]
-    for action_name, action_info in action_dict.items():
-        action_type = action_info['type']
-        action_label = action_info['label']
-        column = action_info['pos']
-        if 'float' in action_type:
+    if len(env_variables['action_at']) == 1:
+        action_xtype = env_variables['action_at'][0]['xtype']
+        action_label = env_variables['action_at'][0]['label']
+        column = env_variables['action_at'][0]['pos']
+        if '2f' in action_xtype:
             tensors[action_label] = tf.constant(data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
         else:
-            print_e('action {} has these infos: {}.'.format(action_name, action_info))
+            print_e('action {} has these infos: {}.'.format(action_label, env_variables['action_at'][0]))
     return tensors
 
 
@@ -343,7 +338,6 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                 op[type(node.op)]['fun'],
                 ast_convert_from_expr_recursive(node.right, prnt=True))
         if build:
-            print('ssss', op[type(node.op)])
             return [op[type(node.op)]['fun'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
                      ast_convert_from_expr_recursive(node.right, build=True)]]

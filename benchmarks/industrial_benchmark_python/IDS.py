@@ -52,13 +52,13 @@ class IDS(object):
         # if inital_seed != None:
         np.random.seed(inital_seed)
 
-        # constants
+        # distributions_file
         self.maxRequiredStep = np.sin(15. / 180. * np.pi)
         self.gsBound = 1.5
         self.gsSetPointDependency = 0.02
         self.gsScale = 2. * self.gsBound + 100. * self.gsSetPointDependency  # scaling factor for shift
 
-        # cost/reward weighting constants
+        # cost/reward weighting distributions_file
         self.CRF = 3.
         self.CRC = 1.
         self.CRGS = 25.

@@ -64,8 +64,6 @@ def play_once(env, agent, render=False, verbose=False, sleep=0.0):
         time.sleep(sleep)
         observation, reward, done, _ = env.step(action)
         episode_reward += reward
-        # if verbose:
-        #     print('{:1.2f} {:1.2f} {}'.format(observation[0], observation[1], '--->' if action == 2 else '<---' if action == 0 else '___'))
         if done:
             break
     # if verbose:

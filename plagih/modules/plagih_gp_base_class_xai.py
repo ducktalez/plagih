@@ -516,7 +516,7 @@ class ExplainableGP(object):
         self.file_conclusion(root_path)
         self.file_pareto_text(self.pareto, root_path)
         self.file_pareto_latex(self.pareto, root_path)
-        self.file_pareto_pycode(self.pareto, root_path)
+        self.file_generate_pycode(self.pareto, root_path)
 
         file_population_karoo(self.population_base, pop_name, root_path, self.gen_id)  # save the final generation of Trees to disk
 
@@ -661,7 +661,6 @@ class ExplainableGP(object):
         """
 
         forest_grouped = []
-        path_trees = make_dir(root_path / folder_solutions)
 
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']  # sfeh: use raw or sym?
@@ -680,19 +679,17 @@ class ExplainableGP(object):
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
 
-        with Path.open(path_trees / '#all_trees.tex', 'w') as file:
+        pareto_folder = make_dir(root_path / folder_solutions)
+        with Path.open(trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
         return
 
-    def file_pareto_pycode(self, pareto, root_path):
+    def file_generate_pycode(self, pareto, root_path):
         """
 
         """
         path_trees = make_dir(root_path / folder_solutions)
-
-        all_agents = []
-        all_agent_names = []
 
         if self.env_variables['action_at'][0]['type'] == 'int':
             action_min, action_max = self.env_variables['action_at'][0]['minmax']
@@ -707,6 +704,8 @@ class ExplainableGP(object):
         py_decide = 'def decide(self, input):\n{}\n'.format(textwrap.indent(py_decide_body, '\t'))
         py_class_code = 'class {{}}:\n\n{}'.format(textwrap.indent(py_decide, '\t'))
 
+        all_agents = []
+        all_agent_names = []
         for parsim, meta in sorted(list(pareto.items())):
 
             expr_raw = meta['expr_raw']

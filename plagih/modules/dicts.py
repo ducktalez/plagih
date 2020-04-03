@@ -43,7 +43,9 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     '-':	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'latex': '$-$', 'call': 'inline', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
     '~':	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'latex': '$-$', 'call': 'inline', 'pycode': lambda a: '(-{})'.format(a)},  # todo this is minus again
     '*':	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'latex': '$\\cdot$', 'call': 'inline', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
-    '/':	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'latex': '$\\div$', 'call': 'inline', 'pycode': lambda a, b: '({}/{})'.format(a, b)},  # a / b  # todo try tf.math.divide_no_nan
+
+    # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented
+    '/':	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'latex': '$\\div$', 'call': 'inline', 'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}{})'.format(a, b)},
     '**':	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow, 'latex': '$**$', 'call': 'inline', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
     'abs':	{'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'tf': tf.abs, 'latex': None, 'call': None, 'pycode': lambda a: 'abs({})'.format(a)},
     'sign':	{'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sign, 'latex': None, 'call': None, 'pycode': None},

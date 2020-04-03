@@ -17,7 +17,7 @@ import numpy as np
 import gym
 
 
-def plot_decisions(env, agent, name):
+def mtc_plot_decisions(env, agent, name, mtcplotpath='img/'):
     # Creates the plot which displays current position/speed and the corresponding action
 
     poses = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, 256)
@@ -41,7 +41,7 @@ def plot_decisions(env, agent, name):
     fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
     plt.title(name)
     fig.show()
-    plt.savefig(Path('img/{}.jpg'.format(name)))
+    plt.savefig(Path('{}{}.jpg'.format(mtcplot_path, name)))
     plt.close()
     return
 
@@ -68,36 +68,19 @@ def play_once(env, agent, render=False, verbose=False, sleep=0.0):
 
 
 def compare_simple(agents):
-    for name, agent in agents:
-        np.random.seed(0)
-        env = gym.make('MountainCar-v0')
-        env.seed(0)
-        time_start = time.perf_counter()
-        episode_rewards = [play_once(env, agent) for _ in range(100)]
-        failcount = sum([1 for x in episode_rewards if x == -200])
-        print('{} \thad average episode rewards = {}. Failed {} times. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards),failcount, time.perf_counter() - time_start))
-        env.close()
+
+    time_start = time.perf_counter()
+    episode_rewards = [play_once(env, agent) for _ in range(100)]
+    failcount = sum([1 for x in episode_rewards if x == -200])
+    print('{} \thad average episode rewards = {}. Failed {} times. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards),failcount, time.perf_counter() - time_start))
+
 
 
 def render_ntimes(agents, n, verbose=False, sleep=0.0):
-    for name, agent in agents:
-        np.random.seed(0)
-        env = gym.make('MountainCar-v0')
-        env.seed(0)
-        for _ in range(n):
-            episode_rewards = play_once(env, agent, render=True, verbose=verbose, sleep=sleep)
-            print('episode_rewards', episode_rewards)
-        env.close()
 
-
-def plot_simple(agents):
-    for name, agent in agents:
-        np.random.seed(0)
-        env = gym.make('MountainCar-v0')
-        env.seed(0)
-
-        plot_decisions(env, agent, 'agent_{}'.format(name))
-        env.close()
+    for _ in range(n):
+        episode_rewards = play_once(env, agent, render=True, verbose=verbose, sleep=sleep)
+        print('episode_rewards', episode_rewards)
 
 
 def load_sarsas():
@@ -140,14 +123,21 @@ mountain_agents = {1: ('v1_simple', SimpleAgent()),
                    13: ('TestCombined', TestCombined()),
                    14: ('SimonTesting', SimonsTesting())}
 
-gen_agents = all_agents
-agent_tuples = agent_tuples
-
 oneAgent = {mountain_agents[12]}
 twoAgents = {mountain_agents[14], mountain_agents[11]}
 
-plot_simple(agent_tuples)
-# compare_simple(agent_tuples)
-# render_ntimes(mountain_agents.values(), 3, verbose=True, sleep=0.0)
+agents = agent_tuples
+
+for name, agent in agents:
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
+
+    mtc_plot_decisions(agent_tuples)
+    compare_simple(agent_tuples)
+    render_ntimes(mountain_agents.values(), 3, verbose=True, sleep=0.0)
+
+    plot_decisions(env, agent, 'agent_{}'.format(name))
+    env.close()
 
 # todo idee: gp vs. nn entscheidungen clustern.

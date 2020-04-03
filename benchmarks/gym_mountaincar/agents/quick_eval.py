@@ -12,8 +12,6 @@ import itertools
 import pickle
 from pathlib import Path
 from benchmarks.gym_mountaincar.agents.generated_agents import *
-from benchmarks.gym_mountaincar.agents.generated_agents2 import *
-from benchmarks.gym_mountaincar.agents.generated_agents3 import *
 
 import numpy as np
 import gym
@@ -29,7 +27,7 @@ def plot_decisions(env, agent, name):
     @np.vectorize
     def decide(position, velocity):
         try:
-            action = agent.decide((position, velocity))
+            action = agent.decide((position, velocity))  # todo
         except:
             action = 1
         return action
@@ -51,16 +49,13 @@ def plot_decisions(env, agent, name):
 def play_once(env, agent, render=False, verbose=False, sleep=0.0):
     observation = env.reset()
     episode_reward = 0.
-    if verbose:
-        print('New agent')
     for step in itertools.count():
         if render:
             env.render()
         try:
             action = agent.decide(observation)
         except:
-            action = 0
-            # todo sfeh
+            action = 1
         time.sleep(sleep)
         observation, reward, done, _ = env.step(action)
         episode_reward += reward
@@ -141,20 +136,18 @@ mountain_agents = {1: ('v1_simple', SimpleAgent()),
                    9: ('test_tmp', TestTmp()),
                    10: ('AgentV1p40', AgentV1p40()),
                    11: ('SimonsBest', SimonsGpFriendly()),
-                   12: ('SimonsCheckpoints', SimonsCheckpoints()),
+                   12: ('test', SimonsCheckpoints()),
                    13: ('TestCombined', TestCombined()),
-                   14: ('SimonTesting', SimonsTesting()),}
+                   14: ('SimonTesting', SimonsTesting())}
 
-gen_agents = agnt_dict.values()
-gen_agents2 = tuples
-gen_agents3 = tuples3
+gen_agents = all_agents
+agent_tuples = agent_tuples
 
-oneAgent = {mountain_agents[11]}
+oneAgent = {mountain_agents[12]}
 twoAgents = {mountain_agents[14], mountain_agents[11]}
 
-# plot_simple(mountain_agents[11])
-compare_simple(oneAgent)
+plot_simple(agent_tuples)
+# compare_simple(agent_tuples)
 # render_ntimes(mountain_agents.values(), 3, verbose=True, sleep=0.0)
-
 
 # todo idee: gp vs. nn entscheidungen clustern.

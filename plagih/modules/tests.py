@@ -308,7 +308,9 @@ def test_tree_reduce_parts():
 
 
 def test_tree_parsimony_ted():
-    tree1 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 4])
+    label_list = ['+', '+', '+', 1, 2, 3, 4]
+    xtype_list = ['f2f', 'f2f', 'f2f', '2f', '2f', '2f', '2f']
+    tree1 = karoo_tree_from_labellist(label_list, xtype_list)
     tree2 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 3])
     distance, mapping = tree_parsimony_ted(tree1, tree2)
     print('dist:', distance)

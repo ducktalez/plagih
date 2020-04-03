@@ -510,7 +510,6 @@ def tree_node_get_parent(tree, node_id):
         return parent_id
     else:
         return int(parent_id)
-    return
 
 
 def tree_node_get_parents(tree, node_id):
@@ -665,7 +664,7 @@ def insert_function_or_term(depth, depth_goal):
     """
     on every tree depth
     """
-    if np.random.choice(['50', 'larger', 'larger', 'larger']) == 'larger':  # todo
+    if np.random.choice(['50', 'larger', 'larger', 'larger']) == 'larger':
         if np.random.uniform(0, depth_goal) > min(depth, depth_goal / 2):
             decision = 'func'
         else:
@@ -962,7 +961,6 @@ def round_constant(constant, accuracy):
         else:
             new_const = -1 / accuracy
     return new_const
-
 
 
 def tree_single_from_csv(origin_tree_file_path):
@@ -1289,11 +1287,11 @@ def tree_get_mutatable_extendables(tree):
     for node_id in fix_ids:
 
         arity = tree_node_get_arity(tree, node_id)
-        for c in range(0, arity):
-            child_id = int(tree[N_c1 + c][node_id])
+        for cc in range(0, arity):
+            child_id = int(tree[N_c1 + cc][node_id])
             # if tree_node_modifiable(tree, node_id):
             if int(tree[N_modify][child_id]) == 1:
-                leaf_ids.append(int(tree[N_c1 + c][node_id]))
+                leaf_ids.append(int(tree[N_c1 + cc][node_id]))
 
     core_ids = []
     core_ids.extend(fix_ids)
@@ -1517,9 +1515,9 @@ def tree_core_init_depth(tree, parent_list=None):
         c1 = tree[N_c1][my_id]
         c2 = tree[N_c2][my_id]
         c3 = tree[N_c3][my_id]
-        for c in [c1, c2, c3]:
-            if c != '':
-                tree[N_depth][int(c)] = child_depth
+        for cc in [c1, c2, c3]:
+            if cc != '':
+                tree[N_depth][int(cc)] = child_depth
     return tree
 
 

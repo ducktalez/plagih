@@ -29,10 +29,6 @@ class SimonsGpFriendly:
 
 
 # todo idee: programm that works has some space to make random decisions. nn analyses, finds best version
-class Yoyoyo:
-    def decide(self, input):
-        cartPos, cartVel = input
-        action = 0 if (cartVel<0) else 2
 
 class SimonsTesting:
 
@@ -57,9 +53,10 @@ class SimonsTesting:
 
 class SimonsCheckpoints:
 
-    def decide(self, observation):
-        return 0
-
+    def decide(self, input):
+        cartPos, cartVel = input
+        action = (min(max((5.0 / cartVel), (4.0 / cartPos)), 1.265) + 5.0)
+        return max(int(0), min(int(2), int(round(action))))
 
 
 class AgentV1p40:

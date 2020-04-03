@@ -65,16 +65,16 @@ class ExplainableGP(object):
             'delete_old_file': False,  # sfeh, delete old gp_files. be very careful
             'monitor': {'gen_fitness_average': 'y',
                         'sympify_errors': 'y',
-                        'population_tmp_done-size': 'y'
-                        },
+                        'population_tmp_done-size': 'y',
+                        'fitness_variance': 'n'},
             'period': {'time_monitor': None,  # in sec
                        'time_save': None,  # in sec
                        'gen_monitor': 1,  # in gen counts
                        'gen_save': 1},  # in gen counts
 
             # GP-evolve specific parameters
-            'evolve_rates': {'repro one': 0.03,
-                             'repro pareto': 0.04,
+            'evolve_rates': {'repro one': 0.05,
+                             'repro pareto': 0.01,
                              'repro reduced one': 0.03,
                              'filter floats': 0.05,
                              'point mutate function': 0.1,
@@ -127,7 +127,6 @@ class ExplainableGP(object):
         self.time_last_monitor = self.time_start
         self.time_last_files = self.time_start
         self.pop_next = None
-        self.choose_node = {'2f': {}, '2b': {}, '2f': {}} # todo
 
         # some config_dict values have to be used quite often...
         self.kernel = FitnessKernel(self.config['kernel_name'])
@@ -697,15 +696,15 @@ class ExplainableGP(object):
 
         if self.env_variables['action_at'][0]['type'] == 'int':
             action_min, action_max = self.env_variables['action_at'][0]['minmax']
-            print(action_min, action_max)
             action_min, action_max = int(action_min), int(action_max)
-            py_return_action = 'return max(int({}), min(int({}), int(round(action))))\n'.format(action_min, action_max)
+            py_return_action = 'return max({}, min({}, int(round(action))))\n'.format(action_min, action_max)
         else:
             py_return_action = 'return action\n'
+            # todo idea round constants when generating
 
         py_operations_assign = '{} = input\n'.format(', '.join(self.env_variables['obs_name']))
-        py_decide_body = '{}{{}}{}'.format(py_operations_assign, py_return_action)
-        py_decide = 'def decide(self, input):\n{}\n'.format(py_decide_body, '\t')
+        py_decide_body = '{}{{}}\n{}'.format(py_operations_assign, py_return_action)
+        py_decide = 'def decide(self, input):\n{}\n'.format(textwrap.indent(py_decide_body, '\t'))
         py_class_code = 'class {{}}:\n\n{}'.format(textwrap.indent(py_decide, '\t'))
 
         for parsim, meta in sorted(list(pareto.items())):
@@ -715,18 +714,21 @@ class ExplainableGP(object):
             label_list_sym = ast_convert_from_expr(expr_sym, build=True)
             xtype_list_sym = xtypes_from_labels(label_list_sym, self.env_variables)
             tree = karoo_tree_from_labellist(label_list_sym, xtype_list_sym)
-            py_action = 'action = {}\n'.format(tree_get_pycode(tree))
+            py_action = 'action = {}'.format(tree_get_pycode(tree))
 
             py_agent_name = '{}{:.0f}'.format(self.name, parsim)
             all_agent_names.append(py_agent_name)
             all_agents.append(py_class_code.format(py_agent_name, py_action))
 
         pycode_names = 'all_agents = [{}]\n'.format(', '.join(all_agent_names))
+        py_agent_tuples = 'agent_tuples = [{}]\n'.format(', '.join(['(\'{}\', {}())'.format(x, x) for x in all_agent_names]))
+
         pycode_agents = '{}'.format('\n'.join(all_agents))
 
         complete_file = 'import math\n\n' \
                         '{}\n\n' \
-                        '{}'.format(pycode_agents, pycode_names)
+                        '{}\n\n' \
+                        '{}'.format(pycode_agents, pycode_names, py_agent_tuples)
 
         with Path.open(path_trees / file_pycode, 'w') as file:
             file.write(complete_file)
@@ -981,13 +983,12 @@ class ExplainableGP(object):
         if self.origin_exists():
             if repro_rate > 0 and tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
                 print_warning('w', 'You can not create new trees from scratch when origin has fix nodes! {} This should be handeled earlier'.format(repro_rate))
-                # print('TEST: removing a return statement here')
                 return
         action_xtype = self.env_variables['action_at'][0]
         for i in range(repro_rate):
             goal_nodes = np.random.randint(self.config['tree from scratch min_nodes'], 1 + self.config['random from scratch max nodes'])
 
-            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(action_xtype, goal_nodes, self.env_variables, self.choose_oparray)
+            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(action_xtype, goal_nodes, self.env_variables, self.choose_oparray, self.choose_distributions)
             p_tree = Plagih_Tree(label_list, xtype_list)
             tree = p_tree.get_uninstanced_tree()
             # tree = tree_set_id(tree, i)
@@ -1486,8 +1487,9 @@ class ExplainableGP(object):
                       right_padding=1,
                       subfolder=folder_pop_analysis)
 
-        data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='variance in fitness', plt_y_label='variance',
+        if self.monitor_dict.get('fitness_variance') == 'y':
+            data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
+            self.plot_end(data_tuples, path_plots, plt_title='variance in fitness', plt_y_label='variance',
                       linestyle='-',
                       marker='')
 
@@ -1616,7 +1618,7 @@ class ExplainableGP(object):
         :param subfolder: save plot in plots/*subfolder*, e.g. if this plot is created in every generation
         :return:
 
-        todo max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
+        sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
         """
 
         if len(data_2d) == 0:

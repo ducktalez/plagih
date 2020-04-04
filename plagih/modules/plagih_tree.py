@@ -2405,7 +2405,7 @@ def visualize_tree_get_vistree(tree):
     open_fix = tree_ids[:]
     while open_fix:
         node_id = open_fix[-1]
-        if visualize_tree_node_force_show(tree, node_id):
+        if visualize_tree_node_force_show(tree, node_id):  # todo a < 5 can actually be shown. just the parent needs a split
             parents = tree_node_get_parents(tree, node_id)
             for x in parents:
                 if x in open_fix:

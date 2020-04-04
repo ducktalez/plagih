@@ -28,7 +28,9 @@ def main(argv):
         sys.exit(2)
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('start_run.py -i <input FOLDER>')  # todo write good + complete text
+            print('start_run.py -i <input FOLDER>\n'
+                  'options:\n'
+                  '--task=<run, analyze, tree-latex>')
             sys.exit(2)
         elif opt in ('-i', '--ipath'):
             ipath = Path(arg)
@@ -56,7 +58,7 @@ def main(argv):
         plagih_gp.show_default_operators(ipath)
     else:
         print('Task not known: {}'.format(task))
-    # todo: options for other functions? run, visualise_tree, analyse_run, check_files, tests
+    # sfeh: options for other functions? run, visualise_tree, analyse_run, check_files, tests
 
 
 if __name__ == "__main__":

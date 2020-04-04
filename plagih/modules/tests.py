@@ -9,31 +9,46 @@ import time
 
 
 class TestHelpers:
+
+    def __init__(self):
+        self.func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
+                               [[], [], ['<', '>', '==', '!='], []],
+                               [[], ['Not', 'Not'], ['&'], []],
+                               [[], [], [], []],
+                               [[], [], [], ['Ifte']]]
+
+        self.env_bundle = {'obs_name': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
+                                        'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
+                                        'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
+                                        'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
+                                        'cartPos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
+                                        'cartVel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
+                                        'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
+                                        'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
+                                        }}
+
+        self.tree_MTC_simon_labels = ['Ifte',
+                                      'Or', '2', 'Ifte',
+                                      '<', '&', '&', '0', 'Ifte',
+                                      'cartVel', '1', '<', '<', '<', '&', '<', '0', '2',
+                                      'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
+                                      'cartVel', '-0.45', 'cartVel', '-0.05']
+
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
-    func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
-                      [[], [], ['<', '>', '==', '!='], []],
-                      [[], ['Not', 'Not'], ['&'], []],
-                      [[], [], [], []],
-                      [[], [], [], ['Ifte']]]
+    def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
+        xtype_list = xtypes_from_labels(label_list, self.env_bundle)
+        p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
+        tree = p_tree.get_uninstanced_tree()
+        return tree
 
-
-    env_var_dummy = {'obs': {'observation0': {'label': 'observation0', 'type': 'float', 'xtype': '2f'},
-                               'observation1': {'label': 'observation1', 'type': 'float', 'xtype': '2f'}
-                             },
-                      'types': ['float', 'float'],
-                      'float': ['observation0', 'observation1'],
-                      'bool': []}
-
-
-def test_all():
-    print('Starting several tests, NOT all!')
-    test_plagih_eval()
-    test_sympify()
-    test_plagih_tree()
-    test_rebuild_loop_tree()
-    test_choose_function()
-    test_build_tree_grow_nodecount()
-    print('Testing procedure is custom_done!')
+    def make_all_known_trees(self):
+        tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
+        expr_raw = tree_get_expr_raw(tree, root_id)
+        expr_sym = expr_sympify(expr_raw)
+        tree_
+        # print('raw\t', tree_get_labellist(tree))
+        # sym_tree = tree_evolve_reduce(tree, self.env_bundle)
+        # print('sym\t', tree_get_labellist(sym_tree))
 
 
 def test_plagih_eval():
@@ -436,12 +451,12 @@ def runtime_exception_vs_if():
 
 def test_tree_visualize_reduced():
     obs_bundle = {'obs_name': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
-                           'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
-                           'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
-                           'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
-                           'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
-                           'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
-                           }}
+                               'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
+                               'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
+                               'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
+                               'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
+                               'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
+                               }}
 
     labellists = [['+', 'a', '2'],
                   ['&', '&', '<', 'True', 'bool1', 'Maxi', 4, '+', 1, '*', '/', 'a', 'b', 'c', 3],
@@ -461,4 +476,5 @@ def test_tree_visualize_reduced():
         file.write(latex_file)
 
 
-test_tree_visualize_reduced()
+live_test = TestHelpers()
+live_test.make_all_known_trees()

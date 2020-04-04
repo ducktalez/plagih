@@ -68,6 +68,20 @@ class Maxi(Function):
         return eval(self, a, b)
 
 
+class Square(Function):
+    """
+    """
+    nargs = 2
+
+    @classmethod
+    def eval(cls, a):
+
+        return a**2  # todo requires testing. a LOT of testing. check for num-type?
+
+    def _sympy_(self, a, b):
+        return eval(self, a, b)
+
+
 class Ftob(Function):
     """
     Dummy function to convert Float to boolean

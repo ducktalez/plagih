@@ -96,5 +96,44 @@ def eval_agents(agent_list, folder=Path('img/')):
         file.write('\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance]))
 
 
+
+class SimonsFriendlyCopy:
+
+    def decide(self, observation):
+        pos, vel = observation
+
+        if pos < -1 or (pos < 0.1 and vel < -0.05):
+            return 2
+        else:
+            if (pos > -0.45 and pos < -0.05) and vel < 0.02:
+                return 0
+
+            if vel < 0:
+                return 0
+            else:
+                return 2
+
+class MTC_simon10:
+
+    def decide(self, input):
+        cartPos, cartVel = input
+
+        if (cartVel < 1) or (cartPos < (-0.05)) and (cartVel < 0.1):
+            action = 2
+        else:
+            if ((cartVel > (-0.45)) and (cartPos < 0.02)) and (cartVel < (-0.05)):
+                action = 0
+            else:
+                if cartPos < 0:
+                    action = 0
+                else:
+                    action = 2
+        # action = 2 if ((cartVel < 1) or ((cartPos < (-0.05)) and (cartVel < 0.1))) else 0 if (((cartVel > (-0.45)) and (cartPos < 0.02)) and (cartVel < (-0.05))) else 0 if (cartPos < 0) else 2
+        return max(0, min(2, int(round(action))))
+
+x = mtc_play(MTC_simon10)
+print('whats x?', x)
+
 if __name__ == '__main__':
-    eval_agents(agent_tuples, folder=folder)
+    agent = [('MTC Test', MTC_simon10)]
+    eval_agents(agent)  # , folder=folder

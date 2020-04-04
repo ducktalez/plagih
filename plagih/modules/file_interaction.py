@@ -12,7 +12,6 @@ example_runs = 'examples/'
 folder_plots = 'plots/'
 folder_info = 'info/'
 folder_steps = 'steps/'
-folder_solutions = 'trees/'
 folder_pop_analysis = 'pop_dist/'
 
 file_pareto = 'pareto.txt'
@@ -20,7 +19,6 @@ file_config_yaml = 'run_files/config.yaml'
 file_config_json = 'run_files/config.json'
 file_backup_pickle = 'run_files/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
-file_pycode = 'agents.py'
 
 run_files = 'run_files/'
 samples_ready_p = 'run_files/samples_ready.p'
@@ -32,7 +30,12 @@ tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
 
+callable_user_python_script = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
+
+folder_solutions = 'solutions/'
 trees_tex = 'solutions/all_trees.tex'
+file_pycode = 'solutions/pareto_agents.py'
+file_pycode_eval = 'solutions/eval_pareto_agents.py'
 
 T_num_lines = 15  # todo this var is not found otherwise
 

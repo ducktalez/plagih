@@ -97,4 +97,5 @@ def eval_agents(agent_list, folder=Path('img/')):
 
 
 if __name__ == '__main__':
+    print('executing!')
     eval_agents(agent_tuples, folder=folder)

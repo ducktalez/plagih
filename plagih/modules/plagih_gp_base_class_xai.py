@@ -9,7 +9,7 @@ Functions, that might be addable in the future:
 import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
-import yaml
+import subprocess
 import json
 
 try:
@@ -679,8 +679,8 @@ class ExplainableGP(object):
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
 
-        pareto_folder = make_dir(root_path / folder_solutions)
-        with Path.open(trees_tex, 'w') as file:
+        pareto_folder = make_dir(root_path / folder_solutions)  # todo new make
+        with Path.open(root_path / trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
         return
@@ -689,7 +689,6 @@ class ExplainableGP(object):
         """
 
         """
-        path_trees = make_dir(root_path / folder_solutions)
 
         if self.env_variables['action_at'][0]['type'] == 'int':
             action_min, action_max = self.env_variables['action_at'][0]['minmax']
@@ -707,7 +706,6 @@ class ExplainableGP(object):
         all_agents = []
         all_agent_names = []
         for parsim, meta in sorted(list(pareto.items())):
-
             expr_raw = meta['expr_raw']
             expr_sym = expr_sympify(expr_raw)
             label_list_sym = ast_convert_from_expr(expr_sym, build=True)
@@ -724,15 +722,42 @@ class ExplainableGP(object):
 
         pycode_agents = '{}'.format('\n'.join(all_agents))
 
-        complete_file = 'import math\n\n' \
-                        '{}\n\n' \
-                        '{}\n\n' \
-                        '{}'.format(pycode_agents, pycode_names, py_agent_tuples)
+        pycode_complete_agents = 'import math\n\n' \
+                                 '{}\n\n' \
+                                 '{}\n\n' \
+                                 '{}'.format(pycode_agents, pycode_names, py_agent_tuples)
 
-        with Path.open(path_trees / file_pycode, 'w') as file:
-            file.write(complete_file)
+        path_trees = make_dir(root_path / folder_solutions)
+        with Path.open(root_path / file_pycode, 'w') as file:
+            file.write(pycode_complete_agents)
+
+        self.call_custom_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
 
         return
+
+    # todo idee: gp vs. nn entscheidungen clustern.
+
+    def call_custom_file(self, root_dir, pycode_complete_agents):
+
+        if Path.is_file(root_dir / callable_user_python_script):
+            #  if direct execution is wished...# exec(Path.open("custom_eval_agents.py").read())
+
+            # auto_import_eval = 'import sys\n' \
+            #                    'from pathlib import Path\n' \
+            #                    'sys.path.append(Path({}))\n' \
+            #                    'import {} as custom_eval_agents\n' \
+            #                    'custom_eval_agents.eval_agents(agent_tuples, folder=Path(\'img\'))'.format(callable_user_python_script, Path(callable_user_python_script).stem)
+
+            with Path.open(root_dir / callable_user_python_script, 'r') as file:
+                auto_import_eval = file.read()
+
+            executable_python_evaluation = pycode_complete_agents + \
+                                           '\nfrom pathlib import Path\n' + \
+                                           'folder = Path.cwd() / \'custom_files\'\n\n' + \
+                                           auto_import_eval
+
+            with Path.open(root_dir / file_pycode_eval, 'w') as file:
+                file.write(executable_python_evaluation)
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Population specific                       |
@@ -1489,8 +1514,8 @@ class ExplainableGP(object):
         if self.monitor_dict.get('fitness_variance') == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
             self.plot_end(data_tuples, path_plots, plt_title='variance in fitness', plt_y_label='variance',
-                      linestyle='-',
-                      marker='')
+                          linestyle='-',
+                          marker='')
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_variance'].items()))
         self.plot_end(data_tuples, path_plots, plt_title='variance in parsimony', plt_y_label='variance',
@@ -1572,14 +1597,17 @@ class ExplainableGP(object):
         """
         return self.env_variables
 
-    def terminate_run(self, path):
+    def terminate_run(self, root_dir):
         """
         Program is done after writing all gp_files one last time.
-        :param path:
-        :return:
         """
-        self.file_save_files(path)
-        self.file_all_plots(path)
+        self.file_save_files(root_dir)
+
+        if Path.is_file(root_dir / file_pycode_eval):
+            # exec(Path.open(root_dir / file_pycode_eval).read())
+            os.system('python ' + str(root_dir / file_pycode_eval))  # sfeh nothing to be proud of
+
+        self.file_all_plots(root_dir)
         self.print_g('gg', ' Terminating. \tTime since start: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1710,10 +1738,10 @@ def funcarray_from_list(functions):
     # rows are the function types (f2f)
     # columns are the arity
     choose_oparray = [[[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []],
-                [[], [], [], []]]
+                      [[], [], [], []],
+                      [[], [], [], []],
+                      [[], [], [], []],
+                      [[], [], [], []]]
 
     # sfeh make this a np.array
 

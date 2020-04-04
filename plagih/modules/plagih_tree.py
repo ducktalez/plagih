@@ -1092,7 +1092,7 @@ def tree_get_expr_raw(tree, node_id):
             return '{}({})'.format(fun, tree_get_expr_raw(tree, tree[9, node_id]))
 
     elif arity == '2':
-        if label not in functions_infix_dict:
+        if label not in expr_raw_infix:
             return '{}({}, {})'.format(label, tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]))
         else:
             return '({}){}({})'.format(tree_get_expr_raw(tree, tree[9, node_id]), label, tree_get_expr_raw(tree, tree[10, node_id]))

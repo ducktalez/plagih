@@ -122,7 +122,7 @@ def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity
     returns: tree, from label_list (newest version)
     """
 
-    label_list = workaround_remove_tilde_operator(label_list)
+    # label_list = workaround_remove_tilde_operator(label_list)
     xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
@@ -137,7 +137,7 @@ def karoo_tree_from_expr(expr, env_variables, modify_list=None):
     Generate tree from a raw or sympified expression
     """
     label_list = ast_convert_from_expr(expr, build=True)
-    label_list = workaround_remove_tilde_operator(label_list)
+    # label_list = workaround_remove_tilde_operator(label_list)
     xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     tree = p_tree.get_uninstanced_tree()
@@ -1683,7 +1683,7 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
 
 def core_from_expr(expr, env_variables):
     label_list = ast_convert_from_expr(expr, build=True)
-    label_list = workaround_remove_tilde_operator(label_list)
+    # label_list = workaround_remove_tilde_operator(label_list)  # sfeh todo not use?
     arity_list = [label_get_arity(label) for label in label_list]
     xtype_list = xtypes_from_labels(label_list, env_variables)
     core = core_from_labels(label_list, arity_list, xtype_list)

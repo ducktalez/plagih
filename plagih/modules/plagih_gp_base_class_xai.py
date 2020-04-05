@@ -914,7 +914,7 @@ class ExplainableGP(object):
                 tree = karoo_tree_from_expr(expr_raw, self.env_variables)
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
                 sym_tree = tree_evolve_reduce(tree, self.env_variables, completely=True)
-                if tree_get_labellist(sym_tree) != tree_get_labellist(tree):
+                if list(tree_get_labellist(sym_tree)) != list(tree_get_labellist(tree)):
                     self.printpl('aa', 'Pareto entry could be further sympified!')
                     sym_tree = tree_set_fitness(sym_tree, fitness)
                     self.pop_add_tree_midrun(sym_tree)
@@ -1390,8 +1390,6 @@ class ExplainableGP(object):
             raise Exception('Expr could not be sympified: {}'.format(ex))
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device, self.tf_classify_labels_map)['fitness']
-
-        print('Debg', fitness_train, tree_labels(tree))
 
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness_train is not a real number: {}'.format(fitness_train))

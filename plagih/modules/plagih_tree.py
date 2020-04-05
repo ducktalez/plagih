@@ -1018,7 +1018,7 @@ def round_constant(constant, accuracy):
 
     new_const = round(new_const * accuracy) / accuracy
     if new_const == 0:
-        if new_const > 0:
+        if constant > 0:
             new_const = 1 / accuracy
         else:
             new_const = -1 / accuracy

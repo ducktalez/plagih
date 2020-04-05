@@ -126,6 +126,8 @@ def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity
     xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
+    if not tree_check_all(tree, karoo=True):  # todo check on creation
+        raise
     return tree
 
 
@@ -269,6 +271,36 @@ def tree_set_id(tree, tree_id):
 def tree_set_last_evolution(tree, last_modification):
     tree[TR_type][1] = last_modification
     return tree
+
+
+def tree_check_core_all(tree, env_variables, karoo=True):
+    """
+    Performs all checks that we currently have
+    # sfeh do not use this if trees are safely generated
+    # sfeh check meta values in separate method? update those aswell?
+    """
+
+    if tree is None:
+        return False
+
+    if not tree_check_children(tree):
+        tree_works = False
+    elif not tree_check_node_label_info:
+        tree_works = False
+    elif not tree_check_types(tree, env_variables):
+        tree_works = False
+    elif tree_node_get_arity(tree, root_id) == 0:
+        print_warning('w', 'Tree is only a root node')
+        tree_works = False
+    elif not tree_check_reproduce_loop(tree, karoo=True):
+
+    # elif tree_get_meta(tree):
+    #     print_warning('w', 'Could not get meta from tree.')
+    #     tree_works = False
+    else:
+        tree_works = True
+
+    return tree_works
 
 
 def tree_check_xtypes(tree):
@@ -2130,9 +2162,9 @@ def tree_check_types(tree, karoo=True):
             c_label = tree_node_get_label(tree, c_id)
             c_xtype = tree_node_get_xtype(tree, c_id)
             if not xtypes_required[ii] == c_xtype[-2:]:
-                print_e('Tree check failed. ({}), child ({}) with c_label ({}) does not match xtype ({}). It is c_xtype ({}).\n'
-                        'tree labels: ({})\n'
-                        'Last modification was: {} '.format(label, ii, c_label, xtype, c_xtype, tree[N_label], tree_get_history(tree)))
+                print_e('Tree check failed. Node {} ({}), child ({}) with c_label ({}) does not match xtype ({}). It is c_xtype ({}).\n'
+                        'tree (pretty print):\n{}\n'
+                        'Last modification was: {} '.format(node_id, label, ii, c_label, xtype, c_xtype, tree_pretty_print(tree, karoo=True), tree_get_history(tree)))
                 return False
 
     return True
@@ -2153,13 +2185,6 @@ def tree_check_reproduce_loop(tree, karoo=True):
     except:
         return False
     return True
-
-
-def tree_check_all(tree, karoo=True):
-    tree_check_reproduce_loop(tree, karoo=karoo)
-    result = tree_check_children(tree, karoo=karoo)
-
-    return result
 
 
 def tree_check_arity_exists(tree, karoo=True):

@@ -1204,33 +1204,6 @@ class ExplainableGP(object):
 
         return tree
 
-    def tree_check_core_all(self, tree):
-        """
-        Performs all checks that we currently have
-        # sfeh do not use this if trees are safely generated
-        # sfeh check meta values in separate method? update those aswell?
-        """
-
-        if tree is None:
-            return False
-
-        if not tree_check_children(tree):
-            tree_works = False
-        elif not tree_check_node_label_info:
-            tree_works = False
-        elif not tree_check_types(tree, self.env_variables):
-            tree_works = False
-        elif tree_node_get_arity(tree, root_id) == 0:
-            print_warning('w', 'Tree is only a root node')
-            tree_works = False
-        # elif tree_get_meta(tree):
-        #     print_warning('w', 'Could not get meta from tree.')
-        #     tree_works = False
-        else:
-            tree_works = True
-
-        return tree_works
-
     def pop_base_transfer(self):
         """
 

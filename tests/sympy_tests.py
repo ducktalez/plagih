@@ -82,10 +82,22 @@ def test_sympify_many():
     print(plagih_sympify('N(2.345, 2)'))
     print(plagih_sympify('Or(True, False)'))
     print(plagih_sympify('(Ifte((Or(((b)<(1)), (((b)<(0.1))&((a)<(-0.01))))), (2), (Ifte((((a)<(0.01))&(((b)>(-0.1))&((b)<(-0.01)))), (0), (Ifte(((a)<(0)), (0), (2)))))))'))
+    print(plagih_sympify('Andb(True, False)'))
+    print(plagih_sympify('Or(True, False)'))
+    print(plagih_sympify('Orb(True, False)'))
 
-print('\nNew try:\n')
 
-expr = 'tanh(1)'
-# new_expr = help_reduce_expr(expr)
-# print('Expression was strongly changed to: \n{}\n'.format(new_expr))
-print(plagih_sympify(expr))
+print(plagih_sympify('Or(True, False)'))
+print(plagih_sympify('Orb(True, False)'))
+print(plagih_sympify('Or(a, a)'))
+print(plagih_sympify('Andb(True, a & b)'))
+print(plagih_sympify('Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'))
+print(plagih_sympify('Andb(True, a & b)'))
+
+
+
+# print('\nNew try:\n')
+# expr = ''
+# # new_expr = help_reduce_expr(expr)
+# # print('Expression was strongly changed to: \n{}\n'.format(new_expr))
+# print(plagih_sympify(expr))

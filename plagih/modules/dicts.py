@@ -72,10 +72,10 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
     # 'b2b' Classical logical operators, evaluate from bool to bool
-    'And':	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': None, 'sym_str': 'And({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # sfeh and + & (delete this)
+    'Andb':	{'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': 'and', 'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # sfeh and + & (delete this)
     '&':	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # DON'T USE tf.bitwise.bitwise_and
-    'Or':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': 'Or({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
-    '|':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': None, 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},  # a or b, sfeh python-'|' not used here
+    'Orb':	{'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': 'or', 'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
+    '|':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},  # a or b, sfeh python-'|' not used here
 
     'Not':	{'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Not({})', 'pycode': None},  # not a
 
@@ -121,12 +121,12 @@ op = {
     'asin': op_what['asin'],
     'atan': op_what['atan'],
     'tanh': op_what['tanh'],
-    'And': op_what['And'],
-    ast.And: op_what['And'],
+    'And': op_what['Andb'],
+    ast.And: op_what['Andb'],
     '&': op_what['&'],
     ast.BitAnd: op_what['&'],
-    'Or': op_what['Or'],
-    ast.Or: op_what['Or'],
+    'Or': op_what['Orb'],
+    ast.Or: op_what['Orb'],
     '|': op_what['|'],
     ast.BitOr: op_what['|'],
     'Not': op_what['Not'],
@@ -185,17 +185,3 @@ op_test = {
 
 expr_raw_infix = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&', '|']  # sfeh / is removed for
 
-function_infix_to_prefix = {  # currently obsolete
-    '+': 'add',
-    '-': 'sub',
-    '*': 'mult',
-    '/': 'div',
-    '**': 'power',
-    '==': 'eq',
-    '!=': 'neq',
-    '<': 'lt',
-    '<=': 'leq',
-    '>': 'gt',
-    '>=': 'geq',
-    '&': 'And',
-}

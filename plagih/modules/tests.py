@@ -33,6 +33,7 @@ class TestHelpers:
                                       'cartVel', '1', '<', '<', '<', '&', '<', '0', '2',
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
+        self.tree_MTC_simon_expr = 'Ifte(pos < -1 or (pos < 0.1 and vel < -0.05), 2, Ifte(pos > -0.45 and pos < -0.05) and (vel < 0.02), 0,  Ifte(vel < 0, 0, 2))'
 
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
@@ -51,7 +52,10 @@ class TestHelpers:
         # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
         sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
         print('sym\n', tree_pretty_print(sym_tree2, karoo=True))
-        print(tree_check_deep(sym_tree2))
+        print(tree_check_deep(sym_tree2, self.env_bundle))
+
+        expr = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
+        print('wwwwdd', expr)
 
 
 def test_rebuild_loop_tree():
@@ -274,17 +278,7 @@ def test_tree_reduce_parts():
 
     label_list = ['+', '-', '~', '1', '2', '3']
     modify_list = [0, 0, 1, 1, 1, 1]
-    tree_test = karoo_tree_from_labellist(label_list)
-    print('tree_test check', tree_check_deep(tree_test))
-    tree_test = karoo_tree_from_labellist(label_list, modify_list=modify_list)
-    print('tree_test check', tree_check_deep(tree_test))
 
-    for tree_base in [tree1, tree2, tree_plus]:
-        print('New try')
-        for _ in range(20):
-            tree = tree_evolve_reduce(tree_base)
-            if not (tree_check_deep(tree, karoo=True)):
-                print('test_tree_reduce_parts ERROR', tree)
 
 
 def test_tree_parsimony_ted():

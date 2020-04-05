@@ -126,7 +126,7 @@ def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity
     xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
-    if not tree_check_deep(tree, karoo=True):  # todo check on creation
+    if not tree_check_deep(tree, env_variables, karoo=True):  # todo check on creation
         raise
     return tree
 

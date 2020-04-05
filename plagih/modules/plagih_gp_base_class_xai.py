@@ -795,7 +795,8 @@ class ExplainableGP(object):
                 continue
 
         if count_fails > 0:
-            print_warning('ww', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(len(self.population_tmp_eval), self.gen_id, count_fails), print_type=self.print_type)
+            print_warning('ww', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(
+                len(self.population_tmp_eval), self.gen_id, count_fails), print_type=self.print_type)  # todo why more trees?
 
         return
 
@@ -846,7 +847,7 @@ class ExplainableGP(object):
         """
         self.printpl('i', 'Trying to add tree mid-run...')
 
-        if self.tree_check_core_all(tree):
+        if tree_check_deep(tree, self.env_variables):
             tree = self.tree_beautify(tree, last_evolution='par-s')
             parsimony = self.tree_eval_parsimony_easywrapper(tree)
             tree = tree_set_parsimony(tree, parsimony)
@@ -1230,7 +1231,7 @@ class ExplainableGP(object):
 
         tree = self.tree_beautify(tree, last_evolution=last_evolution)
 
-        if self.tree_check_core_all(tree):
+        if tree_check_quick(tree, self.env_variables):
             tree_ident = tree_hash(tree)
 
             if tree_ident in self.tree_meta:
@@ -1350,7 +1351,7 @@ class ExplainableGP(object):
         #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
         #                          ''.format(expr_raw, expr_sym))
 
-        if not self.tree_check_core_all(tree):
+        if not tree_check_deep(tree, self.env_variables):
             print('TODO', tree_labels(tree))
             raise
 

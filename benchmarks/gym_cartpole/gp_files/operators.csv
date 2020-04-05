@@ -9,8 +9,8 @@ operator, arity
 <,2
 <=,2
 ==,2
-&,2
-Or,2
+Andb,2
+Orb,2
 Mini,2
 Maxi,2
 Ifte,3

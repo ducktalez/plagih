@@ -6,6 +6,8 @@ Sympy does not have some functions, e. g. 'if a then b else c', which we want to
 
 This has currently only Ifte(a, b, c), which makes 'if then else' as if was a three-parametered function.
 
+inputs a, b, c to a function can be actual actual values but also variables with out a value assigned yet.
+
 Use:
 1. Import function only
     from plagih.modules.plagih_sympy_extras import plagih_sympify
@@ -68,6 +70,40 @@ class Maxi(Function):
         return eval(self, a, b)
 
 
+class Andb(Function):
+    """
+    """
+    nargs = 2
+
+    @classmethod
+    def eval(cls, a, b):
+
+        if (a == True or a == False) and (b == True or b == False):
+            return a and b
+        else:
+            return
+
+    def _sympy_(self, a, b):
+        return eval(self, a, b)
+
+
+class Orb(Function):
+    """
+    """
+    nargs = 2
+
+    @classmethod
+    def eval(cls, a, b):
+
+        if (a == True or a == False) and (b == True or b == False):
+            return a and b
+        else:
+            return
+
+    def _sympy_(self, a, b):
+        return eval(self, a, b)
+
+
 class Square(Function):
     """
     """
@@ -120,7 +156,10 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Ftob': Ftob,
                     'Btof': Btof,
                     'Mini': Mini,
-                    'Maxi': Maxi,}
+                    'Maxi': Maxi,
+                    'Andb': Andb,
+                    'Orb': Orb,
+                    'Square': Square,}
 
 
 def plagih_sympify(function_string):

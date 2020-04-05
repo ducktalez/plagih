@@ -1,5 +1,4 @@
 import os
-import numpy as np
 from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
@@ -102,11 +101,43 @@ class Plagih_node():
         return
 
 
-def karoo_tree_from_labellist(label_list, xtype_list, modify_list=None, arity_list=None):
+def workaround_remove_tilde_operator(label_list):
+    """
+    ~- workaround
+    """
+    arity_list = [label_get_arity(label) for label in label_list]
+    parent_list = parents_from_arities(arity_list)
+    tilde_ids = [i for i, x in enumerate(label_list) if x == '~']
+    for child, parent in enumerate(parent_list):
+        if parent in tilde_ids:
+            if arity_list[child] == 0:
+                label_list[parent] = ''
+                label_list[child] = '-{}'.format(label_list[child])
+    label_list = [x for x in label_list if x != '']
+    return label_list
+
+
+def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity_list=None):
     """
     returns: tree, from label_list (newest version)
     """
+
+    label_list = workaround_remove_tilde_operator(label_list)
+    xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
+    tree = p_tree.get_uninstanced_tree()
+    return tree
+
+
+def karoo_tree_from_expr(expr, env_variables, modify_list=None):
+    """
+    DELETE later sfeh
+    Generate tree from a raw or sympified expression
+    """
+    label_list = ast_convert_from_expr(expr, build=True)
+    label_list = workaround_remove_tilde_operator(label_list)
+    xtype_list = xtypes_from_labels(label_list, env_variables)
+    p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     tree = p_tree.get_uninstanced_tree()
     return tree
 
@@ -129,18 +160,6 @@ def vis_tree_from_labellist(label_list, xtype_list, modify_list=None, arity_list
         for i, val in enumerate(label_list):
             core[N_modify][i] = 1
     tree = tree_convert_plagih_to_karoo(core)
-    return tree
-
-
-def karoo_tree_from_expr(expr, env_variables, modify_list=None):
-    """
-    DELETE later sfeh
-    Generate tree from a raw or sympified expression
-    """
-    label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, env_variables)
-    p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
-    tree = p_tree.get_uninstanced_tree()
     return tree
 
 
@@ -312,14 +331,14 @@ def tree_set_modifyable_nodes_true(tree, karoo=True):
     return tree
 
 
-def tree_set_meta(tree, tree_meta):
+def tree_set_evalutaion(tree, tree_meta):
     """
     When having the meta data, save it in the tree.
     """
     parsimony = tree_meta['parsimony']
     fitness_train = tree_meta['fitness_train']
-    expr_sym = tree_meta['expr_sym']
-    expr_raw = tree_meta['expr_raw']
+    # expr_sym = tree_meta['expr_sym']
+    # expr_raw = tree_meta['expr_raw']
 
     tree = tree_set_parsimony(tree, parsimony)
     tree = tree_set_fitness(tree, fitness_train)
@@ -485,7 +504,8 @@ def tree_node_get_child(tree, node_id, child_num):
     For a list with all childs, search for the plural version
     """
     child_id = tree[N_c1 + child_num][node_id]
-    child_id = int(child_id)
+    if child_id != '':  # when checking for children that do not exist
+        child_id = int(child_id)
 
     return child_id
 
@@ -799,7 +819,7 @@ def tree_evolve_branch_multiple(tree, goal_nodes, env_variables, func_array, cho
     """
 
     tree_base = tree.copy()
-    layer0_ids = tree_get_mutatable_layer(tree, 0)  #('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
+    layer0_ids = tree_get_mutatable_layer(tree, 0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
     nodes_left = goal_nodes  # sfeh - max_nodes-tree_get_size(tree, karoo=True))  #('Which lets us replace {} amount of old nodes'.format(nodes_left))
 
     num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
@@ -1027,13 +1047,14 @@ def tree_get_fitness(tree, precision=None, karoo=True):
     return fitness
 
 
-def tree_get_ident(tree):
+def tree_hash(tree):
     """
     What is used as identificator for a tree...
-    - hash(expr_raw)
+    hash(label_list)
+    old version: hash(expr_raw)
     """
-    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
-    tree_ident = hash(expr_raw)
+    label_list = tree_get_labellist(tree)
+    tree_ident = hash(label_list)
     return tree_ident
 
 
@@ -1099,6 +1120,12 @@ def tree_get_expr_raw(tree, node_id):
 
     elif arity == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
         return 'Ifte(({}), ({}), ({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))
+
+
+def tree_get_expr_sym(tree, node_id):
+    expr_raw = tree_get_expr_raw(tree, node_id)
+    expr_sym = expr_sympify(expr_raw)
+    return expr_sym
 
 
 def tree_get_pycode(tree, node_id=root_id):
@@ -1521,22 +1548,20 @@ def tree_core_init_depth(tree, parent_list=None):
     return tree
 
 
-def tree_core_init_parents(tree, arity_lst=None):
+def parents_from_arities(arity_lst):
     """
     Automatically fill the node_parent of a tree
     - arity list in tree or
     """
-    if not arity_lst:
-        arity_lst = [int(x) for x in tree[N_arity]]
 
     parent_list = [-1]
     for i, arity in enumerate(arity_lst):
         parent_list.extend([i] * arity)
-        tree[N_parent][i] = parent_list[i]
-    return tree, parent_list
+
+    return parent_list
 
 
-def tree_core_init_c(tree, parent_list=None):
+def tree_core_build_childs(tree, parent_list=None):
     """
     automaticalls fills c1, c2, c3 for each node
     Needed: node_parent
@@ -1548,17 +1573,39 @@ def tree_core_init_c(tree, parent_list=None):
     last_parent = -1
 
     # parent_list [-1, 0, 0, 0, 1, 1]
-    for i, val in enumerate(parent_list):
-        my_id = i  # + 1  #
-        parent_id = val  # - 1
-        if val >= 0:
+    for i, parent_id in enumerate(parent_list):
+        if parent_id >= 0:
 
-            if val == last_parent:
+            if parent_id == last_parent:
                 c_iter += 1
             else:
-                last_parent = val
+                last_parent = parent_id
                 c_iter = 0
-            tree[N_c1 + c_iter][parent_id] = my_id
+            tree[N_c1 + c_iter][parent_id] = i
+    return tree
+
+
+def tree_core_childs(tree, parent_list=None):
+    """
+    automaticalls fills c1, c2, c3 for each node
+    Needed: node_parent
+    """
+    if not parent_list:
+        parent_list = tree_row_int(tree, N_parent)
+
+    c_iter = 0
+    last_parent = -1
+
+    # parent_list [-1, 0, 0, 0, 1, 1]
+    for i, parent_id in enumerate(parent_list):
+        if parent_id >= 0:
+
+            if parent_id == last_parent:
+                c_iter += 1
+            else:
+                last_parent = parent_id
+                c_iter = 0
+            tree[N_c1 + c_iter][parent_id] = i
     return tree
 
 
@@ -1592,6 +1639,15 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
     return tree
 
 
+def core_from_expr(expr, env_variables):
+    label_list = ast_convert_from_expr(expr, build=True)
+    label_list = workaround_remove_tilde_operator(label_list)
+    arity_list = [label_get_arity(label) for label in label_list]
+    xtype_list = xtypes_from_labels(label_list, env_variables)
+    core = core_from_labels(label_list, arity_list, xtype_list)
+    return core
+
+
 def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     """
     Given the labels (and label infos) as list
@@ -1599,6 +1655,7 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     """
     if len(label_list) == 0:
         print_warning('w', 'label list is empty')
+        raise
 
     # if arity_list is None:
     #     arity_list = [label_get_arity(label) for label in label_list]
@@ -1615,8 +1672,9 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     tree = tree_core_init_row(tree, N_type, xtype_list)
 
     # and also, fill all the leftover rows
-    tree, parent_list = tree_core_init_parents(tree)
-    tree = tree_core_init_c(tree)
+    parent_list = parents_from_arities(arity_list)
+    tree = tree_core_init_row(tree, N_parent, parent_list)
+    tree = tree_core_build_childs(tree)
     tree = tree_core_init_depth(tree, parent_list)
 
     if not tree_check_children(tree, karoo=False):
@@ -1860,17 +1918,13 @@ def treegp_reduce_branch(tree, node_id, env_variables, karoo=False):
     """
     delete_ids = tree_node_get_branch(tree, node_id, karoo=karoo)
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
-    try:
-        expr_sym = expr_sympify(expr_raw=expr_raw)
-        label_list = ast_convert_from_expr(expr_sym, build=True)
-        arity_list = [label_get_arity(label) for label in label_list]
-        xtype_list = xtypes_from_labels(label_list, env_variables)
-        core = core_from_labels(label_list, arity_list, xtype_list)
-        tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
+    expr_sym = expr_sympify(expr_raw=expr_raw)
 
-        return tree_sympified
-    except Exception as ex:
-        raise Exception('Reducing branch failed! Ex: {}'.format(ex))
+    core = core_from_expr(expr_sym, env_variables)
+
+    tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
+
+    return tree_sympified
 
 
 def tree_check_meta_exists(tree):
@@ -1920,7 +1974,7 @@ def tree_evolve_reduce(tree, env_variables, completely=True):
                 nodes_lv0 = tree_get_mutatable_layer(tree, 0)
                 node_id = nodes_lv0[i]
                 tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
-        else:  # only choose one node to be reduced
+        else:
             node_ids = tree_get_mutatable_nodes(tree)
             func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
             if len(func_ids) > 0:
@@ -1954,21 +2008,25 @@ def tree_pretty_print(tree, karoo=False):
 
     depth = 0
     layer_labels = []
-    print_style = 'Depth{:>3}: {}'  # {:>3} always print 3 letters at least
+    print_style = 'Depth{:>3}: {}\n'  # {:>3} always print 3 letters at least
     node_depth = '-1'
+
+    print_str = ''
 
     for node_id, node_depth in enumerate(tree[N_depth]):
         label = tree_node_get_label(tree, node_id)
         if int(node_depth) == depth:
             layer_labels.append(label)
         else:
-            print(print_style.format(node_depth, layer_labels))
+            # print(print_style.format(node_depth, layer_labels))
+            print_str += print_style.format(node_depth, layer_labels)
             layer_labels = [label]
             depth += 1
     else:
-        print(print_style.format(node_depth, layer_labels))
+        # print(print_style.format(node_depth, layer_labels))
+        print_str += (print_style.format(node_depth, layer_labels))
 
-    return
+    return print_str
 
 
 def tree_labels(tree):
@@ -2032,7 +2090,7 @@ def tree_check_rebuild(tree, karoo=True):
     return tree_works
 
 
-def tree_check_types(tree, env_variables, karoo=True):
+def tree_check_node_label_info(tree, env_variables, karoo=True):
     """
     A method to check if a tree is type consistant:
     - do the values in c1, c2, c3 link to its parent?
@@ -2040,21 +2098,42 @@ def tree_check_types(tree, env_variables, karoo=True):
     if not karoo:
         tree = tree_convert_plagih_to_karoo(tree)
 
-    for node_id in range(1, len(tree[3])):
+    for node_id in tree_iterate_range(tree):
+        label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
+        label_arity = label_get_arity(label)
+        label_xtype = xtype_get_from_label(label, env_variables)
+        if arity != label_arity or xtype != label_xtype:
+            print_e('Tree node info differs from label-version: arity: {}, {} xtype: {}, {}')
+            return False
+    return True
+
+
+def tree_check_types(tree, karoo=True):
+    """
+    A method to check if a tree is type consistant:
+    - do the values in c1, c2, c3 link to its parent?
+    """
+    if not karoo:
+        tree = tree_convert_plagih_to_karoo(tree)
+
+    for node_id in tree_iterate_range(tree):
         label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
-        children_xtypes = xtype_label_get_child_xtypes(label, arity, env_variables)
+        if xtype == 'b2f2f':
+            xtypes_required = ['2b', '2f', '2f']
+        else:
+            xtypes_required = [xtype[:2][::-1]] * arity + [''] * (3-arity)  # ['2f', '2f', '']
 
-        for c in range(0, 3):  # children 0, 1, 2
-            if tree[N_c1 + c][node_id] != '':  # if child exists
-                c_node_id = tree[N_c1 + c][node_id]
-                c_label = tree_node_get_label(tree, c_node_id)
-                c_xtype = xtype_get_from_label(c_label, env_variables)
-                # if c_xtype != test_xtype[c]:
-                if not xtype_equi_outcome(c_xtype, children_xtypes[c]):
-                    print_e('Label ({}), child ({}) with c_label ({}) does not match xtype ({}). It is c_xtype ({}).\ntree labels: ({})'.format(label, c, c_label, xtype, c_xtype, tree[N_label]))
-                    print_e('Last tree modification was: {}'.format(tree_get_history(tree)))
-                    return False
+        # children_xtypes = xtype_label_get_child_xtypes(label, arity, env_variables)
+
+        for ii, c_id in enumerate(tree_node_get_childs(tree, node_id)):
+            c_label = tree_node_get_label(tree, c_id)
+            c_xtype = tree_node_get_xtype(tree, c_id)
+            if not xtypes_required[ii] == c_xtype[-2:]:
+                print_e('Tree check failed. ({}), child ({}) with c_label ({}) does not match xtype ({}). It is c_xtype ({}).\n'
+                        'tree labels: ({})\n'
+                        'Last modification was: {} '.format(label, ii, c_label, xtype, c_xtype, tree[N_label], tree_get_history(tree)))
+                return False
 
     return True
 
@@ -2501,4 +2580,3 @@ def tree_group_branch_expressions(tree):
     E.g. combine a mathematical expression
     - from leaf to root: give info whether you are a inline math-op
     """
-

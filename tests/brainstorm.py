@@ -35,3 +35,5 @@ print('arity {}\t'.format(arity), lst2)
 lst3 = list(filter(None, map(lambda x: x.get(intype), lst2)))
 print('intype: {}\t'.format(intype), lst3)
 
+Ifte((cartVel < 1) | ((cartVel < 0.1) & (cartPos < -0.05)), 2, Ifte((cartPos < 0.02) & (cartVel > -0.45) & (cartVel < -0.05)), 0, Ifte(cartPos < 0, 0, 2))
+Ifte((cartVel < 1) | ((cartPos < -0.05) & (cartVel < 0.1)), 2, Ifte((cartVel > -0.45) & (cartPos < 0.02) & (cartVel < -0.05), 0, Ifte(cartPos < 0, 0, 2)))

@@ -180,8 +180,9 @@ def analyze(root_dir):
     """
 
     config = load_config(root_dir)
-    gp = ExplainableGP(root_dir, config=config)
     data_prepared = load_data_prepared(root_dir)
+
+    gp = ExplainableGP(root_dir, config=config)
     gp.activate_dataset(data_prepared)
     gp.plagih_update_analysis()
 
@@ -205,9 +206,8 @@ def run(root_dir):
     gp.activate_operators(choose_oparray, distributions)
 
     if label_list is not None and modify_list is not None:
-        observation_bundle = gp.get_observation_bundle()  # todo make dummy available
-        xtype_list = xtypes_from_labels(label_list, observation_bundle)
-        origin_tree = karoo_tree_from_labellist(label_list, xtype_list, modify_list=modify_list)
+        observation_bundle = gp.get_observation_bundle()
+        origin_tree = karoo_tree_from_labellist(label_list, observation_bundle, modify_list=modify_list)
         gp.activate_origin_tree(origin_tree)
 
     gp.plagih_gp_run()

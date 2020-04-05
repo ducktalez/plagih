@@ -47,15 +47,15 @@ Some, which are known of not being used yet are commented with '# not tested' or
 todo: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 """
 op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
-    '+':	{'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'latex': '$+$', 'sym_str': '({})+({})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
-    '-':	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'latex': '$-$', 'sym_str': '({})-({})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
-    '~':	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'latex': '$-$', 'sym_str': '-({})', 'pycode': lambda a: '(-{})'.format(a)},  # todo this is minus again
-    '*':	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'latex': '$\\cdot$', 'sym_str': '({})*({})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
+    '+':	{'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'latex': '$+$', 'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
+    '-':	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'latex': '$-$', 'sym_str': '({} - {})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
+    '~':	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'latex': '$-$', 'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},  # todo this is minus again
+    '*':	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'latex': '$\\cdot$', 'sym_str': '({} * {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
 
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
     # todo is call='({})({})' used anywhere?
-    '/':	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'latex': '$\\div$', 'sym_str': '({})/({})', 'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
-    '**':	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow, 'latex': '$**$', 'sym_str': '({})**({})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
+    '/':	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'latex': '$\\div$', 'sym_str': '({} / {})', 'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
+    '**':	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow, 'latex': '$**$', 'sym_str': '({} ** {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
     'abs':	{'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'tf': tf.abs, 'latex': None, 'sym_str': 'abs({})', 'pycode': lambda a: 'abs({})'.format(a)},
     'sign':	{'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sign, 'latex': None, 'sym_str': 'sign({})', 'pycode': lambda a: 'sign({})'.format(a)},
     'square':{'fun': 'square', 'arity': 1, 'xtype': 'f2f', 'tf': tf.square, 'latex': None, 'sym_str': '({}**2)', 'pycode': lambda a: '({}**2)'.format(a)},
@@ -72,23 +72,23 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
     # 'b2b' Classical logical operators, evaluate from bool to bool
-    'And':	{'fun': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': None, 'sym_str': 'And({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # sfeh and + & (delete this)
-    '&':	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({}) & ({})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # DON'T USE tf.bitwise.bitwise_and
-    'Or':	{'fun': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': 'Or({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
-    '|':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': None, 'sym_str': '({}) | ({})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},  # a or b, sfeh python-'|' not used here
+    'And':	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': None, 'sym_str': 'And({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # sfeh and + & (delete this)
+    '&':	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # DON'T USE tf.bitwise.bitwise_and
+    'Or':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': 'Or({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
+    '|':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': None, 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},  # a or b, sfeh python-'|' not used here
 
     'Not':	{'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Not({})', 'pycode': None},  # not a
 
     # 'f2b' Classical comparative operators, evaluate from float to bool
-    '==':	{'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'latex': '$==$', 'sym_str': '({})==({})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
-    '!=':	{'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.not_equal, 'latex': '$\\neg$', 'sym_str': '({})!=({})', 'pycode': lambda a, b: '({}!={})'.format(a, b)},
-    '<':	{'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less, 'latex': '$<$', 'sym_str': '({})<({})', 'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
-    '<=':	{'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less_equal, 'latex': '$<=$', 'sym_str': '({})<=({})', 'pycode': lambda a, b: '({}<={})'.format(a, b)},  # a <= b
-    '>':	{'fun': '>', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater, 'latex': '$>$', 'sym_str': '({})>({})', 'pycode': lambda a, b: '({}>{})'.format(a, b)},  # a > b
-    '>=':	{'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater_equal, 'latex': '$>=$', 'sym_str': '({})>=({})', 'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
+    '==':	{'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'latex': '$==$', 'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
+    '!=':	{'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.not_equal, 'latex': '$\\neg$', 'sym_str': '({} != {})', 'pycode': lambda a, b: '({}!={})'.format(a, b)},
+    '<':	{'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less, 'latex': '$<$', 'sym_str': '({} < {})', 'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
+    '<=':	{'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less_equal, 'latex': '$<=$', 'sym_str': '({} <= {})', 'pycode': lambda a, b: '({}<={})'.format(a, b)},  # a <= b
+    '>':	{'fun': '>', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater, 'latex': '$>$', 'sym_str': '({} > {})', 'pycode': lambda a, b: '({}>{})'.format(a, b)},  # a > b
+    '>=':	{'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater_equal, 'latex': '$>=$', 'sym_str': '({} >= {})', 'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
 
     # Functions which need separate handling in sympify
-    'Ifte':	{'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where, 'latex': 'if', 'sym_str': 'Ifte(({}), ({}), ({}))', 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
+    'Ifte':	{'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where, 'latex': 'if', 'sym_str': 'Ifte({}, {}, {})', 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
     # long version of Ifte-'pycode': lambda a, b, c: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
     'Mini':	{'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum, 'latex': '$\\min$', 'sym_str': 'Mini({}, {})', 'pycode': lambda a, b: 'min({}, {})'.format(a, b)},  # maximum
     'Maxi':	{'fun': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum, 'latex': '$\\max$', 'sym_str': 'Maxi({}, {})', 'pycode': lambda a, b: 'max({}, {})'.format(a, b)},  # minimum

@@ -12,7 +12,6 @@ def help_reduce_expr(expr):
 
 
 def help_reduce_more(expr):
-    # todo not working
     expr = help_reduce_expr(expr)
 
     expr_sym = plagih_sympify(expr)

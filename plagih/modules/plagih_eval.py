@@ -1,6 +1,5 @@
 from plagih.modules.printing import *
 from plagih.modules.dicts import *
-from plagih.modules.plagih_types import xtype_get_from_label
 
 import sklearn.metrics as skm
 
@@ -111,16 +110,23 @@ class FitnessKernel:
             - orderable amount of labels
             """
 
+            # v4 - largely false decisions should get affected largely
             act_min = tf.constant(action_min_max[0], dtype=tf.float32)
             act_max = tf.constant(action_min_max[1], dtype=tf.float32)
             customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - customised_result))
+            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
+
+            # # v3
+            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - customised_result))
 
             # # v2
             # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
             # pairwise_fitness = tf.abs(solution - customised_result)
-            #
-            # # oldest
+
+            # # v1
             # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
             # pairwise_fitness = tf.abs(solution - customised_result)
 
@@ -287,9 +293,9 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
     # Arity 0
     if isinstance(node, ast.Name):  # <tensor_name>
-        if prnt:
-            return '{}'.format(node.id)
-        elif build:
+        # if prnt:
+        #     return '{}'.format(node.id)
+        if build:
             return [node.id]
             # sfeh, what is better?
             # return node.id
@@ -297,8 +303,8 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             return tensors[node.id]
 
     elif isinstance(node, ast.Num):  # <number>
-        if prnt:
-            return '{}'.format(node.n)
+        # if prnt:
+        #     return '{}'.format(node.n)
         if build:
             # return node.n
             return [node.n]
@@ -307,8 +313,8 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             return tf.constant(node.n, shape=shape, dtype=tf.float32)
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-        if prnt:
-            return '{}'.format(node.value)
+        # if prnt:
+        #     return '{}'.format(node.value)
         if build:
             return [node.value]
             # return node.value
@@ -317,10 +323,10 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 #
     # Arity 1
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
-        if prnt:
-            return '({}{})'.format(
-                op[type(node.op)]['fun'],
-                ast_convert_from_expr_recursive(node.operand, prnt=prnt))
+        # if prnt:
+        #     return '({}{})'.format(
+        #         op[type(node.op)]['fun'],
+        #         ast_convert_from_expr_recursive(node.operand, prnt=prnt))
         if build:
             if type(node.op) == ast.USub:
                 return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
@@ -332,11 +338,11 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
-        if prnt:
-            return '({} {} {})'.format(
-                ast_convert_from_expr_recursive(node.left, prnt=True),
-                op[type(node.op)]['fun'],
-                ast_convert_from_expr_recursive(node.right, prnt=True))
+        # if prnt:
+        #     return '({} {} {})'.format(
+        #         ast_convert_from_expr_recursive(node.left, prnt=True),
+        #         op[type(node.op)]['fun'],
+        #         ast_convert_from_expr_recursive(node.right, prnt=True))
         if build:
             return [op[type(node.op)]['fun'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
@@ -347,16 +353,16 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                 ast_convert_from_expr_recursive(node.right, tensors=tensors))
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        if prnt:
-            return ast_chain_bool(node.values, op[type(node.op)]['fun'], prnt=True)
+        # if prnt:
+        #     return ast_chain_bool(node.values, op[type(node.op)]['fun'], prnt=True)
         if build:
             return ast_chain_bool(node.values, op[type(node.op)]['fun'], build=True)
         else:
             return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-        if prnt:
-            return ast_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
+        # if prnt:
+        #     return ast_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
         if build:
             return ast_chain_compare([node.left] + node.comparators, node.ops, build=True)
         else:
@@ -366,11 +372,11 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
 
         if node.func.id == 'Ifte':
-            if prnt:
-                return '(If ({}) then ({}) else ({}))'.format(
-                    ast_convert_from_expr_recursive(node.args[0], prnt=True),
-                    ast_convert_from_expr_recursive(node.args[1], prnt=True),
-                    ast_convert_from_expr_recursive(node.args[2], prnt=True))
+            # if prnt:
+            #     return '(If ({}) then ({}) else ({}))'.format(
+            #         ast_convert_from_expr_recursive(node.args[0], prnt=True),
+            #         ast_convert_from_expr_recursive(node.args[1], prnt=True),
+            #         ast_convert_from_expr_recursive(node.args[2], prnt=True))
             if build:
                 return ['Ifte',
                         [ast_convert_from_expr_recursive(node.args[0], build=True),
@@ -383,26 +389,26 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                     ast_convert_from_expr_recursive(node.args[2], tensors=tensors))
 
         elif node.func.id == 'Ftob' or node.func.id == 'Btof':
-            if prnt:
-                return '({} {})'.format(node.func.id, ast_convert_from_expr_recursive(node.args[0], prnt=prnt))
+            # if prnt:
+            #     return '({} {})'.format(node.func.id, ast_convert_from_expr_recursive(node.args[0], prnt=prnt))
             if build:
                 return [node.func.id, [ast_convert_from_expr_recursive(node.args[0], build=True)]]
             else:
                 return tf.dtypes.cast(*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args], dtype=op[node.func.id]['tf'])
 
         elif len(node.args) <= 2:
-            if prnt:
-                if len(node.args) == 1:
-                    return '({} {})'.format(
-                        op[node.func.id]['fun'],
-                        ast_convert_from_expr_recursive(node.args[0], prnt=True))
-                elif len(node.args) == 2:
-                    return '({} ({}, {}))'.format(
-                        op[node.func.id]['fun'],
-                        ast_convert_from_expr_recursive(node.args[0], prnt=True),
-                        ast_convert_from_expr_recursive(node.args[1], prnt=True))
-                else:
-                    raise Exception('This arity is not supported')
+            # if prnt:
+            #     if len(node.args) == 1:
+            #         return '({} {})'.format(
+            #             op[node.func.id]['fun'],
+            #             ast_convert_from_expr_recursive(node.args[0], prnt=True))
+            #     elif len(node.args) == 2:
+            #         return '({} ({}, {}))'.format(
+            #             op[node.func.id]['fun'],
+            #             ast_convert_from_expr_recursive(node.args[0], prnt=True),
+            #             ast_convert_from_expr_recursive(node.args[1], prnt=True))
+            #     else:
+            #         raise Exception('This arity is not supported')
             if build:
                 if len(node.args) == 1:
                     return [op[node.func.id]['fun'],

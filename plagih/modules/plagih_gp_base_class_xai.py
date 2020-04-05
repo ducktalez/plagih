@@ -25,7 +25,7 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 class ExplainableGP(object):
     """
-    The main class performing all the important stuff
+
     """
 
     def __init__(self, root_dir, config=None):
@@ -116,11 +116,8 @@ class ExplainableGP(object):
         self.population_tmp_eval = []
         self.population_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
-        self.action_min_max = [None, None]  # list with [0] = min and [1] = max, For kernel "regression bounded" (or so)
         self.origin_meta = None
         self.origin_tree = None
-        self.gene_pool = {}
-        self.debug_warnings = {}
         self.gen_id = 0
         self.custom_done = False
         self.restart_count = 0
@@ -297,17 +294,16 @@ class ExplainableGP(object):
         """
         regular plagih-config run
         """
-        if not self.config['force_new_run']:
-            self.try_load_backup()
 
-        # check for 'random from scratch' + 'origin has fix nodes' fail?
         if self.origin_exists():
             if tree_node_is_modifiable(self.origin_tree, root_id):  # Modify-nodes is not "activated"
                 self.config['evolve_rates']['random from origin_tree'] += float(self.config['evolve_rates']['random from scratch'])
                 self.config['evolve_rates']['random from scratch'] = 0
+                print_warning('ww', 'Generating mew trees \'random from scratch\' is not possible when the origin tree has fix nodes! Fixed this problem.')
         else:
-            if self.config['complexity_measure'] in ['ted', 'rel_ari_1']:  # sfeh make 'ted', 'rel_ari_1' variables
+            if self.config['complexity_measure'] in ['ted', 'rel_ari_1']:
                 raise Exception('Can not use relative distance without providing a reference/origin tree!')
+
         if self.gen_id == 0:
             self.gen_create_first()
 
@@ -362,8 +358,15 @@ class ExplainableGP(object):
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        rate_o = int(self.config['pop_max'] * self.evolve_rates['random from origin_tree'])
-        rate_s = int(self.config['pop_max'] * self.evolve_rates['random from scratch'])
+        rate_o = self.evolve_rates['random from origin_tree']
+        rate_s = self.evolve_rates['random from scratch']
+        rate_sum = sum(rate_o, rate_s)
+
+        first_rate_o = rate_o / rate_sum
+        first_rate_s = rate_s / rate_sum
+
+        first_rate_o = int(self.config['pop_max'] * first_rate_o)
+        first_rate_s = int(self.config['pop_max'] * first_rate_s)
 
         self.pop_random_from_origin(rate_o)
 
@@ -409,15 +412,15 @@ class ExplainableGP(object):
             'random from scratch': (self.pop_random_from_scratch, 0, None)}
 
         gp_dict2 = {
-            'repro one': {'fun': self.pop_reproduce, 'tourn_size': 1, 'origin': None},
-            'repro pareto': {'fun': self.pop_reproduce_olymp, 'tourn_size': 0, 'origin': None},
-            'repro reduced one': {'fun': self.pop_reproduce_reduce, 'tourn_size': 1, 'origin': None},
-            'point mutate function': {'fun': self.pop_mutate_point, 'tourn_size': 1, 'origin': None},
-            'filter floats': {'fun': self.pop_mutate_filter, 'tourn_size': 1, 'origin': None},
-            'branch mutate insert': {'fun': self.pop_mutate_branch, 'tourn_size': 1, 'origin': None},
-            'crossover branches': {'fun': self.pop_crossover_branch, 'tourn_size': 2, 'origin': None},
-            'random from origin_tree': {'fun': self.pop_random_from_origin, 'tourn_size': 0, 'origin': origin_tree},
-            'random from scratch': {'fun': self.pop_random_from_scratch, 'tourn_size': 0, 'origin': None}}
+            'repro one': {'funcall': self.pop_reproduce, 'tourn_size': 1, 'origin': None},
+            'repro pareto': {'funcall': self.pop_reproduce_olymp, 'tourn_size': 0, 'origin': None},
+            'repro reduced one': {'funcall': self.pop_reproduce_reduce, 'tourn_size': 1, 'origin': None},
+            'point mutate function': {'funcall': self.pop_mutate_point, 'tourn_size': 1, 'origin': None},
+            'filter floats': {'funcall': self.pop_mutate_filter, 'tourn_size': 1, 'origin': None},
+            'branch mutate insert': {'funcall': self.pop_mutate_branch, 'tourn_size': 1, 'origin': None},
+            'crossover branches': {'funcall': self.pop_crossover_branch, 'tourn_size': 2, 'origin': None},
+            'random from origin_tree': {'funcall': self.pop_random_from_origin, 'tourn_size': 0, 'origin': origin_tree},
+            'random from scratch': {'funcall': self.pop_random_from_scratch, 'tourn_size': 0, 'origin': None}}
 
         while self.run_continues():  # max generation, max time, done...
 
@@ -533,18 +536,22 @@ class ExplainableGP(object):
         did not want to start the whole stuff everytime
         """
         env_variables, data_train, data_control = data_prepared  # sfeh what data is used?
-
         self.env_variables = env_variables
         self.data_train, self.data_control = data_train, data_control  # what is that good for: self.data_train_rows, = data_train_rows,
 
         return
 
-    def activate_operators(self, choose_oparray, choose_distributions=None):
+    def activate_operators(self, choose_oparray, choose_distributions):
         """
         operators were loaded already and need to be set in the gp run
         """
         self.choose_oparray = choose_oparray
         self.choose_distributions = choose_distributions  # sfeh samples from csv?
+
+        if not self.config['force_new_run']:
+            self.try_load_backup()
+            # sfeh: delete old files?
+
         return
 
     def version_pop_fix_trees(self, population):
@@ -663,10 +670,8 @@ class ExplainableGP(object):
         forest_grouped = []
 
         for parsim, meta in sorted(list(pareto.items())):
-            expr_raw = meta['expr_raw']  # sfeh: use raw or sym?
-            label_list = ast_convert_from_expr(expr_raw, build=True)
-            xtype_list = xtypes_from_labels(label_list, self.env_variables)
-            tree = karoo_tree_from_labellist(label_list, xtype_list)
+            expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
+            tree = karoo_tree_from_expr(expr_raw, self.env_variables)
             tree = self.tree_beautify(tree, last_evolution='texify')
             ###
             vistree = visualize_tree_get_vistree(tree)
@@ -708,9 +713,9 @@ class ExplainableGP(object):
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']
             expr_sym = expr_sympify(expr_raw)
-            label_list_sym = ast_convert_from_expr(expr_sym, build=True)
-            xtype_list_sym = xtypes_from_labels(label_list_sym, self.env_variables)
-            tree = karoo_tree_from_labellist(label_list_sym, xtype_list_sym)
+            # label_list_sym = ast_convert_from_expr(expr_sym, build=True)
+            # tree = karoo_tree_from_labellist(label_list_sym, self.env_variables)
+            tree = karoo_tree_from_expr(expr_sym, self.env_variables)
             py_action = 'action = {}'.format(tree_get_pycode(tree))
 
             py_agent_name = '{}{:.0f}'.format(self.name, parsim)
@@ -823,7 +828,7 @@ class ExplainableGP(object):
                 'expr_raw': expr_raw,
                 'expr_sym': expr_sym}
 
-        tree_ident = tree_get_ident(tree)
+        tree_ident = tree_hash(tree)
 
         self.tree_meta[tree_ident] = meta
 
@@ -904,11 +909,11 @@ class ExplainableGP(object):
                 best_fit = fitness
 
             if pareto_improved:
-                expr_raw = meta['expr_raw']  # expy_sym will can cause exceptiops while setting fix nodes
+                expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
                 tree = karoo_tree_from_expr(expr_raw, self.env_variables)
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
                 sym_tree = tree_evolve_reduce(tree, self.env_variables, completely=True)
-                if tree_get_expr_raw(sym_tree, node_id=root_id) != tree_get_expr_raw(tree, node_id=root_id):
+                if tree_get_labellist(sym_tree) != tree_get_labellist(tree):
                     self.printpl('aa', 'Pareto entry could be further sympified!')
                     sym_tree = tree_set_fitness(sym_tree, fitness)
                     self.pop_add_tree_midrun(sym_tree)
@@ -1210,10 +1215,10 @@ class ExplainableGP(object):
             return False
 
         if not tree_check_children(tree):
-            print_e('Tree is not consistent:\n{}'.format(tree))
+            tree_works = False
+        elif not tree_check_node_label_info:
             tree_works = False
         elif not tree_check_types(tree, self.env_variables):
-            print_e('Tree children xtypes are not correct:\n{}'.format(tree_labels(tree)))
             tree_works = False
         elif tree_node_get_arity(tree, root_id) == 0:
             print_warning('w', 'Tree is only a root node')
@@ -1253,13 +1258,12 @@ class ExplainableGP(object):
         tree = self.tree_beautify(tree, last_evolution=last_evolution)
 
         if self.tree_check_core_all(tree):
-            tree_ident = tree_get_ident(tree)
+            tree_ident = tree_hash(tree)
 
             if tree_ident in self.tree_meta:
 
                 tree_meta = self.tree_meta[tree_ident]
-                tree = tree_set_meta(tree, tree_meta)
-                # tree = tree_set_id(tree, len(self.population_tmp_done))
+                tree = tree_set_evalutaion(tree, tree_meta)
                 self.population_tmp_done.append(tree)
             else:
                 parsimony = self.tree_eval_parsimony_easywrapper(tree)
@@ -1405,17 +1409,15 @@ class ExplainableGP(object):
         (now, tf-problems are all gone, but still, the program should never crash because of one tricky tree)
         """
 
-        expr_raw = tree_get_expr_raw(tree, node_id=root_id)
-
         try:
-            expr_sym = expr_sympify(expr_raw=expr_raw)
+            expr_sym = tree_get_expr_sym(tree)
         except Exception as ex:
             raise Exception('Expr could not be sympified: {}'.format(ex))
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device, self.tf_classify_labels_map)['fitness']
 
         if not check_value_is_real(fitness_train):
-            raise Exception('fitness_train is not a real number: {}'.format(fitness_train))
+            raise Exception('Fitness_train is not a real number: {}'.format(fitness_train))
 
         return fitness_train
 

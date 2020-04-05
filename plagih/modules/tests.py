@@ -28,7 +28,7 @@ class TestHelpers:
                                         }}
 
         self.tree_MTC_simon_labels = ['Ifte',
-                                      'Or', '2', 'Ifte',
+                                      '|', '2', 'Ifte',
                                       '<', '&', '&', '0', 'Ifte',
                                       'cartVel', '1', '<', '<', '<', '&', '<', '0', '2',
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
@@ -44,46 +44,14 @@ class TestHelpers:
     def make_all_known_trees(self):
         tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
         expr_raw = tree_get_expr_raw(tree, root_id)
+        print('raw\n', tree_pretty_print(tree, karoo=True))
         expr_sym = expr_sympify(expr_raw)
-        tree_
-        # print('raw\t', tree_get_labellist(tree))
-        # sym_tree = tree_evolve_reduce(tree, self.env_bundle)
-        # print('sym\t', tree_get_labellist(sym_tree))
-
-
-def test_plagih_eval():
-    """
-
-    :return:
-    """
-    label_list = MountainCarExamples.tree_v3_list
-    tree = karoo_tree_from_labellist(label_list)
-    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
-    expr_sym = expr_sympify(expr_raw=expr_raw)
-
-    print(expr_sym)
-    graph = ast_convert_from_expr(expr_raw, build=True)
-    # expr = labels_from_graphlist(graph, [])
-    print(graph)
-    return
-
-
-def test_sympify():
-    pass
-
-
-def test_plagih_tree():
-    tree_list = MountainCarExamples.tree_test_plus_list
-    tree_modify = MountainCarExamples.tree_test_plus_modify_v1
-    tree = karoo_tree_from_labellist(tree_list, modify_list=tree_modify)
-    # tree = karoo_tree_from_labellist(tree_list)
-    print(tree)
-    print(tree_get_mutatable_layer(tree, 0))
-    print(tree_get_mutatable_layer(tree, 1))
-    print(tree_get_mutatable_layer(tree, 2))
-    print(tree_get_mutatable_layer(tree, 3))
-
-    return
+        print(expr_sym)
+        # tree_sym = karoo_tree_from_expr(expr_sym, self.env_bundle)
+        # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
+        sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
+        print('sym\n', tree_pretty_print(sym_tree2, karoo=True))
+        print(tree_check_all(sym_tree2))
 
 
 def test_rebuild_loop_tree():
@@ -181,9 +149,6 @@ def test_build_tree_grow_nodecount(verbose=False):
                 print_warning('w', 'This is wrong: {}!={} {}>{}'.format(sum(arity_list) + 1, len(arity_list), len(label_list), max_nodes))
                 worked_fine = False
 
-            tree = karoo_tree_from_labellist(label_list)
-            if not tree_check_types(tree, env_variables=env_variables):
-                print('WHYY', tree[N_label])
 
     return worked_fine
 

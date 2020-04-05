@@ -49,18 +49,6 @@ def xtype_get_converters(xtype):
         raise
 
 
-def xtype_label_get_child_xtypes(label, node_arity, env_variables):
-    """
-    reverse stuff
-    """
-    xtype = xtype_get_from_label(label, env_variables)
-    if xtype == 'b2f2f':
-        xtypes = ['2b', '2f', '2f']
-    else:
-        xtypes = [xtype[:2][::-1]] * node_arity
-    return xtypes
-
-
 def choose_term(env_variables_xtype, choose_distribution_xtype):
     """
     Returns a terminal of xtype.

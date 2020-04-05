@@ -197,7 +197,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_clas
                 pred_labels = tf.map_fn(tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
 
             tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
-
+        # todo check fitness here?
     return {'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
             'pairwise_fitness': pairwise_fitness}
 

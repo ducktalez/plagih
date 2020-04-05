@@ -1391,8 +1391,16 @@ class ExplainableGP(object):
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device, self.tf_classify_labels_map)['fitness']
 
+        print('debug aa1', fitness_train, tree_get_labellist(tree))
+
+        if str(fitness_train) == 'inf':
+            print('asdasd')
+
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness_train is not a real number: {}'.format(fitness_train))
+        else:
+            print('debug aa1', fitness_train, 'is of type', type(fitness_train), 'the check is', check_value_is_real(fitness_train))
+
 
         return fitness_train
 
@@ -1580,9 +1588,9 @@ class ExplainableGP(object):
         """
         self.file_save_files(root_dir)
 
-        if Path.is_file(root_dir / file_pycode_eval):
-            # exec(Path.open(root_dir / file_pycode_eval).read())
-            os.system('python ' + str(root_dir / file_pycode_eval))  # sfeh nothing to be proud of
+        # if Path.is_file(root_dir / file_pycode_eval):
+        #     # exec(Path.open(root_dir / file_pycode_eval).read())
+        #     os.system('python ' + str(root_dir / file_pycode_eval))  # sfeh nothing to be proud of
 
         self.file_all_plots(root_dir)
         self.print_g('gg', ' Terminating. \tTime since start: {:4.2f}s'.format(time.perf_counter() - self.time_start))

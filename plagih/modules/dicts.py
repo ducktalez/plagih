@@ -72,7 +72,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
     # 'b2b' Classical logical operators, evaluate from bool to bool
-    'Andb':	{'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': 'and', 'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # sfeh and + & (delete this)
+    'Andb':	{'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': 'and', 'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # sfeh Andbm and + & (delete this)
     '&':	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # DON'T USE tf.bitwise.bitwise_and
     'Orb':	{'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': 'or', 'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     '|':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},  # a or b, sfeh python-'|' not used here
@@ -121,13 +121,15 @@ op = {
     'asin': op_what['asin'],
     'atan': op_what['atan'],
     'tanh': op_what['tanh'],
+    'Andb': op_what['Andb'],
     'And': op_what['Andb'],
     ast.And: op_what['Andb'],
-    '&': op_what['&'],
+    '&': op_what['Orb'],
     ast.BitAnd: op_what['&'],
+    'Orb': op_what['Orb'],
     'Or': op_what['Orb'],
     ast.Or: op_what['Orb'],
-    '|': op_what['|'],
+    '|': op_what['Orb'],
     ast.BitOr: op_what['|'],
     'Not': op_what['Not'],
     ast.Not: op_what['Not'],

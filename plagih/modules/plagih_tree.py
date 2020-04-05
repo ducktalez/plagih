@@ -111,8 +111,8 @@ def workaround_remove_tilde_operator(label_list):
     for child, parent in enumerate(parent_list):
         if parent in tilde_ids:
             if arity_list[child] == 0:
-                label_list[parent] = ''
-                label_list[child] = '-{}'.format(label_list[child])
+                label_list[parent] = '-{}'.format(label_list[child])
+                label_list[child] = ''
     label_list = [x for x in label_list if x != '']
     return label_list
 
@@ -151,6 +151,8 @@ def vis_tree_from_labellist(label_list, xtype_list, modify_list=None, arity_list
 
     if force_np_size:
         np_dtype_size = 'U' + str(force_np_size)  # todo sfeh
+    else:
+        np_dtype_size = None
 
     if not arity_list:
         arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
@@ -303,7 +305,7 @@ def tree_check_deep(tree, env_variables, karoo=True):
 
     if not tree_check_quick(tree, env_variables, karoo=karoo):
         tree_works = False
-    elif not tree_check_reproduce_loop(tree, karoo=karoo):
+    elif not tree_check_rebuild(tree, karoo=karoo):
         tree_works = False
     else:
         tree_works = True
@@ -1224,7 +1226,7 @@ def tree_get_leaves(tree, karoo=False):
         tree = tree_convert_karoo_to_plagih(tree)
 
     node_ids = []
-    for node_id in tree[N_id]:
+    for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         if tree_node_get_arity(tree, int(node_id)) == 0:
             node_ids.append(int(node_id))
 
@@ -1594,7 +1596,7 @@ def parents_from_arities(arity_lst):
     - arity list in tree or
     """
 
-    parent_list = [-1]
+    parent_list = [-1]  # todo why -1? is converted, but why?
     for i, arity in enumerate(arity_lst):
         parent_list.extend([i] * arity)
 
@@ -1854,6 +1856,7 @@ def tree_insert_subtree(tree, insert_core, delete_ids, karoo=False):
                 # tree[N_type][j] = insert_core[N_type][insert_count]  # --type
                 tree[N_label][j] = insert_core[N_label][insert_count]  # --label
                 tree[N_arity][j] = insert_core[N_arity][insert_count]  # --arity
+                tree[N_type][j] = insert_core[N_type][insert_count]  # --arity
 
                 if int(tree[N_arity][j]) == 0:
                     tree = tree_fix_link_child(tree)  # fix all child links
@@ -2110,24 +2113,18 @@ def tree_check_rebuild(tree, karoo=True):
     The expression can include separate '~' (usub) nodes, which makes expressions not completely equal
     """
 
-    label_list = tree[N_label]
-    arity_list = tree[N_arity]
-    xtype_list = tree[N_type]
+    label_list, arity_list, xtype_list = [tree_node_get_lax_v3(tree, node_id) for node_id in tree_iterate_range(tree, karoo=karoo)]
 
     if karoo:
         label_list = label_list[1:]
         arity_list = arity_list[1:]
+        xtype_list = xtype_list[1:]
 
     try:
         core = core_from_labels(label_list, arity_list, xtype_list)
-        if core:
-            tree_works = True
-        else:
-            tree_works = False
     except:
-        tree_works = False
-
-    return tree_works
+        return False
+    return True
 
 
 def tree_check_node_label_info(tree, env_variables, karoo=True):
@@ -2175,23 +2172,6 @@ def tree_check_types(tree, karoo=True):
                         'Last modification was: {} '.format(node_id, label, ii, c_label, xtype, c_xtype, tree_pretty_print(tree, karoo=True), tree_get_history(tree)))
                 return False
 
-    return True
-
-
-def tree_check_reproduce_loop(tree, karoo=True):
-    label_list = tree[N_label]
-    arity_list = tree[N_arity]
-    xtype_list = tree[N_arity]
-
-    if karoo:
-        label_list = label_list[1:]
-        arity_list = arity_list[1:]
-        xtype_list = xtype_list[1:]
-
-    try:
-        core = core_from_labels(label_list, arity_list, xtype_list)
-    except:
-        return False
     return True
 
 

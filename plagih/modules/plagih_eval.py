@@ -424,7 +424,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
             # If nothing matched
         else:
-            raise Exception('Failed to identify the function')
+            raise Exception('Failed to identify the function. {}'.format(type(node)))
 
     else:
         raise TypeError(node)

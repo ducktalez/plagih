@@ -13,7 +13,7 @@ class TestHelpers:
     def __init__(self):
         self.func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
                                [[], [], ['<', '>', '==', '!='], []],
-                               [[], ['Not', 'Not'], ['&'], []],
+                               [[], ['Not', 'Not'], ['Andb'], []],
                                [[], [], [], []],
                                [[], [], [], ['Ifte']]]
 
@@ -23,17 +23,19 @@ class TestHelpers:
                                         'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
                                         'cartPos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
                                         'cartVel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
+                                        'pos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
+                                        'vel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
                                         'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
                                         'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
                                         }}
 
         self.tree_MTC_simon_labels = ['Ifte',
-                                      '|', '2', 'Ifte',
-                                      '<', '&', '&', '0', 'Ifte',
-                                      'cartVel', '1', '<', '<', '<', '&', '<', '0', '2',
+                                      'Orb', '2', 'Ifte',
+                                      '<', 'Andb', 'Andb', '0', 'Ifte',
+                                      'cartVel', '1', '<', '<', '<', 'Andb', '<', '0', '2',
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
-        self.tree_MTC_simon_expr = 'Ifte(pos < -1 or (pos < 0.1 and vel < -0.05), 2, Ifte(pos > -0.45 and pos < -0.05) and (vel < 0.02), 0,  Ifte(vel < 0, 0, 2))'
+        self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
 
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
@@ -274,7 +276,7 @@ def test_tree_reduce_parts():
     tree1, tree2, tree_plus = get_three_sample_trees()
     tree = tree_evolve_reduce(tree_plus, env_var_dummy)
     tree = tree_set_modifyable_nodes(tree, origin_tree=tree_plus)
-    print('First try', tree_check_reproduce_loop(tree))
+    print('First try', tree_check_rebuild(tree))
 
     label_list = ['+', '-', '~', '1', '2', '3']
     modify_list = [0, 0, 1, 1, 1, 1]

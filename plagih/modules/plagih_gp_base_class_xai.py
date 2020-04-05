@@ -526,7 +526,7 @@ class ExplainableGP(object):
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Load and Archive Data                     |
+    #   Load and Archive Data                     +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def activate_dataset(self, data_prepared):
@@ -765,7 +765,7 @@ class ExplainableGP(object):
                 file.write(executable_python_evaluation)
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Population specific                       |
+    #   Population specific                       +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def pop_eval_remaining(self):
@@ -973,7 +973,7 @@ class ExplainableGP(object):
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   What happens in a Generation              |
+    #   What happens in a Generation              +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def gen_reset_parameters(self):
@@ -1271,7 +1271,7 @@ class ExplainableGP(object):
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Perform the 3 genetic prog. operations    |
+    #   Perform the 3 genetic prog. operations    +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def pop_selection_tournament(self, tourn_size):
@@ -1333,7 +1333,7 @@ class ExplainableGP(object):
             raise
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Work with trees                           |
+    #   Work with trees                           +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def activate_origin_tree(self, tree):
@@ -1396,7 +1396,7 @@ class ExplainableGP(object):
         return fitness_train
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to use evaluate (tensorflow)      |
+    #   Methods to use evaluate (tensorflow)      +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def tf_classify_labels_map(self, result):
@@ -1432,7 +1432,7 @@ class ExplainableGP(object):
         return pred_label
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Monitoring                                |
+    #   Monitoring                                +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def get_pareto_plot_values(self):
@@ -1587,7 +1587,7 @@ class ExplainableGP(object):
         self.print_g('gg', ' Terminating. \tTime since start: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
     # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to print_type output information     |
+    #   Methods to print_type output information  +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def plot_end(self, data_2d, path,

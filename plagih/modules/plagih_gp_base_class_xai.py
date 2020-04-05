@@ -1222,7 +1222,7 @@ class ExplainableGP(object):
         Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
         they have gone through a process of changes. Here, the tree is refurbished.
-        sfeh: if trees are 100% safely created, tree_check_all() must not be used. Useful when trying out new gp-operators.
+        sfeh: if trees are 100% safely created, tree_check_deep() must not be used. Useful when trying out new gp-operators.
         - Enrich the raw tree for the next generation
         - check if the tree is actually valid
         ->
@@ -1339,7 +1339,7 @@ class ExplainableGP(object):
         """
 
         """
-        tree_check_all(tree)
+        tree_check_deep(tree)
 
         expr_raw = tree_get_expr_raw(tree, node_id=root_id)
         expr_sym = expr_sympify(expr_raw=expr_raw)

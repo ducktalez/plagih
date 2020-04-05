@@ -51,7 +51,7 @@ class TestHelpers:
         # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
         sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
         print('sym\n', tree_pretty_print(sym_tree2, karoo=True))
-        print(tree_check_all(sym_tree2))
+        print(tree_check_deep(sym_tree2))
 
 
 def test_rebuild_loop_tree():
@@ -275,15 +275,15 @@ def test_tree_reduce_parts():
     label_list = ['+', '-', '~', '1', '2', '3']
     modify_list = [0, 0, 1, 1, 1, 1]
     tree_test = karoo_tree_from_labellist(label_list)
-    print('tree_test check', tree_check_all(tree_test))
+    print('tree_test check', tree_check_deep(tree_test))
     tree_test = karoo_tree_from_labellist(label_list, modify_list=modify_list)
-    print('tree_test check', tree_check_all(tree_test))
+    print('tree_test check', tree_check_deep(tree_test))
 
     for tree_base in [tree1, tree2, tree_plus]:
         print('New try')
         for _ in range(20):
             tree = tree_evolve_reduce(tree_base)
-            if not (tree_check_all(tree, karoo=True)):
+            if not (tree_check_deep(tree, karoo=True)):
                 print('test_tree_reduce_parts ERROR', tree)
 
 

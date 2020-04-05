@@ -126,7 +126,7 @@ def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity
     xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
-    if not tree_check_all(tree, karoo=True):  # todo check on creation
+    if not tree_check_deep(tree, karoo=True):  # todo check on creation
         raise
     return tree
 
@@ -273,17 +273,14 @@ def tree_set_last_evolution(tree, last_modification):
     return tree
 
 
-def tree_check_core_all(tree, env_variables, karoo=True):
+def tree_check_quick(tree, env_variables, karoo=True):
     """
-    Performs all checks that we currently have
-    # sfeh do not use this if trees are safely generated
-    # sfeh check meta values in separate method? update those aswell?
+    without some of the heavy tests
     """
-
     if tree is None:
         return False
 
-    if not tree_check_children(tree):
+    if not tree_check_children(tree, karoo=karoo):
         tree_works = False
     elif not tree_check_node_label_info:
         tree_works = False
@@ -292,11 +289,22 @@ def tree_check_core_all(tree, env_variables, karoo=True):
     elif tree_node_get_arity(tree, root_id) == 0:
         print_warning('w', 'Tree is only a root node')
         tree_works = False
-    elif not tree_check_reproduce_loop(tree, karoo=True):
+    else:
+        tree_works = True
+    return tree_works
 
-    # elif tree_get_meta(tree):
-    #     print_warning('w', 'Could not get meta from tree.')
-    #     tree_works = False
+
+def tree_check_deep(tree, env_variables, karoo=True):
+    """
+    Performs all checks that we currently have
+    # sfeh do not use this if trees are safely generated
+    # sfeh check meta values in separate method? update those aswell?
+    """
+
+    if not tree_check_quick(tree, env_variables, karoo=karoo):
+        tree_works = False
+    elif not tree_check_reproduce_loop(tree, karoo=karoo):
+        tree_works = False
     else:
         tree_works = True
 

@@ -1083,7 +1083,7 @@ def tree_get_fitness(tree, precision=None, karoo=True):
 
     fitness = tree[T_fitness][1]
     if fitness != '':
-        fitness = round(float(fitness), precision)
+        fitness = round(float(fitness), precision)  # todo also round random values immediately elsewhere
     else:
         raise Exception('This tree does not contain float fitness: {}.'.format(fitness))
     return fitness
@@ -1096,7 +1096,7 @@ def tree_hash(tree):
     old version: hash(expr_raw)
     """
     label_list = tree_get_labellist(tree)
-    tree_ident = hash(label_list)
+    tree_ident = hash(','.join(np.array(label_list)))
     return tree_ident
 
 
@@ -1136,7 +1136,7 @@ def tree_get_meta(tree):
     return tree_meta
 
 
-def tree_get_expr_raw(tree, node_id):
+def tree_get_expr_raw(tree, node_id):  # todo make mode_id optional
     """
     Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
     The large amount of () is required doe to some sympify errors. But feel free to reduce them.
@@ -1164,8 +1164,8 @@ def tree_get_expr_raw(tree, node_id):
         return 'Ifte(({}), ({}), ({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))
 
 
-def tree_get_expr_sym(tree, node_id):
-    expr_raw = tree_get_expr_raw(tree, node_id)
+def tree_get_expr_sym(tree, node_id=root_id):
+    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
     expr_sym = expr_sympify(expr_raw)
     return expr_sym
 
@@ -1292,9 +1292,9 @@ def tree_get_branch_ilax(tree, node_id, karoo=True):
     returns all ids, labels and arities for a node in a tree
     """
     ids = tree_node_get_branch(tree, node_id, karoo=karoo)
-    labels = [tree[N_label][i] for i in ids]
-    aritys = [tree[N_arity][i] for i in ids]
-    xtypes = [tree[N_type][i] for i in ids]
+    labels = [tree_node_get_label(tree, i) for i in ids]
+    aritys = [tree_node_get_arity(tree, i) for i in ids]
+    xtypes = [tree_node_get_xtype(tree, i) for i in ids]
     return ids, labels, aritys, xtypes
 
 
@@ -2113,12 +2113,9 @@ def tree_check_rebuild(tree, karoo=True):
     The expression can include separate '~' (usub) nodes, which makes expressions not completely equal
     """
 
-    label_list, arity_list, xtype_list = [tree_node_get_lax_v3(tree, node_id) for node_id in tree_iterate_range(tree, karoo=karoo)]
-
-    if karoo:
-        label_list = label_list[1:]
-        arity_list = arity_list[1:]
-        xtype_list = xtype_list[1:]
+    label_list = [tree_node_get_label(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
+    arity_list = [tree_node_get_arity(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
+    xtype_list = [tree_node_get_xtype(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
 
     try:
         core = core_from_labels(label_list, arity_list, xtype_list)

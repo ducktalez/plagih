@@ -56,8 +56,9 @@ class TestHelpers:
         print('sym\n', tree_pretty_print(sym_tree2, karoo=True))
         print(tree_check_deep(sym_tree2, self.env_bundle))
 
-        expr = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
-        print('wwwwdd', expr)
+        label_list = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
+        label_list = workaround_remove_tilde_operator(label_list)
+        print('wwwwdd', label_list)
 
 
 def test_rebuild_loop_tree():

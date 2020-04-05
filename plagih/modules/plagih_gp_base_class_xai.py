@@ -296,7 +296,7 @@ class ExplainableGP(object):
         """
 
         if self.origin_exists():
-            if tree_node_is_modifiable(self.origin_tree, root_id):  # Modify-nodes is not "activated"
+            if not tree_node_is_modifiable(self.origin_tree, root_id):  # Modify-nodes is not "activated"
                 self.config['evolve_rates']['random from origin_tree'] += float(self.config['evolve_rates']['random from scratch'])
                 self.config['evolve_rates']['random from scratch'] = 0
                 print_warning('ww', 'Generating mew trees \'random from scratch\' is not possible when the origin tree has fix nodes! Fixed this problem.')
@@ -360,7 +360,7 @@ class ExplainableGP(object):
 
         rate_o = self.evolve_rates['random from origin_tree']
         rate_s = self.evolve_rates['random from scratch']
-        rate_sum = sum(rate_o, rate_s)
+        rate_sum = sum([rate_o, rate_s])
 
         first_rate_o = rate_o / rate_sum
         first_rate_s = rate_s / rate_sum
@@ -368,9 +368,9 @@ class ExplainableGP(object):
         first_rate_o = int(self.config['pop_max'] * first_rate_o)
         first_rate_s = int(self.config['pop_max'] * first_rate_s)
 
-        self.pop_random_from_origin(rate_o)
+        self.pop_random_from_origin(first_rate_o)
 
-        self.pop_random_from_scratch(rate_s)
+        self.pop_random_from_scratch(first_rate_s)
 
         self.gen_finalize()
         file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
@@ -1340,7 +1340,8 @@ class ExplainableGP(object):
         """
 
         """
-        tree_check_deep(tree)
+        if not tree_check_deep(tree, self.env_variables):
+            raise
 
         expr_raw = tree_get_expr_raw(tree, node_id=root_id)
         expr_sym = expr_sympify(expr_raw=expr_raw)
@@ -1389,6 +1390,8 @@ class ExplainableGP(object):
             raise Exception('Expr could not be sympified: {}'.format(ex))
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device, self.tf_classify_labels_map)['fitness']
+
+        print('Debg', fitness_train, tree_labels(tree))
 
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness_train is not a real number: {}'.format(fitness_train))

@@ -1008,15 +1008,16 @@ def round_constant(constant, accuracy):
     """
     Rounding float distributions_file
     """
-    if constant == 0:
-        return constant
 
     try:
-        new_const = float(constant)
+        constant = float(constant)
     except Exception:
         return constant
 
-    new_const = round(new_const * accuracy) / accuracy
+    if constant == 0:
+        return constant
+
+    new_const = round(constant * accuracy) / accuracy
     if new_const == 0:
         if constant > 0:
             new_const = 1 / accuracy

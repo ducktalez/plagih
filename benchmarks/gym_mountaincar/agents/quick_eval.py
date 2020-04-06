@@ -10,34 +10,154 @@ import numpy as np
 import gym
 
 
-def mtc_plot_decisions(agent, name, folder='img/'):
-    # Creates the plot which displays current position/speed and the corresponding action
+def mtc_plot_decisions_space(agent, name='space_test', folder='img/'):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
-    observation = env.reset()
 
+    # Making the data for the plot
     poses = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, 256)
     vels = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, 256)
     positions, velocities = np.meshgrid(poses, vels)
 
     @np.vectorize
     def decide(position, velocity):
-        try:
-            action = agent.decide((position, velocity))  # todo
-        except:
-            action = 1
+        action = agent.decide((position, velocity))
         return action
 
     action_values = decide(positions, velocities)
     env.close()
 
+    # generating plot
     fig, ax = plt.subplots()
     c = ax.pcolormesh(positions, velocities, action_values)
     ax.set_xlabel('position')
     ax.set_ylabel('velocity')
     fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
     plt.title(name)
+    folder = Path(folder)
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
+    plt.savefig(Path(folder) / '{}.jpg'.format(name))
+    plt.close()
+    return
+
+
+def mtc_heatmap_data(env, agent, num_splits, n=100):
+    # Making the data for the plot
+    behaviour = []
+    for _ in range(n):
+        observation = env.reset()
+        while True:
+            action = agent.decide(observation)
+            behaviour.append([observation[0], observation[1], action])
+            observation, reward, done, _ = env.step(action)
+
+            if done:
+                break
+    env.close()
+    behaviour = np.array(behaviour)  # [(1,2,3), (1,2,3), (1,2,3), (1,2,3), (1,2,3), ...]
+    positions, velocities, action_values = behaviour.T  # [[1,1,1, ...], [2,2,2, ...], [3,3, ...]]
+
+    x_min = env.unwrapped.min_position
+    x_max = env.unwrapped.max_position
+    y_min = -env.unwrapped.max_speed
+    y_max = env.unwrapped.max_speed
+
+    # Making the data for the plot
+    splits_x = np.linspace(x_min, x_max, num_splits)
+    splits_y = np.linspace(y_min, y_max, num_splits)
+
+    def linspace_pos(x, rangetuple, num_splits):
+        num_splits -= 1
+        range_spread = rangetuple[1] - rangetuple[0]
+        xadd = -rangetuple[0]
+        x = (x + xadd) * (num_splits / range_spread)  # normalized
+        x = round(x * (num_splits)) / (num_splits)
+        x = int(round(x))
+        return x
+
+    results_0 = np.zeros((num_splits, num_splits))
+    results_1 = np.zeros((num_splits, num_splits))
+    results_2 = np.zeros((num_splits, num_splits))
+    results = np.zeros((num_splits, num_splits))
+    heatmap_list = [results, results_0, results_1, results_2]
+
+    for tup in behaviour:
+        res_x = linspace_pos(tup[0], (x_min, x_max), num_splits)
+        res_y = linspace_pos(tup[1], (y_min, y_max), num_splits)
+        results[res_x, res_y] += 1
+
+    return splits_x, splits_y, results
+
+
+def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', num_splits=128, decisions=None):
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
+
+    splits_x, splits_y, results = mtc_heatmap_data(env, agent, num_splits)
+
+    # generating plot
+    fig, ax = plt.subplots()
+    c = ax.pcolormesh(splits_x, splits_y, results, cmap='Greys')
+    ax.set_xlabel('position')
+    ax.set_ylabel('velocity')
+    fig.colorbar(c, ax=ax)
+    plt.title(name)
+    folder = Path(folder)
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
+    plt.savefig(Path(folder) / '{}.jpg'.format(name))
+    plt.close()
+    return
+
+
+def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits=256, name='differences', folder='img/', abs_diff=True, cmap='viridis'):
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
+
+    # Making the data for the plot
+    poses = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, num_splits)
+    vels = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, num_splits)
+    positions, velocities = np.meshgrid(poses, vels)
+
+    @np.vectorize
+    def decide_diff(position, velocity):
+        action_a = agent_a.decide((position, velocity))
+        action_b = agent_b.decide((position, velocity))
+        return action_a - action_b
+
+    result = decide_diff(positions, velocities)
+
+    if abs_diff:
+        result = abs(result)
+        boundaries=np.linspace(-0.5,2.5,4)
+        ticks=np.linspace(0,2,3)
+    else:
+        boundaries=np.linspace(-2.5,2.5,6)
+        ticks=np.linspace(-2,2,5)
+        cmap='PiYG'
+
+    if agent_a_dummy:
+        hm_x, hm_y, hm_res = mtc_heatmap_data(env, agent_a, num_splits)
+        dummy_res = abs(np.sign(hm_res))
+        result = result * dummy_res
+
+
+    env.close()
+
+    # generating plot
+    fig, ax = plt.subplots()
+    c = ax.pcolormesh(positions, velocities, result, cmap=cmap)
+    ax.set_xlabel('position')
+    ax.set_ylabel('velocity')
+    fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)
+    plt.title(name)
+    folder = Path(folder)
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
     plt.savefig(Path(folder) / '{}.jpg'.format(name))
     plt.close()
     return
@@ -46,9 +166,7 @@ def mtc_plot_decisions(agent, name, folder='img/'):
 def mtc_play(agent, render=False, mp4=False, n=1):
     # if mp4:
     #     env = wrappers.Monitor(env, Path('videos/{}/'.format(time.time() % 100000)))
-    np.random.seed(0)
-    env = gym.make('MountainCar-v0')
-    env.seed(0)
+    np.random.seed(0);env = gym.make('MountainCar-v0');env.seed(0)
     reward_sum = 0
     fail_sum = 0
     for asd in range(n):
@@ -57,10 +175,7 @@ def mtc_play(agent, render=False, mp4=False, n=1):
         while True:
             if render:
                 env.render()
-            try:
-                action = agent.decide(observation)
-            except:
-                action = 1
+            action = agent.decide(observation)
             observation, reward, done, _ = env.step(action)
 
             episode_reward += reward
@@ -76,13 +191,13 @@ def mtc_play(agent, render=False, mp4=False, n=1):
     return reward_average, fail_sum
 
 
-def eval_agents(agent_list, folder=Path('img/')):
+def eval_agent_list(agent_list, folder=Path('img/')):
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
     agent_performance = []
     for name, agent in agent_list:
-        mtc_plot_decisions(agent, name, folder=folder)
+        mtc_plot_decisions_space(agent, name, folder=folder)
         avg_reward, fails = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 
@@ -96,44 +211,5 @@ def eval_agents(agent_list, folder=Path('img/')):
         file.write('\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance]))
 
 
-
-class SimonsFriendlyCopy:
-
-    def decide(self, observation):
-        pos, vel = observation
-
-        if pos < -1 or (pos < 0.1 and vel < -0.05):
-            return 2
-        else:
-            if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-                return 0
-
-            if vel < 0:
-                return 0
-            else:
-                return 2
-
-class MTC_simon10:
-
-    def decide(self, input):
-        cartPos, cartVel = input
-
-        if (cartVel < 1) or (cartPos < (-0.05)) and (cartVel < 0.1):
-            action = 2
-        else:
-            if ((cartVel > (-0.45)) and (cartPos < 0.02)) and (cartVel < (-0.05)):
-                action = 0
-            else:
-                if cartPos < 0:
-                    action = 0
-                else:
-                    action = 2
-        # action = 2 if ((cartVel < 1) or ((cartPos < (-0.05)) and (cartVel < 0.1))) else 0 if (((cartVel > (-0.45)) and (cartPos < 0.02)) and (cartVel < (-0.05))) else 0 if (cartPos < 0) else 2
-        return max(0, min(2, int(round(action))))
-
-x = mtc_play(MTC_simon10)
-print('whats x?', x)
-
 if __name__ == '__main__':
-    agent = [('MTC Test', MTC_simon10)]
-    eval_agents(agent)  # , folder=folder
+    eval_agent_list(agent_tuples)  # , folder=folder

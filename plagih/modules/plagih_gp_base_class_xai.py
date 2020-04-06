@@ -79,7 +79,7 @@ class ExplainableGP(object):
                              'filter floats': 0.05,
                              'point mutate function': 0.1,
                              'branch mutate insert': 0.10,
-                             'crossover branches': 0.40,
+                             'crossover branches': 0.36,
                              'random from origin_tree': 0.15,
                              'random from scratch': 0.15,
                              },
@@ -92,7 +92,7 @@ class ExplainableGP(object):
             'tree from scratch min_nodes': 8,
             'random from scratch max nodes': 50,
             'tree branch base nodes': 20,
-            'tourn_size': 4,  # [7 per 100] number of trees selected for tournament
+            'tourn_size': 5,  # [7 per 100] number of trees selected for tournament # todo
 
             # When to stop the run
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
@@ -751,7 +751,7 @@ class ExplainableGP(object):
             #                    'from pathlib import Path\n' \
             #                    'sys.path.append(Path({}))\n' \
             #                    'import {} as custom_eval_agents\n' \
-            #                    'custom_eval_agents.eval_agents(agent_tuples, folder=Path(\'img\'))'.format(callable_user_python_script, Path(callable_user_python_script).stem)
+            #                    'custom_eval_agents.eval_agent_list(agent_tuples, folder=Path(\'img\'))'.format(callable_user_python_script, Path(callable_user_python_script).stem)
 
             with Path.open(root_dir / callable_user_python_script, 'r') as file:
                 auto_import_eval = file.read()
@@ -1393,8 +1393,9 @@ class ExplainableGP(object):
 
         # print('debug aa1', fitness_train, tree_get_labellist(tree))
 
-        print(str(fitness_train), 'str fitness train')
-
+        # print(str(fitness_train), 'str fitness train')
+        # if str(fitness_train) == 'inf':
+        #     print('fitness_train', fitness_train, type(fitness_train), fitness_train != float('inf'))
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness_train is not a real number: {}'.format(fitness_train))
         # else:
@@ -1755,4 +1756,4 @@ def check_value_is_real(fitness):
     nan: fitness == fitness -> False
     inf: fitness is not float('inf') -> False
     """
-    return fitness == fitness and fitness is not float('inf')
+    return fitness == fitness and fitness != float('inf')

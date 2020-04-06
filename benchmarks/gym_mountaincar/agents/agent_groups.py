@@ -13,7 +13,7 @@ def safe_division(n, d):
     return n / d if d else 0
 
 
-class SimonsGpFriendly:
+class Good_Expert:
 
     def decide(self, observation):
         pos, vel = observation
@@ -39,17 +39,13 @@ class SimonsTesting:
 
         # return
         if pos < -0.88 or (pos < -0.7 and (vel < -0.2 or vel > 0.1)):
-            print('      <|-->')
             return 2
         if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-            print('   <--|>')
             return 0
 
         if vel < 0:
-            print('<------|')
             return 0
         else:
-            print('       |------>')
             return 2
 
 
@@ -251,8 +247,8 @@ class SARSALambdaAgent(SARSAAgent):
         if done:
             self.z = np.zeros_like(self.z)
 
-def load_sarsas():
 
+def load_sarsas():
     with Path.open(Path(sarsa_file_75), 'rb') as file:
         sarsa_agent_75 = pickle.load(file)
         print('Loaded sarsa 75')
@@ -270,25 +266,6 @@ def load_sarsas():
         print('Loaded sarsa 10000')
     return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
 
-
-
-
 # sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
 sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
 # sarsa_agent_75, _, _, _ = load_sarsas()
-
-
-mountain_agents = {1: ('v1_simple', SimpleAgent()),
-                   2: ('v1_improved', PlagihAgent_A()),
-                   3: ('xiao_base', FixAgent()),
-                   4: ('xiao_short', TestFixNoLowerbound()),
-                   5: ('sarsa_75', sarsa_agent_75),
-                   6: ('sarsa_200', sarsa_agent_200),
-                   7: ('sarsa_1000', sarsa_agent_1000),
-                   8: ('sarsa_10000', sarsa_agent_10000),
-                   9: ('test_tmp', TestTmp()),
-                   10: ('AgentV1p40', AgentV1p40()),
-                   11: ('Good Expert', SimonsGpFriendly()),
-                   12: ('test', SimonsCheckpoints()),
-                   13: ('TestCombined', TestCombined()),
-                   14: ('SimonTesting', SimonsTesting())}

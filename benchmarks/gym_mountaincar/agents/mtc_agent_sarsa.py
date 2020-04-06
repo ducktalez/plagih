@@ -13,7 +13,10 @@ from plagih.modules.dicts import name_observation, name_action
 import pickle
 
 
-def play_sarsa(env, agent, train=False, render=False, save=False):
+def mountaincar_play_once(env, agent, train=False, render=False):
+    """
+
+    """
     episode_reward = 0
     observation = env.reset()
     action = agent.decide(observation)
@@ -31,32 +34,14 @@ def play_sarsa(env, agent, train=False, render=False, save=False):
             agent.learn(observation, action, reward, observation_next, done, action_next)
         observation, action = observation_next, action_next
 
-    if save is True:
-        with open('sarsa_agent.p', 'wb') as file:
-            pickle.dump(agent, file)
-
     return episode_reward
-
-
-def sarsa_start_training(env, episodes, rewardSample_interval, train=False, render=False):
-    agent = SARSALambdaAgent(env)
-    episode_rewards, episode_rewards_preaverage, episode_rewards_average = [], [], []
-    for episode in range(episodes):
-        episode_reward = play_sarsa(env, agent, train, render)
-        episode_rewards_preaverage.append(episode_reward)
-        if episode % rewardSample_interval == 0:
-            episode_rewards.append(episode_reward)
-            episode_rewards_average.append(np.mean(episode_rewards_preaverage[-rewardSample_interval:]))
-
-            print("SARSA: " + str(episode_reward))
-    return episode_rewards, episode_rewards_average
 
 
 def sarsa_start_frommodel(env, episodes, rewardSample_interval, train=False, render=False):
     agent = SARSALambdaAgent(env)
     episode_rewards, episode_rewards_preaverage, episode_rewards_average = [], [], []
     for episode in range(episodes):
-        episode_reward = play_sarsa(env, agent, train, render)
+        episode_reward = mountaincar_play_once(env, agent, train, render)
         episode_rewards_preaverage.append(episode_reward)  #
         if episode % rewardSample_interval == 0:
             episode_rewards.append(episode_reward)
@@ -66,12 +51,15 @@ def sarsa_start_frommodel(env, episodes, rewardSample_interval, train=False, ren
     return episode_rewards, episode_rewards_average
 
 
-def plagih_get_behaviour_samples(env, agent, episodes, train=False, render=False):
+def plagih_get_behaviour_samples(env, agent, episodes):
+    """
+    Create obs-act-list: [[0.12, 1.55, 2], ...]
+    - epsilon = 0 (no exploration)
+    """
     agent.epsilon = 0
     plagih_state_actions = []
 
     for episode in range(episodes):
-
         episode_reward = 0
         observation = env.reset()
         while True:
@@ -98,7 +86,7 @@ def train_sarsa_agent_pickle(seed=0):
     #     episode_rewards = []
     #     steps_left = training_steps - steps_done
     #     for episode in range(steps_left):
-    #         episode_reward = play_sarsa(env, agent, train=True)
+    #         episode_reward = mountaincar_play_once(env, agent, train=True)
     #         episode_rewards.append(episode_reward)
     #
     #     with open(Path('pickle/sarsa_agent_{}.p'.format(str(training_steps))), 'wb') as file:
@@ -106,28 +94,28 @@ def train_sarsa_agent_pickle(seed=0):
 
     episode_rewards = []
     for episode in range(75):
-        episode_reward = play_sarsa(env, agent, train=True)
+        episode_reward = mountaincar_play_once(env, agent, train=True)
         episode_rewards.append(episode_reward)
     with open(sarsa_file_75, 'wb') as file:
         pickle.dump(agent, file)
     print('...saved agent pickle')
 
     for episode in range(125):
-        episode_reward = play_sarsa(env, agent, train=True)
+        episode_reward = mountaincar_play_once(env, agent, train=True)
         episode_rewards.append(episode_reward)
     with open(sarsa_file_200, 'wb') as file:
         pickle.dump(agent, file)
     print('...saved agent pickle')
 
     for episode in range(800):
-        episode_reward = play_sarsa(env, agent, train=True)
+        episode_reward = mountaincar_play_once(env, agent, train=True)
         episode_rewards.append(episode_reward)
     with open(sarsa_file_1000, 'wb') as file:
         pickle.dump(agent, file)
     print('...saved agent pickle')
 
     for episode in range(9000):
-        episode_reward = play_sarsa(env, agent, train=True)
+        episode_reward = mountaincar_play_once(env, agent, train=True)
         episode_rewards.append(episode_reward)
     with open(sarsa_file_10000, 'wb') as file:
         pickle.dump(agent, file)
@@ -136,36 +124,27 @@ def train_sarsa_agent_pickle(seed=0):
     return
 
 
-def create_samples_dataset(seed=0):
+def create_plagih_samples_csv(seed=0):
     env = gym.make('MountainCar-v0')
     env.seed(seed)
     with Path.open(sarsa_file_75, 'rb') as file:
         agent = pickle.load(file)
 
-    plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=20, train=False)
-    print(sys.getsizeof(plagih_behaviour_samples))
-    print('Amount of samples: ' + str(len(plagih_behaviour_samples)))
+    plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=20)  # ((cartPos, cartVel), act)
+    print('Amount of samples: {}, {} bytes'.format(len(plagih_behaviour_samples), sys.getsizeof(plagih_behaviour_samples)))
     env.close()
 
-    # samples_file = Path('../gp_files/behaviour_samples.p')
-    # with open(samples_file, "wb") as fp:  # Pickling
-    #     pickle.dump(plagih_behaviour_samples, fp)
-
     # pickle-version does make too much trouble for now... need to switch to .csv
-    samples_csv_ready = [[name_observation + '0:' + 'float', name_observation + '1:' + 'float', name_action + '0:' + 'int']]
-    for sample in plagih_behaviour_samples:
-        row = []
-        row.append(sample[0][0])
-        row.append(sample[0][1])
-        row.append(sample[1])
-        samples_csv_ready.append(row[:])
-    print(samples_csv_ready)
 
-    file_csv = Path('../gp_files/samples.csv')
-    with open(file_csv, 'w+', newline='') as csvFile:
+    samples_csv_ready = [['cartPos|type=float|role=input', 'cartVel|type=float|role=input', 'action|type=int|role=output']]
+
+    for sample_row in plagih_behaviour_samples:
+        row = list(sample_row[0]) + [sample_row[1]]
+        samples_csv_ready.append(row[:])
+
+    with open(Path('../gp_files/samples.csv'), 'w', newline='') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(samples_csv_ready)
-    csvFile.close()
 
     return
 

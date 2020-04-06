@@ -1,2 +1,2 @@
 
-label_list,Ifte,Or,2,Ifte,<,&,&,0,Ifte,observation1,1,<,<,<,&,<,0,2,observation1,0.1,observation0,-0.05,observation0,0.02,>,<,observation0,0,observation1,-0.45,observation1,-0.05
+label_list,Ifte,Orb,2,Ifte,<,Andb,Andb,0,Ifte,cartPos,-1,<,<,Andb,<,<,0,2,cartPos,0.1,cartVel,-0.05,>,<,cartVel,0.02,cartVel,0,cartPos,-0.45,cartPos,-0.05

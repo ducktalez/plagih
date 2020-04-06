@@ -24,7 +24,7 @@ The input parameter must be a folder with the following content:
 - `/run_files/operators.csv`: Set of mathematical operators to build programs with
 - `/run_files/samples.csv`: Target-data with states + actions. (Caution, weird syntax)
 - `/run_files/tree_labels.csv`: Self-written program (as label-list)
-- `Config.json` (Optional): GP parameters like `pop_size`, `evolve_rates`
+- `Config.yaml` (Optional): GP parameters like `pop_size`, `evolve_rates`
 
 
 ### How to: behaviour_samples.csv
@@ -60,7 +60,7 @@ Possible operators are:
 |Group|examples|
 |:------------------ |:-----------------|
 |Mathematical operators|`+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `Mini`, `Maxi`|
-|Logical operators | `&`, `Or`, `Xor`, `Nand`, `Xand`, `Nor`, `Xnor`, `Not`|
+|Logical operators | `Andb`, `Orb`, `Not`|
 |Comparative operators|`==`, `!=`, `<`, `<=`, `>`, `>=`|
 |Conditional (If-then-else)|`Ifte`|
 
@@ -94,7 +94,7 @@ modify_list,0,1,0,0,1,1
 
 ...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
 
-### How I analyse results:
+### How I analyze results:
 - `plots/average-fitness.jpg` - to see if there was an improvement
 - `plots/best_candidate.jpg` - for the current best solution
 - `plots/pareto.jpg` - showing the best candidates related to the complexity. Find your prefered combination of performance and complexity

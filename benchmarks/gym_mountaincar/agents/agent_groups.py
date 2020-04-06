@@ -1,5 +1,7 @@
 import numpy as np
 import math
+from pathlib import Path
+import pickle
 
 sarsa_file_75 = 'sarsa_agent_75.p'
 sarsa_file_200 = 'sarsa_agent_200.p'
@@ -11,18 +13,15 @@ def safe_division(n, d):
     return n / d if d else 0
 
 
-class SimonsGpFriendly:
+class Good_Expert:
 
     def decide(self, observation):
         pos, vel = observation
 
-        # return
         if pos < -1 or (pos < 0.1 and vel < -0.05):
-            # print('----------->>')
             return 2
         else:
             if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-                # print('<<-----------')
                 return 0
 
             if vel < 0:
@@ -33,7 +32,6 @@ class SimonsGpFriendly:
 
 # todo idee: programm that works has some space to make random decisions. nn analyses, finds best version
 
-
 class SimonsTesting:
 
     def decide(self, observation):
@@ -41,25 +39,22 @@ class SimonsTesting:
 
         # return
         if pos < -0.88 or (pos < -0.7 and (vel < -0.2 or vel > 0.1)):
-            print('      <|-->')
             return 2
         if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-            print('   <--|>')
             return 0
 
         if vel < 0:
-            print('<------|')
             return 0
         else:
-            print('       |------>')
             return 2
 
 
 class SimonsCheckpoints:
 
-    def decide(self, observation):
-        return 0
-
+    def decide(self, input):
+        cartPos, cartVel = input
+        action = (min(max((5.0 / cartVel), (4.0 / cartPos)), 1.265) + 5.0)
+        return max(int(0), min(int(2), int(round(action))))
 
 
 class AgentV1p40:
@@ -251,3 +246,26 @@ class SARSALambdaAgent(SARSAAgent):
         self.w += (self.learning_rate * delta * self.z)
         if done:
             self.z = np.zeros_like(self.z)
+
+
+def load_sarsas():
+    with Path.open(Path(sarsa_file_75), 'rb') as file:
+        sarsa_agent_75 = pickle.load(file)
+        print('Loaded sarsa 75')
+
+    with Path.open(Path(sarsa_file_200), 'rb') as file:
+        sarsa_agent_200 = pickle.load(file)
+        print('Loaded sarsa 200')
+
+    with Path.open(Path(sarsa_file_1000), 'rb') as file:
+        sarsa_agent_1000 = pickle.load(file)
+        print('Loaded sarsa 1000')
+
+    with Path.open(Path(sarsa_file_10000), 'rb') as file:
+        sarsa_agent_10000 = pickle.load(file)
+        print('Loaded sarsa 10000')
+    return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
+
+# sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
+sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
+# sarsa_agent_75, _, _, _ = load_sarsas()

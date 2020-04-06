@@ -1,9 +1,39 @@
-dct = {1: {'a': 10, 'b': 4},
-       3: {'a': 30, 'b': 3},
-       2: {'a': 40, 'b': 2},
-       4: {'a': 20, 'b': 1}}
+import numpy as np
 
-import json
-from pathlib import Path
+choose_oparray = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
+                  [[], [], ['<', '>', '==', '!='], []],
+                  [[], ['Not', 'Not'], ['Andb'], []],
+                  [[], [], [], []],
+                  [[], [], [], ['Ifte']]]
 
-(Ifte((Or(((observation1)<(1)), (((observation1)<(0.1))&((observation0)<(-0.05))))), (2), (Ifte((((observation0)<(0.02))&(((observation1)>(-0.45))&((observation1)<(-0.05)))), (0), (Ifte(((observation0)<(0)), (0), (2)))))))
+node_choose_dict = {
+    '2f': {
+        0: {'observ': ['cartPos', 'cartVel'],
+            'distribution': [lambda: np.random.normal(1, 2), lambda: np.random.choice([1, 2, 3])]},
+        1: {'f2f': ['sin', 'abs'],
+            'b2f': []},
+        2: {'f2f': ['+', '+', '-'],
+            'b2f': []},
+        3: {'b2f2f': ['Ifte']}},
+    '2b': {
+        0: {'observ': [],
+            'distribution': [lambda: np.random.choice([True, False])]},
+        1: {'f2b': [],
+            'b2b': ['Not']},
+        2: {'f2b': ['<', '<=', '>'],
+            'b2b': ['Andb', 'Orb']},
+        3: {None: []}}}
+
+arity = 3
+intype = 'f2f'
+get1 = node_choose_dict.get('2f')
+lst1 = list(node_choose_dict.values())
+print('raw', lst1)
+get2 = list(filter(None, map(lambda x: x.get(arity), lst1)))
+lst2 = list(filter(None, map(lambda x: x.get(arity), lst1)))
+print('arity {}\t'.format(arity), lst2)
+lst3 = list(filter(None, map(lambda x: x.get(intype), lst2)))
+print('intype: {}\t'.format(intype), lst3)
+
+Ifte((cartVel < 1) | ((cartVel < 0.1) & (cartPos < -0.05)), 2, Ifte((cartPos < 0.02) & (cartVel > -0.45) & (cartVel < -0.05)), 0, Ifte(cartPos < 0, 0, 2))
+Ifte((cartVel < 1) | ((cartPos < -0.05) & (cartVel < 0.1)), 2, Ifte((cartVel > -0.45) & (cartPos < 0.02) & (cartVel < -0.05), 0, Ifte(cartPos < 0, 0, 2)))

@@ -13,16 +13,21 @@ name_action = 'action'
 first_action = name_action + str(0)
 name_observation = 'observation'
 first_gen_id = 1  # maybe take care to make this 0 for base gen
+karoo_skip = 1
 
 delete_this = True
 
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
 
-
-def a2_wrp(fun):
-    return lambda a, b: '({}=={})'.format(a, b)
-
+class Plagih_Plus:
+    fun_name = '+'
+    fun_arity = 2
+    xtype = 'f2f'
+    fun_tf = tf.add
+    fun_latex = '$+$'
+    fun_sym = '({})+({})'
+    fun_pycode = lambda a, b: '({}+{})'.format(a, b)
 
 """
 op: Dict to work as 'Database' for every expression-bit and its features
@@ -41,116 +46,144 @@ Features should always be defined, even though they might not occur at all. If n
 Some, which are known of not being used yet are commented with '# not tested' or '# not used'
 todo: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 """
-op = {  # 'f2f': Classical mathematical operators, evaluate from float to float
-    '+': 	{'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'gpbp': ['ö'], 'latex': '$+$', 'call': 'inline', 				'pycode': lambda a, b: '({}+{})'.format(a, b)},
-    ast.Add: 	{'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 				'pycode': None},
-    '-': 	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$-$', 'call': 'inline', 			    	'pycode': lambda a, b: '({}-{})'.format(a, b)},
-    ast.Sub: 	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	    'pycode': None},
-    '~': 	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$-$', 'call': 'inline', 				    'pycode': lambda a: '(-{})'.format(a)},  # todo this is minus again
-    'usub': 	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			      	'pycode': None},
-    ast.USub: 	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'gpbp': ['ö'], 'latex': None, 'call': None, 	    	'pycode': None},
-    '*': 	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'gpbp': ['ö'], 'latex': '$\\cdot$', 'call': 'inline',   	'pycode': lambda a, b: '({}*{})'.format(a, b)},
-    ast.Mult: 	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	    'pycode': None},  # a * b
-    '/': 	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$\\div$', 'call': 'inline', 		    	'pycode': lambda a, b: '({}/{})'.format(a, b)},
-    ast.Div: 	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 'pycode': None},  # a / b  # todo try tf.math.divide_no_nan
-    '**': 	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$**$', 'call': 'inline', 			    	'pycode': lambda a, b: '({}*{})'.format(a, b)},
-    ast.Pow: 	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 			'pycode': None},  # a ** 2
-    'abs': 	{'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'tf': tf.abs, 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': lambda a: 'abs({})'.format(a)},
-    'sign': 	{'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sign, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': None},
-    'square': 	{'fun': 'square', 'arity': 1, 'xtype': 'f2f', 'tf': tf.square, 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': lambda a: '(({})**2)'.format(a)},
-    'sqrt': 	{'fun': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sqrt, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a: 'math.sqrt({})'.format(a)},
-    'log': 	{'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a: 'math.log({})'.format(a)},
-    'log1p': 	{'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log1p, 'gpbp': ['ö'], 'latex': None, 'call': None, 		'pycode': lambda a: 'math.log1p()'.format(a)},
-    'cos': 	{'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.cos, 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': lambda a: 'math.cos({})'.format(a)},
-    'sin': 	{'fun': 'sin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sin, 'gpbp': ['ö'], 'latex': '$\\sin$', 'call': None, 				'pycode': lambda a: 'math.sin({})'.format(a)},
-    'tan': 	{'fun': 'tan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan, 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': lambda a: 'math.tan({})'.format(a)},
-    'acos':     {'fun': 'acos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.acos, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a: 'math.acos({})'.format(a)},
-    'asin': 	{'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.asin, 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a: 'math.asin({})'.format(a)},
-    'atan': 	{'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan, 'gpbp': [1], 'latex': None, 'call': None, 				'pycode': lambda a: 'math.atan({})'.format(a)},
-    'tanh': 	{'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'tf': tf.tanh, 'gpbp': [1], 'latex': None, 'call': None, 				'pycode': lambda a: 'math.tanh({})'.format(a)},
+op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
+    '+':	{'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'latex': '$+$', 'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
+    '-':	{'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'latex': '$-$', 'sym_str': '({} - {})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
+    '~':	{'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'latex': '$-$', 'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},  # todo this is minus again
+    '*':	{'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'latex': '$\\cdot$', 'sym_str': '({} * {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
+
+    # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
+    # todo is call='({})({})' used anywhere?
+    '/':	{'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'latex': '$\\div$', 'sym_str': '({} / {})', 'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
+    '**':	{'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow, 'latex': '$**$', 'sym_str': '({} ** {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
+    'abs':	{'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'tf': tf.abs, 'latex': None, 'sym_str': 'abs({})', 'pycode': lambda a: 'abs({})'.format(a)},
+    'sign':	{'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sign, 'latex': None, 'sym_str': 'sign({})', 'pycode': lambda a: 'sign({})'.format(a)},
+    'square':{'fun': 'square', 'arity': 1, 'xtype': 'f2f', 'tf': tf.square, 'latex': None, 'sym_str': '({}**2)', 'pycode': lambda a: '({}**2)'.format(a)},
+    'sqrt':	{'fun': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sqrt, 'latex': None, 'sym_str': 'sqrt({})', 'pycode': lambda a: 'math.sqrt({})'.format(a)},
+    'log':	{'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log, 'latex': None, 'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},
+    'log1p':{'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'tf': tf.math.log1p, 'latex': None, 'sym_str': 'log1p({})', 'pycode': lambda a: 'math.log1p({})'.format(a)},
+    'cos':	{'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.cos, 'latex': '$\\cos$', 'sym_str': 'cos({})', 'pycode': lambda a: 'math.cos({})'.format(a)},
+    'sin':	{'fun': 'sin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.sin, 'latex': '$\\sin$', 'sym_str': 'sin({})', 'pycode': lambda a: 'math.sin({})'.format(a)},
+    'tan':	{'fun': 'tan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan, 'latex': '$\\tan$', 'sym_str': 'tan({})', 'pycode': lambda a: 'math.tan({})'.format(a)},
+    'acos':	{'fun': 'acos', 'arity': 1, 'xtype': 'f2f', 'tf': tf.acos, 'latex': None, 'sym_str': 'acos({})', 'pycode': lambda a: 'math.acos({})'.format(a)},
+    'asin':	{'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.asin, 'latex': None, 'sym_str': 'asin({})', 'pycode': lambda a: 'math.asin({})'.format(a)},
+    'atan':	{'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan, 'latex': None, 'sym_str': 'atan({})', 'pycode': lambda a: 'math.atan({})'.format(a)},
+    'tanh':	{'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'tf': tf.tanh, 'latex': None, 'sym_str': 'tanh({})', 'pycode': lambda a: 'math.tanh({})'.format(a)},
     # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
     # 'b2b' Classical logical operators, evaluate from bool to bool
-    'And': 	{'fun': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				        'pycode': lambda a, b: '({} and {})'.format(a, b)},
-    ast.And: 	{'fun': 'And', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'gpbp': ['ö'], 'latex': None, 'call': None, 		'pycode': None},  # a and b
-    '&': 	{'fun': 'bitwise', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'gpbp': ['ö'], 'latex': '$\\land$', 'call': 'inline', 	'pycode': lambda a, b: '({} & {})'.format(a, b)},
-    ast.BitAnd: 	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	'pycode': None},  # DON'T USE tf.bitwise.bitwise_and
-    'Or': 	{'fun': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$\\lor$', 'call': None, 			    	'pycode': lambda a, b: '({} or {})'.format(a, b)},
-    ast.Or: 	{'fun': 'Or', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': None},  # a or b
-    '|': 	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 			'pycode': lambda a, b: '({} | {})'.format(a, b)},  # a or b
-    ast.BitOr: 	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': None},  # a or b
-    # ast.BitOr
-    'Xor': 	{'fun': 'Xor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			    	'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
-    'Nand': 	{'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a, b: 'not({} and {})'.format(a, b)},
-    'Xand': 	{'fun': 'Xand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a, b: 'not({} ^ {})'.format(a, b)},
-    'Nor': 	{'fun': 'Nor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				    'pycode': None},
-    'Xnor': 	{'fun': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': None},
-    'Not': 	{'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				    'pycode': None},
-    ast.Not: 	{'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'gpbp': ['ö'], 'latex': '$\\neg$', 'call': None, 				'pycode': None},  # not a
+    'Andb':	{'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': 'and', 'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # sfeh Andbm and + & (delete this)
+    '&':	{'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},  # DON'T USE tf.bitwise.bitwise_and
+    'Orb':	{'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': 'or', 'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
+    '|':	{'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},  # a or b, sfeh python-'|' not used here
+
+    'Not':	{'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Not({})', 'pycode': None},  # not a
 
     # 'f2b' Classical comparative operators, evaluate from float to bool
-    '==': 	{'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$==$', 'call': 'inline', 				'pycode': lambda a, b: '({}=={})'.format(a, b)},
-    ast.Eq: 	{'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': lambda a, b: '({}=={})'.format(a, b)},  # a == b
-    '!=': 	{'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$\\neg$', 'call': 'inline', 			'pycode': lambda a, b: '({}!={})'.format(a, b)},
-    ast.NotEq: 	{'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.not_equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline',	'pycode': lambda a, b: '({}!={})'.format(a, b)},  # a != b
-    '<': 	{'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$<$', 'call': 'inline', 				'pycode': lambda a, b: '({}<{})'.format(a, b)},
-    ast.Lt: 	{'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
-    '<=': 	{'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$<=$', 'call': 'inline', 				'pycode': lambda a, b: '({}<={})'.format(a, b)},
-    ast.LtE: 	{'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less_equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	'pycode': lambda a, b: '({}<={})'.format(a, b)},  # a <= b
-    '>': 	{'fun': '>', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$>$', 'call': 'inline', 				'pycode': lambda a, b: '({}>{})'.format(a, b)},
-    ast.Gt: 	{'fun': '>', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 		'pycode': lambda a, b: '({}>{})'.format(a, b)},  # a > b
-    '>=': 	{'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': '$>=$', 'call': 'inline', 				'pycode': lambda a, b: '({}>={})'.format(a, b)},
-    ast.GtE: 	{'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater_equal, 'gpbp': ['ö'], 'latex': None, 'call': 'inline', 	'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
+    '==':	{'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'latex': '$==$', 'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
+    '!=':	{'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.not_equal, 'latex': '$\\neg$', 'sym_str': '({} != {})', 'pycode': lambda a, b: '({}!={})'.format(a, b)},
+    '<':	{'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less, 'latex': '$<$', 'sym_str': '({} < {})', 'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
+    '<=':	{'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less_equal, 'latex': '$<=$', 'sym_str': '({} <= {})', 'pycode': lambda a, b: '({}<={})'.format(a, b)},  # a <= b
+    '>':	{'fun': '>', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater, 'latex': '$>$', 'sym_str': '({} > {})', 'pycode': lambda a, b: '({}>{})'.format(a, b)},  # a > b
+    '>=':	{'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.greater_equal, 'latex': '$>=$', 'sym_str': '({} >= {})', 'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
 
     # Functions which need separate handling in sympify
-    'Ifte': 	{'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where, 'gpbp': ['ö'], 'latex': 'if', 'call': None, 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
-    # 'Ifte': 	{'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where, 'gpbp': ['ö'], 'latex': 'if', 'call': None, 'pycode': lambda a, b, c: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))},
-    'Mini': 	{'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum, 'gpbp': ['ö'], 'latex': '$\\min$', 'call': None, 'pycode': lambda a: 'min({})'.format(a)},  # maximum
-    'Maxi': 	{'fun': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum, 'gpbp': ['ö'], 'latex': '$\\max$', 'call': None, 'pycode': lambda a: 'max({})'.format(a)},  # minimum
-
-    # I think this is only used when trying to get the xtype of type(variable), e.g. 0.3 -> float -> '2f'
-    'float': 	{'fun': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a: 'float({})'.format(a)},  # not tested
-    'int': 	{'fun': 'int', 'arity': 0, 'xtype': '2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				    'pycode': lambda a: 'int({})'.format(a)},  # not tested
-    'bool': 	{'fun': 'bool', 'arity': 0, 'xtype': '2b', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': lambda a: 'bool({})'.format(a)},  # not tested
+    'Ifte':	{'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'tf': tf.compat.v2.where, 'latex': 'if', 'sym_str': 'Ifte({}, {}, {})', 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
+    # long version of Ifte-'pycode': lambda a, b, c: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
+    'Mini':	{'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.minimum, 'latex': '$\\min$', 'sym_str': 'Mini({}, {})', 'pycode': lambda a, b: 'min({}, {})'.format(a, b)},  # maximum
+    'Maxi':	{'fun': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.maximum, 'latex': '$\\max$', 'sym_str': 'Maxi({}, {})', 'pycode': lambda a, b: 'max({}, {})'.format(a, b)},  # minimum
 }
 
+op = {
+    '+': op_what['+'],
+    ast.Add: op_what['+'],
+    '-': op_what['-'],
+    ast.Sub: op_what['-'],
+    '~': op_what['~'],
+    'usub': op_what['~'],
+    ast.USub: op_what['~'],
+    '*': op_what['*'],
+    ast.Mult: op_what['*'],
+    '/': op_what['/'],
+    ast.Div: op_what['/'],
+    '**': op_what['**'],
+    ast.Pow: op_what['**'],
+    'abs': op_what['abs'],
+    'sign': op_what['sign'],
+    'square': op_what['square'],
+    'sqrt': op_what['sqrt'],
+    'log': op_what['log'],
+    'log1p': op_what['log1p'],
+    'cos': op_what['cos'],
+    'sin': op_what['sin'],
+    'tan': op_what['tan'],
+    'acos': op_what['acos'],
+    'asin': op_what['asin'],
+    'atan': op_what['atan'],
+    'tanh': op_what['tanh'],
+    'Andb': op_what['Andb'],
+    'And': op_what['Andb'],
+    ast.And: op_what['Andb'],
+    '&': op_what['Orb'],
+    ast.BitAnd: op_what['Andb'],
+    'Orb': op_what['Orb'],
+    'Or': op_what['Orb'],
+    ast.Or: op_what['Orb'],
+    '|': op_what['Orb'],
+    ast.BitOr: op_what['Orb'],
+    'Not': op_what['Not'],
+    ast.Not: op_what['Not'],
+    '==': op_what['=='],
+    ast.Eq: op_what['=='],
+    '!=': op_what['!='],
+    ast.NotEq: op_what['!='],
+    '<': op_what['<'],
+    ast.Lt: op_what['<'],
+    '<=': op_what['<='],
+    ast.LtE: op_what['<='],
+    '>': op_what['>'],
+    ast.Gt: op_what['>'],
+    '>=': op_what['>='],
+    ast.GtE: op_what['>='],
+    'Ifte': op_what['Ifte'],
+    'Mini': op_what['Mini'],
+    'Maxi': op_what['Maxi'],
+}
 op_test = {
+    # no (easy-to use) tensorflow-operations available
+    # ast.BitOr
+    'Xor':	{'fun': 'Xor', 'arity': 2, 'xtype': 'b2b', 'tf': tf.math.logical_xor, 'latex': None, 'sym_str': 'Xor({}, {})', 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
+    'Nand':{'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Nand({}, {})',                        'pycode': lambda a, b: 'not({} and {})'.format(a, b)},
+    'Xand':{'fun': 'Xand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Xand({}, {})',                        'pycode': lambda a, b: 'not({} ^ {})'.format(a, b)},
+    'Nor':{'fun': 'Nor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Nor({}, {})',                        'pycode': None},
+    'Xnor': {'fun': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Xnor({}, {})',                        'pycode': None},
+
+    # I think this is only used when trying to get the xtype of type(variable), e.g. 0.3 -> float -> '2f'
+    'float':{'fun': 'float', 'arity': 0, 'xtype': '2f', 'tf': 'ä', 'latex': None, 'sym_str': None, 'pycode': lambda a: 'float({})'.format(a)},  # not tested
+    'int':	{'fun': 'int', 'arity': 0, 'xtype': '2f', 'tf': 'ä', 'latex': None, 'sym_str': 'Integer({})', 'pycode': lambda a: 'int({})'.format(a)},  # not tested
+    'bool':	{'fun': 'bool', 'arity': 0, 'xtype': '2b', 'tf': 'ä', 'latex': None, 'sym_str': '', 'pycode': lambda a: 'bool({})'.format(a)},  # not tested
 
     # Not tested: Converters: Dummy operators that convert between float and bool
-    'Ftob': 	{'fun': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool, 'gpbp': ['ö'], 'latex': None, 'call': 'bool', 			'pycode': lambda a: 'bool({})'.format(a)},  # not tested, same as bool
-    'Btof': 	{'fun': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32, 'gpbp': ['ö'], 'latex': None, 'call': 'float', 		'pycode': lambda a: 'float({})'.format(a)},  # not tested
+    'Ftob':{'fun': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool, 'latex': None, 'sym_str': 'bool',                'pycode': lambda a: 'bool({})'.format(a)},  # not tested, same as bool
+    'Btof':{'fun': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32, 'latex': None, 'sym_str': 'float',            'pycode': lambda a: 'float({})'.format(a)},  # not tested
 
     # Never used yet, trying to get rid of the ** function
-    'Power': 	{'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': '(({})**{})', 			'pycode': lambda a, b: '({}**{})'.format(a)},  # not used # todo # a*a*a -> a**3
-    'inverse': 	{'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': None},  # not used # 1/float. important for squareroots. todo
-
-    # Never used yet, todo. Trying to introduce multi-dimensional outputs that should
-    'vector': 	{'fun': 'vector', 'arity': 1, 'xtype': 'ü', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 				'pycode': None},  # not tested # sfeh: not working
+    'Power':{'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'latex': None, 'sym_str': '({})**({})',            'pycode': lambda a, b: '({}**{})'.format(a, b)},  # not used # todo # a*a*a -> a**3
+    'inverse':{'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'latex': None, 'sym_str': None,                'pycode': None},  # not used # 1/float. important for squareroots. todo
 
     # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
     # Also very unclear how they should work.
     # - Let user specify them completely. Limit use to 1 (or 2) per tree.
     # - temporary variable(s) must be introduced that change within loop
     # - Condition must be change within loop
-    'while': 	{'fun': 'while', 'arity': 2, 'xtype': 'b2?2?', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 			'pycode': None},  # sfeh: not working # Condition must change in loop
-    'repeat_n': 	{'fun': 'repeat_n', 'arity': 2, 'xtype': 'b2?', 'tf': 'ä', 'gpbp': ['ö'], 'latex': None, 'call': None, 		'pycode': None},  # sfeh: not working # repeat n time, specify n (int) by user?
+    'while':{'fun': 'while', 'arity': 2, 'xtype': 'b2?2?', 'tf': 'ä', 'latex': None, 'sym_str': None,                    'pycode': None},  # sfeh: not working # Condition must change in loop
+    'repeat_n':{'fun': 'repeat_n', 'arity': 2, 'xtype': 'b2?', 'tf': 'ä', 'latex': None, 'sym_str': None,                'pycode': None},  # sfeh: not working # repeat n time, specify n (int) by user?
 }
+
+# sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
+
 # import tensorflow as tf; import ast; import textwrap
 # print([x for x in op.keys() if type(x) == type('asd')])  # retreive a list with all non-ast ops:
 
-functions_infix_dict = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&', '|']
+expr_raw_infix = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&', '|']  # sfeh / is removed for
 
-function_infix_to_prefix = {  # currently obsolete
-    '+': 'add',
-    '-': 'sub',
-    '*': 'mult',
-    '/': 'div',
-    '**': 'power',
-    '==': 'eq',
-    '!=': 'neq',
-    '<': 'lt',
-    '<=': 'leq',
-    '>': 'gt',
-    '>=': 'geq',
-    '&': 'And',
-}

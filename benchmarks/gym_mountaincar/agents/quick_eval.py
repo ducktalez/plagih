@@ -1,147 +1,216 @@
 """
-FYI:
 pos = observation0
 velocity = observation1
 pos, vel = observation
 """
-import time
 
-from benchmarks.gym_mountaincar.agents.agent_groups import *
-import matplotlib.pyplot as plt
-import itertools
-import pickle
 from pathlib import Path
-
+import matplotlib.pyplot as plt
 import numpy as np
 import gym
 
 
-def plot_decisions(env, agent, name):
-    # Creates the plot which displays current position/speed and the corresponding action
+def mtc_plot_decisions_space(agent, name='space_test', folder='img/'):
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
 
+    # Making the data for the plot
     poses = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, 256)
     vels = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, 256)
     positions, velocities = np.meshgrid(poses, vels)
 
     @np.vectorize
     def decide(position, velocity):
-        return agent.decide((position, velocity))
+        action = agent.decide((position, velocity))
+        return action
 
     action_values = decide(positions, velocities)
+    env.close()
 
+    # generating plot
     fig, ax = plt.subplots()
     c = ax.pcolormesh(positions, velocities, action_values)
     ax.set_xlabel('position')
     ax.set_ylabel('velocity')
     fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
     plt.title(name)
-    fig.show()
-    plt.savefig(Path('img/{}.jpg'.format(name)))
+    folder = Path(folder)
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
+    plt.savefig(Path(folder) / '{}.jpg'.format(name))
     plt.close()
     return
 
 
-def play_once(env, agent, render=False, verbose=False, sleep=0.0):
-    observation = env.reset()
-    episode_reward = 0.
-    if verbose:
-        print('New agent')
-    for step in itertools.count():
-        if render:
-            env.render()
-        action = agent.decide(observation)
-        time.sleep(sleep)
-        observation, reward, done, _ = env.step(action)
-        episode_reward += reward
-        # if verbose:
-        #     print('{:1.2f} {:1.2f} {}'.format(observation[0], observation[1], '--->' if action == 2 else '<---' if action == 0 else '___'))
-        if done:
-            break
-    # if verbose:
-    #     print('get {} rewards in {} steps'.format(
-    #         episode_reward, step + 1))
-    return episode_reward
+def mtc_heatmap_data(env, agent, num_splits, n=100):
+    # Making the data for the plot
+    behaviour = []
+    for _ in range(n):
+        observation = env.reset()
+        while True:
+            action = agent.decide(observation)
+            behaviour.append([observation[0], observation[1], action])
+            observation, reward, done, _ = env.step(action)
+
+            if done:
+                break
+    env.close()
+    behaviour = np.array(behaviour)  # [(1,2,3), (1,2,3), (1,2,3), (1,2,3), (1,2,3), ...]
+    positions, velocities, action_values = behaviour.T  # [[1,1,1, ...], [2,2,2, ...], [3,3, ...]]
+
+    x_min = env.unwrapped.min_position
+    x_max = env.unwrapped.max_position
+    y_min = -env.unwrapped.max_speed
+    y_max = env.unwrapped.max_speed
+
+    # Making the data for the plot
+    splits_x = np.linspace(x_min, x_max, num_splits)
+    splits_y = np.linspace(y_min, y_max, num_splits)
+
+    def linspace_pos(x, rangetuple, num_splits):
+        num_splits -= 1
+        range_spread = rangetuple[1] - rangetuple[0]
+        xadd = -rangetuple[0]
+        x = (x + xadd) * (num_splits / range_spread)  # normalized
+        x = round(x * (num_splits)) / (num_splits)
+        x = int(round(x))
+        return x
+
+    results_0 = np.zeros((num_splits, num_splits))
+    results_1 = np.zeros((num_splits, num_splits))
+    results_2 = np.zeros((num_splits, num_splits))
+    results = np.zeros((num_splits, num_splits))
+    heatmap_list = [results, results_0, results_1, results_2]
+
+    for tup in behaviour:
+        res_x = linspace_pos(tup[0], (x_min, x_max), num_splits)
+        res_y = linspace_pos(tup[1], (y_min, y_max), num_splits)
+        results[res_x, res_y] += 1
+
+    return splits_x, splits_y, results
 
 
-def compare_simple(agents):
-    for name, agent in agents:
-        np.random.seed(0)
-        env = gym.make('MountainCar-v0')
-        env.seed(0)
-        time_start = time.perf_counter()
-        episode_rewards = [play_once(env, agent) for _ in range(100)]
-        failcount = sum([1 for x in episode_rewards if x == -200])
-        print('{} \thad average episode rewards = {}. Failed {} times. \tTime needed: {:1.3f}s'.format(name, np.mean(episode_rewards),failcount, time.perf_counter() - time_start))
-        env.close()
+def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', num_splits=128, decisions=None):
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
+
+    splits_x, splits_y, results = mtc_heatmap_data(env, agent, num_splits)
+
+    # generating plot
+    fig, ax = plt.subplots()
+    c = ax.pcolormesh(splits_x, splits_y, results, cmap='Greys')
+    ax.set_xlabel('position')
+    ax.set_ylabel('velocity')
+    fig.colorbar(c, ax=ax)
+    plt.title(name)
+    folder = Path(folder)
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
+    plt.savefig(Path(folder) / '{}.jpg'.format(name))
+    plt.close()
+    return
 
 
-def render_ntimes(agents, n, verbose=False, sleep=0.0):
-    for name, agent in agents:
-        np.random.seed(0)
-        env = gym.make('MountainCar-v0')
-        env.seed(0)
-        for _ in range(n):
-            episode_rewards = play_once(env, agent, render=True, verbose=verbose, sleep=sleep)
-            print('episode_rewards', episode_rewards)
-        env.close()
+def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits=256, name='differences', folder='img/', abs_diff=True, cmap='viridis'):
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
+
+    # Making the data for the plot
+    poses = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, num_splits)
+    vels = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, num_splits)
+    positions, velocities = np.meshgrid(poses, vels)
+
+    @np.vectorize
+    def decide_diff(position, velocity):
+        action_a = agent_a.decide((position, velocity))
+        action_b = agent_b.decide((position, velocity))
+        return action_a - action_b
+
+    result = decide_diff(positions, velocities)
+
+    if abs_diff:
+        result = abs(result)
+        boundaries=np.linspace(-0.5,2.5,4)
+        ticks=np.linspace(0,2,3)
+    else:
+        boundaries=np.linspace(-2.5,2.5,6)
+        ticks=np.linspace(-2,2,5)
+        cmap='PiYG'
+
+    if agent_a_dummy:
+        hm_x, hm_y, hm_res = mtc_heatmap_data(env, agent_a, num_splits)
+        dummy_res = abs(np.sign(hm_res))
+        result = result * dummy_res
+        cmap='Greys'
 
 
-def plot_simple(agents):
-    for name, agent in agents:
-        np.random.seed(0)
-        env = gym.make('MountainCar-v0')
-        env.seed(0)
+    env.close()
 
-        plot_decisions(env, agent, 'agent_{}'.format(name))
-        env.close()
-
-
-def load_sarsas():
-
-    with Path.open(Path(sarsa_file_75), 'rb') as file:
-        sarsa_agent_75 = pickle.load(file)
-        print('Loaded sarsa 75')
-
-    with Path.open(Path(sarsa_file_200), 'rb') as file:
-        sarsa_agent_200 = pickle.load(file)
-        print('Loaded sarsa 200')
-
-    with Path.open(Path(sarsa_file_1000), 'rb') as file:
-        sarsa_agent_1000 = pickle.load(file)
-        print('Loaded sarsa 1000')
-
-    with Path.open(Path(sarsa_file_10000), 'rb') as file:
-        sarsa_agent_10000 = pickle.load(file)
-        print('Loaded sarsa 10000')
-    return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
+    # generating plot
+    fig, ax = plt.subplots()
+    c = ax.pcolormesh(positions, velocities, result, cmap=cmap)
+    ax.set_xlabel('position')
+    ax.set_ylabel('velocity')
+    fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)
+    plt.title(name)
+    folder = Path(folder)
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
+    plt.savefig(Path(folder) / '{}.jpg'.format(name))
+    plt.close()
+    return
 
 
-sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
-sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
-# sarsa_agent_75, _, _, _ = load_sarsas()
+def mtc_play(agent, render=False, mp4=False, n=1):
+    # if mp4:
+    #     env = wrappers.Monitor(env, Path('videos/{}/'.format(time.time() % 100000)))
+    np.random.seed(0);env = gym.make('MountainCar-v0');env.seed(0)
+    reward_sum = 0
+    fail_sum = 0
+    for asd in range(n):
+        episode_reward = 0
+        observation = env.reset()
+        while True:
+            if render:
+                env.render()
+            action = agent.decide(observation)
+            observation, reward, done, _ = env.step(action)
+
+            episode_reward += reward
+            if done:
+                reward_sum += episode_reward
+                break
+
+        if episode_reward == 199:
+            fail_sum += 1
+    reward_average = reward_sum / n
+    env.close()
+
+    return reward_average, fail_sum
 
 
-mountain_agents = {1: ('v1_simple', SimpleAgent()),
-                   2: ('v1_improved', PlagihAgent_A()),
-                   3: ('xiao_base', FixAgent()),
-                   4: ('xiao_short', TestFixNoLowerbound()),
-                   5: ('sarsa_75', sarsa_agent_75),
-                   6: ('sarsa_200', sarsa_agent_200),
-                   7: ('sarsa_1000', sarsa_agent_1000),
-                   8: ('sarsa_10000', sarsa_agent_10000),
-                   9: ('test_tmp', TestTmp()),
-                   10: ('AgentV1p40', AgentV1p40()),
-                   11: ('SimonsBest', SimonsGpFriendly()),
-                   12: ('SimonsCheckpoints', SimonsCheckpoints()),
-                   13: ('TestCombined', TestCombined()),
-                   14: ('SimonTesting', SimonsTesting()),}
+def eval_agent_list(agent_list, folder=Path('img/')):
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
 
-oneAgent = {mountain_agents[11]}
-twoAgents = {mountain_agents[14], mountain_agents[11]}
+    agent_performance = []
+    for name, agent in agent_list:
+        mtc_plot_decisions_space(agent, name, folder=folder)
+        avg_reward, fails = mtc_play(agent, n=100)
+        agent_performance.append([name, avg_reward, fails])
 
-# plot_simple(oneAgent)
-# compare_simple(twoAgents)
-render_ntimes(oneAgent, 3, verbose=True, sleep=0.1)
+    y = [x[1] for x in agent_performance]
+    x = list(range(len(agent_performance)))
+    plt.bar(x, y)
+    # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
+    plt.savefig(folder / 'agent_perf.jpg')
+
+    with Path.open(folder / 'summary.txt', 'w') as file:
+        file.write('\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance]))
 
 
-# todo idee: gp vs. nn entscheidungen clustern.
+if __name__ == '__main__':
+    eval_agent_list(agent_tuples)  # , folder=folder

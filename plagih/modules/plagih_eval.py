@@ -1,6 +1,5 @@
 from plagih.modules.printing import *
 from plagih.modules.dicts import *
-from plagih.modules.plagih_types import xtype_get
 
 import sklearn.metrics as skm
 
@@ -55,8 +54,9 @@ class FitnessKernel:
             result_str += ('\n\n Matching fitness score: {}'.format(result['fitness']))
         return result_str
 
-    def tf_get_pairwise_fitness(self, solution, tf_result, action_dict, unique_outputs_num, action_min_max=None):
+    def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num, action_min_max=None):
         # 3- Add fitness computation into TF graph
+        # sfeh add action here if needed for multidimensional results
 
         if self.kernel == 'classification':  # CLASSIFY kernel
 
@@ -72,9 +72,6 @@ class FitnessKernel:
             side of origin_meta as it has not yet been determined the effect of enabling the middle bin to include both a 
             negative and positive result.
             """
-
-            if len(action_dict) > 1:
-                print_e('TODO multidimensional input. To be custom_done, there is no solution yet.')
 
             skew = (unique_outputs_num / 2) - 1
 
@@ -95,9 +92,7 @@ class FitnessKernel:
         elif self.kernel == 'regression':
 
             """
-            A very, very basic  kernel which is not designed to perform well in the real world. It requires
-            that you raise the minimum node count to keep it from converging on the c1 of '1'. Consider writing or 
-            integrating a more sophisticated kernel.
+            Gets the difference to the correct label
             """
 
             pairwise_fitness = tf.abs(solution - tf_result)
@@ -105,8 +100,9 @@ class FitnessKernel:
         elif self.kernel == 'regression bounded':
             """
             special regression for float solutions and discrete labels
-            - if the solution is between labels, the difference is added
-            - if the solution > bound_pop (the highest possible label), difference 0 is added
+            The result is assigned to the closest value
+                - if the result is between labels
+                - if the solution exceeds the minimum or maximum value
             ---
             suitable for:
             - not fitting labels beforehand
@@ -114,10 +110,25 @@ class FitnessKernel:
             - orderable amount of labels
             """
 
+            # v4 - largely false decisions should get affected largely
             act_min = tf.constant(action_min_max[0], dtype=tf.float32)
             act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            new_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
-            pairwise_fitness = tf.abs(solution - new_result)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
+
+            # # v3
+            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - customised_result))
+
+            # # v2
+            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # pairwise_fitness = tf.abs(solution - customised_result)
+
+            # # v1
+            # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
+            # pairwise_fitness = tf.abs(solution - customised_result)
 
         elif self.kernel == 'match':  # MATCH kernel
 
@@ -135,11 +146,10 @@ class FitnessKernel:
         return pairwise_fitness
 
 
-def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
+def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_classify_labels_map, get_pred_labels=False):
 
     """
-    computes config-tree results and fitness scores.
-    - Computes tree expression using TensorFlow (TF)
+    Computes tree expression using TensorFlow (TF)
     - parsing input string 'expression' and converting it into a TF operation graph
     - processing tf graph in an isolated TF session (results and corresponding fitness)
 
@@ -147,8 +157,6 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
         'self.tf_device_log' - controls device placement logging (debug only).
 
     Args:
-        'expr' - a string expression to be computed on the data_csv_path. Variable -> 'self.terminals'
-        'data_csv_path' - an 'n by m' matrix of the data_csv_path points containing n observations like 'self.terminals'.
         'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be
         extracted from the evolved results.
 
@@ -161,16 +169,9 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
             'fitness'           - aggregated scalar fitness score
 
     """
-    # eval_parameters = self.eval_parameters
-    kernel = eval_parameters['kernel_name']
-    action_dict = eval_parameters['action_dict']
-    variables_dict = eval_parameters['variables_dict']
-    tf_device_log = eval_parameters['tf_device_log']
-    tf_device = eval_parameters['tf_device']
-    unique_outputs_num = eval_parameters['unique_outputs_num']
-    tf_classify_labels_map = eval_parameters['tf_classify_labels_map']
-    action_min_max = eval_parameters['action_min_max']
 
+    unique_outputs_num = env_variables['action_at'][0]['unique_outputs_num']
+    action_min_max = env_variables['action_at'][0]['minmax']
     # Initialize TensorFlow session
     tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
     config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log, allow_soft_placement=True)
@@ -181,7 +182,7 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
             # 1. data_csv_path (observations, actions) to tensors
             tensors = {}
 
-            tensors = tensors_leaves(tensors, data, variables_dict, action_dict)
+            tensors = tensors_leaves(tensors, data, env_variables)
 
             # 2- Transform string expression into TF operation graph
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
@@ -189,42 +190,49 @@ def eval_tf(expr, data, eval_parameters, get_pred_labels=False):
 
             solution = tensors[first_action]  # todo
 
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, action_dict, unique_outputs_num, action_min_max=action_min_max)
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if get_pred_labels:
                 pred_labels = tf.map_fn(tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
 
             tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
-
+        # todo check fitness here?
     return {'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
             'pairwise_fitness': pairwise_fitness}
 
 
-def tensors_leaves(tensors, data, variables_dict, action_dict):
+def tensors_leaves(tensors, data, env_variables):
     """
     All the tensors in leaf nodes
     - variables (observation0, ...)
-    - constants (True, False, 1.234, ...)
+    - distributions_file (True, False, 1.234, ...)
     """
-    num_terminals = len(variables_dict['all'])
 
-    for i in range(num_terminals):
-        var = variables_dict['all'][i]
-        xtype = xtype_get(var, variables_dict=variables_dict, node_arity=0)
+    # for i in range(num_columns):
+    for obs_name, obs_info in env_variables['obs_name'].items():
+
+        label = obs_info['label']
+        xtype = obs_info['xtype']
+        pos = obs_info['pos']
+        # xtype = xtype_get_from_label(obs, env_var_dummy=env_var_dummy, node_arity=0)
+
         if '2f' in xtype:
-            tensors[var] = tf.constant(data[:, i], dtype=tf.float32)  # converts data_csv_path into vectors
+            tensors[label] = tf.constant(data[:, pos], dtype=tf.float32)  # converts data_csv_path into vectors
         elif '2b' in xtype:
-            tensors[var] = tf.constant(data[:, i], dtype=tf.bool)
+            tensors[label] = tf.constant(data[:, pos], dtype=tf.bool)
         else:
             raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
 
-    for i, action in enumerate(action_dict):
-        py_type = action_dict[action]
-        if 'float' in py_type:
-            tensors[name_action + str(i)] = tf.constant(data[:, num_terminals + i], dtype=tf.float32)  # converts data_csv_path into vectors
+    # sfeh: if more than one action is provided...
+    if len(env_variables['action_at']) == 1:
+        action_xtype = env_variables['action_at'][0]['xtype']
+        action_label = env_variables['action_at'][0]['label']
+        column = env_variables['action_at'][0]['pos']
+        if '2f' in action_xtype:
+            tensors[action_label] = tf.constant(data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
         else:
-            print_e('action_dict type for {} is: {}.'.format(action, py_type))
+            print_e('action {} has these infos: {}.'.format(action_label, env_variables['action_at'][0]))
     return tensors
 
 
@@ -285,9 +293,9 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
     # Arity 0
     if isinstance(node, ast.Name):  # <tensor_name>
-        if prnt:
-            return '{}'.format(node.id)
-        elif build:
+        # if prnt:
+        #     return '{}'.format(node.id)
+        if build:
             return [node.id]
             # sfeh, what is better?
             # return node.id
@@ -295,8 +303,8 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             return tensors[node.id]
 
     elif isinstance(node, ast.Num):  # <number>
-        if prnt:
-            return '{}'.format(node.n)
+        # if prnt:
+        #     return '{}'.format(node.n)
         if build:
             # return node.n
             return [node.n]
@@ -305,8 +313,8 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             return tf.constant(node.n, shape=shape, dtype=tf.float32)
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-        if prnt:
-            return '{}'.format(node.value)
+        # if prnt:
+        #     return '{}'.format(node.value)
         if build:
             return [node.value]
             # return node.value
@@ -315,10 +323,10 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 #
     # Arity 1
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
-        if prnt:
-            return '({}{})'.format(
-                op[type(node.op)]['fun'],
-                ast_convert_from_expr_recursive(node.operand, prnt=prnt))
+        # if prnt:
+        #     return '({}{})'.format(
+        #         op[type(node.op)]['fun'],
+        #         ast_convert_from_expr_recursive(node.operand, prnt=prnt))
         if build:
             if type(node.op) == ast.USub:
                 return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
@@ -330,11 +338,11 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
-        if prnt:
-            return '({} {} {})'.format(
-                ast_convert_from_expr_recursive(node.left, prnt=True),
-                op[type(node.op)]['fun'],
-                ast_convert_from_expr_recursive(node.right, prnt=True))
+        # if prnt:
+        #     return '({} {} {})'.format(
+        #         ast_convert_from_expr_recursive(node.left, prnt=True),
+        #         op[type(node.op)]['fun'],
+        #         ast_convert_from_expr_recursive(node.right, prnt=True))
         if build:
             return [op[type(node.op)]['fun'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
@@ -345,16 +353,16 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                 ast_convert_from_expr_recursive(node.right, tensors=tensors))
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        if prnt:
-            return ast_chain_bool(node.values, op[type(node.op)]['fun'], prnt=True)
+        # if prnt:
+        #     return ast_chain_bool(node.values, op[type(node.op)]['fun'], prnt=True)
         if build:
             return ast_chain_bool(node.values, op[type(node.op)]['fun'], build=True)
         else:
             return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-        if prnt:
-            return ast_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
+        # if prnt:
+        #     return ast_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
         if build:
             return ast_chain_compare([node.left] + node.comparators, node.ops, build=True)
         else:
@@ -364,11 +372,11 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
 
         if node.func.id == 'Ifte':
-            if prnt:
-                return '(If ({}) then ({}) else ({}))'.format(
-                    ast_convert_from_expr_recursive(node.args[0], prnt=True),
-                    ast_convert_from_expr_recursive(node.args[1], prnt=True),
-                    ast_convert_from_expr_recursive(node.args[2], prnt=True))
+            # if prnt:
+            #     return '(If ({}) then ({}) else ({}))'.format(
+            #         ast_convert_from_expr_recursive(node.args[0], prnt=True),
+            #         ast_convert_from_expr_recursive(node.args[1], prnt=True),
+            #         ast_convert_from_expr_recursive(node.args[2], prnt=True))
             if build:
                 return ['Ifte',
                         [ast_convert_from_expr_recursive(node.args[0], build=True),
@@ -381,26 +389,26 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
                     ast_convert_from_expr_recursive(node.args[2], tensors=tensors))
 
         elif node.func.id == 'Ftob' or node.func.id == 'Btof':
-            if prnt:
-                return '({} {})'.format(node.func.id, ast_convert_from_expr_recursive(node.args[0], prnt=prnt))
+            # if prnt:
+            #     return '({} {})'.format(node.func.id, ast_convert_from_expr_recursive(node.args[0], prnt=prnt))
             if build:
                 return [node.func.id, [ast_convert_from_expr_recursive(node.args[0], build=True)]]
             else:
                 return tf.dtypes.cast(*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args], dtype=op[node.func.id]['tf'])
 
         elif len(node.args) <= 2:
-            if prnt:
-                if len(node.args) == 1:
-                    return '({} {})'.format(
-                        op[node.func.id]['fun'],
-                        ast_convert_from_expr_recursive(node.args[0], prnt=True))
-                elif len(node.args) == 2:
-                    return '({} ({}, {}))'.format(
-                        op[node.func.id]['fun'],
-                        ast_convert_from_expr_recursive(node.args[0], prnt=True),
-                        ast_convert_from_expr_recursive(node.args[1], prnt=True))
-                else:
-                    raise Exception('This arity is not supported')
+            # if prnt:
+            #     if len(node.args) == 1:
+            #         return '({} {})'.format(
+            #             op[node.func.id]['fun'],
+            #             ast_convert_from_expr_recursive(node.args[0], prnt=True))
+            #     elif len(node.args) == 2:
+            #         return '({} ({}, {}))'.format(
+            #             op[node.func.id]['fun'],
+            #             ast_convert_from_expr_recursive(node.args[0], prnt=True),
+            #             ast_convert_from_expr_recursive(node.args[1], prnt=True))
+            #     else:
+            #         raise Exception('This arity is not supported')
             if build:
                 if len(node.args) == 1:
                     return [op[node.func.id]['fun'],
@@ -416,7 +424,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
 
             # If nothing matched
         else:
-            raise Exception('Failed to identify the function')
+            raise Exception('Failed to identify the function. {}'.format(type(node)))
 
     else:
         raise TypeError(node)

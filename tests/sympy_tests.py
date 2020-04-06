@@ -1,13 +1,9 @@
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.dicts import name_observation
 import re
 
 
 def help_reduce_expr(expr):
-    a = name_observation + '0'
-    b = name_observation + '1'
-
-    replacements = [(a, 'a'), (b, 'b'), ('(True)', 'True'), ('(False)', 'False'), ('(a)', 'a'), ('sina', 'sin(a)')]
+    replacements = [('(True)', 'True'), ('(False)', 'False'), ('(a)', 'a'), ('sina', 'sin(a)')]
     for repl in replacements:
         expr = expr.replace(repl[0], repl[1])
 
@@ -15,7 +11,6 @@ def help_reduce_expr(expr):
 
 
 def help_reduce_more(expr):
-    # todo not working
     expr = help_reduce_expr(expr)
 
     expr_sym = plagih_sympify(expr)
@@ -37,59 +32,65 @@ def help_reduce_more(expr):
 
 
 def test_sympify_many():
-    print(plagih_sympify('(ifte(True, 0, 1))'))
-    print(plagih_sympify('(ifte(False, 0, 1))'))
-    print(plagih_sympify('a == (a<b)'))
-    print(plagih_sympify('a+a+b'))
-    print(plagih_sympify('(ifte((a<2), 0, 2))'))
-    print(plagih_sympify('(ifte((a<2), mini(a, 2), 2))'))
-    print(plagih_sympify('mini(a, 2)'))
-    print(plagih_sympify('maxi(a, 2)'))
-    print(plagih_sympify('Ftob(x)'))
-    print(plagih_sympify('Ftob2'))
-    print(plagih_sympify('a/0'))
-    print(plagih_sympify('a/(a/(a-a))'))
+    sympify_test_strings = [
+        ('(ifte(True, 0, 1)), None', None),
+        ('(ifte(False, 0, 1))', None),
+        ('a == (a<b)', None),
+        ('a+a+b', None),
+        ('(ifte((a<2), 0, 2))', None),
+        ('(ifte((a<2), mini(a, 2), 2))', None),
+        ('mini(a, 2)', None),
+        ('maxi(a, 2)', None),
+        ('Ftob(x)', None),
+        ('Ftob2', None),
+        ('a/0', None),
+        ('a/(a/(a-a))', None),
+        ('(Ifte((b<((Ifte(((((Ifte(((Mini((-0.9932952785512101), b))>a), (a*(0.1)), b))-(((-0.7)-b)*b))*((-0.7)/(Maxi(a, ((Ifte((-0.3), b, (0.7)))-(-0.8))))))>(a/(Ifte(False, (0.9), (0.1))))), b, (-0.4)))*(Ifte((0>a), (Ifte(True, b, a)), (Mini(b, (Maxi((Ifte(True, (((a-(0.8))-(-0.9))/((Ifte(b, a, (0.3)))+b)), (-0.2))), ((-0.9)/((0)/a)))))))))), 0, 2))', None),
+        ('((Ifte(((b*(7/a))>a), b, (-4)))*(Ifte(False, b, (Mini(b, (Maxi((Ifte(True, (a/((Ifte(b, a, 3))+b)), 0)), (1/(0/a)))))))))', None),
+        ('Ifte(False, b, (Mini(b, (Maxi(((a)), (1/(0/a)))))))', None),
+        ('1/(0/a)', None),
+        ('Maxi(a, (1/(a)))', None),
+        ('Maxi(1, (1/(a)))', None),
+        ('Maxi(a, (1/(0/a)))', None),
+        ('Mini(b, (Maxi(a, (1/(0/a)))))', None),
+        ('Mini(b, (Maxi(a, (1/(0/a)))))', None),  # nan
+        ('nan', None),  # nan
+        ('a<zoo', None),  # nan
+        ('a/0', None),  # zoo*a
+        ('a/0.0', None),  # inf*a
+        ('obs0+(-0.09)**4', None),  # obs0 + 6.561e-5
+        ('And(a<2,b<3)', None),
+        ('(a<2) & (b<3)', None),
+        ('(-1)**(-0.5)', None),
+        ('(Ifte((And(((Mini((((((obs0)+(0.25))**(2))*(-0.09))+(0.03)), ((((obs0)+(-0.09))**(4))*(0.03))))<=(obs1)), ((obs1)<=(((-0.07)*(((obs0)+(0.38))**(2)))+(0.7))))), (0), (2)))', None),
+        ('a & True', None),  # a
+        ('(-0.09*(a**2))+0.03', None),  # -0.09*a**2 + 0.03
+        ('5 + (+6)', None),
+        ('5 + (-6)', None),
+        ('(-1)**(-0.5)', None),
+        ('(0**(-1.13))', None),
+        ('(a<b)', None),
+        ('--a < b', None),
+        ('(b>a)', None),
+        ('--a < b', None),
+        ('((-a)>(-b))', None),
+        ('--a < b', None),
+        ('((a<=b) & (a!=b))', None),
+        ('--a < b', None),
+        ('a*a*a*a*a', None),
+        ('N(2.345, 2)', None),
+        ('Or(True, False)', None),
+        ('(Ifte((Or(((b)<(1)), (((b)<(0.1))&((a)<(-0.01))))), (2), (Ifte((((a)<(0.01))&(((b)>(-0.1))&((b)<(-0.01)))), (0), (Ifte(((a)<(0)), (0), (2)))))))', None),
+        ('Andb(True, False)', None),
+        ('Or(True, False)', None),
+        ('Orb(True, False)', None),
+        ('Or(True, False)', None),
+        ('Orb(True, False)', None),
+        ('Or(a, a)', None),
+        ('Andb(True, a & b)', None),
+        ('Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))', None),
+        ('Andb(True, a & b)', None)]
 
-    print(type(plagih_sympify('zoo')))
-    print(plagih_sympify(
-        '(Ifte((b<((Ifte(((((Ifte(((Mini((-0.9932952785512101), b))>a), (a*(0.06780742530309536)), b))-(((-0.7211696970358776)-b)*(Ifte(False, (Maxi((0.3096806245031116), a)), (b+(0.21136426839679912))))))*((-0.753417111601751)/(Maxi((Ifte(False, (0.014032479771852957), a)), ((Ifte((-0.3260846193322311), b, (0.6765217675917521)))-(-0.8467329233491687))))))>(a/(Ifte(False, (0.9713116326167917), (0.015012772791043627))))), b, (-0.4203299405142009)))*(Ifte((0>a), (Ifte(True, b, a)), (Mini(b, (Maxi((Ifte(True, (((a-(0.8622404989425894))-(-0.9540913171769931))/((Ifte(b, a, (0.3379741691735958)))+b)), (-0.2472563440018496))), ((-0.9065824434028913)/(0/a)))))))))), 0, (Ifte(True, 2, 0))))'))
-    print(plagih_sympify(
-        '(Ifte((b<((Ifte(((((Ifte(((Mini((-0.9), b))>a), (a*(0.1)), b))-(((-0.7)-b)*b))*((-0.7)/(Maxi(a, ((Ifte((-0.3), b, (0.7)))-(-0.8))))))>(a/(Ifte(False, (0.9), (0.1))))), b, (-0.4)))*(Ifte((0>a), (Ifte(True, b, a)), (Mini(b, (Maxi((Ifte(True, (((a-(0.8))-(-0.9))/((Ifte(b, a, (0.3)))+b)), (-0.2))), ((-0.9)/((0)/a)))))))))), 0, 2))'))
-    print(plagih_sympify('((Ifte(((b*(7/a))>a), b, (-4)))*(Ifte(False, b, (Mini(b, (Maxi((Ifte(True, (a/((Ifte(b, a, 3))+b)), 0)), (1/(0/a)))))))))'))
-    print(plagih_sympify('Ifte(False, b, (Mini(b, (Maxi(((a)), (1/(0/a)))))))'))
-    print(plagih_sympify('1/(0/a)'))
-    print(plagih_sympify('Maxi(a, (1/(a)))'))
-    print(plagih_sympify('Maxi(1, (1/(a)))'))
-    print(plagih_sympify('Maxi(a, (1/(0/a)))'))
-    print(plagih_sympify('Mini(b, (Maxi(a, (1/(0/a)))))'))
-    print(plagih_sympify('Mini(b, (Maxi(a, (1/(0/a)))))'))  # nan
-    print(plagih_sympify('nan'))  # nan
-    print(plagih_sympify('a<zoo'))  # nan
-    print(plagih_sympify('a/0'))  # zoo*a
-    print(plagih_sympify('a/0.0'))  # inf*a
-    print(plagih_sympify('observation0+(-0.09)**4'))  # observation0 + 6.561e-5
-    print(plagih_sympify('And(a<2,b<3)'))
-    print(plagih_sympify('(a<2) & (b<3)'))
-    print(plagih_sympify('(-1)**(-0.5)'))
-    print(plagih_sympify('(Ifte((And(((Mini((((((observation0)+(0.25))**(2))*(-0.09))+(0.03)), ((((observation0)+(-0.09))**(4))*(0.03))))<=(observation1)), ((observation1)<=(((-0.07)*(((observation0)+(0.38))**(2)))+(0.7))))), (0), (2)))'))
-    print(plagih_sympify('a & True'))  # a
-    print(plagih_sympify('(-0.09*(a**2))+0.03'))  # -0.09*a**2 + 0.03
-    print(plagih_sympify('5 + (+6)'))
-    print(plagih_sympify('5 + (-6)'))
-    print(plagih_sympify('(-1)**(-0.5)'))
-    print(plagih_sympify('(0**(-1.13))'))
-    print(plagih_sympify('(a<b)'), '--a < b')
-    print(plagih_sympify('(b>a)'), '--a < b')
-    print(plagih_sympify('((-a)>(-b))'), '--a < b')
-    print(plagih_sympify('((a<=b) & (a!=b))'), '--a < b')
-    print(plagih_sympify('a*a*a*a*a'))
-    print(plagih_sympify('N(2.345, 2)'))
-    print(plagih_sympify('Or(True, False)'))
-    print(plagih_sympify('(Ifte((Or(((b)<(1)), (((b)<(0.1))&((a)<(-0.01))))), (2), (Ifte((((a)<(0.01))&(((b)>(-0.1))&((b)<(-0.01)))), (0), (Ifte(((a)<(0)), (0), (2)))))))'))
 
-print('\nNew try:\n')
-
-expr = 'tanh(1)'
-# new_expr = help_reduce_expr(expr)
-# print('Expression was strongly changed to: \n{}\n'.format(new_expr))
+expr = ''
 print(plagih_sympify(expr))

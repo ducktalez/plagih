@@ -144,6 +144,7 @@ def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits
         hm_x, hm_y, hm_res = mtc_heatmap_data(env, agent_a, num_splits)
         dummy_res = abs(np.sign(hm_res))
         result = result * dummy_res
+        cmap='Greys'
 
 
     env.close()

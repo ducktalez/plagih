@@ -2165,9 +2165,13 @@ def tree_check_types(tree, karoo=True):
             c_label = tree_node_get_label(tree, c_id)
             c_xtype = tree_node_get_xtype(tree, c_id)
             if not xtypes_required[ii] == c_xtype[-2:]:
-                print_e('Tree check failed. Node {} ({}), child ({}) with c_label ({}) does not match xtype ({}). It is c_xtype ({}).\n'
+                print_e('Tree check failed. Node id {}, label {}, xtype {} in child {} with id {} label {}, c_xtype {}.\n'
                         'tree (pretty print):\n{}\n'
-                        'Last modification was: {} '.format(node_id, label, ii, c_label, xtype, c_xtype, tree_pretty_print(tree, karoo=True), tree_get_history(tree)))
+                        'xtype_list: {}\n'
+                        'Last modification was: {} '.format(node_id, label, xtype, ii, c_id, c_label, c_xtype,
+                                                            tree_pretty_print(tree, karoo=True),
+                                                            [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)],
+                                                            tree_get_history(tree)))
                 return False
 
     return True

@@ -901,14 +901,14 @@ class ExplainableGP(object):
                     pareto_fit = self.pareto.get(parsim)['fitness_train']
                     if self.kernel.fitness_compare(fitness, pareto_fit):
                         self.pareto[parsim] = meta
-                        self.printpl('a', 'Pareto update at {}, with new fitness: {}. Old was: {}!'.format(parsim, fitness, best_fit))
+                        self.printpl('a', 'Pareto update at {}, with new {}-error: {}. Old was: {}!'.format(parsim, self.config['kernel_name'], fitness, best_fit))
                         pareto_improved = True
                 else:
                     self.pareto[parsim] = meta
-                    self.printpl('a', 'New pareto entry at {} with fitness: {:4.2f}!'.format(parsim, fitness))
+                    self.printpl('a', 'New pareto entry at {:.0f} with {}-error: {:4.2f}!'.format(parsim, self.config['kernel_name'], fitness))
                     pareto_improved = True
                 best_fit = fitness
-
+            # todo idea plot #pareto entries / gen
             if pareto_improved:
                 expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
                 tree = karoo_tree_from_expr(expr_raw, self.env_variables)

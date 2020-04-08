@@ -3,10 +3,9 @@ import sys
 sys.path = ['..'] + sys.path
 sys.path.append('modules/')  # add directory 'modules' to the current root_dir
 
-import plagih.modules.plagih_gp_base_class_xai as plagih
 from plagih.modules.plagih_gp_base_class_xai import *
-from plagih.modules.Examples import *
 from plagih.modules.plagih_data import *
+from plagih.modules.operators import oparray_from_list
 import yaml
 
 
@@ -64,7 +63,7 @@ def show_default_config(output_file):
     """
     if not Path.is_dir(output_file.parent):
         raise Exception('Will not make the path with Path.mkdir(output_file.parent): {}'.format(output_file))
-    print('Coming soon! sfeh.')
+    raise Exception('Coming soon! sfeh.')
 
 
 def show_default_operators(output_file=None):
@@ -74,7 +73,7 @@ def show_default_operators(output_file=None):
 
     if not Path.is_dir(output_file.parent):
         raise Exception('Will not make the path with Path.mkdir(output_file.parent): {}'.format(output_file))
-    print('Coming soon! sfeh.')
+    raise Exception('Coming soon! sfeh.')
 
 
 def runfolder_exists(root_dir):
@@ -122,7 +121,6 @@ def load_data_prepared(root_dir):
 
 
 def load_tree_elements(root_dir):
-
     # Load operators
     operators_csv = root_dir / operators
     if Path.is_file(operators_csv):  # Load operators.csv
@@ -130,10 +128,10 @@ def load_tree_elements(root_dir):
     else:
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators.')
-        functions = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2],['Mini', 2], ['Maxi', 2],['<', 2], ['<=', 2],
+        functions = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
                               ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['Not', 2], ['sin', 2], ['Ifte', 2]])
         np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
-    choose_oparray = funcarray_from_list(functions)
+    choose_oparray = oparray_from_list(functions)
 
     # load distributions_file
     distributions_yaml = root_dir / distributions_file
@@ -142,8 +140,10 @@ def load_tree_elements(root_dir):
             distributions_as_string = yaml.load(file, Loader=yaml.FullLoader)
     else:
         print_warning('w', 'Distributions file does not exist.')
-        distributions_as_string = {'2f': ['lambda: np.random.normal(1,2)', 'lambda: np.random.normal(1,1)', 'lambda: np.random.randint(0, 10)'],
-                                   '2b': ['lambda: np.random.choice([True, False])']}  # sfeh
+        distributions_as_string = {'2f': ['lambda: np.random.normal(1,2)',
+                                          'lambda: np.random.normal(1,1)',
+                                          'lambda: np.random.randint(0, 10)'],
+                                   '2b': ['lambda: np.random.choice([True, False])']}
         with Path.open(Path(distributions_yaml), 'w') as file:
             _ = yaml.dump(distributions_as_string, file)
     distributions = {}

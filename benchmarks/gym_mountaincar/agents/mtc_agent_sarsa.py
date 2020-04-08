@@ -8,7 +8,7 @@ np.random.seed(0)
 import gym
 import sys
 from pathlib import Path
-from plagih.modules.dicts import name_observation, name_action
+from plagih.modules.operators import name_observation, name_action
 
 import pickle
 

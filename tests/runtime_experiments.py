@@ -1,5 +1,6 @@
 import time
 
+
 class WhatsBetter:
 
     def __init__(self, repeats):

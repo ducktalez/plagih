@@ -1,6 +1,4 @@
 from benchmarks.gym_mountaincar.agents.quick_eval import *
-# from benchmarks.gym_mountaincar.agents.agent_groups import *
-# from benchmarks.gym_mountaincar.agents.generated_agents import *
 from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *
 # from pathlib import Path
 

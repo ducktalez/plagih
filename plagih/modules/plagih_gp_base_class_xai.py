@@ -51,7 +51,7 @@ class ExplainableGP(object):
             # (!) Relevant for result
             'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
             'parsimony_max': 100,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
-            'kernel_name': 'regression bounded',  # [regression, regression bounded, classification, match]
+            'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
             'complexity_measure': 'ted',
 
             # rather irrelevant
@@ -92,7 +92,7 @@ class ExplainableGP(object):
             'tree from scratch min_nodes': 8,
             'random from scratch max nodes': 50,
             'tree branch base nodes': 20,
-            'tourn_size': 5,  # [7 per 100] number of trees selected for tournament # todo
+            'tourn_size': 3,  # [7 per 100] number of trees selected for tournament
 
             # When to stop the run
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
@@ -1008,7 +1008,7 @@ class ExplainableGP(object):
 
     def pop_random_from_scratch(self, repro_rate):
         """
-        sfeh
+        Creates completely random trees from scratch
         """
         if self.origin_exists():
             if repro_rate > 0 and tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
@@ -1021,7 +1021,6 @@ class ExplainableGP(object):
             label_list, arity_list, xtype_list = invent_label_list_nodes_grow(action_xtype, goal_nodes, self.env_variables, self.choose_oparray, self.choose_distributions)
             p_tree = Plagih_Tree(label_list, xtype_list)
             tree = p_tree.get_uninstanced_tree()
-            # tree = tree_set_id(tree, i)
 
             self.pop_append(tree, last_evolution='new-s')
 
@@ -1131,7 +1130,6 @@ class ExplainableGP(object):
                 raise Exception('Tree growth version not known')
 
             self.pop_append(tree, last_evolution='m-bra')
-            # print('Mutated a trees branch. Took {:4.2f} sec'.format(time.perf_counter()-time_start))
         return
 
     def pop_crossover_branch(self, repro_rate):
@@ -1353,7 +1351,6 @@ class ExplainableGP(object):
         #                          ''.format(expr_raw, expr_sym))
 
         if not tree_check_deep(tree, self.env_variables):
-            print('TODO', tree_labels(tree))
             raise
 
         self.origin_tree = copy.deepcopy(tree)
@@ -1390,8 +1387,6 @@ class ExplainableGP(object):
             raise Exception('Expr could not be sympified: {}'.format(ex))
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device, self.tf_classify_labels_map)['fitness']
-
-        # print('debug aa1', fitness_train, tree_get_labellist(tree))
 
         # print(str(fitness_train), 'str fitness train')
         # if str(fitness_train) == 'inf':
@@ -1461,7 +1456,7 @@ class ExplainableGP(object):
 
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='average fitness', plt_y_label='fitness',
+            self.plot_end(data_tuples, path_plots, plt_title='average error', plt_y_label='fitness',
                           linestyle='-',
                           set_left=data_tuples[0][0])
 
@@ -1497,17 +1492,17 @@ class ExplainableGP(object):
 
         if self.monitor_dict.get('fitness_variance') == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='variance in fitness', plt_y_label='variance',
+            self.plot_end(data_tuples, path_plots, plt_title='variance in error', plt_y_label='variance',
                           linestyle='-',
                           marker='')
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_variance'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='variance in parsimony', plt_y_label='variance',
+        self.plot_end(data_tuples, path_plots, plt_title='variance in complexity', plt_y_label='variance',
                       linestyle='-',
                       marker='')
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation', plt_y_label='fitness',
+        self.plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation', plt_y_label='error',
                       linestyle='dashed',
                       step_where='post')
 
@@ -1712,40 +1707,6 @@ class ExplainableGP(object):
             printez(message_type, text, time_total=time.perf_counter() - self.time_start)
 
         return
-
-
-def funcarray_from_list(functions):
-    """
-    Load all operators ready-to-use from a file
-    """
-
-    # rows are the function types (f2f)
-    # columns are the arity
-    choose_oparray = [[[], [], [], []],
-                      [[], [], [], []],
-                      [[], [], [], []],
-                      [[], [], [], []],
-                      [[], [], [], []]]
-
-    # sfeh make this a np.array
-
-    for fun in functions:
-        label = fun[0]
-        arity = op[label]['arity']  # arity = int(fun[1])
-        xtype = op[label]['xtype']
-
-        if xtype == 'f2f':
-            choose_oparray[f2f][arity].append(label)
-        elif xtype == 'f2b':
-            choose_oparray[f2b][arity].append(label)
-        elif xtype == 'b2b':
-            choose_oparray[b2b][arity].append(label)
-        elif xtype == 'b2f':
-            choose_oparray[b2f][arity].append(label)
-        elif xtype == 'b2f2f':
-            choose_oparray[b2f2f][arity].append(label)
-
-    return choose_oparray
 
 
 def check_value_is_real(fitness):

@@ -1,7 +1,7 @@
 from plagih.modules.plagih_eval import *
 from plagih.modules.plagih_tree import *
 from plagih.modules.Examples import *
-from plagih.modules.plagih_gp_base_class_xai import funcarray_from_list
+from plagih.modules.operators import *
 import time
 
 
@@ -21,13 +21,13 @@ class TestHelpers:
                                         'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
                                         'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
                                         'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
-                                        'cartPos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
-                                        'cartVel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
                                         'pos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
                                         'vel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
                                         'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
                                         'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
-                                        }}
+                                        },
+                           '2f': ['a', 'b', 'c', 'd'],
+                           '2b': ['bool1', 'bool2']}
 
         self.tree_MTC_simon_labels = ['Ifte',
                                       'Orb', '2', 'Ifte',
@@ -35,6 +35,12 @@ class TestHelpers:
                                       'cartVel', '1', '<', '<', '<', 'Andb', '<', '0', '2',
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
+
+        self.distributions_as_string = {'2f': [lambda: np.random.normal(1,2),
+                                               lambda: np.random.normal(1,1),
+                                               lambda: np.random.randint(0, 10)],
+                                        '2b': [lambda: np.random.choice([True, False])]}
+
         self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
 
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
@@ -47,18 +53,38 @@ class TestHelpers:
     def make_all_known_trees(self):
         tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
         expr_raw = tree_get_expr_raw(tree, root_id)
-        print('raw\n', tree_pretty_print(tree, karoo=True))
         expr_sym = expr_sympify(expr_raw)
         print(expr_sym)
         # tree_sym = karoo_tree_from_expr(expr_sym, self.env_bundle)
         # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
         sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
-        print('sym\n', tree_pretty_print(sym_tree2, karoo=True))
         print(tree_check_deep(sym_tree2, self.env_bundle))
 
         label_list = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
         label_list = workaround_remove_tilde_operator(label_list)
-        print('wwwwdd', label_list)
+
+    def auto_operator_tree_build(self):
+        """
+        test building all potential trees with all genetic operators
+        """
+        # sfeh float + bool
+        result_xtype = '2f'
+        goal_max_nodes = 14
+        env_variables = self.env_bundle
+        oparray = get_all_oparrays()
+        choose_distributions = self.distributions_as_string
+        build_type='grow'
+
+        label_list, arity_list, xtype_list = invent_label_list_nodes_grow(result_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_type=build_type)
+        modify_list = None  # get random modify list
+        tree = karoo_tree_from_labellist(label_list, env_variables)
+        for x in range(10):
+            # print('ss', tree_pretty_print(tree))
+
+            tree = tree_evolve_branch_multiple(tree, goal_max_nodes, env_variables, oparray, choose_distributions)
+            # if not tree_check_deep(tree, env_variables):
+
+        return
 
 
 def test_rebuild_loop_tree():
@@ -83,7 +109,7 @@ def test_rebuild_loop_tree():
 
 def test_choose_function():
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
-    func_array = TestHelpers.func_arr_dummy
+    oparray = TestHelpers.func_arr_dummy
     arities = [0, 1, 2, 3]
     xtypes = ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f']
     do_not_forget_this_option = None
@@ -91,21 +117,21 @@ def test_choose_function():
     # test_cases: (arity, xtype, result)
     test_cases = [(0, 'f2f', []),
                   (0, 'f2b', []),
-                  (1, 'f2f', func_array[0][1]),
-                  (1, 'f2b', func_array[1][1]),
-                  (2, 'f2f', func_array[0][2]),
-                  (2, 'b2b', func_array[2][2]),
-                  (2, 'f2b', func_array[1][2]),
+                  (1, 'f2f', oparray[0][1]),
+                  (1, 'f2b', oparray[1][1]),
+                  (2, 'f2f', oparray[0][2]),
+                  (2, 'b2b', oparray[2][2]),
+                  (2, 'f2b', oparray[1][2]),
 
-                  (2, None, func_array[0][2] + func_array[1][2] + func_array[2][2]),
-                  (3, None, func_array[4][3]),
+                  (2, None, oparray[0][2] + oparray[1][2] + oparray[2][2]),
+                  (3, None, oparray[4][3]),
 
-                  (None, 'f2f', func_array[f2f][1] + func_array[f2f][2] + func_array[b2f][1] + func_array[b2f2f][3]),
+                  (None, 'f2f', oparray[f2f][1] + oparray[f2f][2] + oparray[b2f][1] + oparray[b2f2f][3]),
 
-                  (None, None, sum(sum(func_array, []), [])),
+                  (None, None, sum(sum(oparray, []), [])),
 
-                  (None, 'b2f2f', func_array[f2f][1] + func_array[f2f][2] + func_array[b2f][1] + func_array[b2f2f][3]),
-                  (None, '2f', func_array[f2f][1] + func_array[f2f][2] + func_array[b2f][1] + func_array[b2f2f][3])
+                  (None, 'b2f2f', oparray[f2f][1] + oparray[f2f][2] + oparray[b2f][1] + oparray[b2f2f][3]),
+                  (None, '2f', oparray[f2f][1] + oparray[f2f][2] + oparray[b2f][1] + oparray[b2f2f][3])
                   ]
 
     worked_fine = True
@@ -113,7 +139,7 @@ def test_choose_function():
         arity = test_case[0]
         xtype = test_case[1]
         solution = test_case[2]
-        result = xtype_get_func_list(func_array, xtype=xtype, arity=arity)
+        result = xtype_get_func_list(oparray, xtype=xtype, arity=arity)
         if solution != result:
             print('Failed for {}. Result was: {}'.format(test_case, result))
             worked_fine = False
@@ -142,12 +168,12 @@ def test_build_tree_grow_nodecount(verbose=False):
                   ('2b', 12),
                   ('f2b', 12)]
     env_variables = TestHelpers.env_var_dummy
-    func_array = TestHelpers.func_arr_dummy
+    oparray = TestHelpers.func_arr_dummy
     for test_case in test_cases:
         for _ in range(10):
             old_xtype = test_case[0]
             max_nodes = test_case[1]
-            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, max_nodes, env_variables, func_array)
+            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, max_nodes, env_variables, oparray)
             if verbose:
                 print('Received the following list', len(label_list), label_list, arity_list)
 
@@ -207,26 +233,6 @@ def test_tree_layers():
         print('All Layers till 1:', layer_ids)
 
 
-def test_tree_evolve_branch_multiple():
-    env_variables = TestHelpers.env_var_dummy
-    label_list = MountainCarExamples.tree_v2_list
-    modify_list = MountainCarExamples.tree_v2_modify
-    xtype_list = xtypes_from_labels(label_list, env_variables)
-    p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
-    # p_tree = Plagih_Tree(label_list)
-    tree = p_tree.get_uninstanced_tree()
-    max_nodes = 15
-    env_variables = TestHelpers.env_var_dummy
-    func_array = TestHelpers.func_arr_dummy
-    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
-    tree = tree_evolve_branch_multiple(tree, max_nodes, env_variables, func_array)
-    print(tree)
-
-
 def test_list_split():
     fail_cnt = 0
 
@@ -263,63 +269,14 @@ def test_tree_viz_latex():
 
 def test_tree_set_modifyable_nodes():
     env_var_dummy = TestHelpers.env_var_dummy
-    func_array = TestHelpers.func_arr_dummy
+    oparray = TestHelpers.func_arr_dummy
     origin, tree2, _ = get_three_sample_trees()
     print('a origin_meta', origin[N_modify])
-    tree_new = tree_evolve_branch_multiple(origin.copy(), 25, env_var_dummy, func_array)
+    tree_new = tree_evolve_branch_multiple(origin.copy(), 25, env_var_dummy, oparray)
     print('b origin_meta', origin[N_modify])
     tree_new = tree_set_modifyable_nodes(tree_new, origin_tree=origin)
     print('c origin_meta', origin)
     print(tree_new)
-
-
-def test_tree_reduce_parts():
-    tree1, tree2, tree_plus = get_three_sample_trees()
-    tree = tree_evolve_reduce(tree_plus, env_var_dummy)
-    tree = tree_set_modifyable_nodes(tree, origin_tree=tree_plus)
-    print('First try', tree_check_rebuild(tree))
-
-    label_list = ['+', '-', '~', '1', '2', '3']
-    modify_list = [0, 0, 1, 1, 1, 1]
-
-
-
-def test_tree_parsimony_ted():
-    label_list = ['+', '+', '+', 1, 2, 3, 4]
-    xtype_list = ['f2f', 'f2f', 'f2f', '2f', '2f', '2f', '2f']
-    tree1 = karoo_tree_from_labellist(label_list, xtype_list)
-    tree2 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 3])
-    distance, mapping = tree_parsimony_ted(tree1, tree2)
-    print('dist:', distance)
-    print('mapping', mapping)
-    dist2 = tree_eval_parsimony(tree1, 'ted', origin_tree=tree2)
-    print('dist 2:', dist2)
-
-    tree1 = karoo_tree_from_labellist(['Ifte', 'True', 0, 1])
-    tree2 = karoo_tree_from_labellist(['Ifte', 'False', 0, 1])
-    dist2 = tree_eval_parsimony(tree1, 'ted', origin_tree=tree2)
-    print('dist 3:', dist2)
-
-
-def pycode_wrap():
-    complete_file = 'import math\n\n' \
-                    'all_agents = [{}]\n\n\n' \
-                    '{}'
-
-
-def pycode_agent_wrap(agent_name, pycode):
-    """
-    textwrap.indent(pycode, '\t')
-    """
-    agent_code = 'def {}({}):\n\treturn {}\n\n\n'.format(agent_name, name_observation, pycode)
-    return agent_code
-
-
-def test_tree_get_pycode():
-    tree1 = karoo_tree_from_labellist(['+', '+', '+', 1, 2, 3, 4])
-    print(tree_get_pycode(tree1))
-    tree1 = karoo_tree_from_labellist(['Ifte', '<', 'Ifte', 'Ifte', 'abs', 0.1, '<', 0, 1, '<', 0, 1, 'observation3', 'observation3', 0, 'observation1', 0])
-    print(tree_get_pycode(tree1))
 
 
 def check_op_names():
@@ -341,8 +298,8 @@ def test_create_random_tree(verbose=False):
     goal_max_nodes = 15
     env_var_dummy = TestHelpers.env_var_dummy
     all_functions = [(value['fun'], value['arity']) for key, value in op.items()]
-    func_array = funcarray_from_list(all_functions)
-    label_list, arity_list, xtype_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, env_var_dummy, func_array, build_type='grow')
+    oparray = funcarray_from_list(all_functions)
+    label_list, arity_list, xtype_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, env_var_dummy, oparray, build_type='grow')
     print(label_list)
     tree = karoo_tree_from_labellist(label_list)
     print('regular print:\n', tree)
@@ -439,4 +396,4 @@ def test_tree_visualize_reduced():
 
 
 live_test = TestHelpers()
-live_test.make_all_known_trees()
+live_test.auto_operator_tree_build()

@@ -124,10 +124,10 @@ def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity
 
     # label_list = workaround_remove_tilde_operator(label_list)
     xtype_list = xtypes_from_labels(label_list, env_variables)
+
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
-    if not tree_check_deep(tree, env_variables, karoo=True):  # todo check on creation
-        raise
+
     return tree
 
 
@@ -755,7 +755,7 @@ def invent_label_list_depth_random(xtype_root, depth_goal, env_variables, choose
         if depth < depth_goal - 1:
             for xtype in tbdo_xtypes:
                 if build_mode == 'grow' and np.random.choice(['term', 'func']) == 'term' and depth >= min_depth:
-                    label = choose_term(env_variables[xtype[-2:]], choose_distributions[xtype[-2:]])
+                    label = choose_term(xtype[-2:], env_variables, choose_distributions)
                     arity = 0
                 elif build_mode == 'full':
                     label, arity, xtype = choose_operator(choose_oparray, xtype, arity=None)
@@ -778,7 +778,7 @@ def invent_label_list_depth_random(xtype_root, depth_goal, env_variables, choose
         else:  # now, we are on the lowest dim_y.
 
             for xtype in tbdo_xtypes:  # Build terminals now.
-                label, arity = choose_term(env_variables[xtype[-2:]], choose_distributions[xtype[-2:]]), 0
+                label, arity = choose_term([xtype[-2:], env_variables], choose_distributions), 0
 
                 # Add the label to the result list
                 result_label_list.append(label)
@@ -791,7 +791,7 @@ def invent_label_list_depth_random(xtype_root, depth_goal, env_variables, choose
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def tree_evolve_insert_branch_v1(tree, branch_ids, env_variables, func_array, choose_distributions, depth_max=None, depth_min=None, depth_goal=None):
+def tree_evolve_insert_branch_v1(tree, branch_ids, env_variables, oparray, choose_distributions, depth_max=None, depth_min=None, depth_goal=None):
     """
     # The old depth based version
     # Not used anymore, as the amount of nodes is much more useful
@@ -813,7 +813,7 @@ def tree_evolve_insert_branch_v1(tree, branch_ids, env_variables, func_array, ch
 
     build_mode = np.random.choice(['full', 'grow'])  # todo test full method
     # Build a new tree
-    label_list, arity_list, xtype_list = invent_label_list_depth_random(old_xtype, depth_goal, env_variables, func_array, choose_distributions, min_depth=depth_min, build_mode=build_mode)
+    label_list, arity_list, xtype_list = invent_label_list_depth_random(old_xtype, depth_goal, env_variables, oparray, choose_distributions, min_depth=depth_min, build_mode=build_mode)
 
     if label_list:
         core_insert = core_from_labels(label_list, arity_list, xtype_list)
@@ -850,7 +850,7 @@ def randomly_split_range(range_max, num_splits):
     return sample_dist
 
 
-def tree_evolve_branch_multiple(tree, goal_nodes, env_variables, func_array, choose_distributions):
+def tree_evolve_branch_multiple(tree, goal_nodes, env_variables, oparray, choose_distributions):
     """
     insert a (random) number of branches at the first possible "layer"
     (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
@@ -870,7 +870,10 @@ def tree_evolve_branch_multiple(tree, goal_nodes, env_variables, func_array, cho
         layer0_ids = tree_get_mutatable_layer_lv0(tree)
         node_id = layer0_ids[i]
         old_branch = tree_node_get_branch(tree, node_id, karoo=True)
-        tree = tree_insert_branch_v2(tree_base, old_branch, env_variables, func_array, choose_distributions, goal_nodes=num_nodes_split[i])  # tree with new branch
+        tree = tree_insert_branch_v2(tree_base, old_branch, env_variables, oparray, choose_distributions, goal_nodes=num_nodes_split[i])  # tree with new branch
+
+    if not tree_check_types(tree, env_variables):
+        print_e('Error fgh')
 
     return tree
 
@@ -907,7 +910,7 @@ def tree_insert_branch_v2(tree, branch_ids, env_variables, choose_oparray, choos
     return tree
 
 
-def invent_label_list_nodes_grow(xtype, goal_max_nodes, env_variables, func_array, choose_distributions, build_type='grow'):
+def invent_label_list_nodes_grow(t_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_type='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -918,13 +921,13 @@ def invent_label_list_nodes_grow(xtype, goal_max_nodes, env_variables, func_arra
 
     How this works:
     - Building until we have achieved goal_max_nodes
-    - xtype is the root node
+    - t_xtype is the root node
     -> functerm_list: ['func', 'term', ...] for the current depth.
        shuffled for complete randomness
     ->
-    # sfeh xtype here is a filler, e.g. 2f -> + -> f2f
+    # sfeh t_xtype here is a filler, e.g. 2f -> + -> f2f
     """
-    tbdo_xtypes = [xtype]
+    tbdo_xtypes = [t_xtype]
     num_inserts = 1
     result_label_list = []
     result_arity_list = []
@@ -953,9 +956,9 @@ def invent_label_list_nodes_grow(xtype, goal_max_nodes, env_variables, func_arra
         np.random.shuffle(func_indices)
 
         for enum, index in enumerate(func_indices):  #
-            xtype = tbdo_xtypes[index]
+            t_xtype = tbdo_xtypes[index]
 
-            label, arity, label_xtype = choose_operator(xtype, func_array)
+            label, arity, label_xtype = choose_operator(t_xtype, oparray)
             # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), num_inserts, '>', arity, ')', (len(result_label_list) + num_inserts + arity), goal_max_nodes)
             if goal_max_nodes > (len(result_label_list) + num_inserts) + arity + 1:  # +1 = the start node which we must not forget
 
@@ -969,8 +972,8 @@ def invent_label_list_nodes_grow(xtype, goal_max_nodes, env_variables, func_arra
                 break
 
         for index in term_indices:
-            xtype = tbdo_xtypes[index]
-            label, arity = choose_term(env_variables[xtype[-2:]], choose_distributions[xtype[-2:]]), 0
+            t_xtype = tbdo_xtypes[index]
+            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions), 0
             label_xtype = xtype_get_from_label(label, env_variables)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
@@ -983,8 +986,8 @@ def invent_label_list_nodes_grow(xtype, goal_max_nodes, env_variables, func_arra
             if label == 'Ifte':
                 tbdo_xtypes.extend(['2b', '2f', '2f'])
             else:
-                xtype = xtype_get_from_label(label, env_variables)
-                child_type = xtype[:2][::-1]  # e. g. 'f2b' requires '2f' input
+                t_xtype = xtype_get_from_label(label, env_variables)
+                child_type = t_xtype[:2][::-1]  # e. g. 'f2b' requires '2f' input
                 arity = tmp_arity_list[index]
                 tbdo_xtypes.extend([child_type] * arity)
 
@@ -994,8 +997,8 @@ def invent_label_list_nodes_grow(xtype, goal_max_nodes, env_variables, func_arra
 
     else:
         # Fix the last leftover nodes
-        for xtype in tbdo_xtypes:
-            label, arity = choose_term(env_variables[xtype[-2:]], choose_distributions[xtype[-2:]]), 0
+        for t_xtype in tbdo_xtypes:
+            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions), 0
             label_xtype = xtype_get_from_label(label, env_variables)
             result_label_list.append(label)
             result_arity_list.append(arity)
@@ -1696,6 +1699,7 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     Given the labels (and label infos) as list
     this function builds the core of a tree (no node_modify)
     """
+
     if len(label_list) == 0:
         print_warning('w', 'label list is empty')
         raise
@@ -1719,10 +1723,6 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     tree = tree_core_init_row(tree, N_parent, parent_list)
     tree = tree_core_build_childs(tree)
     tree = tree_core_init_depth(tree, parent_list)
-
-    if not tree_check_children(tree, karoo=False):
-        print_e('Tree from label_list {} is not correct: {}'.format(label_list, tree))
-        raise
 
     return tree
 
@@ -1998,7 +1998,7 @@ def tree_evolve_mutate_point(tree, choose_oparray, env_variables, choose_distrib
         new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray, arity=arity)  # Function is same type, same arity
         tree = tree_node_set_label(tree, node_id, new_label)
     else:
-        new_label = choose_term(env_variables[xtype[-2:]], choose_distributions[xtype[-2:]])  # 3 -> '2f' -> 5
+        new_label = choose_term(xtype[-2:], env_variables, choose_distributions)  # 3 -> '2f' -> 5
         tree = tree_node_set_label(tree, node_id, new_label)
 
     # All node info should stay the same. xtype, arity
@@ -2046,7 +2046,7 @@ def labels_get_aritys_list(label_list, karoo=False):
     return arity_list
 
 
-def tree_pretty_print(tree, karoo=False):
+def tree_pretty_print(tree, karoo=True):
     if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
 
@@ -2165,13 +2165,15 @@ def tree_check_types(tree, karoo=True):
             c_label = tree_node_get_label(tree, c_id)
             c_xtype = tree_node_get_xtype(tree, c_id)
             if not xtypes_required[ii] == c_xtype[-2:]:
-                print_e('Tree check failed. Node id {}, label {}, xtype {} in child {} with id {} label {}, c_xtype {}.\n'
+                print_e('Tree check failed. Node ({}, {}, {}) child {} ({}, {}, {}).\n'
                         'tree (pretty print):\n{}\n'
                         'xtype_list: {}\n'
                         'Last modification was: {} '.format(node_id, label, xtype, ii, c_id, c_label, c_xtype,
                                                             tree_pretty_print(tree, karoo=True),
                                                             [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)],
                                                             tree_get_history(tree)))
+                delete_this = True
+                raise
                 return False
 
     return True
@@ -2282,7 +2284,7 @@ def tree_prune_depth(tree, max_depth, env_variables, choose_distributions):
             label = tree_node_get_label(tree, node_id)
             xtype = xtype_get_from_label(label, env_variables)
             tree = tree_node_set_arity(tree, node_id, 0)
-            new_term = choose_term(env_variables[xtype[-2:]], choose_distributions[xtype[-2:]])  # replace label
+            new_term = choose_term(xtype[-2:], env_variables, choose_distributions)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)
 
         elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth

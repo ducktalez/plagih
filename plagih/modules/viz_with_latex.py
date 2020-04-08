@@ -1,7 +1,7 @@
 """
 Visualising Trees with latex.
 """
-from plagih.modules.dicts import op
+from plagih.modules.operators import op
 
 tree_sep = ''  # ''\\newpage'
 

@@ -33,14 +33,13 @@ def help_reduce_more(expr):
 
 def test_sympify_many():
     sympify_test_strings = [
-        ('(ifte(True, 0, 1)), None', None),
-        ('(ifte(False, 0, 1))', None),
-        ('a == (a<b)', None),
-        ('a+a+b', None),
-        ('(ifte((a<2), 0, 2))', None),
-        ('(ifte((a<2), mini(a, 2), 2))', None),
-        ('mini(a, 2)', None),
-        ('maxi(a, 2)', None),
+        ('(Ifte(True, 0, 1))', '0'),
+        ('(Ifte(False, 0, 1))', '1'),
+        ('a+a+b', '2*a+b'),
+        ('(Ifte((a<2), 0, 2))', 'ifte(a < 2, 0, 2)'),
+        ('(Ifte((a<2), Mini(a, 2), 2))', None),
+        ('Mini(a, 2)', None),
+        ('Maxi(a, 2)', None),
         ('Ftob(x)', None),
         ('Ftob2', None),
         ('a/0', None),
@@ -91,6 +90,11 @@ def test_sympify_many():
         ('Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))', None),
         ('Andb(True, a & b)', None)]
 
+    for expr in sympify_test_strings:
+        print(plagih_sympify(expr[0]))
+
+
+test_sympify_many()
 
 expr = ''
 print(plagih_sympify(expr))

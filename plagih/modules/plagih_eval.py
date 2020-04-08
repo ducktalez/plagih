@@ -1,5 +1,5 @@
 from plagih.modules.printing import *
-from plagih.modules.dicts import *
+from plagih.modules.operators import *
 
 import sklearn.metrics as skm
 
@@ -22,6 +22,8 @@ class FitnessKernel:
         elif self.kernel == 'regression' and fitness1 < fitness2:
             return True
         elif self.kernel == 'regression bounded' and fitness1 < fitness2:
+            return True
+        elif self.kernel == 'regression discrete' and fitness1 < fitness2:
             return True
         elif self.kernel == 'classification' and fitness1 > fitness2:
             return True
@@ -49,7 +51,8 @@ class FitnessKernel:
             mse = skm.mean_squared_error(result['tf_result'], result['solution'])
             result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
-
+        elif self.kernel == 'regression discrete':
+            result_str = 'No summary provided for this kernel'
         elif self.kernel == 'match':
             result_str += ('\n\n Matching fitness score: {}'.format(result['fitness']))
         return result_str
@@ -110,11 +113,11 @@ class FitnessKernel:
             - orderable amount of labels
             """
 
-            # v4 - largely false decisions should get affected largely
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
+            # # v4 - largely false decisions should get affected largely
+            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
 
             # # v3
             # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
@@ -122,13 +125,16 @@ class FitnessKernel:
             # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
             # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - customised_result))
 
-            # # v2
-            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            # pairwise_fitness = tf.abs(solution - customised_result)
-
             # # v1
             # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
             # pairwise_fitness = tf.abs(solution - customised_result)
+
+        elif self.kernel == 'regression discrete':
+            # regression that fits the outputs to a discrete set of actions defined by min and max
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            pairwise_fitness = tf.abs(solution - customised_result)
 
         elif self.kernel == 'match':  # MATCH kernel
 
@@ -144,6 +150,39 @@ class FitnessKernel:
             raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
 
         return pairwise_fitness
+
+
+class RegressionKernel(FitnessKernel):
+    """
+    first try to make separate classes
+    """
+    def __init__(self):
+        super('regression')
+        self.name = 'regression'
+
+    # def fitness_compare(self, fitness1, fitness2, mode='better'):
+    #     """
+    #     Compares the fitness of two candidates according to the kernel
+    #
+    #     Example:
+    #         >
+    #         fitness_compare
+    #     """
+    #
+    #     if fitness2 is None:
+    #         return True
+    #     elif fitness1 < fitness2:
+    #         return True
+    #     elif fitness1 == fitness2 and mode == 'better_or_equal':
+    #         return True
+    #     else super(RegressionKernel, self).fitness_compare()
+    #
+    # def tf_get_pairwise_fitness(self, solution, tf_result):
+    #     pairwise_fitness = tf.abs(solution - tf_result)
+    #     return pairwise_fitness
+    #
+    # def conclusion_get_text(self):
+    #     return
 
 
 def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_classify_labels_map, get_pred_labels=False):

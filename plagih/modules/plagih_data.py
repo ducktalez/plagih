@@ -6,7 +6,7 @@ import numpy as np
 import csv
 from plagih.modules.printing import *
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
-from plagih.modules.dicts import *
+from plagih.modules.operators import *
 
 
 def samples_header_line(row):

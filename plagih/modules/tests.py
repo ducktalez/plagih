@@ -74,11 +74,12 @@ class TestHelpers:
         oparray = get_all_oparrays()
         choose_distributions = self.distributions_as_string
         build_type='grow'
+        # origin_tree = karoo_tree_from_labellist(['+', '1', '2'], env_variables, modify_list=[0, 1, 1])
 
         label_list, arity_list, xtype_list = invent_label_list_nodes_grow(result_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_type=build_type)
-        modify_list = None  # get random modify list
-        tree = karoo_tree_from_labellist(label_list, env_variables)
-        for x in range(10):
+        modify_list = [0] + ([1] * len(label_list))[1:]
+        tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
+        for x in range(100):
             # print('ss', tree_pretty_print(tree))
 
             tree = tree_evolve_branch_multiple(tree, goal_max_nodes, env_variables, oparray, choose_distributions)

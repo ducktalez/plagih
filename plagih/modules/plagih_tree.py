@@ -17,7 +17,7 @@ np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters b
 N_label = 6
 N_id = 3
 N_depth = 4
-N_type = 5
+N_xtype = 5
 N_parent = 7
 N_arity = 8
 N_c1 = 9
@@ -238,12 +238,14 @@ def load_pop_from_csv(pop_csv):
     return tree_list
 
 
-def tree_get_labellist(tree):
+def tree_get_labellist(tree, karoo=True):
     """
     Returns all tree labels in order
     these identify a tree completely (if the tree is fully functioning)
     """
     label_list = tree[N_label]
+    if karoo:
+        label_list = label_list[1:]
     return label_list
 
 
@@ -286,7 +288,7 @@ def tree_check_quick(tree, env_variables, karoo=True):
         tree_works = False
     elif not tree_check_node_label_info:
         tree_works = False
-    elif not tree_check_types(tree, env_variables):
+    elif not tree_check_types(tree):
         tree_works = False
     elif tree_node_get_arity(tree, root_id) == 0:
         print_warning('w', 'Tree is only a root node')
@@ -315,7 +317,7 @@ def tree_check_deep(tree, env_variables, karoo=True):
 
 def tree_check_xtypes(tree):
     for node in tree_iterate_range(tree):
-        if tree[N_type][node] == '':  # are xtypes set?
+        if tree[N_xtype][node] == '':  # are xtypes set?
             # print_warning('ww', 'xtypes in tree were not set correctly.\n{}'.format(tree))
             return False
     return True
@@ -390,7 +392,7 @@ def tree_set_evalutaion(tree, tree_meta):
 
 
 def tree_node_set_xtype(tree, node_id, xtype):
-    tree[N_type][node_id] = xtype
+    tree[N_xtype][node_id] = xtype
     return tree
 
 
@@ -472,7 +474,7 @@ def tree_nodes_get_ids_string(tree, node_id):
 
 
 def tree_node_get_xtype(tree, node_id):
-    return tree[N_type][node_id]
+    return tree[N_xtype][node_id]
 
 
 def tree_node_get_arity(tree, node_id, empty_is_zero=False):
@@ -872,8 +874,8 @@ def tree_evolve_branch_multiple(tree, goal_nodes, env_variables, oparray, choose
         old_branch = tree_node_get_branch(tree, node_id, karoo=True)
         tree = tree_insert_branch_v2(tree_base, old_branch, env_variables, oparray, choose_distributions, goal_nodes=num_nodes_split[i])  # tree with new branch
 
-    if not tree_check_types(tree, env_variables):
-        print_e('Error fgh')
+    if not tree_check_types(tree):
+        raise Exception('Branch multiple failed...')
 
     return tree
 
@@ -882,6 +884,15 @@ def raise_if_empty(name, val):
     if val == '' or val is None:
         print('This variable did not work'.format(name))
         raise
+
+
+def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
+    for ii, delete_this in enumerate(label_list):
+        xt = xtype_get_from_label(delete_this, env_variables)
+        if xt != xtype_list[ii]:
+            print('OMG FAIL as', ii, '\n', label_list, '\n', xtype_list)
+            if raising:
+                raise
 
 
 def tree_insert_branch_v2(tree, branch_ids, env_variables, choose_oparray, choose_distributions, goal_nodes):
@@ -895,6 +906,10 @@ def tree_insert_branch_v2(tree, branch_ids, env_variables, choose_oparray, choos
     which the tree might have up his sleeve
     """
 
+    if not tree_check_types(tree):
+        debug_this_please = True
+        raise Exception('insert branch v2 at 1...')
+
     # Get information about the top-node we have to replace
     # old_label = tree_node_get_label(tree, branch_ids[0])
     old_xtype = tree_node_get_xtype(tree, branch_ids[0])
@@ -906,6 +921,10 @@ def tree_insert_branch_v2(tree, branch_ids, env_variables, choose_oparray, choos
     if label_list:
         core_insert = core_from_labels(label_list, arity_list, xtype_list)
         tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
+
+    if not tree_check_types(tree):
+        debug_this_please = True
+        raise Exception('insert branch v2 at end...')
 
     return tree
 
@@ -1716,13 +1735,16 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     tree = tree_core_init_row(tree, N_id, [x for x in range(0, size)])
     tree = tree_core_init_row(tree, N_label, label_list)
     tree = tree_core_init_row(tree, N_arity, arity_list)
-    tree = tree_core_init_row(tree, N_type, xtype_list)
+    tree = tree_core_init_row(tree, N_xtype, xtype_list)
 
     # and also, fill all the leftover rows
     parent_list = parents_from_arities(arity_list)
     tree = tree_core_init_row(tree, N_parent, parent_list)
     tree = tree_core_build_childs(tree)
     tree = tree_core_init_depth(tree, parent_list)
+
+    if delete_this:
+        print('asd insert core\n', label_list, '\n', xtype_list)
 
     return tree
 
@@ -1753,13 +1775,13 @@ def evolve_c_buffer_karoo(tree, node):
     return c_buffer
 
 
-def evolve_c_buffer(tree, node_id, karoo=False):
+def evolve_c_buffer(ztree, node_id, karoo=False):
     """
-    Generates the c_buffer for a node_id of a tree
+    Generates the c_buffer for a node_id of a ztree
     The c_buffer is:
     """
     if karoo:
-        tree = tree_convert_karoo_to_plagih(tree)
+        ztree = tree_convert_karoo_to_plagih(ztree)
         node_id -= 1
 
     parent_arity_sum = 0
@@ -1769,24 +1791,24 @@ def evolve_c_buffer(tree, node_id, karoo=False):
     if node_id == 0:
         return 1
 
-    for n in range(0, len(tree[N_id])):  # increment through all nodes in array 'tree'
+    for n in tree_iterate_range(ztree, karoo=False):  # increment through all nodes in array 'ztree'
 
         # sum up all arities of the parent dim_y
-        if int(tree[N_depth][n]) == int(tree[N_depth][node_id]) - 1:  # find parent nodes at the prior depth
-            if tree[N_arity][n] != '':
-                parent_arity_sum += int(tree[N_arity][n])  # sum arities of all parent nodes at the prior depth
+        if int(ztree[N_depth][n]) == int(ztree[N_depth][node_id]) - 1:  # find parent nodes at the prior depth
+            if ztree[N_arity][n] != '':
+                parent_arity_sum += int(ztree[N_arity][n])  # sum arities of all parent nodes at the prior depth
 
         # add the arities of nodes on the left (siblings)
-        elif int(tree[N_depth][n]) == int(tree[N_depth][node_id]) and int(tree[N_id][n]) < int(tree[N_id][node_id]):  # find prior siblings at the current depth
-            if tree[N_arity][n] != '':
-                prior_sibling_arity_sum += int(tree[N_arity][n])  # sum prior sibling arity
+        elif int(ztree[N_depth][n]) == int(ztree[N_depth][node_id]) and int(ztree[N_id][n]) < int(ztree[N_id][node_id]):  # find prior siblings at the current depth
+            if ztree[N_arity][n] != '':
+                prior_sibling_arity_sum += int(ztree[N_arity][n])  # sum prior sibling arity
             prior_siblings += 1  # sum quantity of prior siblings
 
     # node_id = the position from where we start counting
-    # (parent_arity_sum - prior_siblings - 1) = the amount of nodes after our node
+    # (parent_arity_sum - prior_siblings - 1) = the amount of nodes on our level after our node
     # prior_sibling_arity_sum = the amount of children before our children
     # + 1 = our first child node, not the last child of the prior sibling
-    c_buffer = node_id + (parent_arity_sum - prior_siblings - 1) + prior_sibling_arity_sum + 1
+    c_buffer = node_id + (parent_arity_sum - prior_siblings - 1) + prior_sibling_arity_sum + 1  # see above
 
     if karoo:
         c_buffer += 1
@@ -1819,61 +1841,64 @@ def tree_convert_plagih_to_karoo(plagih_tree):
     return tree_karoo
 
 
-def tree_insert_subtree(tree, insert_core, delete_ids, karoo=False):
+def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
     """
     insert a prepared subtree in a node-spot
     """
     if karoo:
-        tree = tree_convert_karoo_to_plagih(tree)
+        ztree = tree_convert_karoo_to_plagih(ztree)
         for i, val in enumerate(delete_ids):
             delete_ids[i] -= 1
 
     # 1. insert the top node
     top_node_id = int(delete_ids[0])
 
-    tree[N_label][top_node_id] = insert_core[N_label][0]  # --label
-    tree[N_arity][top_node_id] = insert_core[N_arity][0]  # --arity
-    # tree[N_type][top_node_id] = 'term' if int(insert_core[N_arity][0]) == 0 else 'func'  # --type
+    ztree[N_label][top_node_id] = insert_core[N_label][0]  # --label
+    ztree[N_arity][top_node_id] = insert_core[N_arity][0]  # --arity
+    ztree[N_xtype][top_node_id] = insert_core[N_xtype][0]
 
-    tree = np.delete(tree, delete_ids[1:], axis=1)  # delete all branches below
+    ztree = np.delete(ztree, delete_ids[1:], axis=1)  # delete all branches below
 
-    c_buffer = evolve_c_buffer(tree, top_node_id)  # child nr.1 at c_buffer
-    tree = tree_unsafe_insert_node_child_dummies(tree, top_node_id, c_buffer)  # --child: id, depth, parent
-    # if not tree_check_arity_exists(tree):
+    c_buffer = evolve_c_buffer(ztree, top_node_id)  # child nr.1 at c_buffer
+    ztree = tree_unsafe_insert_node_child_dummies(ztree, top_node_id, c_buffer)  # --child: id, depth, parent
+    # if not tree_check_arity_exists(ztree):
     #     raise
 
-    tree = evolve_node_renum(tree)  # --all: ids
-    # tree = tree_fix_arity(tree)
-    tree = tree_fix_link_child(tree)
+    ztree = evolve_node_renum(ztree)  # --all: ids
+    # ztree = tree_fix_arity(ztree)
+    ztree = tree_fix_link_child(ztree)
 
     # 2. insert all following nodes
     insert_count = 1  # set node count to +1 as the new root has already replaced 'branch_top' (above)
 
     while insert_count < len(insert_core[3]):  # increment through all nodes in the new Tree, leaving out the root... +1??
 
-        for j in range(0, len(tree[N_id])):  # increment through all nodes in og tree ('tree')
+        for j in tree_iterate_range(ztree, karoo=False):  # increment through all nodes in og ztree ('ztree')  # range(0, len(ztree[N_id]))
 
-            if tree[N_label][j] == '':  # aka: is this a dummy?
-                # tree[N_type][j] = insert_core[N_type][insert_count]  # --type
-                tree[N_label][j] = insert_core[N_label][insert_count]  # --label
-                tree[N_arity][j] = insert_core[N_arity][insert_count]  # --arity
-                tree[N_type][j] = insert_core[N_type][insert_count]  # --arity
+            if ztree[N_label][j] == '':  # aka: is this a dummy?
+                ztree[N_label][j] = insert_core[N_label][insert_count]  # --label
+                ztree[N_arity][j] = insert_core[N_arity][insert_count]  # --arity
+                ztree[N_xtype][j] = insert_core[N_xtype][insert_count]
 
-                if int(tree[N_arity][j]) == 0:
-                    tree = tree_fix_link_child(tree)  # fix all child links
-                    tree = evolve_node_renum(tree)  # renumber all 'NODE_ID's
+                if int(ztree[N_arity][j]) == 0:
+                    ztree = tree_fix_link_child(ztree)  # fix all child links
+                    ztree = evolve_node_renum(ztree)  # renumber all 'NODE_ID's
 
-                elif int(tree[N_arity][j]) > 0:
-                    c_buffer = evolve_c_buffer(tree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
-                    tree = tree_unsafe_insert_node_child_dummies(tree, j, c_buffer)  # insert new nodes
-                    tree = tree_fix_link_child(tree)  # fix all child links
-                    tree = evolve_node_renum(tree)  # renumber all 'NODE_ID's
+                elif int(ztree[N_arity][j]) > 0:
+                    c_buffer = evolve_c_buffer(ztree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
+                    ztree = tree_unsafe_insert_node_child_dummies(ztree, j, c_buffer)  # insert new nodes
+                    ztree = tree_fix_link_child(ztree)  # fix all child links
+                    ztree = evolve_node_renum(ztree)  # renumber all 'NODE_ID's
 
                 insert_count = insert_count + 1  # exit loop when 'node_count' reaches the number of columns in the array
     if karoo:
-        tree = tree_convert_plagih_to_karoo(tree)
+        ztree = tree_convert_plagih_to_karoo(ztree)
 
-    return tree
+    if not tree_check_types(ztree, karoo=karoo):
+        debug_this_please = True
+        raise Exception('insert branch v2 at end...')
+
+    return ztree
 
 
 def tree_fix_link_child_karoo(tree):
@@ -1930,10 +1955,14 @@ def tree_unsafe_insert_node_child_dummies(tree, node_id, c_buffer, karoo=False):
 
     # for arity, insert nodes with correct id, depth, parent
     for c in range(0, tree_node_get_arity(tree, node_id)):  # 0 to 3
-        tree = np.insert(tree, c_buffer + c, '', axis=1)  # insert node_id for 'node_c1'
-        tree[N_id][c_buffer + c] = c_buffer + c  # node_id ID
-        tree[N_depth][c_buffer + c] = int(tree[N_depth][node_id]) + 1  # node_depth
-        tree[N_parent][c_buffer + c] = int(tree[N_id][node_id])  # parent ID
+        try:
+            tree = np.insert(tree, c_buffer + c, '', axis=1)  # insert node_id for 'node_c1'
+            tree[N_id][c_buffer + c] = c_buffer + c  # node_id ID
+            tree[N_depth][c_buffer + c] = int(tree[N_depth][node_id]) + 1  # node_depth
+            tree[N_parent][c_buffer + c] = int(tree[N_id][node_id])  # parent ID
+        except:
+            delete_this = True
+            print('asdasd')
 
     if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
@@ -1956,7 +1985,7 @@ def evolve_node_renum(tree):
     return tree
 
 
-def treegp_reduce_branch(tree, node_id, env_variables, karoo=False):
+def treegp_reduce_branch(tree, node_id, env_variables, karoo=True):
     """
     Reduce a branch of a tree with sympify
     """
@@ -2149,7 +2178,7 @@ def tree_check_types(tree, karoo=True):
     - do the values in c1, c2, c3 link to its parent?
     """
     if not karoo:
-        tree = tree_convert_plagih_to_karoo(tree)
+        tree = tree_convert_plagih_to_karoo(tree.copy())
 
     for node_id in tree_iterate_range(tree):
         label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
@@ -2160,20 +2189,20 @@ def tree_check_types(tree, karoo=True):
             xtypes_required = [xtype[:2][::-1]] * arity + [''] * (3-arity)  # ['2f', '2f', '']
 
         # children_xtypes = xtype_label_get_child_xtypes(label, arity, env_variables)
-
+        print('asd tree check types\n',
+              tree_get_labellist(tree), '\n',
+              [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)])
         for ii, c_id in enumerate(tree_node_get_childs(tree, node_id)):
             c_label = tree_node_get_label(tree, c_id)
             c_xtype = tree_node_get_xtype(tree, c_id)
             if not xtypes_required[ii] == c_xtype[-2:]:
-                print_e('Tree check failed. Node ({}, {}, {}) child {} ({}, {}, {}).\n'
+                print_e('Tree check failed. Node ({}, {}, {}) at child {} reqquires {}, but node is ({}, {}, {}).\n'
                         'tree (pretty print):\n{}\n'
                         'xtype_list: {}\n'
-                        'Last modification was: {} '.format(node_id, label, xtype, ii, c_id, c_label, c_xtype,
+                        'Last modification was: {} '.format(node_id, label, xtype, ii, xtypes_required[ii], c_id, c_label, c_xtype,
                                                             tree_pretty_print(tree, karoo=True),
                                                             [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)],
                                                             tree_get_history(tree)))
-                delete_this = True
-                raise
                 return False
 
     return True

@@ -1195,11 +1195,10 @@ class ExplainableGP(object):
             print_warning('ww', 'Tree from last_evolution: {} failed. probably sympify. Continuing.'.format(last_evolution))
         else:
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-            tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)
+            tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)  # sfeh: test 08.04.2020
             tree = tree_normalize_exponentiation(tree)
             tree = tree_set_last_evolution(tree, last_evolution)
-            tree_check_xtypes(tree)
-            tree = tree_set_xtypes(tree, self.env_variables)  # todo
+            # tree = tree_set_xtypes(tree, self.env_variables)
 
         return tree
 

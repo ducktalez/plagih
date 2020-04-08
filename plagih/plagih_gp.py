@@ -9,8 +9,8 @@ from plagih.modules.operators import oparray_from_list
 import yaml
 
 
-# todo clean up this class... make extra class or folder (!) with all cases to be tested
-# todo idee: nach generationen alle mit einem gen sterben lassen! epidemie!
+# sfeh clean up this class... make extra class or folder (!) with all cases to be tested
+# todo idee:
 # import warnings
 # warnings.filterwarnings('error')
 
@@ -102,6 +102,9 @@ def load_config(root_dir):
 
 
 def load_data_prepared(root_dir):
+    """
+
+    """
     if Path.is_file(root_dir / samples_ready_p):
         data_prepared = pickle_load(root_dir / samples_ready_p)
     elif Path.is_file(root_dir / samples_csv):
@@ -112,10 +115,7 @@ def load_data_prepared(root_dir):
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
 
-    # if Path.is_file(env_variables_yaml):
-    #     env_variables, param_at = yaml_load(env_variables_yaml)
-    #     pass
-    #     # todo
+    # sfeh: if you want to load informations from extra file, check for this file here
 
     return data_prepared
 

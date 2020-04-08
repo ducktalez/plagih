@@ -51,7 +51,7 @@ def mtc_play(agent, render=False, mp4=False, n=1):
     env.seed(0)
     reward_sum = 0
     fail_sum = 0
-    for asd in range(n):
+    for _ in range(n):
         episode_reward = 0
         observation = env.reset()
         while True:

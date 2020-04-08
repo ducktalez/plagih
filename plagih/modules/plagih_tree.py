@@ -491,31 +491,6 @@ def tree_node_get_arity(tree, node_id, empty_is_zero=False):
     return arity
 
 
-def tree_node_get_nodekind(tree, node):
-    """
-    special node-type 'nodekind'
-    'func', 'term-variable', 'term-float', 'term-bool'
-    """
-    arity = tree_node_get_arity(tree, node)
-    if arity > 0:
-        nodekind = 'func'
-    else:
-        label = tree[N_label][node]
-        # if name_observation in label:  # 'observation'
-        #     nodekind = 'term-variable'
-        # el
-        if 'True' in label or 'False' in label:
-            nodekind = 'term-bool'
-        else:
-            try:
-                float(label)
-                nodekind = 'term-float'
-            except ValueError:
-                print_e('No good. This label is completely unknown: {} (or arity {} is not correct).'.format(label, arity))
-                raise
-    return nodekind
-
-
 def tree_node_get_label(tree, node_id):
     """
 
@@ -607,8 +582,7 @@ def tree_node_all_info(tree, node_id):
                  'modify': tree_node_get_modify(tree, node_id),
                  'xtype': tree_node_get_xtype(tree, node_id),
                  'arity': tree_node_get_arity(tree, node_id),
-                 'depth': tree_node_get_depth(tree, node_id),
-                 'kind': tree_node_get_nodekind(tree, node_id)}
+                 'depth': tree_node_get_depth(tree, node_id)}
 
     return node_info
 
@@ -1743,7 +1717,7 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     tree = tree_core_build_childs(tree)
     tree = tree_core_init_depth(tree, parent_list)
 
-    if delete_this:
+    if debug_this_please and False:
         print('asd insert core\n', label_list, '\n', xtype_list)
 
     return tree
@@ -1955,14 +1929,10 @@ def tree_unsafe_insert_node_child_dummies(tree, node_id, c_buffer, karoo=False):
 
     # for arity, insert nodes with correct id, depth, parent
     for c in range(0, tree_node_get_arity(tree, node_id)):  # 0 to 3
-        try:
-            tree = np.insert(tree, c_buffer + c, '', axis=1)  # insert node_id for 'node_c1'
-            tree[N_id][c_buffer + c] = c_buffer + c  # node_id ID
-            tree[N_depth][c_buffer + c] = int(tree[N_depth][node_id]) + 1  # node_depth
-            tree[N_parent][c_buffer + c] = int(tree[N_id][node_id])  # parent ID
-        except:
-            delete_this = True
-            print('asdasd')
+        tree = np.insert(tree, c_buffer + c, '', axis=1)  # insert node_id for 'node_c1'
+        tree[N_id][c_buffer + c] = c_buffer + c  # node_id ID
+        tree[N_depth][c_buffer + c] = int(tree[N_depth][node_id]) + 1  # node_depth
+        tree[N_parent][c_buffer + c] = int(tree[N_id][node_id])  # parent ID
 
     if karoo:
         tree = tree_convert_plagih_to_karoo(tree)
@@ -2189,9 +2159,9 @@ def tree_check_types(tree, karoo=True):
             xtypes_required = [xtype[:2][::-1]] * arity + [''] * (3-arity)  # ['2f', '2f', '']
 
         # children_xtypes = xtype_label_get_child_xtypes(label, arity, env_variables)
-        print('asd tree check types\n',
-              tree_get_labellist(tree), '\n',
-              [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)])
+        # print('asd tree check types\n',
+        #       tree_get_labellist(tree), '\n',
+        #       [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)])
         for ii, c_id in enumerate(tree_node_get_childs(tree, node_id)):
             c_label = tree_node_get_label(tree, c_id)
             c_xtype = tree_node_get_xtype(tree, c_id)
@@ -2203,6 +2173,8 @@ def tree_check_types(tree, karoo=True):
                                                             tree_pretty_print(tree, karoo=True),
                                                             [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)],
                                                             tree_get_history(tree)))
+                if debug_this_please:
+                    raise
                 return False
 
     return True

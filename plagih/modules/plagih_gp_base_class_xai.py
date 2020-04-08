@@ -1014,7 +1014,7 @@ class ExplainableGP(object):
             if repro_rate > 0 and tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
                 print_warning('w', 'You can not create new trees from scratch when origin has fix nodes! {} This should be handeled earlier'.format(repro_rate))
                 return
-        action_xtype = self.env_variables['action_at'][0]
+        action_xtype = self.env_variables['action_at'][0]['xtype']
         for i in range(repro_rate):
             goal_nodes = np.random.randint(self.config['tree from scratch min_nodes'], 1 + self.config['random from scratch max nodes'])
 

@@ -298,23 +298,25 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
     return graph
 
 
-def labels_from_nestedexpr(expr_array, expr):
+def labels_from_nestedexpr(labels_nested_list, result_accum):
     """
     Returns a label list from the nested list which ast_convert_from_expr_recursive() created
     [+, [a], [/, [b, c]]]]  -> [+, a, /, b, c]
     """
 
-    for x in expr_array:  # all elements, that are not lists themselves
+    for x in labels_nested_list:  # all elements, that are not lists themselves
         if type(x) is not list:
+            x = str(x)  # labels must be string!
             # x = str(x).replace('~', '-')  # workaround for usub/sub problem
-            expr.append(x)
+            result_accum.append(x)
 
-    only_lists = [x for x in expr_array if (type(x) == list)]
+    only_lists = [x for x in labels_nested_list if (type(x) == list)]
     if only_lists:
         from itertools import chain
         lists_removed = list(chain(*only_lists))
-        expr = labels_from_nestedexpr(lists_removed, expr)
-    return expr
+        result_accum = labels_from_nestedexpr(lists_removed, result_accum)
+
+    return result_accum
 
 
 def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):

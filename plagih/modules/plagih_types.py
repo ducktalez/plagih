@@ -242,6 +242,13 @@ def xtype_get_from_label(label, env_variables):
     returns xtype for a label
     if you are not 100% sure that it is a function.
     """
+
+    if delete_this:
+        print('asddsds', label, type(label))
+
+    if not isinstance(label, str) and delete_this:
+        raise
+
     if env_variables == 'ö':
         print_warning('www', 'Sfeh, we knowingly create a xtype-dummy')
         return 'ö'
@@ -253,6 +260,9 @@ def xtype_get_from_label(label, env_variables):
     elif label in op:
         xtype = op[label]['xtype']
     else:
+        if delete_this and isinstance(label, bool):
+            xtype = '2b'
+            print_e('This should never happen!!! labels  must be string')
         try:
             float(label)
             xtype = '2f'

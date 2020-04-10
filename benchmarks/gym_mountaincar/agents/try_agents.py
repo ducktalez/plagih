@@ -18,9 +18,11 @@ mountain_agents = [('simple', SimpleAgent()),
                    ('TestCombined', TestCombined()),
                    ('SimonTesting', SimonsTesting())]
 
-# mtc_plot_heatmap(sarsa_agent_75, name='sarsa75-heatmap')
+# mtc_plot_heatmap(sarsa_agent_75, name='sarsa75-heatmap, num_splits=128')
+mtc_plot_heatmap(sarsa_agent_75, name='sarsa75-heatmap_dummy', num_splits=128, dummymap=True)
+# mtc_plot_heatmap(SimpleAgent(), name='simple-heatmapmap_dummy', num_splits=128, dummymap=True)
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa - diff', abs_diff=False)
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa - diff + dummy', abs_diff=False, agent_a_dummy=True)
-mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa - diff + dummy', abs_diff=False, agent_a_dummy=True)
+# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa - diff + dummy', abs_diff=False, agent_a_dummy=True)
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa')
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa +dummies', agent_a_dummy=True)

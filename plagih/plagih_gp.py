@@ -9,8 +9,6 @@ from plagih.modules.operators import oparray_from_list
 import yaml
 
 
-# sfeh clean up this class... make extra class or folder (!) with all cases to be tested
-# todo idee:
 # import warnings
 # warnings.filterwarnings('error')
 
@@ -32,9 +30,6 @@ def plagih_config_update_from_json(config_json=Path('config.json')):
         config = json.load(file)
     return config
 
-
-# create_samples_pickle_prepared(root_dir, CartpoleExamples.files['samples_file'])  # todo outsource
-# analyse_old_run(root_dir)
 
 def labellists_from_csv(csv_path):
     modify_list = []

@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 dct = {1: {'a': 10, 'b': 4},
        3: {'a': 30, 'b': 3},
        2: {'a': 40, 'b': 2},

@@ -11,7 +11,7 @@ first_gen_id = 1  # maybe take care to make this 0 for base gen
 karoo_skip = 1
 
 delete_this = True
-debug_this_please = True
+debug_this_please = False
 
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
@@ -47,7 +47,7 @@ todo: write test that checks all operators for sympificytion (...+branch-combina
 op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'latex': '$+$', 'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
     '-': {'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'latex': '$-$', 'sym_str': '({} - {})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
-    '~': {'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'latex': '$-$', 'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},  # todo this is minus again
+    '~': {'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'latex': '$-$', 'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},
     '*': {'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'latex': '$\\cdot$', 'sym_str': '({} * {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
 
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?

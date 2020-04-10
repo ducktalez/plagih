@@ -24,7 +24,7 @@ def mtc_plot_decisions(agent, name, folder='img/'):
     @np.vectorize
     def decide(position, velocity):
         try:
-            action = agent.decide((position, velocity))  # todo
+            action = agent.decide((position, velocity))
         except:
             action = 1
         return action

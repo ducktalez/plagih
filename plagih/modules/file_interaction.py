@@ -10,17 +10,16 @@ import yaml
 example_runs = 'run_examples/'
 
 folder_plots = 'plots/'
-folder_info = 'info/'
 folder_steps = 'steps/'
 folder_pop_analysis = 'pop_dist/'
 
-file_pareto = 'pareto.txt'
-file_config_yaml = 'run_files/config.yaml'
-file_config_json = 'run_files/config.json'
-file_backup_pickle = 'run_files/backup.p'  # backup-version is set here
+file_pareto = 'info/pareto.txt'
+file_backup_pickle = 'info/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
 run_files = 'run_files/'
+file_config_yaml = 'run_files/config.yaml'
+file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
 env_variables_yaml = 'run_files/env_variables.yaml'
 samples_csv = 'run_files/samples.csv'
@@ -32,25 +31,23 @@ tree_numpy_csv = 'run_files/tree_numpy.csv'
 
 callable_user_python_script = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
 
-folder_solutions = 'solutions/'
-trees_tex = 'solutions/all_trees.tex'
-file_pycode = 'solutions/pareto_agents.py'
-file_pycode_eval = 'solutions/eval_pareto_agents.py'
+folder_solutions = 'agents/'
+trees_tex = 'solutions/agents_trees.tex'
+file_pycode = 'solutions/agents.py'
+file_pycode_eval = 'solutions/eval_agents.py'
 
 T_num_lines = 15  # todo this var is not found otherwise
 
-get_path = {example_runs: Path('examples/'),
-            folder_plots: Path('plots/'),
-            folder_info: Path('info/'),
-            folder_steps: Path('steps/'),
-            folder_pop_analysis: Path('steps/pop_dist/'),
+get_path = {example_runs: Path('run_examples/'),
+            'folder_plots': Path('plots/'),
+            'subfolder_step': Path('/steps/'),
+            'folder_pop_analysis': Path('steps/pop_dist/'),
 
-            file_conclusion: Path('analysis/conclusion.txt'),
+            'file_conclusion': Path('analysis/conclusion.txt'),
 
-            folder_solutions: Path('solutions/'),
-            file_pareto: Path('solutions/pareto.txt'),
-            trees_tex: Path('solutions/all_trees.tex'),
-            file_pycode: Path('solutions/agents.py'),
+            'pareto.txt': Path('agents/pareto.txt'),
+            'all_trees.tex': Path('agents/all_trees.tex'),
+            file_pycode: Path('agents/agents.py'),
 
             run_files: Path('run_files/'),
             file_config_yaml: Path('run_files/config.yaml'),
@@ -71,16 +68,25 @@ def make_dir(path):
     """
     if not Path.is_dir(path):
         Path.mkdir(path)
-    return path
+    return path  # todo new make
 
 
-def get_path(gen_id='tmp'):
+def file_make_dir(file_path):
     """
-    ! Only used for population plots right now
-    Returns the path where a file is located
-    get_path('config') -> *root_dir*/info/config.csv
+    Creates the folder only knowing the file.
+    paff/tuuu/fyle.txe  ->  *mkdir* paff/tuuu/
     """
-    path = 'plots/pop_dist/fitness_{}.jpg'
+    p = Path(file_path)
+    if not p.parent.is_dir():
+        p.parent.mkdir(parents=True)
+    return p
+
+
+def open_force_write_text(p, text):
+    p = Path(p)
+    if not p.parent.is_dir():
+        p.parent.mkdir(parents=True)
+    p.write_text(text)
 
 
 def experiment_data(experiment_yaml):
@@ -139,10 +145,10 @@ def file_population_karoo(population, pop_name, path, gen_id):
 
     """
 
-    pop_path = make_dir(path / folder_info)
 
-    file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
-    # todo function to tree_ and append each tree
+    file_path = path / 'info/population_{}.csv'.format(str(pop_name))
+    file_make_dir(file_path)
+    # sfeh? function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')
         if gen_id != 0:

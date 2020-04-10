@@ -1,8 +1,6 @@
 """
 'f2f', 'b2b', f = float, b = bool. 'float to bool'
 
-# todo idea: split up population after convergence to a certain structure?
-
 Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
 """
@@ -50,16 +48,16 @@ class ExplainableGP(object):
             },
             # (!) Relevant for result
             'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
-            'parsimony_max': 100,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
+            'parsimony_max': 80,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
-            'complexity_measure': 'ted',
+            'complexity_measure': 'tree edit distance',
 
             # rather irrelevant
             'parsimony_tmp': 15,
             'precision': 3,  # rounding the fitness
             'float_accuracy': 200,
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-            'print_type': 'gggwwsivoaa',  # To print_type absolutely all: wggggsiiiivvvtopppttt
+            'print_type': 'gggwwsivoaa',  # To show absolutely all: wggggsiiiivvvtopppttt
             'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,  # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
             'delete_old_file': False,  # sfeh, delete old gp_files. be very careful
@@ -83,6 +81,16 @@ class ExplainableGP(object):
                              'random from origin_tree': 0.15,
                              'random from scratch': 0.15,
                              },
+            'evolve': {'r': {'evolve_fun': 'reproduce lucky', 'params': (), 'rate': 0.05},  # tbd sfeh tbd
+                       'rP': {'evolve_fun': 'reproduce pareto', 'rate': 0.01, 'params': ()},
+                       'rS': {'evolve_fun': 'reproduce sympify', 'rate': 0.03, 'params': ()},
+                       'p': {'evolve_fun': 'parameters filter floats', 'rate': 0.05, 'params': ('filter_gaussian')},  # sfeh bool aswell
+                       'mN': {'evolve_fun': 'mutate node', 'rate': 0.1, 'params': ()},  # sfeh mutate node or mutate function?
+                       'mB': {'evolve_fun': 'mutate branch', 'rate': 0.1, 'params': ()},
+                       'c': {'evolve_fun': 'crossover branche', 'rate': 0.36, 'params': ()},
+                       'nO': {'evolve_fun': 'new origin-based', 'rate': 0.15, 'params': ()},
+                       'n': {'evolve_fun': 'new random', 'rate': 0.15, 'params': ()}
+                       },
             'crossover_type_safety_mode': 'replace_same_types',
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
             'tree_growth': 'node-based',  # node-based, depth-based
@@ -106,7 +114,7 @@ class ExplainableGP(object):
             }
         }
 
-        self.config.update(config)  # todo check if config is correct
+        self.config.update(config)
 
         # init values with dummies (just to have all self values here for overview)
         self.tree_meta = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw', 'gen+nr'}
@@ -269,30 +277,9 @@ class ExplainableGP(object):
         self.printpl('iii', 'Saved run in pickle file.')
         return
 
-    def run_save_pickle_old(self):
-        """
-        automatically saves everything important after a certain amount of time
-        - save the pareto front (custom_done)
-        - save the last generation (custom_done)
-        - Save valuable meta-data_csv_path: current generation (custom_done)
-        """
-        path_backup = self.root_dir / file_backup_pickle
-
-        run_data = {'self.restart_count': self.restart_count,
-                    'self.gen_id': self.gen_id,
-                    'self.parsimony_best_meta': self.parsimony_best_meta,
-                    'self.pareto': self.pareto,
-                    'self.population_base': self.population_base,
-                    'self.monitoring_dict': self.monitoring_dict
-                    }
-        with Path.open(path_backup, 'wb') as file:
-            pickle.dump(run_data, file)
-        self.printpl('iii', 'Saved run in pickle file.')
-        return
-
     def plagih_gp_run(self):
         """
-        regular plagih-config run
+        regular plagih run
         """
 
         if self.origin_exists():
@@ -301,7 +288,7 @@ class ExplainableGP(object):
                 self.config['evolve_rates']['random from scratch'] = 0
                 print_warning('ww', 'Generating mew trees \'random from scratch\' is not possible when the origin tree has fix nodes! Fixed this problem.')
         else:
-            if self.config['complexity_measure'] in ['ted', 'rel_ari_1']:
+            if self.config['complexity_measure'] in ['tree edit distance']:  # sfeh get all origin-based distances
                 raise Exception('Can not use relative distance without providing a reference/origin tree!')
 
         if self.gen_id == 0:
@@ -400,38 +387,40 @@ class ExplainableGP(object):
         else:
             origin_tree = None
 
-        gp_dict = {  # name of the function:    implementation in plagih,       number of tournament selections needed
-            'repro one': (self.pop_reproduce, 1, None),
-            'repro pareto': (self.pop_reproduce_olymp, 0, None),
-            'repro reduced one': (self.pop_reproduce_reduce, 1, None),
-            'point mutate function': (self.pop_mutate_point, 1, None),
-            'filter floats': (self.pop_mutate_filter, 1, None),
-            'branch mutate insert': (self.pop_mutate_branch, 1, None),
-            'crossover branches': (self.pop_crossover_branch, 2, None),
-            'random from origin_tree': (self.pop_random_from_origin, 0, origin_tree),
-            'random from scratch': (self.pop_random_from_scratch, 0, None)}
-
         gp_dict2 = {
-            'repro one': {'funcall': self.pop_reproduce, 'tourn_size': 1, 'origin': None},
-            'repro pareto': {'funcall': self.pop_reproduce_olymp, 'tourn_size': 0, 'origin': None},
-            'repro reduced one': {'funcall': self.pop_reproduce_reduce, 'tourn_size': 1, 'origin': None},
-            'point mutate function': {'funcall': self.pop_mutate_point, 'tourn_size': 1, 'origin': None},
-            'filter floats': {'funcall': self.pop_mutate_filter, 'tourn_size': 1, 'origin': None},
-            'branch mutate insert': {'funcall': self.pop_mutate_branch, 'tourn_size': 1, 'origin': None},
-            'crossover branches': {'funcall': self.pop_crossover_branch, 'tourn_size': 2, 'origin': None},
-            'random from origin_tree': {'funcall': self.pop_random_from_origin, 'tourn_size': 0, 'origin': origin_tree},
-            'random from scratch': {'funcall': self.pop_random_from_scratch, 'tourn_size': 0, 'origin': None}}
+            'R': {'gp_func': 'repro one', 'funcall': self.pop_reproduce},
+            'Rp': {'gp_func': 'repro pareto', 'funcall': self.pop_reproduce_olymp},
+            'Rs': {'gp_func': 'repro reduced one', 'funcall': self.pop_reproduce_reduce},
+            'M': {'gp_func': 'point mutate function', 'funcall': self.pop_mutate_point},
+            'Mf': {'gp_func': 'filter floats', 'funcall': self.pop_mutate_filter},
+            'Mb': {'gp_func': 'branch mutate insert', 'funcall': self.pop_mutate_branch},
+            'C': {'gp_func': 'crossover branches', 'funcall': self.pop_crossover_branch},
+            'No': {'gp_func': 'random from origin_tree', 'funcall': self.pop_random_from_origin},
+            'N': {'gp_func': 'random from scratch', 'funcall': self.pop_random_from_scratch}}
+
+        gpfunc_call2 = {
+            self.pop_reproduce: (1, None),
+            self.pop_reproduce_olymp: (0, None),
+            self.pop_reproduce_reduce: (1, None),
+            self.pop_mutate_point: (1, None),
+            self.pop_mutate_filter: (1, None),
+            self.pop_mutate_branch: (1, None),
+            self.pop_crossover_branch: (2, None),
+            self.pop_random_from_origin: (0, origin_tree),
+            self.pop_random_from_scratch: (0, None)}
 
         while self.run_continues():  # max generation, max time, done...
 
             self.gen_reset_parameters()
 
+            # ########
+            # for tag, gp_func in gp_dict2.items():
+            #     repro_rate = int(self.evolve_rates[tag] * self.config['pop_max'])
+            # ########
+
             # Creating a new population ############
             for name, gp_function, tourn_rep in gp_list:
                 time_evolve = time.perf_counter()
-                count_tries = 0
-                # while count_tries < self.evolve_rates[name] * self.config['pop_max']:
-                #     break
 
                 repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
                 gp_function(repro_rate)
@@ -648,11 +637,9 @@ class ExplainableGP(object):
         Save all the pareto efficient candidates to file
         """
 
-        path_pareto = root_path / folder_info
-        if not Path.is_dir(path_pareto):
-            Path.mkdir(path_pareto)
+        pth = file_make_dir(root_path / file_pareto)
 
-        with Path.open(path_pareto / file_pareto, 'w') as file:
+        with Path.open(pth, 'w') as file:
 
             for parsim, meta in sorted(list(pareto.items())):
                 fitness = meta['fitness_train']
@@ -684,8 +671,8 @@ class ExplainableGP(object):
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
 
-        pareto_folder = make_dir(root_path / folder_solutions)  # todo new make
-        with Path.open(root_path / trees_tex, 'w') as file:
+        pth = file_make_dir(root_path / trees_tex)
+        with Path.open(pth, 'w') as file:
             file.write(latex_full_doc)
 
         return
@@ -732,8 +719,8 @@ class ExplainableGP(object):
                                  '{}\n\n' \
                                  '{}'.format(pycode_agents, pycode_names, py_agent_tuples)
 
-        path_trees = make_dir(root_path / folder_solutions)
-        with Path.open(root_path / file_pycode, 'w') as file:
+        pth = file_make_dir(root_path / file_pycode)
+        with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
 
         self.call_custom_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
@@ -858,28 +845,6 @@ class ExplainableGP(object):
 
         return
 
-    def pareto_update_try(self):
-        """
-        sfeh tbd #
-        """
-        for i, tree in enumerate(self.population_tmp_done):
-            fitness = tree_get_fitness(tree, precision=self.precision)
-            parsimony = tree_get_parsimony(tree)
-            meta = tree_get_meta(tree)
-            for p_fit, p_meta in self.pareto.items():
-                p_parsim = p_meta['parsimony']
-                if self.kernel.fitness_compare(fitness, p_fit):
-                    if parsimony < p_parsim:
-                        # Found a new entry on pareto
-                        # 1. insert new entry
-                        self.pareto[parsimony] = meta
-                        # 2. clean pareto
-                        self.pareto_update_clean()
-
-                    else:
-                        # pareto is already sufficient
-                        break
-
     def pareto_update_insert(self):
         """
         update new entries in the pareto dict (part of the whole update process)
@@ -949,6 +914,28 @@ class ExplainableGP(object):
 
         return
 
+    def pareto_update_try(self):
+        """
+        sfeh tbd #
+        """
+        for i, tree in enumerate(self.population_tmp_done):
+            fitness = tree_get_fitness(tree, precision=self.precision)
+            parsimony = tree_get_parsimony(tree)
+            meta = tree_get_meta(tree)
+            for p_fit, p_meta in self.pareto.items():
+                p_parsim = p_meta['parsimony']
+                if self.kernel.fitness_compare(fitness, p_fit):
+                    if parsimony < p_parsim:
+                        # Found a new entry on pareto
+                        # 1. insert new entry
+                        self.pareto[parsimony] = meta
+                        # 2. clean pareto
+                        self.pareto_update_clean()
+
+                    else:
+                        # pareto is already sufficient
+                        break
+
     def parsimony_best_update(self):
         """
         Updates a list with the best candidates for each parsimony.
@@ -985,7 +972,6 @@ class ExplainableGP(object):
 
         self.gen_id += 1
         self.time_genstart = time.perf_counter()
-        self.debug_warnings = {}
         self.population_tmp_done = []
         self.population_tmp_eval = []
         self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)

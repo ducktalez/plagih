@@ -1440,32 +1440,6 @@ def tree_parsimony_ted(tree1, tree2):
     return distance, mapping
 
 
-def tree_parsimony_relari(tree, origin_tree):
-    """
-    This distance penalizes non-original functions with its arity
-    - ignore node[0] [description]
-    - look within the subtree if the original function is on origin_tree spot
-    """
-
-    # If the new tree is actually less complex than the original one, just return 1
-    if len(tree[N_label]) < len(origin_tree[N_label]):
-        return 1
-
-    distance = 0
-
-    # iterate over every node in the new tree
-    for i, arity in enumerate(tree[N_arity]):
-        if i == 0:  # skip node 0. the description
-            continue
-        elif i < len(origin_tree[N_label]):  # Make sure we stay within the tree index. <= does not work
-            if origin_tree[N_label][i] != tree[N_label][i]:  # is it different from the origin_tree?
-                distance = distance + int(arity)  # add the nodes arity. double-punishes large trees
-        else:
-            distance = distance + int(arity)
-
-    return max(distance, 1)  # make sure, it does not return 0
-
-
 def expr_sympify(expr_raw):
     """
     Returns a simplified expression using sympify.
@@ -2363,19 +2337,23 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
 
     """
 
-    if parsimony_distance == 'total_count_nodes':  # number of nodes
-        return tree_get_last_nodeid(tree)  # returns the number of nodes
-    elif parsimony_distance == 'total_tree_depth':
+    distance_dict = {
+        'tree_node_count': tree_get_size,
+        'tree_depth': tree_get_depth,
+        'tree_edit_distance': tree_parsimony_ted,
+    }
+
+    if parsimony_distance == 'tree_node_count':  # number of nodes
+        return tree_get_size(tree)  # returns the number of nodes
+    elif parsimony_distance == 'tree_depth':
         return 0
-    if parsimony_distance == 'ted':  # tree edit distance, tree-edit-distance
+    if parsimony_distance == 'tree_edit_distance':  # tree edit distance, tree-edit-distance
         distance, mapping = tree_parsimony_ted(tree, origin_tree)
         if weights is None:
             return distance
         else:
             raise
             # TODO weights
-    elif parsimony_distance == 'rel_ari_1':  # Does this work?
-        return tree_parsimony_relari(tree, origin_tree)
     else:
         print_e('Complexity measurement not available: {}'.format(parsimony_distance))
         raise

@@ -43,7 +43,7 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/'):
     return
 
 
-def mtc_heatmap_data(env, agent, num_splits, n=100):
+def mtc_heatmap_data(env, agent, num_splits, n):
     # Making the data for the plot
     behaviour = []
     for _ in range(n):
@@ -91,12 +91,15 @@ def mtc_heatmap_data(env, agent, num_splits, n=100):
     return splits_x, splits_y, results
 
 
-def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', num_splits=128, decisions=None):
+def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', num_splits=128, dummymap=False):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
 
-    splits_x, splits_y, results = mtc_heatmap_data(env, agent, num_splits)
+    splits_x, splits_y, results = mtc_heatmap_data(env, agent, num_splits, n)
+
+    if dummymap:
+        results = abs(np.sign(results))
 
     # generating plot
     fig, ax = plt.subplots()
@@ -133,19 +136,18 @@ def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits
 
     if abs_diff:
         result = abs(result)
-        boundaries=np.linspace(-0.5,2.5,4)
-        ticks=np.linspace(0,2,3)
+        boundaries = np.linspace(-0.5, 2.5, 4)
+        ticks = np.linspace(0, 2, 3)
     else:
-        boundaries=np.linspace(-2.5,2.5,6)
-        ticks=np.linspace(-2,2,5)
-        cmap='PiYG'
+        boundaries = np.linspace(-2.5, 2.5, 6)
+        ticks = np.linspace(-2, 2, 5)
+        cmap = 'PiYG'
 
     if agent_a_dummy:
-        hm_x, hm_y, hm_res = mtc_heatmap_data(env, agent_a, num_splits)
-        dummy_res = abs(np.sign(hm_res))
+        _, _, heatmap_result = mtc_heatmap_data(env, agent_a, num_splits, n)
+        dummy_res = abs(np.sign(heatmap_result))
         result = result * dummy_res
-        cmap='Greys'
-
+        cmap = 'Greys'
 
     env.close()
 
@@ -167,8 +169,11 @@ def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits
 def mtc_play(agent, render=False, mp4=False, n=1):
     # if mp4:
     #     env = wrappers.Monitor(env, Path('videos/{}/'.format(time.time() % 100000)))
-    np.random.seed(0);env = gym.make('MountainCar-v0');env.seed(0)
+    np.random.seed(0);
+    env = gym.make('MountainCar-v0');
+    env.seed(0)
     reward_sum = 0
+    list_episode_rewards = []
     fail_sum = 0
     for _ in range(n):
         episode_reward = 0
@@ -182,6 +187,7 @@ def mtc_play(agent, render=False, mp4=False, n=1):
             episode_reward += reward
             if done:
                 reward_sum += episode_reward
+                list_episode_rewards.append(episode_reward)
                 break
 
         if episode_reward == 199:
@@ -208,7 +214,7 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
     plt.savefig(folder / 'agent_perf.jpg')
 
-    with Path.open(folder / 'summary.txt', 'w') as file:
+    with Path(folder / 'summary.txt', 'w').open as file:
         file.write('\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance]))
 
 

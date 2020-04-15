@@ -1,15 +1,10 @@
 import csv
-
-import numpy as np
-
 from benchmarks.gym_mountaincar.agents.agent_groups import *
 
 np.random.seed(0)
 import gym
 import sys
 from pathlib import Path
-from plagih.modules.operators import name_observation, name_action
-
 import pickle
 
 
@@ -96,30 +91,10 @@ def train_sarsa_agent_pickle(seed=0):
     for episode in range(75):
         episode_reward = mountaincar_play_once(env, agent, train=True)
         episode_rewards.append(episode_reward)
-    with open(sarsa_file_75, 'wb') as file:
-        pickle.dump(agent, file)
     print('...saved agent pickle')
 
-    for episode in range(125):
-        episode_reward = mountaincar_play_once(env, agent, train=True)
-        episode_rewards.append(episode_reward)
-    with open(sarsa_file_200, 'wb') as file:
+    with open('sarsa_75.p', 'wb') as file:
         pickle.dump(agent, file)
-    print('...saved agent pickle')
-
-    for episode in range(800):
-        episode_reward = mountaincar_play_once(env, agent, train=True)
-        episode_rewards.append(episode_reward)
-    with open(sarsa_file_1000, 'wb') as file:
-        pickle.dump(agent, file)
-    print('...saved agent pickle')
-
-    for episode in range(9000):
-        episode_reward = mountaincar_play_once(env, agent, train=True)
-        episode_rewards.append(episode_reward)
-    with open(sarsa_file_10000, 'wb') as file:
-        pickle.dump(agent, file)
-    print('...saved agent pickle')
 
     return
 
@@ -151,7 +126,7 @@ def create_plagih_samples_csv(seed=0):
 
 if __name__ == "__main__":
     # create_behaviour_samples_file()
-    # dothis = input('Please press: create (s)amples, run coming later: ')
+    # do this = input('Please press: create (s)amples, run coming later: ')
     # if dothis == 's':
     #     create_behaviour_samples_file()
     train_sarsa_agent_pickle()

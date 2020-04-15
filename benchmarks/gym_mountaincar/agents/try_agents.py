@@ -18,11 +18,17 @@ mountain_agents = [('simple', SimpleAgent()),
                    ('TestCombined', TestCombined()),
                    ('SimonTesting', SimonsTesting())]
 
-# mtc_plot_heatmap(sarsa_agent_75, name='sarsa75-heatmap, num_splits=128')
-mtc_plot_heatmap(sarsa_agent_75, name='sarsa75-heatmap_dummy', num_splits=128, dummymap=True)
-# mtc_plot_heatmap(SimpleAgent(), name='simple-heatmapmap_dummy', num_splits=128, dummymap=True)
-# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa - diff', abs_diff=False)
-# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa - diff + dummy', abs_diff=False, agent_a_dummy=True)
-# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa - diff + dummy', abs_diff=False, agent_a_dummy=True)
-# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa')
-# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs. Sarsa +dummies', agent_a_dummy=True)
+# mtc_plot_decisions_space(sarsa_agent_75, name='sarsa75 decisions', cmap='coolwarm')
+#
+# mtc_plot_heatmap(sarsa_agent_75, name='sarsa75 states heatmap', splits=128, cmap='Greys')
+mtc_plot_heatmap(sarsa_agent_75, name='sarsa75 states', splits=128, dummymap=True, cmap='Greys')
+mtc_plot_heatmap(SimpleAgent(), name='simple states', splits=128, dummymap=False, cmap='Greys')
+#
+# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs sarsa75 differences', abs_diff=False, cmap='PiYG')
+# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs sarsa75 differences in states PiYG', abs_diff=False, agent_a_dummy=True, cmap='PiYG')
+# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs sarsa75 differences in states Greys', abs_diff=False, agent_a_dummy=True, cmap='Greys')
+# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs sarsa75 differences in states coolwarm', abs_diff=False, agent_a_dummy=True, cmap='coolwarm')
+# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs sarsa75 absolute differences', abs_diff=True, cmap='Greys')
+#
+# mtc_plot_episode_performance(sarsa_agent_75, name='sarsa75 individual performance', color='y')
+# mtc_plot_episode_performance(SimpleAgent(), name='simple individual performance', color='b')

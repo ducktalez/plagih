@@ -10,7 +10,7 @@ import numpy as np
 import gym
 
 
-def mtc_plot_decisions_space(agent, name='space_test', folder='img/'):
+def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='coolwarm'):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -30,7 +30,7 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/'):
 
     # generating plot
     fig, ax = plt.subplots()
-    c = ax.pcolormesh(positions, velocities, action_values)
+    c = ax.pcolormesh(positions, velocities, action_values, cmap=cmap)
     ax.set_xlabel('position')
     ax.set_ylabel('velocity')
     fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
@@ -56,8 +56,8 @@ def mtc_heatmap_data(env, agent, num_splits, n):
             if done:
                 break
     env.close()
-    behaviour = np.array(behaviour)  # [(1,2,3), (1,2,3), (1,2,3), (1,2,3), (1,2,3), ...]
-    positions, velocities, action_values = behaviour.T  # [[1,1,1, ...], [2,2,2, ...], [3,3, ...]]
+    behaviour = np.array(behaviour)  # [(pos, vel, act), (-0.5,0.01,2), ...]
+    positions, velocities, action_values = behaviour.T  # [[pos, pos, ..], [vel, ..], [act, ..]]
 
     x_min = env.unwrapped.min_position
     x_max = env.unwrapped.max_position
@@ -68,7 +68,7 @@ def mtc_heatmap_data(env, agent, num_splits, n):
     splits_x = np.linspace(x_min, x_max, num_splits)
     splits_y = np.linspace(y_min, y_max, num_splits)
 
-    def linspace_pos(x, rangetuple, num_splits):
+    def linspace_pos(x, rangetuple, num_splits):  # returns the position of the bucket the calue is in
         num_splits -= 1
         range_spread = rangetuple[1] - rangetuple[0]
         xadd = -rangetuple[0]
@@ -77,36 +77,35 @@ def mtc_heatmap_data(env, agent, num_splits, n):
         x = int(round(x))
         return x
 
-    results_0 = np.zeros((num_splits, num_splits))
-    results_1 = np.zeros((num_splits, num_splits))
-    results_2 = np.zeros((num_splits, num_splits))
     results = np.zeros((num_splits, num_splits))
-    heatmap_list = [results, results_0, results_1, results_2]
 
     for tup in behaviour:
         res_x = linspace_pos(tup[0], (x_min, x_max), num_splits)
         res_y = linspace_pos(tup[1], (y_min, y_max), num_splits)
-        results[res_x, res_y] += 1
+        results[res_y, res_x] += 1  # the mesh is not a coordinate system...
 
     return splits_x, splits_y, results
 
 
-def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', num_splits=128, dummymap=False):
+def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', splits=128, dummymap=False, cmap='Greys'):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
 
-    splits_x, splits_y, results = mtc_heatmap_data(env, agent, num_splits, n)
+    splits_x, splits_y, results = mtc_heatmap_data(env, agent, splits, n)
 
     if dummymap:
         results = abs(np.sign(results))
+        boundaries = np.linspace(-0.5, 1.5, 3)
+        ticks = np.linspace(0, 1, 2)
 
     # generating plot
     fig, ax = plt.subplots()
-    c = ax.pcolormesh(splits_x, splits_y, results, cmap='Greys')
+    c = ax.pcolormesh(splits_x, splits_y, results, cmap=cmap)
     ax.set_xlabel('position')
     ax.set_ylabel('velocity')
-    fig.colorbar(c, ax=ax)
+
+    fig.colorbar(c, ax=ax)  # needed, plot is stretched otherwise
     plt.title(name)
     folder = Path(folder)
     if not Path.is_dir(folder):
@@ -116,7 +115,7 @@ def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', num_split
     return
 
 
-def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits=256, name='differences', folder='img/', abs_diff=True, cmap='viridis'):
+def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits=256, name='differences', folder='img/', abs_diff=True, cmap='coolwarm'):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -141,13 +140,14 @@ def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits
     else:
         boundaries = np.linspace(-2.5, 2.5, 6)
         ticks = np.linspace(-2, 2, 5)
-        cmap = 'PiYG'
 
     if agent_a_dummy:
         _, _, heatmap_result = mtc_heatmap_data(env, agent_a, num_splits, n)
         dummy_res = abs(np.sign(heatmap_result))
         result = result * dummy_res
-        cmap = 'Greys'
+
+        boundaries = np.linspace(-0.5, 2.5, 4)
+        ticks = np.linspace(0, 2, 3)
 
     env.close()
 
@@ -166,11 +166,11 @@ def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits
     return
 
 
-def mtc_play(agent, render=False, mp4=False, n=1):
+def mtc_play(agent, render=False, n=1):
     # if mp4:
     #     env = wrappers.Monitor(env, Path('videos/{}/'.format(time.time() % 100000)))
-    np.random.seed(0);
-    env = gym.make('MountainCar-v0');
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
     env.seed(0)
     reward_sum = 0
     list_episode_rewards = []
@@ -195,7 +195,27 @@ def mtc_play(agent, render=False, mp4=False, n=1):
     reward_average = reward_sum / n
     env.close()
 
-    return reward_average, fail_sum
+    return reward_average, fail_sum, list_episode_rewards
+
+
+def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path('img/'), n=100, color='b'):
+
+    if not Path.is_dir(folder):
+        Path.mkdir(folder)
+
+    mtc_plot_decisions_space(agent, name, folder=folder)
+    _, _, reward_list = mtc_play(agent, n=n)
+
+    x = np.arange(n)
+    plt.plot(x, reward_list, color=color)
+
+    plt.xlabel('episode')
+    plt.ylabel('reward')
+    plt.title(name)
+
+    plt.ylim(-200, -80)
+
+    plt.savefig(folder / '{}.jpg'.format(name))
 
 
 def eval_agent_list(agent_list, folder=Path('img/')):
@@ -205,7 +225,7 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     agent_performance = []
     for name, agent in agent_list:
         mtc_plot_decisions_space(agent, name, folder=folder)
-        avg_reward, fails = mtc_play(agent, n=100)
+        avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 
     y = [x[1] for x in agent_performance]
@@ -216,7 +236,3 @@ def eval_agent_list(agent_list, folder=Path('img/')):
 
     with Path(folder / 'summary.txt', 'w').open as file:
         file.write('\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance]))
-
-
-if __name__ == '__main__':
-    eval_agent_list(agent_tuples)  # , folder=folder

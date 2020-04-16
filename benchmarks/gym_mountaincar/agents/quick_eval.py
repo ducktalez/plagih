@@ -39,18 +39,6 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='cool
 
     mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
-    # # generating plot
-    # fig, ax = plt.subplots()
-    # c = ax.pcolormesh(positions, velocities, results, cmap=cmap)
-    # ax.set_xlabel('position')
-    # ax.set_ylabel('velocity')
-    # fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
-    # plt.title(name)
-    # folder = Path(folder)
-    # if not Path.is_dir(folder):
-    #     Path.mkdir(folder)
-    # plt.savefig(Path(folder) / '{}.png'.format(name))
-    # plt.close()
     return
 
 
@@ -210,18 +198,7 @@ def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits
     env.close()
 
     mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=agent_a_dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
-    # # generating plot
-    # fig, ax = plt.subplots()
-    # c = ax.pcolormesh(positions, velocities, result, cmap=cmap)
-    # ax.set_xlabel('position')
-    # ax.set_ylabel('velocity')
-    # fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)
-    # plt.title(name)
-    # folder = Path(folder)
-    # if not Path.is_dir(folder):
-    #     Path.mkdir(folder)
-    # plt.savefig(Path(folder) / '{}.png'.format(name))
-    # plt.close()
+
     return
 
 

@@ -1661,7 +1661,7 @@ class ExplainableGP(object):
         if subfolder:  #
             path = make_dir(path / subfolder)
 
-        plt.savefig(path / '{}.jpg'.format(plt_title))
+        plt.savefig(path / '{}.png'.format(plt_title))
         if save_tikz:
             try:
                 tikzplotlib.save(path / '{}.tex'.format(plt_title))

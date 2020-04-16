@@ -38,7 +38,7 @@ def mtc_plot_decisions(agent, name, folder='img/'):
     ax.set_ylabel('velocity')
     fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
     plt.title(name)
-    plt.savefig(Path(folder) / '{}.jpg'.format(name))
+    plt.savefig(Path(folder) / '{}.png'.format(name))
     plt.close()
     return
 
@@ -90,7 +90,7 @@ def eval_agents(agent_list, folder=Path('img/')):
     x = list(range(len(agent_performance)))
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
-    plt.savefig(folder / 'agent_perf.jpg')
+    plt.savefig(folder / 'agent_perf.png')
 
     with Path.open(folder / 'summary.txt', 'w') as file:
         file.write('\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance]))

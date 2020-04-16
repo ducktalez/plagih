@@ -251,20 +251,20 @@ class SARSALambdaAgent(SARSAAgent):
 def load_sarsas():
     with Path.open(Path(sarsa_file_75), 'rb') as file:
         sarsa_agent_75 = pickle.load(file)
-        print('Loaded sarsa 75')
-
-    with Path.open(Path(sarsa_file_200), 'rb') as file:
-        sarsa_agent_200 = pickle.load(file)
-        print('Loaded sarsa 200')
-
-    with Path.open(Path(sarsa_file_1000), 'rb') as file:
-        sarsa_agent_1000 = pickle.load(file)
-        print('Loaded sarsa 1000')
-
-    with Path.open(Path(sarsa_file_10000), 'rb') as file:
-        sarsa_agent_10000 = pickle.load(file)
-        print('Loaded sarsa 10000')
-    return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
+        print('Loaded sarsa 75 backup')
+    #
+    # with Path.open(Path(sarsa_file_200), 'rb') as file:
+    #     sarsa_agent_200 = pickle.load(file)
+    #     print('Loaded sarsa 200')
+    #
+    # with Path.open(Path(sarsa_file_1000), 'rb') as file:
+    #     sarsa_agent_1000 = pickle.load(file)
+    #     print('Loaded sarsa 1000')
+    #
+    # with Path.open(Path(sarsa_file_10000), 'rb') as file:
+    #     sarsa_agent_10000 = pickle.load(file)
+    #     print('Loaded sarsa 10000')
+    return sarsa_agent_75, False, False, False
 
 # sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
 sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()

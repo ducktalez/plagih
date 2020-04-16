@@ -24,7 +24,7 @@ def plot_decisions(env, agent, name):
     fig.colorbar(c, ax=ax, boundaries=[-.5, .5, 1.5, 2.5], ticks=[0, 1, 2])
     plt.title(name)
     fig.show()
-    plt.savefig(Path('img/{}.jpg'.format(name)))
+    plt.savefig(Path('img/{}.png'.format(name)))
     plt.close()
     return
 

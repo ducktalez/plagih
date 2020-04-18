@@ -282,7 +282,7 @@ class ExplainableGP(object):
         regular plagih run
         """
 
-        if self.origin_exists():
+        if self.origin_exists():  # Just handeling a special case here
             if not tree_node_is_modifiable(self.origin_tree, root_id):  # Modify-nodes is not "activated"
                 self.config['evolve_rates']['random from origin_tree'] += float(self.config['evolve_rates']['random from scratch'])
                 self.config['evolve_rates']['random from scratch'] = 0
@@ -399,12 +399,12 @@ class ExplainableGP(object):
             'N': {'gp_func': 'random from scratch', 'funcall': self.pop_random_from_scratch}}
 
         gpfunc_call2 = {
-            self.pop_reproduce: (1, None),
-            self.pop_reproduce_olymp: (0, None),
-            self.pop_reproduce_reduce: (1, None),
-            self.pop_mutate_point: (1, None),
-            self.pop_mutate_filter: (1, None),
-            self.pop_mutate_branch: (1, None),
+            self.pop_reproduce: (1, None),                      #
+            self.pop_reproduce_olymp: (0, None),                #
+            self.pop_reproduce_reduce: (1, None),               #
+            self.pop_mutate_point: (1, None),                   #
+            self.pop_mutate_filter: (1, None),                  #
+            self.pop_mutate_branch: (1, None),                  # branch goal depth vs. branch goal node vs. new actual size?      Grow vs. Full
             self.pop_crossover_branch: (2, None),
             self.pop_random_from_origin: (0, origin_tree),
             self.pop_random_from_scratch: (0, None)}
@@ -1099,7 +1099,6 @@ class ExplainableGP(object):
         """
 
         for _ in range(repro_rate):  # quantity of Trees to be generated through mutation
-            # time_start = time.perf_counter()
             tree = self.pop_selection_tournament(self.tourn_size)  # perform tournament selection for each mutation
             node_ids = tree_get_mutatable_nodes(tree, no_root=True)
             node = np.random.choice(node_ids)

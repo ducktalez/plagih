@@ -21,9 +21,10 @@ mountain_agents = [('simple', SimpleAgent()),
 # mtc_plot_decisions_space(sarsa_agent_75, name='sarsa75 decisions', cmap='coolwarm')
 # mtc_plot_decisions_space(sarsa_agent_75, name='sarsa75 decisions dummy', cmap='coolwarm', dummy=True)
 #
-# mtc_plot_heatmap(sarsa_agent_75, name='heatmap sarsa75', splits=128, cmap='Greys')
-# mtc_plot_heatmap(sarsa_agent_75, name='heatmap sarsa75', splits=128, dummy=True, cmap='Greys')
-# mtc_plot_heatmap(SimpleAgent(), name='heatmap simple', splits=128, dummy=False, cmap='Greys')
+mtc_plot_heatmap(sarsa_agent_75, name='heatmap sarsa75 1', splits=128, cmap='Greys')
+mtc_plot_heatmap(SimpleAgent(), name='heatmap simple 1', splits=128, dummy=False, cmap='Greys')
+
+mtc_plot_heatmap(sarsa_agent_75, name='heatdummy sarsa75 2', splits=128, dummy=True, cmap='Greys')
 
 # mtc_plot_heatmap(sarsa_agent_75, name='sarsa75 states 1', splits=128, cmap='gray', dummy=True, nan_style=('white', '///', 'grey', 0.2), no_colorbar=True)
 # mtc_plot_heatmap(sarsa_agent_75, name='sarsa75 states 2', splits=128, cmap='binary', dummy=True, nan_style=('black', '', 'grey', 0.2), no_colorbar=True)
@@ -42,7 +43,7 @@ mountain_agents = [('simple', SimpleAgent()),
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 7', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', None, 'grey', 0.2))
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 8', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('grey', None, 'grey', 0.2))
 
-mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 9', abs_diff=False, agent_a_dummy=True, cmap='cool', nan_style=('xkcd:dark grey', None, 'xkcd:dark grey', 0.2))
+# mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 9', abs_diff=False, agent_a_dummy=True, cmap='cool', nan_style=('xkcd:dark grey', None, 'xkcd:dark grey', 0.2))
 
 # hatch patterns
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 2 hatch 1', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '///', 'black', 0.2))

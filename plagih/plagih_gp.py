@@ -115,7 +115,7 @@ def load_data_prepared(root_dir):
     return data_prepared
 
 
-def load_tree_elements(root_dir):
+def load_tree_builders(root_dir):
     # Load operators
     operators_csv = root_dir / operators
     if Path.is_file(operators_csv):  # Load operators.csv
@@ -167,21 +167,6 @@ def load_label_list(root_dir):
     return label_list, modify_list
 
 
-def analyze(root_dir):
-    """
-    write all analysing files.
-    - pareto (txt, latex_trees, agents)
-    - plots (pareto, best)
-    """
-
-    config = load_config(root_dir)
-    data_prepared = load_data_prepared(root_dir)
-
-    gp = ExplainableGP(root_dir, config=config)
-    gp.activate_dataset(data_prepared)
-    gp.plagih_update_analysis()
-
-
 def run(root_dir):
     """
     Loads important files in your run-folder
@@ -193,7 +178,7 @@ def run(root_dir):
 
     config = load_config(root_dir)
     data_prepared = load_data_prepared(root_dir)
-    choose_oparray, distributions = load_tree_elements(root_dir)
+    choose_oparray, distributions = load_tree_builders(root_dir)
     label_list, modify_list = load_label_list(root_dir)
 
     gp = ExplainableGP(root_dir, config=config)
@@ -208,6 +193,20 @@ def run(root_dir):
     gp.plagih_gp_run()
     sys.exit()
 
+
+def analyze(root_dir):
+    """
+    write all analysing files.
+    - pareto (txt, latex_trees, agents)
+    - plots (pareto, best)
+    """
+
+    config = load_config(root_dir)
+    data_prepared = load_data_prepared(root_dir)
+
+    gp = ExplainableGP(root_dir, config=config)
+    gp.activate_dataset(data_prepared)
+    gp.plagih_update_analysis()
 
 def visualize_labellist(csv_file, output_file=None):
     """

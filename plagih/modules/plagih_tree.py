@@ -2116,17 +2116,18 @@ def tree_evolve_complexify(tree, same_arity=True):
     pass
 
 
-def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter'):
+def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter', float_accuracy=200):
     """
     When this happens, distributions_file get a a small variance
     """
 
     if term_type == 'float':
         if filter_type == 'gaussian_filter':
-            constant = np.random.normal(constant, 0.1)
+            constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
         else:
             print_warning('w', 'Warning: Filter  not specified. Please specify a filter_type.')
             constant = np.random.normal(constant, 0.1)
+        constant = round_constant(constant, float_accuracy)
 
     if term_type == 'int':
         constant = int(np.random.normal(constant, 2))
@@ -2138,7 +2139,7 @@ def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter')
     return constant
 
 
-def tree_evolve_mutate_filter_one(tree, filter_type='gaussian_filter'):
+def tree_evolve_mutate_filter_one(tree, filter_type='gaussian_filter', float_accuracy=200):
     """
     Mutates a number of float terminal of a tree
     """
@@ -2152,7 +2153,7 @@ def tree_evolve_mutate_filter_one(tree, filter_type='gaussian_filter'):
     if float_nodes:
         float_id = np.random.choice(float_nodes)
         val = float(tree_node_get_label(tree, float_id))
-        new_value = gp_mutate_constants(val, term_type='float', filter_type=filter_type)
+        new_value = gp_mutate_constants(val, term_type='float', filter_type=filter_type, float_accuracy=float_accuracy)
         tree = tree_node_set_label(tree, float_id, new_value)
         return tree
     else:

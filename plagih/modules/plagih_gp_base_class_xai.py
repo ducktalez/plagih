@@ -448,26 +448,26 @@ class ExplainableGP(object):
         # sfehsfeh: pring every written file
 
         gp_dict2 = {
-            # 'Repro': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None,
-            #           'custom_params': {}, 'evolve_num': 50},
-            # 'Rsympy': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None,
-            #            'custom_params': {'sympify_tree': True},
-            #            'evolve_num': 30},
-            #
-            # 'Pareto': {'gp_func': 'revive pareto', 'evolve_call': self.pop_reproduce_olymp, 'tourn_size': 0,
-            #            'custom_params': {}, 'evolve_num': 10},
+            'Repro': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None,
+                      'custom_params': {}, 'evolve_num': 50},
+            'Rsympy': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None,
+                       'custom_params': {'sympify_tree': True},
+                       'evolve_num': 30},
 
-            # 'Point': {'gp_func': 'mutate point', 'evolve_call': self.pop_mutate_point, 'tourn_size': None,
-            #           'custom_params': {}, 'evolve_num': 50},
-            # 'Branch1': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
-            #             'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'},
-            #             'evolve_num': 50},
-            # 'Branch2': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
-            #             'custom_params': {'depth_tuple': (6, 1, 9, 1), 'build_method': 'full'},
-            #             'evolve_num': 50},
-            # 'Branch3': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
-            #             'custom_params': {'depth_tuple': (7, 1, 9, 1), 'build_method': 'grow'},
-            #             'evolve_num': 50},
+            'Pareto': {'gp_func': 'revive pareto', 'evolve_call': self.pop_reproduce_olymp, 'tourn_size': 0,
+                       'custom_params': {}, 'evolve_num': 10},
+
+            'Point': {'gp_func': 'mutate point', 'evolve_call': self.pop_mutate_point, 'tourn_size': None,
+                      'custom_params': {}, 'evolve_num': 50},
+            'Branch1': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
+                        'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'},
+                        'evolve_num': 50},
+            'Branch2': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
+                        'custom_params': {'depth_tuple': (6, 1, 9, 1), 'build_method': 'full'},
+                        'evolve_num': 50},
+            'Branch3': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
+                        'custom_params': {'depth_tuple': (7, 1, 9, 1), 'build_method': 'grow'},
+                        'evolve_num': 50},
             'Xover': {'gp_func': 'crossover branch', 'evolve_call': self.pop_crossover_branch, 'tourn_size': None,
                       'custom_params': {}, 'evolve_num': 50},
 
@@ -476,18 +476,18 @@ class ExplainableGP(object):
                         'evolve_num': 50},  # todo
             'Filter2': {'gp_func': 'filter', 'evolve_call': self.pop_mutate_filter, 'tourn_size': None,
                         'custom_params': {'mode': 'point'}, 'evolve_num': 50},
-            #
-            # 'Rand1': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0,
-            #           'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},  'evolve_num': 50},
-            # 'Rand2': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0,
-            #           'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}, 'evolve_num': 50},
 
-            # 'RandFix1': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-            #              'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},
-            #              'evolve_num': 50},
-            # 'RandFix2': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-            #              'custom_params': {'nodes_tuple': (20, 1, 30, 6), 'build_method': 'grow'},
-            #              'evolve_num': 50}
+            'Rand1': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0,
+                      'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},  'evolve_num': 50},
+            'Rand2': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0,
+                      'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}, 'evolve_num': 50},
+
+            'RandFix1': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
+                         'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},
+                         'evolve_num': 50},
+            'RandFix2': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
+                         'custom_params': {'nodes_tuple': (20, 1, 30, 6), 'build_method': 'grow'},
+                         'evolve_num': 50}
             }
 
         for k in gp_dict2.keys():  # all selected gp mutations  # sfeh seems like dumb code
@@ -1176,10 +1176,11 @@ class ExplainableGP(object):
                 float_nodes = [np.random.choice(float_nodes)]
             for node_id in float_nodes:
                 val = float(tree_node_get_label(tree, node_id))
-                val = gp_mutate_constants(val, term_type='float', filter_type=filter)
+                val = gp_mutate_constants(val, term_type='float', filter_type=filter, float_accuracy=self.config['float_accuracy'])
                 tree = tree_node_set_label(tree, node_id, val)
         else:
-            print_warning('ww', 'Tree does not seem to have any float nodes for filtering.')
+            # print_warning('iii', 'Tree does not seem to have any float nodes for filtering.')
+            pass
 
         return tree
 
@@ -1268,10 +1269,10 @@ class ExplainableGP(object):
         """
 
         build_mode = call_params['build_method']
-        if self.origin_exists():  # todo
-            if tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
-                print_warning('w', 'You can not create new trees from scratch when origin has fix nodes! This should be handeled earlier')
-                return
+        # if self.origin_exists():  # done?
+        #     if tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
+        #         print_warning('w', 'You can not create new trees from scratch when origin has fix nodes! This should be handeled earlier')
+        #         return
         action_xtype = self.env_variables['action_at'][0]['xtype']
 
         if call_params.get('depth_tuple'):

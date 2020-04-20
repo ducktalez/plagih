@@ -277,7 +277,7 @@ def tree_set_last_evolution(tree, last_modification):
     return tree
 
 
-def tree_check_quick(tree, env_variables, karoo=True):
+def tree_check_quick(tree, karoo=True):
     """
     without some of the heavy tests
     """
@@ -305,7 +305,7 @@ def tree_check_deep(tree, env_variables, karoo=True):
     # sfeh check meta values in separate method? update those aswell?
     """
 
-    if not tree_check_quick(tree, env_variables, karoo=karoo):
+    if not tree_check_quick(tree, karoo=karoo):
         tree_works = False
     elif not tree_check_rebuild(tree, karoo=karoo):
         tree_works = False
@@ -713,91 +713,6 @@ def insert_function_or_term(depth, depth_goal):
     return decision
 
 
-def invent_label_list_depth_random(xtype_root, depth_goal, env_variables, choose_oparray, choose_distributions, min_depth=0, build_mode='grow'):
-    """
-    build a random, but within itself consistent label list
-    Also, return the arities aswell (they are searched anyways)
-    todo check xtype-arity relation. actually, check the correct labels xtype
-    """
-    tbdo_xtypes = [xtype_root]
-    result_label_list = []
-    result_arity_list = []
-    result_xtype_list = []
-
-    # Build a list with labels in row, and a list with their arities
-    for depth in range(min_depth, depth_goal):
-        next_xtype_list = []
-
-        if depth < depth_goal - 1:
-            for xtype in tbdo_xtypes:
-                if build_mode == 'grow' and np.random.choice(['term', 'func']) == 'term' and depth >= min_depth:
-                    label = choose_term(xtype[-2:], env_variables, choose_distributions)
-                    arity = 0
-                elif build_mode == 'full':
-                    label, arity, xtype = choose_operator(choose_oparray, xtype, arity=None)
-                else:
-                    raise
-
-                # xtype-'To-do' list for the next depth to give values to these functions
-                if label == 'Ifte':
-                    next_xtype_list.extend(['2b', '2f', '2f'])
-                else:
-                    tmp_xtype = xtype_get_from_label(label, env_variables)
-                    child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
-                    for _ in range(0, arity):  # when arity==2, add 2 times
-                        next_xtype_list.append(child_type)
-
-                # Add the label to the result list
-                result_label_list.append(label)
-                result_arity_list.append(arity)
-                result_xtype_list.append(xtype)
-        else:  # now, we are on the lowest dim_y.
-
-            for xtype in tbdo_xtypes:  # Build terminals now.
-                label, arity = choose_term([xtype[-2:], env_variables], choose_distributions), 0
-
-                # Add the label to the result list
-                result_label_list.append(label)
-                result_arity_list.append(arity)
-                result_xtype_list.append(xtype)
-
-        # Finally, update the list for the next round
-        tbdo_xtypes = next_xtype_list[:]
-
-    return result_label_list, result_arity_list, result_xtype_list
-
-
-def tree_evolve_insert_branch_v1(tree, branch_ids, env_variables, oparray, choose_distributions, depth_max=None, depth_min=None, depth_goal=None):
-    """
-    # The old depth based version
-    # Not used anymore, as the amount of nodes is much more useful
-    Given: Tree and a list of node ids
-    - checks how far to build down
-    - checks the old nodes xtype, etc.
-    - checks if we are not too far down the tree
-    -
-
-    """
-
-    # Get information about the top-node we have to replace
-    old_label = tree_node_get_label(tree, branch_ids[0])
-    old_xtype = xtype_get_from_label(old_label, env_variables)
-
-    # calculate depth restriction
-    depth_upper_bound = depth_max - tree_node_get_depth(tree, branch_ids[0])
-    depth_goal = min(depth_goal, depth_upper_bound)
-
-    build_mode = np.random.choice(['full', 'grow'])  # todo test full method
-    # Build a new tree
-    label_list, arity_list, xtype_list = invent_label_list_depth_random(old_xtype, depth_goal, env_variables, oparray, choose_distributions, min_depth=depth_min, build_mode=build_mode)
-
-    if label_list:
-        core_insert = core_from_labels(label_list, arity_list, xtype_list)
-        tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
-
-    return tree
-
-
 def randomly_split_range(range_max, num_splits):
     """
     split a integer range randomly into parts
@@ -826,34 +741,6 @@ def randomly_split_range(range_max, num_splits):
     return sample_dist
 
 
-def tree_evolve_branch_multiple(tree, goal_nodes, env_variables, oparray, choose_distributions):
-    """
-    insert a (random) number of branches at the first possible "layer"
-    (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
-    - get these nodes, randomly choose a subset of those
-    - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
-    - split the amount of nodes up (randomly) and add these new branches to the tree
-    todo fix min and max border
-    """
-
-    tree_base = tree.copy()
-    layer0_ids = tree_get_mutatable_layer(tree, 0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
-    nodes_left = goal_nodes  # sfeh - max_nodes-tree_get_size(tree, karoo=True))  #('Which lets us replace {} amount of old nodes'.format(nodes_left))
-
-    num_nodes_split = randomly_split_range(nodes_left, len(layer0_ids))
-
-    for i in range(len(layer0_ids)):  # finally, insert branches. need to get layer every time as node ids might have changed.
-        layer0_ids = tree_get_mutatable_layer_lv0(tree)
-        node_id = layer0_ids[i]
-        old_branch = tree_node_get_branch(tree, node_id, karoo=True)
-        tree = tree_insert_branch_v2(tree_base, old_branch, env_variables, oparray, choose_distributions, goal_nodes=num_nodes_split[i])  # tree with new branch
-
-    if not tree_check_types(tree):
-        raise Exception('Branch multiple failed...')
-
-    return tree
-
-
 def raise_if_empty(name, val):
     if val == '' or val is None:
         print('This variable did not work'.format(name))
@@ -869,41 +756,74 @@ def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
                 raise
 
 
-def tree_insert_branch_v2(tree, branch_ids, env_variables, choose_oparray, choose_distributions, goal_nodes):
+def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparray, choose_distributions, min_depth=0, build_mode=None):
     """
-    replaces the branch_ids in a tree with a new branch
-
-    returns: new tree
-
-    We allow a certain amount of new nodes instead tree depth.
-    This could be calculated respectively to the parsimony dim_y
-    which the tree might have up his sleeve
+    build a random, but within itself consistent label list
+    Also, return the arities aswell (they are searched anyways)
+    todo check xtype-arity relation. actually, check the correct labels xtype
     """
 
-    if not tree_check_types(tree):
-        debug_this_please = True
-        raise Exception('insert branch v2 at 1...')
+    tbdo_xtypes = [xtype_root]
+    result_label_list = []
+    result_arity_list = []
+    result_xtype_list = []
 
-    # Get information about the top-node we have to replace
-    # old_label = tree_node_get_label(tree, branch_ids[0])
-    old_xtype = tree_node_get_xtype(tree, branch_ids[0])
-    raise_if_empty('old_xtype', old_xtype)
-    # old_xtype = xtype_get_from_label(old_label, env_var_dummy)
+    # Build a list with labels in row, and a list with their arities
+    for depth in range(min_depth, depth_goal):
+        next_xtype_list = []
 
-    label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, goal_nodes, env_variables, choose_oparray, choose_distributions, build_type='grow')
+        if depth < depth_goal - 1:
 
-    if label_list:
-        core_insert = core_from_labels(label_list, arity_list, xtype_list)
-        tree = tree_insert_subtree(tree, core_insert, branch_ids, karoo=True)
+            functerm_list = ['func']
+            for _ in range(len(tbdo_xtypes) - 1):  # 1 -> at least one function
+                if build_mode == 'grow' and depth >= min_depth:
+                    functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
+                elif build_mode == 'full':
+                    functerm_list.append('func')
+                else:
+                    raise
+            np.random.shuffle(functerm_list)  # ['term', 'func', 'term', ...]
 
-    if not tree_check_types(tree):
-        debug_this_please = True
-        raise Exception('insert branch v2 at end...')
+            for ii, xtype in enumerate(tbdo_xtypes):
+                if functerm_list[ii] == 'term':
+                    label = choose_term(xtype[-2:], env_variables, choose_distributions)
+                    # xtype stays the same 'arity-2' version
+                    arity = 0
+                elif functerm_list[ii] == 'func':
+                    label, arity, xtype = choose_operator(xtype[-2:], choose_oparray, arity=None)
+                else:
+                    raise
 
-    return tree
+                # xtype-'To-do' list for the next depth to give values to these functions
+                if label == 'Ifte':
+                    next_xtype_list.extend(['2b', '2f', '2f'])
+                else:
+                    tmp_xtype = xtype_get_from_label(label, env_variables)
+                    child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
+                    for _ in range(0, arity):  # when arity==2, add 2 times
+                        next_xtype_list.append(child_type)
+
+                # Add the label to the result list
+                result_label_list.append(label)
+                result_arity_list.append(arity)
+                result_xtype_list.append(xtype)
+        else:  # now, we are on the lowest dim_y.
+
+            for xtype in tbdo_xtypes:  # Build terminals now.
+                label, arity = choose_term(xtype[-2:], env_variables, choose_distributions), 0
+
+                # Add the label to the result list
+                result_label_list.append(label)
+                result_arity_list.append(arity)
+                result_xtype_list.append(xtype)
+
+        # Finally, update the list for the next round
+        tbdo_xtypes = next_xtype_list[:]
+
+    return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes_grow(t_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_type='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_mode='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -931,9 +851,9 @@ def invent_label_list_nodes_grow(t_xtype, goal_max_nodes, env_variables, oparray
 
         functerm_list = ['func']
         for _ in range(num_inserts - 1):  # 1 -> at least one function
-            if build_type == 'grow':
+            if build_mode == 'grow':
                 functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice
-            elif build_type == 'full':
+            elif build_mode == 'full':
                 functerm_list.append('func')
             else:
                 raise
@@ -944,11 +864,11 @@ def invent_label_list_nodes_grow(t_xtype, goal_max_nodes, env_variables, oparray
         tmp_arity_list = [42] * num_inserts
         tmp_xtype_list = ['xdummy'] * num_inserts
 
-        func_indices = [i for i, x in enumerate(functerm_list) if x == 'func']
-        term_indices = [i for i, x in enumerate(functerm_list) if x == 'term']
-        np.random.shuffle(func_indices)
+        func_at = [i for i, x in enumerate(functerm_list) if x == 'func']
+        term_at = [i for i, x in enumerate(functerm_list) if x == 'term']
+        np.random.shuffle(func_at)
 
-        for enum, index in enumerate(func_indices):  #
+        for enum, index in enumerate(func_at):  #
             t_xtype = tbdo_xtypes[index]
 
             label, arity, label_xtype = choose_operator(t_xtype, oparray)
@@ -960,11 +880,11 @@ def invent_label_list_nodes_grow(t_xtype, goal_max_nodes, env_variables, oparray
                 tmp_xtype_list[index] = label_xtype
                 num_inserts += arity - 1
             else:
-                term_indices.extend(func_indices[enum:])
+                term_at.extend(func_at[enum:])
                 done = True
                 break
 
-        for index in term_indices:
+        for index in term_at:
             t_xtype = tbdo_xtypes[index]
             label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions), 0
             label_xtype = xtype_get_from_label(label, env_variables)
@@ -1839,12 +1759,9 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
                     ztree = evolve_node_renum(ztree)  # renumber all 'NODE_ID's
 
                 insert_count = insert_count + 1  # exit loop when 'node_count' reaches the number of columns in the array
+
     if karoo:
         ztree = tree_convert_plagih_to_karoo(ztree)
-
-    if not tree_check_types(ztree, karoo=karoo):
-        debug_this_please = True
-        raise Exception('insert branch v2 at end...')
 
     return ztree
 

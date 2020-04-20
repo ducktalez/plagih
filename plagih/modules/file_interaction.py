@@ -19,6 +19,7 @@ file_conclusion = 'conclusion.txt'
 
 run_files = 'run_files/'
 file_config_yaml = 'run_files/config.yaml'
+info_config_yaml = 'info/config.yaml'
 file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
 env_variables_yaml = 'run_files/env_variables.yaml'
@@ -147,7 +148,7 @@ def file_population_karoo(population, pop_name, path, gen_id):
 
 
     file_path = path / 'info/population_{}.csv'.format(str(pop_name))
-    file_make_dir(file_path)
+    file_path = file_make_dir(file_path)
     # sfeh? function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')

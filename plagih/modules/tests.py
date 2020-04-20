@@ -76,13 +76,13 @@ class TestHelpers:
         build_type='grow'
         # origin_tree = karoo_tree_from_labellist(['+', '1', '2'], env_variables, modify_list=[0, 1, 1])
 
-        label_list, arity_list, xtype_list = invent_label_list_nodes_grow(result_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_type=build_type)
+        label_list, arity_list, xtype_list = invent_label_list_nodes(result_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_mode=build_type)
         modify_list = [0] + ([1] * len(label_list))[1:]
         tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
         for x in range(100):
             # print('ss', tree_pretty_print(tree))
 
-            tree = tree_evolve_branch_multiple(tree, goal_max_nodes, env_variables, oparray, choose_distributions)
+            tree = self.tree_evolve_branch_multiple(tree, goal_max_nodes, env_variables, oparray, choose_distributions)
             # if not tree_check_deep(tree, env_variables):
 
         return
@@ -223,7 +223,7 @@ def test_build_tree_grow_nodecount(verbose=False):
         for _ in range(10):
             old_xtype = test_case[0]
             max_nodes = test_case[1]
-            label_list, arity_list, xtype_list = invent_label_list_nodes_grow(old_xtype, max_nodes, env_variables, oparray)
+            label_list, arity_list, xtype_list = invent_label_list_nodes(old_xtype, max_nodes, env_variables, oparray)
             if verbose:
                 print('Received the following list', len(label_list), label_list, arity_list)
 
@@ -317,18 +317,6 @@ def test_tree_viz_latex():
     print(result)
 
 
-def test_tree_set_modifyable_nodes():
-    env_var_dummy = TestHelpers.env_var_dummy
-    oparray = TestHelpers.func_arr_dummy
-    origin, tree2, _ = get_three_sample_trees()
-    print('a origin_meta', origin[N_modify])
-    tree_new = tree_evolve_branch_multiple(origin.copy(), 25, env_var_dummy, oparray)
-    print('b origin_meta', origin[N_modify])
-    tree_new = tree_set_modifyable_nodes(tree_new, origin_tree=origin)
-    print('c origin_meta', origin)
-    print(tree_new)
-
-
 def check_op_names():
     # check if the fun-names are correct
     for key, value in op.items():
@@ -349,7 +337,7 @@ def test_create_random_tree(verbose=False):
     env_var_dummy = TestHelpers.env_var_dummy
     all_functions = [(value['fun'], value['arity']) for key, value in op.items()]
     oparray = funcarray_from_list(all_functions)
-    label_list, arity_list, xtype_list = invent_label_list_nodes_grow(xtype, goal_max_nodes, env_var_dummy, oparray, build_type='grow')
+    label_list, arity_list, xtype_list = invent_label_list_nodes(xtype, goal_max_nodes, env_var_dummy, oparray, build_mode='grow')
     print(label_list)
     tree = karoo_tree_from_labellist(label_list)
     print('regular print:\n', tree)

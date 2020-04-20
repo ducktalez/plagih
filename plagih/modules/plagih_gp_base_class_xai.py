@@ -482,12 +482,12 @@ class ExplainableGP(object):
             'Rand2': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0,
                       'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}, 'evolve_num': 50},
 
-            'RandFix1': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-                         'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},
-                         'evolve_num': 50},
-            'RandFix2': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-                         'custom_params': {'nodes_tuple': (20, 1, 30, 6), 'build_method': 'grow'},
-                         'evolve_num': 50}
+            # 'RandFix1': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
+            #              'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},
+            #              'evolve_num': 50},
+            # 'RandFix2': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
+            #              'custom_params': {'nodes_tuple': (20, 1, 30, 6), 'build_method': 'grow'},
+            #              'evolve_num': 50}
             }
 
         for k in gp_dict2.keys():  # all selected gp mutations  # sfeh seems like dumb code
@@ -1330,8 +1330,6 @@ class ExplainableGP(object):
                                                                          self.env_variables, self.choose_oparray, self.choose_distributions,
                                                                          build_mode=build_mode)
 
-
-
         elif call_params.get('nodes_tuple'):
 
             nodes_tuple = call_params.get('nodes_tuple')  # (base, min, max, normal_distrib)
@@ -1350,7 +1348,7 @@ class ExplainableGP(object):
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
         else:
-            tree = None
+            tree = None  # TODO debug this
 
         return tree
 

@@ -50,7 +50,7 @@ class ExplainableGP(object):
             'pop_max': 1000,  # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
             'parsimony_max': 80,  # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
-            'complexity_measure': 'tree edit distance',
+            'complexity_measure': 'tree_edit_distance',
 
             # rather irrelevant
             'parsimony_tmp': 15,
@@ -281,22 +281,8 @@ class ExplainableGP(object):
         """
         regular plagih run
         """
-
-        if self.origin_exists():  # Just handeling a special case here
-            if not tree_node_is_modifiable(self.origin_tree, root_id):  # Modify-nodes is not "activated"
-                self.config['evolve_rates']['random from origin_tree'] += float(self.config['evolve_rates']['random from scratch'])
-                self.config['evolve_rates']['random from scratch'] = 0
-                print_warning('ww', 'Generating new trees \'randomly\' is not possible when the origin tree has fix nodes!'
-                                    '\nFixed by adding the evolve_rate to \'random from origin_tree\'.')
-        else:
-
-            if self.config['evolve_rates']['random from origin_tree'] > 0:
-                self.config['evolve_rates']['random from scratch'] += float(self.config['evolve_rates']['random from origin_tree'])
-                self.config['evolve_rates']['random from origin_tree'] = 0
-                print_warning('ww', 'Generating mew trees \'random from fix_tree\' is not possible without a fix_tree!'
-                                    '\nFixed by adding the evolve_rate to \'random\'.')
-
-            if self.config['complexity_measure'] in ['tree edit distance']:  # sfeh get all origin-based distances
+        if not self.origin_exists():
+            if self.config['complexity_measure'] in ['tree_edit_distance']:  # sfeh get all origin-based distances
                 raise Exception('Can not use relative distance without providing a reference/origin tree!')
 
         self.write_config_yaml()  # sfeh or json?
@@ -354,41 +340,30 @@ class ExplainableGP(object):
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        rate_o = self.evolve_rates['random from origin_tree']
-        rate_s = self.evolve_rates['random from scratch']
-        rate_sum = sum([rate_o, rate_s])
+        # todo separate first origin?  what to do? change this.
+        third_ramped = int(self.config['pop_max'] / 3)
 
-        first_rate_o = int((self.config['pop_max'] * (rate_o / rate_sum))/2)
-        first_rate_s = int((self.config['pop_max'] * (rate_s / rate_sum))/2)
+        params_2 = {}
+        evolve_random_func = self.pop_random
+        if self.origin_exists():
+            if tree_node_is_modifiable(self.origin_tree_get(), root_id):
+                params_2 = {'fix_tree': self.origin_tree_get()}
+                evolve_random_func = self.pop_random
 
-        for ii in range(first_rate_o):
-            call_params = {'fix_tree': self.origin_tree_get(),
-                           'depth_tuple': (6, 1, 10, 2),
-                           'build_method': 'full'}
-            tree = self.pop_random_from_origin(call_params)
-            self.pop_append(tree, last_evolution='f_o1')
+        call_params_list = [{'depth_tuple': (6, 2, 10, 2), 'build_method': 'full'},
+                            {'depth_tuple': (6, 2, 10, 2), 'build_method': 'grow'},
+                            {'nodes_tuple': (25, 5, 40, 7), 'build_method': 'grow'}]
 
-        for ii in range(first_rate_o):
-            call_params = {'fix_tree': self.origin_tree_get(),
-                           'nodes_tuple': (20, 1, 40, 7),
-                           'build_method': 'grow'}
-            tree = self.pop_random_from_origin(call_params)
-            self.pop_append(tree, last_evolution='f_o2')
-
-        for ii in range(first_rate_s):
-            call_params = {'depth_tuple': (6, 1, 10, 2),
-                           'build_method': 'full'}
-            tree = self.pop_random(call_params)
-            self.pop_append(tree, last_evolution='f_r1')
-
-        for ii in range(first_rate_s):
-            call_params = {'depth_tuple': (6, 1, 10, 2),
-                           'build_method': 'grow'}
-            tree = self.pop_random(call_params)
-            self.pop_append(tree, last_evolution='f_r2')
+        for n, call_params in enumerate(call_params_list):
+            tag = '0_{}'.format(n)
+            call_params.update(params_2)
+            for ii in range(third_ramped):
+                tree = evolve_random_func(call_params)
+                self.pop_append(tree, last_evolution=tag)
 
         self.gen_finalize()
         file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
+
 
     def gen_create_loop(self):
         """
@@ -396,103 +371,39 @@ class ExplainableGP(object):
         - adjust parameters for this generation (parsimony threshold)
         - Create a gene pool (kick out too complex candidates)
         """
-        # todo da lässt sich doch was machen...
         # All gp creators: name, function, num of trees from tournament selection
 
-        if self.origin_exists():
-            origin_tree = self.origin_tree
-        else:
-            origin_tree = None
+        # sfeh idee first generation just IS origin?
+        # sfehsfeh idee: print every written file
 
-        gp_dict_user = {
-            'Repro': {'gp_func': 'reproduce', 'params': {}, 'repro_rate': 0.05},
-            'Rsympy': {'gp_func': 'reproduce', 'tourn_size': None, 'repro_rate': 0.03},
-            'Pareto': {'gp_func': 'revive pareto', 'tourn_size': None, 'repro_rate': 0.01},
-            'Point': {'gp_func': 'mutate point', 'tourn_size': None, 'repro_rate': 0.05},
-            'Branch1': {'gp_func': 'mutate branch', 'tourn_size': None, 'repro_rate': 0.05, 'custom_params': {'branch_nodes': 20, 'build_method': 'grow'}},
-            'Branch2': {'gp_func': 'mutate branch', 'tourn_size': None, 'repro_rate': 0.05, 'custom_params': {'branch_depth': 6, 'build_method': 'full'}},
-            'Branch3': {'gp_func': 'mutate branch', 'tourn_size': None, 'repro_rate': 0.05, 'custom_params': {'branch_depth': 7, 'build_method': 'grow'}},
-            'Xover': {'gp_func': 'crossover branch', 'tourn_size': None, 'repro_rate': 0.36},
-            'Filter1': {'gp_func': 'filter', 'tourn_size': None, 'repro_rate': 0.10},
-            'Filter2': {'gp_func': 'filter', 'tourn_size': None, 'repro_rate': 0.10},
-            'RandFix1': {'gp_func': 'random from fix_tree', 'tourn_size': 0, 'repro_rate': 0.15},
-            'RandFix2': {'gp_func': 'random', 'tourn_size': 0, 'repro_rate': 0.15, 'custom_params': {'branch_depth': 7, 'build_method': 'grow'}}
-        }
-
-        evolve_dict = {
-            'reproduce': (self.pop_reproduce, 1, None),
-            'revive pareto': (self.pop_reproduce_olymp, 0, None),
-            'mutate point': (self.pop_mutate_point, 1, None),
-            'mutate branch': (self.pop_mutate_branch, 1, None),
-            'crossover branch': (self.pop_crossover_branch, 2, None),
-            'filter': (self.pop_mutate_filter, 1, None),
-            'random from fix_tree': (self.pop_random_from_origin, 0, origin_tree),
-            'random': (self.pop_random, 0, None)}
-
-        # gp_list = [  # name of the function,    implementation in plagih,       number of tournament selections needed
-        #     ('repro one', self.pop_reproduce, 1),
-        #     ('repro pareto', self.pop_reproduce_olymp, 0),
-        #     ('repro reduced one', self.pop_reproduce_reduce, 1),
-        #     ('point mutate function', self.pop_mutate_point, 1),
-        #     ('filter floats', self.pop_mutate_filter, 1),
-        #     ('branch mutate insert', self.pop_mutate_branch, 1),
-        #     ('crossover branch', self.pop_crossover_branch, 2),
-        #     ('random from origin_tree', self.pop_random_from_origin, 0),
-        #     ('random from scratch', self.pop_random, 0)]
-        # for k, v in gp_dict_user:
-        #
-        #
-        # # if gpfunc_call2[evolve_call][1]:
-        # #     call_params['fix_tree'] = self.origin_tree_get()
-
-        # sfehsfeh: pring every written file
-
-        gp_dict2 = {
-            'Repro': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None,
-                      'custom_params': {}, 'evolve_num': 50},
-            'Rsympy': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None,
-                       'custom_params': {'sympify_tree': True},
-                       'evolve_num': 30},
-
-            'Pareto': {'gp_func': 'revive pareto', 'evolve_call': self.pop_reproduce_olymp, 'tourn_size': 0,
-                       'custom_params': {}, 'evolve_num': 10},
-
-            'Point': {'gp_func': 'mutate point', 'evolve_call': self.pop_mutate_point, 'tourn_size': None,
-                      'custom_params': {}, 'evolve_num': 50},
-            'Branch1': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
-                        'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'},
-                        'evolve_num': 50},
-            'Branch2': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
-                        'custom_params': {'depth_tuple': (6, 1, 9, 1), 'build_method': 'full'},
-                        'evolve_num': 50},
-            'Branch3': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None,
-                        'custom_params': {'depth_tuple': (7, 1, 9, 1), 'build_method': 'grow'},
-                        'evolve_num': 50},
-            'Xover': {'gp_func': 'crossover branch', 'evolve_call': self.pop_crossover_branch, 'tourn_size': None,
-                      'custom_params': {}, 'evolve_num': 50},
-
-            'Filter1': {'gp_func': 'filter', 'evolve_call': self.pop_mutate_filter, 'tourn_size': None,
-                        'custom_params': {'mode': 'branch'},
-                        'evolve_num': 50},  # todo
-            'Filter2': {'gp_func': 'filter', 'evolve_call': self.pop_mutate_filter, 'tourn_size': None,
-                        'custom_params': {'mode': 'point'}, 'evolve_num': 50},
-
-            'Rand1': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0,
-                      'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},  'evolve_num': 50},
-            'Rand2': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0,
-                      'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}, 'evolve_num': 50},
-
-            # 'RandFix1': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-            #              'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},
-            #              'evolve_num': 50},
-            # 'RandFix2': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-            #              'custom_params': {'nodes_tuple': (20, 1, 30, 6), 'build_method': 'grow'},
-            #              'evolve_num': 50}
-            }
-
-        for k in gp_dict2.keys():  # all selected gp mutations  # sfeh seems like dumb code
-            if gp_dict2[k]['tourn_size'] is None:
-                gp_dict2[k]['tourn_size'] = self.tourn_size
+        # evolve_dict = {
+        #     'Repro': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None, 'custom_params': {}, 'evolve_num': 50},
+        #     'Rsympy': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None, 'evolve_num': 30,
+        #                'custom_params': {'sympify_tree': True}},
+        #     'Pareto': {'gp_func': 'revive pareto', 'evolve_call': self.pop_reproduce_olymp, 'tourn_size': 0, 'evolve_num': 10},
+        #     'Point': {'gp_func': 'mutate point', 'evolve_call': self.pop_mutate_point, 'tourn_size': None, 'evolve_num': 50},
+        #     'Branch1': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None, 'evolve_num': 50,
+        #                 'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'}},
+        #     'Branch2': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None, 'evolve_num': 50,
+        #                 'custom_params': {'depth_tuple': (6, 1, 9, 1), 'build_method': 'full'}},
+        #     'Branch3': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None, 'evolve_num': 50,
+        #                 'custom_params': {'depth_tuple': (7, 1, 9, 1), 'build_method': 'grow'}},
+        #     'Xover': {'gp_func': 'crossover branch', 'evolve_call': self.pop_crossover_branch, 'tourn_size': None,
+        #               'custom_params': {}, 'evolve_num': 360},
+        #     'Filter1': {'gp_func': 'filter', 'evolve_call': self.pop_mutate_filter, 'tourn_size': None, 'evolve_num': 50,
+        #                 'custom_params': {'mode': 'branch'}},
+        #     'Filter2': {'gp_func': 'filter', 'evolve_call': self.pop_mutate_filter, 'tourn_size': None, 'evolve_num': 50,
+        #                 'custom_params': {'mode': 'point'}},
+        #     'Rand1': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0, 'evolve_num': 150,
+        #               'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'}},
+        #     'Rand2': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0, 'evolve_num': 150,
+        #               'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}},
+        #     # 'RandFix1': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
+        #     #              'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},
+        #     #              'evolve_num': 50},
+        #     # 'RandFix2': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
+        #     #              'custom_params': {'nodes_tuple': (20, 1, 30, 6), 'build_method': 'grow'},
+        # }
 
         while self.run_continues():  # max generation, max time, done...
 
@@ -500,40 +411,38 @@ class ExplainableGP(object):
 
             # ########
             # call_params{'old_tree', 'partner_tree', 'fix_tree', 'branch_nodes', 'branch_depth': 6, 'build_method': <'full', 'grow', 'half'>}
-            for tag, fun_infos in gp_dict2.items():  # all selected gp mutations
+            for tag, fun_infos in self.evolve_dict.items():  # all selected gp mutations
                 time_evolve = time.perf_counter()
                 evolve_call = fun_infos['evolve_call']
-                gp_func = fun_infos['gp_func']
                 tourn_size = fun_infos['tourn_size']
-
                 call_params = fun_infos['custom_params']
 
-                if evolve_dict[gp_func][2] is not None:
+                if self.evolve_dict[tag]['fix_tree']:
                     call_params['fix_tree'] = self.origin_tree_get()
 
-                evolve_num = gp_dict2[tag]['evolve_num']  # todo
+                evolve_num = self.evolve_dict[tag]['evolve_num']
 
-                tourn_num = evolve_dict[gp_func][1]
-                if tourn_num == 1:  # one tournament winner. mainly mutations
+                tourn_rep = self.evolve_dict[tag]['tourn_rep']
+                if tourn_rep == 1:  # one tournament winner. mainly mutations
                     for ii in range(evolve_num):
                         call_params['old_tree'] = self.pop_selection_tournament(tourn_size)
                         new_tree = evolve_call(call_params)
                         self.pop_append(new_tree, last_evolution=tag)
 
-                elif tourn_num == 0:  # no tournament winner. mainly new random ones
+                elif tourn_rep == 0:  # no tournament winner. mainly new random ones
                     for ii in range(evolve_num):
                         new_tree = evolve_call(call_params)
                         self.pop_append(new_tree, last_evolution=tag)
 
-                elif tourn_num == 2:  # only crossover
-                    for ii in range(int(evolve_num/2)):
+                elif tourn_rep == 2:  # only crossover
+                    for ii in range(int(evolve_num / 2)):
                         call_params['old_tree'] = self.pop_selection_tournament(tourn_size)
                         call_params['partner_tree'] = self.pop_selection_tournament(tourn_size)
                         new_tree, new_tree2 = list(evolve_call(call_params))
                         self.pop_append(new_tree, last_evolution=tag)
                         self.pop_append(new_tree2, last_evolution=tag)
                 else:
-                    raise Exception('Tournament selection is only meant to be performed [0, 1, 2] times. This was: {}'.format(tourn_num))
+                    raise Exception('Tournament selection is only meant to be performed [0, 1, 2] times. This was: {}'.format(tourn_rep))
 
                 self.print_g('ggg', '->Evolving \'{}\' {}x. Took: {:4.2f}s.'.format(tag, evolve_num, time.perf_counter() - time_evolve))
 
@@ -650,6 +559,44 @@ class ExplainableGP(object):
         self.data_train, self.data_control = data_train, data_control  # what is that good for: self.data_train_rows, = data_train_rows,
 
         return
+
+    def avtivate_evolve_functions(self, evolve_dict):
+
+        evolve_specifications = {
+            'reproduce': (self.pop_reproduce, 1, None),
+            'revive pareto': (self.pop_reproduce_olymp, 0, None),
+            'mutate point': (self.pop_mutate_point, 1, None),
+            'mutate branch': (self.pop_mutate_branch, 1, None),
+            'crossover branch': (self.pop_crossover_branch, 2, None),
+            'filter': (self.pop_mutate_filter, 1, None),
+            # 'random from fix_tree': (self.pop_random_from_origin, 0, 'fix_tree'),
+            'random': (self.pop_random, 0, None)}
+
+        if self.origin_exists():  # random stuff only makes sense
+            if not tree_node_is_modifiable(self.origin_tree, root_id):
+                evolve_specifications['random'] = (self.pop_random_from_origin, 0, 'fix_tree')
+
+        for k, v in evolve_dict.items():
+            # tourn_size
+            gp_func = v.get('gp_func')
+            evolve_call, tourn_rep, origin_req = evolve_specifications[gp_func]
+            evolve_dict[k]['evolve_call'] = evolve_call
+            evolve_dict[k]['fix_tree'] = True if origin_req else False
+            evolve_dict[k]['tourn_rep'] = tourn_rep
+            if tourn_rep > 0:
+                tourn_size = evolve_dict[k].get('tourn_size')
+                if not tourn_size:
+                    tourn_size = self.tourn_size
+            else:
+                tourn_size = 0
+            evolve_dict[k]['tourn_size'] = tourn_size
+
+            evolve_rate = evolve_dict[k].get('evolve_rate')
+            evolve_dict[k]['evolve_num'] = int(evolve_rate * self.config['pop_max'])
+            if evolve_dict[k].get('custom_params') is None:
+                evolve_dict[k]['custom_params'] = {}
+
+        self.evolve_dict = evolve_dict
 
     def activate_operators(self, choose_oparray, choose_distributions):
         """
@@ -1190,7 +1137,7 @@ class ExplainableGP(object):
         """
         build_depth = int(np.random.normal(depth_tuple[0], depth_tuple[3]))  #
         build_depth = max(depth_tuple[1], build_depth)
-        build_depth = min(depth_tuple[2] - old_node_depth, build_depth)
+        build_depth = min(depth_tuple[2] - old_node_depth, build_depth)  # sfeh? debug? seems to be one, or was it at node_depth shizzle?
         return build_depth
 
     def choose_build_goal_nodes(self, nodes_tuple, existing_nodes):

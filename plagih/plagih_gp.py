@@ -115,6 +115,38 @@ def load_data_prepared(root_dir):
     return data_prepared
 
 
+def load_evolve_functions(root_dir):
+    """
+
+    """
+    if Path.is_file(root_dir / file_evolve_functions):
+        evolve_dict = yaml_load(root_dir / file_evolve_functions)
+    else:
+
+        print_e('No gp evolve procedure or functions defined! Trying to choose them for you.')
+
+        evolve_dict = {
+            'Repro': {'gp_func': 'reproduce', 'params': {}, 'evolve_rate': 0.06},
+            'Rsympy': {'gp_func': 'reproduce', 'evolve_rate': 0.03},
+            'Pareto': {'gp_func': 'revive pareto', 'evolve_rate': 0.01},
+            'Point': {'gp_func': 'mutate point', 'evolve_rate': 0.05},
+            'Branch1': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (6, 1, 9, 1), 'build_method': 'full'}},
+            'Branch2': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (7, 1, 9, 1), 'build_method': 'grow'}},
+            'Branch3': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'}},
+            'Xover': {'gp_func': 'crossover branch', 'evolve_rate': 0.36},
+            'Filter1': {'gp_func': 'filter', 'evolve_rate': 0.12, 'custom_params': {'mode': 'branch'}},
+            'Filter2': {'gp_func': 'filter', 'evolve_rate': 0.03, 'custom_params': {'mode': 'point'}},
+            'Rand1': {'gp_func': 'random', 'evolve_rate': 0.15, 'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'}},# todo if 'half' -> 50:50 choice
+            'Rand2': {'gp_func': 'random', 'evolve_rate': 0.15, 'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}},
+            'Rand3': {'gp_func': 'random', 'evolve_rate': 0.15, 'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'}}
+        }
+
+    yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_dict)
+    # sfeh: if you want to load informations from extra file, check for this file here
+
+    return evolve_dict
+
+
 def load_tree_builders(root_dir):
     # Load operators
     operators_csv = root_dir / operators
@@ -177,14 +209,18 @@ def run(root_dir):
     """
 
     config = load_config(root_dir)
-    data_prepared = load_data_prepared(root_dir)
-    choose_oparray, distributions = load_tree_builders(root_dir)
-    label_list, modify_list = load_label_list(root_dir)
-
     gp = ExplainableGP(root_dir, config=config)
+
+    data_prepared = load_data_prepared(root_dir)
     gp.activate_dataset(data_prepared)
+
+    choose_oparray, distributions = load_tree_builders(root_dir)
     gp.activate_operators(choose_oparray, distributions)
 
+    evolve_dict = load_evolve_functions(root_dir)
+    gp.avtivate_evolve_functions(evolve_dict)
+
+    label_list, modify_list = load_label_list(root_dir)
     if label_list is not None and modify_list is not None:
         observation_bundle = gp.get_observation_bundle()
         origin_tree = karoo_tree_from_labellist(label_list, observation_bundle, modify_list=modify_list)

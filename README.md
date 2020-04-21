@@ -117,7 +117,7 @@ modify_list,0,1,0,0,1,1
 
 ## Description
 
-The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference program that are necessary to get to the target solution ("tree edit distance").    
+The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference program that are necessary to get to the target solution ("tree_edit_distance").    
 
 PLAGIH stands for PLAusible Genetic Improvements to Heuristics. The name will probably be changed soon.
 This is a Project resulting from my Masters Thesis (with yet unknown name). 

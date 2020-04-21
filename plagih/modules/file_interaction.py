@@ -20,8 +20,10 @@ file_conclusion = 'conclusion.txt'
 run_files = 'run_files/'
 file_config_yaml = 'run_files/config.yaml'
 info_config_yaml = 'info/config.yaml'
+file_info_evolve_dict_yaml = 'info/evolve_dict.yaml'
 file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
+file_evolve_functions = 'run_files/evolve_functions.yaml'
 env_variables_yaml = 'run_files/env_variables.yaml'
 samples_csv = 'run_files/samples.csv'
 operators = 'run_files/operators.csv'
@@ -53,7 +55,7 @@ get_path = {example_runs: Path('run_examples/'),
             run_files: Path('run_files/'),
             file_config_yaml: Path('run_files/config.yaml'),
             file_config_json: Path('run_files/config.json'),
-            file_backup_pickle: Path('run_files/backup.p'),
+            file_backup_pickle: Path('backup/backup.p'),
             samples_ready_p: Path('run_files/samples_ready.p'),
             samples_csv: Path('run_files/samples.csv'),
             operators: Path('run_files/operators.csv'),
@@ -146,7 +148,6 @@ def file_population_karoo(population, pop_name, path, gen_id):
 
     """
 
-
     file_path = path / 'info/population_{}.csv'.format(str(pop_name))
     file_path = file_make_dir(file_path)
     # sfeh? function to tree_ and append each tree
@@ -164,11 +165,12 @@ def file_population_karoo(population, pop_name, path, gen_id):
     return
 
 
-def pickle_load(data_prepared_pickle_path):
+def pickle_load(path):
     """
     loads a data_csv_path file that was already split with the csv reader
     """
-    with Path.open(data_prepared_pickle_path, 'rb') as file:
+
+    with Path.open(path, 'rb') as file:
         pickle_data = pickle.load(file)
 
     return pickle_data
@@ -179,6 +181,7 @@ def pickle_dump(path, data):
     saves prepared plagih data to pickle file
     """
 
+    path = file_make_dir(path)
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
     return
@@ -196,6 +199,7 @@ def yaml_dump(path, data):
     saves prepared plagih data to pickle file
     """
 
+    path = file_make_dir(path)
     with Path.open(path, 'w') as file:
         yaml.dump(data, file, default_flow_style=False, sort_keys=False)
     return

@@ -1611,9 +1611,6 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=None):
     tree = tree_core_build_childs(tree)
     tree = tree_core_init_depth(tree, parent_list)
 
-    if debug_this_please and False:
-        print('asd insert core\n', label_list, '\n', xtype_list)
-
     return tree
 
 
@@ -2265,7 +2262,7 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
         return tree_get_size(tree)  # returns the number of nodes
     elif parsimony_distance == 'tree_depth':
         return 0
-    if parsimony_distance == 'tree_edit_distance':  # tree edit distance, tree-edit-distance
+    if parsimony_distance == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
         distance, mapping = tree_parsimony_ted(tree, origin_tree)
         if weights is None:
             return distance

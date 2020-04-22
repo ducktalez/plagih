@@ -606,14 +606,15 @@ def tree_set_modifyable_nodes(tree, origin_tree=None):
     """
 
     tree = tree_set_modifyable_nodes_true(tree)
-    if origin_tree is not None:  # todo loop is unneccessary if there are no set fix nodes
-        non_modifiable_nodes = []
-        if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
-            permanent_nodes = tree_permanent_nodes_get(1, tree, 1, origin_tree)
-            non_modifiable_nodes.extend(permanent_nodes)
+    if origin_tree is not None:
+        if not tree_node_is_modifiable(origin_tree, root_id):
+            non_modifiable_nodes = []
+            if tree_node_get_modify(origin_tree, root_id) == 0:  # check if modifiable nodes are specified
+                permanent_nodes = tree_permanent_nodes_get(1, tree, 1, origin_tree)
+                non_modifiable_nodes.extend(permanent_nodes)
 
-        for non_modifiable in non_modifiable_nodes:
-            tree = tree_node_set_modify(tree, non_modifiable, 0)
+            for non_modifiable in non_modifiable_nodes:
+                tree = tree_node_set_modify(tree, non_modifiable, 0)
 
     return tree
 
@@ -629,7 +630,10 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
         for c in [N_c1, N_c2, N_c3]:
             if origin_tree[c][origin_node] != '':  # aka a child exists
                 next_origin_node = int(origin_tree[c][origin_node])
-                next_chosen_node = int(chosen_tree[c][chosen_node])
+                try:
+                    next_chosen_node = int(chosen_tree[c][chosen_node])  # error? probably nodes that should not be changed were changed earlier
+                except:
+                    raise  # todo
                 tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
                 if tmp is not None:
                     permanent_nodes.extend(tmp)
@@ -1000,7 +1004,7 @@ def tree_get_fitness(tree, precision=None, karoo=True):
 
     fitness = tree[T_fitness][1]
     if fitness != '':
-        fitness = round(float(fitness), precision)  # todo also round random values immediately elsewhere
+        fitness = round(float(fitness), precision)
     else:
         raise Exception('This tree does not contain float fitness: {}.'.format(fitness))
     return fitness
@@ -1053,7 +1057,7 @@ def tree_get_meta(tree):
     return tree_meta
 
 
-def tree_get_expr_raw(tree, node_id):  # todo make mode_id optional
+def tree_get_expr_raw(tree, node_id=root_id):
     """
     Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
     The large amount of () is required doe to some sympify errors. But feel free to reduce them.
@@ -1082,7 +1086,7 @@ def tree_get_expr_raw(tree, node_id):  # todo make mode_id optional
 
 
 def tree_get_expr_sym(tree, node_id=root_id):
-    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
+    expr_raw = tree_get_expr_raw(tree, node_id=node_id)
     expr_sym = expr_sympify(expr_raw)
     return expr_sym
 
@@ -1483,11 +1487,12 @@ def tree_core_init_depth(tree, parent_list=None):
 
 def parents_from_arities(arity_lst):
     """
-    Automatically fill the node_parent of a tree
+    working on the tree 'core'
+    Automatically fill the node_parent slots of a tree
     - arity list in tree or
     """
 
-    parent_list = [-1]  # todo why -1? is converted, but why?
+    parent_list = [-1]  # -1 is the root node in the non-karoo tree version
     for i, arity in enumerate(arity_lst):
         parent_list.extend([i] * arity)
 
@@ -1574,7 +1579,7 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
 
 def core_from_expr(expr, env_variables):
     label_list = ast_convert_from_expr(expr, build=True)
-    # label_list = workaround_remove_tilde_operator(label_list)  # sfeh todo not use?
+    # label_list = workaround_remove_tilde_operator(label_list)
     arity_list = [label_get_arity(label) for label in label_list]
     xtype_list = xtypes_from_labels(label_list, env_variables)
     core = core_from_labels(label_list, arity_list, xtype_list)

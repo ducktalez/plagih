@@ -81,7 +81,7 @@ class ExplainableGP(object):
                              'random from origin_tree': 0.15,
                              'random from scratch': 0.15,
                              },
-            'evolve': {'r': {'evolve_fun': 'reproduce lucky', 'rate': 0.05, 'params': ()},  # tbd sfeh tbd
+            'evolve': {'r': {'evolve_fun': 'reproduce lucky', 'rate': 0.05, 'params': ()},  # tbd sfeh tbd # todo reproduce and clone?
                        'rP': {'evolve_fun': 'reproduce pareto', 'rate': 0.01, 'params': ()},
                        'rS': {'evolve_fun': 'reproduce sympify', 'rate': 0.03, 'params': ()},
                        'p': {'evolve_fun': 'parameters filter floats', 'rate': 0.05, 'params': ('gaussian')},  # sfeh bool aswell
@@ -94,9 +94,9 @@ class ExplainableGP(object):
             'crossover_type_safety_mode': 'replace_same_types',
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
             'tree_growth': 'node-based',  # node-based, depth-based
-            'tree_depth_base': 7,  # [3..10]
-            'tree_depth_max': 15,  # maximum Tree depth for entire run
-            'tree_depth_min': 5,
+            'tree_depth_base': 4,  # [3..10]
+            'tree_depth_max': 8,  # maximum Tree depth for entire run
+            'tree_depth_min': 2,
             'tree from scratch min_nodes': 8,
             'random from scratch max nodes': 50,
             'tree branch base nodes': 20,
@@ -321,13 +321,19 @@ class ExplainableGP(object):
         write the parameters to a .csv file which can also be loaded
         """
 
-        path_config = make_dir(self.root_dir / run_files)
-        filename = self.root_dir / file_config_json
+        path = file_make_dir(self.root_dir / file_config_json)
 
-        with Path.open(filename, 'w') as file:
+        with Path.open(path, 'w') as file:
             json.dump(self.config, file, indent=4)
 
         return
+
+    def origin_is_fix(self):
+
+        if self.origin_exists():
+            if not tree_node_is_modifiable(self.origin_tree_get(), root_id):
+                return True
+        return False
 
     def gen_create_first(self):
         """
@@ -343,16 +349,19 @@ class ExplainableGP(object):
         # todo separate first origin?  what to do? change this.
         third_ramped = int(self.config['pop_max'] / 3)
 
-        params_2 = {}
-        evolve_random_func = self.pop_random
-        if self.origin_exists():
-            if tree_node_is_modifiable(self.origin_tree_get(), root_id):
-                params_2 = {'fix_tree': self.origin_tree_get()}
-                evolve_random_func = self.pop_random
+        third_ramped = 50  # todo todo
 
-        call_params_list = [{'depth_tuple': (6, 2, 10, 2), 'build_method': 'full'},
-                            {'depth_tuple': (6, 2, 10, 2), 'build_method': 'grow'},
-                            {'nodes_tuple': (25, 5, 40, 7), 'build_method': 'grow'}]
+        if self.origin_is_fix():
+            print('FIX TREE')
+            params_2 = {'fix_tree': self.origin_tree_get()}
+            evolve_random_func = self.pop_random_from_origin
+        else:
+            params_2 = {}
+            evolve_random_func = self.pop_random
+
+        call_params_list = [{'depth_tuple': (4, 3, 7, 1.5), 'build_method': 'full'},
+                            {'depth_tuple': (4, 3, 7, 1.5), 'build_method': 'grow'},
+                            {'nodes_tuple': (16, 8, 45, 6), 'build_method': 'grow'}]
 
         for n, call_params in enumerate(call_params_list):
             tag = '0_{}'.format(n)
@@ -364,7 +373,6 @@ class ExplainableGP(object):
         self.gen_finalize()
         file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
 
-
     def gen_create_loop(self):
         """
         Creates all new Generations.
@@ -372,38 +380,7 @@ class ExplainableGP(object):
         - Create a gene pool (kick out too complex candidates)
         """
         # All gp creators: name, function, num of trees from tournament selection
-
-        # sfeh idee first generation just IS origin?
         # sfehsfeh idee: print every written file
-
-        # evolve_dict = {
-        #     'Repro': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None, 'custom_params': {}, 'evolve_num': 50},
-        #     'Rsympy': {'gp_func': 'reproduce', 'evolve_call': self.pop_reproduce, 'tourn_size': None, 'evolve_num': 30,
-        #                'custom_params': {'sympify_tree': True}},
-        #     'Pareto': {'gp_func': 'revive pareto', 'evolve_call': self.pop_reproduce_olymp, 'tourn_size': 0, 'evolve_num': 10},
-        #     'Point': {'gp_func': 'mutate point', 'evolve_call': self.pop_mutate_point, 'tourn_size': None, 'evolve_num': 50},
-        #     'Branch1': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None, 'evolve_num': 50,
-        #                 'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'}},
-        #     'Branch2': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None, 'evolve_num': 50,
-        #                 'custom_params': {'depth_tuple': (6, 1, 9, 1), 'build_method': 'full'}},
-        #     'Branch3': {'gp_func': 'mutate branch', 'evolve_call': self.pop_mutate_branch, 'tourn_size': None, 'evolve_num': 50,
-        #                 'custom_params': {'depth_tuple': (7, 1, 9, 1), 'build_method': 'grow'}},
-        #     'Xover': {'gp_func': 'crossover branch', 'evolve_call': self.pop_crossover_branch, 'tourn_size': None,
-        #               'custom_params': {}, 'evolve_num': 360},
-        #     'Filter1': {'gp_func': 'filter', 'evolve_call': self.pop_mutate_filter, 'tourn_size': None, 'evolve_num': 50,
-        #                 'custom_params': {'mode': 'branch'}},
-        #     'Filter2': {'gp_func': 'filter', 'evolve_call': self.pop_mutate_filter, 'tourn_size': None, 'evolve_num': 50,
-        #                 'custom_params': {'mode': 'point'}},
-        #     'Rand1': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0, 'evolve_num': 150,
-        #               'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'}},
-        #     'Rand2': {'gp_func': 'random', 'evolve_call': self.pop_random, 'tourn_size': 0, 'evolve_num': 150,
-        #               'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}},
-        #     # 'RandFix1': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-        #     #              'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'},
-        #     #              'evolve_num': 50},
-        #     # 'RandFix2': {'gp_func': 'random from fix_tree', 'evolve_call': self.pop_random_from_origin, 'tourn_size': 0,
-        #     #              'custom_params': {'nodes_tuple': (20, 1, 30, 6), 'build_method': 'grow'},
-        # }
 
         while self.run_continues():  # max generation, max time, done...
 
@@ -572,9 +549,10 @@ class ExplainableGP(object):
             # 'random from fix_tree': (self.pop_random_from_origin, 0, 'fix_tree'),
             'random': (self.pop_random, 0, None)}
 
-        if self.origin_exists():  # random stuff only makes sense
-            if not tree_node_is_modifiable(self.origin_tree, root_id):
-                evolve_specifications['random'] = (self.pop_random_from_origin, 0, 'fix_tree')
+        if self.origin_is_fix():
+            print('DDASDSADSDASD')
+            evolve_specifications['random'] = (self.pop_random_from_origin, 0, 'fix_tree')
+
 
         for k, v in evolve_dict.items():
             # tourn_size
@@ -842,7 +820,8 @@ class ExplainableGP(object):
                 fitness_train = self.tree_eval_fitness_train(tree)
                 tree = tree_set_fitness(tree, fitness_train)
                 self.tree_meta_update(tree, fitness_train=fitness_train)
-                self.pop_append(tree)
+                last_evolution = tree_get_last_evolution(tree)
+                self.pop_append(tree, last_evolution=last_evolution)
             except Exception as ex:
                 print_warning('www', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
                 count_fails += 1
@@ -947,6 +926,8 @@ class ExplainableGP(object):
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
                 sym_tree = tree_evolve_reduce(tree, self.env_variables, completely=True)
                 if list(tree_get_labellist(sym_tree)) != list(tree_get_labellist(tree)):
+                    if len(list(tree_get_labellist(sym_tree))) > len(list(tree_get_labellist(tree))):
+                        print_warning('w', 'Sympified tree is larger than raw version?')
                     self.printpl('aa', 'Pareto entry could be further sympified!')
                     sym_tree = tree_set_fitness(sym_tree, fitness)
                     self.pop_add_tree_midrun(sym_tree)
@@ -1172,7 +1153,7 @@ class ExplainableGP(object):
         build_split = []
         if depth_tuple:
             for ii in range(len(layer0_ids)):
-                build_depth = self.choose_build_goal_depth(depth_tuple, 0)
+                build_depth = self.choose_build_goal_depth(depth_tuple, 0)  # this 0 is wrong
                 build_split.append(build_depth)
 
         elif nodes_tuple:
@@ -1185,7 +1166,7 @@ class ExplainableGP(object):
             node_id = layer0_ids[i]
             node_xtype = tree_node_get_xtype(tree, node_id)
             old_branch = tree_node_get_branch(tree, node_id, karoo=True)
-            branch_build = build_split[i]
+            build_size = build_split[i]
 
             # label_list, arity_list, xtype_list = invent_label_list_nodes(node_xtype, branch_goal_nodes,
             #                                                              env_variables, oparray, choose_distributions,
@@ -1193,13 +1174,13 @@ class ExplainableGP(object):
 
             if depth_tuple:
                 # sfeh warning: Attention with this one. can get quite large with depth based
-                label_list, arity_list, xtype_list = invent_label_list_depth(node_xtype, branch_build,
+                label_list, arity_list, xtype_list = invent_label_list_depth(node_xtype, build_size,
                                                                              self.env_variables, self.choose_oparray, self.choose_distributions,
                                                                              build_mode=build_mode)
 
             elif nodes_tuple:
 
-                label_list, arity_list, xtype_list = invent_label_list_nodes(node_xtype, branch_build,
+                label_list, arity_list, xtype_list = invent_label_list_nodes(node_xtype, build_size,
                                                                              self.env_variables, self.choose_oparray, self.choose_distributions,
                                                                              build_mode=build_mode)
             else:
@@ -1273,6 +1254,8 @@ class ExplainableGP(object):
             depth_tuple = call_params.get('depth_tuple')  # (base, min, max, normal_distrib)
             old_node_depth = tree_node_get_depth(tree, old_node)
             build_depth = self.choose_build_goal_depth(depth_tuple, old_node_depth)
+            if build_depth < 1:
+                print_warning('ww', 'Build depth should be negative, cannot evolve this tree from last evolution: {}'.format(tree_get_last_evolution(tree)))
             label_list, arity_list, xtype_list = invent_label_list_depth(old_xtype, build_depth,
                                                                          self.env_variables, self.choose_oparray, self.choose_distributions,
                                                                          build_mode=build_mode)
@@ -1294,6 +1277,7 @@ class ExplainableGP(object):
             core_insert = core_from_labels(label_list, arity_list, xtype_list)
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
+            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)
         else:
             tree = None  # TODO debug this
 
@@ -1354,10 +1338,10 @@ class ExplainableGP(object):
         """
 
         if tree is None:
-            print_warning('ww', 'Tree from last_evolution: \'{}\' failed. probably sympify. Continuing.'.format(last_evolution))
+            print_warning('ww', 'Tree from last_evolution: \'{}\' failed. Continuing.'.format(last_evolution))  # reasons: sympify, last tree was already too large
         else:
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-            tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)  # sfeh: test 08.04.2020
+            # tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)  # sfeh: test 22.04.2020  # todo
             tree = tree_normalize_exponentiation(tree)
             tree = tree_set_last_evolution(tree, last_evolution)
             # tree = tree_set_xtypes(tree, self.env_variables)

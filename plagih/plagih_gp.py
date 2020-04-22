@@ -130,15 +130,15 @@ def load_evolve_functions(root_dir):
             'Rsympy': {'gp_func': 'reproduce', 'evolve_rate': 0.03},
             'Pareto': {'gp_func': 'revive pareto', 'evolve_rate': 0.01},
             'Point': {'gp_func': 'mutate point', 'evolve_rate': 0.05},
-            'Branch1': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (6, 1, 9, 1), 'build_method': 'full'}},
-            'Branch2': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (7, 1, 9, 1), 'build_method': 'grow'}},
-            'Branch3': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'}},
-            'Xover': {'gp_func': 'crossover branch', 'evolve_rate': 0.36},
-            'Filter1': {'gp_func': 'filter', 'evolve_rate': 0.12, 'custom_params': {'mode': 'branch'}},
-            'Filter2': {'gp_func': 'filter', 'evolve_rate': 0.03, 'custom_params': {'mode': 'point'}},
-            'Rand1': {'gp_func': 'random', 'evolve_rate': 0.15, 'custom_params': {'depth_tuple': (6, 1, 9, 2), 'build_method': 'full'}},# todo if 'half' -> 50:50 choice
-            'Rand2': {'gp_func': 'random', 'evolve_rate': 0.15, 'custom_params': {'depth_tuple': (7, 1, 9, 2), 'build_method': 'grow'}},
-            'Rand3': {'gp_func': 'random', 'evolve_rate': 0.15, 'custom_params': {'nodes_tuple': (20, 1, 40, 5), 'build_method': 'grow'}}
+            'BranchDF': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (4, 1, 7, 1.5), 'build_method': 'full'}},
+            'BranchDG': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (5, 1, 7, 1.5), 'build_method': 'grow'}},
+            'BranchNG': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'nodes_tuple': (15, 1, 50, 7), 'build_method': 'grow'}},
+            'Xover': {'gp_func': 'crossover branch', 'evolve_rate': 0.35},
+            'FilterB': {'gp_func': 'filter', 'evolve_rate': 0.12, 'custom_params': {'mode': 'branch'}},
+            'FilterP': {'gp_func': 'filter', 'evolve_rate': 0.03, 'custom_params': {'mode': 'point'}},
+            'Rand1': {'gp_func': 'random', 'evolve_rate': 0.10, 'custom_params': {'depth_tuple': (6, 2, 7, 1.5), 'build_method': 'full'}},# todo if 'half' -> 50:50 choice
+            'Rand2': {'gp_func': 'random', 'evolve_rate': 0.10, 'custom_params': {'depth_tuple': (7, 2, 7, 1.5), 'build_method': 'grow'}},
+            'Rand3': {'gp_func': 'random', 'evolve_rate': 0.10, 'custom_params': {'nodes_tuple': (20, 1, 40, 7), 'build_method': 'grow'}}
         }
 
     yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_dict)
@@ -217,14 +217,14 @@ def run(root_dir):
     choose_oparray, distributions = load_tree_builders(root_dir)
     gp.activate_operators(choose_oparray, distributions)
 
-    evolve_dict = load_evolve_functions(root_dir)
-    gp.avtivate_evolve_functions(evolve_dict)
-
     label_list, modify_list = load_label_list(root_dir)
     if label_list is not None and modify_list is not None:
         observation_bundle = gp.get_observation_bundle()
         origin_tree = karoo_tree_from_labellist(label_list, observation_bundle, modify_list=modify_list)
         gp.activate_origin_tree(origin_tree)
+
+    evolve_dict = load_evolve_functions(root_dir)
+    gp.avtivate_evolve_functions(evolve_dict)
 
     gp.plagih_gp_run()
     sys.exit()

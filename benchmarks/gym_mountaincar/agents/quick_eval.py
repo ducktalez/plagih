@@ -12,7 +12,7 @@ import numpy as np
 import gym
 
 
-def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='coolwarm', dummy=False, n=100, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
+def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -148,8 +148,11 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
     else:
         # p.fill = False
         # p.set_color()  # default 'white' is okay
-        p.set_hatch('///')
-        p.set_edgecolor('grey')
+        ax.set_facecolor('xkcd:light grey')
+        p.set_color('xkcd:light grey')
+        p.fill = True
+        p.set_hatch('//')
+        p.set_edgecolor('xkcd:dark grey')
         plt.rcParams['hatch.linewidth'] = 0.2
     ax.add_patch(p)
 
@@ -255,12 +258,13 @@ def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path(
 
 
 def eval_agent_list(agent_list, folder=Path('img/')):
+
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
     agent_performance = []
     for name, agent in agent_list:
-        mtc_plot_decisions_space(agent, name, folder=folder)
+        mtc_plot_decisions_space(agent, name=name, folder=folder)
         avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 
@@ -270,5 +274,6 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
     plt.savefig(folder / 'agent_perf.png')
 
-    with Path(folder / 'summary.txt', 'w').open as file:
-        file.write('\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance]))
+    summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
+    with (folder / 'summary.txt').open('w') as file:
+        file.write(summary_text)

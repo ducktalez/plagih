@@ -117,7 +117,7 @@ class ExplainableGP(object):
         self.config.update(config)
 
         # init values with dummies (just to have all self values here for overview)
-        self.tree_meta = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw', 'gen+nr'}
+        self.tree_meta = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}  # a dict with all pareto candidates. key is complexity, value is tree meta
         self.population_tmp_done = []
@@ -190,7 +190,7 @@ class ExplainableGP(object):
         if Path.is_file(path_backup):
             self.print_g('g', 'Backup-file was found. Loading data...')
             try:
-                self.run_backup_load(path_backup)
+                self.load_backup_pickle(path_backup)
                 return True
             except Exception as ex:
                 print_warning('w', 'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
@@ -198,7 +198,7 @@ class ExplainableGP(object):
         else:
             return False
 
-    def run_backup_load(self, path_backup):
+    def load_backup_pickle(self, path_backup):
         """
 
         """
@@ -207,54 +207,6 @@ class ExplainableGP(object):
             run_data = pickle.load(file)
 
         self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
-
-        self.restart_count += 1
-        printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
-
-        return
-
-    def run_backup_load_old(self, path_backup):
-        """
-
-        """
-
-        with Path.open(path_backup, 'rb') as file:
-            run_data = pickle.load(file)
-
-        self.restart_count = run_data['self.restart_count']  # counting how often this was restarted
-        self.gen_id = run_data['self.gen_id']
-        self.parsimony_best_meta = run_data['self.parsimony_best_meta']
-        self.pareto = run_data['self.pareto']
-        self.population_base = run_data['self.population_base']
-        self.monitoring_dict = run_data['self.monitoring_dict']
-
-        # check if entries exist
-        for key, value in self.monitoring_dict:
-            self.monitoring_dict[key] = value
-        # if self.monitoring_dict.get('complexity_variance') is None:
-        #     self.monitoring_dict['complexity_variance'] = {}
-        # if self.monitoring_dict.get('fitness_variance') is None:
-        #     self.monitoring_dict['fitness_variance'] = {}
-
-        # updating the population header line (removing it)
-        if isinstance(self.population_base[0], str):
-            self.population_base.pop(0)
-
-        # force fix of all trees if they are incorrect in last versions
-        self.version_pop_fix_trees(self.population_base)
-
-        # update monitoring dict name (genepool_size -> population_tmp_done-size)
-        try:
-            self.monitoring_dict['population_tmp_done-size'] = run_data['self.monitoring_dict']['genepool_size']
-            print_warning('w', 'Delete this. Restarting from an old run, where gene_pool existed.')
-        except:
-            pass
-
-        # update pareto entries (pareto now contains meta data)
-        first_pareto = next(iter(self.pareto.items()))
-        if isinstance(first_pareto[1], float):
-            self.pareto = {}
-            self.pareto_update()
 
         self.restart_count += 1
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
@@ -290,7 +242,11 @@ class ExplainableGP(object):
         if self.gen_id == 0:
             self.gen_create_first()
 
-        self.gen_create_loop()
+        while self.run_continues():  # max generation, max time, done...
+            self.gen_create_loop()
+        else:
+            printez('g', 'Done after Generation {}.'.format(self.gen_id), print_type=self.print_type)
+
         self.terminate_run(self.root_dir)
         return
 
@@ -346,32 +302,32 @@ class ExplainableGP(object):
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        # todo separate first origin?  what to do? change this.
-        third_ramped = int(self.config['pop_max'] / 3)
+        random_rate = 0
+        for ii, evolve_specs in enumerate(self.evolve_list):
+            if evolve_specs['evolve_name'] == 'random trees':
+                random_rate += evolve_specs['evolve_rate']
 
-        third_ramped = 50  # todo todo
+        print('ASDDSAAD evo rate', random_rate)
 
-        if self.origin_is_fix():
-            print('FIX TREE')
-            params_2 = {'fix_tree': self.origin_tree_get()}
-            evolve_random_func = self.pop_random_from_origin
-        else:
-            params_2 = {}
-            evolve_random_func = self.pop_random
+        for ii, evolve_specs in enumerate(self.evolve_list):
+            if evolve_specs['evolve_name'] == 'random trees':
+                # time_evolve = time.perf_counter()
+                evolve_num = int(self.config['gen_max'] * (evolve_specs['evolve_rate'] / random_rate))
+                call_params = evolve_specs.get('custom_params')
+                tag = evolve_specs['tag']
 
-        call_params_list = [{'depth_tuple': (4, 3, 7, 1.5), 'build_method': 'full'},
-                            {'depth_tuple': (4, 3, 7, 1.5), 'build_method': 'grow'},
-                            {'nodes_tuple': (16, 8, 45, 6), 'build_method': 'grow'}]
-
-        for n, call_params in enumerate(call_params_list):
-            tag = '0_{}'.format(n)
-            call_params.update(params_2)
-            for ii in range(third_ramped):
-                tree = evolve_random_func(call_params)
-                self.pop_append(tree, last_evolution=tag)
+                if self.origin_is_fix():
+                    origin_tree = self.origin_tree_get()
+                    for nn in range(evolve_num):
+                        new_tree = self.pop_random_from_origin(call_params, origin_tree)
+                        self.pop_append(new_tree, last_evolution=tag)
+                else:
+                    for nn in range(evolve_num):
+                        new_tree = self.pop_random(call_params)
+                        self.pop_append(new_tree, last_evolution=tag)
 
         self.gen_finalize()
-        file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
+        write_file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
 
     def gen_create_loop(self):
         """
@@ -382,66 +338,87 @@ class ExplainableGP(object):
         # All gp creators: name, function, num of trees from tournament selection
         # sfehsfeh idee: print every written file
 
-        while self.run_continues():  # max generation, max time, done...
+        self.gen_reset_parameters()
 
-            self.gen_reset_parameters()
+        # ########
 
-            # ########
-            # call_params{'old_tree', 'partner_tree', 'fix_tree', 'branch_nodes', 'branch_depth': 6, 'build_method': <'full', 'grow', 'half'>}
-            for tag, fun_infos in self.evolve_dict.items():  # all selected gp mutations
-                time_evolve = time.perf_counter()
-                evolve_call = fun_infos['evolve_call']
-                tourn_size = fun_infos['tourn_size']
-                call_params = fun_infos['custom_params']
+        #     {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+        #     'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean': 12, 'min': 1, 'max': 30, 'gauss_var': 1, 'method': 'grow'}}},
+        for ii, evolve_specs in enumerate(self.evolve_list):  # all selected gp mutations
+            time_evolve = time.perf_counter()
+            evolve_name = evolve_specs['evolve_name']
+            evolve_num = evolve_specs['evolve_num']
+            tourn_size = evolve_specs['tourn_size']
+            call_params = evolve_specs.get('custom_params')
+            tag = evolve_specs['tag']
 
-                if self.evolve_dict[tag]['fix_tree']:
-                    call_params['fix_tree'] = self.origin_tree_get()
+            # believe me, debugging with this is much more fun
 
-                evolve_num = self.evolve_dict[tag]['evolve_num']
+            if evolve_name == 'reproduce':
+                # sfeh one parameter
+                for nn in range(evolve_num):
+                    tree = self.pop_selection_tournament(tourn_size)
+                    new_tree = self.pop_reproduce(call_params, tree)
+                    self.pop_append(new_tree, last_evolution=tag)
 
-                tourn_rep = self.evolve_dict[tag]['tourn_rep']
-                if tourn_rep == 1:  # one tournament winner. mainly mutations
-                    for ii in range(evolve_num):
-                        call_params['old_tree'] = self.pop_selection_tournament(tourn_size)
-                        new_tree = evolve_call(call_params)
+            elif evolve_name == 'mutate point':
+
+                for nn in range(evolve_num):
+                    tree = self.pop_selection_tournament(tourn_size)
+                    new_tree = self.pop_mutate_point(tree)
+                    self.pop_append(new_tree, last_evolution=tag)
+
+            elif evolve_name == 'mutate branch':
+
+                for nn in range(evolve_num):
+                    tree = self.pop_selection_tournament(tourn_size)
+                    new_tree = self.pop_mutate_branch(call_params, tree)
+                    self.pop_append(new_tree, last_evolution=tag)
+
+            elif evolve_name == 'crossover branch':
+
+                for nn in range(evolve_num / 2):  # two childs
+                    parent_a = self.pop_selection_tournament(tourn_size)
+                    parent_b = self.pop_selection_tournament(tourn_size)
+                    child_a, child_b = self.pop_crossover_branch(call_params, parent_a, parent_b)
+                    self.pop_append(child_a, last_evolution=tag)
+                    self.pop_append(child_b, last_evolution=tag)
+
+            elif evolve_name == 'filter optimize':
+
+                for nn in range(evolve_num):
+                    tree = self.pop_selection_tournament(tourn_size)
+                    new_tree = self.pop_mutate_filter(call_params, tree)
+                    self.pop_append(new_tree, last_evolution=tag)
+
+            elif evolve_name == 'revive pareto':
+
+                for nn in range(evolve_num):
+                    new_tree = self.pop_reproduce_olymp()
+                    self.pop_append(new_tree, last_evolution=tag)
+
+            elif evolve_name == 'random trees':
+
+                if self.origin_is_fix():
+                    origin_tree = self.origin_tree_get()
+                    for nn in range(evolve_num):
+                        new_tree = self.pop_random_from_origin(call_params, origin_tree)
                         self.pop_append(new_tree, last_evolution=tag)
-
-                elif tourn_rep == 0:  # no tournament winner. mainly new random ones
-                    for ii in range(evolve_num):
-                        new_tree = evolve_call(call_params)
-                        self.pop_append(new_tree, last_evolution=tag)
-
-                elif tourn_rep == 2:  # only crossover
-                    for ii in range(int(evolve_num / 2)):
-                        call_params['old_tree'] = self.pop_selection_tournament(tourn_size)
-                        call_params['partner_tree'] = self.pop_selection_tournament(tourn_size)
-                        new_tree, new_tree2 = list(evolve_call(call_params))
-                        self.pop_append(new_tree, last_evolution=tag)
-                        self.pop_append(new_tree2, last_evolution=tag)
                 else:
-                    raise Exception('Tournament selection is only meant to be performed [0, 1, 2] times. This was: {}'.format(tourn_rep))
+                    for nn in range(evolve_num):
+                        new_tree = self.pop_random(call_params)
+                        self.pop_append(new_tree, last_evolution=tag)
+            else:
+                print_e('the specified evolve call is not known: \'{}\''.format(evolve_name))
 
-                self.print_g('ggg', '->Evolving \'{}\' {}x. Took: {:4.2f}s.'.format(tag, evolve_num, time.perf_counter() - time_evolve))
+            self.print_g('ggg', '->Evolving \'{}\' {}x. Took: {:4.2f}s.'.format(tag, evolve_num, time.perf_counter() - time_evolve))
 
-            # ########
+        self.gen_finalize()
 
-            # # Creating a new population ############
-            # for name, gp_function, tourn_rep in gp_list:
-            #     time_evolve = time.perf_counter()
-            #
-            #     repro_rate = int(self.evolve_rates[name] * self.config['pop_max'])
-            #     gp_function(repro_rate)
-            #     self.print_g('ggg', '-->Evolve ({}) {}x. Took: {:4.2f}s.'.format(name, repro_rate, time.perf_counter() - time_evolve))
-            # # ######################################
+        self.periodical_procedures()
 
-            self.gen_finalize()
+        self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
 
-            self.periodical_procedures()
-
-            self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
-        else:
-            printez('g', 'Done after Generation {}.'.format(self.gen_id), print_type=self.print_type)
-            return
 
     def run_continues(self):
         """
@@ -507,7 +484,7 @@ class ExplainableGP(object):
 
         return 0
 
-    def file_save_files(self, root_path, pop_name=''):
+    def file_save_files(self, root_path):
         """
         writes all important gp_files
 
@@ -517,7 +494,7 @@ class ExplainableGP(object):
         self.file_pareto_latex(self.pareto, root_path)
         self.file_generate_pycode(self.pareto, root_path)
 
-        file_population_karoo(self.population_base, pop_name, root_path, self.gen_id)  # save the final generation of Trees to disk
+        write_file_population_karoo(self.population_base, 'final', root_path, self.gen_id)  # save the final generation of Trees to disk
 
         return
 
@@ -537,44 +514,25 @@ class ExplainableGP(object):
 
         return
 
-    def avtivate_evolve_functions(self, evolve_dict):
-
-        evolve_specifications = {
-            'reproduce': (self.pop_reproduce, 1, None),
-            'revive pareto': (self.pop_reproduce_olymp, 0, None),
-            'mutate point': (self.pop_mutate_point, 1, None),
-            'mutate branch': (self.pop_mutate_branch, 1, None),
-            'crossover branch': (self.pop_crossover_branch, 2, None),
-            'filter': (self.pop_mutate_filter, 1, None),
-            # 'random from fix_tree': (self.pop_random_from_origin, 0, 'fix_tree'),
-            'random': (self.pop_random, 0, None)}
-
-        if self.origin_is_fix():
-            print('DDASDSADSDASD')
-            evolve_specifications['random'] = (self.pop_random_from_origin, 0, 'fix_tree')
-
-
-        for k, v in evolve_dict.items():
+    def avtivate_evolve_functions(self, evolve_list):
+        """
+        Example entry of the list could be:
+        {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+        'custom_params': {'build_spec': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
+        """
+        for ii, evolve_spec in enumerate(evolve_list):
             # tourn_size
-            gp_func = v.get('gp_func')
-            evolve_call, tourn_rep, origin_req = evolve_specifications[gp_func]
-            evolve_dict[k]['evolve_call'] = evolve_call
-            evolve_dict[k]['fix_tree'] = True if origin_req else False
-            evolve_dict[k]['tourn_rep'] = tourn_rep
-            if tourn_rep > 0:
-                tourn_size = evolve_dict[k].get('tourn_size')
-                if not tourn_size:
-                    tourn_size = self.tourn_size
-            else:
-                tourn_size = 0
-            evolve_dict[k]['tourn_size'] = tourn_size
+            tourn_size = evolve_spec.get('tourn_size')  # can be custom set
+            if not tourn_size:
+                tourn_size = self.tourn_size
+                evolve_list[ii]['tourn_size'] = tourn_size
 
-            evolve_rate = evolve_dict[k].get('evolve_rate')
-            evolve_dict[k]['evolve_num'] = int(evolve_rate * self.config['pop_max'])
-            if evolve_dict[k].get('custom_params') is None:
-                evolve_dict[k]['custom_params'] = {}
+            evolve_rate = evolve_list[ii].get('evolve_rate')
+            evolve_list[ii]['evolve_num'] = int(evolve_rate * self.config['pop_max'])
+            if evolve_list[ii].get('custom_params') is None:
+                evolve_list[ii]['custom_params'] = {}
 
-        self.evolve_dict = evolve_dict
+        self.evolve_list = evolve_list
 
     def activate_operators(self, choose_oparray, choose_distributions):
         """
@@ -846,7 +804,7 @@ class ExplainableGP(object):
     def tree_meta_update(self, tree, fitness_train=None, parsimony=None, expr_raw=None, expr_sym=None):
         """
         update self.tree_meta
-        # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw', 'gen+nr'}
+        # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         """
         if not fitness_train:
             fitness_train = tree_get_fitness(tree)
@@ -1031,13 +989,12 @@ class ExplainableGP(object):
         # todo
         return tree
 
-    def pop_reproduce(self, call_params):
+    def pop_reproduce(self, call_params, tree):
 
         """
 
         copy a tree from the last population without changing its outcome
         """
-        tree = call_params['old_tree']
         if call_params.get('sympify_tree'):
             tree = tree_evolve_reduce(tree, self.env_variables, completely=False)
 
@@ -1061,22 +1018,20 @@ class ExplainableGP(object):
 
         return tree
 
-    def pop_mutate_point(self, call_params):
+    def pop_mutate_point(self, tree):
 
         """
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        tree = call_params['old_tree']
         tree = tree_evolve_mutate_point(tree, self.choose_oparray, self.env_variables, self.choose_distributions)
 
         return tree
 
-    def pop_mutate_filter(self, call_params):
+    def pop_mutate_filter(self, call_params, tree):
         """
 
         """
-        tree = call_params['old_tree']
         mode = call_params['mode']  # point/branch/all
         filter = 'gaussian_filter'  # sfeh change?
 
@@ -1112,26 +1067,62 @@ class ExplainableGP(object):
 
         return tree
 
-    def choose_build_goal_depth(self, depth_tuple, old_node_depth):
+    def choose_build_size(self, size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
         """
 
+        # branch_nodes, branch_depth, tree_depth, tree_nodes
         """
-        build_depth = int(np.random.normal(depth_tuple[0], depth_tuple[3]))  #
-        build_depth = max(depth_tuple[1], build_depth)
-        build_depth = min(depth_tuple[2] - old_node_depth, build_depth)  # sfeh? debug? seems to be one, or was it at node_depth shizzle?
-        return build_depth
+        mean, variance, size_max, size_min = mean_min_max_var
+        if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
+            relative_size = 0
+        else:
+            if tree and node_id:
+                pass
+            else:
+                raise Exception('No tree or node is given for computing the relative size')
 
-    def choose_build_goal_nodes(self, nodes_tuple, existing_nodes):
-        """
+            if size_mode == 'tree_depth':
+                tree_size = tree_get_depth(tree)
+                node_size = tree_node_get_depth(tree, node_id)
+            elif size_mode == 'tree_nodes':
+                tree_size = tree_get_size(tree)
+                node_size = len(tree_node_get_branch(tree, node_id))
+            else:
+                raise Exception('Sizemode not known?')
 
-        """
+            relative_size = tree_size - node_size
 
-        build_nodes = int(np.random.normal(nodes_tuple[0], nodes_tuple[3]))
-        build_nodes = max(nodes_tuple[1], build_nodes)
-        build_nodes = min(nodes_tuple[2] - existing_nodes, build_nodes)
-        return build_nodes
+        build_size = int(np.random.normal(mean, variance))
+        build_size = min(size_max - relative_size, build_size)
+        build_size = max(size_min, build_size)
 
-    def pop_random_from_origin(self, call_params):
+        return build_size
+
+    def helper_evolve_params_branch(self, call_params):
+
+        build_spec = call_params.get('build_spec')
+        size_mode = build_spec['size_mode']
+        mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
+        build_method = build_spec['build_method']
+        return build_spec, size_mode, mean_min_max_var, build_method
+
+    def invent_label_list(self, size_mode, first_xtype, build_size, build_method):
+        if 'depth' in size_mode:
+            # sfeh warning: Attention with this one. can get quite large with depth based
+            label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
+                                                                         self.env_variables, self.choose_oparray, self.choose_distributions,
+                                                                         build_method=build_method)
+
+        elif 'nodes' in size_mode:
+
+            label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
+                                                                         self.env_variables, self.choose_oparray, self.choose_distributions,
+                                                                         build_method=build_method)
+        else:
+            raise Exception('Known build_method was not found for building random trees.')
+        return label_list, arity_list, xtype_list
+
+    def pop_random_from_origin(self, call_params, origin_tree):
         """
         insert a (random) number of branches at the first possible "layer"
         (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
@@ -1141,50 +1132,34 @@ class ExplainableGP(object):
         todo fix min and max border
         """
 
-        # tree_origin = self.origin_tree_get()
-        fix_tree = call_params.get('fix_tree')
-        build_mode = call_params.get('build_method')
-        depth_tuple = call_params.get('depth_tuple')  # (base, min, max, normal_distrib)
-        nodes_tuple = call_params.get('nodes_tuple')  # (base, min, max, normal_distrib)
+        # tree_origin = self.origin_tree_get()origin_tree
+        build_spec, size_mode, mean_min_max_var, build_method = self.helper_evolve_params_branch(call_params)
 
         # tree_base = tree.copy()
-        layer0_ids = tree_get_mutatable_layer(fix_tree, 0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
+        layer0_ids = tree_get_mutatable_layer(origin_tree, 0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
 
         build_split = []
-        if depth_tuple:
+        if 'depth' in size_mode:
+            # print_warning('ww', 'notagoodidea.origin adding depths without a plan? sfeh sfeh')
             for ii in range(len(layer0_ids)):
-                build_depth = self.choose_build_goal_depth(depth_tuple, 0)  # this 0 is wrong
-                build_split.append(build_depth)
+                build_size = self.choose_build_size(size_mode, mean_min_max_var, force='branch')
+                build_split.append(build_size)
 
-        elif nodes_tuple:
-            build_nodes = self.choose_build_goal_nodes(nodes_tuple, 0)  # sfeh actually, this does not care about tree depth
+        elif 'nodes' in size_mode:
+            build_nodes = self.choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh actually, this does not care about tree depth
             build_split = randomly_split_range(build_nodes, len(layer0_ids))
+        else:
+            raise
 
-        tree = fix_tree.copy()
+        tree = origin_tree.copy()
         for i in range(len(layer0_ids)):  # finally, insert branches. need to get layer every time as node ids might have changed.
             layer0_ids = tree_get_mutatable_layer_lv0(tree)
             node_id = layer0_ids[i]
-            node_xtype = tree_node_get_xtype(tree, node_id)
+            first_xtype = tree_node_get_xtype(tree, node_id)
             old_branch = tree_node_get_branch(tree, node_id, karoo=True)
             build_size = build_split[i]
 
-            # label_list, arity_list, xtype_list = invent_label_list_nodes(node_xtype, branch_goal_nodes,
-            #                                                              env_variables, oparray, choose_distributions,
-            #                                                              build_mode='grow')
-
-            if depth_tuple:
-                # sfeh warning: Attention with this one. can get quite large with depth based
-                label_list, arity_list, xtype_list = invent_label_list_depth(node_xtype, build_size,
-                                                                             self.env_variables, self.choose_oparray, self.choose_distributions,
-                                                                             build_mode=build_mode)
-
-            elif nodes_tuple:
-
-                label_list, arity_list, xtype_list = invent_label_list_nodes(node_xtype, build_size,
-                                                                             self.env_variables, self.choose_oparray, self.choose_distributions,
-                                                                             build_mode=build_mode)
-            else:
-                raise Exception('Known build_mode was not found for building random trees.')
+            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, build_method)
 
             core = core_from_labels(label_list, arity_list, xtype_list)
             tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
@@ -1196,37 +1171,18 @@ class ExplainableGP(object):
         Creates completely random trees from scratch
         """
 
-        build_mode = call_params['build_method']
-        # if self.origin_exists():  # done?
-        #     if tree_node_get_modify(self.origin_tree, root_id) != node_is_modifiable:
-        #         print_warning('w', 'You can not create new trees from scratch when origin has fix nodes! This should be handeled earlier')
-        #         return
+        build_spec, size_mode, mean_min_max_var, build_method = self.helper_evolve_params_branch(call_params)
         action_xtype = self.env_variables['action_at'][0]['xtype']
+        build_size = self.choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
 
-        if call_params.get('depth_tuple'):
-
-            depth_tuple = call_params.get('depth_tuple')  # (base, min, max, normal_distrib)
-            build_depth = self.choose_build_goal_depth(depth_tuple, 0)
-            label_list, arity_list, xtype_list = invent_label_list_depth(action_xtype, build_depth,
-                                                                         self.env_variables, self.choose_oparray, self.choose_distributions,
-                                                                         build_mode=build_mode)
-
-        elif call_params.get('nodes_tuple'):
-
-            nodes_tuple = call_params.get('nodes_tuple')  # (base, min, max, normal_distrib)
-            build_nodes = self.choose_build_goal_nodes(nodes_tuple, 0)
-            label_list, arity_list, xtype_list = invent_label_list_nodes(action_xtype, build_nodes,
-                                                                         self.env_variables, self.choose_oparray, self.choose_distributions,
-                                                                         build_mode=build_mode)
-        else:
-            raise Exception('Known build_mode was not found for building random trees.')
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, build_method)
 
         p_tree = Plagih_Tree(label_list, xtype_list, arity_list=arity_list)
         tree = p_tree.get_uninstanced_tree()
 
         return tree
 
-    def pop_mutate_branch(self, call_params):
+    def pop_mutate_branch(self, call_params, tree):
 
         """
         Mutates a whole tree branch.
@@ -1239,39 +1195,18 @@ class ExplainableGP(object):
 
         """
 
-        tree = call_params['old_tree']
-        build_mode = call_params['build_method']
-        # 'nodes_tuple', 'depth_tuple': 6, 'build_method': <'full', 'grow', 'half'>}
+        build_spec, size_mode, mean_min_max_var, build_method = self.helper_evolve_params_branch(call_params)
+
+        method = build_spec.get('method')
+        if method is None:
+            method = np.random.choice(['full', 'grow'])
 
         node_ids = tree_get_mutatable_nodes(tree, no_root=True)
         old_node = np.random.choice(node_ids)
         old_xtype = tree_node_get_xtype(tree, old_node)
 
-        # build_mode = np.random.choice(['full', 'grow'])
-
-        if call_params.get('depth_tuple'):
-
-            depth_tuple = call_params.get('depth_tuple')  # (base, min, max, normal_distrib)
-            old_node_depth = tree_node_get_depth(tree, old_node)
-            build_depth = self.choose_build_goal_depth(depth_tuple, old_node_depth)
-            if build_depth < 1:
-                print_warning('ww', 'Build depth should be negative, cannot evolve this tree from last evolution: {}'.format(tree_get_last_evolution(tree)))
-            label_list, arity_list, xtype_list = invent_label_list_depth(old_xtype, build_depth,
-                                                                         self.env_variables, self.choose_oparray, self.choose_distributions,
-                                                                         build_mode=build_mode)
-
-        elif call_params.get('nodes_tuple'):
-
-            nodes_tuple = call_params.get('nodes_tuple')  # (base, min, max, normal_distrib)
-            tree_size = tree_get_last_nodeid(tree)
-            build_nodes = self.choose_build_goal_nodes(nodes_tuple, tree_size)
-
-            label_list, arity_list, xtype_list = invent_label_list_nodes(old_xtype, build_nodes,
-                                                                         self.env_variables, self.choose_oparray, self.choose_distributions,
-                                                                         build_mode=build_mode)
-
-        else:
-            raise Exception('Known build_mode was not found for branch mutation.')
+        build_size = self.choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)  # sfeh anderer name für branch
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, build_method)
 
         if label_list:
             core_insert = core_from_labels(label_list, arity_list, xtype_list)
@@ -1279,11 +1214,11 @@ class ExplainableGP(object):
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
             tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)
         else:
-            tree = None  # TODO debug this
+            tree = None
 
         return tree
 
-    def pop_crossover_branch(self, call_params):
+    def pop_crossover_branch(self, call_params, tree_a, tree_b):
         """
         swap branches of two trees
         - select parent a and b
@@ -1405,7 +1340,7 @@ class ExplainableGP(object):
         self.pareto_update()
         self.pop_base_transfer()
         self.pop_analyze()
-        file_population_karoo(self.population_tmp_done, 'tmp', self.root_dir, self.gen_id)
+        write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(

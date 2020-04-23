@@ -6,10 +6,10 @@ pos, vel = observation
 
 from pathlib import Path
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import matplotlib.patches as patches
 import numpy as np
 import gym
+import pickle
 
 
 def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
@@ -165,7 +165,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
 
 
 def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits=256, name='diff', folder='img/',
-                         abs_diff=True, cmap='coolwarm', nan_style=None, no_colorbar=False):
+                         abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -262,9 +262,13 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
+    with Path.open(Path('sarsa_agent_75.p'), 'rb') as file:
+        sarsa_agent_75 = pickle.load(file)
+
     agent_performance = []
     for name, agent in agent_list:
-        mtc_plot_decisions_space(agent, name=name, folder=folder)
+        mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
+        mtc_plot_differences(agent, sarsa_agent_75, name=name, folder=folder, abs_diff=False, agent_a_dummy=True)
         avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 
@@ -277,3 +281,4 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
     with (folder / 'summary.txt').open('w') as file:
         file.write(summary_text)
+

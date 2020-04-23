@@ -125,9 +125,11 @@ class MTC_simple13:
 # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='simple vs sarsa', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '///', 'xkcd:dark grey', 0.2))
 # mtc_plot_differences(sarsa_agent_75, SimpleAgent(), name='sarsa vs simple', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '///', 'xkcd:dark grey', 0.2))
 #
-# mtc_plot_differences(sarsa_agent_200, sarsa_agent_75, name='sarsa200 vs sarsa75', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '///', 'xkcd:dark grey', 0.2))
+# mtc_plot_differences(sarsa_agent_200, sarsa_agent_75, name='sarsa200 vs sarsa75', abs_diff=False, agent_a_dummy=True)
 # mtc_plot_decisions_space(MTC_simple13(), name='decisions-13', dummy=True)
 # mtc_plot_decisions_space(SimpleAgent(), name='decisions-simple', dummy=True)
-mtc_plot_decisions_space(MTC_simple13(), name='decisionsr-13')
-mtc_plot_decisions_space(SimpleAgent(), name='decisionsr-simple')
+# mtc_plot_decisions_space(MTC_simple13(), name='decisionsr-13')
+# mtc_plot_decisions_space(SimpleAgent(), name='decisionsr-simple')
 
+
+eval_agent_list([('sim', MTC_simple13())])

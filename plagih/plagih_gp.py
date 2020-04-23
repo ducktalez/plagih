@@ -120,31 +120,37 @@ def load_evolve_functions(root_dir):
 
     """
     if Path.is_file(root_dir / file_evolve_functions):
-        evolve_dict = yaml_load(root_dir / file_evolve_functions)
+        evolve_list = yaml_load(root_dir / file_evolve_functions)
     else:
 
         print_e('No gp evolve procedure or functions defined! Trying to choose them for you.')
 
-        evolve_dict = {
-            'Repro': {'gp_func': 'reproduce', 'params': {}, 'evolve_rate': 0.06},
-            'Rsympy': {'gp_func': 'reproduce', 'evolve_rate': 0.03},
-            'Pareto': {'gp_func': 'revive pareto', 'evolve_rate': 0.01},
-            'Point': {'gp_func': 'mutate point', 'evolve_rate': 0.05},
-            'BranchDF': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (4, 1, 7, 1.5), 'build_method': 'full'}},
-            'BranchDG': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'depth_tuple': (5, 1, 7, 1.5), 'build_method': 'grow'}},
-            'BranchNG': {'gp_func': 'mutate branch', 'evolve_rate': 0.05, 'custom_params': {'nodes_tuple': (15, 1, 50, 7), 'build_method': 'grow'}},
-            'Xover': {'gp_func': 'crossover branch', 'evolve_rate': 0.35},
-            'FilterB': {'gp_func': 'filter', 'evolve_rate': 0.12, 'custom_params': {'mode': 'branch'}},
-            'FilterP': {'gp_func': 'filter', 'evolve_rate': 0.03, 'custom_params': {'mode': 'point'}},
-            'Rand1': {'gp_func': 'random', 'evolve_rate': 0.10, 'custom_params': {'depth_tuple': (6, 2, 7, 1.5), 'build_method': 'full'}},# todo if 'half' -> 50:50 choice
-            'Rand2': {'gp_func': 'random', 'evolve_rate': 0.10, 'custom_params': {'depth_tuple': (7, 2, 7, 1.5), 'build_method': 'grow'}},
-            'Rand3': {'gp_func': 'random', 'evolve_rate': 0.10, 'custom_params': {'nodes_tuple': (20, 1, 40, 7), 'build_method': 'grow'}}
-        }
-
-    yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_dict)
+        evolve_list = [
+            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06},
+            {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03},
+            {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01},
+            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05},
+            {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (3, 1, 5, 0.8), 'build_method': 'full'}}},
+            {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (4, 1,  6,  1), 'build_method': 'grow'}}},
+            {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (12, 1,  30, 1), 'build_method': 'grow'}}},
+            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.35},
+            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.12, 'custom_params': {'mode': 'branch'}},
+            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'custom_params': {'mode': 'point'}},
+            {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4,  3,  7,  1), 'build_method': 'full'}}},
+            {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (5,  3,  7, 1), 'build_method': 'grow'}}},
+            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
+             'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (5,  3,  6,  1), 'build_method': 'full'}}},
+        ]
+    # todo if 'half' -> 50:50 choice
+    yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_list)
     # sfeh: if you want to load informations from extra file, check for this file here
 
-    return evolve_dict
+    return evolve_list
 
 
 def load_tree_builders(root_dir):
@@ -223,8 +229,8 @@ def run(root_dir):
         origin_tree = karoo_tree_from_labellist(label_list, observation_bundle, modify_list=modify_list)
         gp.activate_origin_tree(origin_tree)
 
-    evolve_dict = load_evolve_functions(root_dir)
-    gp.avtivate_evolve_functions(evolve_dict)
+    evolve_list = load_evolve_functions(root_dir)
+    gp.avtivate_evolve_functions(evolve_list)
 
     gp.plagih_gp_run()
     sys.exit()
@@ -243,6 +249,7 @@ def analyze(root_dir):
     gp = ExplainableGP(root_dir, config=config)
     gp.activate_dataset(data_prepared)
     gp.plagih_update_analysis()
+
 
 def visualize_labellist(csv_file, output_file=None):
     """

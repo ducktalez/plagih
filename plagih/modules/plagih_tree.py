@@ -630,10 +630,8 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
         for c in [N_c1, N_c2, N_c3]:
             if origin_tree[c][origin_node] != '':  # aka a child exists
                 next_origin_node = int(origin_tree[c][origin_node])
-                try:
-                    next_chosen_node = int(chosen_tree[c][chosen_node])  # error? probably nodes that should not be changed were changed earlier
-                except:
-                    raise  # todo
+                next_chosen_node = int(chosen_tree[c][chosen_node])  # error? probably nodes that should not be changed were changed earlier. correct random function?
+
                 tmp = tree_permanent_nodes_get(next_origin_node, chosen_tree, next_chosen_node, origin_tree)
                 if tmp is not None:
                     permanent_nodes.extend(tmp)
@@ -760,7 +758,7 @@ def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
                 raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparray, choose_distributions, min_depth=0, build_mode=None):
+def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparray, choose_distributions, min_depth=0, build_method=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -780,9 +778,9 @@ def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparra
 
             functerm_list = ['func']
             for _ in range(len(tbdo_xtypes) - 1):  # 1 -> at least one function
-                if build_mode == 'grow' and depth >= min_depth:
+                if build_method == 'grow' and depth >= min_depth:
                     functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
-                elif build_mode == 'full':
+                elif build_method == 'full':
                     functerm_list.append('func')
                 else:
                     raise
@@ -827,7 +825,7 @@ def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparra
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_mode='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_method='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -855,9 +853,9 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, env_variables, oparray, cho
 
         functerm_list = ['func']
         for _ in range(num_inserts - 1):  # 1 -> at least one function
-            if build_mode == 'grow':
+            if build_method == 'grow':
                 functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice
-            elif build_mode == 'full':
+            elif build_method == 'full':
                 functerm_list.append('func')
             else:
                 raise

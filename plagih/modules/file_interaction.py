@@ -20,7 +20,7 @@ file_conclusion = 'conclusion.txt'
 run_files = 'run_files/'
 file_config_yaml = 'run_files/config.yaml'
 info_config_yaml = 'info/config.yaml'
-file_info_evolve_dict_yaml = 'info/evolve_dict.yaml'
+file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
 file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
 file_evolve_functions = 'run_files/evolve_functions.yaml'
@@ -142,13 +142,13 @@ def save_data_pickle(data_prepared, data_pickle_path):
     return
 
 
-def file_population_karoo(population, pop_name, path, gen_id):
+def write_file_population_karoo(population, pop_name, path, gen_id):
     """
     Save population_* to disk.
 
     """
-
-    file_path = path / 'info/population_{}.csv'.format(str(pop_name))
+    file_name = 'population_{}.csv'.format(str(pop_name))
+    file_path = path / 'info/' / file_name
     file_path = file_make_dir(file_path)
     # sfeh? function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
@@ -161,6 +161,8 @@ def file_population_karoo(population, pop_name, path, gen_id):
             target.writerows([''])  # empty row before each Tree
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
                 target.writerows([population[ii][row]])
+
+    printez('f', '{}'.format(file_name))
 
     return
 

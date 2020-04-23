@@ -75,7 +75,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         pause = True
     elif 'f' in message_type:
         message_style = BColors.MAGENTA
-        message_pretxt = 'Func: '
+        message_pretxt = 'Writing File: '
     elif 'a' in message_type:
         message_style = BColors.GREEN
         message_pretxt = ''

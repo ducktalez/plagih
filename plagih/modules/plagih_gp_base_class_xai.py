@@ -277,7 +277,7 @@ class ExplainableGP(object):
         write the parameters to a .csv file which can also be loaded
         """
 
-        path = file_make_dir(self.root_dir / file_config_json)
+        path = file_make_dir(self.root_dir / file_info_config_json)
 
         with Path.open(path, 'w') as file:
             json.dump(self.config, file, indent=4)
@@ -1000,7 +1000,7 @@ class ExplainableGP(object):
 
         return tree
 
-    def pop_reproduce_olymp(self, call_params):
+    def pop_reproduce_olymp(self):
 
         """
         Copy an entry from the pareto candidates into the population

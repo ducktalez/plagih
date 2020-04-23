@@ -262,13 +262,13 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
-    with Path.open(Path('sarsa_agent_75.p'), 'rb') as file:
-        sarsa_agent_75 = pickle.load(file)
+    # with Path.open(Path('sarsa_agent_75.p'), 'rb') as file:
+    #     sarsa_agent_75 = pickle.load(file)
 
     agent_performance = []
     for name, agent in agent_list:
         mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
-        mtc_plot_differences(agent, sarsa_agent_75, name=name, folder=folder, abs_diff=False, agent_a_dummy=True)
+        # mtc_plot_differences(agent, sarsa_agent_75, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
         avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 
@@ -281,7 +281,6 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
     with (folder / 'summary.txt').open('w') as file:
         file.write(summary_text)
-
 
 
 

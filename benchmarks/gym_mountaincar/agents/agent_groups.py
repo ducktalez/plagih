@@ -30,8 +30,6 @@ class Good_Expert:
                 return 2
 
 
-# todo idee: programm that works has some space to make random decisions. nn analyses, finds best version
-
 class SimonsTesting:
 
     def decide(self, observation):

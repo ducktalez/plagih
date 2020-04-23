@@ -119,7 +119,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         mask_nan = np.ma.masked_where(result == np.nan, result)
         plt.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
 
-        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise  # todo: whitespace, find better solution
+        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise  # sfeh: whitespace, find better solution
 
         # sfeh normalize?
         # plt.cm.get_cmap().set_bad(color='white')
@@ -262,13 +262,13 @@ def eval_agent_list(agent_list, folder=Path('img/')):
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
-    with Path.open(Path('sarsa_agent_75.p'), 'rb') as file:
-        sarsa_agent_75 = pickle.load(file)
+    # with Path.open(Path('sarsa_agent_75.p'), 'rb') as file:
+    #     sarsa_agent_75 = pickle.load(file)
 
     agent_performance = []
     for name, agent in agent_list:
         mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
-        mtc_plot_differences(agent, sarsa_agent_75, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
+        # mtc_plot_differences(agent, sarsa_agent_75, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
         avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 

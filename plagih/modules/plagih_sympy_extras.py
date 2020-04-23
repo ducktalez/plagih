@@ -112,7 +112,7 @@ class Square(Function):
     @classmethod
     def eval(cls, a):
 
-        return a**2  # todo requires testing. a LOT of testing. check for num-type?
+        return a**2  # sfeh requires testing. a LOT of testing. check for num-type?
 
     def _sympy_(self, a, b):
         return eval(self, a, b)

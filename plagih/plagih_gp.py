@@ -127,7 +127,8 @@ def load_evolve_functions(root_dir):
 
         evolve_list = [
             {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06},
-            {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03},
+            {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
+             'custom_params': {'sympify_tree': True}},
             {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01},
             {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05},
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
@@ -137,8 +138,10 @@ def load_evolve_functions(root_dir):
             {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (18, 1, 30, 5), 'build_method': 'grow'}}},
             {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.35},
-            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.12, 'custom_params': {'mode': 'branch'}},
-            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.03, 'custom_params': {'mode': 'point'}},
+            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.12,
+             'custom_params': {'mode': 'branch'}},
+            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.03,
+             'custom_params': {'mode': 'point'}},
             {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
              'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 7, 1), 'build_method': 'full'}}},
             {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
@@ -146,7 +149,7 @@ def load_evolve_functions(root_dir):
             {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
              'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 50, 6), 'build_method': 'full'}}},
         ]
-    # todo if 'half' -> 50:50 choice
+
     yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_list)
     # sfeh: if you want to load informations from extra file, check for this file here
 

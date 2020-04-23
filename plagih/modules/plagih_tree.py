@@ -25,8 +25,8 @@ N_c2 = 10
 N_c3 = 11
 N_modify = 13
 
-TR_ID = 0  # todo I think the id is irrelevant
-TR_type = 1  # todo I think the type is irrelevant
+TR_ID = 0  # sfeh I think the id is irrelevant
+TR_lastEvolve = 1
 T_fitness = 12
 T_parsimony = 14
 
@@ -258,7 +258,7 @@ def tree_get_size(tree, karoo=True):
 
 
 def tree_get_history(tree):
-    return tree[TR_type][1]
+    return tree[TR_lastEvolve][1]
 
 
 def tree_set_id(tree, tree_id):
@@ -273,7 +273,7 @@ def tree_set_id(tree, tree_id):
 
 
 def tree_set_last_evolution(tree, last_modification):
-    tree[TR_type][1] = last_modification
+    tree[TR_lastEvolve][1] = last_modification
     return tree
 
 
@@ -387,7 +387,7 @@ def tree_set_evalutaion(tree, tree_meta):
     tree = tree_set_parsimony(tree, parsimony)
     tree = tree_set_fitness(tree, fitness_train)
     # tree = tree_set_expr_sym(tree, expr_sym) # todo, also at get method
-    # tree = tree_set_expr_raw(tree, expr_raw) # todo
+    # tree = tree_set_expr_raw(tree, expr_raw)
     return tree
 
 
@@ -1023,7 +1023,7 @@ def tree_get_last_evolution(tree):
     """
     return a tree's last genetic modification
     """
-    last_modi = tree[TR_type][1]
+    last_modi = tree[TR_lastEvolve][1]
     return last_modi
 
 
@@ -1734,7 +1734,7 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
 
     ztree = evolve_node_renum(ztree)  # --all: ids
     # ztree = tree_fix_arity(ztree)
-    ztree = tree_fix_link_child(ztree)
+    ztree = tree_fix_link_child(ztree, karoo=False)
 
     # 2. insert all following nodes
     insert_count = 1  # set node count to +1 as the new root has already replaced 'branch_top' (above)
@@ -1749,13 +1749,13 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
                 ztree[N_xtype][j] = insert_core[N_xtype][insert_count]
 
                 if int(ztree[N_arity][j]) == 0:
-                    ztree = tree_fix_link_child(ztree)  # fix all child links
+                    ztree = tree_fix_link_child(ztree, karoo=False)  # fix all child links
                     ztree = evolve_node_renum(ztree)  # renumber all 'NODE_ID's
 
                 elif int(ztree[N_arity][j]) > 0:
                     c_buffer = evolve_c_buffer(ztree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
                     ztree = tree_unsafe_insert_node_child_dummies(ztree, j, c_buffer)  # insert new nodes
-                    ztree = tree_fix_link_child(ztree)  # fix all child links
+                    ztree = tree_fix_link_child(ztree, karoo=False)  # fix all child links
                     ztree = evolve_node_renum(ztree)  # renumber all 'NODE_ID's
 
                 insert_count = insert_count + 1  # exit loop when 'node_count' reaches the number of columns in the array
@@ -1789,7 +1789,7 @@ def tree_fix_arity(tree):
     return tree
 
 
-def tree_fix_link_child(tree):
+def tree_fix_link_child(tree, karoo=False):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
@@ -1799,7 +1799,7 @@ def tree_fix_link_child(tree):
 
     for node in range(0, len(tree[N_id])):
         c_buffer = evolve_c_buffer(tree, node)  # generate c_buffer for each node
-        tree = tree_node_set_childs_ids(tree, node, c_buffer)  # update child links for each node # todo karoo=True??
+        tree = tree_node_set_childs_ids(tree, node, c_buffer, karoo=False)  # update child links for each node
 
     return tree
 
@@ -2227,25 +2227,6 @@ def tree_normalize_exponentiation(tree):
                 tree = tree_node_set_label(tree, child_id, new_power)
             except ValueError:
                 pass  # sfeh: This may actually take some time. Every tree gets checked any many have '**'.
-    return tree
-
-
-def tree_set_meta_wipe(tree):
-    """
-    Wipes all tree meta data, e.g.
-    todo save history of last values
-    What should be deleted?
-    - fitness
-    - parsimony
-    - tree_id
-    - tree_type
-
-    What should not be deleted?
-    - modifiable nodes
-    """
-    # tree = tree_set_fitness(tree, '')  # todo just randomly kick this out aswell
-    # tree = tree_set_parsimony(tree, '')  # todo if we wipe this, parsimony can not be checked anymore
-    # tree = tree_set_id(tree, 'tourn win')
     return tree
 
 

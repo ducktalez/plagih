@@ -51,7 +51,6 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     '*': {'fun': '*', 'arity': 2, 'xtype': 'f2f', 'tf': tf.multiply, 'latex': '$\\cdot$', 'sym_str': '({} * {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
 
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
-    # todo is call='({})({})' used anywhere?
     '/': {'fun': '/', 'arity': 2, 'xtype': 'f2f', 'tf': tf.math.divide_no_nan, 'latex': '$\\div$', 'sym_str': '({} / {})',
           'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
     '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'tf': tf.pow, 'latex': '$**$', 'sym_str': '({} ** {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
@@ -68,6 +67,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     'asin': {'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'tf': tf.asin, 'latex': None, 'sym_str': 'asin({})', 'pycode': lambda a: 'math.asin({})'.format(a)},
     'atan': {'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'tf': tf.atan, 'latex': None, 'sym_str': 'atan({})', 'pycode': lambda a: 'math.atan({})'.format(a)},
     'tanh': {'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'tf': tf.tanh, 'latex': None, 'sym_str': 'tanh({})', 'pycode': lambda a: 'math.tanh({})'.format(a)},
+
     # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
     # 'b2b' Classical logical operators, evaluate from bool to bool

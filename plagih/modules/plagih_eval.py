@@ -227,7 +227,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_clas
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
             pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-            solution = tensors[first_action]  # todo
+            solution = tensors[first_action]  # sfeh
 
             pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
@@ -236,7 +236,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_clas
                 pred_labels = tf.map_fn(tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
 
             tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
-        # todo check fitness here?
+
     return {'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
             'pairwise_fitness': pairwise_fitness}
 

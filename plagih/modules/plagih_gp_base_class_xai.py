@@ -56,10 +56,9 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 200,
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
-            'print_type': 'gggwwsivoaa',  # To show absolutely all: wggggsiiiivvvtopppttt
+            'print_type': 'gggwwwsivoaaff',  # To show absolutely all: wggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,  # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
-            'delete_old_file': False,  # sfeh, delete old gp_files. be very careful
             'monitor': {'gen_fitness_average': 'y',
                         'sympify_errors': 'y',
                         'population_tmp_done-size': 'y',
@@ -68,42 +67,15 @@ class ExplainableGP(object):
                        'time_save': None,  # in sec
                        'gen_monitor': 1,  # in gen counts
                        'gen_save': 1},  # in gen counts
-
-            # GP-evolve specific parameters
-            'evolve_rates': {'repro one': 0.05,
-                             'repro pareto': 0.01,
-                             'repro reduced one': 0.03,
-                             'filter floats': 0.05,
-                             'point mutate function': 0.1,
-                             'branch mutate insert': 0.10,
-                             'crossover branches': 0.36,
-                             'random from origin_tree': 0.15,
-                             'random from scratch': 0.15,
-                             },
-            'evolve': {'r': {'evolve_fun': 'reproduce lucky', 'rate': 0.05, 'params': ()},  # tbd sfeh tbd # todo reproduce and clone?
-                       'rP': {'evolve_fun': 'reproduce pareto', 'rate': 0.01, 'params': ()},
-                       'rS': {'evolve_fun': 'reproduce sympify', 'rate': 0.03, 'params': ()},
-                       'p': {'evolve_fun': 'parameters filter floats', 'rate': 0.05, 'params': ('gaussian')},  # sfeh bool aswell
-                       'mN': {'evolve_fun': 'mutate node', 'rate': 0.1, 'params': ()},  # sfeh mutate node or mutate function?
-                       'mB': {'evolve_fun': 'mutate branch', 'rate': 0.1, 'params': ()},
-                       'c': {'evolve_fun': 'crossover branche', 'rate': 0.36, 'params': ()},
-                       'nO': {'evolve_fun': 'new origin-based', 'rate': 0.15, 'params': ()},
-                       'n': {'evolve_fun': 'new random', 'rate': 0.15, 'params': ()}
-                       },
             'crossover_type_safety_mode': 'replace_same_types',
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
-            'tree_growth': 'node-based',  # node-based, depth-based
-            'tree_depth_base': 4,  # [3..10]
-            'tree_depth_max': 8,  # maximum Tree depth for entire run
+            'tree_depth_max': 10,  # maximum Tree depth for entire run
             'tree_depth_min': 2,
-            'tree from scratch min_nodes': 8,
-            'random from scratch max nodes': 50,
-            'tree branch base nodes': 20,
             'tourn_size': 3,  # [7 per 100] number of trees selected for tournament
 
             # When to stop the run
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
-            'gen_max': 800,  # Maximum amount of generations
+            'gen_max': 1000,  # Maximum amount of generations
 
             'env': {
                 'name': None,
@@ -342,6 +314,7 @@ class ExplainableGP(object):
         #     {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
         #     'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean': 12, 'min': 1, 'max': 30, 'gauss_var': 1, 'method': 'grow'}}},
         for ii, evolve_specs in enumerate(self.evolve_list):  # all selected gp mutations
+
             time_evolve = time.perf_counter()
             evolve_name = evolve_specs['evolve_name']
             evolve_num = evolve_specs['evolve_num']
@@ -350,6 +323,8 @@ class ExplainableGP(object):
             tag = evolve_specs['tag']
 
             # believe me, debugging with this is much more fun
+
+            self.print_g('gggg', '->Evolving \'{}\' {}x starting...'.format(tag, evolve_num))
 
             if evolve_name == 'reproduce':
                 # sfeh one parameter
@@ -1058,7 +1033,7 @@ class ExplainableGP(object):
 
         # branch_nodes, branch_depth, tree_depth, tree_nodes
         """
-        mean, variance, size_max, size_min = mean_min_max_var
+        mean, size_min, size_max, size_variance = mean_min_max_var
         if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
             relative_size = 0
         else:
@@ -1078,7 +1053,7 @@ class ExplainableGP(object):
 
             relative_size = tree_size - node_size
 
-        build_size = int(np.random.normal(mean, variance))
+        build_size = int(np.random.normal(mean, size_variance))
         build_size = min(size_max - relative_size, build_size)
         build_size = max(size_min, build_size)
 
@@ -1358,7 +1333,6 @@ class ExplainableGP(object):
                 best_fitness = fitness
 
         tourn_winner = copy.deepcopy(self.population_base[best_id])
-        tourn_winner = tree_set_meta_wipe(tourn_winner)
 
         return tourn_winner
 

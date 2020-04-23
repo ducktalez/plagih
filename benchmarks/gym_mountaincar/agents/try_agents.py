@@ -132,4 +132,4 @@ class MTC_simple13:
 # mtc_plot_decisions_space(SimpleAgent(), name='decisionsr-simple')
 
 
-eval_agent_list([('sim', MTC_simple13())])
+eval_agent_list([('simyo', MTC_simple13())])

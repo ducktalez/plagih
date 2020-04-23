@@ -9,20 +9,20 @@ import yaml
 
 example_runs = 'run_examples/'
 
+run_files = 'run_files/'
 folder_plots = 'plots/'
 folder_steps = 'steps/'
 folder_pop_analysis = 'pop_dist/'
 
 file_pareto = 'info/pareto.txt'
-file_backup_pickle = 'info/backup.p'  # backup-version is set here
+info_config_yaml = 'info/config.yaml'
+file_info_config_json = 'info/config.json'
+file_backup_pickle = 'backup/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
-run_files = 'run_files/'
 file_config_yaml = 'run_files/config.yaml'
-info_config_yaml = 'info/config.yaml'
 file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
 file_config_json = 'run_files/config.json'
-file_info_config_json = 'info/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
 file_evolve_functions = 'run_files/evolve_functions.yaml'
 env_variables_yaml = 'run_files/env_variables.yaml'
@@ -36,33 +36,11 @@ tree_numpy_csv = 'run_files/tree_numpy.csv'
 callable_user_python_script = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
 
 folder_solutions = 'agents/'
-trees_tex = 'solutions/agents_trees.tex'
-file_pycode = 'solutions/agents.py'
-file_pycode_eval = 'solutions/eval_agents.py'
+trees_tex = 'agents_trees.tex'
+file_pycode = 'agents.py'
+file_pycode_eval = 'eval_agents.py'
 
 T_num_lines = 15  # todo this var is not found otherwise
-
-get_path = {example_runs: Path('run_examples/'),
-            'folder_plots': Path('plots/'),
-            'subfolder_step': Path('/steps/'),
-            'folder_pop_analysis': Path('steps/pop_dist/'),
-
-            'file_conclusion': Path('analysis/conclusion.txt'),
-
-            'pareto.txt': Path('agents/pareto.txt'),
-            'all_trees.tex': Path('agents/all_trees.tex'),
-            file_pycode: Path('agents/agents.py'),
-
-            run_files: Path('run_files/'),
-            file_config_yaml: Path('run_files/config.yaml'),
-            file_config_json: Path('run_files/config.json'),
-            file_backup_pickle: Path('backup/backup.p'),
-            samples_ready_p: Path('run_files/samples_ready.p'),
-            samples_csv: Path('run_files/samples.csv'),
-            operators: Path('run_files/operators.csv'),
-            tree_expr_txt: Path('run_files/tree_expr.txt'),
-            tree_labels_csv: Path('run_files/tree_labels.csv'),
-            tree_numpy_csv: Path('run_files/tree_numpy.csv')}
 
 
 def make_dir(path):
@@ -72,7 +50,7 @@ def make_dir(path):
     """
     if not Path.is_dir(path):
         Path.mkdir(path)
-    return path  # todo new make
+    return path
 
 
 def file_make_dir(file_path):

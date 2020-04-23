@@ -34,7 +34,6 @@ class ExplainableGP(object):
         self.restart_vers = 'v0.8'
 
         self.root_dir = root_dir
-        print(self.root_dir)
 
         self.config = {
             # 'root_dir': root_dir,  # TODO
@@ -307,8 +306,6 @@ class ExplainableGP(object):
             if evolve_specs['evolve_name'] == 'random trees':
                 random_rate += evolve_specs['evolve_rate']
 
-        print('ASDDSAAD evo rate', random_rate)
-
         for ii, evolve_specs in enumerate(self.evolve_list):
             if evolve_specs['evolve_name'] == 'random trees':
                 # time_evolve = time.perf_counter()
@@ -377,10 +374,10 @@ class ExplainableGP(object):
 
             elif evolve_name == 'crossover branch':
 
-                for nn in range(evolve_num / 2):  # two childs
+                for nn in range(int(evolve_num / 2)):  # two childs
                     parent_a = self.pop_selection_tournament(tourn_size)
                     parent_b = self.pop_selection_tournament(tourn_size)
-                    child_a, child_b = self.pop_crossover_branch(call_params, parent_a, parent_b)
+                    child_a, child_b = self.pop_crossover_branch(parent_a, parent_b)
                     self.pop_append(child_a, last_evolution=tag)
                     self.pop_append(child_b, last_evolution=tag)
 
@@ -418,7 +415,6 @@ class ExplainableGP(object):
         self.periodical_procedures()
 
         self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
-
 
     def run_continues(self):
         """
@@ -490,7 +486,7 @@ class ExplainableGP(object):
 
         """
         self.file_conclusion(root_path)
-        self.file_pareto_text(self.pareto, root_path)
+        write_file_pareto_text(self.pareto, root_path)
         self.file_pareto_latex(self.pareto, root_path)
         self.file_generate_pycode(self.pareto, root_path)
 
@@ -636,19 +632,6 @@ class ExplainableGP(object):
 
         return
 
-    def file_pareto_text(self, pareto, root_path):
-        """
-        Save all the pareto efficient candidates to file
-        """
-
-        pth = file_make_dir(root_path / file_pareto)
-
-        with Path.open(pth, 'w') as file:
-            for parsim, meta in sorted(list(pareto.items())):
-                fitness = meta['fitness_train']
-                algo_sym = meta['expr_sym']  # save raw version, not the sympified one
-                file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
-
     def file_pareto_latex(self, pareto, root_path):
         """
         Save all pareto entries as latex gp_files
@@ -678,6 +661,8 @@ class ExplainableGP(object):
         with Path.open(pth, 'w') as file:
             file.write(latex_full_doc)
 
+        printez('f', '{}'.format(trees_tex))
+
         return
 
     def file_generate_pycode(self, pareto, root_path):
@@ -691,7 +676,6 @@ class ExplainableGP(object):
             py_return_action = 'return max({}, min({}, int(round(action))))\n'.format(action_min, action_max)
         else:
             py_return_action = 'return action\n'
-            # todo idea round constants when generating
 
         py_operations_assign = '{} = input\n'.format(', '.join(self.env_variables['obs_name']))
         py_decide_body = '{}{{}}\n{}'.format(py_operations_assign, py_return_action)
@@ -725,6 +709,7 @@ class ExplainableGP(object):
         pth = file_make_dir(root_path / file_pycode)
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
+            printez('f', '{}'.format(file_pycode))
 
         self.call_custom_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
 
@@ -753,6 +738,7 @@ class ExplainableGP(object):
 
             with Path.open(root_dir / file_pycode_eval, 'w') as file:
                 file.write(executable_python_evaluation)
+                printez('f', '{}'.format(file_pycode_eval))
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Population specific                       +
@@ -1096,7 +1082,7 @@ class ExplainableGP(object):
         build_size = min(size_max - relative_size, build_size)
         build_size = max(size_min, build_size)
 
-        return build_size
+        return int(build_size)
 
     def helper_evolve_params_branch(self, call_params):
 
@@ -1197,9 +1183,9 @@ class ExplainableGP(object):
 
         build_spec, size_mode, mean_min_max_var, build_method = self.helper_evolve_params_branch(call_params)
 
-        method = build_spec.get('method')
-        if method is None:
-            method = np.random.choice(['full', 'grow'])
+        build_method = build_spec.get('build_method')
+        if build_method is None:
+            build_method = np.random.choice(['full', 'grow'])
 
         node_ids = tree_get_mutatable_nodes(tree, no_root=True)
         old_node = np.random.choice(node_ids)
@@ -1218,7 +1204,7 @@ class ExplainableGP(object):
 
         return tree
 
-    def pop_crossover_branch(self, call_params, tree_a, tree_b):
+    def pop_crossover_branch(self, left_tree, right_tree):
         """
         swap branches of two trees
         - select parent a and b
@@ -1229,8 +1215,6 @@ class ExplainableGP(object):
         """
 
         # 1. two parents
-        left_tree = call_params['old_tree']
-        right_tree = call_params['partner_tree']
 
         # 2. search nodes for left and right that can be exchanged. convert_needed
         left_id, right_id, success = self.tree_try_get_swapids(left_tree, right_tree)
@@ -1248,13 +1232,13 @@ class ExplainableGP(object):
             # right_aritys.insert(0, 1)
             # left_labels.insert(0, conv_to_right)
             # left_aritys.insert(0, 1)
-            return
+            return None, None
 
         left_core = core_from_labels(left_labels, left_aritys, left_xtypes)  # todo this is not necessary, switch branches
         right_core = core_from_labels(right_labels, right_aritys, right_xtypes)
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)
+        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)  # todo param from config
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
         right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)
@@ -1766,7 +1750,7 @@ class ExplainableGP(object):
         plt.close()
         return
 
-    def printpl(self, message_type, text):
+    def printpl(self, message_type, message):
         """
         Lightweight print function.
         Instead of checking if you should print every time, this is done here.
@@ -1774,7 +1758,7 @@ class ExplainableGP(object):
         """
 
         if message_type in self.print_type:
-            printez(message_type, text, print_type=self.print_type, time_total=time.perf_counter() - self.time_start)
+            printez(message_type, message, print_type=self.print_type, time_total=time.perf_counter() - self.time_start)
 
         return
 

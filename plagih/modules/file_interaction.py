@@ -86,6 +86,21 @@ def file_make_dir(file_path):
     return p
 
 
+def write_file_pareto_text(pareto, root_path):
+    """
+    Save all the pareto efficient candidates to file
+    """
+
+    pth = file_make_dir(root_path / file_pareto)
+
+    with Path.open(pth, 'w') as file:
+        for parsim, meta in sorted(list(pareto.items())):
+            fitness = meta['fitness_train']
+            algo_sym = meta['expr_sym']  # save raw version, not the sympified one
+            file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
+    printez('f', '{}'.format(file_pareto))
+
+
 def open_force_write_text(p, text):
     p = Path(p)
     if not p.parent.is_dir():
@@ -140,6 +155,9 @@ def save_data_pickle(data_prepared, data_pickle_path):
 
     with Path.open(data_pickle_path, 'wb') as file:
         pickle.dump(data_prepared, file, protocol=pickle.HIGHEST_PROTOCOL)  # not sure if the protocol matters
+
+    printez('f', '{}'.format(data_pickle_path))
+
     return
 
 

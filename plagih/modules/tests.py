@@ -135,19 +135,6 @@ class CartpoleExamples:
     modify_list = [0, 1, 0, 0]
 
 
-def test_list_split():
-    fail_cnt = 0
-
-    for sample_size in range(10, 100):
-        x = randomly_split_range(sample_size, 3)
-        print(x)
-        if sum(x) < sample_size:
-            fail_cnt += 1
-        elif sum(x) > sample_size:
-            fail_cnt += 1
-    print('test_list_split failed {} times.'.format(fail_cnt))
-
-
 def check_op_names():
     # check if the fun-names are correct
     for key, value in op.items():

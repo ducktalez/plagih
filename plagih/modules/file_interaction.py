@@ -40,7 +40,7 @@ trees_tex = 'agents_trees.tex'
 file_pycode = 'agents.py'
 file_pycode_eval = 'eval_agents.py'
 
-T_num_lines = 15  # todo this var is not found otherwise
+T_num_lines = 15  # sfeh this var is not found otherwise
 
 
 def make_dir(path):

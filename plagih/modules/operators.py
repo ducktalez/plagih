@@ -42,7 +42,7 @@ op: Dict to work as 'Database' for every expression-bit and its features
 
 Features should always be defined, even though they might not occur at all. If not used, they CAN be filled with dummy values like äöü
 Some, which are known of not being used yet are commented with '# not tested' or '# not used'
-todo: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
+sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 """
 op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'latex': '$+$', 'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
@@ -71,15 +71,15 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
     # 'b2b' Classical logical operators, evaluate from bool to bool
-    'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': 'and', 'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
-    # sfeh Andbm and + & (delete this)
+    'Andpl': {'fun': 'Andpl', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': 'and', 'sym_str': 'Andpl({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
+    # sfeh Andplm and + & (delete this)
     '&': {'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
     # DON'T USE tf.bitwise.bitwise_and
-    'Orb': {'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': 'or', 'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
+    'Orpl': {'fun': 'Orpl', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': 'or', 'sym_str': 'Orpl({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     '|': {'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     # a or b, sfeh python-'|' not used here
 
-    'Not': {'fun': 'Not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Not({})', 'pycode': None},  # not a
+    'not': {'fun': 'not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'not({})', 'pycode': None},  # not a
 
     # 'f2b' Classical comparative operators, evaluate from float to bool
     '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'latex': '$==$', 'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
@@ -123,18 +123,18 @@ op = {
     'asin': op_what['asin'],
     'atan': op_what['atan'],
     'tanh': op_what['tanh'],
-    'Andb': op_what['Andb'],
-    'And': op_what['Andb'],
-    ast.And: op_what['Andb'],
-    '&': op_what['Orb'],
-    ast.BitAnd: op_what['Andb'],
-    'Orb': op_what['Orb'],
-    'Or': op_what['Orb'],
-    ast.Or: op_what['Orb'],
-    '|': op_what['Orb'],
-    ast.BitOr: op_what['Orb'],
-    'Not': op_what['Not'],
-    ast.Not: op_what['Not'],
+    'Andpl': op_what['Andpl'],
+    'And': op_what['Andpl'],
+    ast.And: op_what['Andpl'],
+    '&': op_what['Orpl'],
+    ast.BitAnd: op_what['Andpl'],
+    'Orpl': op_what['Orpl'],
+    'Or': op_what['Orpl'],
+    ast.Or: op_what['Orpl'],
+    '|': op_what['Orpl'],
+    ast.BitOr: op_what['Orpl'],
+    'not': op_what['not'],
+    ast.Not: op_what['not'],
     '==': op_what['=='],
     ast.Eq: op_what['=='],
     '!=': op_what['!='],
@@ -171,7 +171,7 @@ op_test = {
 
     # Never used yet, trying to get rid of the ** function
     'Power': {'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'latex': None, 'sym_str': '({})**({})', 'pycode': lambda a, b: '({}**{})'.format(a, b)},  # not used # todo # a*a*a -> a**3
-    'inverse': {'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'latex': None, 'sym_str': None, 'pycode': None},  # not used # 1/float. important for squareroots. todo
+    'Sqrt': {'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'latex': None, 'sym_str': None, 'pycode': None},  # not used # 1/float. important for squareroots. todo sqrt, not inverse
 
     # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
     # Also very unclear how they should work.

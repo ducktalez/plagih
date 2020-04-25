@@ -119,7 +119,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         mask_nan = np.ma.masked_where(result == np.nan, result)
         plt.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
 
-        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise  # sfeh: whitespace, find better solution
+        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise  # todo: whitespace, find better solution
 
         # sfeh normalize?
         # plt.cm.get_cmap().set_bad(color='white')

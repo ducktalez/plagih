@@ -165,7 +165,7 @@ def load_tree_builders(root_dir):
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators.')
         functions = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
-                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['Not', 2], ['sin', 2], ['Ifte', 2]])
+                              ['==', 2], ['abs', 2], ['Andpl', 2], ['Orpl', 2], ['not', 2], ['sin', 2], ['Ifte', 2]])
         np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
     choose_oparray = oparray_from_list(functions)
 

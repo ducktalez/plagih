@@ -5,15 +5,12 @@ from plagih.modules.operators import *
 import time
 
 
-# todo slowly make all of those random tests worth something
-
-
 class TestHelpers:
 
     def __init__(self):
         self.func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
                                [[], [], ['<', '>', '==', '!='], []],
-                               [[], ['Not', 'Not'], ['Andb'], []],
+                               [[], ['not', 'not'], ['Andpl'], []],
                                [[], [], [], []],
                                [[], [], [], ['Ifte']]]
 
@@ -30,9 +27,9 @@ class TestHelpers:
                            '2b': ['bool1', 'bool2']}
 
         self.tree_MTC_simon_labels = ['Ifte',
-                                      'Orb', '2', 'Ifte',
-                                      '<', 'Andb', 'Andb', '0', 'Ifte',
-                                      'cartVel', '1', '<', '<', '<', 'Andb', '<', '0', '2',
+                                      'Orpl', '2', 'Ifte',
+                                      '<', 'Andpl', 'Andpl', '0', 'Ifte',
+                                      'cartVel', '1', '<', '<', '<', 'Andpl', '<', '0', '2',
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
 
@@ -41,7 +38,7 @@ class TestHelpers:
                                                lambda: np.random.randint(0, 10)],
                                         '2b': [lambda: np.random.choice([True, False])]}
 
-        self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
+        self.tree_MTC_simon_expr = 'Ifte(Orpl(pos < -1,  Andpl(pos < 0.1, vel < -0.05)), 2, Ifte(Andpl(Andpl(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
 
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
@@ -101,14 +98,14 @@ class MountainCarExamples:
     tree_v2_expr_sym = 'Ifte(vel < 0.0, 0.0, 2.0)'
     tree_v2_expr_raw = '(Ifte(((vel)<(0.0)), (0.0), (Ifte((True), (2.0), (1.0)))))'
 
-    tree_v3_list = ['Ifte', 'Andb', '2', '0', '<=', '<=', 'Mini', 'vel', 'vel', '+', '+', '-', '*', '0.7',
+    tree_v3_list = ['Ifte', 'Andpl', '2', '0', '<=', '<=', 'Mini', 'vel', 'vel', '+', '+', '-', '*', '0.7',
                     '*', '0.03', '*', '0.008', '-0.07', '**',
                     '-0.09', '**', '0.3', '**', '+', '2', '+', '2', '+', '4', 'pos', '0.38', 'pos', '0.25',
                     'pos', '0.9']
     tree_v3_modify = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                       1, 1, 1]
 
-    tree_v3_new = ['Ifte', 'Andb', 2, 0, '<=', '<=', 'Mini', 'vel', 'vel', '+', '+', '-', '*', 0.7, '*',
+    tree_v3_new = ['Ifte', 'Andpl', 2, 0, '<=', '<=', 'Mini', 'vel', 'vel', '+', '+', '-', '*', 0.7, '*',
                    0.03, '*', 0.008, '-', '**', '-', '**', 0.3, '**', 0.07, '+', 2, 0.09, '+', 2, '+', 4,
                    'pos', 0.38, 'pos', 0.25, 'pos', 0.9]
 

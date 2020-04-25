@@ -2,7 +2,7 @@ import numpy as np
 
 choose_oparray = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
                   [[], [], ['<', '>', '==', '!='], []],
-                  [[], ['Not', 'Not'], ['Andb'], []],
+                  [[], ['not', 'not'], ['Andpl'], []],
                   [[], [], [], []],
                   [[], [], [], ['Ifte']]]
 
@@ -19,9 +19,9 @@ node_choose_dict = {
         0: {'observ': [],
             'distribution': [lambda: np.random.choice([True, False])]},
         1: {'f2b': [],
-            'b2b': ['Not']},
+            'b2b': ['not']},
         2: {'f2b': ['<', '<=', '>'],
-            'b2b': ['Andb', 'Orb']},
+            'b2b': ['Andpl', 'Orpl']},
         3: {None: []}}}
 
 arity = 3

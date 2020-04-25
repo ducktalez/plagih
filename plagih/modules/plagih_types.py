@@ -49,7 +49,7 @@ def xtype_get_converters(xtype):
         raise
 
 
-def choose_term(xtype, env_variables, choose_distribution, accuracy=200):  # todo accuracy must be given from calling function
+def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
     """
     Returns a terminal of xtype.
 
@@ -69,7 +69,7 @@ def choose_term(xtype, env_variables, choose_distribution, accuracy=200):  # tod
     if np.random.choice(['observ', 'distrib']) == 'observ' and env_variables[xtype]:
         term = np.random.choice(env_variables[xtype])
     else:
-        term = choose_constant(xtype, choose_distribution, accuracy)
+        term = choose_constant(xtype, choose_distribution, float_accuracy)
 
     term = str(term)  # sfeh
 

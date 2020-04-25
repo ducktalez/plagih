@@ -54,7 +54,7 @@ class ExplainableGP(object):
             # rather irrelevant
             'parsimony_tmp': 15,
             'precision': 3,  # rounding the fitness
-            'float_accuracy': 200,
+            'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
             'print_type': 'gggwwwsivoaaff',  # To show absolutely all: wggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
@@ -111,7 +111,6 @@ class ExplainableGP(object):
         self.parsimony_tmp = self.config['parsimony_tmp']
         self.parsimony_max = self.config['parsimony_max']
         self.monitor_dict = self.config['monitor']
-        self.evolve_rates = self.config['evolve_rates']
         self.tourn_size = self.config['tourn_size']
 
         # special variables
@@ -191,7 +190,7 @@ class ExplainableGP(object):
         - save the last generation (custom_done)
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
-        path_backup = self.root_dir / file_backup_pickle
+        path_backup = file_make_dir(self.root_dir / file_backup_pickle)
 
         run_backup_data = self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict
 
@@ -690,8 +689,6 @@ class ExplainableGP(object):
 
         return
 
-    # todo idee: gp vs. nn entscheidungen clustern.
-
     def call_custom_file(self, root_dir, pycode_complete_agents):
 
         if Path.is_file(root_dir / callable_user_python_script):
@@ -1067,16 +1064,16 @@ class ExplainableGP(object):
         build_method = build_spec['build_method']
         return build_spec, size_mode, mean_min_max_var, build_method
 
-    def invent_label_list(self, size_mode, first_xtype, build_size, build_method):
+    def invent_label_list(self, size_mode, first_xtype, build_size, build_method, float_accuracy):
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
-            label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
+            label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_accuracy,
                                                                          self.env_variables, self.choose_oparray, self.choose_distributions,
                                                                          build_method=build_method)
 
         elif 'nodes' in size_mode:
 
-            label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
+            label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_accuracy,
                                                                          self.env_variables, self.choose_oparray, self.choose_distributions,
                                                                          build_method=build_method)
         else:
@@ -1120,7 +1117,7 @@ class ExplainableGP(object):
             old_branch = tree_node_get_branch(tree, node_id, karoo=True)
             build_size = build_split[i]
 
-            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, build_method)
+            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, build_method, self.config['float_accuracy'])
 
             core = core_from_labels(label_list, arity_list, xtype_list)
             tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
@@ -1136,7 +1133,7 @@ class ExplainableGP(object):
         action_xtype = self.env_variables['action_at'][0]['xtype']
         build_size = self.choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
 
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, build_method)
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, build_method, self.config['float_accuracy'])
 
         p_tree = Plagih_Tree(label_list, xtype_list, arity_list=arity_list)
         tree = p_tree.get_uninstanced_tree()
@@ -1167,7 +1164,7 @@ class ExplainableGP(object):
         old_xtype = tree_node_get_xtype(tree, old_node)
 
         build_size = self.choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)  # sfeh anderer name für branch
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, build_method)
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, build_method, self.config['float_accuracy'])
 
         if label_list:
             core_insert = core_from_labels(label_list, arity_list, xtype_list)
@@ -1379,9 +1376,13 @@ class ExplainableGP(object):
         if not tree_check_deep(tree, self.env_variables):
             raise
 
-        expr_raw = tree_get_expr_raw(tree, node_id=root_id)
-        expr_sym = expr_sympify(expr_raw=expr_raw)
         tree_check_expr(tree)
+        expr_raw = tree_get_expr_raw(tree, node_id=root_id)
+
+        try:
+            expr_sym = expr_sympify(expr_raw=expr_raw)
+        except Exception as ex:
+            raise Exception('Your tree\'s algorithm could not be sympified. ex: {}'.format(ex))
 
         # sfeh, this does not work
         # if not tree_check_is_sympified(tree):

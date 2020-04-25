@@ -70,7 +70,7 @@ class Maxi(Function):
         return eval(self, a, b)
 
 
-class Andb(Function):
+class Andpl(Function):
     """
     """
     nargs = 2
@@ -87,7 +87,7 @@ class Andb(Function):
         return eval(self, a, b)
 
 
-class Orb(Function):
+class Orpl(Function):
     """
     """
     nargs = 2
@@ -157,8 +157,8 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Btof': Btof,
                     'Mini': Mini,
                     'Maxi': Maxi,
-                    'Andb': Andb,
-                    'Orb': Orb,
+                    'Andpl': Andpl,
+                    'Orpl': Orpl,
                     'Square': Square,}
 
 
@@ -176,4 +176,4 @@ def plagih_sympify(function_string):
     try:
         return sympify(sympify(function_string, locals=local_sympy_dict))
     except:
-        return 'nan'
+        return 'nan'  # 'nan' always evaluates to nan

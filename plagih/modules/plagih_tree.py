@@ -197,14 +197,7 @@ def tree_check_expr(tree):
     """
     todo make this look better later...
     """
-    expr_raw = tree_get_expr_raw(tree, node_id=root_id)
 
-    try:
-        expr_sym = expr_sympify(expr_raw=expr_raw)
-    except:
-        raise Exception('Your tree\'s algorithm could not be sympified. Aborting.')
-
-    return
 
 
 def load_pop_from_csv(pop_csv):
@@ -758,7 +751,7 @@ def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
                 raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparray, choose_distributions, min_depth=0, build_method=None):
+def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray, choose_distributions, min_depth=0, build_method=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -788,7 +781,7 @@ def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparra
 
             for ii, xtype in enumerate(tbdo_xtypes):
                 if functerm_list[ii] == 'term':
-                    label = choose_term(xtype[-2:], env_variables, choose_distributions)
+                    label = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
@@ -812,7 +805,7 @@ def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparra
         else:  # now, we are on the lowest dim_y.
 
             for xtype in tbdo_xtypes:  # Build terminals now.
-                label, arity = choose_term(xtype[-2:], env_variables, choose_distributions), 0
+                label, arity = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy), 0
 
                 # Add the label to the result list
                 result_label_list.append(label)
@@ -825,7 +818,7 @@ def invent_label_list_depth(xtype_root, depth_goal, env_variables, choose_oparra
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_method='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, oparray, choose_distributions, build_method='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -888,7 +881,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, env_variables, oparray, cho
 
         for index in term_at:
             t_xtype = tbdo_xtypes[index]
-            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions), 0
+            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions, float_accuracy), 0
             label_xtype = xtype_get_from_label(label, env_variables)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
@@ -913,7 +906,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, env_variables, oparray, cho
     else:
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
-            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions), 0
+            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions, float_accuracy), 0
             label_xtype = xtype_get_from_label(label, env_variables)
             result_label_list.append(label)
             result_arity_list.append(arity)
@@ -935,7 +928,7 @@ def round_constant(constant, accuracy):
     if constant == 0:
         return constant
 
-    new_const = round(constant * accuracy) / accuracy
+    new_const = round(constant * (10**accuracy)) / (10**accuracy)
     if new_const == 0:
         if constant > 0:
             new_const = 1 / accuracy
@@ -959,26 +952,6 @@ def tree_single_from_csv(origin_tree_file_path):
         else:
             print_e('Tree could not be imported correctly from .csv file.')
             raise
-    return tree
-
-
-def tree_round_constants(tree, accuracy, karoo=True):
-    """
-    rounds the values in constant float nodes
-    """
-
-    if karoo:
-        tree = tree_convert_karoo_to_plagih(tree)
-
-    for node_id in tree_get_leaves(tree):
-        if tree_node_get_xtype(tree, node_id) == '2f':
-            label = tree_node_get_label(tree, node_id)
-            tmp = round_constant(label, accuracy)
-            tree[N_label][node_id] = tmp
-
-    if karoo:
-        tree = tree_convert_plagih_to_karoo(tree)
-
     return tree
 
 
@@ -1085,6 +1058,7 @@ def tree_get_expr_raw(tree, node_id=root_id):
 
 def tree_get_expr_sym(tree, node_id=root_id):
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
+    print('todo dasd raw', expr_raw)
     expr_sym = expr_sympify(expr_raw)
     return expr_sym
 
@@ -1888,7 +1862,7 @@ def tree_evolve_mutate_point(tree, choose_oparray, env_variables, choose_distrib
         new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray, arity=arity)  # Function is same type, same arity
         tree = tree_node_set_label(tree, node_id, new_label)
     else:
-        new_label = choose_term(xtype[-2:], env_variables, choose_distributions)  # 3 -> '2f' -> 5
+        new_label = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)  # 3 -> '2f' -> 5
         tree = tree_node_set_label(tree, node_id, new_label)
 
     # All node info should stay the same. xtype, arity
@@ -2116,7 +2090,7 @@ def tree_evolve_complexify(tree, same_arity=True):
     pass
 
 
-def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter', float_accuracy=200):
+def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter', float_accuracy=None):
     """
     When this happens, distributions_file get a a small variance
     """
@@ -2177,7 +2151,7 @@ def tree_prune_depth(tree, max_depth, env_variables, choose_distributions):
             label = tree_node_get_label(tree, node_id)
             xtype = xtype_get_from_label(label, env_variables)
             tree = tree_node_set_arity(tree, node_id, 0)
-            new_term = choose_term(xtype[-2:], env_variables, choose_distributions)  # replace label
+            new_term = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)
 
         elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth

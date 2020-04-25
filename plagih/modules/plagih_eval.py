@@ -286,9 +286,14 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
 
     """
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
+
+    if delete_this and '~' in expr:
+        print('TODOASDDSA')
+        pass
+
     tree = ast.parse(expr, mode='eval').body
 
-    graph = ast_convert_from_expr_recursive(tree, tensors=tensors, prnt=prnt, build=build)
+    graph = ast_convert_from_expr_recursive(tree, tensors=tensors, build=build)
 
     if build:
         # print('before:', graph)
@@ -319,7 +324,7 @@ def labels_from_nestedexpr(labels_nested_list, result_accum):
     return result_accum
 
 
-def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
+def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     """
     Returns (recursively) a (tensorflow) graph from a (raw or sympified) math expression.
     please use by calling labels_from_graphlist()
@@ -468,24 +473,16 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             raise Exception('Failed to identify the function. {}'.format(type(node)))
 
     else:
-        raise TypeError(node)
+        raise TypeError('Node type could not be handeled in ast-evaluation: {}'.format(node))
 
 
-def ast_chain_bool(values, operation, tensors=None, prnt=False, build=False):
+def ast_chain_bool(values, operation, tensors=None, build=False):
     """
     Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
         a & b
     --> values[0] operation values[1]
     """
-    if prnt:
-        x = ast_convert_from_expr_recursive(values[0], prnt=True)
-        if len(values) == 2:
-            return '({} {} {})'.format(values[0], operation, values[1])
-        elif len(values) == 1:
-            return x
-        else:
-            raise
-    elif build:
+    if build:
         x = ast_convert_from_expr_recursive(values[0], build=True)
         if len(values) == 2:
             return [operation, [values[0], values[1]]]
@@ -501,21 +498,19 @@ def ast_chain_bool(values, operation, tensors=None, prnt=False, build=False):
             return x
 
 
-def ast_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):
+def ast_chain_compare(comparators, ops, tensors=None, build=False):
     """
     Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
     """
 
-    x = ast_convert_from_expr_recursive(comparators[0], tensors=tensors, prnt=prnt, build=build)
-    y = ast_convert_from_expr_recursive(comparators[1], tensors=tensors, prnt=prnt, build=build)
+    x = ast_convert_from_expr_recursive(comparators[0], tensors=tensors, build=build)
+    y = ast_convert_from_expr_recursive(comparators[1], tensors=tensors, build=build)
 
     if len(comparators) > 2:
         print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')
         return tf.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
-        if prnt:
-            return '({} {} {})'.format(x, op[type(ops[0])]['fun'], y)
         if build:
             return [op[type(ops[0])]['fun'], [x, y]]
         else:

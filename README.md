@@ -60,7 +60,7 @@ Possible operators are:
 |Group|examples|
 |:------------------ |:-----------------|
 |Mathematical operators|`+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `Mini`, `Maxi`|
-|Logical operators | `Andpl`, `Orpl`, `not`|
+|Logical operators | `Andb`, `Orb`, `not`|
 |Comparative operators|`==`, `!=`, `<`, `<=`, `>`, `>=`|
 |Conditional (If-then-else)|`Ifte`|
 

@@ -136,7 +136,7 @@ def load_evolve_functions(root_dir):
             {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (4, 1, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (18, 1, 30, 5), 'build_method': 'grow'}}},
+             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (14, 1, 22, 4), 'build_method': 'grow'}}},
             {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.35},
             {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.12,
              'custom_params': {'mode': 'branch'}},
@@ -165,7 +165,7 @@ def load_tree_builders(root_dir):
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators.')
         functions = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
-                              ['==', 2], ['abs', 2], ['Andpl', 2], ['Orpl', 2], ['not', 2], ['sin', 2], ['Ifte', 2]])
+                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['not', 2], ['sin', 2], ['Ifte', 2]])
         np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
     choose_oparray = oparray_from_list(functions)
 

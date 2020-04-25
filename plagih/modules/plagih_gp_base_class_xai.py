@@ -347,6 +347,7 @@ class ExplainableGP(object):
                     self.pop_append(new_tree, last_evolution=tag)
 
             elif evolve_name == 'crossover branch':
+                # todo prune tree!
 
                 for nn in range(int(evolve_num / 2)):  # two childs
                     parent_a = self.pop_selection_tournament(tourn_size)
@@ -982,7 +983,7 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        tree = tree_evolve_mutate_point(tree, self.choose_oparray, self.env_variables, self.choose_distributions)
+        tree = tree_evolve_mutate_point(tree, self.config['float_accuracy'], self.choose_oparray, self.env_variables, self.choose_distributions)
 
         return tree
 
@@ -1170,7 +1171,7 @@ class ExplainableGP(object):
             core_insert = core_from_labels(label_list, arity_list, xtype_list)
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
-            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)
+            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_variables, self.choose_distributions, self.config['float_accuracy'])
         else:
             tree = None
 
@@ -1210,10 +1211,10 @@ class ExplainableGP(object):
         right_core = core_from_labels(right_labels, right_aritys, right_xtypes)
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)  # todo param from config
+        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_variables, self.choose_distributions, self.config['float_accuracy'])
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_variables, self.choose_distributions)
+        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_variables, self.choose_distributions, self.config['float_accuracy'])
 
         return left_offspring, right_offspring
 
@@ -1343,7 +1344,6 @@ class ExplainableGP(object):
             a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
             # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
             a_id = np.random.choice(a_ids)
-            a_label = tree_node_get_label(a_tree, a_id)
             a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
 
             # create a list from parent b with same xtype

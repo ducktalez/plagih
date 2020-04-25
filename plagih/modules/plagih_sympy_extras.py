@@ -70,7 +70,7 @@ class Maxi(Function):
         return eval(self, a, b)
 
 
-class Andpl(Function):
+class Andb(Function):
     """
     """
     nargs = 2
@@ -87,7 +87,7 @@ class Andpl(Function):
         return eval(self, a, b)
 
 
-class Orpl(Function):
+class Orb(Function):
     """
     """
     nargs = 2
@@ -157,8 +157,8 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Btof': Btof,
                     'Mini': Mini,
                     'Maxi': Maxi,
-                    'Andpl': Andpl,
-                    'Orpl': Orpl,
+                    'Andb': Andb,
+                    'Orb': Orb,
                     'Square': Square,}
 
 

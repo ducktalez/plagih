@@ -75,16 +75,16 @@ def test_sympify_many():
         ('N(2.345, 2)', None),
         ('Or(True, False)', None),
         ('(Ifte((Or(((b)<(1)), (((b)<(0.1))&((a)<(-0.01))))), (2), (Ifte((((a)<(0.01))&(((b)>(-0.1))&((b)<(-0.01)))), (0), (Ifte(((a)<(0)), (0), (2)))))))', None),
-        ('Andpl(True, False)', None),
+        ('Andb(True, False)', None),
         ('Or(True, False)', None),
-        ('Orpl(True, False)', None),
+        ('Orb(True, False)', None),
         ('Or(True, False)', None),
-        ('Orpl(True, False)', None),
+        ('Orb(True, False)', None),
         ('Or(a, a)', None),
-        ('Andpl(True, a & b)', None),
-        ('Ifte(Orpl(pos < -1,  Andpl(pos < 0.1, vel < -0.05)), 2, Ifte(Andpl(Andpl(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))', None),
-        ('Andpl(True, a & b)', None),
-        ('not(Orpl(True, Orpl(False, (0.895)<(cartVel))))', None)]
+        ('Andb(True, a & b)', None),
+        ('Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))', None),
+        ('Andb(True, a & b)', None),
+        ('not(Orb(True, Orb(False, (0.895)<(cartVel))))', None)]
 
     for expr in sympify_test_strings:
         print(plagih_sympify(expr[0]))
@@ -92,7 +92,7 @@ def test_sympify_many():
 
 # test_sympify_many()
 
-expr = 'not(Orpl(True, Andpl(False, 1 <(cartVel))))'
-# expr = 'not(True || Orpl(False, 1 <(cartVel)))'
+expr = 'not(Orb(True, Andb(False, 1 <(cartVel))))'
+# expr = 'not(True || Orb(False, 1 <(cartVel)))'
 # expr = '~(a)'
 print(plagih_sympify(expr))

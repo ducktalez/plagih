@@ -1058,7 +1058,7 @@ def tree_get_expr_raw(tree, node_id=root_id):
 
 def tree_get_expr_sym(tree, node_id=root_id):
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
-    print('todo dasd raw', expr_raw)
+    print('Important print. Expr raw: {}'.format(expr_raw))
     expr_sym = expr_sympify(expr_raw)
     return expr_sym
 
@@ -1360,7 +1360,7 @@ def expr_sympify(expr_raw):
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:
-            raise Exception('Sympify: Failed due to a fail reason: {}.'.format(fail_reason))
+            raise Exception('Sympify failed due to the expression containing: {}.'.format(fail_reason))
 
     return expr_sym
 
@@ -1848,7 +1848,7 @@ def tree_check_meta_exists(tree):
         return True
 
 
-def tree_evolve_mutate_point(tree, choose_oparray, env_variables, choose_distributions):
+def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray, env_variables, choose_distributions):
     """
     Mutate a single mutatable point in any Tree.
     """
@@ -2135,7 +2135,7 @@ def tree_evolve_mutate_filter_one(tree, filter_type='gaussian_filter', float_acc
         # return None
 
 
-def tree_prune_depth(tree, max_depth, env_variables, choose_distributions):
+def tree_prune_depth(tree, max_depth, env_variables, choose_distributions, float_accuracy):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth

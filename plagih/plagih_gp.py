@@ -165,7 +165,7 @@ def load_tree_builders(root_dir):
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators.')
         functions = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
-                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['not', 2], ['sin', 2], ['Ifte', 2]])
+                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['Notb', 2], ['sin', 2], ['Ifte', 2]])
         np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
     choose_oparray = oparray_from_list(functions)
 
@@ -208,7 +208,7 @@ def load_label_list(root_dir):
     return label_list, modify_list
 
 
-def run(root_dir):
+def gp_run(root_dir):
     """
     Loads important files in your run-folder
     - load config.yaml
@@ -276,4 +276,4 @@ def visualize_labellist(csv_file, output_file=None):
 if __name__ == "__main__":
     runs_dir = Path.cwd() / '../{}'.format(example_runs)
     root_dir = runs_dir / 'cartpole_v1/'
-    run(root_dir)
+    gp_run(root_dir)

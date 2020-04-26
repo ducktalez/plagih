@@ -104,6 +104,24 @@ class Orb(Function):
         return eval(self, a, b)
 
 
+class Notb(Function):
+    """
+    Not (boolean)
+    Problem was:
+    - Not(a) evaluates to ~a
+    - not(a<2) evaluates to nan
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+
+        return not a
+
+    def _sympy_(self, a):
+        return eval(self, a)
+
+
 class Square(Function):
     """
     """
@@ -159,6 +177,7 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Maxi': Maxi,
                     'Andb': Andb,
                     'Orb': Orb,
+                    'Notb': Notb,
                     'Square': Square,}
 
 

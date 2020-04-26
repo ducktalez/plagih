@@ -46,7 +46,7 @@ def main(argv):
     # print('Starting plagih-run in {}'.format(Path(run_folder)))
 
     if task == 'run':
-        plagih_gp.run(ipath)
+        plagih_gp.gp_run(ipath)
     elif task == 'analyze':
         plagih_gp.analyze(ipath)
     elif task == 'tree-latex':

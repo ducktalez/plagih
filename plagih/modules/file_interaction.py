@@ -33,7 +33,8 @@ tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
 
-callable_user_python_script = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
+# pycode_load = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
+pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
 
 folder_solutions = 'agents/'
 trees_tex = 'agents_trees.tex'

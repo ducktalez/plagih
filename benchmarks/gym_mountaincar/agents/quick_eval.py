@@ -267,8 +267,8 @@ def eval_agent_list(agent_list, folder=Path('img/')):
 
     agent_performance = []
     for name, agent in agent_list:
-        mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
-        # mtc_plot_differences(agent, sarsa_agent_75, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
+        # mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
+        mtc_plot_differences(agent, 'sarsa_agent_75', name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
         avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 

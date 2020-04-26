@@ -79,7 +79,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     '|': {'fun': '|', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     # a or b, sfeh python-'|' not used here
 
-    'not': {'fun': 'not', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'not({})', 'pycode': None},  # not a
+    'Notb': {'fun': 'Notb', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Notb({})', 'pycode': None},  # not a
 
     # 'f2b' Classical comparative operators, evaluate from float to bool
     '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'latex': '$==$', 'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
@@ -133,8 +133,8 @@ op = {
     ast.Or: op_what['Orb'],
     '|': op_what['Orb'],
     ast.BitOr: op_what['Orb'],
-    'not': op_what['not'],
-    ast.Not: op_what['not'],
+    'Notb': op_what['Notb'],
+    ast.Not: op_what['Notb'],
     '==': op_what['=='],
     ast.Eq: op_what['=='],
     '!=': op_what['!='],
@@ -155,8 +155,8 @@ op_test = {
     # no (easy-to use) tensorflow-operations available
     # ast.BitOr
     'Xor': {'fun': 'Xor', 'arity': 2, 'xtype': 'b2b', 'tf': tf.math.logical_xor, 'latex': None, 'sym_str': 'Xor({}, {})', 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
-    'Nand': {'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Nand({}, {})', 'pycode': lambda a, b: 'not({} and {})'.format(a, b)},
-    'Xand': {'fun': 'Xand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Xand({}, {})', 'pycode': lambda a, b: 'not({} ^ {})'.format(a, b)},
+    'Nand': {'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Nand({}, {})', 'pycode': lambda a, b: 'Notb({} and {})'.format(a, b)},
+    'Xand': {'fun': 'Xand', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Xand({}, {})', 'pycode': lambda a, b: 'Notb({} ^ {})'.format(a, b)},
     'Nor': {'fun': 'Nor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Nor({}, {})', 'pycode': None},
     'Xnor': {'fun': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'tf': 'ä', 'latex': None, 'sym_str': 'Xnor({}, {})', 'pycode': None},
 

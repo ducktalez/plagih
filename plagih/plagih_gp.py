@@ -63,7 +63,7 @@ def show_default_config(output_file):
 
 def show_default_operators(output_file=None):
     """
-    - operators.csv
+    - operators_csv.csv
     """
 
     if not Path.is_dir(output_file.parent):
@@ -106,7 +106,7 @@ def load_data_prepared(root_dir):
         data_prepared = data_from_csv(root_dir / samples_csv)
         print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
         pickle_dump(root_dir / samples_ready_p, data_prepared)
-        yaml_dump(root_dir / env_variables_yaml, data_prepared)
+        yaml_dump(root_dir / env_variables_yaml, data_prepared)  # sfeh todo
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
 
@@ -123,7 +123,7 @@ def load_evolve_functions(root_dir):
         evolve_list = yaml_load(root_dir / file_evolve_functions)
     else:
 
-        print_e('No gp evolve procedure or functions defined! Trying to choose them for you.')
+        print_warning('w', 'No gp evolve procedure or functions defined! Trying to choose them for you.')
 
         evolve_list = [
             {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06},
@@ -156,18 +156,23 @@ def load_evolve_functions(root_dir):
     return evolve_list
 
 
-def load_tree_builders(root_dir):
-    # Load operators
-    operators_csv = root_dir / operators
-    if Path.is_file(operators_csv):  # Load operators.csv
-        functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators)
+def load_tree_builders(root_dir, data_prepared=None):
+    # Load operators_csv
+    path = root_dir / operators_yaml
+    # if Path.is_file(operators_csv):  # sfeh test yaml
+    #     functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators_csv)
+
+    if Path.is_file(path):
+        operators = yaml_load(path)
     else:
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
-        print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators.')
-        functions = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
-                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['Notb', 2], ['sin', 2], ['Ifte', 2]])
-        np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
-    choose_oparray = oparray_from_list(functions)
+        print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
+        operators = np.array([['+', 2], ['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
+                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['Notb', 2], ['sin', 2], ['Ifte', 2], ['Ifte', 2]])
+        # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
+        yaml_dump(operators_info, operators)
+
+    choose_oparray = oparray_from_list(operators)
 
     # load distributions_file
     distributions_yaml = root_dir / distributions_file
@@ -175,16 +180,26 @@ def load_tree_builders(root_dir):
         with Path.open(Path(distributions_yaml), 'r') as file:
             distributions_as_string = yaml.load(file, Loader=yaml.FullLoader)
     else:
-        print_warning('w', 'Distributions file does not exist.')
+        print_warning('w', 'Distributions file does not exist. Using default set.')
         distributions_as_string = {'2f': ['lambda: np.random.normal(1,2)',
                                           'lambda: np.random.normal(1,1)',
                                           'lambda: np.random.randint(0, 10)'],
-                                   '2b': ['lambda: np.random.choice([True, False])']}
-        with Path.open(Path(distributions_yaml), 'w') as file:
-            _ = yaml.dump(distributions_as_string, file)
-    distributions = {}
-    distributions['2f'] = [eval(x) for x in distributions_as_string['2f']]
-    distributions['2b'] = [eval(x) for x in distributions_as_string['2b']]
+                                   '2b': ['lambda: np.random.choice([True, False])'],
+                                   'observed_floats': 100}  # todo variables from csv
+        info_file = file_make_dir(root_dir / info_distributions_yaml)
+        yaml_dump(info_file, distributions_as_string)
+
+    distributions = {'2f': [], '2b': []}
+
+    if data_prepared and distributions_as_string.get('observed_floats'):
+        env_variables, data_train, _ = data_prepared  # todo data types must be float for this to work
+        action_columns = list(range(len(env_variables['obs_name']), len(data_train[0])))
+        subset = np.delete(data_train, action_columns, 1)
+        variables_set = np.random.choice(subset.flatten(), distributions_as_string.get('observed_floats'))  # 2nd param is probably '100'
+        distributions['2f'].extend([lambda: np.random.choice(variables_set)]),
+
+    distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),
+    distributions['2b'].extend([eval(x) for x in distributions_as_string['2b']])
 
     return choose_oparray, distributions
 
@@ -213,7 +228,7 @@ def gp_run(root_dir):
     Loads important files in your run-folder
     - load config.yaml
     - load samples_ready_p.p or samples.csv
-    - load operators.csv
+    - load operators_csv.csv
     - load tree
     """
 
@@ -223,7 +238,7 @@ def gp_run(root_dir):
     data_prepared = load_data_prepared(root_dir)
     gp.activate_dataset(data_prepared)
 
-    choose_oparray, distributions = load_tree_builders(root_dir)
+    choose_oparray, distributions = load_tree_builders(root_dir, data_prepared=data_prepared)
     gp.activate_operators(choose_oparray, distributions)
 
     label_list, modify_list = load_label_list(root_dir)

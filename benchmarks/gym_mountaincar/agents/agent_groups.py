@@ -264,6 +264,3 @@ def load_sarsas(root_path=''):
     #     print('Loaded sarsa 10000')
     return sarsa_agent_75, sarsa_agent_200, False, False
 
-# sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
-sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
-# sarsa_agent_75, _, _, _ = load_sarsas()

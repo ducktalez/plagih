@@ -1360,7 +1360,7 @@ def expr_sympify(expr_raw):
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:
-            raise Exception('Sympify failed due to the expression containing: {}.'.format(fail_reason))
+            raise Exception('Sympify fail: {}.'.format(fail_reason))
 
     return expr_sym
 

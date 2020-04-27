@@ -14,24 +14,30 @@ folder_plots = 'plots/'
 folder_steps = 'steps/'
 folder_pop_analysis = 'pop_dist/'
 
-file_pareto = 'info/pareto.txt'
-info_config_yaml = 'info/config.yaml'
-file_info_config_json = 'info/config.json'
 file_backup_pickle = 'backup/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
-file_config_yaml = 'run_files/config.yaml'
+file_pareto = 'info/pareto.txt'
+info_config_yaml = 'info/config.yaml'
+file_info_config_json = 'info/config.json'
 file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
+info_distributions_yaml = 'info/distributions_file.yaml'
+
+file_config_yaml = 'run_files/config.yaml'
 file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
 file_evolve_functions = 'run_files/evolve_functions.yaml'
 env_variables_yaml = 'run_files/env_variables.yaml'
 samples_csv = 'run_files/samples.csv'
-operators = 'run_files/operators.csv'
+operators_csv = 'run_files/operators_csv.csv'
+operators_yaml = 'run_files/operators_csv.yaml'
+operators_info = 'run_files/operators_csv.yaml'
 distributions_file = 'run_files/distributions_file.yaml'
 tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
+
+file_sarsa_agent = '../../benchmarks/gym_mountaincar/agents/sarsa_agent_75.p'
 
 # pycode_load = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
 pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
@@ -90,7 +96,7 @@ def open_force_write_text(p, text):
 def experiment_data(experiment_yaml):
     if Path.is_file(experiment_yaml):  # Load config.yaml
         with Path.open(experiment_yaml, 'r') as file:
-            experiment_infos = yaml.load(file, Loader=yaml.FullLoader)
+            experiment_infos = yaml_load(file)
 
     wer = {
         'env': {
@@ -184,6 +190,7 @@ def pickle_dump(path, data):
     path = file_make_dir(path)
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+        printez('f', '{}'.format(path))
     return
 
 
@@ -201,5 +208,6 @@ def yaml_dump(path, data):
 
     path = file_make_dir(path)
     with Path.open(path, 'w') as file:
-        yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+        _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+        printez('f', '{}'.format(path))
     return

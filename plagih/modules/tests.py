@@ -62,7 +62,7 @@ class TestHelpers:
 
     def auto_operator_tree_build(self):
         """
-        test building all potential trees with all genetic operators
+        test building all potential trees with all genetic operators_csv
         """
         # sfeh float + bool
         result_xtype = '2f'
@@ -119,17 +119,6 @@ class MountainCarExamples:
                     'bl': tf.constant(True, dtype=tf.bool)}
 
     expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, pos) > -0.97, 0.0, 2.0)'
-
-
-class CartpoleExamples:
-
-    files = {
-        'samples_file': '../benchmarks/gym_cartpole/gp_files/samples.csv',
-        'samples_pickle': '../benchmarks/gym_cartpole/gp_files/prepared_samples.p',
-        'operators_file': '../benchmarks/gym_cartpole/gp_files/operators.csv'}
-
-    label_list = ['Ifte', 'True', 0, 1]
-    modify_list = [0, 1, 0, 0]
 
 
 def check_op_names():

@@ -7,7 +7,6 @@ Functions, that might be addable in the future:
 import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
-import subprocess
 import json
 
 try:
@@ -43,14 +42,14 @@ class ExplainableGP(object):
             'description': 'No description set',
             'choose': {
                 'choose rules': ['first', 'choose', 'random'],
-                'operators': ['random', 'from distribution'],
+                'operators_csv': ['random', 'from distribution'],
                 'distributions_file': ['gauss', 'random', 'data samples'],
                 'default': 'random'
             },
             # (!) Relevant for result
             'pop_max': 1000,
             # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
-            'parsimony_max': 80,
+            'parsimony_max': 90,
             # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
             'complexity_measure': 'tree_edit_distance',
@@ -59,7 +58,7 @@ class ExplainableGP(object):
             'parsimony_tmp': 15,
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
-            'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
+            'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
             'print_type': 'gggwwwsivoaaff',  # To show absolutely all: wggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
@@ -513,7 +512,7 @@ class ExplainableGP(object):
 
     def activate_operators(self, choose_oparray, choose_distributions):
         """
-        operators were loaded already and need to be set in the gp run
+        operators_csv were loaded already and need to be set in the gp run
         """
         self.choose_oparray = choose_oparray
         self.choose_distributions = choose_distributions  # sfeh samples from csv?
@@ -708,16 +707,26 @@ class ExplainableGP(object):
             #                    'import {} as custom_eval_agents\n' \
             #                    'custom_eval_agents.eval_agent_list(agent_tuples, folder=Path(\'img\'))'.format(pycode_load, Path(pycode_load).stem)
 
-            with Path.open(root_dir / pycode_load, 'r') as file:
-                auto_import_eval = file.read()
+            # with Path.open(root_dir / pycode_load, 'r') as file:
+            #     auto_import_eval = file.read()  # todo remove completely
+            auto_import_eval = ''
 
-            executable_python_evaluation = pycode_complete_agents + \
-                                           '\nfrom pathlib import Path\n' + \
+            # todo first lines are only for mountaincar loading agents
+            # 'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *\n\n' + \
+
+            executable_python_evaluation = 'import sys\n' + \
+                                           'sys.path.append(\'../../benchmarks/\')\n' + \
+                                           'from benchmarks.gym_mountaincar.agents.quick_eval import *\n' + \
+                                           pycode_complete_agents + '\n' + \
+                                           'from pathlib import Path\n' + \
                                            'folder = Path.cwd() / \'custom_files\'\n\n' + \
-                                           auto_import_eval + \
+                                           auto_import_eval + '\n' + \
+                                           'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import * \n' + \
+                                           'with Path.open(Path(\'../../benchmarks/gym_mountaincar/agents/sarsa_agent_75.p\').absolute(), \'rb\') as file:\n' + \
+                                           'sarsa_agent_75 = pickle.load(file)\n' + \
                                            'if __name__ == \'__main__\':\n' + \
                                            '\tprint(\'executing!\')\n' + \
-                                           '\teval_agent_list(agent_tuples, folder=folder)'
+                                           '\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent_75)\n'
 
             with Path.open(root_dir / file_pycode_eval, 'w') as file:
                 file.write(executable_python_evaluation)
@@ -739,7 +748,7 @@ class ExplainableGP(object):
         ...if anything in the try-block fails, the tree will not be appended to the population
         """
 
-        count_fails = 0
+        eval_fails = []
 
         for tree in self.population_tmp_eval:
 
@@ -750,14 +759,13 @@ class ExplainableGP(object):
                 last_evolution = tree_get_last_evolution(tree)
                 self.pop_append(tree, last_evolution=last_evolution)
             except Exception as ex:
-                print_warning('www', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
-                count_fails += 1
+                # print_warning('wwww', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
+                eval_fails.append(str(ex))
                 continue
 
-        if count_fails > 0:
-            print_warning('ww', 'Evaluating {} trees in gen {} caused {} exceptions.'.format(
-                len(self.population_tmp_eval), self.gen_id, count_fails),
-                          print_type=self.print_type)  # todo why more trees?
+        if len(eval_fails) > 0:
+            print_warning('ww', 'Evaluating {} trees in gen {} caused these exceptions:\n{}'.format(
+                len(self.population_tmp_eval), self.gen_id, ', '.join(eval_fails)), print_type=self.print_type)  # todo why more trees?
 
         return
 
@@ -1261,7 +1269,7 @@ class ExplainableGP(object):
 
         -> round all distributions_file
         -> try to normalize exponents ('**'). sfeh, not really working.
-        -> set last evolution (for analysing gp operators. e.g. if no good trees originate from crossover, something might be wrong)
+        -> set last evolution (for analysing gp operators_csv. e.g. if no good trees originate from crossover, something might be wrong)
         -> set xtype for all nodes.
         """
 
@@ -1295,7 +1303,7 @@ class ExplainableGP(object):
         Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
         they have gone through a process of changes. Here, the tree is refurbished.
-        sfeh: if trees are 100% safely created, tree_check_deep() must not be used. Useful when trying out new gp-operators.
+        sfeh: if trees are 100% safely created, tree_check_deep() must not be used. Useful when trying out new gp-operators_csv.
         - Enrich the raw tree for the next generation
         - check if the tree is actually valid
         ->
@@ -1466,8 +1474,8 @@ class ExplainableGP(object):
             raise Exception('Expr could not be sympified: {}'.format(ex))
 
         fitness_train = \
-        eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device,
-                self.tf_classify_labels_map)['fitness']
+            eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device,
+                    self.tf_classify_labels_map)['fitness']
 
         # print(str(fitness_train), 'str fitness train')
         # if str(fitness_train) == 'inf':

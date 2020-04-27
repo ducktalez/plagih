@@ -1,8 +1,6 @@
 from benchmarks.gym_mountaincar.agents.quick_eval import *
 from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *
 
-from pathlib import Path
-
 
 def compare_plot_styles():
     pass
@@ -92,6 +90,7 @@ def compare_plot_styles():
     # mtc_plot_episode_performance(sarsa_agent_75, name='sarsa75 individual performance', color='y')
     # mtc_plot_episode_performance(SimpleAgent(), name='simple individual performance', color='b')
 
+sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
 
 mountain_agents = [('simple', SimpleAgent()),
                    ('v1_improved', PlagihAgent_A()),

@@ -32,19 +32,19 @@ op: Dict to work as 'Database' for every expression-bit and its features
 - KEY: expression-bit: can occur in various forms, which group into following uses:
     - ast.KEY: Found by pythons 'ast' when inline op like [+, -, *, ...] occurs
     - 'KEY': Found by pythons 'ast' when non-inline functions are found as string
-    -> some operators are identical, but occur several times, e. g. ('And', '&', ast.BitAnd)
+    -> some operators_csv are identical, but occur several times, e. g. ('And', '&', ast.BitAnd)
 - VALUE: several features that have to be regarded. Some are irrelevant or have to be done.
-    - name: (irrelevant) information what this function actually does. identical operators can be found like this.
+    - name: (irrelevant) information what this function actually does. identical operators_csv can be found like this.
     - arity: Amount of inputs an operator has to have. This must always be constant (reason why pythons min/max does not work)
     - tf: Tensorflow graph representation for the key. Was separated earlier. (!): [tf.bool, tf.float] are just variables of the used tf.cast function.
-    - gpbp: Genetic Programming Backpropagation: An open idea from sfeh to introduce backpropagation for genetic operators.
+    - gpbp: Genetic Programming Backpropagation: An open idea from sfeh to introduce backpropagation for genetic operators_csv.
     - latex: For visualizing trees with latex, these representations might look better
 
 Features should always be defined, even though they might not occur at all. If not used, they CAN be filled with dummy values like äöü
 Some, which are known of not being used yet are commented with '# not tested' or '# not used'
-sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
+sfeh: write test that checks all operators_csv for sympificytion (...+branch-combinations, and more?)
 """
-op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
+op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float to float
     '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'tf': tf.add, 'latex': '$+$', 'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
     '-': {'fun': '-', 'arity': 2, 'xtype': 'f2f', 'tf': tf.subtract, 'latex': '$-$', 'sym_str': '({} - {})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
     '~': {'fun': '~', 'arity': 1, 'xtype': 'f2f', 'tf': tf.negative, 'latex': '$-$', 'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},
@@ -70,7 +70,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
 
     # todo round operation! sympify: N(1.2345, decimals). e.g. Int
 
-    # 'b2b' Classical logical operators, evaluate from bool to bool
+    # 'b2b' Classical logical operators_csv, evaluate from bool to bool
     'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': 'and', 'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
     # sfeh Andbm and + & (delete this)
     '&': {'fun': '&', 'arity': 2, 'xtype': 'b2b', 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
@@ -81,7 +81,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
 
     'Notb': {'fun': 'Notb', 'arity': 1, 'xtype': 'b2b', 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Notb({})', 'pycode': None},  # not a
 
-    # 'f2b' Classical comparative operators, evaluate from float to bool
+    # 'f2b' Classical comparative operators_csv, evaluate from float to bool
     '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'tf': tf.equal, 'latex': '$==$', 'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
     '!=': {'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'tf': tf.not_equal, 'latex': '$\\neg$', 'sym_str': '({} != {})', 'pycode': lambda a, b: '({}!={})'.format(a, b)},
     '<': {'fun': '<', 'arity': 2, 'xtype': 'f2b', 'tf': tf.less, 'latex': '$<$', 'sym_str': '({} < {})', 'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
@@ -165,7 +165,7 @@ op_test = {
     'int': {'fun': 'int', 'arity': 1, 'xtype': 'f2f', 'tf': 'ä', 'latex': None, 'sym_str': 'Integer({})', 'pycode': lambda a: 'int({})'.format(a)},  # not tested
     'bool': {'fun': 'bool', 'arity': 1, 'xtype': 'f2b', 'tf': 'ä', 'latex': None, 'sym_str': '', 'pycode': lambda a: 'bool({})'.format(a)},  # not tested
 
-    # Not tested: Converters: Dummy operators that convert between float and bool
+    # Not tested: Converters: Dummy operators_csv that convert between float and bool
     'Ftob': {'fun': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'tf': tf.bool, 'latex': None, 'sym_str': 'bool', 'pycode': lambda a: 'bool({})'.format(a)},  # not tested, same as bool
     'Btof': {'fun': 'Btof', 'arity': 1, 'xtype': 'b2f', 'tf': tf.float32, 'latex': None, 'sym_str': 'float', 'pycode': lambda a: 'float({})'.format(a)},  # not tested
 
@@ -197,7 +197,7 @@ def get_example_distribution_dict():
 
 def oparray_from_list(functions):
     """
-    Load all operators ready-to-use from a file
+    Load all operators_csv ready-to-use from a file
     """
 
     # rows are the function types (f2f)

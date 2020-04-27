@@ -1,7 +1,8 @@
 from benchmarks.gym_mountaincar.agents.quick_eval import *
 from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *
 
-# from pathlib import Path
+from pathlib import Path
+
 
 def compare_plot_styles():
     pass
@@ -132,4 +133,4 @@ class MTC_simple13:
 # mtc_plot_decisions_space(SimpleAgent(), name='decisionsr-simple')
 
 
-eval_agent_list([('simyo', MTC_simple13())])
+eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)

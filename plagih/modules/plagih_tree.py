@@ -1058,7 +1058,7 @@ def tree_get_expr_raw(tree, node_id=root_id):
 
 def tree_get_expr_sym(tree, node_id=root_id):
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
-    print('Important print. Expr raw: {}'.format(expr_raw))
+    # print('Important print. Expr raw: {}'.format(expr_raw))
     expr_sym = expr_sympify(expr_raw)
     return expr_sym
 

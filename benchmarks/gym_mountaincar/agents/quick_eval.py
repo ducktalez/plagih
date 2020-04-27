@@ -148,12 +148,12 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
     else:
         # p.fill = False
         # p.set_color()  # default 'white' is okay
-        ax.set_facecolor('xkcd:light grey')
-        p.set_color('xkcd:light grey')
+        # ax.set_facecolor('xkcd:light grey')
+        p.set_color('xkcd:dark grey')
         p.fill = True
         p.set_hatch('//')
-        p.set_edgecolor('xkcd:dark grey')
-        plt.rcParams['hatch.linewidth'] = 0.2
+        # p.set_edgecolor('xkcd:dark grey')
+        # plt.rcParams['hatch.linewidth'] = 0.2
     ax.add_patch(p)
 
     # saving as jpg
@@ -257,18 +257,15 @@ def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path(
     plt.savefig(folder / '{}.png'.format(name))
 
 
-def eval_agent_list(agent_list, folder=Path('img/')):
+def eval_agent_list(agent_list, goal_agent, folder=Path('img/')):
 
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
-    # with Path.open(Path('sarsa_agent_75.p'), 'rb') as file:
-    #     sarsa_agent_75 = pickle.load(file)
-
     agent_performance = []
     for name, agent in agent_list:
         # mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
-        mtc_plot_differences(agent, 'sarsa_agent_75', name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
+        mtc_plot_differences(agent, goal_agent, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
         avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 

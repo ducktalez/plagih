@@ -14,6 +14,6 @@ Maxi,2
 abs,1
 Andb,2
 Orb,2
-not,1
+Notb,1
 Ifte,3
 sin,1

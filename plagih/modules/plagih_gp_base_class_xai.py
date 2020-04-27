@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
 import json
+from pathlib import Path
 
 try:
     import tikzplotlib
@@ -59,7 +60,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gggwwwsivoaaff',  # To show absolutely all: wggggsiiiivvvtoppptttff
+            'print_type': 'gggwwwsivoaaff',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -385,8 +386,8 @@ class ExplainableGP(object):
             else:
                 print_e('the specified evolve call is not known: \'{}\''.format(evolve_name))
 
-            self.print_g('ggg', '->Evolving \'{}\' {}x. Took: {:4.2f}s.'.format(tag, evolve_num,
-                                                                                time.perf_counter() - time_evolve))
+            self.print_g('ggg', '->Evolving \'{}\' {} times took: {:4.2f}s.'.format(tag, evolve_num,
+                                                                                    time.perf_counter() - time_evolve))
 
         self.gen_finalize()
 
@@ -715,15 +716,16 @@ class ExplainableGP(object):
             # 'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *\n\n' + \
 
             executable_python_evaluation = 'import sys\n' + \
-                                           'sys.path.append(\'../../benchmarks/\')\n' + \
+                                           'from pathlib import Path\n' \
+                                           'sys.path.append(str(Path(\'' + str(Path.cwd().absolute().as_posix()) + '\')))\n' + \
                                            'from benchmarks.gym_mountaincar.agents.quick_eval import *\n' + \
                                            pycode_complete_agents + '\n' + \
                                            'from pathlib import Path\n' + \
                                            'folder = Path.cwd() / \'custom_files\'\n\n' + \
                                            auto_import_eval + '\n' + \
                                            'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import * \n' + \
-                                           'with Path.open(Path(\'../../benchmarks/gym_mountaincar/agents/sarsa_agent_75.p\').absolute(), \'rb\') as file:\n' + \
-                                           'sarsa_agent_75 = pickle.load(file)\n' + \
+                                           'with Path.open(Path(\'' + str(Path('benchmarks/gym_mountaincar/agents/sarsa_agent_75.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
+                                           '\tsarsa_agent_75 = pickle.load(file)\n\n' + \
                                            'if __name__ == \'__main__\':\n' + \
                                            '\tprint(\'executing!\')\n' + \
                                            '\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent_75)\n'
@@ -1326,8 +1328,7 @@ class ExplainableGP(object):
                     tree = tree_set_fitness(tree, '')
                     self.population_tmp_eval.append(tree)
                 else:
-                    print_warning('www', 'Tree was too complex! Last Evolution: {}'.format(last_evolution),
-                                  print_type=self.print_type)
+                    print_warning('wwww', 'Tree too complex, last evolution: {}'.format(last_evolution), print_type=self.print_type)
 
         return
 
@@ -1443,8 +1444,8 @@ class ExplainableGP(object):
         self.origin_meta = {'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
         try:
             fitness_train = self.tree_eval_fitness_train(tree)
-        except Exception:
-            raise Exception('Your origin_meta algorithm already caused an exception!')
+        except Exception as ex:
+            raise Exception('Your origin_meta algorithm already caused an exception: {}'.format(ex))
         self.origin_meta['fitness_train'] = fitness_train
 
         self.parsimony_best_meta[0] = self.origin_meta
@@ -1471,7 +1472,7 @@ class ExplainableGP(object):
         try:
             expr_sym = tree_get_expr_sym(tree)
         except Exception as ex:
-            raise Exception('Expr could not be sympified: {}'.format(ex))
+            raise Exception('eval:{}'.format(ex))
 
         fitness_train = \
             eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device,
@@ -1552,6 +1553,7 @@ class ExplainableGP(object):
         if self.monitor_dict['population_tmp_done-size'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['population_tmp_done-size'].items()))
             self.plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='',
+                          marker='.',
                           set_left=data_tuples[0][0])
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
@@ -1561,12 +1563,14 @@ class ExplainableGP(object):
 
         data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
         self.plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='',
+                      marker='.',
                       set_left=data_tuples[0][0])
 
         data_tuples = self.get_pareto_plot_values()
         self.plot_end(data_tuples, path_plots, plt_title='pareto dominant candidates', plt_x_label='parsimony',
                       plt_y_label='fitness',
                       linestyle='dashed',
+                      marker='.',
                       step_where='post',
                       set_right=self.parsimony_max,
                       beyond_lines=True,
@@ -1690,7 +1694,7 @@ class ExplainableGP(object):
                  plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear',
                  step_where='', plt_xparam='',
                  linestyle='None',
-                 marker='.',
+                 marker='',
                  set_left=None, set_right=None, set_top=None,
                  right_padding=1.05, top_padding=1.05,
                  beyond_lines=False,

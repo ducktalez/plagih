@@ -122,7 +122,6 @@ def load_evolve_functions(root_dir):
     if Path.is_file(root_dir / file_evolve_functions):
         evolve_list = yaml_load(root_dir / file_evolve_functions)
     else:
-
         print_warning('w', 'No gp evolve procedure or functions defined! Trying to choose them for you.')
 
         evolve_list = [
@@ -134,19 +133,19 @@ def load_evolve_functions(root_dir):
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (3, 1, 5, 0.8), 'build_method': 'full'}}},
             {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (4, 1, 6, 1), 'build_method': 'grow'}}},
+             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (3, 1, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (14, 1, 22, 4), 'build_method': 'grow'}}},
-            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.35},
-            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.12,
+             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (12, 1, 20, 4), 'build_method': 'grow'}}},
+            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30},
+            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.09,
              'custom_params': {'mode': 'branch'}},
-            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.03,
+            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.01,
              'custom_params': {'mode': 'point'}},
-            {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 7, 1), 'build_method': 'full'}}},
-            {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (5, 3, 7, 1), 'build_method': 'grow'}}},
-            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
+            {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.06,
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 6, 1), 'build_method': 'full'}}},
+            {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.06,
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 7, 1), 'build_method': 'grow'}}},
+            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.03,
              'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 50, 6), 'build_method': 'full'}}},
         ]
 

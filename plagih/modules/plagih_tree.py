@@ -1356,11 +1356,11 @@ def expr_sympify(expr_raw):
     try:
         expr_sym = str(plagih_sympify(expr_raw))
     except Exception as ex:
-        raise Exception('Sympify: Fail caused by this raw algorithm: {}. Ex: {}'.format(expr_raw, ex))
+        raise Exception('sympify_1: {} reason: ({})'.format(expr_raw, ex))
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:
-            raise Exception('Sympify fail: {}.'.format(fail_reason))
+            raise Exception('sympify_2: {}'.format(fail_reason))
 
     return expr_sym
 
@@ -1890,7 +1890,7 @@ def tree_evolve_reduce(tree, env_variables, completely=True):
                 try:
                     tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
                 except Exception as ex:
-                    print_e('This failed tree should have been kicked out earlier.\nex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
+                    print_e('This failed tree should have been kicked out earlier: ex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
                     pass
         return tree
     except Exception as ex:

@@ -2113,28 +2113,6 @@ def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter',
     return constant
 
 
-def tree_evolve_mutate_filter_one(tree, filter_type='gaussian_filter', float_accuracy=200):
-    """
-    Mutates a number of float terminal of a tree
-    """
-    # 1. choose a node
-    node_ids = tree_get_mutatable_nodes(tree)
-
-    float_nodes = []
-    for node_id in node_ids:
-        if tree_node_get_xtype(tree, node_id) == '2f':
-            float_nodes.append(node_id)
-    if float_nodes:
-        float_id = np.random.choice(float_nodes)
-        val = float(tree_node_get_label(tree, float_id))
-        new_value = gp_mutate_constants(val, term_type='float', filter_type=filter_type, float_accuracy=float_accuracy)
-        tree = tree_node_set_label(tree, float_id, new_value)
-        return tree
-    else:
-        raise Exception('No mutatable node found!')
-        # return None
-
-
 def tree_prune_depth(tree, max_depth, env_variables, choose_distributions, float_accuracy):
     """
     reduces the depth of a Tree (in case it is too deep).
@@ -2277,7 +2255,8 @@ def latex_tree_node_get_forest(tree, node_id=root_id):
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
     latex_label = label
-    # Get the best math-like representation
+
+    # Get the best math-like representation for functions
     if label in op:
         op_tex = op[label]['latex']
         if op_tex is not None:
@@ -2340,6 +2319,20 @@ def visualize_tree_node_force_show(tree, node_id):
     return False
 
 
+def tree_node_is_numeric_constant(tree, node_id):
+    """
+    returns if the label is float/int constant (aka numeric value)
+    """
+    if tree_node_get_xtype(tree, node_id) == '2f':
+        try:
+            label = float(tree_node_get_label(tree, node_id))
+            return True
+        except:
+            pass
+
+    return False
+
+
 def visualize_tree_get_vistree(tree):
     """
     reduce
@@ -2347,9 +2340,20 @@ def visualize_tree_get_vistree(tree):
     """
 
     node_dict = dict()  # key: node_id, value: number of nodes to paste
-
     tree_ids = list(tree_iterate_range(tree))
-    open_sym = []
+
+    # before calculating more, shorten floats to a 3-decimal form
+    for node_id in tree_ids:
+        if tree_node_is_numeric_constant(tree, node_id):
+            label = float(tree_node_get_label(tree, node_id))
+
+            if label % 1 > 0.001:
+                label = '{:0.3f}'.format(label)
+            else:
+                label = '{}'.format(int(label))
+            tree_node_set_label(tree, node_id, label)
+
+    open_sym = []  # the nodes where the expression can be sympified
     open_fix = tree_ids[:]
     while open_fix:
         node_id = open_fix[-1]

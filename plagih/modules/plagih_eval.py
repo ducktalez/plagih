@@ -227,7 +227,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_clas
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
             pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-            solution = tensors[first_action]  # sfeh
+            solution = tensors[env_variables['action_at'][0]['label']]  # sfeh
 
             pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)

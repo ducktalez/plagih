@@ -37,7 +37,7 @@ tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
 
-file_sarsa_agent = '../../benchmarks/gym_mountaincar/agents/sarsa_agent_75.p'
+file_sarsa_agent = '../../benchmarks/gym_mountaincar/agents/sarsa_agent_200.p'  # todo
 
 # pycode_load = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
 pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
@@ -83,7 +83,7 @@ def write_file_pareto_text(pareto, root_path):
             fitness = meta['fitness_train']
             algo_sym = meta['expr_sym']  # save raw version, not the sympified one
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
-    printez('f', '{}'.format(file_pareto))
+    printez('f', '{}'.format(pth))
 
 
 def open_force_write_text(p, text):

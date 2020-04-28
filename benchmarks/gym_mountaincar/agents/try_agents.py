@@ -132,4 +132,6 @@ class MTC_simple13:
 # mtc_plot_decisions_space(SimpleAgent(), name='decisionsr-simple')
 
 
-eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
+# eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
+
+print('results:', mtc_play(sarsa_agent_200, n=100))

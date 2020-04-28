@@ -106,7 +106,8 @@ def load_data_prepared(root_dir):
         data_prepared = data_from_csv(root_dir / samples_csv)
         print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
         pickle_dump(root_dir / samples_ready_p, data_prepared)
-        yaml_dump(root_dir / env_variables_yaml, data_prepared)  # sfeh todo
+        # env_variables, _, _ = data_prepared
+        yaml_dump(root_dir / env_variables_yaml, data_prepared[0])  # sfeh todo
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
 
@@ -125,10 +126,10 @@ def load_evolve_functions(root_dir):
         print_warning('w', 'No gp evolve procedure or functions defined! Trying to choose them for you.')
 
         evolve_list = [
-            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06},
+            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.1},
             {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
              'custom_params': {'sympify_tree': True}},
-            {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01},
+            {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02},
             {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05},
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (3, 1, 5, 0.8), 'build_method': 'full'}}},
@@ -141,11 +142,11 @@ def load_evolve_functions(root_dir):
              'custom_params': {'mode': 'branch'}},
             {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.01,
              'custom_params': {'mode': 'point'}},
-            {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.06,
+            {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
              'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 6, 1), 'build_method': 'full'}}},
-            {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.06,
+            {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
              'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 7, 1), 'build_method': 'grow'}}},
-            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.03,
+            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.5,
              'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 50, 6), 'build_method': 'full'}}},
         ]
 
@@ -166,8 +167,11 @@ def load_tree_builders(root_dir, data_prepared=None):
     else:
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
-        operators = np.array([['+', 2], ['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
-                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['Notb', 2], ['sin', 2], ['Ifte', 2], ['Ifte', 2]])
+        operators = np.array([['+', 2], ['+', 2], ['-', 2], ['*', 2], ['/', 2],
+                              ['sin', 2], ['Square', 2],
+                              ['Mini', 2], ['Maxi', 2], ['abs', 2],
+                              ['<', 2], ['<=', 2], ['==', 2],
+                              ['Andb', 2], ['Orb', 2], ['Notb', 2], ['Ifte', 2], ['Ifte', 2]])
         # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
         yaml_dump(operators_info, operators)
 
@@ -184,7 +188,7 @@ def load_tree_builders(root_dir, data_prepared=None):
                                           'lambda: np.random.normal(1,1)',
                                           'lambda: np.random.randint(0, 10)'],
                                    '2b': ['lambda: np.random.choice([True, False])'],
-                                   'observed_floats': 100}  # todo variables from csv
+                                   'observed_floats': 100}  # todo test these
         info_file = file_make_dir(root_dir / info_distributions_yaml)
         yaml_dump(info_file, distributions_as_string)
 

@@ -1,8 +1,9 @@
 from plagih.modules.plagih_eval import *
 from plagih.modules.plagih_tree import *
-from plagih.modules.Examples import *
 from plagih.modules.operators import *
 import time
+from pathlib import Path
+from plagih.tree_distances.tree_edit_distance import *
 
 
 class TestHelpers:
@@ -33,12 +34,20 @@ class TestHelpers:
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
 
-        self.distributions_as_string = {'2f': [lambda: np.random.normal(1,2),
-                                               lambda: np.random.normal(1,1),
+        self.distributions_as_string = {'2f': [lambda: np.random.normal(1, 2),
+                                               lambda: np.random.normal(1, 1),
                                                lambda: np.random.randint(0, 10)],
                                         '2b': [lambda: np.random.choice([True, False])]}
 
         self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
+        self.tree1 = karoo_tree_from_labellist(['+', '+', '*', '-', '1', '2', '3', '4', '5'], self.env_bundle)
+        self.tree2 = karoo_tree_from_labellist(['+', '-', '*', '1', '2', '3', '4'], self.env_bundle)
+
+    def test_ted_weighting(self):
+        distance, mapping = tree_parsimony_ted(self.tree1, self.tree2)
+        print('Mapping:\n' + '\n'.join([str(x) for x in mapping]))
+        weighted_distance = weight_ted_mapping(mapping)
+        print('\nDistance:', distance, 'Mapping_distance:', weighted_distance)
 
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
@@ -132,46 +141,6 @@ def check_op_names():
     return True
 
 
-def runtime_exception_vs_if():
-    value = '5'  # 5
-    range_size = 2000000
-
-    print('if     exVal  exExc  raw')
-
-    for value in [5, '5', '']:
-
-        v1_start = time.perf_counter()
-        for _ in range(range_size):
-            if value == '':
-                x = value
-            else:
-                x = int(value)
-        v1_end = time.perf_counter() - v1_start
-
-        v2_start = time.perf_counter()
-        for _ in range(range_size):
-            try:
-                x = int(value)
-            except ValueError:
-                x = value
-        v2_end = time.perf_counter() - v2_start
-
-        v3_start = time.perf_counter()
-        for _ in range(range_size):
-            try:
-                x = int(value)
-            except:
-                x = value
-        v3_end = time.perf_counter() - v3_start
-
-        v4_start = time.perf_counter()
-        for _ in range(range_size):
-            x = value
-        v4_end = time.perf_counter() - v4_start
-
-        print('{:4.4f} {:4.4f} {:4.4f} {:4.4f}'.format(v1_end, v2_end, v3_end, v4_end))
-
-
 def test_tree_visualize_reduced():
     obs_bundle = {'obs_name': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
                                'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
@@ -200,4 +169,4 @@ def test_tree_visualize_reduced():
 
 
 live_test = TestHelpers()
-live_test.auto_operator_tree_build()
+live_test.test_ted_weighting()

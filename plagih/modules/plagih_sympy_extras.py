@@ -115,8 +115,10 @@ class Notb(Function):
 
     @classmethod
     def eval(cls, a):
-
-        return not a
+        if sympify(a).is_Boolean:  # sfeh sympify.is_xxx here seems dumb
+            return not a
+        else:
+            return
 
     def _sympy_(self, a):
         return eval(self, a)
@@ -125,15 +127,22 @@ class Notb(Function):
 class Square(Function):
     """
     """
-    nargs = 2
+    nargs = 1
 
     @classmethod
     def eval(cls, a):
+        if sympify(a).is_real:
+            try:
+                return a**2  # todo sfeh requires testing. a LOT of testing. check for num-type?
+            except:
+                print('SFEH TODO, Square function in sympify does not work properly. a is {} and of type {}'.format(a, type(a)))
+                return
+        else:
+            # print('sympy debug, Square(a). a is {} and of type {}'.format(a, type(a)))
+            return
 
-        return a**2  # sfeh requires testing. a LOT of testing. check for num-type?
-
-    def _sympy_(self, a, b):
-        return eval(self, a, b)
+    def _sympy_(self, a):
+        return eval(self, a)
 
 
 class Ftob(Function):

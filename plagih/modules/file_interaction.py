@@ -2,10 +2,9 @@ import pickle
 from plagih.modules.plagih_tree import *
 from plagih.modules.printing import *
 import csv
-from pydoc import locate  # convert stringed-type to type. ('float' -> float)
-import sklearn.model_selection as skcv
-import numpy as np
+import matplotlib.pyplot as plt
 import yaml
+from pathlib import Path
 
 example_runs = 'run_examples/'
 
@@ -22,12 +21,12 @@ info_config_yaml = 'info/config.yaml'
 file_info_config_json = 'info/config.json'
 file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
 info_distributions_yaml = 'info/distributions_file.yaml'
+env_variables_yaml = 'info/env_variables.yaml'
 
 file_config_yaml = 'run_files/config.yaml'
 file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
 file_evolve_functions = 'run_files/evolve_functions.yaml'
-env_variables_yaml = 'run_files/env_variables.yaml'
 samples_csv = 'run_files/samples.csv'
 operators_csv = 'run_files/operators_csv.csv'
 operators_yaml = 'run_files/operators_csv.yaml'
@@ -42,9 +41,8 @@ file_sarsa_agent = '../../benchmarks/gym_mountaincar/agents/sarsa_agent_200.p'  
 # pycode_load = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
 pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
 
-folder_solutions = 'agents/'
 trees_tex = 'agents_trees.tex'
-file_pycode = 'agents.py'
+file_pycode = 'agents/agents.py'
 file_pycode_eval = 'eval_agents.py'
 
 T_num_lines = 15  # sfeh this var is not found otherwise
@@ -209,5 +207,101 @@ def yaml_dump(path, data):
     path = file_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
-        printez('f', '{}'.format(path))
+        printez('ff', '{}'.format(path))
+    return
+
+
+def plot_end(data_2d, path,
+             plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear',
+             step_where='', plt_xparam='',
+             linestyle='None',
+             marker='',
+             set_left=None, set_right=None, set_top=None,
+             right_padding=1.05, top_padding=1.05,
+             beyond_lines=False,
+             save_tikz=False,
+             subfolder=None):
+    """
+    Make all plots in the same style - and also saving space.
+    - Makes pyplots
+
+
+    :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
+    :param path: where to save the result
+    :param plt_title:
+    :param plt_curve_label: irrelevant for a single curve
+    :param plt_x_label: label the x-axis
+    :param plt_y_label: label the y-axis
+    :param yscale: only 'linear'.
+    :param step_where: makes 'step' plots- can be 'post', 'pre' or [pls google]
+    :param plt_xparam: not in use, the same adjustment can be done with optional parameters
+    :param linestyle: E. g. 'None', 'dashed', '-', ''
+    :param set_left: Smallest left value
+    :param set_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40
+    :param top_padding: How much padding to the top border
+    :param beyond_lines: in step plots, draw the line further to the left and right
+    :param save_tikz: Also save the plot as tikzpicture (for Latex)(requires tikzplotlib)
+    :param subfolder: save plot in plots/*subfolder*, e.g. if this plot is created in every generation
+    :return:
+
+    sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
+    """
+
+    if len(data_2d) == 0:
+        print_e('Plotting empty array is not possible! Data={}'.format(data_2d))
+        return
+
+    x, y = [], []
+    for a, b in data_2d:
+        x.append(a)
+        y.append(b)
+
+    # x, y = data_2d.reshape(-1, 2).T  # sfeh this could be a more pythonic way, but tuples can not be reshaped.
+
+    # bottom, top = plt.ylim()
+    # left, right = plt.xlim()
+
+    top, bottom, left, right = max(y), min(y), min(x), max(x)
+    if set_left:
+        left = set_left
+    if set_top:
+        new_top = set_top
+    else:
+        new_top = (top - min(bottom, 0)) * top_padding  # top * 1.05 for better style
+
+    if set_right:
+        right = max(right, set_right)
+    new_right = right * right_padding
+
+    if beyond_lines:
+        x = [x[0]] + x + [new_right + 1]
+        y = [new_top + 1] + y + [y[-1]]
+
+    if step_where:
+        plt.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
+    else:
+        plt.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+
+    # let it start at (0,0) but +5% margin to the top and right
+    plt.yscale(yscale)
+    plt.ylim(min(bottom, 0), new_top)
+    plt.xlim(min(left, 0), new_right)
+    plt.margins(x=0, y=0)
+
+    plt.xlabel(plt_x_label)
+    plt.ylabel(plt_y_label)
+    plt.title(plt_title)
+
+    # plt.legend()
+    if subfolder:  #
+        path = make_dir(path / subfolder)
+
+    plt.savefig(path / '{}.png'.format(plt_title))
+    if save_tikz:
+        try:
+            tikzplotlib.save(path / '{}.tex'.format(plt_title))
+        except Exception as ex:
+            pass
+
+    plt.close()
     return

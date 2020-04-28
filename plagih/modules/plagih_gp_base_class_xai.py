@@ -4,11 +4,11 @@
 Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
 """
-import matplotlib.pyplot as plt
 import time
 from plagih.modules.file_interaction import *
 import json
 from pathlib import Path
+import textwrap
 
 try:
     import tikzplotlib
@@ -216,6 +216,7 @@ class ExplainableGP(object):
             self.gen_create_first()
 
         while self.run_continues():  # max generation, max time, done...
+            self.printpl('gg', 'Evolving Generation {}'.format(self.gen_id))
             self.gen_create_loop()
         else:
             printez('g', 'Done after Generation {}.'.format(self.gen_id), print_type=self.print_type)
@@ -691,7 +692,7 @@ class ExplainableGP(object):
         pth = file_make_dir(root_path / file_pycode)
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
-            printez('f', '{}'.format(file_pycode))
+            printez('ff', '{}'.format(pth))
 
         self.call_custom_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
 
@@ -708,8 +709,6 @@ class ExplainableGP(object):
             #                    'import {} as custom_eval_agents\n' \
             #                    'custom_eval_agents.eval_agent_list(agent_tuples, folder=Path(\'img\'))'.format(pycode_load, Path(pycode_load).stem)
 
-            # with Path.open(root_dir / pycode_load, 'r') as file:
-            #     auto_import_eval = file.read()  # todo remove completely
             auto_import_eval = ''
 
             # todo first lines are only for mountaincar loading agents
@@ -767,7 +766,7 @@ class ExplainableGP(object):
 
         if len(eval_fails) > 0:
             print_warning('ww', 'Evaluating {} trees in gen {} caused these exceptions:\n{}'.format(
-                len(self.population_tmp_eval), self.gen_id, ', '.join(eval_fails)), print_type=self.print_type)  # todo why more trees?
+                len(self.population_tmp_eval), self.gen_id, ', '.join(eval_fails)), print_type=self.print_type)
 
         return
 
@@ -863,7 +862,6 @@ class ExplainableGP(object):
                         'kernel_name'], fitness))
                     pareto_improved = True
                 best_fit = fitness
-            # todo idea plot #pareto entries / gen
             if pareto_improved:
                 expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
                 tree = karoo_tree_from_expr(expr_raw, self.env_variables)
@@ -1023,7 +1021,7 @@ class ExplainableGP(object):
 
         """
         mode = call_params['mode']  # point/branch/all
-        filter = 'gaussian_filter'  # sfeh change?
+        mutate_filter = 'gaussian_filter'  # sfeh change?
 
         # new_tree = tree_evolve_mutate_filter_one(tree)
         """
@@ -1049,7 +1047,7 @@ class ExplainableGP(object):
                 float_nodes = [np.random.choice(float_nodes)]
             for node_id in float_nodes:
                 val = float(tree_node_get_label(tree, node_id))
-                val = gp_mutate_constants(val, term_type='float', filter_type=filter,
+                val = gp_mutate_constants(val, term_type='float', filter_type=mutate_filter,
                                           float_accuracy=self.config['float_accuracy'])
                 tree = tree_node_set_label(tree, node_id, val)
         else:
@@ -1057,45 +1055,6 @@ class ExplainableGP(object):
             pass
 
         return tree
-
-    def choose_build_size(self, size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
-        """
-
-        # branch_nodes, branch_depth, tree_depth, tree_nodes
-        """
-        mean, size_min, size_max, size_variance = mean_min_max_var
-        if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
-            relative_size = 0
-        else:
-            if tree and node_id:
-                pass
-            else:
-                raise Exception('No tree or node is given for computing the relative size')
-
-            if size_mode == 'tree_depth':
-                tree_size = tree_get_depth(tree)
-                node_size = tree_node_get_depth(tree, node_id)
-            elif size_mode == 'tree_nodes':
-                tree_size = tree_get_size(tree)
-                node_size = len(tree_node_get_branch(tree, node_id))
-            else:
-                raise Exception('Sizemode not known?')
-
-            relative_size = tree_size - node_size
-
-        build_size = int(np.random.normal(mean, size_variance))
-        build_size = min(size_max - relative_size, build_size)
-        build_size = max(size_min, build_size)
-
-        return int(build_size)
-
-    def helper_evolve_params_branch(self, call_params):
-
-        build_spec = call_params.get('build_spec')
-        size_mode = build_spec['size_mode']
-        mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
-        build_method = build_spec['build_method']
-        return build_spec, size_mode, mean_min_max_var, build_method
 
     def invent_label_list(self, size_mode, first_xtype, build_size, build_method, float_accuracy):
         if 'depth' in size_mode:
@@ -1126,7 +1085,7 @@ class ExplainableGP(object):
         """
 
         # tree_origin = self.origin_tree_get()origin_tree
-        build_spec, size_mode, mean_min_max_var, build_method = self.helper_evolve_params_branch(call_params)
+        build_spec, size_mode, mean_min_max_var, build_method = helper_evolve_params_branch(call_params)
 
         # tree_base = tree.copy()
         layer0_ids = tree_get_mutatable_layer(origin_tree,
@@ -1136,12 +1095,12 @@ class ExplainableGP(object):
         if 'depth' in size_mode:
             # print_warning('ww', 'notagoodidea.origin adding depths without a plan? sfeh sfeh')
             for ii in range(len(layer0_ids)):
-                build_size = self.choose_build_size(size_mode, mean_min_max_var, force='branch')
+                build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
                 build_split.append(build_size)
 
         elif 'nodes' in size_mode:
-            build_nodes = self.choose_build_size(size_mode, mean_min_max_var,
-                                                 force='branch')  # sfeh actually, this does not care about tree depth
+            build_nodes = choose_build_size(size_mode, mean_min_max_var,
+                                            force='branch')  # sfeh actually, this does not care about tree depth
             build_split = randomly_split_range(build_nodes, len(layer0_ids))
         else:
             raise
@@ -1168,9 +1127,9 @@ class ExplainableGP(object):
         Creates completely random trees from scratch
         """
 
-        build_spec, size_mode, mean_min_max_var, build_method = self.helper_evolve_params_branch(call_params)
+        build_spec, size_mode, mean_min_max_var, build_method = helper_evolve_params_branch(call_params)
         action_xtype = self.env_variables['action_at'][0]['xtype']
-        build_size = self.choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
+        build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
 
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, build_method,
                                                                     self.config['float_accuracy'])
@@ -1193,7 +1152,7 @@ class ExplainableGP(object):
 
         """
 
-        build_spec, size_mode, mean_min_max_var, build_method = self.helper_evolve_params_branch(call_params)
+        build_spec, size_mode, mean_min_max_var, build_method = helper_evolve_params_branch(call_params)
 
         build_method = build_spec.get('build_method')
         if build_method is None:
@@ -1203,8 +1162,8 @@ class ExplainableGP(object):
         old_node = np.random.choice(node_ids)
         old_xtype = tree_node_get_xtype(tree, old_node)
 
-        build_size = self.choose_build_size(size_mode, mean_min_max_var, tree=tree,
-                                            node_id=old_node)  # sfeh anderer name für branch
+        build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree,
+                                       node_id=old_node)  # sfeh anderer name für branch
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, build_method,
                                                                     self.config['float_accuracy'])
 
@@ -1430,7 +1389,7 @@ class ExplainableGP(object):
         try:
             expr_sym = expr_sympify(expr_raw=expr_raw)
         except Exception as ex:
-            raise Exception('Your tree\'s algorithm could not be sympified. ex: {}'.format(ex))
+            raise Exception('Your tree\'s algorithm could not be sympified. excep: {}'.format(ex))
 
         # sfeh, this does not work
         # if not tree_check_is_sympified(tree):
@@ -1546,61 +1505,62 @@ class ExplainableGP(object):
 
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='average error', plt_y_label='fitness',
-                          linestyle='-',
-                          set_left=data_tuples[0][0])
+            plot_end(data_tuples, path_plots, plt_title='average error', plt_y_label='fitness',
+                     linestyle='-',
+                     set_left=data_tuples[0][0])
 
         if self.monitor_dict['population_tmp_done-size'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['population_tmp_done-size'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='',
-                          marker='.',
-                          set_left=data_tuples[0][0])
+            plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='',
+                     marker='.',
+                     set_left=data_tuples[0][0])
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes',
-                      linestyle='-',
-                      set_left=data_tuples[0][0])
+        plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes',
+                 linestyle='-',
+                 set_left=data_tuples[0][0])
 
         data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='',
-                      marker='.',
-                      set_left=data_tuples[0][0])
+        plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='',
+                 marker='.',
+                 set_left=data_tuples[0][0])
 
         data_tuples = self.get_pareto_plot_values()
-        self.plot_end(data_tuples, path_plots, plt_title='pareto dominant candidates', plt_x_label='parsimony',
-                      plt_y_label='fitness',
-                      linestyle='dashed',
-                      marker='.',
-                      step_where='post',
-                      set_right=self.parsimony_max,
-                      beyond_lines=True,
-                      save_tikz=True)
+        plot_end(data_tuples, path, plt_title='pareto dominant candidates', plt_x_label='parsimony',
+                 plt_y_label='fitness',
+                 linestyle='dashed',
+                 marker='.',
+                 step_where='post',
+                 set_right=self.parsimony_max,
+                 beyond_lines=True,
+                 save_tikz=True)
 
         dist_fit = self.monitoring_dict['tmp_pop_fitness_distribution']
-        self.plot_end(dist_fit, path_plots, plt_title='population distribution Gen {}'.format(self.gen_id),
-                      plt_y_label='fitness',
-                      linestyle='-',
-                      marker='',
-                      set_right=self.config['pop_max'],
-                      right_padding=1,
-                      subfolder=folder_pop_analysis)
+        plot_end(dist_fit, path_plots, plt_title='population distribution Gen {}'.format(self.gen_id),
+                 plt_x_label='tree ids',
+                 plt_y_label='fitness',
+                 linestyle='-',
+                 marker='',
+                 set_right=self.config['pop_max'],
+                 right_padding=1,
+                 subfolder=folder_pop_analysis)
 
         if self.monitor_dict.get('fitness_variance') == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
-            self.plot_end(data_tuples, path_plots, plt_title='variance in error', plt_y_label='variance',
-                          linestyle='-',
-                          marker='')
+            plot_end(data_tuples, path_plots, plt_title='variance in error', plt_y_label='variance',
+                     linestyle='-',
+                     marker='')
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_variance'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='variance in complexity', plt_y_label='variance',
-                      linestyle='-',
-                      marker='')
+        plot_end(data_tuples, path_plots, plt_title='variance in complexity', plt_y_label='variance',
+                 linestyle='-',
+                 marker='')
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
-        self.plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation',
-                      plt_y_label='error',
-                      linestyle='dashed',
-                      step_where='post')
+        plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation',
+                 plt_y_label='error',
+                 linestyle='dashed',
+                 step_where='post')
 
         # sfeh https://github.com/linkedin/naarad/issues/114 UserWarning: Attempting to set identical bottom==top results
 
@@ -1645,8 +1605,7 @@ class ExplainableGP(object):
         self.monitoring_dict['best_candidate'][self.gen_id] = self.best_fitness
 
         # Tree fitness distribution
-        dist_fit = [(i, x) for i, x in
-                    enumerate(sorted([x['fitness'] for x in pop_tree_analysis]))]  # sorting based on fitness
+        dist_fit = [(i, x) for i, x in enumerate([x['fitness'] for x in pop_tree_analysis])]  # sorted() was here based on fitness
         self.monitoring_dict['tmp_pop_fitness_distribution'] = dist_fit
 
         # Tree complexity
@@ -1690,100 +1649,6 @@ class ExplainableGP(object):
     #   Methods to print_type output information  +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def plot_end(self, data_2d, path,
-                 plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear',
-                 step_where='', plt_xparam='',
-                 linestyle='None',
-                 marker='',
-                 set_left=None, set_right=None, set_top=None,
-                 right_padding=1.05, top_padding=1.05,
-                 beyond_lines=False,
-                 save_tikz=False,
-                 subfolder=None):
-        """
-        Make all plots in the same style - and also saving space.
-        - Makes pyplots
-
-
-        :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
-        :param path: where to save the result
-        :param plt_title:
-        :param plt_curve_label: irrelevant for a single curve
-        :param plt_x_label: label the x-axis
-        :param plt_y_label: label the y-axis
-        :param yscale: only 'linear'.
-        :param step_where: makes 'step' plots- can be 'post', 'pre' or [pls google]
-        :param plt_xparam: not in use, the same adjustment can be done with optional parameters
-        :param linestyle: E. g. 'None', 'dashed', '-', ''
-        :param set_left: Smallest left value
-        :param set_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40
-        :param beyond_lines: in step plots, draw the line further to the left and right
-        :param save_tikz: Also save the plot as tikzpicture (for Latex)(requires tikzplotlib)
-        :param subfolder: save plot in plots/*subfolder*, e.g. if this plot is created in every generation
-        :return:
-
-        sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
-        """
-
-        if len(data_2d) == 0:
-            print_e('Plotting empty array is not possible! Data={}'.format(data_2d))
-            return
-
-        x, y = [], []
-        for a, b in data_2d:
-            x.append(a)
-            y.append(b)
-
-        # x, y = data_2d.reshape(-1, 2).T  # sfeh this could be a more pythonic way, but tuples can not be reshaped.
-
-        # bottom, top = plt.ylim()
-        # left, right = plt.xlim()
-
-        top, bottom, left, right = max(y), min(y), min(x), max(x)
-        if set_left:
-            left = set_left
-        if set_top:
-            new_top = set_top
-        else:
-            new_top = (top - min(bottom, 0)) * top_padding  # top * 1.05 for better style
-
-        if set_right:
-            right = max(right, set_right)
-        new_right = right * right_padding
-
-        if beyond_lines:
-            x = [x[0]] + x + [new_right + 1]
-            y = [new_top + 1] + y + [y[-1]]
-
-        if step_where:
-            plt.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
-        else:
-            plt.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
-
-        # let it start at (0,0) but +5% margin to the top and right
-        plt.yscale(yscale)
-        plt.ylim(min(bottom, 0), new_top)
-        plt.xlim(min(left, 0), new_right)
-        plt.margins(x=0, y=0)
-
-        plt.xlabel(plt_x_label)
-        plt.ylabel(plt_y_label)
-        plt.title(plt_title)
-
-        # plt.legend()
-        if subfolder:  #
-            path = make_dir(path / subfolder)
-
-        plt.savefig(path / '{}.png'.format(plt_title))
-        if save_tikz:
-            try:
-                tikzplotlib.save(path / '{}.tex'.format(plt_title))
-            except Exception as ex:
-                pass
-
-        plt.close()
-        return
-
     def printpl(self, message_type, message):
         """
         Lightweight print function.
@@ -1805,6 +1670,46 @@ class ExplainableGP(object):
             printez(message_type, text, time_total=time.perf_counter() - self.time_start)
 
         return
+
+
+def helper_evolve_params_branch(call_params):
+    build_spec = call_params.get('build_spec')
+    size_mode = build_spec['size_mode']
+    mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
+    build_method = build_spec['build_method']
+    return build_spec, size_mode, mean_min_max_var, build_method
+
+
+def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
+    """
+
+    # branch_nodes, branch_depth, tree_depth, tree_nodes
+    """
+    mean, size_min, size_max, size_variance = mean_min_max_var
+    if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
+        relative_size = 0
+    else:
+        if tree and node_id:
+            pass
+        else:
+            raise Exception('No tree or node is given for computing the relative size')
+
+        if size_mode == 'tree_depth':
+            tree_size = tree_get_depth(tree)
+            node_size = tree_node_get_depth(tree, node_id)
+        elif size_mode == 'tree_nodes':
+            tree_size = tree_get_size(tree)
+            node_size = len(tree_node_get_branch(tree, node_id))
+        else:
+            raise Exception('Sizemode not known?')
+
+        relative_size = tree_size - node_size
+
+    build_size = int(np.random.normal(mean, size_variance))
+    build_size = min(size_max - relative_size, build_size)
+    build_size = max(size_min, build_size)
+
+    return int(build_size)
 
 
 def check_value_is_real(fitness):

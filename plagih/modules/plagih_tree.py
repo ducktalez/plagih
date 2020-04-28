@@ -1329,8 +1329,8 @@ def tree_parsimony_ted(tree1, tree2):
     The Tree Edit distance (TED) ('coolest' distance)
     - the amount of changes that have to be applied to the origin_meta to equality are counted
     """
-    apted_tree1 = tree_raw_depth_prefix(tree1, 1)
-    apted_tree2 = tree_raw_depth_prefix(tree2, 1)
+    apted_tree1 = tree_raw_depth_prefix(tree1, root_id)
+    apted_tree2 = tree_raw_depth_prefix(tree2, root_id)
     distance, mapping = apted_distance(apted_tree1, apted_tree2)
     # sfeh the mapping could be handy somewhere
     return distance, mapping
@@ -1357,6 +1357,9 @@ def expr_sympify(expr_raw):
         expr_sym = str(plagih_sympify(expr_raw))
     except Exception as ex:
         raise Exception('sympify_1: {} reason: ({})'.format(expr_raw, ex))
+
+    if 'nan' in expr_sym:
+        print('TODO DEBUG SYMPY RAW', expr_raw, '\n', expr_sym)
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:

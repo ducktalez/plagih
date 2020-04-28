@@ -7,6 +7,7 @@ pos, vel = observation
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.colors as colors
 import numpy as np
 import gym
 import pickle
@@ -22,6 +23,8 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr'
     y_linspace = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, 256)
     positions, velocities = np.meshgrid(x_linspace, y_linspace)
 
+    env.close()
+
     @np.vectorize
     def decide(position, velocity):
         action = agent.decide((position, velocity))
@@ -29,21 +32,24 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr'
 
     results = decide(positions, velocities)
     if dummy:
-        _, _, result_dummy = mtc_heatmap_helper(env, agent, 256, n, dummy=dummy)
+        _, _, result_dummy = mtc_heatmap_helper(agent, 256, n, dummy=dummy)
         results = results * result_dummy
 
-    env.close()
 
-    boundaries = [-.5, .5, 1.5, 2.5]
-    ticks = [0, 1, 2]
+    # boundaries = [-.5, .5, 1.5, 2.5]
+    # ticks = [0, 1, 2]
 
-    mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, a_dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
     return
 
 
-def mtc_heatmap_helper(env, agent, num_splits, n, dummy=False):
+def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
     # Making the data for the plot
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
+
     behaviour = []
     for _ in range(n):
         observation = env.reset()
@@ -84,37 +90,38 @@ def mtc_heatmap_helper(env, agent, num_splits, n, dummy=False):
         res_y = linspace_pos(tup[1], (y_min, y_max), num_splits)
         result[res_y, res_x] += 1  # the mesh is not a coordinate system...
 
-    if dummy:
+    if dummy == 1:
         result = np.vectorize(lambda x: np.nan if x == 0 else 1)(result)
-    else:
+    else:  # either dummy=2 OR no dummy
         result = np.vectorize(lambda x: np.nan if x == 0 else x)(result)  # sfeh: normalize values?
 
     return x_linspace, y_linspace, result
 
 
 def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', splits=128, dummy=False, cmap='Greys', boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
-    np.random.seed(0)
-    env = gym.make('MountainCar-v0')
-    env.seed(0)
 
-    x_linspace, y_linspace, result = mtc_heatmap_helper(env, agent, splits, n, dummy=dummy)
+    x_linspace, y_linspace, result = mtc_heatmap_helper(agent, splits, n, dummy=dummy)
 
-    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
     return
 
 
-def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=False, b_dummy=False, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
+def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=None, ticks=None, vmin=None, vmax=None, nan_style=None, no_colorbar=False):
     # generating plot
     fig, ax = plt.subplots()
-    c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap)
+    if vmin and vmax:
+        norm = colors.Normalize(vmin=vmin, vmax=vmax)
+    else:
+        norm = None
+    c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
     ax.set_xlabel('position')
     ax.set_ylabel('velocity')
 
     if no_colorbar:
         boundaries = np.array([0, 1])  # don't know why, but makes the bar disappear somehow
 
-    if a_dummy or b_dummy:
+    if dummy:
         mask_nan = np.ma.masked_where(result == np.nan, result)
         plt.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
@@ -160,50 +167,6 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=False, 
         Path.mkdir(folder)
     plt.savefig(Path(folder) / '{}.png'.format(name))
     plt.close()
-
-
-def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, agent_b_dummy=None, n=100, num_splits=256, name='diff', folder='img/',
-                         abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False):
-    np.random.seed(0)
-    env = gym.make('MountainCar-v0')
-    env.seed(0)
-
-    # Making the data for the plot
-    x_linspace = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, num_splits)
-    y_linspace = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, num_splits)
-    positions, velocities = np.meshgrid(x_linspace, y_linspace)
-
-    @np.vectorize
-    def decide_diff(position, velocity):
-        action_a = agent_a.decide((position, velocity))
-        action_b = agent_b.decide((position, velocity))
-        return action_a - action_b
-
-    result = decide_diff(positions, velocities)
-
-    if abs_diff:
-        result = abs(result)
-        boundaries = np.linspace(-0.5, 2.5, 4)
-        ticks = np.linspace(0, 2, 3)
-    else:
-        boundaries = np.linspace(-2.5, 2.5, 6)
-        ticks = np.linspace(-2, 2, 5)
-
-    if agent_a_dummy:
-        _, _, result_dummy = mtc_heatmap_helper(env, agent_a, num_splits, n, dummy=True)
-        result = result * result_dummy  # just transfer all 'nan', done here as x*nan=nan, x*1=1
-        # boundaries = np.linspace(-0.5, 2.5, 4)
-        # ticks = np.linspace(0, 2, 3)
-
-    if agent_b_dummy:
-        _, _, result_dummy = mtc_heatmap_helper(env, agent_b, num_splits, n, dummy=True)
-        result = result * result_dummy
-
-    env.close()
-
-    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=agent_a_dummy, b_dummy=agent_b_dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
-
-    return
 
 
 def mtc_play(agent, render=False, n=1):
@@ -258,21 +221,71 @@ def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path(
     plt.savefig(folder / '{}.png'.format(name))
 
 
-def eval_agent_list(agent_list, goal_agent, folder=Path('img/')):
+def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_splits=256, name='diff', folder='img/',
+                         abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False):
+    np.random.seed(0)
+    env = gym.make('MountainCar-v0')
+    env.seed(0)
+
+    # Making the data for the plot
+    x_linspace = np.linspace(env.unwrapped.min_position, env.unwrapped.max_position, num_splits)
+    y_linspace = np.linspace(-env.unwrapped.max_speed, env.unwrapped.max_speed, num_splits)
+    env.close()
+
+    positions, velocities = np.meshgrid(x_linspace, y_linspace)
+
+    @np.vectorize
+    def decide_diff(position, velocity):
+        action_a = agent.decide((position, velocity))
+        action_b = diff_agent.decide((position, velocity))
+        return action_a - action_b
+
+    result = decide_diff(positions, velocities)
+
+    if abs_diff:
+        # result = abs(result)
+        ticks = np.linspace(0, 2*boarders, min(3*boarders, 10))
+        boundaries = np.linspace(-(0.5+0), 0.5+2*boarders, 1+min(3*boarders, 10))
+        vmin = 0
+        vmax = 2 * boarders
+    else:
+        vmin = -2 * boarders
+        vmax = +2 * boarders
+        ticks = np.linspace(-(2*boarders), 2*boarders, min(4*boarders, 10))
+        boundaries = np.linspace(-(0.5+2*boarders), 0.5+2*boarders, 1+min(4*boarders, 10))
+
+    # if boarders > 1:
+    #     boundaries = boundaries * boarders
+    #     ticks = ticks * boarders
+    #     ticks = None  # todo
+
+    if dummy_result is None:
+        mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
+    else:
+        result = result * dummy_result  # just transfer all 'nan', done here as x*nan=nan, x*1=1
+        mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=True, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
+
+    return
+
+
+def eval_agent_list(agent_list, goal_agent, n=40, folder=Path('img/')):
 
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
     agent_performance = []
+    _, _, sarsa_dummy = mtc_heatmap_helper(goal_agent, 256, n, dummy=1)
+
     for name, agent in agent_list:
         # mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
         print('Evaluating agent: {}'.format(name))
-        mtc_plot_differences(agent, goal_agent, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_b_dummy=True)
-        avg_reward, fails, _ = mtc_play(agent, n=100)
+        mtc_plot_differences(agent, goal_agent, dummy_result=sarsa_dummy, boarders=1, name='diff-{}'.format(name), folder=folder, abs_diff=False)
+        avg_reward, fails, _ = mtc_play(agent, n=n)
         agent_performance.append([name, avg_reward, fails])
 
     y = [x[1] for x in agent_performance]
     x = list(range(len(agent_performance)))
+
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
     plt.savefig(folder / 'agent_perf.png')

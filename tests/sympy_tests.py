@@ -84,7 +84,14 @@ def test_sympify_many():
         ('Andb(True, a & b)', None),
         ('Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))', None),
         ('Andb(True, a & b)', None),
-        ('Notb(Orb(True, Orb(False, (0.895)<(vel))))', None)]
+        ('Notb(Orb(True, Orb(False, (0.895)<(vel))))', None),
+        ('Ifte((Andb((((vel)+(0.9))+(Mini(6.0, pos)))==(abs(abs(-2.3))), Notb(((vel)*(vel))<(Mini(2.0, pos)))), (0), (2))', None),
+        ('', None),
+        ('', None),
+        ('', None),
+        ('', None),
+        ('', None),
+        ('', None)]
 
     for expr in sympify_test_strings:
         print(plagih_sympify(expr[0]))
@@ -92,7 +99,7 @@ def test_sympify_many():
 
 # test_sympify_many()
 
-expr = 'Ifte((Andb((((vel)+(0.9))+(Mini(6.0, pos)))==(abs(abs(-2.3))), Notb(((vel)*(vel))<(Mini(2.0, pos)))), (0), (2))'
+expr = 'Ifte((Notb((Maxi(0.4, cartVel))<=(9.0))), (0), (2))'
 # expr = 'Notb(True || Orb(False, 1 <(vel)))'
 # expr = '~(a)'
 print(plagih_sympify(expr))

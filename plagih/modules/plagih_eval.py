@@ -1,5 +1,5 @@
 from plagih.modules.printing import *
-from plagih.modules.dicts import *
+from plagih.modules.operators import *
 
 import sklearn.metrics as skm
 
@@ -22,6 +22,8 @@ class FitnessKernel:
         elif self.kernel == 'regression' and fitness1 < fitness2:
             return True
         elif self.kernel == 'regression bounded' and fitness1 < fitness2:
+            return True
+        elif self.kernel == 'regression discrete' and fitness1 < fitness2:
             return True
         elif self.kernel == 'classification' and fitness1 > fitness2:
             return True
@@ -49,7 +51,8 @@ class FitnessKernel:
             mse = skm.mean_squared_error(result['tf_result'], result['solution'])
             result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
-
+        elif self.kernel == 'regression discrete':
+            result_str = 'No summary provided for this kernel'
         elif self.kernel == 'match':
             result_str += ('\n\n Matching fitness score: {}'.format(result['fitness']))
         return result_str
@@ -110,11 +113,11 @@ class FitnessKernel:
             - orderable amount of labels
             """
 
-            # v4 - largely false decisions should get affected largely
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
+            # # v4 - largely false decisions should get affected largely
+            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
 
             # # v3
             # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
@@ -122,13 +125,16 @@ class FitnessKernel:
             # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
             # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - customised_result))
 
-            # # v2
-            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            # pairwise_fitness = tf.abs(solution - customised_result)
-
             # # v1
             # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
             # pairwise_fitness = tf.abs(solution - customised_result)
+
+        elif self.kernel == 'regression discrete':
+            # regression that fits the outputs to a discrete set of actions defined by min and max
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            pairwise_fitness = tf.abs(solution - customised_result)
 
         elif self.kernel == 'match':  # MATCH kernel
 
@@ -144,6 +150,39 @@ class FitnessKernel:
             raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
 
         return pairwise_fitness
+
+
+class RegressionKernel(FitnessKernel):
+    """
+    first try to make separate classes
+    """
+    def __init__(self):
+        super('regression')
+        self.name = 'regression'
+
+    # def fitness_compare(self, fitness1, fitness2, mode='better'):
+    #     """
+    #     Compares the fitness of two candidates according to the kernel
+    #
+    #     Example:
+    #         >
+    #         fitness_compare
+    #     """
+    #
+    #     if fitness2 is None:
+    #         return True
+    #     elif fitness1 < fitness2:
+    #         return True
+    #     elif fitness1 == fitness2 and mode == 'better_or_equal':
+    #         return True
+    #     else super(RegressionKernel, self).fitness_compare()
+    #
+    # def tf_get_pairwise_fitness(self, solution, tf_result):
+    #     pairwise_fitness = tf.abs(solution - tf_result)
+    #     return pairwise_fitness
+    #
+    # def conclusion_get_text(self):
+    #     return
 
 
 def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_classify_labels_map, get_pred_labels=False):
@@ -188,7 +227,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_clas
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
             pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-            solution = tensors[first_action]  # todo
+            solution = tensors[env_variables['action_at'][0]['label']]  # sfeh
 
             pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
@@ -197,7 +236,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_clas
                 pred_labels = tf.map_fn(tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
 
             tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
-        # todo check fitness here?
+
     return {'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
             'pairwise_fitness': pairwise_fitness}
 
@@ -247,9 +286,14 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
 
     """
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
+
+    if delete_this and '~' in expr:
+        print('TODOASDDSA')
+        pass
+
     tree = ast.parse(expr, mode='eval').body
 
-    graph = ast_convert_from_expr_recursive(tree, tensors=tensors, prnt=prnt, build=build)
+    graph = ast_convert_from_expr_recursive(tree, tensors=tensors, build=build)
 
     if build:
         # print('before:', graph)
@@ -259,26 +303,28 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
     return graph
 
 
-def labels_from_nestedexpr(expr_array, expr):
+def labels_from_nestedexpr(labels_nested_list, result_accum):
     """
     Returns a label list from the nested list which ast_convert_from_expr_recursive() created
     [+, [a], [/, [b, c]]]]  -> [+, a, /, b, c]
     """
 
-    for x in expr_array:  # all elements, that are not lists themselves
+    for x in labels_nested_list:  # all elements, that are not lists themselves
         if type(x) is not list:
+            x = str(x)  # labels must be string!
             # x = str(x).replace('~', '-')  # workaround for usub/sub problem
-            expr.append(x)
+            result_accum.append(x)
 
-    only_lists = [x for x in expr_array if (type(x) == list)]
+    only_lists = [x for x in labels_nested_list if (type(x) == list)]
     if only_lists:
         from itertools import chain
         lists_removed = list(chain(*only_lists))
-        expr = labels_from_nestedexpr(lists_removed, expr)
-    return expr
+        result_accum = labels_from_nestedexpr(lists_removed, result_accum)
+
+    return result_accum
 
 
-def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
+def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     """
     Returns (recursively) a (tensorflow) graph from a (raw or sympified) math expression.
     please use by calling labels_from_graphlist()
@@ -427,24 +473,16 @@ def ast_convert_from_expr_recursive(node, tensors=None, prnt=None, build=None):
             raise Exception('Failed to identify the function. {}'.format(type(node)))
 
     else:
-        raise TypeError(node)
+        raise TypeError('Node type could not be handeled in ast-evaluation: {}'.format(node))
 
 
-def ast_chain_bool(values, operation, tensors=None, prnt=False, build=False):
+def ast_chain_bool(values, operation, tensors=None, build=False):
     """
     Chains a sequence of boolean operations (e.g. 'a and b and c') into a single TensorFlow (TF) sub graph.
         a & b
     --> values[0] operation values[1]
     """
-    if prnt:
-        x = ast_convert_from_expr_recursive(values[0], prnt=True)
-        if len(values) == 2:
-            return '({} {} {})'.format(values[0], operation, values[1])
-        elif len(values) == 1:
-            return x
-        else:
-            raise
-    elif build:
+    if build:
         x = ast_convert_from_expr_recursive(values[0], build=True)
         if len(values) == 2:
             return [operation, [values[0], values[1]]]
@@ -460,21 +498,19 @@ def ast_chain_bool(values, operation, tensors=None, prnt=False, build=False):
             return x
 
 
-def ast_chain_compare(comparators, ops, tensors=None, prnt=False, build=False):
+def ast_chain_compare(comparators, ops, tensors=None, build=False):
     """
     Chains a sequence of comparison operations (e.g. 'a > b < c') into a single TensorFlow (TF) sub graph.
 
     """
 
-    x = ast_convert_from_expr_recursive(comparators[0], tensors=tensors, prnt=prnt, build=build)
-    y = ast_convert_from_expr_recursive(comparators[1], tensors=tensors, prnt=prnt, build=build)
+    x = ast_convert_from_expr_recursive(comparators[0], tensors=tensors, build=build)
+    y = ast_convert_from_expr_recursive(comparators[1], tensors=tensors, build=build)
 
     if len(comparators) > 2:
         print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')
         return tf.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
-        if prnt:
-            return '({} {} {})'.format(x, op[type(ops[0])]['fun'], y)
         if build:
             return [op[type(ops[0])]['fun'], [x, y]]
         else:

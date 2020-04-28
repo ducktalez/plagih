@@ -104,6 +104,24 @@ class Orb(Function):
         return eval(self, a, b)
 
 
+class Notb(Function):
+    """
+    Not (boolean)
+    Problem was:
+    - Not(a) evaluates to ~a
+    - not(a<2) evaluates to nan
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+
+        return not a
+
+    def _sympy_(self, a):
+        return eval(self, a)
+
+
 class Square(Function):
     """
     """
@@ -112,7 +130,7 @@ class Square(Function):
     @classmethod
     def eval(cls, a):
 
-        return a**2  # todo requires testing. a LOT of testing. check for num-type?
+        return a**2  # sfeh requires testing. a LOT of testing. check for num-type?
 
     def _sympy_(self, a, b):
         return eval(self, a, b)
@@ -159,6 +177,7 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Maxi': Maxi,
                     'Andb': Andb,
                     'Orb': Orb,
+                    'Notb': Notb,
                     'Square': Square,}
 
 
@@ -176,4 +195,4 @@ def plagih_sympify(function_string):
     try:
         return sympify(sympify(function_string, locals=local_sympy_dict))
     except:
-        return 'nan'
+        return 'nan'  # 'nan' always evaluates to nan

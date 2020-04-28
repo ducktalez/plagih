@@ -33,18 +33,14 @@ def help_reduce_more(expr):
 
 def test_sympify_many():
     sympify_test_strings = [
-        ('(ifte(True, 0, 1)), None', None),
-        ('(ifte(False, 0, 1))', None),
-        ('a == (a<b)', None),
-        ('a+a+b', None),
-        ('(ifte((a<2), 0, 2))', None),
-        ('(ifte((a<2), mini(a, 2), 2))', None),
-        ('mini(a, 2)', None),
-        ('maxi(a, 2)', None),
-        ('Ftob(x)', None),
-        ('Ftob2', None),
-        ('a/0', None),
-        ('a/(a/(a-a))', None),
+        ('(Ifte(True, 0, 1))', '0'),
+        ('(Ifte(False, 0, 1))', '1'),
+        ('a+a+b', '2*a+b'),
+        ('(Ifte((a<2), 0, 2))', 'ifte(a < 2, 0, 2)'),
+        ('(Ifte((a<2), Mini(a, 2), 2))', None),
+        ('Ftob(x)', 'Ftob(x)'),
+        ('a/0', 'zoo'),
+        ('a/(a/(a-a))', 'a*zoo'),
         ('(Ifte((b<((Ifte(((((Ifte(((Mini((-0.9932952785512101), b))>a), (a*(0.1)), b))-(((-0.7)-b)*b))*((-0.7)/(Maxi(a, ((Ifte((-0.3), b, (0.7)))-(-0.8))))))>(a/(Ifte(False, (0.9), (0.1))))), b, (-0.4)))*(Ifte((0>a), (Ifte(True, b, a)), (Mini(b, (Maxi((Ifte(True, (((a-(0.8))-(-0.9))/((Ifte(b, a, (0.3)))+b)), (-0.2))), ((-0.9)/((0)/a)))))))))), 0, 2))', None),
         ('((Ifte(((b*(7/a))>a), b, (-4)))*(Ifte(False, b, (Mini(b, (Maxi((Ifte(True, (a/((Ifte(b, a, 3))+b)), 0)), (1/(0/a)))))))))', None),
         ('Ifte(False, b, (Mini(b, (Maxi(((a)), (1/(0/a)))))))', None),
@@ -52,9 +48,7 @@ def test_sympify_many():
         ('Maxi(a, (1/(a)))', None),
         ('Maxi(1, (1/(a)))', None),
         ('Maxi(a, (1/(0/a)))', None),
-        ('Mini(b, (Maxi(a, (1/(0/a)))))', None),
         ('Mini(b, (Maxi(a, (1/(0/a)))))', None),  # nan
-        ('nan', None),  # nan
         ('a<zoo', None),  # nan
         ('a/0', None),  # zoo*a
         ('a/0.0', None),  # inf*a
@@ -89,8 +83,16 @@ def test_sympify_many():
         ('Or(a, a)', None),
         ('Andb(True, a & b)', None),
         ('Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))', None),
-        ('Andb(True, a & b)', None)]
+        ('Andb(True, a & b)', None),
+        ('Notb(Orb(True, Orb(False, (0.895)<(vel))))', None)]
+
+    for expr in sympify_test_strings:
+        print(plagih_sympify(expr[0]))
 
 
-expr = ''
+# test_sympify_many()
+
+expr = 'Ifte((Andb((((vel)+(0.9))+(Mini(6.0, pos)))==(abs(abs(-2.3))), Notb(((vel)*(vel))<(Mini(2.0, pos)))), (0), (2))'
+# expr = 'Notb(True || Orb(False, 1 <(vel)))'
+# expr = '~(a)'
 print(plagih_sympify(expr))

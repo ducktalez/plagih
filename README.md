@@ -60,7 +60,7 @@ Possible operators are:
 |Group|examples|
 |:------------------ |:-----------------|
 |Mathematical operators|`+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `Mini`, `Maxi`|
-|Logical operators | `Andb`, `Orb`, `Not`|
+|Logical operators | `Andb`, `Orb`, `not`|
 |Comparative operators|`==`, `!=`, `<`, `<=`, `>`, `>=`|
 |Conditional (If-then-else)|`Ifte`|
 
@@ -95,9 +95,9 @@ modify_list,0,1,0,0,1,1
 ...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
 
 ### How I analyze results:
-- `plots/average-fitness.jpg` - to see if there was an improvement
-- `plots/best_candidate.jpg` - for the current best solution
-- `plots/pareto.jpg` - showing the best candidates related to the complexity. Find your prefered combination of performance and complexity
+- `plots/average-fitness.png` - to see if there was an improvement
+- `plots/best_candidate.png` - for the current best solution
+- `plots/pareto.png` - showing the best candidates related to the complexity. Find your prefered combination of performance and complexity
 - `info/pareto.txt` - pareto-efficient candidates in math-expression
 - `trees/#all_trees.tex` - A Latex file with all computational trees visualized
 
@@ -117,7 +117,7 @@ modify_list,0,1,0,0,1,1
 
 ## Description
 
-The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference program that are necessary to get to the target solution ("tree edit distance").    
+The Genetic-Programming Framework is primarily intended to extend a human written program to achieve the same performance as a (better) NN solution. Decisive for the "explainability" is the number of changes to the reference program that are necessary to get to the target solution ("tree_edit_distance").    
 
 PLAGIH stands for PLAusible Genetic Improvements to Heuristics. The name will probably be changed soon.
 This is a Project resulting from my Masters Thesis (with yet unknown name). 

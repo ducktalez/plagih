@@ -89,12 +89,8 @@ class SimonsFirst200:
 
         # move_dir =
         if cart_vel < 0:
-            if verbose:
-                print('<-----')
             return 0
         else:
-            if verbose:
-                print('----->')
             return 1
 
 
@@ -105,40 +101,17 @@ class SimonsBest:
 
         if abs(pole_vel) > 0.1:
             if pole_vel < 0:
-                if verbose:
-                    print('<-----|   ')
                 return 0
             else:
-                if verbose:
-                    print('      |---->')
                 return 1
 
-        # move_dir =
         if abs(cart_vel) > 0.1:
             if cart_vel < 0:
-                if verbose:
-                    print('  <---|    ')
                 return 0
             else:
-                if verbose:
-                    print('      |--->')
                 return 1
 
         if cart_pos > 0:
-            if verbose:
-                print('    <-|    ')
-            return 0
-        else:
-            if verbose:
-                print('      |->')
-            return 1
-
-
-class Gp1_asdads:
-
-    def decide(self, observation, verbose=False):
-        cart_pos, cart_vel, pole_angle, pole_vel = observation[0], observation[1], observation[2], observation[3]
-        if pole_vel < 0:
             return 0
         else:
             return 1
@@ -153,4 +126,4 @@ oneAgent = {cartpole_agents[3]}
 twoAgents = {cartpole_agents[4], cartpole_agents[3]}
 
 # compare_simple(oneAgent)
-render_ntimes(oneAgent, 1, verbose=True, sleep=0.0)
+render_ntimes(oneAgent, 1, verbose=True)

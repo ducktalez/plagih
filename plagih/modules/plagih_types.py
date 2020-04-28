@@ -7,7 +7,7 @@ This notation offers the opportunity to actually search for parts, e. g.
 > if '2b' in function:  # This returns True if the label evaluates to boolean
 Be careful with if-then-else though. This needs boolean and two float inputs to produce one float
 """
-from plagih.modules.dicts import *
+from plagih.modules.operators import *
 from plagih.modules.printing import *
 import numpy as np
 
@@ -49,7 +49,7 @@ def xtype_get_converters(xtype):
         raise
 
 
-def choose_term(env_variables_xtype, choose_distribution_xtype):
+def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
     """
     Returns a terminal of xtype.
 
@@ -66,23 +66,25 @@ def choose_term(env_variables_xtype, choose_distribution_xtype):
     """
 
     # insert a ?
-    if np.random.choice(['observ', 'distrib']) == 'observ' and env_variables_xtype:
-        term = np.random.choice(env_variables_xtype)
+    if np.random.choice(['observ', 'distrib']) == 'observ' and env_variables[xtype]:
+        term = np.random.choice(env_variables[xtype])
     else:
-        term = choose_constant(choose_distribution_xtype)
+        term = choose_constant(xtype, choose_distribution, float_accuracy)
+
+    term = str(term)  # sfeh
+
     return term
 
 
-def choose_constant(choose_distributions_xtype=None):
+def choose_constant(xtype, choose_distributions, accuracy):
     """
 
     Returns a constant that fits into the position
     -- xtype = 'float'
     """
-    if choose_distributions_xtype:
-        const = np.random.choice(choose_distributions_xtype)()
-    else:
-        raise
+    const = np.random.choice(choose_distributions[xtype])()
+    if '2f' in xtype:
+        const = round(const*accuracy)/accuracy
 
     return const
 
@@ -190,7 +192,7 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
     return func_list
 
 
-def xtype_get_func_list_OLD(func_array, xtype=None, arity=None):
+def xtype_get_func_list_OLD(oparray, xtype=None, arity=None):
     """
     returns a function list out of the given 2d-op array randomly
     This fills in a function that fits the type of the function/terminal before.
@@ -205,27 +207,25 @@ def xtype_get_func_list_OLD(func_array, xtype=None, arity=None):
     # arity and xtype
     if arity is not None and xtype:
         xtype_row = ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index(xtype)
-        func_list.extend(func_array[xtype_row][arity])
+        func_list.extend(oparray[xtype_row][arity])
 
     # arity
     if arity is not None and xtype is None:
-        func_list = sum([xtype_row[arity] for xtype_row in func_array], [])
+        func_list = sum([xtype_row[arity] for xtype_row in oparray], [])
 
     # xtype
     if arity is None and xtype is not None:
         if '2f' in xtype:
-            func_list = sum([sum(func_array[funcs], []) for funcs in funcs_float], [])
+            func_list = sum([sum(oparray[funcs], []) for funcs in funcs_float], [])
         elif '2b' in xtype:
-            func_list = sum([sum(func_array[funcs], []) for funcs in funcs_bool], [])
+            func_list = sum([sum(oparray[funcs], []) for funcs in funcs_bool], [])
         else:
             print_e('xtype {} is not accepted. Must be \'2f\' or \'2b\'.'.format(xtype))
             raise
 
     # return all functions
     if arity is None and xtype is None:
-        func_list = sum(sum(func_array, []), [])
-
-    # TODO what about arity-0 functions? those are effectively terminals and currently do not exist
+        func_list = sum(sum(oparray, []), [])
 
     return func_list
 
@@ -240,6 +240,7 @@ def xtype_get_from_label(label, env_variables):
     returns xtype for a label
     if you are not 100% sure that it is a function.
     """
+
     if env_variables == 'ö':
         print_warning('www', 'Sfeh, we knowingly create a xtype-dummy')
         return 'ö'
@@ -251,10 +252,14 @@ def xtype_get_from_label(label, env_variables):
     elif label in op:
         xtype = op[label]['xtype']
     else:
-        try:
-            float(label)
-            xtype = '2f'
-        except:
-            raise Exception('This label is not known at all: {}'.format(label))
+        # if delete_this and isinstance(label, bool):
+        #     xtype = '2b'
+        #     print_e('This should never happen!!! labels  must be string')
+        # try:
+        #     float(label)
+        #     xtype = '2f'
+        # except:
+        #     raise Exception('This label is not known at all: {}'.format(label))
+        xtype = '2f'
 
     return xtype

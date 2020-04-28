@@ -30,8 +30,6 @@ class Good_Expert:
                 return 2
 
 
-# todo idee: programm that works has some space to make random decisions. nn analyses, finds best version
-
 class SimonsTesting:
 
     def decide(self, observation):
@@ -248,24 +246,21 @@ class SARSALambdaAgent(SARSAAgent):
             self.z = np.zeros_like(self.z)
 
 
-def load_sarsas():
-    with Path.open(Path(sarsa_file_75), 'rb') as file:
+def load_sarsas(root_path=''):
+    with Path.open(Path(root_path) / sarsa_file_75, 'rb') as file:
         sarsa_agent_75 = pickle.load(file)
-        print('Loaded sarsa 75')
+        print('Loaded sarsa 75 backup')
 
-    with Path.open(Path(sarsa_file_200), 'rb') as file:
+    with Path.open(Path(root_path) / sarsa_file_200, 'rb') as file:
         sarsa_agent_200 = pickle.load(file)
-        print('Loaded sarsa 200')
+        print('Loaded sarsa 200 backup')
+    #
+    # with Path.open(Path(root_path) / sarsa_file_1000, 'rb') as file:
+    #     sarsa_agent_1000 = pickle.load(file)
+    #     print('Loaded sarsa 1000')
+    #
+    # with Path.open(Path(root_path) / sarsa_file_10000, 'rb') as file:
+    #     sarsa_agent_10000 = pickle.load(file)
+    #     print('Loaded sarsa 10000')
+    return sarsa_agent_75, sarsa_agent_200, False, False
 
-    with Path.open(Path(sarsa_file_1000), 'rb') as file:
-        sarsa_agent_1000 = pickle.load(file)
-        print('Loaded sarsa 1000')
-
-    with Path.open(Path(sarsa_file_10000), 'rb') as file:
-        sarsa_agent_10000 = pickle.load(file)
-        print('Loaded sarsa 10000')
-    return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
-
-# sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = None, None, None, None
-sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
-# sarsa_agent_75, _, _, _ = load_sarsas()

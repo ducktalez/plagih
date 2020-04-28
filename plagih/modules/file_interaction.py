@@ -7,61 +7,47 @@ import sklearn.model_selection as skcv
 import numpy as np
 import yaml
 
-example_runs = 'examples/'
+example_runs = 'run_examples/'
 
+run_files = 'run_files/'
 folder_plots = 'plots/'
-folder_info = 'info/'
 folder_steps = 'steps/'
 folder_pop_analysis = 'pop_dist/'
 
-file_pareto = 'pareto.txt'
-file_config_yaml = 'run_files/config.yaml'
-file_config_json = 'run_files/config.json'
-file_backup_pickle = 'run_files/backup.p'  # backup-version is set here
+file_backup_pickle = 'backup/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
-run_files = 'run_files/'
+file_pareto = 'info/pareto.txt'
+info_config_yaml = 'info/config.yaml'
+file_info_config_json = 'info/config.json'
+file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
+info_distributions_yaml = 'info/distributions_file.yaml'
+
+file_config_yaml = 'run_files/config.yaml'
+file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
+file_evolve_functions = 'run_files/evolve_functions.yaml'
 env_variables_yaml = 'run_files/env_variables.yaml'
 samples_csv = 'run_files/samples.csv'
-operators = 'run_files/operators.csv'
+operators_csv = 'run_files/operators_csv.csv'
+operators_yaml = 'run_files/operators_csv.yaml'
+operators_info = 'run_files/operators_csv.yaml'
 distributions_file = 'run_files/distributions_file.yaml'
 tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
 
-callable_user_python_script = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
+file_sarsa_agent = '../../benchmarks/gym_mountaincar/agents/sarsa_agent_200.p'  # todo
 
-folder_solutions = 'solutions/'
-trees_tex = 'solutions/all_trees.tex'
-file_pycode = 'solutions/pareto_agents.py'
-file_pycode_eval = 'solutions/eval_pareto_agents.py'
+# pycode_load = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
+pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
 
-T_num_lines = 15  # todo this var is not found otherwise
+folder_solutions = 'agents/'
+trees_tex = 'agents_trees.tex'
+file_pycode = 'agents.py'
+file_pycode_eval = 'eval_agents.py'
 
-get_path = {example_runs: Path('examples/'),
-            folder_plots: Path('plots/'),
-            folder_info: Path('info/'),
-            folder_steps: Path('steps/'),
-            folder_pop_analysis: Path('steps/pop_dist/'),
-
-            file_conclusion: Path('analysis/conclusion.txt'),
-
-            folder_solutions: Path('solutions/'),
-            file_pareto: Path('solutions/pareto.txt'),
-            trees_tex: Path('solutions/all_trees.tex'),
-            file_pycode: Path('solutions/agents.py'),
-
-            run_files: Path('run_files/'),
-            file_config_yaml: Path('run_files/config.yaml'),
-            file_config_json: Path('run_files/config.json'),
-            file_backup_pickle: Path('run_files/backup.p'),
-            samples_ready_p: Path('run_files/samples_ready.p'),
-            samples_csv: Path('run_files/samples.csv'),
-            operators: Path('run_files/operators.csv'),
-            tree_expr_txt: Path('run_files/tree_expr.txt'),
-            tree_labels_csv: Path('run_files/tree_labels.csv'),
-            tree_numpy_csv: Path('run_files/tree_numpy.csv')}
+T_num_lines = 15  # sfeh this var is not found otherwise
 
 
 def make_dir(path):
@@ -74,19 +60,43 @@ def make_dir(path):
     return path
 
 
-def get_path(gen_id='tmp'):
+def file_make_dir(file_path):
     """
-    ! Only used for population plots right now
-    Returns the path where a file is located
-    get_path('config') -> *root_dir*/info/config.csv
+    Creates the folder only knowing the file.
+    paff/tuuu/fyle.txe  ->  *mkdir* paff/tuuu/
     """
-    path = 'plots/pop_dist/fitness_{}.jpg'
+    p = Path(file_path)
+    if not p.parent.is_dir():
+        p.parent.mkdir(parents=True)
+    return p
+
+
+def write_file_pareto_text(pareto, root_path):
+    """
+    Save all the pareto efficient candidates to file
+    """
+
+    pth = file_make_dir(root_path / file_pareto)
+
+    with Path.open(pth, 'w') as file:
+        for parsim, meta in sorted(list(pareto.items())):
+            fitness = meta['fitness_train']
+            algo_sym = meta['expr_sym']  # save raw version, not the sympified one
+            file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
+    printez('f', '{}'.format(pth))
+
+
+def open_force_write_text(p, text):
+    p = Path(p)
+    if not p.parent.is_dir():
+        p.parent.mkdir(parents=True)
+    p.write_text(text)
 
 
 def experiment_data(experiment_yaml):
     if Path.is_file(experiment_yaml):  # Load config.yaml
         with Path.open(experiment_yaml, 'r') as file:
-            experiment_infos = yaml.load(file, Loader=yaml.FullLoader)
+            experiment_infos = yaml_load(file)
 
     wer = {
         'env': {
@@ -130,19 +140,21 @@ def save_data_pickle(data_prepared, data_pickle_path):
 
     with Path.open(data_pickle_path, 'wb') as file:
         pickle.dump(data_prepared, file, protocol=pickle.HIGHEST_PROTOCOL)  # not sure if the protocol matters
+
+    printez('f', '{}'.format(data_pickle_path))
+
     return
 
 
-def file_population_karoo(population, pop_name, path, gen_id):
+def write_file_population_karoo(population, pop_name, path, gen_id):
     """
     Save population_* to disk.
 
     """
-
-    pop_path = make_dir(path / folder_info)
-
-    file_path = pop_path / 'population_{}.csv'.format(str(pop_name))
-    # todo function to tree_ and append each tree
+    file_name = 'population_{}.csv'.format(str(pop_name))
+    file_path = path / 'info/' / file_name
+    file_path = file_make_dir(file_path)
+    # sfeh? function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')
         if gen_id != 0:
@@ -154,14 +166,17 @@ def file_population_karoo(population, pop_name, path, gen_id):
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
                 target.writerows([population[ii][row]])
 
+    printez('f', '{}'.format(file_name))
+
     return
 
 
-def pickle_load(data_prepared_pickle_path):
+def pickle_load(path):
     """
     loads a data_csv_path file that was already split with the csv reader
     """
-    with Path.open(data_prepared_pickle_path, 'rb') as file:
+
+    with Path.open(path, 'rb') as file:
         pickle_data = pickle.load(file)
 
     return pickle_data
@@ -172,8 +187,10 @@ def pickle_dump(path, data):
     saves prepared plagih data to pickle file
     """
 
+    path = file_make_dir(path)
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+        printez('f', '{}'.format(path))
     return
 
 
@@ -189,6 +206,8 @@ def yaml_dump(path, data):
     saves prepared plagih data to pickle file
     """
 
+    path = file_make_dir(path)
     with Path.open(path, 'w') as file:
-        yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+        _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+        printez('f', '{}'.format(path))
     return

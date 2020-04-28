@@ -62,10 +62,10 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = 'ERROR: '
     elif 'w' in message_type:
         message_style = BColors.WARNING
-        message_pretxt = 'Warning: '
+        message_pretxt = ''
     elif 'g' in message_type:
         message_style = BColors.BLUE
-        message_pretxt = '{:5.0f}: '.format(time_total)
+        message_pretxt = '{:3.0f}s. '.format(time_total)
     elif 'v' in message_type:
         message_style = BColors.WHITE
         message_pretxt = 'Verbose: '
@@ -75,7 +75,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         pause = True
     elif 'f' in message_type:
         message_style = BColors.MAGENTA
-        message_pretxt = 'Func: '
+        message_pretxt = 'Writing File: '
     elif 'a' in message_type:
         message_style = BColors.GREEN
         message_pretxt = ''

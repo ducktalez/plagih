@@ -37,7 +37,7 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr'
     boundaries = [-.5, .5, 1.5, 2.5]
     ticks = [0, 1, 2]
 
-    mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, a_dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
     return
 
@@ -99,12 +99,12 @@ def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', splits=12
 
     x_linspace, y_linspace, result = mtc_heatmap_helper(env, agent, splits, n, dummy=dummy)
 
-    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
     return
 
 
-def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=False, b_dummy=False, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
+def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
     # generating plot
     fig, ax = plt.subplots()
     c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap)
@@ -114,14 +114,16 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=False, 
     if no_colorbar:
         boundaries = np.array([0, 1])  # don't know why, but makes the bar disappear somehow
 
-    if a_dummy or b_dummy:
+    if dummy:
+
         mask_nan = np.ma.masked_where(result == np.nan, result)
         plt.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
+
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
+
         # sfeh normalize?
         # plt.cm.get_cmap().set_bad(color='white')
         # plt.imshow(result)
-
     else:
         fig.colorbar(c, ax=ax)  # needed, plot is stretched otherwise
 
@@ -146,12 +148,12 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=False, 
     else:
         # p.fill = False
         # p.set_color()  # default 'white' is okay
-        # ax.set_facecolor('xkcd:light grey')
-        p.set_color('xkcd:dark grey')
+        ax.set_facecolor('xkcd:light grey')
+        p.set_color('xkcd:light grey')
         p.fill = True
         p.set_hatch('//')
-        # p.set_edgecolor('xkcd:dark grey')
-        # plt.rcParams['hatch.linewidth'] = 0.2
+        p.set_edgecolor('xkcd:dark grey')
+        plt.rcParams['hatch.linewidth'] = 0.2
     ax.add_patch(p)
 
     # saving as jpg
@@ -162,7 +164,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=False, 
     plt.close()
 
 
-def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, agent_b_dummy=None, n=100, num_splits=256, name='diff', folder='img/',
+def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, n=100, num_splits=256, name='diff', folder='img/',
                          abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False):
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
@@ -192,16 +194,13 @@ def mtc_plot_differences(agent_a, agent_b, agent_a_dummy=None, agent_b_dummy=Non
     if agent_a_dummy:
         _, _, result_dummy = mtc_heatmap_helper(env, agent_a, num_splits, n, dummy=True)
         result = result * result_dummy  # just transfer all 'nan', done here as x*nan=nan, x*1=1
+
         # boundaries = np.linspace(-0.5, 2.5, 4)
         # ticks = np.linspace(0, 2, 3)
 
-    if agent_b_dummy:
-        _, _, result_dummy = mtc_heatmap_helper(env, agent_b, num_splits, n, dummy=True)
-        result = result * result_dummy
-
     env.close()
 
-    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, a_dummy=agent_a_dummy, b_dummy=agent_b_dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=agent_a_dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
     return
 
@@ -258,16 +257,18 @@ def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path(
     plt.savefig(folder / '{}.png'.format(name))
 
 
-def eval_agent_list(agent_list, goal_agent, folder=Path('img/')):
+def eval_agent_list(agent_list, folder=Path('img/')):
 
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 
+    # with Path.open(Path('sarsa_agent_75.p'), 'rb') as file:
+    #     sarsa_agent_75 = pickle.load(file)
+
     agent_performance = []
     for name, agent in agent_list:
-        # mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
-        print('Evaluating agent: {}'.format(name))
-        mtc_plot_differences(agent, goal_agent, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_b_dummy=True)
+        mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
+        # mtc_plot_differences(agent, sarsa_agent_75, name='diff-{}'.format(name), folder=folder, abs_diff=False, agent_a_dummy=True)
         avg_reward, fails, _ = mtc_play(agent, n=100)
         agent_performance.append([name, avg_reward, fails])
 
@@ -280,3 +281,9 @@ def eval_agent_list(agent_list, goal_agent, folder=Path('img/')):
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
     with (folder / 'summary.txt').open('w') as file:
         file.write(summary_text)
+
+
+
+if __name__ == '__main__':
+    print('executing!')
+    eval_agent_list(agent_tuples, folder=folder)

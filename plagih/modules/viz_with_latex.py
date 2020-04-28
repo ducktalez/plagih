@@ -1,7 +1,7 @@
 """
 Visualising Trees with latex.
 """
-from plagih.modules.dicts import op
+from plagih.modules.operators import op
 
 tree_sep = ''  # ''\\newpage'
 
@@ -47,17 +47,19 @@ def latex_wrap_forest(tikz_forest_tree):
         - originalnode: todo, if node is the same as in origin_meta (exactly the same, changed variable?, ...)
         - point: sfeh, guess this is currently not used
     """
+
+    # '\n  point/.style={{coordinate,}},' \
+    # '\n  symbol/.style={{text height=1.5ex,text depth=.25ex,}},' \
+
     latex_tikz_forest = '\n\\begin{{forest}}' \
-                        '\n  for tree={{symbol, rounded corners,draw=black!100}}' \
-                        '\n  point/.style={{coordinate,}},' \
-                        '\n  symbol/.style={{draw=black,text height=1.5ex,text depth=.25ex,}},' \
-                        '\n  terminal/.style={{symbol,}},' \
-                        '\n  nonterminal/.style={{rectangle, symbol, rounded corners,fill=green!20}},' \
-                        '\n  operation/.style={{symbol, rounded rectangle,}},' \
-                        '\n  fixnode/.style={{draw=black!100, fill=red!20,}},' \
-                        '\n  terminal/.style={{rectangle, symbol,draw=black!100, fill=green!20,}},' \
-                        '\n  variable/.style={{rounded corners, symbol,draw=black!100, fill=green!20,}},' \
-                        '\n  constant/.style={{rectangle, symbol,}},' \
+                        '\n  for tree={{rounded corners,align=center,draw=black!100,fill=blue!20}},' \
+                        '\n  terminal/.style={{}},' \
+                        '\n  nonterminal/.style={{rectangle}},' \
+                        '\n  operation/.style={{}},' \
+                        '\n  fixnode/.style={{fill=blue!60,}},' \
+                        '\n  terminal/.style={{rectangle,}},' \
+                        '\n  variable/.style={{rounded corners,}},' \
+                        '\n  constant/.style={{rectangle,}},' \
                         '\n {}' \
                         '\n\\end{{forest}}\n'.format(tikz_forest_tree)
     return latex_tikz_forest

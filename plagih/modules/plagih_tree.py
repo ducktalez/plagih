@@ -7,6 +7,7 @@ import csv
 from plagih.modules.viz_with_latex import *
 from sympy import sympify
 import copy
+from pathlib import Path
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -2264,6 +2265,8 @@ def latex_tree_node_get_forest(tree, node_id=root_id):
         op_tex = op[label]['latex']
         if op_tex is not None:
             latex_label = op_tex
+
+    # todo float labels too long
 
     latex_label = '{{{}}}'.format(latex_label)  # e.g. ->{cartPos}
 

@@ -146,7 +146,7 @@ def load_evolve_functions(root_dir):
              'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 6, 1), 'build_method': 'full'}}},
             {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
              'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 7, 1), 'build_method': 'grow'}}},
-            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.5,
+            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 50, 6), 'build_method': 'full'}}},
         ]
 

@@ -86,7 +86,7 @@ def test_sympify_many():
         ('Andb(True, a & b)', None),
         ('Notb(Orb(True, Orb(False, (0.895)<(vel))))', None),
         ('Ifte((Andb((((vel)+(0.9))+(Mini(6.0, pos)))==(abs(abs(-2.3))), Notb(((vel)*(vel))<(Mini(2.0, pos)))), (0), (2))', None),
-        ('', None),
+        ('Ifte((Notb((Maxi(0.4, cartVel))<=(9.0))), (0), (2))', None),
         ('', None),
         ('', None),
         ('', None),
@@ -99,7 +99,5 @@ def test_sympify_many():
 
 # test_sympify_many()
 
-expr = 'Ifte((Notb((Maxi(0.4, cartVel))<=(9.0))), (0), (2))'
-# expr = 'Notb(True || Orb(False, 1 <(vel)))'
-# expr = '~(a)'
+expr = ''
 print(plagih_sympify(expr))

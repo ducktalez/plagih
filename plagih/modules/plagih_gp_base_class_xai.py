@@ -60,7 +60,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gggwwwsivoaaff',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'gggwwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -165,8 +165,7 @@ class ExplainableGP(object):
                 return True
             except Exception as ex:
                 print_warning('w',
-                              'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(
-                                  ex))
+                              'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
                 raise
         else:
             return False
@@ -193,13 +192,13 @@ class ExplainableGP(object):
         - save the last generation (custom_done)
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
-        path_backup = file_make_dir(self.root_dir / file_backup_pickle)
 
         run_backup_data = self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict
 
+        path_backup = file_make_dir(self.root_dir / file_backup_pickle)
         with Path.open(path_backup, 'wb') as file:
-            pickle.dump(run_backup_data, file)
-        self.printpl('iii', 'Saved run in pickle file.')
+            pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
+        self.printpl('ff', 'Saved: {}'.format(path_backup))
         return
 
     def plagih_gp_run(self):
@@ -299,7 +298,7 @@ class ExplainableGP(object):
                         self.pop_append(new_tree, last_evolution=tag)
 
         self.gen_finalize()
-        write_file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id)  # first gen only
+        write_file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id, print_type=self.print_type)  # first gen only
 
     def gen_create_loop(self):
         """
@@ -471,8 +470,7 @@ class ExplainableGP(object):
         self.file_pareto_latex(self.pareto, root_path)
         self.file_generate_pycode(self.pareto, root_path)
 
-        write_file_population_karoo(self.population_base, 'final', root_path,
-                                    self.gen_id)  # save the final generation of Trees to disk
+        write_file_population_karoo(self.population_base, 'final', root_path, self.gen_id, print_type=self.print_type)
 
         return
 
@@ -643,7 +641,7 @@ class ExplainableGP(object):
         with Path.open(pth, 'w') as file:
             file.write(latex_full_doc)
 
-        printez('f', '{}'.format(trees_tex))
+        self.printpl('f', '{}'.format(trees_tex))
 
         return
 
@@ -692,7 +690,7 @@ class ExplainableGP(object):
         pth = file_make_dir(root_path / file_pycode)
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
-            printez('ff', '{}'.format(pth))
+            self.printpl('ff', '{}'.format(pth))
 
         self.call_custom_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
 
@@ -723,15 +721,15 @@ class ExplainableGP(object):
                                            'folder = Path.cwd() / \'custom_files\'\n\n' + \
                                            auto_import_eval + '\n' + \
                                            'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import * \n' + \
-                                           'with Path.open(Path(\'' + str(Path('benchmarks/gym_mountaincar/agents/sarsa_agent_75.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
-                                           '\tsarsa_agent_75 = pickle.load(file)\n\n' + \
+                                           'with Path.open(Path(\'' + str(Path('benchmarks/gym_mountaincar/agents/sarsa_agent_200.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
+                                           '\tsarsa_agent = pickle.load(file)\n\n' + \
                                            'if __name__ == \'__main__\':\n' + \
                                            '\tprint(\'executing!\')\n' + \
-                                           '\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent_75)\n'
+                                           '\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n'
 
             with Path.open(root_dir / file_pycode_eval, 'w') as file:
                 file.write(executable_python_evaluation)
-                printez('f', '{}'.format(file_pycode_eval))
+                self.printpl('f', '{}'.format(file_pycode_eval))
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Population specific                       +
@@ -1303,7 +1301,7 @@ class ExplainableGP(object):
         self.pareto_update()
         self.pop_base_transfer()
         self.pop_analyze()
-        write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id)
+        write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
         self.print_g('gg', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(

@@ -81,7 +81,6 @@ def write_file_pareto_text(pareto, root_path):
             fitness = meta['fitness_train']
             algo_sym = meta['expr_sym']  # save raw version, not the sympified one
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
-    printez('f', '{}'.format(pth))
 
 
 def open_force_write_text(p, text):
@@ -131,20 +130,7 @@ def experiment_data(experiment_yaml):
     }
 
 
-def save_data_pickle(data_prepared, data_pickle_path):
-    """
-    saves prepared plagih data to pickle file
-    """
-
-    with Path.open(data_pickle_path, 'wb') as file:
-        pickle.dump(data_prepared, file, protocol=pickle.HIGHEST_PROTOCOL)  # not sure if the protocol matters
-
-    printez('f', '{}'.format(data_pickle_path))
-
-    return
-
-
-def write_file_population_karoo(population, pop_name, path, gen_id):
+def write_file_population_karoo(population, pop_name, path, gen_id, print_type=None):
     """
     Save population_* to disk.
 
@@ -164,7 +150,7 @@ def write_file_population_karoo(population, pop_name, path, gen_id):
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
                 target.writerows([population[ii][row]])
 
-    printez('f', '{}'.format(file_name))
+    printez('f', '{}'.format(file_name), print_type=print_type)
 
     return
 
@@ -180,7 +166,7 @@ def pickle_load(path):
     return pickle_data
 
 
-def pickle_dump(path, data):
+def pickle_dump(path, data, print_type=None):
     """
     saves prepared plagih data to pickle file
     """
@@ -188,7 +174,7 @@ def pickle_dump(path, data):
     path = file_make_dir(path)
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        printez('f', '{}'.format(path))
+        printez('f', '{}'.format(path), print_type=print_type)
     return
 
 

@@ -251,8 +251,8 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
     else:
         vmin = -2 * boarders
         vmax = +2 * boarders
-        ticks = np.linspace(-(2*boarders), 2*boarders, min(4*boarders, 10))
-        boundaries = np.linspace(-(0.5+2*boarders), 0.5+2*boarders, 1+min(4*boarders, 10))
+        ticks = np.linspace(-(2*boarders), 2*boarders, 1+min(4*boarders, 10))
+        boundaries = np.linspace(-(0.5+2*boarders), 0.5+2*boarders, 2+min(4*boarders, 10))
 
     # if boarders > 1:
     #     boundaries = boundaries * boarders
@@ -277,8 +277,8 @@ def eval_agent_list(agent_list, goal_agent, n=40, folder=Path('img/')):
     _, _, sarsa_dummy = mtc_heatmap_helper(goal_agent, 256, n, dummy=1)
 
     for name, agent in agent_list:
-        # mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
         print('Evaluating agent: {}'.format(name))
+        mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
         mtc_plot_differences(agent, goal_agent, dummy_result=sarsa_dummy, boarders=1, name='diff-{}'.format(name), folder=folder, abs_diff=False)
         avg_reward, fails, _ = mtc_play(agent, n=n)
         agent_performance.append([name, avg_reward, fails])

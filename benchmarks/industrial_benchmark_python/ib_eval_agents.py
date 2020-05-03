@@ -42,48 +42,6 @@ def get_max_history(index, history_list):
         return history_list[index]
 
 
-class Agent_simple():
-
-    def __init__(self):
-
-        self.state_history = collections.deque()
-
-    def decide(self, state):
-        self.state_history.appendleft(state)
-
-        if len(self.state_history) > 10:
-            self.state_history.pop()
-
-        at = np.array([0, 0, 0])
-        at[0] = -get_max_history(5, self.state_history)['v'] - 0.91
-        at[1] = 2*get_max_history(3, self.state_history)['f'] - state['p'] + 1.43
-        at[2] = -3.48*get_max_history(3, self.state_history)['h'] - get_max_history(4, self.state_history)['h'] + 2*state['p'] + 0.81
-        return at
-        # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
-        # at = 2 * np.random.rand(3) - 1
-
-
-class Agent_blackbox():
-
-    def __init__(self):
-        self.state_history = collections.deque()
-
-    def get_h(self, name, steps):
-        return get_max_history(steps, self.state_history)[name]
-
-    def decide(self, state):
-        self.state_history.appendleft(state)
-
-        if len(self.state_history) > 10:
-            self.state_history.pop()
-
-        at = np.array([0, 0, 0])
-        at[0] = -get_max_history(4, self.state_history)['v'] - 0.96
-        at[1] = 0.41*get_max_history(1, self.state_history)['f'] + self.get_h('f', 4) - 0.59 * state['p'] + 0.77
-        at[2] = -4.05*get_max_history(3, self.state_history)['h'] - get_max_history(4, self.state_history)['h'] + 2.26*state['p'] + 0.90
-        return at
-
-
 class Agent_nothing():
     """
     ...does nothing, kind of.
@@ -122,27 +80,113 @@ class Agent_random():
         return at
 
 
-n_trajectories = 10
-T = 10000
-bad_agents = [Agent_nothing()]
-agents = [Agent_random(), Agent_simple(), Agent_blackbox()]
+def envstate_normalize(env_state, observable_keys=None):
+    """
+    p, v, g, h, f, c
+    'p', 'v', 'g', 'h', 'f', 'c'
+    """
 
-data = np.zeros((n_trajectories*len(agents), T))
-data_cost = np.zeros((n_trajectories, T))
+    norm_dict = {
+        'p': [55.0, 28.72],
+        'v': [48.75, 12.31],
+        'g': [50.53, 29.91],
+        'h': [49.45, 29.22],
+        'f': [37.51, 31.17],
+        'c': [166.33, 139.44]}
+
+    norm_values = {}
+    for k, v in norm_dict.items():
+        norm_values[k] = (env_state[k] - v[0]) / v[1]
+    return norm_values
+
+
+class Ib_Agent():
+
+    def __init__(self):
+        self.state_history = collections.deque()
+
+    def get_h(self, name, steps):
+        return get_max_history(steps, self.state_history)[name]
+
+
+class Agent_daniel_21(Ib_Agent):
+    """
+    Daniel Hein's best agent for complexity 21
+    """
+
+    def decide(self, env_state):
+        self.state_history.appendleft(env_state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0])
+        at[0] = - self.get_h('v', 5) - 0.91
+        at[1] = 2 * self.get_h('f', 3) - env_state['p'] + 1.43
+        at[2] = -3.48 * self.get_h('h', 3) - self.get_h('h', 4) + 2*env_state['p'] + 0.81
+        return at
+
+
+class Agent_daniel_27(Ib_Agent):
+
+    def decide(self, state):
+
+        self.state_history.appendleft(state)
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0])
+        at[0] = -self.get_h('v', 5) - 1.17
+        at[1] = 2 * self.get_h('f', 3) - self.get_h('p', 0) + 1.16
+        at[2] = -3.49 * self.get_h('h', 3) - self.get_h('h', 4) + 2 * self.get_h('p', 0) + 0.82
+        return at
+
+
+class Agent_Daniel_Best(Ib_Agent):
+
+    def decide(self, state):
+
+        self.state_history.appendleft(state)
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0])
+        at[0] = -self.get_h('v', 4) - 0.96  # 27
+        at[1] = 0.41 * self.get_h('f', 1) + self.get_h('f', 4) - 0.59 * self.get_h('p', 0) + 0.77  # 27
+        at[2] = -4.05 * self.get_h('h', 3) - self.get_h('h', 4) + 2.26 * self.get_h('p', 0) + 0.90  # 27
+
+        return at
+
+
+T = 10000
+
+# agents = [Agent_Daniel_Best()]
+agents = [
+    # Agent_random(),
+    # Agent_nothing(),
+    # Agent_daniel_21(),
+    # Agent_daniel_27(),
+    Agent_Daniel_Best()]
+
+data = np.zeros((len(agents), T))
+data_cost = np.zeros((len(agents), T))
 
 
 # for k in range(n_trajectories):
 for k, agent in enumerate(agents):
     env = IDS(p=100)
+    state_debug = []
     for t in range(T):
-        at = agent.decide(env.state)
+        env_state = envstate_normalize(env.state)
+        state_debug.append(env_state)
+        at = agent.decide(env_state)
         # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
         # at = 2 * np.random.rand(3) - 1
         markovStates = env.step(at)
         data[k, t] = env.visibleState()[-1]
     print('Average fitness: {}'.format(np.average(data[k])))
 
-plt.plot(data.T)
-plt.xlabel('T')
-plt.ylabel('Reward')
-plt.show()
+# plt.plot(data.T)
+# plt.xlabel('T')
+# plt.ylabel('Reward')
+# plt.show()

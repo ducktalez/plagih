@@ -35,7 +35,6 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr'
         _, _, result_dummy = mtc_heatmap_helper(agent, 256, n, dummy=dummy)
         results = results * result_dummy
 
-
     # boundaries = [-.5, .5, 1.5, 2.5]
     # ticks = [0, 1, 2]
 
@@ -93,7 +92,7 @@ def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
     if dummy == 1:
         result = np.vectorize(lambda x: np.nan if x == 0 else 1)(result)
     else:  # either dummy=2 OR no dummy
-        result = np.vectorize(lambda x: np.nan if x == 0 else x)(result)  # sfeh: normalize values?
+        result = np.vectorize(lambda x: np.nan if x == 0 else x)(result)  # sfeh: envstate_normalize values?
 
     return x_linspace, y_linspace, result
 
@@ -125,7 +124,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         mask_nan = np.ma.masked_where(result == np.nan, result)
         plt.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
-        # sfeh normalize?
+        # sfeh envstate_normalize?
         # plt.cm.get_cmap().set_bad(color='white')
         # plt.imshow(result)
 

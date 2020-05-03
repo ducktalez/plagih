@@ -60,7 +60,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gggwwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'ggwwsivoaa',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -1227,7 +1227,7 @@ class ExplainableGP(object):
         -> set modifyable nodes (mandatory)
 
         -> round all distributions_file
-        -> try to normalize exponents ('**'). sfeh, not really working.
+        -> try to envstate_normalize exponents ('**'). sfeh, not really working.
         -> set last evolution (for analysing gp operators_csv. e.g. if no good trees originate from crossover, something might be wrong)
         -> set xtype for all nodes.
         """

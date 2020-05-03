@@ -87,7 +87,7 @@ def mtc_heatmap_helper(env, agent, num_splits, n, dummy=False):
     if dummy:
         result = np.vectorize(lambda x: np.nan if x == 0 else 1)(result)
     else:
-        result = np.vectorize(lambda x: np.nan if x == 0 else x)(result)  # sfeh: normalize values?
+        result = np.vectorize(lambda x: np.nan if x == 0 else x)(result)  # sfeh: envstate_normalize values?
 
     return x_linspace, y_linspace, result
 
@@ -121,7 +121,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
 
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
 
-        # sfeh normalize?
+        # sfeh envstate_normalize?
         # plt.cm.get_cmap().set_bad(color='white')
         # plt.imshow(result)
     else:

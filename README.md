@@ -1,10 +1,18 @@
 # PLAGIH Genetic Programming (Name will change (soon?))
 
+TODO. This read-me is outdated.
+
 ...is a genetic programming framework.
 
 Its main goal is to improve a human written program without making too many changes.
 
 *Please note that a lot of stuff is about to change in the future (last update 18.03.2020)*
+
+Main features:
+- Tree-based genetic programming
+- tensorflow-based evaluation
+- visualisation with latex
+
 
 ## How to
 
@@ -127,7 +135,6 @@ plausible addition to the original program which the developer does understand.
 
 
 ### All included Plagih stuff
-Todo: Describe all files and folders + their functions here
 
 ## Run Plagih
 Required packages: `tensorflow` `numpy` `sympy` `Apted` `pickle`

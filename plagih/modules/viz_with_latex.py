@@ -17,7 +17,7 @@ def latex_complete_tree_summary(tikz_forest_list, preamble=''):
     [varwidth=\\maxdimen,convert,border=5pt]{{standalone}}  # -> newpage does not exist
     {{article}}     # -> tree_sep should be \newpage
     {{beamer}}      # -> tree_sep should be \newpage
-    todo schow tex plots aswell?
+    sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
     tikz_combined = ''

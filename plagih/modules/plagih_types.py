@@ -123,7 +123,9 @@ def choose_constant(xtype, choose_distributions, accuracy):
 
 def choose_operator(xtype, choose_oparray, arity=None):
     """
-
+    Randomly choosing an operator for a given xtype.
+    choose_oparray must be given, as they are different between runs.
+    arity can also be set optionally, e.g. for point mutation
     """
     func_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
     if not func_list:
@@ -159,6 +161,8 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
     terminal  '2f' -> '_2f', arity
     function 'f2f' -> '_2f', arity
     function 'b2f2f' -> '_2f', arity
+
+    Note: arity-0 functions (e.g. dummies, that calculate a problem specific value) are terminals!
     """
     func_list = []
     funcs_float = [f2f, b2f, b2f2f]
@@ -186,8 +190,6 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
     # return all functions
     if arity is None and xtype is None:
         func_list = sum(sum(choose_oparray, []), [])
-
-    # TODO what about arity-0 functions? those are effectively terminals and currently do not exist
 
     return func_list
 

@@ -40,7 +40,6 @@ node_is_modifiable = 1
 class Plagih_Tree():
     """
     Plagih trees are computational trees that hold the genetic programs.
-    # todo the same expr_raw can originate from many trees. not good for the meta dict
 
     What is a trees primary identificable?
     - the alignment of labels: [+, a, b]
@@ -71,7 +70,6 @@ class Plagih_Tree():
     #     self.expr = expr
     #     self.numpy_nodes = None
 
-    # def karoo_tree_from_labellist(label_list, modify_list=None):
     def __init__(self, label_list, xtype_list, modify_list=None, arity_list=None):
         """
         create a tree from user input
@@ -95,29 +93,6 @@ class Plagih_Tree():
     def write_to_file(self, path):
         pass
 
-
-class Plagih_node():
-
-    def __init__(self, n_id, depth, n_type, label, parent, arity, c1, c2, c3):
-        return
-
-
-def workaround_remove_tilde_operator(label_list):
-    """
-    ~- workaround
-    """
-    arity_list = [label_get_arity(label) for label in label_list]
-    parent_list = parents_from_arities(arity_list)
-    tilde_ids = [i for i, x in enumerate(label_list) if x == '~']
-    for child, parent in enumerate(parent_list):
-        if parent in tilde_ids:
-            if arity_list[child] == 0:
-                label_list[parent] = '-{}'.format(label_list[child])
-                label_list[child] = ''
-    label_list = [x for x in label_list if x != '']
-    return label_list
-
-
 def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity_list=None):
     """
     returns: tree, from label_list (newest version)
@@ -136,9 +111,9 @@ def karoo_tree_from_expr(expr, env_variables, modify_list=None):
     """
     DELETE later sfeh
     Generate tree from a raw or sympified expression
+    # label_list = workaround_remove_tilde_operator(label_list)
     """
     label_list = ast_convert_from_expr(expr, build=True)
-    # label_list = workaround_remove_tilde_operator(label_list)
     xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
     tree = p_tree.get_uninstanced_tree()
@@ -168,18 +143,21 @@ def vis_tree_from_labellist(label_list, xtype_list, modify_list=None, arity_list
     return tree
 
 
-def tree_from_load_numpycsv(origin_tree_file_path=None):
+def workaround_remove_tilde_operator(label_list):
     """
-    returns: tree, old karoo version
+    ~- workaround
     """
+    arity_list = [label_get_arity(label) for label in label_list]
+    parent_list = parents_from_arities(arity_list)
+    tilde_ids = [i for i, x in enumerate(label_list) if x == '~']
+    for child, parent in enumerate(parent_list):
+        if parent in tilde_ids:
+            if arity_list[child] == 0:
+                label_list[parent] = '-{}'.format(label_list[child])
+                label_list[child] = ''
+    label_list = [x for x in label_list if x != '']
+    return label_list
 
-    if origin_tree_file_path:
-        tree = tree_single_from_csv(origin_tree_file_path)
-    else:
-        print_warning('ww', 'No origin provided. Starting from scratch with random generation.')
-        tree = None
-
-    return tree
 
 
 def tree_save_csv(tree, path_csv):
@@ -192,13 +170,6 @@ def tree_save_csv(tree, path_csv):
         target.writerows([''])  # empty row before each Tree
         for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
             target.writerows([tree][row])
-
-
-def tree_check_expr(tree):
-    """
-    todo make this look better later...
-    """
-
 
 
 def load_pop_from_csv(pop_csv):
@@ -380,8 +351,6 @@ def tree_set_evalutaion(tree, tree_meta):
 
     tree = tree_set_parsimony(tree, parsimony)
     tree = tree_set_fitness(tree, fitness_train)
-    # tree = tree_set_expr_sym(tree, expr_sym) # todo, also at get method
-    # tree = tree_set_expr_raw(tree, expr_raw)
     return tree
 
 
@@ -635,6 +604,9 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
 
 
 def tree_node_is_variable(tree, node_id):
+    """
+    check if the node is not a float value
+    """
     label = tree_node_get_label(tree, node_id)
 
     try:
@@ -644,7 +616,6 @@ def tree_node_is_variable(tree, node_id):
             bool(label)
         except:
             return True
-    # todo sfeh
     return False
 
 
@@ -707,6 +678,38 @@ def insert_function_or_term(depth, depth_goal):
         decision = np.random.choice(['term', 'func'])
 
     return decision
+
+
+def tree_try_get_swapids(a_tree, b_tree, version='default'):
+    """
+    Try to return two branches (aka ids) [for crossover] that can be crossed
+
+    """
+    if version == 'default':
+        # choose a node from parent a
+        a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
+        # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
+        a_id = np.random.choice(a_ids)
+        a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
+
+        # create a list from parent b with same xtype
+        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
+        b_sametype_ids = b_node_ids[:]
+        for b_id in b_node_ids:
+            b_label, _, b_xtype = tree_node_get_lax_v3(b_tree, b_id)
+            if not xtype_equi_outcome(b_xtype, a_xtype):
+                b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
+
+        if b_sametype_ids:  # if entries were found, choose one. we are custom_done
+            b_id = np.random.choice(b_sametype_ids)
+            success = True
+        else:
+            b_id = np.random.choice(b_node_ids)
+            success = False
+
+        return a_id, b_id, success
+    else:
+        raise
 
 
 def randomly_split_range(range_max, num_splits):
@@ -1358,9 +1361,6 @@ def expr_sympify(expr_raw):
         expr_sym = str(plagih_sympify(expr_raw))
     except Exception as ex:
         raise Exception('sympify_1: {} reason: ({})'.format(expr_raw, ex))
-
-    if 'nan' in expr_sym:
-        print('TODO DEBUG SYMPY RAW', expr_raw, '\n', expr_sym)
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:
@@ -2069,8 +2069,8 @@ def tree_evolve_node_insert(tree, env_variables):
     insert_id = None
     for node_id in node_ids:
         label = tree_node_get_label(tree, node_id)
-        xtype = xtype_get_from_label(label, env_variables)  # '>' -> 'f2b'
-        if label == '**' and tree_node_get_child(tree, node_id, 1) != 'Power':  # todo
+        # xtype = xtype_get_from_label(label, env_variables)  # '>' -> 'f2b'
+        if label == '**' and tree_node_get_child(tree, node_id, 1) != 'Power':  # sfeh
             insert_id = node_id
             break
 
@@ -2087,7 +2087,7 @@ def tree_evolve_node_insert(tree, env_variables):
 
 def tree_evolve_complexify(tree, same_arity=True):
     """
-    todo
+    sfeh open
     a function that inserts certain functions that hopefully give good opportunities for next generations
     eg: in old_node '+', inserting Ifte(True, '+', 1.23) or so...
     """
@@ -2208,7 +2208,6 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
             return distance
         else:
             raise
-            # TODO weights
     else:
         print_e('Complexity measurement not available: {}'.format(parsimony_distance))
         raise
@@ -2363,7 +2362,7 @@ def visualize_tree_get_vistree(tree):
     open_fix = tree_ids[:]
     while open_fix:
         node_id = open_fix[-1]
-        if visualize_tree_node_force_show(tree, node_id):  # todo a < 5 can actually be shown. just the parent needs a split
+        if visualize_tree_node_force_show(tree, node_id):  # sfeh a < 5 can actually be shown. just the parent needs a split
             parents = tree_node_get_parents(tree, node_id)
             for x in parents:
                 if x in open_fix:

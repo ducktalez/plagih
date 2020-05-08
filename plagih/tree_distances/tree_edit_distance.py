@@ -73,6 +73,9 @@ def is_bool_constant(x):
 
 
 def weight_ted_mapping(mapping):
+    """
+    todo: make clear how this distance is ought to be used...
+    """
     weighted_distance = 0
     for map_i in mapping:
         a, b = map_i[0], map_i[1]
@@ -110,7 +113,7 @@ def weight_ted_mapping(mapping):
                     if b_weight:
                         weighted_distance += b_weight
                         print('Substituted non-op with op, weight', b_weight)
-                    # elif True:  # todo
+                    # elif True:  # sfeh
                     #     weighted_distance += 0
                     #     print('dummy exir with weight=0 for constants')
                     elif is_float_constant(a_name) and is_float_constant(b_name):
@@ -128,8 +131,8 @@ def weight_ted_mapping(mapping):
                     if b_weight is not None:
                         weighted_distance += b_weight
                         print('Substituted non-op with op, weight', b_weight)
-                    # elif True:  # todo
-                    #     weighted_distance += max(0.5, b_weight-(0.5*a_weight))  # todo
+                    # elif True:  # sfeh
+                    #     weighted_distance += max(0.5, b_weight-(0.5*a_weight))
                     #     print('dummy exit with weight=0 for constants')
                     elif is_float_constant(a_name) and is_float_constant(b_name):
                         weighted_distance += 0.5

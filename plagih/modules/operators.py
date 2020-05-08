@@ -22,7 +22,9 @@ class Plagih_Plus:
     fun_tf = tf.add
     fun_latex = '$+$'
     fun_sym = '({})+({})'
-    fun_pycode = lambda a, b: '({}+{})'.format(a, b)
+
+    def fun_pycode(self, a, b):
+        return'({}+{})'.format(a, b)
 
 
 """
@@ -66,8 +68,8 @@ op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float 
     'asin': {'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'weight': 3, 'tf': tf.asin, 'latex': None, 'sym_str': 'asin({})', 'pycode': lambda a: 'math.asin({})'.format(a)},
     'atan': {'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'weight': 3, 'tf': tf.atan, 'latex': None, 'sym_str': 'atan({})', 'pycode': lambda a: 'math.atan({})'.format(a)},
     'tanh': {'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'weight': 3, 'tf': tf.tanh, 'latex': None, 'sym_str': 'tanh({})', 'pycode': lambda a: 'math.tanh({})'.format(a)},
-
-    # todo round operation! sympify: N(1.2345, decimals). e.g. Int
+    # 'Integer': {'fun': 'Integer', 'arity': 1, 'xtype': 'f2f', 'weight': 0.5, 'tf': tf.cast({}, tf.int32), 'latex': None, 'sym_str': 'N({}, )', 'pycode': lambda a: 'math.tanh({})'.format(a)},
+    # todo round operation! sympify: N(1.2345, decimals) or Integer(1.234). e.g. Int
     # 'b2b' Classical logical operators_csv, evaluate from bool to bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
@@ -169,8 +171,9 @@ op_test = {
     'Btof': {'fun': 'Btof', 'arity': 1, 'xtype': 'b2f', 'weight': 1, 'tf': tf.float32, 'latex': None, 'sym_str': 'float', 'pycode': lambda a: 'float({})'.format(a)},  # not tested
 
     # Never used yet, trying to get rid of the ** function
-    'Power': {'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'weight': 1, 'tf': 'ä', 'latex': None, 'sym_str': '({})**({})', 'pycode': lambda a, b: '({}**{})'.format(a, b)},  # not used # todo # a*a*a -> a**3
-    'Sqrt': {'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'weight': 1, 'tf': 'ä', 'latex': None, 'sym_str': None, 'pycode': None},  # not used # 1/float. important for squareroots. todo sqrt, not inverse
+    'Power': {'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'weight': 1, 'tf': 'ä', 'latex': None, 'sym_str': '({})**({})', 'pycode': lambda a, b: '({}**{})'.format(a, b)},  # sfeh: round the exponent
+    'Sqrt': {'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'weight': 1, 'tf': 'ä', 'latex': None, 'sym_str': None, 'pycode': None},  # not used # 1/float. important for squareroots.
+    # sfeh sqrt, is only 2nd root, also 3rd-root?
 
     # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
     # Also very unclear how they should work.

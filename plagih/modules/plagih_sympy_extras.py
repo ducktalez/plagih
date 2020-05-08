@@ -14,6 +14,41 @@ Use:
 2. Use function
 
 Also, please do not ask me about when to use Ifte() and ifte(), it somehow works.
+
+Useful information:
+- These variables are set for every sympy object and thus can be tested, e.g. a.is_Boolean
+    # To be overridden with True in the appropriate subclasses
+    is_number = False
+    is_Atom = False
+    is_Symbol = False
+    is_symbol = False
+    is_Indexed = False
+    is_Dummy = False
+    is_Wild = False
+    is_Function = False
+    is_Add = False
+    is_Mul = False
+    is_Pow = False
+    is_Number = False
+    is_Float = False
+    is_Rational = False
+    is_Integer = False
+    is_NumberSymbol = False
+    is_Order = False
+    is_Derivative = False
+    is_Piecewise = False
+    is_Poly = False
+    is_AlgebraicNumber = False
+    is_Relational = False
+    is_Equality = False
+    is_Boolean = False
+    is_Not = False
+    is_Matrix = False
+    is_Vector = False
+    is_Point = False
+    is_MatAdd = False
+    is_MatMul = False
+
 """
 
 from sympy import Function, sympify
@@ -39,12 +74,16 @@ class Ifte(Function):
 
 class Mini(Function):
     """
+    Minimum function with arity-2.
+    min() does not work (for now), as nested min() get accumulated, which leads to problems creating the tf-graph
     """
     nargs = 2
 
     @classmethod
     def eval(cls, a, b):
-        if (a < b) == True or (a < b) == False:
+
+        # if (a < b) == True or (a < b) == False: # first solution
+        if a.is_real and b.is_real:
             return a if a < b else b
         else:
             return
@@ -61,7 +100,8 @@ class Maxi(Function):
     @classmethod
     def eval(cls, a, b):
 
-        if (a < b) == True or (a < b) == False:
+        # if (a < b) == True or (a < b) == False: # first solution, was working.
+        if a.is_real and b.is_real:
             return a if a > b else b
         else:
             return
@@ -95,7 +135,14 @@ class Orb(Function):
     @classmethod
     def eval(cls, a, b):
 
-        if (a == True or a == False) and (b == True or b == False):
+        #
+        # if ((a == True or a == False) and (b == True or b == False)) == (sympify(a).is_Boolean and sympify(b).is_Boolean):
+        #     pass
+        # else:
+        #     raise
+
+        # if (a == True or a == False) and (b == True or b == False):  # this works guaranteed
+        if a.is_Boolean and b.is_Boolean:
             return a and b
         else:
             return
@@ -132,11 +179,7 @@ class Square(Function):
     @classmethod
     def eval(cls, a):
         if sympify(a).is_real:
-            try:
-                return a**2  # todo sfeh requires testing. a LOT of testing. check for num-type?
-            except:
-                print('SFEH TODO, Square function in sympify does not work properly. a is {} and of type {}'.format(a, type(a)))
-                return
+            return a**2  # see
         else:
             # print('sympy debug, Square(a). a is {} and of type {}'.format(a, type(a)))
             return

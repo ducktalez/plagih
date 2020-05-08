@@ -98,7 +98,10 @@ def load_config(root_dir):
 
 def load_data_prepared(root_dir):
     """
-
+    loading the data which the GP will be working on.
+    The .csv-file is prepared (loading correct data-type, splitting data, ...)
+    and saved as pickle-file for reloading runs.
+    This is especially important, as the split in training and test-data must be the same.
     """
     if Path.is_file(root_dir / samples_ready_p):
         data_prepared = pickle_load(root_dir / samples_ready_p)
@@ -106,8 +109,7 @@ def load_data_prepared(root_dir):
         data_prepared = data_from_csv(root_dir / samples_csv)
         print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
         pickle_dump(root_dir / samples_ready_p, data_prepared)
-        # env_variables, _, _ = data_prepared
-        yaml_dump(root_dir / env_variables_yaml, data_prepared[0])  # sfeh todo
+        # yaml_dump(root_dir / env_variables_yaml, data_prepared[0])  # sfeh env_variables, _, _ = data_prepared. anyways, currently loading infos via brackets in .csv-file
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
 
@@ -132,11 +134,11 @@ def load_evolve_functions(root_dir):
             {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02},
             {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05},
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'build_method': 'full'}}},
+             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 2, 5, 0.8), 'build_method': 'full'}}},
             {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'build_method': 'grow'}}},
+             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 2, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 1, 24, 4), 'build_method': 'grow'}}},
+             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 6, 24, 4), 'build_method': 'grow'}}},
             {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30},
             {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.09,
              'custom_params': {'mode': 'branch'}},
@@ -188,17 +190,18 @@ def load_tree_builders(root_dir, data_prepared=None):
                                           'lambda: np.random.normal(1,1)',
                                           'lambda: np.random.randint(0, 10)'],
                                    '2b': ['lambda: np.random.choice([True, False])'],
-                                   'observed_floats': 100}  # todo test these
+                                   'observed_floats': 100}
         info_file = file_make_dir(root_dir / info_distributions_yaml)
         yaml_dump(info_file, distributions_as_string)
 
     distributions = {'2f': [], '2b': []}
 
     if data_prepared and distributions_as_string.get('observed_floats'):
-        env_variables, data_train, _ = data_prepared  # todo data types must be float for this to work
-        action_columns = list(range(len(env_variables['obs_name']), len(data_train[0])))
-        subset = np.delete(data_train, action_columns, 1)
-        variables_set = np.random.choice(subset.flatten(), distributions_as_string.get('observed_floats'))  # 2nd param is probably '100'
+        env_variables, data_train, _ = data_prepared
+        action_columns = list(range(len(env_variables['obs_name']), len(data_train[0])))  # remove these
+        # non_float_columns = ... # todo: data types must be float for this to work, remove non-float values. probably, these do not really exist.
+        observ_values = np.delete(data_train, action_columns, 1)
+        variables_set = np.random.choice(observ_values.flatten(), distributions_as_string.get('observed_floats'))  # 2nd param is probably '100'
         distributions['2f'].extend([lambda: np.random.choice(variables_set)]),
 
     distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),

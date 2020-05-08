@@ -38,7 +38,6 @@ class ExplainableGP(object):
         self.root_dir = root_dir
 
         self.config = {
-            # 'root_dir': root_dir,  # TODO
             'mode': 'run',  # ['run', 'analyze']
             'description': 'No description set',
             'choose': {
@@ -148,7 +147,6 @@ class ExplainableGP(object):
                                 'tmp_pop_fitness_distribution': {}}
         self.pop_analysis_dict = {}  # similar to monitoring_dict
 
-        # self.file_directories_create(self.config['root_dir'])  # deprecated, folder MUST already exist
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
         return
@@ -692,11 +690,11 @@ class ExplainableGP(object):
             file.write(pycode_complete_agents)
             self.printpl('ff', '{}'.format(pth))
 
-        self.call_custom_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
+        self.call_custom_mountaincar_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
 
         return
 
-    def call_custom_file(self, root_dir, pycode_complete_agents):
+    def call_custom_mountaincar_file(self, root_dir, pycode_complete_agents):
 
         if Path.is_file(root_dir / self.config.get('pycode_load')):
             #  if direct execution is wished...# exec(Path.open("custom_eval_agents.py").read())
@@ -709,7 +707,7 @@ class ExplainableGP(object):
 
             auto_import_eval = ''
 
-            # todo first lines are only for mountaincar loading agents
+            # todo remove this (?)
             # 'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *\n\n' + \
 
             executable_python_evaluation = 'import sys\n' + \
@@ -763,7 +761,7 @@ class ExplainableGP(object):
                 continue
 
         if len(eval_fails) > 0:
-            print_warning('ww', 'Evaluating {} trees in gen {} caused these exceptions:\n{}'.format(
+            print_warning('www', 'Evaluating {} trees in gen {} caused these exceptions:\n{}'.format(
                 len(self.population_tmp_eval), self.gen_id, ', '.join(eval_fails)), print_type=self.print_type)
 
         return
@@ -969,11 +967,6 @@ class ExplainableGP(object):
 
         return
 
-    def tree_evolve_branch_multiple(self, tree, goal_nodes, env_variables, oparray, choose_distributions):
-
-        # todo
-        return tree
-
     def pop_reproduce(self, call_params, tree):
 
         """
@@ -1079,7 +1072,6 @@ class ExplainableGP(object):
         - get these nodes, randomly choose a subset of those
         - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
         - split the amount of nodes up (randomly) and add these new branches to the tree
-        todo fix min and max border
         """
 
         # tree_origin = self.origin_tree_get()origin_tree
@@ -1189,26 +1181,18 @@ class ExplainableGP(object):
         # 1. two parents
 
         # 2. search nodes for left and right that can be exchanged. convert_needed
-        left_id, right_id, success = self.tree_try_get_swapids(left_tree, right_tree)
+        left_id, right_id, success = tree_try_get_swapids(left_tree, right_tree)
         if not success:
-            right_id, left_id, success = self.tree_try_get_swapids(right_tree, left_tree)
+            right_id, left_id, success = tree_try_get_swapids(right_tree, left_tree)
 
         left_ids, left_labels, left_aritys, left_xtypes = tree_get_branch_ilax(left_tree, left_id)
         right_ids, right_labels, right_aritys, right_xtypes = tree_get_branch_ilax(right_tree, right_id)
 
         if not success:
-            print_warning('ww',
-                          'Crossover conversion between trees not possible: \n{}\n{}'.format(left_tree, right_tree))
-            # left_xtype = xtype_get_from_label(tree_node_get_label(left_tree, left_id), self.env_var_dummy)
-            # conv_to_left, conv_to_right = xtype_get_converters(left_xtype)
-            # right_labels.insert(0, conv_to_left)
-            # right_aritys.insert(0, 1)
-            # left_labels.insert(0, conv_to_right)
-            # left_aritys.insert(0, 1)
+            print_warning('ww', 'Crossover conversion between trees not possible: \n{}\n{}'.format(left_tree, right_tree))
             return None, None
 
-        left_core = core_from_labels(left_labels, left_aritys,
-                                     left_xtypes)  # todo this is not necessary, switch branches
+        left_core = core_from_labels(left_labels, left_aritys, left_xtypes)
         right_core = core_from_labels(right_labels, right_aritys, right_xtypes)
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
@@ -1304,7 +1288,7 @@ class ExplainableGP(object):
         write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
-        self.print_g('gg', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(
+        self.print_g('g', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(
             len(self.population_tmp_done), self.config['pop_max'], self.gen_id,
             time.perf_counter() - self.time_genstart))
 
@@ -1339,49 +1323,17 @@ class ExplainableGP(object):
 
         return tourn_winner
 
-    def tree_try_get_swapids(self, a_tree, b_tree, version='default'):
-        """
-        Try to return two branches (aka ids) [for crossover] that can be crossed
-
-        """
-        if version == 'default':
-            # choose a node from parent a
-            a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
-            # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
-            a_id = np.random.choice(a_ids)
-            a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
-
-            # create a list from parent b with same xtype
-            b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
-            b_sametype_ids = b_node_ids[:]
-            for b_id in b_node_ids:
-                b_label, _, b_xtype = tree_node_get_lax_v3(b_tree, b_id)
-                if not xtype_equi_outcome(b_xtype, a_xtype):
-                    b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
-
-            if b_sametype_ids:  # if entries were found, choose one. we are custom_done
-                b_id = np.random.choice(b_sametype_ids)
-                success = True
-            else:
-                b_id = np.random.choice(b_node_ids)
-                success = False
-
-            return a_id, b_id, success
-        else:
-            raise
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Work with trees                           +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
     def activate_origin_tree(self, tree):
         """
-
+        The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
         if not tree_check_deep(tree, self.env_variables):
             raise
 
-        tree_check_expr(tree)
         expr_raw = tree_get_expr_raw(tree, node_id=root_id)
 
         try:

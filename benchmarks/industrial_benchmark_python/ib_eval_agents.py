@@ -56,9 +56,9 @@ class Agent_nothing():
             self.state_history.pop()
 
         at = np.array([0, 0, 0])
-        at[0] = 50
-        at[1] = 50
-        at[2] = 50
+        at[0] = 0
+        at[1] = 0
+        at[2] = 0
         return at
 
 
@@ -120,10 +120,10 @@ class Agent_daniel_21(Ib_Agent):
         if len(self.state_history) > 10:
             self.state_history.pop()
 
-        at = np.array([0, 0, 0])
+        at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = - self.get_h('v', 5) - 0.91
         at[1] = 2 * self.get_h('f', 3) - env_state['p'] + 1.43
-        at[2] = -3.48 * self.get_h('h', 3) - self.get_h('h', 4) + 2*env_state['p'] + 0.81
+        at[2] = -3.48 * self.get_h('h', 3) - self.get_h('h', 4) + 2*self.get_h('p', 0) + 0.81
         return at
 
 
@@ -135,14 +135,18 @@ class Agent_daniel_27(Ib_Agent):
         if len(self.state_history) > 10:
             self.state_history.pop()
 
-        at = np.array([0, 0, 0])
-        at[0] = -self.get_h('v', 5) - 1.17
-        at[1] = 2 * self.get_h('f', 3) - self.get_h('p', 0) + 1.16
-        at[2] = -3.49 * self.get_h('h', 3) - self.get_h('h', 4) + 2 * self.get_h('p', 0) + 0.82
+        at = np.array([0, 0, 0], dtype=np.float32)
+        # # idk why, but these are the best??
+        # at[0] = -self.get_h('v', 5) - 1.17
+        # at[1] = 2 * self.get_h('f', 3) - self.get_h('p', 0) + 1.16
+        # at[2] = -3.49 * self.get_h('h', 3) - self.get_h('h', 4) + 2 * self.get_h('p', 0) + 0.82
+        at[0] = - self.get_h('v', 4) - 0.96
+        at[1] = 0.4 * self.get_h('f', 1) + self.get_h('f', 4) - 0.6 * self.get_h('p', 0) + 0.76
+        at[2] = - self.get_h('h', 3) - 1.57 * self.get_h('h', 4) + self.get_h('p', 0) + 0.52
         return at
 
 
-class Agent_Daniel_Best(Ib_Agent):
+class Agent_Daniel_29_Best(Ib_Agent):
 
     def decide(self, state):
 
@@ -150,7 +154,7 @@ class Agent_Daniel_Best(Ib_Agent):
         if len(self.state_history) > 10:
             self.state_history.pop()
 
-        at = np.array([0, 0, 0])
+        at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = -self.get_h('v', 4) - 0.96  # 27
         at[1] = 0.41 * self.get_h('f', 1) + self.get_h('f', 4) - 0.59 * self.get_h('p', 0) + 0.77  # 27
         at[2] = -4.05 * self.get_h('h', 3) - self.get_h('h', 4) + 2.26 * self.get_h('p', 0) + 0.90  # 27
@@ -158,35 +162,90 @@ class Agent_Daniel_Best(Ib_Agent):
         return at
 
 
-T = 10000
+def eval_agents():
 
-# agents = [Agent_Daniel_Best()]
-agents = [
-    # Agent_random(),
-    # Agent_nothing(),
-    # Agent_daniel_21(),
-    # Agent_daniel_27(),
-    Agent_Daniel_Best()]
+    T = 100
 
-data = np.zeros((len(agents), T))
-data_cost = np.zeros((len(agents), T))
+    # agents = [Agent_Daniel_Best()]
+    agents = [
+        # # Agent_random(),
+        Agent_nothing(),
+        Agent_daniel_21(),
+        Agent_daniel_27(),
+        Agent_Daniel_29_Best()]
+
+    data = np.zeros((len(agents), T))
+    data_cost = np.zeros((len(agents), T))
+
+    # for k in range(n_trajectories):
+    for k, agent in enumerate(agents):
+        env = IDS()  # p=100 in examples!
+        # state_debug = []
+        for t in range(T):
+            env_state = envstate_normalize(env.state)
+            # state_debug.append(list(env_state.values()))
+            at = agent.decide(env_state)
+            # at = at * np.array([1, 10, 5.75])  # daniel hein phd scales
+
+            # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
+            # at = 2 * np.random.rand(3) - 1
+            markovStates = env.step(at)
+            data[k, t] = env.visibleState()[-1]
+        print('Average fitness: {}'.format(np.average(data[k])))
+        # debug_array = np.array(state_debug).T
+        # for x in range(6):
+        #     print('Variable {}: {:.5f} {:.5f}'.format(x, np.mean(debug_array[x]), np.var(debug_array[x])))
+
+    # plt.plot(data.T)
+    # plt.xlabel('T')
+    # plt.ylabel('Reward')
+    # plt.show()
 
 
-# for k in range(n_trajectories):
-for k, agent in enumerate(agents):
-    env = IDS(p=100)
-    state_debug = []
+def agent_samples_csv(T=10000):
+
+    from pathlib import Path
+    import csv
+
+    history_t = 5
+    csv_data = np.zeros((T, 6 * history_t + 3))
+
+    data = np.zeros(T)
+
+    agent = Agent_Daniel_29_Best()
+    env = IDS()  # p=100 in examples!
+
     for t in range(T):
         env_state = envstate_normalize(env.state)
-        state_debug.append(env_state)
+
+        for ii in range(history_t):
+            for enum_x, state_x in enumerate(env_state.values()):
+                if t + ii < T:
+                    csv_data[t+ii][enum_x * history_t + ii] = state_x
+
+        # state_debug.append(list(env_state.values()))
         at = agent.decide(env_state)
+        # at = at * np.array([1, 10, 5.75])
         # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
         # at = 2 * np.random.rand(3) - 1
-        markovStates = env.step(at)
-        data[k, t] = env.visibleState()[-1]
-    print('Average fitness: {}'.format(np.average(data[k])))
 
-# plt.plot(data.T)
-# plt.xlabel('T')
-# plt.ylabel('Reward')
-# plt.show()
+        for ii, action in enumerate(at):
+            csv_data[t][6 * history_t + ii] = action
+
+        markovStates = env.step(at)
+        data[t] = env.visibleState()[-1]
+    # debug_array = np.array(state_debug).T
+    # for x in range(6):
+    #     print('Variable {}: {:.5f} {:.5f}'.format(x, np.mean(debug_array[x]), np.var(debug_array[x])))
+
+    print(Path.cwd())
+    print(Path('gp_files/ib_agent29_samples.csv'))
+    print(Path('gp_files').is_dir())
+
+    with Path('gp_files/ib_agent29_samples.csv').open('w', newline='') as csvFile:
+        writer = csv.writer(csvFile)
+        writer.writerows(csv_data)
+
+    print('DONE!')
+
+eval_agents()

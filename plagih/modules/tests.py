@@ -130,17 +130,6 @@ class MountainCarExamples:
     expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, pos) > -0.97, 0.0, 2.0)'
 
 
-def check_op_names():
-    # check if the fun-names are correct
-    for key, value in op.items():
-        if not value['fun'] in op:
-            print('The op-dict has an entry: {} with fun: {} Which is not in op.'.format(key, value['fun']))
-            return False
-
-    # check if the pycode-functions are working with this arity
-    return True
-
-
 def test_tree_visualize_reduced():
     obs_bundle = {'obs_name': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
                                'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},

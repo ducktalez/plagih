@@ -50,7 +50,7 @@ def main(argv):
     elif task == 'analyze':
         plagih_gp.analyze(ipath)
     elif task == 'tree-latex':
-        print('Creating a Latex-file from tree (complete tree, todo) csv-file...')
+        print('Creating a Latex-file from tree (complete tree) csv-file. Can not be used yet. ...')
         # plagih_gp.visualize_labellist(ipath)
     elif task == 'show-default_config':
         plagih_gp.show_default_config(ipath)

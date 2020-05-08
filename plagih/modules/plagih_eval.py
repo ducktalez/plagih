@@ -275,7 +275,7 @@ def tensors_leaves(tensors, data, env_variables):
     return tensors
 
 
-def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
+def ast_convert_from_expr(expr, tensors=None, build=None):
     """
     Extract expression tree from the string algo_sym.
     Please provide ONE of the following if you want to get...
@@ -286,10 +286,6 @@ def ast_convert_from_expr(expr, tensors=None, prnt=None, build=None):
 
     """
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
-
-    if delete_this and '~' in expr:
-        print('TODOASDDSA')
-        pass
 
     tree = ast.parse(expr, mode='eval').body
 

@@ -52,7 +52,7 @@ class TestHelpers:
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
         xtype_list = xtypes_from_labels(label_list, self.env_bundle)
-        p_tree = Plagih_Tree(label_list, xtype_list, modify_list=modify_list)
+        p_tree = Plagih_KarooTree(label_list, xtype_list, modify_list=modify_list)
         tree = p_tree.get_uninstanced_tree()
         return tree
 
@@ -148,7 +148,7 @@ def test_tree_visualize_reduced():
     for label_list in labellists:
         xtype_list = xtypes_from_labels(label_list, obs_bundle)
         tree = karoo_tree_from_labellist(label_list, xtype_list)
-        vistree = visualize_tree_get_vistree(tree)
+        vistree = latex_tree_get_vistree(tree)
         forest_grouped.append(latex_tree_get_forest(tree))
 
     latex_file = latex_complete_tree_summary(forest_grouped)

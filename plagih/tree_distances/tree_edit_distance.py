@@ -74,7 +74,7 @@ def is_bool_constant(x):
 
 def weight_ted_mapping(mapping):
     """
-    todo: make clear how this distance is ought to be used...
+    todo: make clear how this distance is meant to be used...
     """
     weighted_distance = 0
     for map_i in mapping:

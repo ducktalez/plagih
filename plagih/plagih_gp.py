@@ -81,17 +81,19 @@ def runfolder_exists(root_dir):
 
 def load_config(root_dir):
     config_yaml_path = root_dir / file_config_yaml
+
     if Path.is_file(config_yaml_path):  # Load config.yaml
         with Path.open(config_yaml_path, 'r') as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
     else:
-        printez('i', 'Loading json-config, yaml-version was not found...')
         config_json_path = root_dir / file_config_json
+
         if Path.is_file(config_json_path):  # Load config.yaml
+            printez('i', 'Loading json-config, yaml-version was not found...')
             with Path.open(config_yaml_path, 'r') as file:
                 json.load(file)
         else:
-            print_warning('w', 'You should have a {} here:\n{}'.format(file_config_yaml, config_yaml_path))
+            print_warning('w', 'No config (yaml/json) found in:\n{}'.format(config_yaml_path))
             config = {}
     return config
 
@@ -229,7 +231,7 @@ def load_label_list(root_dir):
     return label_list, modify_list
 
 
-def gp_run(root_dir):
+def gp_run(root_dir, force_new_run):
     """
     Loads important files in your run-folder
     - load config.yaml
@@ -239,6 +241,12 @@ def gp_run(root_dir):
     """
 
     config = load_config(root_dir)
+
+    if force_new_run:
+        # for convenience, this can be set here.
+        # Makes restarting runs possible from comand line
+        config['force_new_run'] = True
+
     gp = ExplainableGP(root_dir, config=config)
 
     data_prepared = load_data_prepared(root_dir)
@@ -249,9 +257,12 @@ def gp_run(root_dir):
 
     label_list, modify_list = load_label_list(root_dir)
     if label_list is not None and modify_list is not None:
-        observation_bundle = gp.get_observation_bundle()
-        origin_tree = karoo_tree_from_labellist(label_list, observation_bundle, modify_list=modify_list)
-        gp.activate_origin_tree(origin_tree)
+        env_variables = gp.get_observation_bundle()
+        xtype_list = xtypes_from_labels(label_list, env_variables)
+        # origin_tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
+        origin_ptree = Plagih_KarooTree(label_list, xtype_list, modify_list=modify_list)
+        # origin_tree = origin_ptree.get_uninstanced_tree() # todo
+        gp.activate_origin_tree(origin_ptree)
 
     evolve_list = load_evolve_functions(root_dir)
     gp.avtivate_evolve_functions(evolve_list)
@@ -273,25 +284,6 @@ def analyze(root_dir):
     gp = ExplainableGP(root_dir, config=config)
     gp.activate_dataset(data_prepared)
     gp.plagih_update_analysis()
-
-
-def visualize_labellist(csv_file, output_file=None):
-    """
-    visualize a label list
-    e.g. if you want to check, if you made your tree correctly
-    """
-    print('can not create tree from label list anymore, xtype_list required')
-    # if Path.is_file(csv_file):
-    #     label_list, modify_list = labellists_from_csv(csv_file)
-    #     tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
-    #     forest_input = latex_tree_get_forest(tree)
-    #     latex_full_doc = latex_complete_tree_summary(forest_input)
-    #     if not output_file:
-    #         output_file = csv_file.with_suffix('.tex')
-    #     with Path.open(output_file, 'w') as csv_file:
-    #         csv_file.write(latex_full_doc)
-    # else:
-    #     print_e('File {}  does not exist!'.format(csv_file))
 
 
 if __name__ == "__main__":

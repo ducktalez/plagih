@@ -52,7 +52,7 @@ Useful information:
 """
 
 from sympy import Function, sympify
-from sympy.core.numbers import ComplexInfinity
+# from sympy.core.numbers import ComplexInfinity
 
 
 class Ifte(Function):
@@ -118,7 +118,8 @@ class Andb(Function):
     @classmethod
     def eval(cls, a, b):
 
-        if (a == True or a == False) and (b == True or b == False):
+        # if (a == True or a == False) and (b == True or b == False):
+        if a.is_Boolean and b.is_Boolean:
             return a and b
         else:
             return
@@ -188,43 +189,41 @@ class Square(Function):
         return eval(self, a)
 
 
-class Ftob(Function):
-    """
-    Dummy function to convert Float to boolean
-    """
-    nargs = 1
-
-    @classmethod
-    def eval(cls, a):
-        if (a > 0) == True or (a > 0) == False:
-            return True if a > 0 else False
-        else:
-            return
-
-    def _sympy_(self, a):
-        return eval(self, a)
-
-
-class Btof(Function):
-    """
-    Dummy function to convert Boolean to Float
-    """
-    nargs = 1
-
-    @classmethod
-    def eval(cls, a):
-        if a == True or a == False:
-            return 1 if a else 0
-        else:
-            return
-
-    def _sympy_(self, a):
-        return eval(self, a)
+# class Ftob(Function):
+#     """
+#     Dummy function to convert Float to boolean
+#     """
+#     nargs = 1
+#
+#     @classmethod
+#     def eval(cls, a):
+#         if (a > 0) == True or (a > 0) == False:
+#             return True if a > 0 else False
+#         else:
+#             return
+#
+#     def _sympy_(self, a):
+#         return eval(self, a)
+#
+#
+# class Btof(Function):
+#     """
+#     Dummy function to convert Boolean to Float
+#     """
+#     nargs = 1
+#
+#     @classmethod
+#     def eval(cls, a):
+#         if a == True or a == False:
+#             return 1 if a else 0
+#         else:
+#             return
+#
+#     def _sympy_(self, a):
+#         return eval(self, a)
 
 
 local_sympy_dict = {'Ifte': Ifte,
-                    'Ftob': Ftob,
-                    'Btof': Btof,
                     'Mini': Mini,
                     'Maxi': Maxi,
                     'Andb': Andb,

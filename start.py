@@ -21,8 +21,10 @@ def main(argv):
    """
     ipath = None
     task = 'run'
+    force_new_run = False
+
     try:
-        opts, args = getopt.getopt(argv, 'hi:o:f', ['ipath=', 'opath=', 'task='])
+        opts, args = getopt.getopt(argv, 'hi:o:f', ['ipath=', 'opath=', 'task=', 'force_new_run='])
     except getopt.GetoptError:
         print('Failed, try: start.py -i <input FOLDER>')
         sys.exit(2)
@@ -39,6 +41,8 @@ def main(argv):
             print('Your input -o {} is not used'.format(opath))
         elif opt in ('--task'):
             task = arg
+        elif opt in ('--force_new_run'):
+            force_new_run = True
 
     if ipath is None:
         print('No run-folder provided. Starting an example run.\n')
@@ -46,7 +50,7 @@ def main(argv):
     # print('Starting plagih-run in {}'.format(Path(run_folder)))
 
     if task == 'run':
-        plagih_gp.gp_run(ipath)
+        plagih_gp.gp_run(ipath, force_new_run)
     elif task == 'analyze':
         plagih_gp.analyze(ipath)
     elif task == 'tree-latex':

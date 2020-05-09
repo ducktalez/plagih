@@ -6,14 +6,12 @@ Functions, that might be addable in the future:
 """
 import time
 from plagih.modules.file_interaction import *
+# from plagih.modules.plagih_tree import *
+from plagih.modules.viz_with_latex import *
 import json
 from pathlib import Path
 import textwrap
 
-try:
-    import tikzplotlib
-except Exception as ex:
-    print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -59,7 +57,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'ggwwsivoaa',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'gwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -85,7 +83,7 @@ class ExplainableGP(object):
             'pycode_load': pycode_load
         }
 
-        self.config.update(config)
+        self.config.update(config)  # overwrites the default config-values with user-loaded config
 
         # init values with dummies (just to have all self values here for overview)
         self.tree_meta = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
@@ -348,7 +346,6 @@ class ExplainableGP(object):
                     self.pop_append(new_tree, last_evolution=tag)
 
             elif evolve_name == 'crossover branch':
-                # todo prune tree!
 
                 for nn in range(int(evolve_num / 2)):  # two childs
                     parent_a = self.pop_selection_tournament(tourn_size)
@@ -622,10 +619,11 @@ class ExplainableGP(object):
 
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            tree = karoo_tree_from_expr(expr_raw, self.env_variables)
+            ptree = karoo_tree_from_expr(expr_raw, self.env_variables)
+            tree = ptree.get_uninstanced_tree()
             tree = self.tree_beautify(tree, last_evolution='texify')
             ###
-            vistree = visualize_tree_get_vistree(tree)
+            vistree = latex_tree_get_vistree(tree)
             ###
 
             tikz_code = latex_tree_get_forest(vistree)  # generate the small forest inputs
@@ -667,7 +665,8 @@ class ExplainableGP(object):
             expr_sym = expr_sympify(expr_raw)
             # label_list_sym = ast_convert_from_expr(expr_sym, build=True)
             # tree = karoo_tree_from_labellist(label_list_sym, self.env_variables)
-            tree = karoo_tree_from_expr(expr_sym, self.env_variables)
+            ptree = karoo_tree_from_expr(expr_sym, self.env_variables)
+            tree = ptree.get_uninstanced_tree()
             py_action = 'action = {}'.format(tree_get_pycode(tree))
 
             py_agent_name = '{}{:.0f}'.format(self.name, parsim)
@@ -696,6 +695,8 @@ class ExplainableGP(object):
 
     def call_custom_mountaincar_file(self, root_dir, pycode_complete_agents):
 
+        # sfeh remove this (?)
+
         if Path.is_file(root_dir / self.config.get('pycode_load')):
             #  if direct execution is wished...# exec(Path.open("custom_eval_agents.py").read())
 
@@ -707,7 +708,6 @@ class ExplainableGP(object):
 
             auto_import_eval = ''
 
-            # todo remove this (?)
             # 'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *\n\n' + \
 
             executable_python_evaluation = 'import sys\n' + \
@@ -860,7 +860,8 @@ class ExplainableGP(object):
                 best_fit = fitness
             if pareto_improved:
                 expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
-                tree = karoo_tree_from_expr(expr_raw, self.env_variables)
+                ptree = karoo_tree_from_expr(expr_raw, self.env_variables)
+                tree = ptree.get_uninstanced_tree()
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
                 sym_tree = tree_evolve_reduce(tree, self.env_variables, completely=True)
                 if list(tree_get_labellist(sym_tree)) != list(tree_get_labellist(tree)):
@@ -989,7 +990,7 @@ class ExplainableGP(object):
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
             xtype_list = xtypes_from_labels(label_list, self.env_variables)
-            p_tree = Plagih_Tree(label_list, xtype_list)
+            p_tree = Plagih_KarooTree(label_list, xtype_list)
             tree = p_tree.get_uninstanced_tree()
         else:
             tree = None
@@ -1038,8 +1039,7 @@ class ExplainableGP(object):
                 float_nodes = [np.random.choice(float_nodes)]
             for node_id in float_nodes:
                 val = float(tree_node_get_label(tree, node_id))
-                val = gp_mutate_constants(val, term_type='float', filter_type=mutate_filter,
-                                          float_accuracy=self.config['float_accuracy'])
+                val = gp_mutate_constants(val, term_type='float', filter_type=mutate_filter, float_accuracy=self.config['float_accuracy'])
                 tree = tree_node_set_label(tree, node_id, val)
         else:
             # print_warning('iii', 'Tree does not seem to have any float nodes for filtering.')
@@ -1107,7 +1107,9 @@ class ExplainableGP(object):
             label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size,
                                                                         build_method, self.config['float_accuracy'])
 
-            core = core_from_labels(label_list, arity_list, xtype_list)
+            # core = core_from_labels(label_list, arity_list, xtype_list)
+            c_core = Core_From_Labels(label_list, arity_list, xtype_list)
+            core = c_core.get_uninstanced_core()
             tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
 
         return tree
@@ -1124,7 +1126,7 @@ class ExplainableGP(object):
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, build_method,
                                                                     self.config['float_accuracy'])
 
-        p_tree = Plagih_Tree(label_list, xtype_list, arity_list=arity_list)
+        p_tree = Plagih_KarooTree(label_list, xtype_list, arity_list=arity_list)
         tree = p_tree.get_uninstanced_tree()
 
         return tree
@@ -1158,7 +1160,11 @@ class ExplainableGP(object):
                                                                     self.config['float_accuracy'])
 
         if label_list:
-            core_insert = core_from_labels(label_list, arity_list, xtype_list)
+            # core_insert = core_from_labels(label_list, arity_list, xtype_list)
+
+            c_core = Core_From_Labels(label_list, arity_list, xtype_list)
+            core_insert = c_core.get_uninstanced_core()
+
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
             tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_variables, self.choose_distributions,
@@ -1217,14 +1223,11 @@ class ExplainableGP(object):
         """
 
         if tree is None:
-            print_warning('ww', 'Tree from last_evolution: \'{}\' failed. Continuing.'.format(
-                last_evolution))  # reasons: sympify, last tree was already too large
+            print_warning('ww', 'Tree from last_evolution: \'{}\' failed. Continuing.'.format(last_evolution))  # reasons: sympify, last tree too large
         else:
             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-            # tree = tree_round_constants(tree, self.config['float_accuracy'], karoo=True)  # sfeh: test 22.04.2020  # todo
             tree = tree_normalize_exponentiation(tree)
             tree = tree_set_last_evolution(tree, last_evolution)
-            # tree = tree_set_xtypes(tree, self.env_variables)
 
         return tree
 
@@ -1327,10 +1330,11 @@ class ExplainableGP(object):
     #   Work with trees                           +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def activate_origin_tree(self, tree):
+    def activate_origin_tree(self, ptree: Plagih_KarooTree):
         """
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
+        tree = ptree.get_uninstanced_tree()
         if not tree_check_deep(tree, self.env_variables):
             raise
 
@@ -1345,9 +1349,6 @@ class ExplainableGP(object):
         # if not tree_check_is_sympified(tree):
         #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
         #                          ''.format(expr_raw, expr_sym))
-
-        if not tree_check_deep(tree, self.env_variables):
-            raise
 
         self.origin_tree = copy.deepcopy(tree)
         self.origin_meta = {'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
@@ -1383,17 +1384,11 @@ class ExplainableGP(object):
         except Exception as ex:
             raise Exception('eval:{}'.format(ex))
 
-        fitness_train = \
-            eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables, self.tf_device_log, self.tf_device,
-                    self.tf_classify_labels_map)['fitness']
+        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables,
+                                self.tf_device_log, self.tf_device, self.tf_classify_labels_map)['fitness']
 
-        # print(str(fitness_train), 'str fitness train')
-        # if str(fitness_train) == 'inf':
-        #     print('fitness_train', fitness_train, type(fitness_train), fitness_train != float('inf'))
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness_train is not a real number: {}'.format(fitness_train))
-        # else:
-        #     print('debug aa1', fitness_train, 'is of type', type(fitness_train), 'the check is', check_value_is_real(fitness_train))
 
         return fitness_train
 
@@ -1599,15 +1594,15 @@ class ExplainableGP(object):
     #   Methods to print_type output information  +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def printpl(self, message_type, message):
+    def printpl(self, message_type, message_str):
         """
         Lightweight print function.
         Instead of checking if you should print every time, this is done here.
-        :param message_type: 'gggiiiivvv...' options can be found in config
+        message_type options can be found in config
         """
 
         if message_type in self.print_type:
-            printez(message_type, message, print_type=self.print_type, time_total=time.perf_counter() - self.time_start)
+            printez(message_type, message_str, print_type=self.print_type, time_total=time.perf_counter() - self.time_start)
 
         return
 

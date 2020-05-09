@@ -1,10 +1,14 @@
 import pickle
-from plagih.modules.plagih_tree import *
 from plagih.modules.printing import *
 import csv
 import matplotlib.pyplot as plt
 import yaml
 from pathlib import Path
+
+try:
+    import tikzplotlib
+except Exception as ex:
+    print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
 
 example_runs = 'run_examples/'
 

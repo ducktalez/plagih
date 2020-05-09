@@ -256,7 +256,7 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
     # if boarders > 1:
     #     boundaries = boundaries * boarders
     #     ticks = ticks * boarders
-    #     ticks = None  # todo
+    #     ticks = None  #
 
     if dummy_result is None:
         mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)

@@ -303,8 +303,19 @@ def tree_set_id(tree, tree_id):
     return tree
 
 
+def tree_get_last_evolution(tree):
+    """
+    return a tree's last genetic modification
+    """
+    last_modi = tree[TR_lastEvolve][root_id]
+    return last_modi
+
+
 def tree_set_last_evolution(tree, last_modification):
-    tree[TR_lastEvolve][1] = last_modification
+    """
+    the last evolution (or evolutions)
+    """
+    tree[TR_lastEvolve][root_id] = last_modification
     return tree
 
 
@@ -403,20 +414,6 @@ def tree_set_modifyable_nodes_true(tree, karoo=True):
 
     for node_id in tree_nodes_get_ids(tree, karoo=karoo):
         tree[N_modify][node_id] = 1
-    return tree
-
-
-def tree_set_evalutaion(tree, tree_meta):
-    """
-    When having the meta data, save it in the tree.
-    """
-    parsimony = tree_meta['parsimony']
-    fitness_train = tree_meta['fitness_train']
-    # expr_sym = tree_meta['expr_sym']
-    # expr_raw = tree_meta['expr_raw']
-
-    tree = tree_set_parsimony(tree, parsimony)
-    tree = tree_set_fitness(tree, fitness_train)
     return tree
 
 
@@ -1053,20 +1050,14 @@ def tree_get_fitness(tree, precision=None, karoo=True):
 def tree_hash(tree):
     """
     What is used as identificator for a tree...
+    The tree is identifiable by the node-structure it holds, aka the labels in order.
     hash(label_list)
-    old version: hash(expr_raw)
+    old version: hash(expr_raw) deprecated.
+    trees can hold the same expr_raw with different label-lists and thus different parsimonies
     """
     label_list = tree_get_labellist(tree)
     tree_ident = hash(','.join(np.array(label_list)))
     return tree_ident
-
-
-def tree_get_last_evolution(tree):
-    """
-    return a tree's last genetic modification
-    """
-    last_modi = tree[TR_lastEvolve][1]
-    return last_modi
 
 
 def tree_get_parsimony(tree):
@@ -2196,6 +2187,9 @@ def tree_iterate_range(tree, karoo=True):
 
 
 def tree_normalize_exponentiation(tree):
+    """
+    todo: the rounding process should be done earlier - when the tree with the '**' is created.
+    """
     # 1. ** should have an int as second number
     for node_id in tree_nodes_get_ids(tree, karoo=True):
         if tree_node_get_label(tree, node_id) == '**':

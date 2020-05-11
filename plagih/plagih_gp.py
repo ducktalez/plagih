@@ -172,7 +172,7 @@ def load_tree_builders(root_dir, data_prepared=None):
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
         operators = np.array([['+', 2], ['+', 2], ['-', 2], ['*', 2], ['/', 2],
-                              ['sin', 2], ['Square', 2],
+                              ['sin', 2], ['Square', 2], ['sqrt', 2],
                               ['Mini', 2], ['Maxi', 2], ['abs', 2],
                               ['<', 2], ['<=', 2], ['==', 2],
                               ['Andb', 2], ['Orb', 2], ['Notb', 2], ['Ifte', 2], ['Ifte', 2]])
@@ -244,7 +244,7 @@ def gp_run(root_dir, force_new_run):
 
     if force_new_run:
         # for convenience, this can be set here.
-        # Makes restarting runs possible from comand line
+        # Makes restarting runs possible from command line
         config['force_new_run'] = True
 
     gp = ExplainableGP(root_dir, config=config)
@@ -261,7 +261,7 @@ def gp_run(root_dir, force_new_run):
         xtype_list = xtypes_from_labels(label_list, env_variables)
         # origin_tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
         origin_ptree = Plagih_KarooTree(label_list, xtype_list, modify_list=modify_list)
-        # origin_tree = origin_ptree.get_uninstanced_tree() # todo
+        # origin_tree = origin_ptree.get_uninstanced_tree() # sfeh delete commented code
         gp.activate_origin_tree(origin_ptree)
 
     evolve_list = load_evolve_functions(root_dir)
@@ -289,4 +289,4 @@ def analyze(root_dir):
 if __name__ == "__main__":
     runs_dir = Path.cwd() / '../{}'.format(example_runs)
     root_dir = runs_dir / 'cartpole_v1/'
-    gp_run(root_dir)
+    gp_run(root_dir, False)

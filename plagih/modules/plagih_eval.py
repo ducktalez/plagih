@@ -58,39 +58,42 @@ class FitnessKernel:
         return result_str
 
     def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num, action_min_max=None):
+        """
+        Calculates the kernel-specific fitness for the solution.
+        - classification: dummy
+        """
         # 3- Add fitness computation into TF graph
         # sfeh add action here if needed for multidimensional results
 
         if self.kernel == 'classification':  # CLASSIFY kernel
 
             """
-            This multiclass classifer compares each row of a given Tree to the known solution.
-            The left-most (class?) bin includes -inf. The right-most bin includes +inf. Those inbetween are 
-            by default confined to the spacing of 1.0 each, as defined by:
+            - The left-most bin includes -inf, the right-most bin includes +inf.
+            Those in between are by default confined to the spacing of 1.0 each, as defined by:
 
                 (solution - 1) < result <= solution
 
-            The skew adjusts the boundaries of the bins such that they fall on both the negative and positive sides of the 
-            origin_meta. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
-            side of origin_meta as it has not yet been determined the effect of enabling the middle bin to include both a 
+            The skew adjusts the boundaries of the bins such that they fall on both the negative and positive positive sides of the
+            origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
+            side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
             negative and positive result.
             """
 
             skew = (unique_outputs_num / 2) - 1
 
-            rule11 = tf.equal(solution, 0)
-            rule12 = tf.less_equal(tf_result, 0 - skew)
-            rule13 = tf.logical_and(rule11, rule12)
+            rule1 = tf.logical_and(
+                tf.equal(solution, 0),
+                tf.less_equal(tf_result, 0 - skew))
 
-            rule21 = tf.equal(solution, unique_outputs_num - 1)
-            rule22 = tf.greater(tf_result, solution - 1 - skew)
-            rule23 = tf.logical_and(rule21, rule22)
+            rule2 = tf.logical_and(
+                tf.equal(solution, unique_outputs_num - 1),
+                tf.greater(tf_result, solution - 1 - skew))
 
-            rule31 = tf.less(solution - 1 - skew, tf_result)
-            rule32 = tf.less_equal(tf_result, solution - skew)
-            rule33 = tf.logical_and(rule31, rule32)
+            rule3 = tf.logical_and(
+                tf.less(solution - 1 - skew, tf_result),
+                tf.less_equal(tf_result, solution - skew))
 
-            pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule13, rule23), rule33), tf.int32)
+            pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
 
         elif self.kernel == 'regression':
 
@@ -102,6 +105,7 @@ class FitnessKernel:
 
         elif self.kernel == 'regression bounded':
             """
+            sfeh: version 4 is slightly different from what it is meant to do exactly
             special regression for float solutions and discrete labels
             The result is assigned to the closest value
                 - if the result is between labels
@@ -113,11 +117,11 @@ class FitnessKernel:
             - orderable amount of labels
             """
 
-            # # v4 - largely false decisions should get affected largely
-            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
+            # v4 - largely false decisions should get affected largely
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
 
             # # v3
             # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
@@ -216,34 +220,32 @@ def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_clas
     config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log, allow_soft_placement=True)
     config.gpu_options.allow_growth = True
 
-    with tf.compat.v1.Session(config=config) as sess:
+    with tf.compat.v1.Session(config=config) as sess:  # starting a tf-session, mainly building the tf-graph
         with sess.graph.device(tf_device):
-            # 1. data_csv_path (observations, actions) to tensors
-            tensors = {}
 
-            tensors = tensors_leaves(tensors, data, env_variables)
-
-            # 2- Transform string expression into TF operation graph
+            tensors = tensors_leaves({}, data, env_variables)  # first parameter {}?-> tensors = {}
             tf_result = ast_convert_from_expr(expr, tensors=tensors)
-            pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
-
-            solution = tensors[env_variables['action_at'][0]['label']]  # sfeh
+            solution = tensors[env_variables['action_at'][0]['label']]  # todo
 
             pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if get_pred_labels:
                 pred_labels = tf.map_fn(tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
+            else:
+                pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-            tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
+            # tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
+            fitness, pairwise_fitness = sess.run([fitness, pairwise_fitness])
 
-    return {'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, 'fitness': float(fitness),  # this was changed
-            'pairwise_fitness': pairwise_fitness}
+    # 'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, # old dict, not needed for returning
+    # {'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness} # old dict
+    return float(fitness), pairwise_fitness
 
 
 def tensors_leaves(tensors, data, env_variables):
     """
-    All the tensors in leaf nodes
+    Updates the tensors-dictionary with all the terminals/leaf nodes
     - variables (observation0, ...)
     - distributions_file (True, False, 1.234, ...)
     """

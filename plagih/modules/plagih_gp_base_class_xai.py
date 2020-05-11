@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 import textwrap
 
+# todo (in start) check if the folder where the run should be in actually exists. currently traps in the operators.csv-loading process
+
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -68,8 +70,8 @@ class ExplainableGP(object):
                         'fitness_variance': 'n'},
             'period': {'time_monitor': None,  # in sec
                        'time_save': None,  # in sec
-                       'gen_monitor': 1,  # in gen counts
-                       'gen_save': 1},  # in gen counts
+                       'gen_monitor': 10,  # in gen counts
+                       'gen_save': 5},  # in gen counts
             'crossover_type_safety_mode': 'replace_same_types',
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
             'tree_depth_max': 10,  # maximum Tree depth for entire run
@@ -86,7 +88,7 @@ class ExplainableGP(object):
         self.config.update(config)  # overwrites the default config-values with user-loaded config
 
         # init values with dummies (just to have all self values here for overview)
-        self.tree_meta = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
+        self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = {}  # a dict with all pareto candidates. key is complexity, value is tree meta
         self.population_tmp_done = []
@@ -294,7 +296,7 @@ class ExplainableGP(object):
                         self.pop_append(new_tree, last_evolution=tag)
 
         self.gen_finalize()
-        write_file_population_karoo(self.population_base, '1_first', self.root_dir, self.gen_id, print_type=self.print_type)  # first gen only
+        write_file_population_karoo(self.population_base, 'first', self.root_dir, self.gen_id, print_type=self.print_type)  # first gen only
 
     def gen_create_loop(self):
         """
@@ -409,7 +411,7 @@ class ExplainableGP(object):
         else:
             return False
 
-    def periodical_procedures(self):
+    def periodical_procedures(self, plots_show=None, save_run=None):
         """
         Every few generations, update the created gp_files
         - default is in every generation, but saving every n-th gen or after time passed is possible aswell
@@ -420,7 +422,6 @@ class ExplainableGP(object):
             tmp_path = make_dir(self.root_dir / folder_steps / 'Gen-{}'.format(self.gen_id))
 
         time_now = time.perf_counter()
-        plots_show, save_run = False, False
 
         if self.config['period']['time_monitor']:
             if self.config['period']['time_monitor'] < (time_now - self.time_last_monitor):
@@ -460,12 +461,12 @@ class ExplainableGP(object):
         writes all important gp_files
 
         """
+        self.file_pareto_histograms(root_path)
         self.file_conclusion(root_path)
         write_file_pareto_text(self.pareto, root_path)
         self.file_pareto_latex(self.pareto, root_path)
         self.file_generate_pycode(self.pareto, root_path)
-
-        write_file_population_karoo(self.population_base, 'final', root_path, self.gen_id, print_type=self.print_type)
+        write_file_population_karoo(self.population_base, 'last', root_path, self.gen_id, print_type=self.print_type)
 
         return
 
@@ -518,31 +519,25 @@ class ExplainableGP(object):
 
         return
 
-    def version_pop_fix_trees(self, population):
+    def file_pareto_histograms(self, root_path):
         """
-        Some old runs are now inconsistent as the trees now hold some important information
+        Make histograms for all pareto-efficient candidates
+        sfeh: based on training data- maybe use test data...
         """
+        for parsim, meta in sorted(list(self.pareto.items())):
+            expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
+            ptree = karoo_tree_from_expr(expr_raw, self.env_variables)
+            tree = ptree.get_uninstanced_tree()
+            tree = self.tree_finish(tree, last_evolution='texify')
+        path_hist = file_make_dir(root_path / file_pareto)
+        # for agent in self.pareto
 
-        # Fix the tree node's xtypes (old node's 'type', e.g. 'Term', ...) with 'f2f', ...
-        cnt = 0
-        for ii, tree in enumerate(population):
-            if tree_node_get_xtype(tree, root_id) == '':
-                cnt += 1
-                population[ii] = tree_set_xtypes(tree, self.env_variables)
-        if cnt > 0:
-            print_warning('ww', 'Amount of trees with node_xtype inconsistency: {}.'.format(cnt))
-
-        # Fix the trees missing parsimony
-        cnt = 0
-        for ii, tree in enumerate(population):
-            if str(tree_get_parsimony(tree)) == '':
-                cnt += 1
-                parsimony = self.tree_eval_parsimony_easywrapper(tree)
-                population[ii] = tree_set_parsimony(tree, parsimony)
-        if cnt > 0:
-            print_warning('ww', 'Amount of trees without parsimony: {}.'.format(cnt))
-
-        return
+        #
+        # for parsim, meta in sorted(list(self.pareto.items())):
+        #     # todo
+        #     # todo
+        #     # # todo
+        #     pass
 
     def file_conclusion(self, path):
 
@@ -621,7 +616,7 @@ class ExplainableGP(object):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
             ptree = karoo_tree_from_expr(expr_raw, self.env_variables)
             tree = ptree.get_uninstanced_tree()
-            tree = self.tree_beautify(tree, last_evolution='texify')
+            tree = self.tree_finish(tree, last_evolution='texify')
             ###
             vistree = latex_tree_get_vistree(tree)
             ###
@@ -637,7 +632,7 @@ class ExplainableGP(object):
         with Path.open(pth, 'w') as file:
             file.write(latex_full_doc)
 
-        self.printpl('f', '{}'.format(trees_tex))
+        self.printpl('f', '{}'.format(pth))
 
         return
 
@@ -751,17 +746,18 @@ class ExplainableGP(object):
 
             try:
                 fitness_train = self.tree_eval_fitness_train(tree)
-                tree = tree_set_fitness(tree, fitness_train)
-                self.tree_meta_update(tree, fitness_train=fitness_train)
-                last_evolution = tree_get_last_evolution(tree)
-                self.pop_append(tree, last_evolution=last_evolution)
             except Exception as ex:
-                # print_warning('wwww', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
+                print_warning('wwww', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
                 eval_fails.append(str(ex))
                 continue
+            else:
+                tree = tree_set_fitness(tree, fitness_train)
+                self.treelut_tree_add(tree, fitness_train=fitness_train)
+                last_evolution = tree_get_last_evolution(tree)
+                self.pop_append(tree, last_evolution=last_evolution)
 
         if len(eval_fails) > 0:
-            print_warning('www', 'Evaluating {} trees in gen {} caused these exceptions:\n{}'.format(
+            print_warning('www', 'Evaluating {} new trees in gen {} caused these exceptions:\n{}'.format(
                 len(self.population_tmp_eval), self.gen_id, ', '.join(eval_fails)), print_type=self.print_type)
 
         return
@@ -776,10 +772,10 @@ class ExplainableGP(object):
             tree_origin = None
         return tree_origin
 
-    def tree_meta_update(self, tree, fitness_train=None, parsimony=None, expr_raw=None, expr_sym=None):
+    def treelut_tree_add(self, tree, fitness_train=None, parsimony=None, expr_raw=None, expr_sym=None):
         """
-        update self.tree_meta
-        # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
+        update selected values in self.tree_meta
+        LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         """
         if not fitness_train:
             fitness_train = tree_get_fitness(tree)
@@ -797,9 +793,13 @@ class ExplainableGP(object):
 
         tree_ident = tree_hash(tree)
 
-        self.tree_meta[tree_ident] = meta
+        self.tree_lut[tree_ident] = meta
+        return
 
     def tree_eval_parsimony_easywrapper(self, tree):
+        """
+        loading the two extra parameters every time is just boring
+        """
         parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
         return parsimony
 
@@ -813,15 +813,18 @@ class ExplainableGP(object):
         """
         self.printpl('i', 'Trying to add tree mid-run...')
 
-        if tree_check_deep(tree, self.env_variables):
-            tree = self.tree_beautify(tree, last_evolution='par-s')
-            parsimony = self.tree_eval_parsimony_easywrapper(tree)
-            tree = tree_set_parsimony(tree, parsimony)
-            self.tree_meta_update(tree, parsimony=parsimony)
-            self.population_tmp_done.append(tree)
+        tree = self.tree_finish(tree, last_evolution='par-s')
 
-            self.pareto_update_insert()
+        if not tree_check_deep(tree, self.env_variables):
+            self.printpl('w', 'todo: remove w, tree could not be added midrun.')
+            return
 
+        parsimony = self.tree_eval_parsimony_easywrapper(tree)
+        tree = tree_set_parsimony(tree, parsimony)
+        self.treelut_tree_add(tree, parsimony=parsimony)
+        self.population_tmp_done.append(tree)
+
+        self.pareto_update_insert()
         return
 
     def pareto_update_insert(self):
@@ -1211,7 +1214,7 @@ class ExplainableGP(object):
 
         return left_offspring, right_offspring
 
-    def tree_beautify(self, tree, last_evolution=''):
+    def tree_finish(self, tree, last_evolution=''):
         """
         The np-tree needs more information than only the expression.
         -> set modifyable nodes (mandatory)
@@ -1219,15 +1222,17 @@ class ExplainableGP(object):
         -> round all distributions_file
         -> try to envstate_normalize exponents ('**'). sfeh, not really working.
         -> set last evolution (for analysing gp operators_csv. e.g. if no good trees originate from crossover, something might be wrong)
-        -> set xtype for all nodes.
+
+        ! The tree must exist, it is not checked whether the tree is None
         """
 
-        if tree is None:
-            print_warning('ww', 'Tree from last_evolution: \'{}\' failed. Continuing.'.format(last_evolution))  # reasons: sympify, last tree too large
-        else:
-            tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-            tree = tree_normalize_exponentiation(tree)
-            tree = tree_set_last_evolution(tree, last_evolution)
+        # if tree is None:
+        #     print_warning('ww', 'Tree from last_evolution: \'{}\' failed. Continuing.'.format(last_evolution))  # reasons: sympify, last tree too large
+        # else:
+
+        tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())  # sfeh: somewhere else
+        tree = tree_normalize_exponentiation(tree)  # sfeh: somewhere else
+        tree = tree_set_last_evolution(tree, last_evolution)  # sfeh: should this be done during the evolve process?
 
         return tree
 
@@ -1255,24 +1260,29 @@ class ExplainableGP(object):
         ->
         """
 
-        tree = self.tree_beautify(tree, last_evolution=last_evolution)  # sfeh beautify somewhere else
+        if not tree_check_quick(tree):
+            return
 
-        if tree_check_quick(tree):
-            tree_ident = tree_hash(tree)
+        tree = self.tree_finish(tree, last_evolution=last_evolution)
 
-            if tree_ident in self.tree_meta:
+        tree_ident = tree_hash(tree)
+        if tree_ident in self.tree_lut:
+            tree_meta = self.tree_lut[tree_ident]  # tree_hash: fitness_train, parsimony, expr_sym, expr_raw
+            parsimony = tree_meta['parsimony']
+            fitness_train = tree_meta['fitness_train']
+            tree = tree_set_parsimony(tree, parsimony)
+            tree = tree_set_fitness(tree, fitness_train)
 
-                tree_meta = self.tree_meta[tree_ident]
-                tree = tree_set_evalutaion(tree, tree_meta)
-                self.population_tmp_done.append(tree)
+            self.population_tmp_done.append(tree)
+        else:
+            # sfeh idea: evaluate already when the trees are constructed? evaluating later seems kind of dull
+            parsimony = self.tree_eval_parsimony_easywrapper(tree)
+            if parsimony <= self.parsimony_max:
+                tree = tree_set_parsimony(tree, parsimony)
+                tree = tree_set_fitness(tree, '')
+                self.population_tmp_eval.append(tree)
             else:
-                parsimony = self.tree_eval_parsimony_easywrapper(tree)
-                if parsimony <= self.parsimony_max:
-                    tree = tree_set_parsimony(tree, parsimony)
-                    tree = tree_set_fitness(tree, '')
-                    self.population_tmp_eval.append(tree)
-                else:
-                    print_warning('wwww', 'Tree too complex, last evolution: {}'.format(last_evolution), print_type=self.print_type)
+                print_warning('wwww', 'Tree too complex, last evolution: {}'.format(last_evolution), print_type=self.print_type)
 
         return
 
@@ -1288,9 +1298,9 @@ class ExplainableGP(object):
         self.pareto_update()
         self.pop_base_transfer()
         self.pop_analyze()
-        write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)
+        # write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)  # better in periodic file write
 
-        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_meta)
+        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_lut)
         self.print_g('g', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(
             len(self.population_tmp_done), self.config['pop_max'], self.gen_id,
             time.perf_counter() - self.time_genstart))
@@ -1374,9 +1384,6 @@ class ExplainableGP(object):
         - (if sympify fails, evaluating does not make sense! Check sympify errors)
         - (sfeh: if sympify fails because of inf or zoo, tf could maybe still work due to save-tf-division)
 
-        This evaluation should only be called inside a try-block.
-        sympification is allowed to fail and also tf-eval showed some exceptions in the past
-        (now, tf-problems are all gone, but still, the program should never crash because of one tricky tree)
         """
 
         try:
@@ -1384,11 +1391,13 @@ class ExplainableGP(object):
         except Exception as ex:
             raise Exception('eval:{}'.format(ex))
 
-        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_variables,
-                                self.tf_device_log, self.tf_device, self.tf_classify_labels_map)['fitness']
+        fitness_train, fitness_list = eval_tf(expr_sym,
+                                              self.data_train,
+                                              self.kernel,
+                                              self.env_variables, self.tf_device_log, self.tf_device, self.tf_classify_labels_map)  # ['fitness'] only needed if return is dict
 
         if not check_value_is_real(fitness_train):
-            raise Exception('Fitness_train is not a real number: {}'.format(fitness_train))
+            raise Exception('Fitness is not a real number: {}'.format(fitness_train))
 
         return fitness_train
 
@@ -1400,8 +1409,8 @@ class ExplainableGP(object):
 
         """
         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
-        the quantity of true class labels provided in the data_csv_path .csv. Outputs an array of tuples containing the predicted
-        labels based upon the result and corresponding boolean condition triggered.
+        the quantity of true class labels provided in the samples-csv.
+        Outputs an array of tuples containing the predicted labels based upon the result and corresponding boolean condition triggered.
 
         For comparison, the original (pre-TensorFlow) cod follows:
 
@@ -1423,8 +1432,7 @@ class ExplainableGP(object):
                 tf.constant(class_label), tf.constant(' <= {}'.format(class_label - skew))),
                                                lambda: label_rules[class_label + 1])
 
-        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(' <= {}'.format(0 - skew))),
-                             lambda: label_rules[1])
+        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(' <= {}'.format(0 - skew))), lambda: label_rules[1])
 
         return pred_label
 

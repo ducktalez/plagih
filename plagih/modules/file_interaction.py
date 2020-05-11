@@ -40,11 +40,9 @@ tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
 
-# file_sarsa_agent = '../../benchmarks/gym_mountaincar/agents/sarsa_agent_200.p'
-
-# pycode_load = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
 pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
 
+folder_histograms = 'agents/'
 trees_tex = 'agents_trees.tex'
 file_pycode = 'agents/agents.py'
 file_pycode_eval = 'eval_agents.py'
@@ -154,7 +152,7 @@ def write_file_population_karoo(population, pop_name, path, gen_id, print_type=N
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
                 target.writerows([population[ii][row]])
 
-    printez('f', '{}'.format(file_name), print_type=print_type)
+    printez('f', '{}'.format(file_path), print_type=print_type)
 
     return
 
@@ -189,7 +187,7 @@ def yaml_load(yaml_path):
     return loaded_yaml
 
 
-def yaml_dump(path, data):
+def yaml_dump(path, data, print_type=None):
     """
     saves prepared plagih data to pickle file
     """
@@ -197,13 +195,13 @@ def yaml_dump(path, data):
     path = file_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
-        printez('ff', '{}'.format(path))
+        printez('ff', '{}'.format(path), print_type=print_type)
     return
 
 
 def plot_end(data_2d, path,
              plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear',
-             step_where='', plt_xparam='',
+             step_where='', plt_xparam='', plt_hist=False,
              linestyle='None',
              marker='',
              set_left=None, set_right=None, set_top=None,
@@ -269,6 +267,8 @@ def plot_end(data_2d, path,
 
     if step_where:
         plt.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
+    elif plt_hist:
+        plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
     else:
         plt.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
 
@@ -295,3 +295,27 @@ def plot_end(data_2d, path,
 
     plt.close()
     return
+
+
+def plot_histogram(x, path):
+    """
+    Creating histograms for the agents
+    todo delete?
+    """
+    mu, sigma = 100, 15
+
+    # the histogram of the data
+    n, bins, patches = plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
+
+    # import matplotlib.mlab as mlab
+    # # add a 'best fit' line
+    # y = mlab.normpdf( bins, mu, sigma)
+    # l = plt.plot(bins, y, 'r--', linewidth=1)
+
+    plt.xlabel('Smarts')
+    plt.ylabel('Probability')
+    plt.title(r'$\mathrm{Histogram\ of\ IQ:}\ \mu=100,\ \sigma=15$')
+    plt.axis([40, 160, 0, 0.03])
+    plt.grid(True)
+
+    plt.show()

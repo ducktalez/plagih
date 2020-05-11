@@ -69,7 +69,7 @@ op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float 
     'atan': {'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'weight': 3, 'tf': tf.atan, 'latex': None, 'sym_str': 'atan({})', 'pycode': lambda a: 'math.atan({})'.format(a)},
     'tanh': {'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'weight': 3, 'tf': tf.tanh, 'latex': None, 'sym_str': 'tanh({})', 'pycode': lambda a: 'math.tanh({})'.format(a)},
     # 'Integer': {'fun': 'Integer', 'arity': 1, 'xtype': 'f2f', 'weight': 0.5, 'tf': tf.cast({}, tf.int32), 'latex': None, 'sym_str': 'N({}, )', 'pycode': lambda a: 'math.tanh({})'.format(a)},
-    # todo round operation! sympify: N(1.2345, decimals) or Integer(1.234). e.g. Int
+
     # 'b2b' Classical logical operators_csv, evaluate from bool to bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'

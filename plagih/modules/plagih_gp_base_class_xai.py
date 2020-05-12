@@ -537,7 +537,7 @@ class ExplainableGP(object):
         np_data = self.data_train  # todo sfeh?
         data_dimensions = len(self.env_variables['obs_name'])
         agent_dimensions = len(self.pareto)
-        agent_dimatrix = [[None] * (data_dimensions + 1)] * (agent_dimensions)  # +1? -> pairwise fitness!
+        agent_dimatrix = [[None] * (data_dimensions + 1) for _ in range(agent_dimensions)]  # +1? -> pairwise fitness! # lel. never use the *-list createn nested, ir references the same list
 
         max_fails_per_bin = 0
 
@@ -569,7 +569,7 @@ class ExplainableGP(object):
                                  self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True)  # ['fitness'] only needed if return is dict
 
             pairwise_fitness = tf_results['pairwise_fitness']
-            agent_dimatrix[a_ii][-1] = pairwise_fitness
+            agent_dimatrix[a_ii][-1] = copy.deepcopy(pairwise_fitness)
 
             for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
                 col = obs_info.get('pos')
@@ -577,10 +577,8 @@ class ExplainableGP(object):
                 hist, _ = np.histogram(histogram_data, bins=data_bins[ii], weights=pairwise_fitness)
                 max_fails_per_bin = max(max(hist), max_fails_per_bin)
 
-                agent_dimatrix[a_ii][ii] = (histogram_data, parsim, obs_name, tf_results['fitness'])  # sfeh fitness train aswell
+                agent_dimatrix[a_ii][ii] = copy.deepcopy((histogram_data, parsim, obs_name, tf_results['fitness']))  # sfeh fitness train aswell
 
-
-        # todo get max dimensional
         for agent_ii in agent_dimatrix:
             fig, ax = plt.subplots(data_dimensions, 1)
             pairwise_fitness = agent_ii[-1]
@@ -598,6 +596,7 @@ class ExplainableGP(object):
             plt.margins(x=0, y=0)
             path_hist = folder_make_dir(root_path / folder_histograms)
             plt.savefig(path_hist / 'hist_{}.png'.format(parsim))
+            # todo add the min max to the csv standard
 
     def file_conclusion(self, path):
 

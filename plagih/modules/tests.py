@@ -52,7 +52,7 @@ class TestHelpers:
     # example func_arr_dummy. Note that (for the random choice) functions can be included more often
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
         xtype_list = xtypes_from_labels(label_list, self.env_bundle)
-        p_tree = Plagih_KarooTree(label_list, xtype_list, modify_list=modify_list)
+        p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
         tree = p_tree.get_uninstanced_tree()
         return tree
 
@@ -61,7 +61,7 @@ class TestHelpers:
         expr_raw = tree_get_expr_raw(tree, root_id)
         expr_sym = expr_sympify(expr_raw)
         print(expr_sym)
-        # tree_sym = karoo_tree_from_expr(expr_sym, self.env_bundle)
+        # tree_sym = karoo_ptree_from_expr(expr_sym, self.env_bundle)
         # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
         sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
         print(tree_check_deep(sym_tree2, self.env_bundle))

@@ -59,7 +59,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'gggwwwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -116,6 +116,10 @@ class ExplainableGP(object):
         # special variables
         self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device
         self.tf_device_log = False  # TF device usage logging (for debugging)
+        tf_device_log = False
+
+        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log, allow_soft_placement=True)
+        self.tf_config.gpu_options.allow_growth = True
 
         self.node_choose_dict = {
             '2f': {
@@ -127,7 +131,6 @@ class ExplainableGP(object):
                     'b2f': []},
                 3: {'b2f2f': []}},
             '2b': {
-
                 0: {'observ': [],
                     'distribution': []},
                 1: {'f2b': [],
@@ -170,7 +173,7 @@ class ExplainableGP(object):
 
     def load_backup_pickle(self, path_backup):
         """
-
+        Loading the state of the run from the pickle file
         """
 
         with Path.open(path_backup, 'rb') as file:
@@ -417,9 +420,9 @@ class ExplainableGP(object):
         - default is in every generation, but saving every n-th gen or after time passed is possible aswell
         """
         if self.config['overwrite periodic gp_files']:
-            tmp_path = make_dir(self.root_dir)
+            tmp_path = folder_make_dir(self.root_dir)
         else:
-            tmp_path = make_dir(self.root_dir / folder_steps / 'Gen-{}'.format(self.gen_id))
+            tmp_path = folder_make_dir(self.root_dir / folder_steps / 'Gen-{}'.format(self.gen_id))
 
         time_now = time.perf_counter()
 
@@ -480,9 +483,9 @@ class ExplainableGP(object):
         Why like this? I needed to find a bug in the data_from_csv file and
         did not want to start the whole stuff everytime
         """
-        env_variables, data_train, data_control = data_prepared  # sfeh what data is used?
-        self.env_variables = env_variables
+        self.env_variables, data_train, data_control = data_prepared  # sfeh what data is used?
         self.data_train, self.data_control = data_train, data_control  # what is that good for: self.data_train_rows, = data_train_rows,
+        # self.data_train = dataq_train  # data_train currently not needed (?)
 
         return
 
@@ -523,21 +526,78 @@ class ExplainableGP(object):
         """
         Make histograms for all pareto-efficient candidates
         sfeh: based on training data- maybe use test data...
-        """
-        for parsim, meta in sorted(list(self.pareto.items())):
-            expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            ptree = karoo_tree_from_expr(expr_raw, self.env_variables)
-            tree = ptree.get_uninstanced_tree()
-            tree = self.tree_finish(tree, last_evolution='texify')
-        path_hist = file_make_dir(root_path / file_pareto)
-        # for agent in self.pareto
 
-        #
-        # for parsim, meta in sorted(list(self.pareto.items())):
-        #     # todo
-        #     # todo
-        #     # # todo
-        #     pass
+        useful code?
+        # histogram_data = np.digitize(histogram_data, bins)  # digitize: the bin index the entry belongs to
+        # histogram_data = np.concatenate((histogram_data.reshape(-1, 1), pairwise_fitness.reshape(-1, 1)), axis=1)
+        # histogram_data = np.multiply.reduce(histogram_data, axis=1)
+        # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
+        """
+
+        np_data = self.data_train  # todo sfeh?
+        data_dimensions = len(self.env_variables['obs_name'])
+        agent_dimensions = len(self.pareto)
+        agent_dimatrix = [[None] * (data_dimensions + 1)] * (agent_dimensions)  # +1? -> pairwise fitness!
+
+        max_fails_per_bin = 0
+
+        data_bins = [None] * data_dimensions
+        for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
+            col = obs_info.get('pos')
+            histogram_data = np_data[:, col]
+            obs_minmax = obs_info.get('minmax')  # todo
+            if obs_minmax is None:
+                if obs_name == 'cartVel':  # todo
+                    obs_minmax = (-0.07, 0.07)
+                elif obs_name == 'cartPos':
+                    obs_minmax = (-1.2, 0.6)
+                else:
+                    obs_minmax = (np.min(histogram_data), np.max(histogram_data))
+            bins = np.linspace(obs_minmax[0], obs_minmax[1], 128)  # todo 64 bins?
+            data_bins[ii] = bins
+
+        for a_ii, (parsim, meta) in enumerate(sorted(list(self.pareto.items()))):
+            expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
+            ptree = karoo_ptree_from_expr(expr_raw, self.env_variables)
+            tree = ptree.get_uninstanced_tree()
+            expr_sym = tree_get_expr_sym(tree)
+
+            tf_results = eval_tf(expr_sym,
+                                 np_data,
+                                 self.kernel,
+                                 self.env_variables,
+                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True)  # ['fitness'] only needed if return is dict
+
+            pairwise_fitness = tf_results['pairwise_fitness']
+            agent_dimatrix[a_ii][-1] = pairwise_fitness
+
+            for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
+                col = obs_info.get('pos')
+                histogram_data = np_data[:, col]
+                hist, _ = np.histogram(histogram_data, bins=data_bins[ii], weights=pairwise_fitness)
+                max_fails_per_bin = max(max(hist), max_fails_per_bin)
+
+                agent_dimatrix[a_ii][ii] = (histogram_data, parsim, obs_name, tf_results['fitness'])  # sfeh fitness train aswell
+
+
+        # todo get max dimensional
+        for agent_ii in agent_dimatrix:
+            fig, ax = plt.subplots(data_dimensions, 1)
+            pairwise_fitness = agent_ii[-1]
+            parsim = 'todo will be overwritten in loop'
+            for enum_ii, (histogram_data, parsim, obs_name, fitness) in enumerate(agent_ii[:-1]):  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
+                # histogram_data, parsim, obs_name, fitness = dim_ii
+                ax[enum_ii].hist(histogram_data, bins=data_bins[enum_ii], weights=pairwise_fitness)  # todo
+                # ax[enum_ii].hist(histogram_data, bins='auto', weights=pairwise_fitness)  # todo
+                ax[enum_ii].set_title(obs_name)
+                ax[enum_ii].set_ylim(top=max_fails_per_bin)
+
+                # plt.hist(hist, bins='auto')
+                # plt.show()
+            plt.tight_layout()
+            plt.margins(x=0, y=0)
+            path_hist = folder_make_dir(root_path / folder_histograms)
+            plt.savefig(path_hist / 'hist_{}.png'.format(parsim))
 
     def file_conclusion(self, path):
 
@@ -581,11 +641,11 @@ class ExplainableGP(object):
         #         fittest_parsimony = parsimony
         #
         #     no_fault = True
-        #     for enum, entry in enumerate(result['tf_result']):
+        #     for enum, entry in enumerate(result['agent_result']):
         #         if not self.check_value_is_real(entry):
         #             no_fault = False
         #             # sfeh this is a bad workaround
-        #             result['tf_result'][enum] = 1
+        #             result['agent_result'][enum] = 1
         #
         #     if no_fault:
         #         kernel_result = self.kernel.conclusion_get_text(result, fitness_control_best)
@@ -614,7 +674,7 @@ class ExplainableGP(object):
 
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            ptree = karoo_tree_from_expr(expr_raw, self.env_variables)
+            ptree = karoo_ptree_from_expr(expr_raw, self.env_variables)
             tree = ptree.get_uninstanced_tree()
             tree = self.tree_finish(tree, last_evolution='texify')
             ###
@@ -660,7 +720,7 @@ class ExplainableGP(object):
             expr_sym = expr_sympify(expr_raw)
             # label_list_sym = ast_convert_from_expr(expr_sym, build=True)
             # tree = karoo_tree_from_labellist(label_list_sym, self.env_variables)
-            ptree = karoo_tree_from_expr(expr_sym, self.env_variables)
+            ptree = karoo_ptree_from_expr(expr_sym, self.env_variables)
             tree = ptree.get_uninstanced_tree()
             py_action = 'action = {}'.format(tree_get_pycode(tree))
 
@@ -863,7 +923,7 @@ class ExplainableGP(object):
                 best_fit = fitness
             if pareto_improved:
                 expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
-                ptree = karoo_tree_from_expr(expr_raw, self.env_variables)
+                ptree = karoo_ptree_from_expr(expr_raw, self.env_variables)
                 tree = ptree.get_uninstanced_tree()
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
                 sym_tree = tree_evolve_reduce(tree, self.env_variables, completely=True)
@@ -889,9 +949,8 @@ class ExplainableGP(object):
                 last_fitness = fitness
             else:
                 self.pareto.pop(parsim)
-                self.printpl('aa',
-                             'Pareto entry at {} became obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(
-                                 parsim, last_fitness, fitness))
+                self.printpl('aa', 'Pareto entry at {} became obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(
+                    parsim, last_fitness, fitness))
         return
 
     def pareto_update(self):
@@ -993,7 +1052,7 @@ class ExplainableGP(object):
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
             xtype_list = xtypes_from_labels(label_list, self.env_variables)
-            p_tree = Plagih_KarooTree(label_list, xtype_list)
+            p_tree = Ptree_karoo(label_list, xtype_list)
             tree = p_tree.get_uninstanced_tree()
         else:
             tree = None
@@ -1129,7 +1188,7 @@ class ExplainableGP(object):
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, build_method,
                                                                     self.config['float_accuracy'])
 
-        p_tree = Plagih_KarooTree(label_list, xtype_list, arity_list=arity_list)
+        p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
         tree = p_tree.get_uninstanced_tree()
 
         return tree
@@ -1340,7 +1399,7 @@ class ExplainableGP(object):
     #   Work with trees                           +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def activate_origin_tree(self, ptree: Plagih_KarooTree):
+    def activate_origin_tree(self, ptree: Ptree_karoo):
         """
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
@@ -1362,10 +1421,10 @@ class ExplainableGP(object):
 
         self.origin_tree = copy.deepcopy(tree)
         self.origin_meta = {'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
-        try:
-            fitness_train = self.tree_eval_fitness_train(tree)
-        except Exception as ex:
-            raise Exception('Your origin_meta algorithm already caused an exception: {}'.format(ex))
+        fitness_train = self.tree_eval_fitness_train(tree)
+        # except Exception as ex:
+        #     raise Exception('Your origin_meta algorithm already caused an exception: {}'.format(ex))
+
         self.origin_meta['fitness_train'] = fitness_train
 
         self.parsimony_best_meta[0] = self.origin_meta
@@ -1378,6 +1437,8 @@ class ExplainableGP(object):
 
     def tree_eval_fitness_train(self, tree):
         """
+        Very fast eval-version that only computes fitness of the train data.
+        tree_eval_complete gives more options
         Evaluating the fitness of a tree.
         - extract the expression the tree is holding
         - sympify the expression
@@ -1391,10 +1452,11 @@ class ExplainableGP(object):
         except Exception as ex:
             raise Exception('eval:{}'.format(ex))
 
-        fitness_train, fitness_list = eval_tf(expr_sym,
-                                              self.data_train,
-                                              self.kernel,
-                                              self.env_variables, self.tf_device_log, self.tf_device, self.tf_classify_labels_map)  # ['fitness'] only needed if return is dict
+        fitness_train = eval_tf(expr_sym,
+                                self.data_train,
+                                self.kernel,
+                                self.env_variables,
+                                self.tf_config, self.tf_device, self.tf_classify_labels_map)
 
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness is not a real number: {}'.format(fitness_train))
@@ -1454,7 +1516,7 @@ class ExplainableGP(object):
         Make all plots
         """
 
-        path_plots = make_dir(path / folder_plots)
+        path_plots = folder_make_dir(path / folder_plots)
 
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))

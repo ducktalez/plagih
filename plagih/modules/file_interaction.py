@@ -50,7 +50,7 @@ file_pycode_eval = 'eval_agents.py'
 T_num_lines = 15  # sfeh this var is not found otherwise
 
 
-def make_dir(path):
+def folder_make_dir(path):
     """
     Checks if the folders for the specified path exist and creates them otherwise.
     Apparently, this procedure is used often.
@@ -199,6 +199,24 @@ def yaml_dump(path, data, print_type=None):
     return
 
 
+def plot_styleup(x, y, set_left=None, set_right=None, set_top=None, right_padding=1.05, top_padding=1.05):
+
+    top, bottom, left, right = max(y), min(y), min(x), max(x)
+    if set_left:
+        left = set_left
+
+    if set_top:
+        new_top = set_top
+    else:
+        new_top = (top - min(bottom, 0)) * top_padding  # top * 1.05 for better style
+
+    if set_right:
+        right = max(right, set_right)
+    new_right = right * right_padding
+
+    return top, bottom, left, right, new_right, new_top
+
+
 def plot_end(data_2d, path,
              plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear',
              step_where='', plt_xparam='', plt_hist=False,
@@ -249,17 +267,7 @@ def plot_end(data_2d, path,
     # bottom, top = plt.ylim()
     # left, right = plt.xlim()
 
-    top, bottom, left, right = max(y), min(y), min(x), max(x)
-    if set_left:
-        left = set_left
-    if set_top:
-        new_top = set_top
-    else:
-        new_top = (top - min(bottom, 0)) * top_padding  # top * 1.05 for better style
-
-    if set_right:
-        right = max(right, set_right)
-    new_right = right * right_padding
+    top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
 
     if beyond_lines:
         x = [x[0]] + x + [new_right + 1]
@@ -284,7 +292,7 @@ def plot_end(data_2d, path,
 
     # plt.legend()
     if subfolder:  #
-        path = make_dir(path / subfolder)
+        path = folder_make_dir(path / subfolder)
 
     plt.savefig(path / '{}.png'.format(plt_title))
     if save_tikz:
@@ -296,26 +304,18 @@ def plot_end(data_2d, path,
     plt.close()
     return
 
-
-def plot_histogram(x, path):
-    """
-    Creating histograms for the agents
-    todo delete?
-    """
-    mu, sigma = 100, 15
-
-    # the histogram of the data
-    n, bins, patches = plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
-
-    # import matplotlib.mlab as mlab
-    # # add a 'best fit' line
-    # y = mlab.normpdf( bins, mu, sigma)
-    # l = plt.plot(bins, y, 'r--', linewidth=1)
-
-    plt.xlabel('Smarts')
-    plt.ylabel('Probability')
-    plt.title(r'$\mathrm{Histogram\ of\ IQ:}\ \mu=100,\ \sigma=15$')
-    plt.axis([40, 160, 0, 0.03])
-    plt.grid(True)
-
-    plt.show()
+#
+# def plot_histogram(x, plt):
+#     """
+#     Creating histograms for the agents
+#     todo delete?
+#     """
+#     top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
+#     n, bins, patches = plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
+#
+#     # import matplotlib.mlab as mlab
+#     # # add a 'best fit' line
+#     # y = mlab.normpdf( bins, mu, sigma)
+#     # l = plt.plot(bins, y, 'r--', linewidth=1)
+#
+#     plt.show()

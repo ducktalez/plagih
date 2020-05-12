@@ -43,12 +43,12 @@ class FitnessKernel:
             result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
 
         elif self.kernel == 'regression':
-            mse = skm.mean_squared_error(result['tf_result'], result['solution'])
+            mse = skm.mean_squared_error(result['agent_result'], result['solution'])
             result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
 
         elif self.kernel == 'regression bounded':
-            mse = skm.mean_squared_error(result['tf_result'], result['solution'])
+            mse = skm.mean_squared_error(result['agent_result'], result['solution'])
             result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
         elif self.kernel == 'regression discrete':
@@ -160,8 +160,9 @@ class RegressionKernel(FitnessKernel):
     """
     first try to make separate classes
     """
+
     def __init__(self):
-        super('regression')
+        # super('regression')
         self.name = 'regression'
 
     # def fitness_compare(self, fitness1, fitness2, mode='better'):
@@ -189,84 +190,77 @@ class RegressionKernel(FitnessKernel):
     #     return
 
 
-def eval_tf(expr, data, kernel, env_variables, tf_device_log, tf_device, tf_classify_labels_map, get_pred_labels=False):
-
+def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify_labels_map, get_pred_labels=False, complete=False):
     """
-    Computes tree expression using TensorFlow (TF)
+    Evaluates an expression using TensorFlow (TF)
+    The is usually extracted from a tree and is sympified
     - parsing input string 'expression' and converting it into a TF operation graph
     - processing tf graph in an isolated TF session (results and corresponding fitness)
 
         'self.tf_device' - controls which device will be used for computations (CPU or GPU).
         'self.tf_device_log' - controls device placement logging (debug only).
 
-    Args:
-        'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be
-        extracted from the evolved results.
+    'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
 
     Returns:
         A dict mapping keys to the following outputs:
-            'tf_result'         - array of the results of applying given expression to the data_csv_path
+            'agent_result'         - array of the results of applying given expression to the data_csv_path
             'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
             'solution'          - array of the solution values extracted from the data_csv_path (variable 's' in the dataset)
             'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
             'fitness'           - aggregated scalar fitness score
 
     """
-
     unique_outputs_num = env_variables['action_at'][0]['unique_outputs_num']
     action_min_max = env_variables['action_at'][0]['minmax']
+
     # Initialize TensorFlow session
-    tf.compat.v1.reset_default_graph()  # tf.reset_default_graph()
-    config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log, allow_soft_placement=True)
-    config.gpu_options.allow_growth = True
+    tf.compat.v1.reset_default_graph()
 
-    with tf.compat.v1.Session(config=config) as sess:  # starting a tf-session, mainly building the tf-graph
-        with sess.graph.device(tf_device):
+    tensors = get_env_tensors(data, env_variables)  # sfeh: can this be done once, for all?
 
-            tensors = tensors_leaves({}, data, env_variables)  # first parameter {}?-> tensors = {}
-            tf_result = ast_convert_from_expr(expr, tensors=tensors)
+    with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
+        with sess.graph.device(tf_device):  # device can be the gpu
+
+            agent_result = ast_convert_from_expr(expr, tensors=tensors)
             solution = tensors[env_variables['action_at'][0]['label']]  # todo
-
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, tf_result, unique_outputs_num, action_min_max=action_min_max)
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, agent_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
-            if get_pred_labels:
-                pred_labels = tf.map_fn(tf_classify_labels_map, tf_result, dtype=(tf.int32, tf.string), swap_memory=True)
-            else:
-                pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
+            if complete:
+                if get_pred_labels:
+                    pred_labels = tf.map_fn(tf_classify_labels_map, agent_result, dtype=(tf.int32, tf.string), swap_memory=True)
+                else:
+                    pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-            # tf_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([tf_result, pred_labels, solution, fitness, pairwise_fitness])
-            fitness, pairwise_fitness = sess.run([fitness, pairwise_fitness])
+                agent_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([agent_result, pred_labels, solution, fitness, pairwise_fitness])
+                return {'agent_result': agent_result, 'pred_labels': pred_labels,
+                        'solution': solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
+            else:  # reduced evaluation, only fitness is evaluated
+                fitness = sess.run(fitness)
+                return float(fitness)
 
-    # 'tf_result': tf_result, 'pred_labels': pred_labels, 'solution': solution, # old dict, not needed for returning
-    # {'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness} # old dict
-    return float(fitness), pairwise_fitness
 
-
-def tensors_leaves(tensors, data, env_variables):
+def get_env_tensors(data, env_variables):
     """
-    Updates the tensors-dictionary with all the terminals/leaf nodes
+    return tensors-dictionary with all the terminals/leaf nodes
     - variables (observation0, ...)
     - distributions_file (True, False, 1.234, ...)
     """
+    tensors = {}
 
-    # for i in range(num_columns):
-    for obs_name, obs_info in env_variables['obs_name'].items():
-
+    # for obs_name, obs_info in env_variables['obs_name'].items():
+    for obs_info in env_variables['obs_name'].values():
         label = obs_info['label']
-        xtype = obs_info['xtype']
         pos = obs_info['pos']
-        # xtype = xtype_get_from_label(obs, env_var_dummy=env_var_dummy, node_arity=0)
+        dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool
 
-        if '2f' in xtype:
-            tensors[label] = tf.constant(data[:, pos], dtype=tf.float32)  # converts data_csv_path into vectors
-        elif '2b' in xtype:
-            tensors[label] = tf.constant(data[:, pos], dtype=tf.bool)
-        else:
-            raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
+        tensors[label] = tf.constant(data[:, pos], dtype=dtype)  # converts data_csv_path into vectors
+        # else:
+        #     raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
 
     # sfeh: if more than one action is provided...
-    if len(env_variables['action_at']) == 1:
+    if len(env_variables['action_at']) == 1:  # todo
         action_xtype = env_variables['action_at'][0]['xtype']
         action_label = env_variables['action_at'][0]['label']
         column = env_variables['action_at'][0]['pos']
@@ -281,22 +275,19 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     """
     Extract expression tree from the string algo_sym.
     Please provide ONE of the following if you want to get...
-    ...tensors: All variables (observation0, ...) as tensors.
-    ...prnt: True
-    ...build: True
+    - tensorflow-graph: All variables (observation0, ...) as tensors.
+    - build: True
     More information in ast_convert_from_expr_recursive()
 
     """
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
 
-    tree = ast.parse(expr, mode='eval').body
-
-    graph = ast_convert_from_expr_recursive(tree, tensors=tensors, build=build)
+    ast_tree = ast.parse(expr, mode='eval').body
+    graph = ast_convert_from_expr_recursive(ast_tree, tensors=tensors, build=build)
 
     if build:
-        # print('before:', graph)
         graph = labels_from_nestedexpr(graph, [])
-        # graph = [str(x).replace('~', '-') for x in graph]
+        # graph = [str(x).replace('~', '-') for x in graph]  # ~- workaround?
 
     return graph
 
@@ -364,7 +355,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
             # return node.value
         else:
             return tf.constant(node.value)
-#
+    #
     # Arity 1
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
         # if prnt:

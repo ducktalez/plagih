@@ -125,7 +125,7 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype='U12'):
     return tree
 
 
-class Plagih_KarooTree():
+class Ptree_karoo():
     """
     Plagih trees are computational trees that hold the genetic programs.
 
@@ -191,13 +191,13 @@ def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity
     # label_list = workaround_remove_tilde_operator(label_list)
 
     xtype_list = xtypes_from_labels(label_list, env_variables)
-    p_tree = Plagih_KarooTree(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
+    p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
 
     return tree
 
 
-def karoo_tree_from_expr(expr, env_variables, modify_list=None):
+def karoo_ptree_from_expr(expr, env_variables, modify_list=None):
     """
     DELETE later sfeh
     Generate tree from a raw or sympified expression
@@ -205,7 +205,7 @@ def karoo_tree_from_expr(expr, env_variables, modify_list=None):
     """
     label_list = ast_convert_from_expr(expr, build=True)
     xtype_list = xtypes_from_labels(label_list, env_variables)
-    p_tree = Plagih_KarooTree(label_list, xtype_list, modify_list=modify_list)
+    p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
     return p_tree
 
 

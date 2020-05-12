@@ -223,7 +223,7 @@ def load_label_list(root_dir):
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
         print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
         raise
-    elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
+    elif Path.is_file(tree_expr_txt_path):  # karoo_ptree_from_expr(expr)
         print('SFEH needs to create an option to make trees from expression')
         raise
     else:
@@ -260,7 +260,7 @@ def gp_run(root_dir, force_new_run):
         env_variables = gp.get_observation_bundle()
         xtype_list = xtypes_from_labels(label_list, env_variables)
         # origin_tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
-        origin_ptree = Plagih_KarooTree(label_list, xtype_list, modify_list=modify_list)
+        origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
         # origin_tree = origin_ptree.get_uninstanced_tree() # sfeh delete commented code
         gp.activate_origin_tree(origin_ptree)
 

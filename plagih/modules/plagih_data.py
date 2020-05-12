@@ -10,14 +10,22 @@ from plagih.modules.operators import *
 
 
 def samples_header_line(row):
+    """
+    samples.csv headerline:
+    cartVel|type=float|role=input|minmax=(-0.07, 0.07)  # todo better solution please
+
+    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}}
+    env_variables['obs_name'} = {'type': 'float', 'role': None, 'pos': ii}
+    env_variables['action_at'} = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii}
+    """
     env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}}  # to identify all observation types
     param_at = {}
 
     for ii, header in enumerate(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input -> {cartVel, type=float, role=input]
         name = header_split[0]
-        env_variables[name] = {'type': 'float', 'role': None, 'pos': ii}  # sfeh we assume it is float
-        param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}  # sfeh we assume it is float
+        env_variables[name] = {'type': 'float', 'role': None, 'pos': ii}  # if no type is specified -> float
+        param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}
         try:
             for col_param in header_split[1:]:
                 param, value = col_param.split('=')

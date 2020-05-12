@@ -244,6 +244,7 @@ def xtype_get_from_label(label, env_variables):
     """
 
     if env_variables == 'ö':
+        # todo deleteable?
         print_warning('www', 'Sfeh, we knowingly create a xtype-dummy')
         return 'ö'
 

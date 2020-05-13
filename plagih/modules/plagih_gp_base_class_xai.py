@@ -537,9 +537,10 @@ class ExplainableGP(object):
         np_data = self.data_train  # todo sfeh?
         data_dimensions = len(self.env_variables['obs_name'])
         agent_dimensions = len(self.pareto)
-        agent_dimatrix = [[None] * (data_dimensions + 1) for _ in range(agent_dimensions)]  # +1? -> pairwise fitness! # lel. never use the *-list createn nested, ir references the same list
+        # lel. never use the *-list createn nested, ir references the same list
+        agent_dimatrix = [[None] * (data_dimensions + 1) for _ in range(agent_dimensions)]  # +1? -> pairwise fitness!
 
-        max_fails_per_bin = 0
+        max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
 
         data_bins = [None] * data_dimensions
         for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):

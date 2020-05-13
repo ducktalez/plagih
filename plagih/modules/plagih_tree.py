@@ -292,17 +292,6 @@ def tree_get_history(tree):
     return tree[TR_lastEvolve][1]
 
 
-def tree_set_id(tree, tree_id):
-    """
-    Set the tree's id, aka the number in the population.
-    But we could also enumerate over  the population. not needed.
-    sfeh delete this?
-    """
-    # tree[TR_ID][1] = tree_id
-    print_warning('w', 'This function is not in use!')
-    return tree
-
-
 def tree_get_last_evolution(tree):
     """
     return a tree's last genetic modification

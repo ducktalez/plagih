@@ -13,8 +13,9 @@ def samples_header_line(row):
     """
     samples.csv headerline:
     cartVel|type=float|role=input|minmax=(-0.07, 0.07)  # todo better solution please
+    goal_action: (todo) only one action can be the result. vectors should be implemented someday
 
-    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}}
+    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, cartPos: {}, cartVel: {}}
     env_variables['obs_name'} = {'type': 'float', 'role': None, 'pos': ii}
     env_variables['action_at'} = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii}
     """
@@ -31,29 +32,45 @@ def samples_header_line(row):
                 param, value = col_param.split('=')
                 env_variables[name][param] = value
         except:
-            print('Could not load samples csv correctly...')
+            print('Could not load samples csv correctly')
 
-        # try to guess if it is observation or action
-        role = env_variables[name]['role']
-        type = env_variables[name]['type']
-        xtype = '2b' if 'bool' in type else '2f'
+        # todo fill obs_name or diretly in names??
 
-        param_at[ii] = {'name': name, 'type': type, 'xtype': xtype, 'label': name}
-
-        if any(x in role for x in ['input', 'observation', 'obs']):
-            env_variables['obs_name'][name] = {'type': type, 'xtype': xtype, 'label': name, 'pos': ii}
-            env_variables[xtype].append(name)
-        elif any(x in role for x in ['result', 'output', 'out', 'action']):
-            env_variables['action_at'][0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii}
+        col_type = env_variables[name].get('type')
+        if col_type is None:
+            col_type = 'float'  # it probably is float anyways
         else:
+            col_type = col_type.replace('int', 'float')  # sfeh: int is currently not really used
+            col_type = col_type.replace('num', 'float')  # sfeh: num is currently not really used
+
+        xtype = '2b' if 'bool' in col_type else '2f'
+
+        minmax = env_variables[name].get('minmax')
+        if minmax is None:
+            printez('w', 'mimax value tuple not provided. Trying to use the min-max values from the samples later.')
+        else:
+            minmax = [float(x) for x in minmax.split(',')]
+            env_variables['obs_name']['minmax'] = minmax
+
+        param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name}
+
+        role = env_variables[name].get('role')
+        if role is None:
             if ii < len(row) - 1:
                 env_variables[name]['role'] = 'input'
             else:
                 env_variables[name]['role'] = 'action'
+        else:
+            if any(x in role for x in ['input', 'observation', 'obs']):
+                env_variables['obs_name'][name] = {'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}
+                env_variables[xtype].append(name)
+            elif any(x in role for x in ['result', 'output', 'out', 'action']):
+                env_variables['action_at'][0] = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}
+            else:
+                print_warning('w', 'role ignored: {}'.format(role))
 
     if len(env_variables['action_at']) > 1:
-        print_e('More than one result is not yet supported!')
-        raise
+        print_e('More than one result is not yet supported! Is done in next milestone though.')
 
     return env_variables, param_at
 
@@ -76,6 +93,7 @@ def data_from_csv(samples_file, test_size=0.2):
 
         for i, row in enumerate(reader):
             if i == 0:
+                # env_variables
                 env_variables, param_at = samples_header_line(row)
                 num_observations = min(len(env_variables['obs_name']), len(row) - 1)
             else:  # convert every 'string' element to its data_csv_path type
@@ -87,7 +105,7 @@ def data_from_csv(samples_file, test_size=0.2):
                 data_results.append(row_as_data[num_observations:])
 
     unique_outputs_num = len(np.unique(data_results))  # load the user defined true labels for classification or solutions for regression
-    action_min_max = min(data_results)[0], max(data_results)[0]
+    action_min_max = min(data_results)[0], max(data_results)[0]  # sfeh: better to get this from the environment!
     env_variables['action_at'][0]['unique_outputs_num'] = unique_outputs_num
     env_variables['action_at'][0]['minmax'] = action_min_max
 

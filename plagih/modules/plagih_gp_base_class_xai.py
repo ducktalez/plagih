@@ -589,14 +589,14 @@ class ExplainableGP(object):
                 # ax[enum_ii].hist(histogram_data, bins='auto', weights=pairwise_fitness)  # todo
                 ax[enum_ii].set_title(obs_name)
                 ax[enum_ii].set_ylim(top=max_fails_per_bin)
+                ax[enum_ii].margins(x=0)
 
-                # plt.hist(hist, bins='auto')
-                # plt.show()
             plt.tight_layout()
             plt.margins(x=0, y=0)
             path_hist = folder_make_dir(root_path / folder_histograms)
             plt.savefig(path_hist / 'hist_{}.png'.format(parsim))
             # todo add the min max to the csv standard
+            # todo plots margin must be adjusted...
 
     def file_conclusion(self, path):
 
@@ -1071,15 +1071,12 @@ class ExplainableGP(object):
 
     def pop_mutate_filter(self, call_params, tree):
         """
-
+        Mutates a number of float terminal of a tree
         """
         mode = call_params['mode']  # point/branch/all
         mutate_filter = 'gaussian_filter'  # sfeh change?
 
         # new_tree = tree_evolve_mutate_filter_one(tree)
-        """
-        Mutates a number of float terminal of a tree
-        """
         # 1. choose a node
         node_ids = tree_get_mutatable_nodes(tree)
         if mode == 'branch':

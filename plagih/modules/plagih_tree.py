@@ -2121,7 +2121,7 @@ def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter',
         constant = round_constant(constant, float_accuracy)
 
     if term_type == 'int':
-        constant = int(np.random.normal(constant, 2))
+        constant = int(np.random.normal(constant, 1))  # sfeh
 
     if term_type == 'bool':
         constant = not constant

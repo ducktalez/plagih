@@ -108,11 +108,20 @@ mountain_agents = [('simple', SimpleAgent()),
                    ('SimonTesting', SimonsTesting())]
 
 
-class MTC_simple13:
+class Test_Agent:
 
     def decide(self, input):
         cartPos, cartVel = input
-        action = ((((-2.0) * cartPos) + 0.555) + (lambda x, y: x / y if y != 0 else 0)(math.sin(cartPos), (cartPos * cartVel)))
+
+        # startposition
+        if abs(cartVel) < 0.01 and -0.7 < cartPos < 0.3:
+            # action = ???
+            pass
+        else:
+            pass
+            #todotodo
+
+        action = (((-2.0) * cartPos) + 0.5) + (lambda x, y: x / y if y != 0 else 0)(math.sin(cartPos), (cartPos * cartVel))
         return max(0, min(2, int(round(action))))
 
 
@@ -134,4 +143,5 @@ class MTC_simple13:
 
 # eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
 
-print('results:', mtc_play(sarsa_agent_200, n=100))
+print('results:', mtc_play(Test_Agent(), n=10))
+# print('results:', mtc_play(sarsa_agent_200, n=100))

@@ -539,6 +539,7 @@ class ExplainableGP(object):
         agent_dimensions = len(self.pareto)
         # lel. never use the *-list createn nested, ir references the same list
         agent_dimatrix = [[None] * (data_dimensions + 1) for _ in range(agent_dimensions)]  # +1? -> pairwise fitness!
+        action_hist_data = [None for _ in range(agent_dimensions)]
 
         max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
 
@@ -554,7 +555,7 @@ class ExplainableGP(object):
                     obs_minmax = (-1.2, 0.6)
                 else:
                     obs_minmax = (np.min(histogram_data), np.max(histogram_data))
-            bins = np.linspace(obs_minmax[0], obs_minmax[1], 128)  # todo 64 bins?
+            bins = np.linspace(obs_minmax[0], obs_minmax[1], 32+1)  # todo 64 bins?
             data_bins[ii] = bins
 
         for a_ii, (parsim, meta) in enumerate(sorted(list(self.pareto.items()))):
@@ -577,10 +578,17 @@ class ExplainableGP(object):
                 histogram_data = np_data[:, col]
                 hist, _ = np.histogram(histogram_data, bins=data_bins[ii], weights=pairwise_fitness)
                 max_fails_per_bin = max(max(hist), max_fails_per_bin)
-
                 agent_dimatrix[a_ii][ii] = copy.deepcopy((histogram_data, parsim, obs_name, tf_results['fitness']))  # sfeh fitness train aswell
 
-        for agent_ii in agent_dimatrix:
+            # actionhist
+            agent_result = tf_results['agent_result']
+            act_solution = tf_results['act_solution']
+            action_hist_data[a_ii] = copy.deepcopy(agent_result - act_solution)  # # nope
+            print('ASD LEL at agent:', parsim,  '\n', np.sum(agent_result))
+
+        for enum_aii, agent_ii in enumerate(agent_dimatrix):
+            path_hist = folder_make_dir(root_path / folder_histograms)
+
             fig, ax = plt.subplots(data_dimensions, 1)
             pairwise_fitness = agent_ii[-1]
             parsim = 'todo will be overwritten in loop'
@@ -594,10 +602,22 @@ class ExplainableGP(object):
 
             plt.tight_layout()
             plt.margins(x=0, y=0)
-            path_hist = folder_make_dir(root_path / folder_histograms)
             plt.savefig(path_hist / 'hist_{}.png'.format(parsim))
             # todo add the min max to the csv standard
             # todo plots margin must be adjusted...
+
+            # Histograms action-based
+            plt.clf()
+            action_bins = np.linspace(-2.5, 2.5, 5+1)  # old
+            # action_bins = np.linspace(-.5, 2.5, 3+1)  # todo action minmax
+            # todo bins should actually be boarders... np.linspace(-2, 2, 5) or np.linspace(-2.5, 2.5, 5+1)
+            plt.ylim(0, 2500)  # todo 2000 should be smthng else
+            plt.ylabel('Frequency')
+            plt.xlabel('Deviation')
+            plt.tight_layout()
+            plt.hist(action_hist_data[enum_aii], bins='auto')  #, weights=np.abs(np.sign(pairwise_fitness))
+            # plt.hist(action_hist_data[enum_aii], bins=action_bins)  #, weights=np.abs(np.sign(pairwise_fitness)) todo
+            plt.savefig(path_hist / 'acthist_{}.png'.format(parsim))
 
     def file_conclusion(self, path):
 

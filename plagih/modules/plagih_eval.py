@@ -39,16 +39,16 @@ class FitnessKernel:
 
         if self.kernel == 'classification':
             result_str += ('\n\n Classification fitness score: {}'.format(fitness_control_best))
-            result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution'], result['pred_labels'][0])))
-            result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution'], result['pred_labels'][0])))
+            result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['act_solution'], result['pred_labels'][0])))
+            result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['act_solution'], result['pred_labels'][0])))
 
         elif self.kernel == 'regression':
-            mse = skm.mean_squared_error(result['agent_result'], result['solution'])
+            mse = skm.mean_squared_error(result['agent_result'], result['act_solution'])
             result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
 
         elif self.kernel == 'regression bounded':
-            mse = skm.mean_squared_error(result['agent_result'], result['solution'])
+            mse = skm.mean_squared_error(result['agent_result'], result['act_solution'])
             result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
             result_str += ('\n Mean Squared Error: {}'.format(mse))
         elif self.kernel == 'regression discrete':
@@ -206,7 +206,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
         A dict mapping keys to the following outputs:
             'agent_result'         - array of the results of applying given expression to the data_csv_path
             'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
-            'solution'          - array of the solution values extracted from the data_csv_path (variable 's' in the dataset)
+            'act_solution'          - array of the solution values extracted from the data_csv_path (variable 's' in the dataset)
             'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
             'fitness'           - aggregated scalar fitness score
 
@@ -223,8 +223,8 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
         with sess.graph.device(tf_device):  # device can be the gpu
 
             agent_result = ast_convert_from_expr(expr, tensors=tensors)
-            solution = tensors[env_variables['action_at'][0]['label']]  # todo
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(solution, agent_result, unique_outputs_num, action_min_max=action_min_max)
+            act_solution = tensors[env_variables['action_at'][0]['label']]  # todo
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, agent_result, unique_outputs_num, action_min_max=action_min_max)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if complete:
@@ -233,9 +233,9 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
                 else:
                     pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-                agent_result, pred_labels, solution, fitness, pairwise_fitness = sess.run([agent_result, pred_labels, solution, fitness, pairwise_fitness])
+                agent_result, pred_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, pred_labels, act_solution, fitness, pairwise_fitness])
                 return {'agent_result': agent_result, 'pred_labels': pred_labels,
-                        'solution': solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
+                        'act_solution': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
             else:  # reduced evaluation, only fitness is evaluated
                 fitness = sess.run(fitness)
                 return float(fitness)

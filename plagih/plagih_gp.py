@@ -225,7 +225,16 @@ def load_label_list(root_dir):
         raise
     elif Path.is_file(tree_expr_txt_path):  # karoo_ptree_from_expr(expr)
         print('SFEH needs to create an option to make trees from expression')
-        raise
+        with Path.open(tree_expr_txt_path) as txt_file:
+            expr = txt_file.read()  # sfeh requires separate handling?
+            print('Assuming all variables are floats, ö')
+            ptree = karoo_ptree_from_expr(expr, 'ö')
+            tree = ptree.get_uninstanced_tree()
+            print('ASD', tree)
+            # tree_pretty_print(tree)  # todo not working??
+            print('ASD DONE')
+            tree_save_csv(tree, tree_labels_csv_path)  # todo
+            raise  # todo
     else:
         print_warning('ww', 'No origin-tree file was provided. Continuing.')
     return label_list, modify_list
@@ -257,7 +266,7 @@ def gp_run(root_dir, force_new_run):
 
     label_list, modify_list = load_label_list(root_dir)
     if label_list is not None and modify_list is not None:
-        env_variables = gp.get_observation_bundle()
+        env_variables = gp.get_env_variables()
         xtype_list = xtypes_from_labels(label_list, env_variables)
         # origin_tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
         origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)

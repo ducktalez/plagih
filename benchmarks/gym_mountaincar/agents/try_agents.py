@@ -109,20 +109,31 @@ mountain_agents = [('simple', SimpleAgent()),
 
 
 class Test_Agent:
-
+    """
+    Ifte(Nand((cartVel == 0), Nand((-0.6 <= cartPos), (cartPos <= -0.4))), Ifte(True, 2, 0), Ifte(False, Ifte((cartVel < 0), 0, 2), Ifte((cartVel < 0), 0, 2)))
+    """
     def decide(self, input):
         cartPos, cartVel = input
 
         # startposition
-        if abs(cartVel) < 0.01 and -0.7 < cartPos < 0.3:
-            # action = ???
-            pass
+        if cartVel == 0 and -0.6 <= cartPos <= -0.4:  # the starting state
+            if True:
+                return 2
+            else:
+                return 0
         else:
-            pass
-            #todotodo
+            if False:
+                if cartVel < 0:
+                    return 0
+                else:
+                    return 2
+            else:
+                if cartVel < 0:
+                    return 0
+                else:
+                    return 2
 
-        action = (((-2.0) * cartPos) + 0.5) + (lambda x, y: x / y if y != 0 else 0)(math.sin(cartPos), (cartPos * cartVel))
-        return max(0, min(2, int(round(action))))
+
 
 
 # eval_agent_list([('lelel_MTC_simple13', MTC_simple13())])
@@ -143,5 +154,5 @@ class Test_Agent:
 
 # eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
 
-print('results:', mtc_play(Test_Agent(), n=10))
+print('results:', mtc_play(Test_Agent(), n=100))
 # print('results:', mtc_play(sarsa_agent_200, n=100))

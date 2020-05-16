@@ -232,8 +232,8 @@ def xtype_get_func_list_OLD(oparray, xtype=None, arity=None):
     return func_list
 
 
-def xtypes_from_labels(label_list, observations_bundle):
-    xtype_list = [xtype_get_from_label(label, observations_bundle) for label in label_list]
+def xtypes_from_labels(label_list, env_variables):
+    xtype_list = [xtype_get_from_label(label, env_variables) for label in label_list]
     return xtype_list
 
 

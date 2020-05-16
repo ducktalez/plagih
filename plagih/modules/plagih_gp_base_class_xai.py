@@ -1657,7 +1657,7 @@ class ExplainableGP(object):
 
         return
 
-    def get_observation_bundle(self):
+    def get_env_variables(self):
         """
         xtypes_list is required to build trees
         this helps creating it

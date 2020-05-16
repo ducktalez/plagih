@@ -149,6 +149,9 @@ class Ptree_karoo():
 
     What run-specific data is irrelevant?
     - pop_id (NO!)
+
+    node:
+    todo branch depth
     """
 
     #
@@ -225,10 +228,10 @@ def workaround_remove_tilde_operator(label_list):
     return label_list
 
 
-
 def tree_save_csv(tree, path_csv):
     """
     Writing one tree to a .csv file. As it is appended, many can be added.
+    todo remove ~ operator!!
     """
     with Path.open(path_csv, 'a', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')

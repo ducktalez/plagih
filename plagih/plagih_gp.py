@@ -32,14 +32,17 @@ def plagih_config_update_from_json(config_json=Path('config.json')):
 
 
 def labellists_from_csv(csv_path):
+    """
+    from the labellist-csv, loading the label list
+    """
     modify_list = []
     with Path.open(csv_path, newline='') as csvFile:
         reader = csv.reader(csvFile, delimiter=',')
         for row in reader:
             if len(row) > 0:
-                if row[0] == 'label_list':
+                if row[0] == 'label_list' or row[0] == 'node_label':
                     label_list = row[1:]
-                elif row[0] == 'modify_list':
+                elif row[0] == 'modify_list' or row[0] == 'node_modify':  # sfeh
                     modify_list = [int(x) for x in row[1:]]  # N_modify sfeh
                 elif row[0] == '':
                     pass
@@ -147,11 +150,11 @@ def load_evolve_functions(root_dir):
             {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.01,
              'custom_params': {'mode': 'point'}},
             {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 6, 1), 'build_method': 'full'}}},
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 3, 5, 1), 'build_method': 'full'}}},
             {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 7, 1), 'build_method': 'grow'}}},
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 50, 6), 'build_method': 'full'}}},
+             'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}},
         ]
 
     yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_list)

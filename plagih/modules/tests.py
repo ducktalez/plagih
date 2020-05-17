@@ -49,7 +49,6 @@ class TestHelpers:
         weighted_distance = weight_ted_mapping(mapping)
         print('\nDistance:', distance, 'Mapping_distance:', weighted_distance)
 
-    # example func_arr_dummy. Note that (for the random choice) functions can be included more often
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
         xtype_list = xtypes_from_labels(label_list, self.env_bundle)
         p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
@@ -97,7 +96,6 @@ class TestHelpers:
 
 class MountainCarExamples:
 
-
     tree_v1_list = ['Ifte', '<', '0.0', '2.0', 'vel', '0.0']
     tree_v1_modify = [0, 1, 0, 0, 1, 1]
     tree_v1_expr = 'Ifte(vel < 0.0, 0.0, 2.0)'
@@ -128,33 +126,6 @@ class MountainCarExamples:
                     'bl': tf.constant(True, dtype=tf.bool)}
 
     expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, pos) > -0.97, 0.0, 2.0)'
-
-
-def test_tree_visualize_reduced():
-    obs_bundle = {'obs_name': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
-                               'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
-                               'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
-                               'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
-                               'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
-                               'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
-                               }}
-
-    labellists = [['+', 'a', '2'],
-                  ['&', '&', '<', 'True', 'bool1', 'Maxi', 4, '+', 1, '*', '/', 'a', 'b', 'c', 3],
-                  ['Maxi', 1, '+', 'a', 'b'],
-                  ['+', '-', 'Maxi', 1, 2, 3, 4]]
-
-    forest_grouped = []
-    for label_list in labellists:
-        xtype_list = xtypes_from_labels(label_list, obs_bundle)
-        tree = karoo_tree_from_labellist(label_list, xtype_list)
-        vistree = latex_tree_get_vistree(tree)
-        forest_grouped.append(latex_tree_get_forest(tree))
-
-    latex_file = latex_complete_tree_summary(forest_grouped)
-
-    with Path.open(Path('textreetest.tex'), 'w') as file:
-        file.write(latex_file)
 
 
 live_test = TestHelpers()

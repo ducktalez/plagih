@@ -237,6 +237,7 @@ def tree_save_csv(tree, path_csv):
         target = csv.writer(csv_file, delimiter=',')
 
         target.writerows([''])  # empty row before each Tree
+        # tree = tree_remove_minus_workaround(tree)
         for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
             target.writerows([tree][row])
 
@@ -1117,7 +1118,7 @@ def tree_get_expr_sym(tree, node_id=root_id):
 
 def tree_get_pycode(tree, node_id=root_id):
     """
-    returns python (one-lined) code from a tree
+    returns python (inline-) code from a tree
     """
     node_id = int(node_id)
     arity = tree_node_get_arity(tree, node_id)
@@ -1130,7 +1131,12 @@ def tree_get_pycode(tree, node_id=root_id):
         results = []
         for child in childs:
             results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
-        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
+        try:
+            return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
+        except:
+            print(label, 'asd')
+            print(results, 'asd')
+            return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)  # todo
 
 
 def tree_raw_depth_prefix(tree, node_id):
@@ -2351,6 +2357,8 @@ def tree_remove_minus_workaround(tree):
     """
     The ~ operator should be removed and replaced with a
     """
+    # todo
+    # ~,x should be equal to -x
 
 
 def tree_group_branch_expressions(tree):

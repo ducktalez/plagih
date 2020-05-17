@@ -77,7 +77,7 @@ op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float 
     '&': {'fun': '&', 'arity': 2, 'xtype': 'b2b', 'weight': 0.5, 'tf': tf.logical_and, 'latex': '$\\land$', 'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
     'Orb': {'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'weight': 0.5, 'tf': tf.logical_or, 'latex': 'or', 'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     '|': {'fun': '|', 'arity': 2, 'xtype': 'b2b', 'weight': 0.5, 'tf': tf.logical_or, 'latex': '$\\lor$', 'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
-    'Notb': {'fun': 'Notb', 'arity': 1, 'xtype': 'b2b', 'weight': 0.2, 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Notb({})', 'pycode': None},  # not a
+    'Notb': {'fun': 'Notb', 'arity': 1, 'xtype': 'b2b', 'weight': 0.2, 'tf': tf.logical_not, 'latex': '$\\neg$', 'sym_str': 'Notb({})', 'pycode': lambda a: 'not({})'.format(a)},  # not a
 
     # 'f2b' Classical comparative operators_csv, evaluate from float to bool
     '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'weight': 1, 'tf': tf.equal, 'latex': '$==$', 'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},

@@ -217,8 +217,8 @@ def plot_styleup(x, y, set_left=None, set_right=None, set_top=None, right_paddin
     return top, bottom, left, right, new_right, new_top
 
 
-def plot_end(data_2d, path,
-             plt_title='', plt_curve_label='', plt_x_label='Generation', plt_y_label='', yscale='linear',
+def plot_end(data_2d, plotname_path,
+             plt_title='', plt_curve_label='', plt_x_label='', plt_y_label='', yscale='linear',
              step_where='', plt_xparam='', plt_hist=False,
              linestyle='None',
              marker='',
@@ -233,7 +233,7 @@ def plot_end(data_2d, path,
 
 
     :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
-    :param path: where to save the result
+    :param plotname_path: where to save the result
     :param plt_title:
     :param plt_curve_label: irrelevant for a single curve
     :param plt_x_label: label the x-axis
@@ -273,35 +273,55 @@ def plot_end(data_2d, path,
         x = [x[0]] + x + [new_right + 1]
         y = [new_top + 1] + y + [y[-1]]
 
+    # plt.close('all')  # todo
+    fig, ax = plt.subplots()  # todo
+
+    # if step_where:
+    #     plt.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
+    # # elif plt_hist:
+    # #     plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
+    # else:
+    #     plt.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+
     if step_where:
-        plt.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
-    elif plt_hist:
-        plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
+        ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
     else:
-        plt.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+        ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
 
-    # let it start at (0,0) but +5% margin to the top and right
-    plt.yscale(yscale)
-    plt.ylim(min(bottom, 0), new_top)
-    plt.xlim(min(left, 0), new_right)
-    plt.margins(x=0, y=0)
+    # # let it start at (0,0) but +5% margin to the top and right
+    # plt.yscale(yscale)
+    # plt.ylim(min(bottom, 0), new_top)
+    # plt.xlim(min(left, 0), new_right)
+    # plt.margins(x=0, y=0)
+    #
+    # plt.xlabel(plt_x_label)
+    # plt.ylabel(plt_y_label)
+    # plt.title(plt_title)
 
-    plt.xlabel(plt_x_label)
-    plt.ylabel(plt_y_label)
-    plt.title(plt_title)
+    ax.set_yscale(yscale)
+    ax.set_ylim(min(bottom, 0), new_top)
+    ax.set_xlim(min(left, 0), new_right)
+    # fig.set_margins(x=0, y=0)
+    fig.tight_layout()
+    ax.set_xlabel(plt_x_label)
+    ax.set_ylabel(plt_y_label)
+    ax.set_title(plt_title)
 
     # plt.legend()
     if subfolder:  #
-        path = folder_make_dir(path / subfolder)
+        plotname_path = folder_make_dir(plotname_path / subfolder)
 
-    plt.savefig(path / '{}.png'.format(plt_title))
     if save_tikz:
         try:
-            tikzplotlib.save(path / '{}.tex'.format(plt_title))
+            tikzplotlib.save(plotname_path / '{}.tex'.format(plt_title))
         except Exception as ex:
             pass
 
-    plt.close()
+    plt.tight_layout()
+    # plt.title(plt_title)
+    plt.savefig(plotname_path / '{}.png'.format(plt_title))
+    # plt.close()  # Stackoverflow said that this is too much, clf should be better
+    plt.clf()
     return
 
 #

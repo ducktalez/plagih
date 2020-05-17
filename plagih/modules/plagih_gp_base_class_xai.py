@@ -70,8 +70,8 @@ class ExplainableGP(object):
                         'fitness_variance': 'n'},
             'period': {'time_monitor': None,  # in sec
                        'time_save': None,  # in sec
-                       'gen_monitor': 10,  # in gen counts
-                       'gen_save': 5},  # in gen counts
+                       'gen_monitor': 1,  # in gen counts
+                       'gen_save': 1},  # in gen counts
             'crossover_type_safety_mode': 'replace_same_types',
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
             'tree_depth_max': 10,  # maximum Tree depth for entire run
@@ -276,7 +276,7 @@ class ExplainableGP(object):
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
         self.gen_reset_parameters()
 
-        random_rate = 0
+        random_rate = 0  # The total amount of random creations in the evolve configuration. usually like 0.3 or so
         for ii, evolve_specs in enumerate(self.evolve_list):
             if evolve_specs['evolve_name'] == 'random trees':
                 random_rate += evolve_specs['evolve_rate']
@@ -393,7 +393,7 @@ class ExplainableGP(object):
 
         self.periodical_procedures()
 
-        self.print_g('ggg', 'Generation took a total time of: {:4.2f}'.format(time.perf_counter() - self.time_genstart))
+        self.print_g('ggg', 'Generation {} took a total time of: {:4.2f}'.format(self.gen_id, time.perf_counter() - self.time_genstart))
 
     def run_continues(self):
         """
@@ -409,6 +409,10 @@ class ExplainableGP(object):
             return True
 
     def origin_exists(self):
+        """
+        A dummy method to check if the origin exists.
+        This method is rather here to see how often this check is necessary...
+        """
         if self.origin_tree is not None:
             return True
         else:
@@ -464,7 +468,7 @@ class ExplainableGP(object):
         writes all important gp_files
 
         """
-        self.file_pareto_histograms(root_path)
+        # self.file_pareto_histograms(root_path)  # todotodo todo
         self.file_conclusion(root_path)
         write_file_pareto_text(self.pareto, root_path)
         self.file_pareto_latex(self.pareto, root_path)
@@ -1358,7 +1362,7 @@ class ExplainableGP(object):
                 tree = tree_set_fitness(tree, '')
                 self.population_tmp_eval.append(tree)
             else:
-                print_warning('wwww', 'Tree too complex, last evolution: {}'.format(last_evolution), print_type=self.print_type)
+                print_warning('wwww', 'Parsimony too high, last evolution: {}'.format(last_evolution), print_type=self.print_type)
 
         return
 

@@ -19,7 +19,7 @@ def samples_header_line(row):
     env_variables['obs_name'} = {'type': 'float', 'role': None, 'pos': ii}
     env_variables['action_at'} = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii}
     """
-    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}}  # to identify all observation types
+    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, 'param_at': {}}  # to identify all observation types
     param_at = {}
 
     for ii, header in enumerate(row):
@@ -51,6 +51,7 @@ def samples_header_line(row):
         else:
             minmax = [float(x) for x in minmax.split(',')]
             env_variables['obs_name']['minmax'] = minmax
+            env_variables[name]['minmax'] = minmax
 
         param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name}
 
@@ -65,7 +66,7 @@ def samples_header_line(row):
                 env_variables['obs_name'][name] = {'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}
                 env_variables[xtype].append(name)
             elif any(x in role for x in ['result', 'output', 'out', 'action']):
-                env_variables['action_at'][0] = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}
+                env_variables['action_at'][0] = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}  # todo action_at 0
             else:
                 print_warning('w', 'role ignored: {}'.format(role))
 

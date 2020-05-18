@@ -139,6 +139,11 @@ class Ptree_karoo():
     What is the trees meta data?:
     - fitness
     - parsimony
+    - last modification
+
+    evolve-based:
+    - last evolve time
+
     - expr_raw
     - expr_sym
     (- last modifications)

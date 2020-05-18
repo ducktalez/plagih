@@ -57,13 +57,34 @@ class FitnessKernel:
             result_str += ('\n\n Matching fitness score: {}'.format(result['fitness']))
         return result_str
 
-    def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num, action_min_max=None):
+    def tf_wrap_result(self, tf_result, action_min_max):
+        """
+        todo other kernels
+        """
+
+        if self.kernel == 'regression bounded':
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+
+        elif self.kernel == 'regression discrete':
+            # regression that fits the outputs to a discrete set of actions defined by min and max
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+        else:
+            customised_result = tf_result  # tehe sfeh
+            # todo
+        return customised_result
+
+    def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
         """
         # 3- Add fitness computation into TF graph
         # sfeh add action here if needed for multidimensional results
+        customised_result = tf_result  # todo remove this nonsense line later, thanks
 
         if self.kernel == 'classification':  # CLASSIFY kernel
 
@@ -118,9 +139,9 @@ class FitnessKernel:
             """
 
             # v4 - largely false decisions should get affected largely
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
             pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
 
             # # v3
@@ -135,9 +156,9 @@ class FitnessKernel:
 
         elif self.kernel == 'regression discrete':
             # regression that fits the outputs to a discrete set of actions defined by min and max
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
             pairwise_fitness = tf.abs(solution - customised_result)
 
         elif self.kernel == 'match':  # MATCH kernel
@@ -223,8 +244,9 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
         with sess.graph.device(tf_device):  # device can be the gpu
 
             agent_result = ast_convert_from_expr(expr, tensors=tensors)
+            kernel_result = kernel.tf_wrap_result(agent_result, action_min_max)
             act_solution = tensors[env_variables['action_at'][0]['label']]  # todo
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, agent_result, unique_outputs_num, action_min_max=action_min_max)
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, unique_outputs_num)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if complete:
@@ -233,8 +255,8 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
                 else:
                     pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-                agent_result, pred_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, pred_labels, act_solution, fitness, pairwise_fitness])
-                return {'agent_result': agent_result, 'pred_labels': pred_labels,
+                agent_result, kernel_result, pred_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, pred_labels, act_solution, fitness, pairwise_fitness])
+                return {'agent_result': agent_result, 'kernel_result': kernel_result, 'pred_labels': pred_labels,
                         'act_solution': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
             else:  # reduced evaluation, only fitness is evaluated
                 fitness = sess.run(fitness)

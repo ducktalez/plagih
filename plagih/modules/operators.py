@@ -189,12 +189,13 @@ op_test = {
 # import tensorflow as tf; import ast; import textwrap
 # print([x for x in op.keys() if type(x) == type('q')])  # retreive a list with all non-ast ops:
 
-def get_example_distribution_dict():
-    distributions_as_string = {'2f': ['lambda: np.random.normal(1, 2)',
-                                      'lambda: np.random.normal(1, 1)',  # todo variables from csv
-                                      'lambda: np.random.randint(0, 10)'],
-                               '2b': ['lambda: np.random.choice([True, False])']}
-    return distributions_as_string
+## Currently not used
+# def get_example_distribution_dict():
+#     distributions_as_string = {'2f': ['lambda: np.random.normal(1, 2)',
+#                                       'lambda: np.random.normal(1, 1)',
+#                                       'lambda: np.random.randint(0, 10)'],
+#                                '2b': ['lambda: np.random.choice([True, False])']}
+#     return distributions_as_string
 
 
 def oparray_from_list(functions):

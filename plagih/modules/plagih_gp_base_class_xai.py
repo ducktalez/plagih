@@ -589,32 +589,31 @@ class ExplainableGP(object):
             kernel_result = tf_results['kernel_result']
             act_solution = tf_results['act_solution']
             action_hist_data[a_ii] = copy.deepcopy(kernel_result - act_solution)  # # nope
-            print('ASD LEL at agent:', parsim, np.size(kernel_result))
 
         path_hist = folder_make_dir(root_path / folder_histograms)
 
-        # # fig, axs = plt.subplots(data_dimensions, 1)
-        # for enum_aii, agent_ii in enumerate(agent_dimatrix):
-        #     fig, axs = plt.subplots(data_dimensions, 1)
-        #
-        #     pairwise_fitness = agent_ii[-1]
-        #     parsim = 'todo will be overwritten in loop'
-        #     for enum_ii, (histogram_data, parsim, obs_name, fitness) in enumerate(agent_ii[:-1]):  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
-        #         # histogram_data, parsim, obs_name, fitness = dim_ii
-        #         axs[enum_ii].hist(histogram_data, bins=data_bins[enum_ii], weights=pairwise_fitness)  # todo
-        #         # ax[enum_ii].hist(histogram_data, bins='auto', weights=pairwise_fitness)  # todo
-        #         axs[enum_ii].set_title(obs_name)
-        #         axs[enum_ii].set_ylim(top=max_fails_per_bin)
-        #
-        #     plt.tight_layout()
-        #     # plt.margins(x=0, y=0)
-        #     plt.savefig(path_hist / 'hist_{}.png'.format(parsim))
-        #     plt.close()  # todo close is not right probably
-        #     # todo add the min max to the csv standard
+        # fig, axs = plt.subplots(data_dimensions, 1)
+        for enum_aii, agent_ii in enumerate(agent_dimatrix):
+            fig, axs = plt.subplots(data_dimensions, 1)
+
+            pairwise_fitness = agent_ii[-1]
+            parsim = 'todo will be overwritten in loop'
+            for enum_ii, (histogram_data, parsim, obs_name, fitness) in enumerate(agent_ii[:-1]):  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
+                # histogram_data, parsim, obs_name, fitness = dim_ii
+                axs[enum_ii].hist(histogram_data, bins=data_bins[enum_ii], weights=pairwise_fitness)  # todo
+                # ax[enum_ii].hist(histogram_data, bins='auto', weights=pairwise_fitness)  # todo
+                axs[enum_ii].set_title(obs_name)
+                axs[enum_ii].set_ylim(top=max_fails_per_bin)
+
+            plt.tight_layout()
+            # plt.margins(x=0, y=0)
+            plt.savefig(path_hist / 'hist_{}.png'.format(parsim))
+            plt.close()  # todo close is not right probably
+            # todo add the min max to the csv standard
 
         # todotodo
         for enum_aii, agent_ii in enumerate(agent_dimatrix):
-            parsim = 'todo will be overwritten in loop'
+            _, parsim, _, _ = agent_ii[0]
 
             # Histograms action-based
             action_bins = np.linspace(-2-.5, 2+.5, 5+1)  # todo
@@ -623,13 +622,13 @@ class ExplainableGP(object):
 
             fig, ax = plt.subplots()
             ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            ax.set_ylim(0, 2500)  # todo 2000 should be smthng else
+            ax.set_ylim(0, 3500)  # todo 2000 should be smthng else
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
             fig.tight_layout()
             # plt.hist(action_hist_data[enum_aii], bins=action_bins)  #, weights=np.abs(np.sign(pairwise_fitness)) todo
             plt.savefig(path_hist / 'acthist_{}.png'.format(parsim))
-            plt.clf()
+            plt.clf()  # todo
 
     def file_conclusion(self, path):
 

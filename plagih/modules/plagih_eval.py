@@ -74,6 +74,7 @@ class FitnessKernel:
             customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
         else:
             customised_result = tf_result  # tehe sfeh
+            raise
             # todo
         return customised_result
 

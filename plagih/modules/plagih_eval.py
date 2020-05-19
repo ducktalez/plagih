@@ -212,7 +212,7 @@ class RegressionKernel(FitnessKernel):
     #     return
 
 
-def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify_labels_map, get_pred_labels=False, complete=False):
+def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify_labels_map, get_pred_labels=False, complete=False, specific_action=0):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -233,8 +233,9 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
             'fitness'           - aggregated scalar fitness score
 
     """
-    unique_outputs_num = env_variables['action_at'][0]['unique_outputs_num']
-    action_min_max = env_variables['action_at'][0]['minmax']
+    action_at_here = env_variables['action_at'][specific_action]
+    unique_outputs_num = action_at_here['unique_outputs_num']
+    action_min_max = action_at_here['minmax']
 
     # Initialize TensorFlow session
     tf.compat.v1.reset_default_graph()
@@ -246,7 +247,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
 
             agent_result = ast_convert_from_expr(expr, tensors=tensors)
             kernel_result = kernel.tf_wrap_result(agent_result, action_min_max)
-            act_solution = tensors[env_variables['action_at'][0]['label']]  # todo
+            act_solution = tensors[action_at_here['label']]
             pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, unique_outputs_num)
             fitness = tf.reduce_sum(pairwise_fitness)
 

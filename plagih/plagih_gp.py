@@ -82,6 +82,24 @@ def runfolder_exists(root_dir):
         raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
 
 
+def load_startconfig(root_dir):
+    """
+    todo
+    single file that can specify
+    - the files to be loaded (which can be somewhere else)
+    - the action for the regression
+    - the
+    """
+    # loading_configuration = root_dir / 'loading.yaml'
+    #
+    # if Path.is_file(loading_configuration):  # Load config.yaml
+    #     with Path.open(loading_configuration, 'r') as file:
+    #         config = yaml.load(file, Loader=yaml.FullLoader)
+    # else:
+    #     print_warning('w', 'You can specify the files that are loaded here blabla sfeh')
+    # return config
+
+
 def load_config(root_dir):
     config_yaml_path = root_dir / file_config_yaml
 
@@ -101,22 +119,29 @@ def load_config(root_dir):
     return config
 
 
-def load_data_prepared(root_dir):
+def load_data_prepared(root_dir, delimiter=','):
     """
     loading the data which the GP will be working on.
     The .csv-file is prepared (loading correct data-type, splitting data, ...)
     and saved as pickle-file for reloading runs.
     This is especially important, as the split in training and test-data must be the same.
     """
-    if Path.is_file(root_dir / samples_ready_p):
+    if Path.is_file(root_dir / samples_ready_p):  # maybe the data was already prepared earlier
         data_prepared = pickle_load(root_dir / samples_ready_p)
-    elif Path.is_file(root_dir / samples_csv):
-        data_prepared = data_from_csv(root_dir / samples_csv)
+    elif Path.is_file(root_dir / samples_csv):  # We have to split and check the data
+        # preparing the data from raw csv-file
+        data_prepared = data_from_csv(root_dir / samples_csv, delimiter=delimiter)
         print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
         pickle_dump(root_dir / samples_ready_p, data_prepared)
-        # yaml_dump(root_dir / env_variables_yaml, data_prepared[0])  # sfeh env_variables, _, _ = data_prepared. anyways, currently loading infos via brackets in .csv-file
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
+
+    dataspec_file = Path.cwd() / 'run_files/data_specification.yaml'  # todo
+    if dataspec_file.is_file():
+        pass
+    else:
+        yaml_dump(root_dir / env_variables_yaml, data_prepared[0])  # sfeh env_variables, _, _ = data_prepared. anyways, currently loading infos via brackets in .csv-file
+
 
     # sfeh: if you want to load informations from extra file, check for this file here
 
@@ -251,17 +276,16 @@ def gp_run(root_dir, force_new_run):
     - load operators_csv.csv
     - load tree
     """
+    start_configuration = load_startconfig(root_dir)
 
     config = load_config(root_dir)
 
-    if force_new_run:
-        # for convenience, this can be set here.
-        # Makes restarting runs possible from command line
+    if force_new_run:  # for convenience, this can be set here. Makes restarting runs possible from command line
         config['force_new_run'] = True
 
     gp = ExplainableGP(root_dir, config=config)
 
-    data_prepared = load_data_prepared(root_dir)
+    data_prepared = load_data_prepared(root_dir, delimiter=start_configuration)
     gp.activate_dataset(data_prepared)
 
     choose_oparray, distributions = load_tree_builders(root_dir, data_prepared=data_prepared)
@@ -271,9 +295,7 @@ def gp_run(root_dir, force_new_run):
     if label_list is not None and modify_list is not None:
         env_variables = gp.get_env_variables()
         xtype_list = xtypes_from_labels(label_list, env_variables)
-        # origin_tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
         origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
-        # origin_tree = origin_ptree.get_uninstanced_tree() # sfeh delete commented code
         gp.activate_origin_tree(origin_ptree)
 
     evolve_list = load_evolve_functions(root_dir)
@@ -300,5 +322,5 @@ def analyze(root_dir):
 
 if __name__ == "__main__":
     runs_dir = Path.cwd() / '../{}'.format(example_runs)
-    root_dir = runs_dir / 'cartpole_v1/'
+    root_dir = runs_dir / 'cartpole_v1/'  # todo this is outdated
     gp_run(root_dir, False)

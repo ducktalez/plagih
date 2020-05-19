@@ -20,7 +20,14 @@ def samples_header_line(row):
     env_variables['action_at'} = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii}
     """
     env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, 'param_at': {}}  # to identify all observation types
-    param_at = {}
+    # env_observation = {}  # todo
+    # env_xtype_observations = {}  #
+    # env_param_at = {'2b': [], '2f': []}  #
+    # env_action = {}  #
+    param_at = {}  #
+
+    action_counter = 0
+    observation_counter = 0
 
     for ii, header in enumerate(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input -> {cartVel, type=float, role=input]
@@ -65,18 +72,19 @@ def samples_header_line(row):
             if any(x in role for x in ['input', 'observation', 'obs']):
                 env_variables['obs_name'][name] = {'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}
                 env_variables[xtype].append(name)
-            elif any(x in role for x in ['result', 'output', 'out', 'action']):
-                env_variables['action_at'][0] = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}  # todo action_at 0
+            elif any(x in role for x in ['result', 'output', 'out', 'action', 'a_']):
+                env_variables['action_at'][action_counter] = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii}
+                action_counter += 1
             else:
                 print_warning('w', 'role ignored: {}'.format(role))
 
     if len(env_variables['action_at']) > 1:
-        print_e('More than one result is not yet supported! Is done in next milestone though.')
+        print_e('More than one result is not yet tested! Is done in next milestone though.')
 
     return env_variables, param_at
 
 
-def data_from_csv(samples_file, test_size=0.2):
+def data_from_csv(samples_file, test_size=0.2, delimiter=','):
     """
     loads the goal-data_csv_path from .csv file. first env_var_dummy then actions.
     Both can have any shape specified in the gym.env "spaces" (dimensions: 1-n, type: int-floatstring?)
@@ -90,25 +98,32 @@ def data_from_csv(samples_file, test_size=0.2):
 
     data_obs, data_results = [], []
     with Path.open(samples_file) as file:
-        reader = csv.reader(file, delimiter=',')
+        reader = csv.reader(file, delimiter=delimiter)
 
-        for i, row in enumerate(reader):
-            if i == 0:
-                # env_variables
-                env_variables, param_at = samples_header_line(row)
-                num_observations = min(len(env_variables['obs_name']), len(row) - 1)
-            else:  # convert every 'string' element to its data_csv_path type
+        header_row = reader[0]
 
-                types = [param_at[x]['type'] for x in range(len(row))]  # sfeh allow int again
-                row_as_data = [locate(types[i])(x) for i, x in enumerate(row)]  # ['varA:float'] + ['0.123'] --> float(['0.123']) --> 0.123
+        # env_variables
+        env_variables, param_at = samples_header_line(header_row)
+        num_observations = min(len(env_variables['obs_name']), len(header_row) - 1)
 
-                data_obs.append(row_as_data[:num_observations])
-                data_results.append(row_as_data[num_observations:])
+        for i, row in enumerate(reader[1:]):  # all lines containing actual data (leaving out the header line)
+            # if i == 0:
+            #     # env_variables
+            #     env_variables, param_at = samples_header_line(row)
+            #     num_observations = min(len(env_variables['obs_name']), len(row) - 1)
+            # else:  # convert every 'string' element to its data_csv_path type
 
-    unique_outputs_num = len(np.unique(data_results))  # load the user defined true labels for classification or solutions for regression
-    action_min_max = min(data_results)[0], max(data_results)[0]  # sfeh: better to get this from the environment!
-    env_variables['action_at'][0]['unique_outputs_num'] = unique_outputs_num
-    env_variables['action_at'][0]['minmax'] = action_min_max
+            types = [param_at[x]['type'] for x in range(len(row))]  # sfeh allow int again
+            row_as_data = [locate(types[i])(x) for i, x in enumerate(row)]  # ['varA:float'] + ['0.123'] --> float(['0.123']) --> 0.123
+            data_obs.append(row_as_data[:num_observations])
+            data_results.append(row_as_data[num_observations:])
+
+    for x in range(len(data_results[0])):
+
+        unique_outputs_num = len(np.unique(data_results))  # load the user defined true labels for classification or solutions for regression
+        action_min_max = min(data_results)[0], max(data_results)[0]  # todo: better to get this from the environment!
+        env_variables['action_at'][x]['unique_outputs_num'] = unique_outputs_num
+        env_variables['action_at'][x]['minmax'] = action_min_max
 
     x_train, x_test, y_train, y_test = skcv.train_test_split(data_obs, data_results, test_size=test_size)  # 80/20 TRAIN/TEST split
     data_train = np.c_[x_train, y_train]  # recombine each row of data_csv_path with its associated class label (right column)

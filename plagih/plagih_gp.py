@@ -130,30 +130,29 @@ def load_data_prepared(root_dir, delimiter=','):
         data_prepared = pickle_load(root_dir / samples_ready_p)
     elif Path.is_file(root_dir / samples_csv):  # We have to split and check the data
         # preparing the data from raw csv-file
-        data_prepared = data_from_csv(root_dir / samples_csv, delimiter=delimiter)
+        env_variables, data_train_panda, data_test_panda, data_train_numpy, data_test_numpy = data_from_csv(root_dir / samples_csv, delimiter=delimiter)
+        data_prepared = env_variables, data_train_numpy, data_test_numpy  # sfeh version 1.0 remove numpy version
         print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
         pickle_dump(root_dir / samples_ready_p, data_prepared)
     else:
         raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
 
-    dataspec_file = Path.cwd() / 'run_files/data_specification.yaml'  # todo
+    dataspec_file = root_dir / 'run_files/data_specification.yaml'
     if dataspec_file.is_file():
-        pass
+        pass  # sfeh: if you want to load informations from extra file, check for this file here
     else:
         yaml_dump(root_dir / env_variables_yaml, data_prepared[0])  # sfeh env_variables, _, _ = data_prepared. anyways, currently loading infos via brackets in .csv-file
-
-
-    # sfeh: if you want to load informations from extra file, check for this file here
 
     return data_prepared
 
 
-def load_evolve_functions(root_dir):
+def load_evolve_functions(root_dir, evolve_file=file_evolve_functions):
     """
-
+    Return the gp evolve-rates for the genetic programming process.
+    Can be user-defined in the evolve_file, otherwise the default is used...
     """
-    if Path.is_file(root_dir / file_evolve_functions):
-        evolve_list = yaml_load(root_dir / file_evolve_functions)
+    if Path.is_file(root_dir / evolve_file):
+        evolve_list = yaml_load(root_dir / evolve_file)
     else:
         print_warning('w', 'No gp evolve procedure or functions defined! Trying to choose them for you.')
 
@@ -177,7 +176,7 @@ def load_evolve_functions(root_dir):
             {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
              'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 3, 5, 1), 'build_method': 'full'}}},
             {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 3, 6, 1), 'build_method': 'grow'}}},
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}},
         ]
@@ -189,6 +188,9 @@ def load_evolve_functions(root_dir):
 
 
 def load_tree_builders(root_dir, data_prepared=None):
+    """
+
+    """
     # Load operators_csv
     path = root_dir / operators_yaml
     # if Path.is_file(operators_csv):  # sfeh test yaml
@@ -241,6 +243,9 @@ def load_tree_builders(root_dir, data_prepared=None):
 
 
 def load_label_list(root_dir):
+    """
+
+    """
     tree_expr_txt_path = root_dir / tree_expr_txt
     tree_labels_csv_path = root_dir / tree_labels_csv
     tree_numpy_csv_path = root_dir / tree_numpy_csv
@@ -276,16 +281,16 @@ def gp_run(root_dir, force_new_run):
     - load operators_csv.csv
     - load tree
     """
-    start_configuration = load_startconfig(root_dir)
+    # start_configuration = load_startconfig(root_dir)
 
     config = load_config(root_dir)
 
-    if force_new_run:  # for convenience, this can be set here. Makes restarting runs possible from command line
+    if force_new_run:  # for convenience. Makes restarting runs possible from command line
         config['force_new_run'] = True
 
     gp = ExplainableGP(root_dir, config=config)
 
-    data_prepared = load_data_prepared(root_dir, delimiter=start_configuration)
+    data_prepared = load_data_prepared(root_dir)
     gp.activate_dataset(data_prepared)
 
     choose_oparray, distributions = load_tree_builders(root_dir, data_prepared=data_prepared)
@@ -321,6 +326,9 @@ def analyze(root_dir):
 
 
 if __name__ == "__main__":
+    """
+    
+    """
     runs_dir = Path.cwd() / '../{}'.format(example_runs)
     root_dir = runs_dir / 'cartpole_v1/'  # todo this is outdated
     gp_run(root_dir, False)

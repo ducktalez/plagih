@@ -50,7 +50,6 @@ class ExplainableGP(object):
             'pop_max': 1000,
             # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
             'parsimony_max': 90,
-            # right value is the maximum parsimony. left value not used, but was meant to set parsimony for the first generations. [3 to 2^(bas +1) - 1]
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
             'complexity_measure': 'tree_edit_distance',
 
@@ -208,7 +207,8 @@ class ExplainableGP(object):
         """
         if not self.origin_exists():
             if self.config['complexity_measure'] in ['tree_edit_distance']:  # sfeh get all origin-based distances
-                raise Exception('Can not use relative distance without providing a reference/origin tree!')
+                self.config['complexity_measure'] = 'tree_node_count'
+                print_warning('w', 'Complexity measurement \'tree_edit_distance\' is not possible without origin! Using \'tree_node_count\' instead.', print_type=self.print_type)
 
         self.write_config_yaml()  # sfeh or json?
 

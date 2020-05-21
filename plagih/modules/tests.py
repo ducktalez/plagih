@@ -84,13 +84,8 @@ class TestHelpers:
         label_list, arity_list, xtype_list = invent_label_list_nodes(result_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_method=build_type)
         modify_list = [0] + ([1] * len(label_list))[1:]
         tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
-        for x in range(100):
-            # print('ss', tree_pretty_print(tree))
 
-            tree = self.tree_evolve_branch_multiple(tree, goal_max_nodes, env_variables, oparray, choose_distributions)
-            # if not tree_check_deep(tree, env_variables):
-
-        return
+        return tree
 
 
 

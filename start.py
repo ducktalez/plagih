@@ -11,13 +11,14 @@ import getopt
 # sys.root_dir = sys.root_dir / 'plagih'
 sys.path.append('plagih/')
 sys.path.append('plagih/modules')
-sys.path.append('mountaincar/')
+# sys.path.append('mountaincar/')
 
 
 def main(argv):
     """
    -h, -help
    -run_folder
+    # sfeh: options for other functions? run, visualise_tree, analyse_run, check_files, tests
    """
     ipath = None
     task = 'run'
@@ -39,9 +40,9 @@ def main(argv):
         elif opt in ('-o', '--opath'):
             opath = arg
             print('Your input -o {} is not used'.format(opath))
-        elif opt in ('--task'):
+        elif opt in '--task':
             task = arg
-        elif opt in ('--force_new_run'):
+        elif opt in '--force_new_run':
             force_new_run = True
 
     if ipath is None:
@@ -62,7 +63,6 @@ def main(argv):
         plagih_gp.show_default_operators(ipath)
     else:
         print('Task not known: {}'.format(task))
-    # sfeh: options for other functions? run, visualise_tree, analyse_run, check_files, tests
 
 
 if __name__ == "__main__":

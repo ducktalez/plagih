@@ -232,6 +232,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
             'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
             'fitness'           - aggregated scalar fitness score
 
+    sfeh is there a faster method than loading specific action from self.config dict?
     """
     action_at_here = env_variables['action_at'][specific_action]
     unique_outputs_num = action_at_here['unique_outputs_num']
@@ -265,7 +266,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
                 return float(fitness)
 
 
-def get_env_tensors(data, env_variables):
+def get_env_tensors(data, env_variables, eval_action=0):
     """
     return tensors-dictionary with all the terminals/leaf nodes
     - variables (observation0, ...)
@@ -274,6 +275,7 @@ def get_env_tensors(data, env_variables):
     tensors = {}
 
     # for obs_name, obs_info in env_variables['obs_name'].items():
+
     for obs_info in env_variables['obs_name'].values():
         label = obs_info['label']
         pos = obs_info['pos']
@@ -284,14 +286,13 @@ def get_env_tensors(data, env_variables):
         #     raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
 
     # sfeh: if more than one action is provided...
-    if len(env_variables['action_at']) == 1:  # todo
-        action_xtype = env_variables['action_at'][0]['xtype']
-        action_label = env_variables['action_at'][0]['label']
-        column = env_variables['action_at'][0]['pos']
-        if '2f' in action_xtype:
-            tensors[action_label] = tf.constant(data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
-        else:
-            print_e('action {} has these infos: {}.'.format(action_label, env_variables['action_at'][0]))
+    action_xtype = env_variables['action_at'][eval_action]['xtype']
+    action_label = env_variables['action_at'][eval_action]['label']
+    column = env_variables['action_at'][eval_action]['pos']
+    if '2f' in action_xtype:
+        tensors[action_label] = tf.constant(data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
+    else:
+        print_e('action {} has these infos: {}.'.format(action_label, env_variables['action_at'][0]))
     return tensors
 
 

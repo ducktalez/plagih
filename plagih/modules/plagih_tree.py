@@ -55,7 +55,7 @@ class Plagih_Tree():
 
 class Core_From_Labels():
 
-    def __init__(self, label_list, arity_list, xtype_list, force_np_dtype='U12'):
+    def __init__(self, label_list, arity_list, xtype_list, force_np_dtype='U15'):
         """
         Given the labels (and label infos) as list
         this function builds the core of a tree (no node_modify)
@@ -92,7 +92,7 @@ class Core_From_Labels():
         return self.core_tree
 
 
-def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype='U12'):
+def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype='U15'):
     """
     Given the labels (and label infos) as list
     this function builds the core of a tree (no node_modify)

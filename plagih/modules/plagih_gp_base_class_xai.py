@@ -52,13 +52,14 @@ class ExplainableGP(object):
             'parsimony_max': 90,
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
             'complexity_measure': 'tree_edit_distance',
+            'eval_action': 0,  # Only one action at a time! If the data has more than one action, runs have to be split. This can be specified here.
 
             # rather irrelevant
             'parsimony_tmp': 15,
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gggwwwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'ggwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -573,7 +574,7 @@ class ExplainableGP(object):
                                  np_data,
                                  self.kernel,
                                  self.env_variables,
-                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True)  # ['fitness'] only needed if return is dict
+                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, specific_action=self.config['eval_action'])  # ['fitness'] only needed if return is dict
 
             pairwise_fitness = tf_results['pairwise_fitness']
             agent_dimatrix[a_ii][-1] = copy.deepcopy(pairwise_fitness)
@@ -927,8 +928,10 @@ class ExplainableGP(object):
         self.parsimony_best_update()
 
         sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
-        best_fit = next(iter(sorted_parsimony_best))[1][
-            'fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
+        try:
+            best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
+        except:
+            best_fit = None
 
         for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
             fitness = meta['fitness_train']
@@ -1484,7 +1487,7 @@ class ExplainableGP(object):
                                 self.data_train,
                                 self.kernel,
                                 self.env_variables,
-                                self.tf_config, self.tf_device, self.tf_classify_labels_map)
+                                self.tf_config, self.tf_device, self.tf_classify_labels_map, specific_action=self.config['eval_action'])
 
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness is not a real number: {}'.format(fitness_train))

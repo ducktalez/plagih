@@ -273,7 +273,7 @@ def load_label_list(root_dir):
     return label_list, modify_list
 
 
-def gp_run(root_dir, force_new_run):
+def gp_run(root_dir, force_new_run, eval_action):
     """
     Loads important files in your run-folder
     - load config.yaml
@@ -287,6 +287,8 @@ def gp_run(root_dir, force_new_run):
 
     if force_new_run:  # for convenience. Makes restarting runs possible from command line
         config['force_new_run'] = True
+
+    config['eval_action'] = eval_action  # todotodo
 
     gp = ExplainableGP(root_dir, config=config)
 

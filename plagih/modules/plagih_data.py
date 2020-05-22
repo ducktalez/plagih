@@ -31,13 +31,14 @@ def samples_header_line(row):
     param_at = {}  #
     env_action_at = {}  #
     env_param_lookup = {}
+    column_data = {}
 
     for ii, header in enumerate(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input -> {cartVel, type=float, role=input]
         name = header_split[0]
-        env_observation[name] = {'type': 'float', 'role': None, 'pos': ii}  # if no type is specified -> float  # todo rename pos
-        # param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}
         column_meta_values = {}
+        column_meta_values[name] = {'type': 'float', 'role': None, 'pos': ii}  # if no type is specified -> float  # todo rename pos
+        # param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}
         try:
             for col_param in header_split[1:]:
                 param, value = col_param.split('=')
@@ -45,17 +46,14 @@ def samples_header_line(row):
         except Exception as ex:
             print('Could not load samples csv correctly: {}'.format(ex))
 
-        # todo fill obs_name or diretly in names??
         # the column type
         col_type = header_entry_get_type(column_meta_values)
         xtype = '2b' if 'bool' in col_type else '2f'
         minmax = header_entry_get_minmax(column_meta_values)
-
         role = env_observation.get('role')
-        if role is None:
-            role = header_entry_get_roleguess(name, ii, row)
-
+        role = header_entry_get_roleguess(role, name, ii, row)
         all_meta_dict = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii, 'role': role, 'minmax': minmax}
+
         if any(x in role for x in ['input', 'observation', 'obs']):
             env_observation[name] = all_meta_dict
             env_xtype_list[xtype].append(name)
@@ -101,17 +99,18 @@ def header_entry_get_minmax(column_meta_values):
     return minmax
 
 
-def header_entry_get_roleguess(name, ii, row):
+def header_entry_get_roleguess(role, name, ii, row):
     """
 
     """
-    if 'a_' in name[:2]:
-        role = 'action'
-    elif ii < len(row) - 1:
-        role = 'input'
-    else:
-        role = 'action'
-    print_warning('w', 'role not given. Role is interpreted as: {}'.format(role))
+    if role is None:
+        if 'a_' in name[:2]:
+            role = 'action'
+        elif ii < len(row) - 1:
+            role = 'input'
+        else:
+            role = 'action'
+        print_warning('w', 'role not given. Role is interpreted as: {}'.format(role))
     return role
 
 

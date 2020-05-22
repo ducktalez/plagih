@@ -23,9 +23,10 @@ def main(argv):
     ipath = None
     task = 'run'
     force_new_run = False
+    eval_action = 0  # Usually, the dataset only has one action
 
     try:
-        opts, args = getopt.getopt(argv, 'hi:o:f', ['ipath=', 'opath=', 'task=', 'force_new_run='])
+        opts, args = getopt.getopt(argv, 'hi:o:f', ['ipath=', 'opath=', 'task=', 'force_new_run=', 'action='])
     except getopt.GetoptError:
         print('Failed, try: start.py -i <input FOLDER>')
         sys.exit(2)
@@ -44,6 +45,11 @@ def main(argv):
             task = arg
         elif opt in '--force_new_run':
             force_new_run = True
+        elif opt == '--action':
+            try:
+                eval_action = int(arg)
+            except Exception as ex:
+                print('Could not convert action. Exception, just fyi, is: {}'.format(ex))
 
     if ipath is None:
         print('No run-folder provided. Starting an example run.\n')
@@ -51,7 +57,7 @@ def main(argv):
     # print('Starting plagih-run in {}'.format(Path(run_folder)))
 
     if task == 'run':
-        plagih_gp.gp_run(ipath, force_new_run)
+        plagih_gp.gp_run(ipath, force_new_run, eval_action=eval_action)
     elif task == 'analyze':
         plagih_gp.analyze(ipath)
     elif task == 'tree-latex':

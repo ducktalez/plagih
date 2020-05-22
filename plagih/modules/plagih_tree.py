@@ -331,7 +331,7 @@ def tree_check_quick(tree, karoo=True):
     elif not tree_check_types(tree):
         tree_works = False
     elif tree_node_get_arity(tree, root_id) == 0:
-        print_warning('w', 'Tree is only a root node')
+        print_warning('w', 'Tree is only a root node')  # todo this happens sometimes, which it shouldn't?
         tree_works = False
     else:
         tree_works = True

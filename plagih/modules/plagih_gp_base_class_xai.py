@@ -59,7 +59,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'ggwwsivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'gggwwwwsiivoaaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -930,7 +930,7 @@ class ExplainableGP(object):
         sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
         try:
             best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
-        except:
+        except StopIteration:
             best_fit = None
 
         for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
@@ -976,7 +976,10 @@ class ExplainableGP(object):
         remove superfluous pareto entries
         """
         sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
-        last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
+        try:
+            last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
+        except StopIteration:
+            last_fitness = None  # todo is None actually correct here?
         for parsim, meta in sorted_pareto[1:]:
             fitness = meta['fitness_train']
             if self.kernel.fitness_compare(fitness, last_fitness):

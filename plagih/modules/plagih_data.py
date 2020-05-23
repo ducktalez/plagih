@@ -34,7 +34,7 @@ def samples_header_line(row):
     column_data = {}
 
     for ii, header in enumerate(row):
-        header_split = header.split('|')  # split 1: cartVel|type=float|role=input -> {cartVel, type=float, role=input]
+        header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
         name = header_split[0]
         column_meta_values = {}
         column_meta_values[name] = {'type': 'float', 'role': None, 'pos': ii}  # if no type is specified -> float  # todo rename pos

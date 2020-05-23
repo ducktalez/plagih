@@ -1115,8 +1115,10 @@ def tree_get_expr_raw(tree, node_id=root_id):
 
 
 def tree_get_expr_sym(tree, node_id=root_id):
+    """
+
+    """
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
-    # print('Important print. Expr raw: {}'.format(expr_raw))
     expr_sym = expr_sympify(expr_raw)
     return expr_sym
 
@@ -1770,27 +1772,19 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
     return ztree
 
 
-def tree_fix_link_child_karoo(tree):
-    """
-    In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
-
-    This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
-
-    """
-
-    for node_id in range(root_id, len(tree[3])):
-        c_buffer = evolve_c_buffer(tree, node_id, karoo=True)  # generate c_buffer for each node
-        tree = tree_node_set_childs_ids(tree, node_id, c_buffer, karoo=True)  # update child links for each node
-
-    return tree
-
-
-def tree_fix_arity(tree):
-    for node_id in tree_iterate_range(tree):
-        label = tree_node_get_label(tree, node_id)
-        arity = label_get_arity(label)
-        tree = tree_node_set_arity(tree, node_id, arity)
-    return tree
+# def tree_fix_link_child_karoo(tree):
+#     """
+#     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
+# ## sfeh: todo can this REALLY be deleted? how is this not used?^^
+#     This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
+#
+#     """
+#
+#     for node_id in range(root_id, len(tree[3])):
+#         c_buffer = evolve_c_buffer(tree, node_id, karoo=True)  # generate c_buffer for each node
+#         tree = tree_node_set_childs_ids(tree, node_id, c_buffer, karoo=True)  # update child links for each node
+#
+#     return tree
 
 
 def tree_fix_link_child(tree, karoo=False):

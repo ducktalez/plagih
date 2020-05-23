@@ -102,7 +102,7 @@ modify_list,0,1,0,0,1,1
 
 ...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
 
-### How I analyze results:
+### How I analyse results:
 - `plots/average-fitness.png` - to see if there was an improvement
 - `plots/best_candidate.png` - for the current best solution
 - `plots/pareto.png` - showing the best candidates related to the complexity. Find your prefered combination of performance and complexity

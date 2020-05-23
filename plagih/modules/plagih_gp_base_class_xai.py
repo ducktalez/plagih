@@ -38,7 +38,7 @@ class ExplainableGP(object):
         self.root_dir = root_dir
 
         self.config = {
-            'mode': 'run',  # ['run', 'analyze']
+            'mode': 'run',  # ['run', 'analyse']
             'description': 'No description set',
             'choose': {
                 'choose rules': ['first', 'choose', 'random'],
@@ -59,7 +59,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gggwwwwsiivoaaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'gggwwwsiivoaaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -537,32 +537,33 @@ class ExplainableGP(object):
         # histogram_data = np.concatenate((histogram_data.reshape(-1, 1), pairwise_fitness.reshape(-1, 1)), axis=1)
         # histogram_data = np.multiply.reduce(histogram_data, axis=1)
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
+            # todo add the min max to the csv standard and warn if it is not specified
+            # todo only histograms for the variables that are in a tree?
         """
 
+        path_hist = folder_make_dir(root_path / folder_histograms)
+
         np_data = self.data_train  # todo sfeh?
-        data_dimensions = len(self.env_variables['obs_name'])
-        agent_dimensions = len(self.pareto)
-        # lel. never use the *-list createn nested, ir references the same list
-        agent_dimatrix = [[None] * (data_dimensions + 1) for _ in range(agent_dimensions)]  # +1? -> pairwise fitness!
         agent_dimatrix2 = {}  # todo
-        action_hist_data = [None for _ in range(agent_dimensions)]
+        obs_x_info = {}  # [None] * data_dimensions
 
         max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
 
-        data_bins = [None] * data_dimensions
         for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
-            col = obs_info.get('pos')
-            histogram_data = np_data[:, col]
-            obs_minmax = obs_info.get('minmax')  # todo
+            obs_x_info[ii] = {}  # 'bins': None, 'obs_name': None
+            histogram_data = np_data[:, obs_info.get('pos')]  # pos is the same as col
+            obs_minmax = obs_info.get('minmax')  # todo this should be set, no matter what.
             if obs_minmax is None:
-                if obs_name == 'cartVel':  # todo
-                    obs_minmax = (-0.07, 0.07)
-                elif obs_name == 'cartPos':
-                    obs_minmax = (-1.2, 0.6)
-                else:
-                    obs_minmax = (np.min(histogram_data), np.max(histogram_data))
-            bins = np.linspace(obs_minmax[0], obs_minmax[1], 32+1)  # todo 32 bins?
-            data_bins[ii] = bins
+                # print('SHOULD NOT HAPPEN, SFEH. Must be set earlier!')  # todo
+                obs_minmax = (np.min(histogram_data), np.max(histogram_data))
+            
+            # todo delete this
+            if obs_name == 'cartVel':  # todo
+                obs_minmax = (-0.07, 0.07)
+            elif obs_name == 'cartPos':
+                obs_minmax = (-1.2, 0.6)
+                
+            obs_x_info[ii]['bins'] = np.linspace(obs_minmax[0], obs_minmax[1], 32+1)  # todo 32 bins?
 
         for a_ii, (parsim, meta) in enumerate(sorted(list(self.pareto.items()))):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
@@ -577,57 +578,65 @@ class ExplainableGP(object):
                                  self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, specific_action=self.config['eval_action'])  # ['fitness'] only needed if return is dict
 
             pairwise_fitness = tf_results['pairwise_fitness']
-            agent_dimatrix[a_ii][-1] = copy.deepcopy(pairwise_fitness)
+            tf_fitness = tf_results['fitness']
+            agent_dimatrix2[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
+            agent_dimatrix2[a_ii]['tf_fitness'] = tf_fitness
+            agent_dimatrix2[a_ii]['pairwise_fitness'] = copy.deepcopy(pairwise_fitness)
+            agent_dimatrix2[a_ii]['parsim'] = parsim
+            deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
+            agent_dimatrix2[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
             for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
                 col = obs_info.get('pos')
                 histogram_data = np_data[:, col]
-                hist, _ = np.histogram(histogram_data, bins=data_bins[ii], weights=pairwise_fitness)
+                hist, _ = np.histogram(histogram_data, bins=obs_x_info[ii]['bins'], weights=pairwise_fitness)
                 max_fails_per_bin = max(max(hist), max_fails_per_bin)
-                agent_dimatrix[a_ii][ii] = copy.deepcopy((histogram_data, parsim, obs_name, tf_results['fitness']))  # sfeh fitness train aswell
+                agent_dimatrix2[a_ii]['obs-specific'] = {}
+                agent_dimatrix2[a_ii]['obs-specific'][ii] = histogram_data
+                obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
 
-            # actionhist
-            kernel_result = tf_results['kernel_result']
-            act_solution = tf_results['act_solution']
-            action_hist_data[a_ii] = copy.deepcopy(kernel_result - act_solution)  # # nope
+        # # >>> Histograms for every dimension
+        #
+        # data_dimensions = len(self.env_variables['obs_name'])
+        #
+        # # for enum_aii, agent_ii in enumerate(agent_dimatrix):
+        # for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix2.items()):
+        #     fig, axs = plt.subplots(data_dimensions, 1)
+        #
+        #     # pairwise_fitness = agent_ii[-1]
+        #     pairwise_fitness = agent_info['pairwise_fitness']
+        #     # parsim = agent_ii['parsim']
+        #     for obs_ii, agent_obs_info in agent_info['obs-specific'].items():  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
+        #         # histogram_data, parsim, obs_name, fitness = dim_ii
+        #         hist_data = agent_obs_info['histogram_data']
+        #         axs[obs_ii].hist(hist_data, bins=obs_x_info[obs_ii]['bins'], weights=pairwise_fitness)  # todo
+        #         # ax[enum_ii].hist(histogram_data, bins='auto', weights=pairwise_fitness)  # todo
+        #         axs[obs_ii].set_title(obs_x_info[obs_ii].get('obs_name'))
+        #         axs[obs_ii].set_ylim(top=max_fails_per_bin)
+        #
+        #     plt.tight_layout()
+        #     plt.savefig(path_hist / 'obs_hist_{}.png'.format(parsim))
+        #     plt.clf()
 
-        path_hist = folder_make_dir(root_path / folder_histograms)
-
-        # fig, axs = plt.subplots(data_dimensions, 1)
-        for enum_aii, agent_ii in enumerate(agent_dimatrix):
-            fig, axs = plt.subplots(data_dimensions, 1)
-
-            pairwise_fitness = agent_ii[-1]
-            parsim = 'todo will be overwritten in loop'
-            for enum_ii, (histogram_data, parsim, obs_name, fitness) in enumerate(agent_ii[:-1]):  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
-                # histogram_data, parsim, obs_name, fitness = dim_ii
-                axs[enum_ii].hist(histogram_data, bins=data_bins[enum_ii], weights=pairwise_fitness)  # todo
-                # ax[enum_ii].hist(histogram_data, bins='auto', weights=pairwise_fitness)  # todo
-                axs[enum_ii].set_title(obs_name)
-                axs[enum_ii].set_ylim(top=max_fails_per_bin)
-
-            plt.tight_layout()
-            # plt.margins(x=0, y=0)
-            plt.savefig(path_hist / 'hist_{}.png'.format(parsim))
-            plt.close()  # todo close is not right probably
-            # todo add the min max to the csv standard
-
-        # todotodo
-        for enum_aii, agent_ii in enumerate(agent_dimatrix):
-            _, parsim, _, _ = agent_ii[0]
+        # >>> Histograms for every action
+        # for enum_aii, agent_ii in enumerate(agent_dimatrix):
+        for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix2.items()):
 
             # Histograms action-based
+            # if 'discrete' in self.kernel:
+            #     act_min, act_max = self.env_variables['action_at'][self.TODO TODO TODOTODO]
+            #     action_bins = np.linspace(-0.5+, 2+.5, 5+1)
             action_bins = np.linspace(-2-.5, 2+.5, 5+1)  # todo
             # action_bins = np.linspace(-.5, 2.5, 3+1)  # todo action minmax
             # todo bins should actually be boarders... np.linspace(-2, 2, 5) or np.linspace(-2.5, 2.5, 5+1)
 
             fig, ax = plt.subplots()
-            ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
+            # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
+            ax.hist(agent_info['result-solution'], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
             ax.set_ylim(0, 3500)  # todo 2000 should be smthng else
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
             fig.tight_layout()
-            # plt.hist(action_hist_data[enum_aii], bins=action_bins)  #, weights=np.abs(np.sign(pairwise_fitness)) todo
             plt.savefig(path_hist / 'acthist_{}.png'.format(parsim))
             plt.clf()  # todo
 
@@ -849,8 +858,8 @@ class ExplainableGP(object):
                 self.pop_append(tree, last_evolution=last_evolution)
 
         if len(eval_fails) > 0:
-            print_warning('www', 'Evaluating {} new trees in gen {} caused these exceptions:\n{}'.format(
-                len(self.population_tmp_eval), self.gen_id, ', '.join(eval_fails)), print_type=self.print_type)
+            print_warning('www', 'Evaluating {} new trees in gen {} caused {} exceptions:\n{}'.format(
+                len(self.population_tmp_eval), self.gen_id, len(eval_fails), ', '.join(eval_fails)), print_type=self.print_type)
 
         return
 
@@ -1390,7 +1399,7 @@ class ExplainableGP(object):
         self.pop_eval_remaining()
         self.pareto_update()
         self.pop_base_transfer()
-        self.pop_analyze()
+        self.pop_analyse()
         # write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)  # better in periodic file write
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_lut)
@@ -1455,6 +1464,7 @@ class ExplainableGP(object):
 
         self.origin_tree = copy.deepcopy(tree)
         self.origin_meta = {'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
+
         fitness_train = self.tree_eval_fitness_train(tree)
         # except Exception as ex:
         #     raise Exception('Your origin_meta algorithm already caused an exception: {}'.format(ex))
@@ -1615,7 +1625,7 @@ class ExplainableGP(object):
 
         return
 
-    def pop_analyze(self):
+    def pop_analyse(self):
         """
         Analysing this generation
         - amount of trees

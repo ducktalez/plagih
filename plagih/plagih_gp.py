@@ -161,7 +161,7 @@ def load_evolve_functions(root_dir, evolve_file=file_evolve_functions):
             {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
              'custom_params': {'sympify_tree': True}},
             {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02},
-            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05},
+            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.10},
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 2, 5, 0.8), 'build_method': 'full'}}},
             {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
@@ -169,9 +169,9 @@ def load_evolve_functions(root_dir, evolve_file=file_evolve_functions):
             {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 6, 24, 4), 'build_method': 'grow'}}},
             {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30},
-            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.09,
+            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.5,
              'custom_params': {'mode': 'branch'}},
-            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.01,
+            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.0,
              'custom_params': {'mode': 'point'}},
             {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
              'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 3, 5, 1), 'build_method': 'full'}}},
@@ -312,7 +312,7 @@ def gp_run(root_dir, force_new_run, eval_action):
     sys.exit()
 
 
-def analyze(root_dir):
+def analyse(root_dir):
     """
     write all analysing files.
     - pareto (txt, latex_trees, agents)

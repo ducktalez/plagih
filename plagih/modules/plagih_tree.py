@@ -819,7 +819,6 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
-    todo check xtype-arity relation. actually, check the correct labels xtype
     """
 
     tbdo_xtypes = [xtype_root]
@@ -1138,12 +1137,9 @@ def tree_get_pycode(tree, node_id=root_id):
         results = []
         for child in childs:
             results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
-        try:
-            return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
-        except:
-            print(label, 'asd')
-            print(results, 'asd')
-            return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)  # todo
+        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
+        # except:
+        #     return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
 
 
 def tree_raw_depth_prefix(tree, node_id):

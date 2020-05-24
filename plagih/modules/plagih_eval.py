@@ -185,9 +185,10 @@ class RegressionKernel(FitnessKernel):
     first try to make separate classes
     """
 
-    def __init__(self):
+    def __init__(self, kernel_name):
         # super('regression')
         self.name = 'regression'
+        super().__init__(kernel_name)
 
     # def fitness_compare(self, fitness1, fitness2, mode='better'):
     #     """
@@ -233,7 +234,6 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
             'solution_goal'          - array of the solution values extracted from the data_csv_path
             'fitness'           - aggregated scalar fitness score
 
-    sfeh is there a faster method than loading specific action from self.config dict?
     """
     action_at_here = env_variables['action_at'][specific_action]
     unique_outputs_num = action_at_here['unique_outputs_num']

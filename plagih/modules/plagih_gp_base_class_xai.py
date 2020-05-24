@@ -59,11 +59,10 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gggwwwsiivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'ggwwsiivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
-            'force_new_run': False,
-            # especially for testing. Instead of deleting the old folder each time, you can set this to False to init a new run again #
+            'force_new_run': False,  # especially for testing. Otherwise, delete the folder. can be set via command line.
             'monitor': {'gen_fitness_average': 'y',
                         'sympify_errors': 'y',
                         'population_tmp_done-size': 'y',
@@ -460,7 +459,7 @@ class ExplainableGP(object):
             self.run_backup_save()
             self.file_save_files(tmp_path)
 
-        self.printpl('ii', 'Done with auto-procedures')
+        self.printpl('iii', 'Done with auto-procedures')
 
         return 0
 
@@ -623,22 +622,25 @@ class ExplainableGP(object):
         for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix2.items()):
 
             # Histograms action-based
-            # if 'discrete' in self.kernel:
-            #     act_min, act_max = self.env_variables['action_at'][self.TODO TODO TODOTODO]
-            #     action_bins = np.linspace(-0.5+, 2+.5, 5+1)
-            action_bins = np.linspace(-2-.5, 2+.5, 5+1)  # todo
-            # action_bins = np.linspace(-.5, 2.5, 3+1)  # todo action minmax
+            act_min, act_max = self.env_variables['action_at'][self.config['eval_action']]['minmax']
+            if 'discrete' in self.kernel.kernel:
+                # todo test
+                unique_actions = self.env_variables['action_at'][self.config['eval_action']]['unique_outputs_num']
+                action_bins = np.linspace(-0.5+act_min, 0.5+act_max, unique_actions+1)
+            else:
+                action_bins = np.linspace(act_min, act_max, 10)  # check out histogram_bin_edges, maybe it is better
+            # action_bins = np.linspace(-2-.5, 2+.5, 5+1)  # todo
             # todo bins should actually be boarders... np.linspace(-2, 2, 5) or np.linspace(-2.5, 2.5, 5+1)
 
             fig, ax = plt.subplots()
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            ax.hist(agent_info['result-solution'], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
+            ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled")  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
             ax.set_ylim(0, 3500)  # todo 2000 should be smthng else
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
             fig.tight_layout()
             plt.savefig(path_hist / 'acthist_{}.png'.format(parsim))
-            plt.clf()  # todo
+            plt.close()  # todo
 
     def file_conclusion(self, path):
 

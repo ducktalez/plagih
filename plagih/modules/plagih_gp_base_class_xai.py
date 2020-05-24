@@ -634,7 +634,7 @@ class ExplainableGP(object):
 
             fig, ax = plt.subplots()
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled")  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
+            ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
             ax.set_ylim(0, 3500)  # todo 2000 should be smthng else
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
@@ -731,11 +731,11 @@ class ExplainableGP(object):
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
 
-        pth = file_make_dir(root_path / trees_tex)
-        with Path.open(pth, 'w') as file:
+        path_trees_tex = file_make_dir(root_path / trees_tex)
+        with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
-        self.printpl('f', '{}'.format(pth))
+        self.printpl('f', '{}'.format(path_trees_tex))
 
         return
 

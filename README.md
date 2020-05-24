@@ -43,7 +43,7 @@ The data set contains decisions and the associated observations that the agent h
 
 The .csv must (currently) have a header line that looks like this example:
 
-| observation0:float | observation1:float | action0:float |
+| cartPos:float | cartVel:float | action0:float |
 |:------------------ | ------------------ |:------------- |
 | 0.1                | 0.2                | 0.3           |
 | 0.1                | 0.2                | 0.3           |
@@ -84,19 +84,19 @@ Possible operators are:
 
 Code:
 ```
-if (observation0 < 0):
+if (cartPos < 0):
     return 1
 else:
     return 2
 ```
 `tree_labels.csv`:
 ```
-label_list,Ifte, <, 1, 2, observation0, 0
+label_list,Ifte, <, 1, 2, cartPos, 0
 ```
 
 `tree_labels.csv` (with `if`,`return 1`,`return 2` as fix nodes):
 ```
-label_list,Ifte, <, 1, 2, observation0, 0
+label_list,Ifte, <, 1, 2, cartPos, 0
 modify_list,0,1,0,0,1,1
 ```
 

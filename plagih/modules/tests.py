@@ -21,8 +21,8 @@ class TestHelpers:
                                         'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
                                         'pos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
                                         'vel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
-                                        'bool1': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'},
-                                        'bool2': {'label': 'observation1', 'type': 'bool', 'xtype': '2b'}
+                                        'bool1': {'label': 'cartVel', 'type': 'bool', 'xtype': '2b'},
+                                        'bool2': {'label': 'cartVel', 'type': 'bool', 'xtype': '2b'}
                                         },
                            '2f': ['a', 'b', 'c', 'd'],
                            '2b': ['bool1', 'bool2']}

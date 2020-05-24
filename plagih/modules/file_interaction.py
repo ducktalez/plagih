@@ -137,9 +137,7 @@ def write_file_population_karoo(population, pop_name, path, gen_id, print_type=N
     Save population_* to disk.
 
     """
-    file_name = 'population_{}.csv'.format(str(pop_name))
-    file_path = path / 'info/' / file_name
-    file_path = file_make_dir(file_path)
+    file_path = file_make_dir(path / 'info/' / 'population_{}.csv'.format(str(pop_name)))
     # sfeh? function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')

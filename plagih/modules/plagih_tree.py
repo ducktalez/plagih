@@ -317,14 +317,14 @@ def tree_set_last_evolution(tree, last_modification):
     return tree
 
 
-def tree_check_quick(tree, karoo=True):
+def tree_check_quick(tree, karoo=True, print_type=None):
     """
     without some of the heavy tests
     """
     if tree is None:
         return False
 
-    if not tree_check_children(tree, karoo=karoo, print_type=None):
+    if not tree_check_children(tree, karoo=karoo):
         tree_works = False
     elif not tree_check_node_label_info:
         tree_works = False

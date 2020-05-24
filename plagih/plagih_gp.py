@@ -119,7 +119,7 @@ def load_config(root_dir):
     return config
 
 
-def load_data_prepared(root_dir, delimiter=','):
+def load_data_prepared(root_dir, delimiter=',', print_type=None):
     """
     loading the data which the GP will be working on.
     The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -141,7 +141,7 @@ def load_data_prepared(root_dir, delimiter=','):
     if dataspec_file.is_file():
         pass  # sfeh: if you want to load informations from extra file, check for this file here
     else:
-        yaml_dump(root_dir / env_variables_yaml, data_prepared[0])  # sfeh env_variables, _, _ = data_prepared. anyways, currently loading infos via brackets in .csv-file
+        yaml_dump(root_dir / env_variables_yaml, data_prepared[0], print_type=print_type)  # sfeh env_variables, _, _ = data_prepared. anyways, currently loading infos via brackets in .csv-file
 
     return data_prepared
 
@@ -161,15 +161,15 @@ def load_evolve_functions(root_dir, evolve_file=file_evolve_functions):
             {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
              'custom_params': {'sympify_tree': True}},
             {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02},
-            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.10},
+            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.10},  # sum 0.25
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 2, 5, 0.8), 'build_method': 'full'}}},
             {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 2, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 6, 24, 4), 'build_method': 'grow'}}},
-            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30},
-            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.5,
+            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30},  # sum 0.70
+            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.05,
              'custom_params': {'mode': 'branch'}},
             {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.0,
              'custom_params': {'mode': 'point'}},
@@ -231,7 +231,7 @@ def load_tree_builders(root_dir, data_prepared=None):
     if data_prepared and distributions_as_string.get('observed_floats'):
         env_variables, data_train, _ = data_prepared
         action_columns = list(range(len(env_variables['obs_name']), len(data_train[0])))  # remove these
-        # non_float_columns = ... # todo: data types must be float for this to work, remove non-float values. probably, these do not really exist.
+        # non_float_columns = ... # sfeh: data types must be float for this to work, remove non-float values. probably, these do not really exist.
         observ_values = np.delete(data_train, action_columns, 1)
         variables_set = np.random.choice(observ_values.flatten(), distributions_as_string.get('observed_floats'))  # 2nd param is probably '100'
         distributions['2f'].extend([lambda: np.random.choice(variables_set)]),
@@ -264,10 +264,10 @@ def load_label_list(root_dir):
             ptree = karoo_ptree_from_expr(expr, 'ö')
             tree = ptree.get_uninstanced_tree()
             print('ASD', tree)
-            # tree_pretty_print(tree)  # todo not working??
+            # tree_pretty_print(tree)  # sfeh not working??
             print('ASD DONE')
-            tree_save_csv(tree, tree_labels_csv_path)  # todo
-            raise  # todo
+            tree_save_csv(tree, tree_labels_csv_path)
+            raise  # sfeh
     else:
         print_warning('ww', 'No origin-tree file was provided. Continuing.')
     return label_list, modify_list
@@ -288,7 +288,7 @@ def gp_run(root_dir, force_new_run, eval_action):
     if force_new_run:  # for convenience. Makes restarting runs possible from command line
         config['force_new_run'] = True
 
-    config['eval_action'] = eval_action  # todotodo
+    config['eval_action'] = eval_action
 
     gp = ExplainableGP(root_dir, config=config)
 

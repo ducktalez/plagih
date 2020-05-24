@@ -59,7 +59,7 @@ class ExplainableGP(object):
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'gggwwwsiivoaaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'gggwwwsiivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,
             # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,
@@ -70,7 +70,7 @@ class ExplainableGP(object):
                         'fitness_variance': 'n'},
             'period': {'time_monitor': None,  # in sec
                        'time_save': None,  # in sec
-                       'gen_monitor': 1,  # in gen counts
+                       'gen_monitor': 10,  # in gen counts
                        'gen_save': 1},  # in gen counts
             'crossover_type_safety_mode': 'replace_same_types',
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
@@ -653,7 +653,7 @@ class ExplainableGP(object):
         # file.write('Plagih GP\n launched: {}'.format(str(date_time)))
         #
         # if self.origin_exists():
-        #     origin_fitness = eval_tf(self.origin_meta['expr_sym'], self.data_control, self.tf_parameters, get_pred_labels=True)['fitness']
+        #     origin_fitness = eval_tf(self.origin_meta['expr_sym'], self.data_control, self.tf_parameters, get_predicted_labels=True)['fitness']
         #     # fitness_control_best = origin_result['fitness']
         #
         #     fittest_algo = self.origin_meta['expr_sym']
@@ -673,7 +673,7 @@ class ExplainableGP(object):
         #
         # for parsimony, fitness in self.pareto.items():
         #     algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
-        #     result = eval_tf(algo_sym, self.data_control, self.tf_parameters, get_pred_labels=True)
+        #     result = eval_tf(algo_sym, self.data_control, self.tf_parameters, get_predicted_labels=True)
         #     fit_control = result['fitness']
         #
         #     if self.kernel.fitness_compare(fit_control, fitness_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
@@ -760,7 +760,7 @@ class ExplainableGP(object):
             expr_raw = meta['expr_raw']
             expr_sym = expr_sympify(expr_raw)
             # label_list_sym = ast_convert_from_expr(expr_sym, build=True)
-            # tree = karoo_tree_from_labellist(label_list_sym, self.env_variables)
+            # tree = TEST_karoo_tree_from_labellist(label_list_sym, self.env_variables)
             ptree = karoo_ptree_from_expr(expr_sym, self.env_variables)
             tree = ptree.get_uninstanced_tree()
             py_action = 'action = {}'.format(tree_get_pycode(tree))
@@ -1503,7 +1503,7 @@ class ExplainableGP(object):
                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, specific_action=self.config['eval_action'])
 
         if not check_value_is_real(fitness_train):
-            raise Exception('Fitness is not a real number: {}'.format(fitness_train))
+            raise Exception('Fitness is inf or nan: {}'.format(fitness_train))  # happens, eg when values are soo wrong that it leaves the float-range
 
         return fitness_train
 

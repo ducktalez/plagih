@@ -40,8 +40,8 @@ class TestHelpers:
                                         '2b': [lambda: np.random.choice([True, False])]}
 
         self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
-        self.tree1 = karoo_tree_from_labellist(['+', '+', '*', '-', '1', '2', '3', '4', '5'], self.env_bundle)
-        self.tree2 = karoo_tree_from_labellist(['+', '-', '*', '1', '2', '3', '4'], self.env_bundle)
+        self.tree1 = TEST_karoo_tree_from_labellist(['+', '+', '*', '-', '1', '2', '3', '4', '5'], self.env_bundle)
+        self.tree2 = TEST_karoo_tree_from_labellist(['+', '-', '*', '1', '2', '3', '4'], self.env_bundle)
 
     def test_ted_weighting(self):
         distance, mapping = tree_parsimony_ted(self.tree1, self.tree2)
@@ -79,11 +79,11 @@ class TestHelpers:
         oparray = get_all_oparrays()
         choose_distributions = self.distributions_as_string
         build_type='grow'
-        # origin_tree = karoo_tree_from_labellist(['+', '1', '2'], env_variables, modify_list=[0, 1, 1])
+        # origin_tree = TEST_karoo_tree_from_labellist(['+', '1', '2'], env_variables, modify_list=[0, 1, 1])
 
         label_list, arity_list, xtype_list = invent_label_list_nodes(result_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_method=build_type)
         modify_list = [0] + ([1] * len(label_list))[1:]
-        tree = karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
+        tree = TEST_karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
 
         return tree
 

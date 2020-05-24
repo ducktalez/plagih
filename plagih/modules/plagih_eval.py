@@ -35,12 +35,15 @@ class FitnessKernel:
             return False
 
     def conclusion_get_text(self, result, fitness_control_best):
+        """
+
+        """
         result_str = ''
 
         if self.kernel == 'classification':
             result_str += ('\n\n Classification fitness score: {}'.format(fitness_control_best))
-            result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['pred_labels'][0])))
-            result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['pred_labels'][0])))
+            result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
+            result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
 
         elif self.kernel == 'regression':
             mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
@@ -211,7 +214,7 @@ class RegressionKernel(FitnessKernel):
     #     return
 
 
-def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify_labels_map, get_pred_labels=False, complete=False, specific_action=0):
+def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, specific_action=0):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -221,14 +224,13 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
         'self.tf_device' - controls which device will be used for computations (CPU or GPU).
         'self.tf_device_log' - controls device placement logging (debug only).
 
-    'get_pred_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
+    'get_predicted_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
 
     Returns:
         A dict mapping keys to the following outputs:
             'agent_result'         - array of the results of applying given expression to the data_csv_path
-            'pred_labels'       - (Classify) an array of the predicted labels extracted from the results
-            'solution_goal'          - array of the solution values extracted from the data_csv_path (variable 's' in the dataset)
-            'pairwise_fitness'  - array of the element-wise results of applying the fitness kernel function
+            'predicted_labels'       - (Classify) an array of the predicted labels extracted from the results
+            'solution_goal'          - array of the solution values extracted from the data_csv_path
             'fitness'           - aggregated scalar fitness score
 
     sfeh is there a faster method than loading specific action from self.config dict?
@@ -252,13 +254,13 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if complete:
-                if get_pred_labels:
-                    pred_labels = tf.map_fn(tf_classify_labels_map, agent_result, dtype=(tf.int32, tf.string), swap_memory=True)
+                if get_predicted_labels:
+                    predicted_labels = tf.map_fn(tf_classify_labels_map, agent_result, dtype=(tf.int32, tf.string), swap_memory=True)
                 else:
-                    pred_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
+                    predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-                agent_result, kernel_result, pred_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, pred_labels, act_solution, fitness, pairwise_fitness])
-                return {'agent_result': agent_result, 'kernel_result': kernel_result, 'pred_labels': pred_labels,
+                agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness])
+                return {'agent_result': agent_result, 'kernel_result': kernel_result, 'predicted_labels': predicted_labels,
                         'solution_goal': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
             else:  # reduced evaluation, only fitness is evaluated
                 fitness = sess.run(fitness)

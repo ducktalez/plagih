@@ -191,7 +191,7 @@ class Ptree_karoo():
         pass
 
 
-def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity_list=None):
+def TEST_karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity_list=None):
     """
     returns: tree, from label_list (newest version)
     """
@@ -200,9 +200,9 @@ def karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity
 
     xtype_list = xtypes_from_labels(label_list, env_variables)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
-    tree = p_tree.get_uninstanced_tree()
+    # tree = p_tree.get_uninstanced_tree()
 
-    return tree
+    return p_tree
 
 
 def karoo_ptree_from_expr(expr, env_variables, modify_list=None):
@@ -324,14 +324,14 @@ def tree_check_quick(tree, karoo=True):
     if tree is None:
         return False
 
-    if not tree_check_children(tree, karoo=karoo):
+    if not tree_check_children(tree, karoo=karoo, print_type=None):
         tree_works = False
     elif not tree_check_node_label_info:
         tree_works = False
     elif not tree_check_types(tree):
         tree_works = False
     elif tree_node_get_arity(tree, root_id) == 0:
-        print_warning('w', 'Tree is only a root node')  # todo this happens sometimes, which it shouldn't?
+        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)  #
         tree_works = False
     else:
         tree_works = True
@@ -1935,6 +1935,10 @@ def labels_get_aritys_list(label_list, karoo=False):
 
 
 def tree_pretty_print(tree, karoo=True):
+    """
+    prints a tree, each line ia a layer.
+    looks a little bit better than printing the whole array
+    """
     if karoo:
         tree = tree_convert_karoo_to_plagih(tree)
 

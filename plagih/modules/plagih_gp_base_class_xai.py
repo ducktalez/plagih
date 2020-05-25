@@ -11,6 +11,7 @@ from plagih.modules.viz_with_latex import *
 import json
 from pathlib import Path
 import textwrap
+from plagih.modules.plagih_data import *
 
 # todo (in start) check if the folder where the run should be in actually exists. currently traps in the operators.csv-loading process
 
@@ -113,30 +114,29 @@ class ExplainableGP(object):
         self.tourn_size = self.config['tourn_size']
 
         # special variables
-        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device
+        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
         self.tf_device_log = False  # TF device usage logging (for debugging)
-        tf_device_log = False
 
-        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=tf_device_log, allow_soft_placement=True)
+        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.tf_device_log, allow_soft_placement=True)
         self.tf_config.gpu_options.allow_growth = True
 
-        self.node_choose_dict = {
-            '2f': {
-                0: {'observ': [],
-                    'distribution': []},
-                1: {'f2f': [],
-                    'b2f': []},
-                2: {'f2f': [],
-                    'b2f': []},
-                3: {'b2f2f': []}},
-            '2b': {
-                0: {'observ': [],
-                    'distribution': []},
-                1: {'f2b': [],
-                    'b2b': []},
-                2: {'f2b': [],
-                    'b2b': []},
-                3: {None: []}}}
+        # self.node_choose_dict = {
+        #     '2f': {
+        #         0: {'observ': [],
+        #             'distribution': []},
+        #         1: {'f2f': [],
+        #             'b2f': []},
+        #         2: {'f2f': [],
+        #             'b2f': []},
+        #         3: {'b2f2f': []}},
+        #     '2b': {
+        #         0: {'observ': [],
+        #             'distribution': []},
+        #         1: {'f2b': [],
+        #             'b2b': []},
+        #         2: {'f2b': [],
+        #             'b2b': []},
+        #         3: {None: []}}}
 
         # some useful stuff
         self.monitoring_dict = {'population_tmp_done-size': {},
@@ -155,7 +155,7 @@ class ExplainableGP(object):
 
     def try_load_backup(self):
         """
-        If a backup-file is found
+        If a backup-file is found...
         """
         path_backup = self.root_dir / file_backup_pickle
         if Path.is_file(path_backup):
@@ -170,6 +170,27 @@ class ExplainableGP(object):
         else:
             return False
 
+    def update_old_runs(self):
+        """
+        If features were added between versions, you can try to update this from here
+        """
+        if self.env_variables.get('env_observation_family') is None:
+            self.env_variables['env_observation_family'] = {}
+            # sfeh delete this sometimes
+            for x in self.env_variables['obs_name'].values():
+                col_label = x['label']
+                temp_diff = envvariable_get_tempdiff(col_label)
+                core_label = envvariable_get_corelabel(col_label)
+                try:
+                    self.env_variables['env_observation_family'][core_label].extend([col_label])
+                except (IndexError, KeyError):
+                    self.env_variables['env_observation_family'][core_label] = [col_label]
+
+                self.env_variables['obs_name'][col_label]['temp_diff'] = temp_diff
+                self.env_variables['obs_name'][col_label]['core_label'] = core_label
+            self.printpl('w', 'Attention, we updated self.env_variables for an old run')
+        return
+
     def load_backup_pickle(self, path_backup):
         """
         Loading the state of the run from the pickle file
@@ -181,6 +202,9 @@ class ExplainableGP(object):
         self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
 
         self.restart_count += 1
+
+        self.update_old_runs()
+
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
 
         return
@@ -491,6 +515,8 @@ class ExplainableGP(object):
         self.data_train, self.data_control = data_train, data_control  # what is that good for: self.data_train_rows, = data_train_rows,
         # self.data_train = dataq_train  # data_train currently not needed (?)
 
+        self.update_old_runs()
+
         return
 
     def avtivate_evolve_functions(self, evolve_list):
@@ -544,7 +570,7 @@ class ExplainableGP(object):
 
         np_data = self.data_train  # todo sfeh?
         agent_dimatrix2 = {}  # todo
-        obs_x_info = {}  # [None] * data_dimensions
+        obs_x_info = {}  # [None] * data_dims
 
         max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
 
@@ -594,13 +620,15 @@ class ExplainableGP(object):
                 agent_dimatrix2[a_ii]['obs-specific'][ii] = histogram_data
                 obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
 
+        # todo when there are more than 3 (?) dimensions, these plots make no sense.
+        #  check for all vars in the tree, mark all observations of the same type with the same color?
         # # >>> Histograms for every dimension
         #
-        # data_dimensions = len(self.env_variables['obs_name'])
+        # data_dims = len(self.env_variables['obs_name'])
         #
         # # for enum_aii, agent_ii in enumerate(agent_dimatrix):
         # for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix2.items()):
-        #     fig, axs = plt.subplots(data_dimensions, 1)
+        #     fig, axs = plt.subplots(data_dims, 1)
         #
         #     # pairwise_fitness = agent_ii[-1]
         #     pairwise_fitness = agent_info['pairwise_fitness']
@@ -628,14 +656,14 @@ class ExplainableGP(object):
                 unique_actions = self.env_variables['action_at'][self.config['eval_action']]['unique_outputs_num']
                 action_bins = np.linspace(-0.5+act_min, 0.5+act_max, unique_actions+1)
             else:
-                action_bins = np.linspace(act_min, act_max, 10)  # check out histogram_bin_edges, maybe it is better
+                action_bins = np.linspace(act_min, act_max, 10)  # check out histogram_bin_edges, maybe it is better todo also 10 bins?
             # action_bins = np.linspace(-2-.5, 2+.5, 5+1)  # todo
-            # todo bins should actually be boarders... np.linspace(-2, 2, 5) or np.linspace(-2.5, 2.5, 5+1)
 
             fig, ax = plt.subplots()
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            ax.set_ylim(0, 3500)  # todo 2000 should be smthng else
+            # todo options: density = True, cumulative = True, np.clip(), np.diff(np.unique(data)).min() for
+            ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
+            ax.set_ylim(0, len(self.data_train))  # sfeh better size? max? # self.env_variables['action_at'][self.config['eval_action']]
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
             fig.tight_layout()
@@ -1125,21 +1153,20 @@ class ExplainableGP(object):
         mode = call_params['mode']  # point/branch/all
         mutate_filter = 'gaussian_filter'  # sfeh change?
 
-        # new_tree = tree_evolve_mutate_filter_one(tree)
-        # 1. choose a node
         node_ids = tree_get_mutatable_nodes(tree)
         if mode == 'branch':
-            node_id = np.random.choice(node_ids)
-            node_ids = tree_node_get_branch(tree, node_id)
+            node_id = np.random.choice(node_ids)  # todo should this be completely random?
+            node_ids = tree_node_get_branch(tree, node_id)  # select the whole branch
 
         float_nodes = []
+        variables_node = []
         for node_id in node_ids:
             if tree_node_get_xtype(tree, node_id) == '2f':
                 try:
                     _ = float(tree_node_get_label(tree, node_id))
                     float_nodes.append(node_id)
                 except ValueError:
-                    pass
+                    variables_node.append(node_id)
 
         if float_nodes:
             if mode == 'point':
@@ -1148,8 +1175,19 @@ class ExplainableGP(object):
                 val = float(tree_node_get_label(tree, node_id))
                 val = gp_mutate_constants(val, term_type='float', filter_type=mutate_filter, float_accuracy=self.config['float_accuracy'])
                 tree = tree_node_set_label(tree, node_id, val)
+
+        # todo this should probably be done somewhere else...
+        if variables_node:  # 'filtering' variables when they are from different times
+            for nodeobs_id in variables_node:
+                obs_name = tree_node_get_label(tree, nodeobs_id)
+                core_label = envvariable_get_corelabel(obs_name)
+                var_list = self.env_variables['env_observation_family'].get(core_label)
+                if var_list is not None:
+                    new_obs = random_choose_tempobs(var_list)
+                    tree = tree_node_set_label(tree, nodeobs_id, new_obs)
+
         else:
-            # print_warning('iii', 'Tree does not seem to have any float nodes for filtering.')
+            # print_warning('iii', 'Tree does not seem to have any float nodes for filtering.')  # usually happens with point-filtering
             pass
 
         return tree
@@ -1560,6 +1598,12 @@ class ExplainableGP(object):
     def file_all_plots(self, path):
         """
         Make all plots
+        'fitness_average'
+        'population_tmp_done-size'
+        'complexity_average'
+        'total_found_trees'
+        'pareto dominant candidates'
+        'tmp_pop_fitness_distribution'
         """
 
         path_plots = folder_make_dir(path / folder_plots)
@@ -1568,7 +1612,8 @@ class ExplainableGP(object):
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
             plot_end(data_tuples, path_plots, plt_title='average error', plt_y_label='fitness',
                      linestyle='-',
-                     set_left=data_tuples[0][0])
+                     set_left=data_tuples[0][0],
+                     fill_variance=self.monitoring_dict.get('fitness_variance'))
 
         if self.monitor_dict['population_tmp_done-size'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['population_tmp_done-size'].items()))
@@ -1648,9 +1693,9 @@ class ExplainableGP(object):
         pop_tree_analysis = []
         for ii, tree in enumerate(self.population_tmp_done):
             fitness = tree_get_fitness(tree)
-            parsimony = tree_get_parsimony(tree)
-            last_modi = tree_get_last_evolution(tree)
-            pop_tree_analysis.append({'fitness': fitness, 'complexity': parsimony, 'last_evolve': last_modi})
+            complexity = tree_get_parsimony(tree)
+            last_evolve = tree_get_last_evolution(tree)
+            pop_tree_analysis.append({'fitness': fitness, 'complexity': complexity, 'last_evolve': last_evolve})
 
             fitness_train_sum += fitness  # for fitness average
             tree_cnt += 1
@@ -1677,7 +1722,8 @@ class ExplainableGP(object):
         self.monitoring_dict['complexity_average'][self.gen_id] = avg_complexity
 
         # fitness variance
-        fitness_variance = np.var([x['fitness'] for x in pop_tree_analysis])
+        todo = [x['fitness'] for x in pop_tree_analysis]
+        fitness_variance = np.var(todo)
         self.monitoring_dict['fitness_variance'][self.gen_id] = fitness_variance
 
         # complexity variance
@@ -1771,6 +1817,18 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, forc
     build_size = max(size_min, build_size)
 
     return int(build_size)
+
+
+def random_choose_tempobs(var_list):
+    """
+    # todo random histogramme werte am Rand?
+    """
+    x = len(var_list)
+    fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
+    p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
+    p = p / np.sum(p)  # the sum must be equal to 1
+    new_obs = np.random.choice(var_list, p=p)
+    return new_obs
 
 
 def check_value_is_real(fitness):

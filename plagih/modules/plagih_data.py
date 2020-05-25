@@ -8,6 +8,7 @@ from plagih.modules.printing import *
 from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 from plagih.modules.operators import *
 import pandas as pd
+import re
 
 
 def samples_header_line(row):
@@ -21,7 +22,6 @@ def samples_header_line(row):
     env_variables['action_at'}[0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii, 'unique_outputs_num': None}
 
     param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
-    todo time-difference: filter operator for temporal difference with variables
     # delete name or label from dict todo
     """
     env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, 'param_at': {}}  # to identify all observation types
@@ -30,14 +30,15 @@ def samples_header_line(row):
     env_param_at = {}  #
     param_at = {}  #
     env_action_at = {}  #
+    env_observation_family = {}
     env_param_lookup = {}
     column_data = {}
 
     for ii, header in enumerate(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
-        name = header_split[0]
+        col_label = header_split[0]
         column_meta_values = {}
-        column_meta_values[name] = {'type': 'float', 'role': None, 'pos': ii}  # if no type is specified -> float  # todo rename pos
+        column_meta_values[col_label] = {'type': 'float', 'role': None, 'pos': ii}  # if no type is specified -> float  # todo rename pos
         # param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}
         try:
             for col_param in header_split[1:]:
@@ -46,17 +47,26 @@ def samples_header_line(row):
         except Exception as ex:
             print('Could not load samples csv correctly: {}'.format(ex))
 
-        # the column type
         col_type = header_entry_get_type(column_meta_values)
         xtype = '2b' if 'bool' in col_type else '2f'
         minmax = header_entry_get_minmax(column_meta_values)
-        role = env_observation.get('role')
-        role = header_entry_get_roleguess(role, name, ii, row)
-        all_meta_dict = {'name': name, 'type': col_type, 'xtype': xtype, 'label': name, 'pos': ii, 'role': role, 'minmax': minmax}
+        role = header_entry_get_roleguess(env_observation, col_label, ii, row)
+
+        all_meta_dict = {'name': col_label, 'type': col_type, 'xtype': xtype, 'label': col_label, 'pos': ii, 'role': role, 'minmax': minmax}
 
         if any(x in role for x in ['input', 'observation', 'obs']):
-            env_observation[name] = all_meta_dict
-            env_xtype_list[xtype].append(name)
+            temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
+            core_label = envvariable_get_corelabel(col_label)
+            try:
+                env_observation_family[core_label].extend([col_label])  # todo insert in sorted list... also t = [1,2,5,10]?
+            except (IndexError, KeyError):
+                env_observation_family[core_label] = [col_label]
+
+            all_meta_dict['temp_diff'] = temp_diff
+            all_meta_dict['core_label'] = core_label
+            # todo test
+            env_observation[col_label] = all_meta_dict
+            env_xtype_list[xtype].append(col_label)
         elif any(x in role for x in ['result', 'output', 'out', 'action']):
             action_count = len(env_action_at)
             all_meta_dict['unique_outputs_num'] = None  # sfeh add this so a later pycharm warning goes away?
@@ -64,12 +74,13 @@ def samples_header_line(row):
         else:
             raise
 
-        param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
+        param_at[ii] = {'name': col_label, 'type': col_type, 'xtype': xtype, 'role': role}
 
     # last-chance use of env_variables. sfeh: use many dicts instead! hmmm
     env_variables['action_at'].update(env_action_at)
     env_variables['obs_name'].update(env_observation)
     env_variables.update(env_xtype_list)  # sfeh that is ugly code
+    env_variables['env_observation_family'] = env_observation_family
 
     return env_variables, param_at
 
@@ -99,10 +110,11 @@ def header_entry_get_minmax(column_meta_values):
     return minmax
 
 
-def header_entry_get_roleguess(role, name, ii, row):
+def header_entry_get_roleguess(env_observation, name, ii, row):
     """
 
     """
+    role = env_observation.get('role')
     if role is None:
         if 'a_' in name[:2]:
             role = 'action'
@@ -112,6 +124,47 @@ def header_entry_get_roleguess(role, name, ii, row):
             role = 'action'
         print_warning('w', 'role not given. Role is interpreted as: {}'.format(role))
     return role
+
+
+def envvariable_get_tempdiff(name, re_pattern='_\d+$'):
+    """
+    'cartVel_12' -> core_label = 'cartVel', temp_diff = 12
+    can be used to enrich old runs 'manually', otherwise only used in header_entry_get_tempdiff
+    """
+    re_search = re.search(re_pattern, name)  # todo what is the best solution? '\_\d+$' is the correct regex using search.
+    if re_search:
+        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
+    else:
+        temp_diff = 0  # there is only the latest version
+
+    return int(temp_diff)
+
+
+def envvariable_get_corelabel(name, re_pattern='_\d+$'):
+    """
+
+    """
+    core_label = re.split(re_pattern, name)  #
+    if core_label:
+        core_label = core_label[0]
+    else:
+        core_label = name
+    return core_label
+
+
+def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
+    """
+    checking if an observation/variable is a past/historic value 'cartVel_10'
+    """
+
+    temp_diff = column_meta_values.get('temp_diff')
+
+    if temp_diff is not None:
+        temp_diff = int(temp_diff)  # convert time-difference to int-number
+    else:
+        temp_diff = envvariable_get_tempdiff(name, re_pattern=re_pattern)
+
+    return temp_diff
 
 
 def data_from_csv(samples_file, test_size=0.2, delimiter=','):

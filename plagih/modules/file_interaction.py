@@ -4,6 +4,7 @@ import csv
 import matplotlib.pyplot as plt
 import yaml
 from pathlib import Path
+import numpy as np
 
 try:
     import tikzplotlib
@@ -224,7 +225,8 @@ def plot_end(data_2d, plotname_path,
              right_padding=1.05, top_padding=1.05,
              beyond_lines=False,
              save_tikz=False,
-             subfolder=None):
+             subfolder=None,
+             fill_variance=None):
     """
     Make all plots in the same style - and also saving space.
     - Makes pyplots
@@ -267,34 +269,23 @@ def plot_end(data_2d, plotname_path,
 
     top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
 
-    if beyond_lines:
+    if beyond_lines:  # adding a point to the edges to imply that there are no more (better pareto) values
         x = [x[0]] + x + [new_right + 1]
         y = [new_top + 1] + y + [y[-1]]
 
-    # plt.close('all')  # todo
-    fig, ax = plt.subplots()  # todo
+    fig, ax = plt.subplots()
 
-    # if step_where:
-    #     plt.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
-    # # elif plt_hist:
-    # #     plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
-    # else:
-    #     plt.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+    x = np.array(x)  # sfeh this could have been done earlier...
+    y = np.array(y)
 
     if step_where:
         ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
     else:
         ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
-
-    # # let it start at (0,0) but +5% margin to the top and right
-    # plt.yscale(yscale)
-    # plt.ylim(min(bottom, 0), new_top)
-    # plt.xlim(min(left, 0), new_right)
-    # plt.margins(x=0, y=0)
-    #
-    # plt.xlabel(plt_x_label)
-    # plt.ylabel(plt_y_label)
-    # plt.title(plt_title)
+        if fill_variance:
+            pass  # todo
+            # fill_variance = np.array([x[1] for x in fill_variance.items()])  # first, extract 2nd val from tuple, then make the list a np-array
+            # ax.fill_between(x, y-fill_variance, y+fill_variance, alpha=0.2)
 
     ax.set_yscale(yscale)
     ax.set_ylim(min(bottom, 0), new_top)
@@ -316,7 +307,6 @@ def plot_end(data_2d, plotname_path,
             pass
 
     plt.tight_layout()
-    # plt.title(plt_title)
     plt.savefig(plotname_path / '{}.png'.format(plt_title))
     # plt.close()  # Stackoverflow said that this is too much, clf should be better
     plt.clf()

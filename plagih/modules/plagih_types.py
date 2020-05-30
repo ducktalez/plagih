@@ -66,7 +66,7 @@ def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
     """
 
     # insert a ?
-    if np.random.choice(['observ', 'distrib']) == 'observ' and env_variables[xtype]:
+    if np.random.choice(['obs', 'distrib']) == 'obs' and env_variables[xtype]:
         term = np.random.choice(env_variables[xtype])
     else:
         term = choose_constant(xtype, choose_distribution, float_accuracy)

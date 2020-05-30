@@ -139,9 +139,11 @@ def load_data_prepared(root_dir, delimiter=',', print_type=None):
 
     dataspec_file = root_dir / 'run_files/data_specification.yaml'
     if dataspec_file.is_file():
-        pass  # sfeh: if you want to load informations from extra file, check for this file here
+        pass  # sfeh: if you want to load information from extra file, check for this file here
     else:
-        yaml_dump(root_dir / env_variables_yaml, data_prepared[0], print_type=print_type)  # sfeh env_variables, _, _ = data_prepared. anyways, currently loading infos via brackets in .csv-file
+        # sfeh env_variables, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
+        # todo only, if these files are meant to be created. (not in gen 0, make special operator for this. wird eh überschrieben)
+        yaml_dump(root_dir / env_variables_yaml, data_prepared[0], print_type=print_type)
 
     return data_prepared
 
@@ -154,10 +156,10 @@ def load_evolve_functions(root_dir, evolve_file=file_evolve_functions):
     if Path.is_file(root_dir / evolve_file):
         evolve_list = yaml_load(root_dir / evolve_file)
     else:
-        print_warning('w', 'No gp evolve procedure or functions defined! Trying to choose them for you.')
+        print_warning('ww', 'Opt-in not specified. Evolve-file for GP evolve functions defined! Trying to choose them for you.')
 
         evolve_list = [
-            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.1},
+            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.10},
             {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
              'custom_params': {'sympify_tree': True}},
             {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02},
@@ -200,7 +202,7 @@ def load_tree_builders(root_dir, data_prepared=None):
         operators = yaml_load(path)
     else:
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
-        print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
+        print_warning('ww', 'Opt-in not specified. Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
         operators = np.array([['+', 2], ['+', 2], ['-', 2], ['*', 2], ['/', 2],
                               ['sin', 2], ['Square', 2], ['sqrt', 2],
                               ['Mini', 2], ['Maxi', 2], ['abs', 2],
@@ -217,7 +219,7 @@ def load_tree_builders(root_dir, data_prepared=None):
         with Path.open(Path(distributions_yaml), 'r') as file:
             distributions_as_string = yaml.load(file, Loader=yaml.FullLoader)
     else:
-        print_warning('w', 'Distributions file does not exist. Using default set.')
+        print_warning('ww', 'Opt-in not specified. Distributions-file (for random leaf-node constants) does not exist. Using default set.')
         distributions_as_string = {'2f': ['lambda: np.random.normal(1,2)',
                                           'lambda: np.random.normal(1,1)',
                                           'lambda: np.random.randint(0, 10)'],
@@ -269,7 +271,7 @@ def load_label_list(root_dir):
             tree_save_csv(tree, tree_labels_csv_path)
             raise  # sfeh
     else:
-        print_warning('ww', 'No origin-tree file was provided. Continuing.')
+        print_warning('ii', 'No origin-tree file was provided. Continuing.')
     return label_list, modify_list
 
 
@@ -306,7 +308,7 @@ def gp_run(root_dir, force_new_run, eval_action):
         gp.activate_origin_tree(origin_ptree)
 
     evolve_list = load_evolve_functions(root_dir)
-    gp.avtivate_evolve_functions(evolve_list)
+    gp.activate_evolve_functions(evolve_list)
 
     gp.plagih_gp_run()
     sys.exit()

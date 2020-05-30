@@ -17,10 +17,17 @@ run_files = 'run_files/'
 folder_plots = 'plots/'
 folder_steps = 'steps/'
 folder_pop_analysis = 'pop_dist/'
+folder_histograms = 'agents/'
 
 file_backup_pickle = 'backup/backup.p'  # backup-version is set here
 file_conclusion = 'conclusion.txt'
 
+# /agents/
+trees_tex = 'agents/agents_trees.tex'
+file_pycode = 'agents/agents.py'
+file_pycode_eval = 'agents/eval_agents.py'
+
+# /info/
 file_pareto = 'info/pareto.txt'
 info_config_yaml = 'info/config.yaml'
 file_info_config_json = 'info/config.json'
@@ -28,6 +35,7 @@ file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
 info_distributions_yaml = 'info/distributions_file.yaml'
 env_variables_yaml = 'info/env_variables.yaml'
 
+# /run_files/
 file_config_yaml = 'run_files/config.yaml'
 file_config_json = 'run_files/config.json'
 samples_ready_p = 'run_files/samples_ready.p'
@@ -41,12 +49,7 @@ tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
 
-pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
-
-folder_histograms = 'agents/'
-trees_tex = 'agents_trees.tex'
-file_pycode = 'agents/agents.py'
-file_pycode_eval = 'eval_agents.py'
+pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # todo make pretty solution
 
 T_num_lines = 15  # sfeh this var is not found otherwise
 

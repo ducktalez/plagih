@@ -203,11 +203,28 @@ def load_tree_builders(root_dir, data_prepared=None):
     else:
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('ww', 'Opt-in not specified. Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
-        operators = np.array([['+', 2], ['+', 2], ['-', 2], ['*', 2], ['/', 2],
-                              ['sin', 2], ['Square', 2], ['sqrt', 2],
-                              ['Mini', 2], ['Maxi', 2], ['abs', 2],
-                              ['<', 2], ['<=', 2], ['==', 2],
-                              ['Andb', 2], ['Orb', 2], ['Notb', 2], ['Ifte', 2], ['Ifte', 2]])
+        operators = np.array([['+', 3],
+                              ['-', 1], ['usub', 2],
+                              ['*', 2], ['/', 1],
+                              ['Square', 0.75], ['**', 0.25],
+                              ['abs', 0.5], ['sign', 0.5],
+                              ['sqrt', 0.2],
+                              ['log', 0.1], ['log1p', 0.1],
+                              ['cos', 0.33], ['sin', 0.1], ['tan', 0.1],  # ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
+                              ['tanh', 0.2],
+                              ['Andb', 1], ['Orb', 1], ['Xor', 1], ['Notb', 0.5],
+                              ['==', 1], ['!=', 0.5],
+                              ['<', 0.5], ['<=', 0.5], ['>', 0.5], ['>=', 0.5],
+                              ['Ifte', 2],
+                              ['Mini', 1],
+                              ['Maxi', 1]])
+        # operators = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2],
+        #                       ['sin', 2], ['Square', 2], ['sqrt', 2],
+        #                       ['Mini', 2], ['Maxi', 2], ['abs', 2],
+        #                       ['<', 2], ['<=', 2], ['==', 2],
+        #                       ['Andb', 2], ['Orb', 2], ['Notb', 2], ['Ifte', 2],
+        #                       ['Tanh', 1], ['usub', 1],
+        #                       ['+', 2], ['Ifte', 2]])
         # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
         yaml_dump(operators_info, operators)
 

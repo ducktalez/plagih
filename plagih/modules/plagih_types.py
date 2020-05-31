@@ -127,28 +127,12 @@ def choose_operator(xtype, choose_oparray, arity=None):
     choose_oparray must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
     """
-    func_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
+    func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
     if not func_list:
         print_e('No function found with xtype={}, arity={}.\nfunc_arr_dummy:\n{}'.format(xtype, arity, choose_oparray))
-    func = np.random.choice(func_list)
-    arity = label_get_arity(func)
-    xtype = op[func]['xtype']
-    return func, arity, xtype
-
-
-def choose_func_old(choose_oparray, xtype, arity=None):
-    """
-    chooses a function that fits at the spot randomly. func array is created from user functions
-    - get a list with potantial functions: ['+', '-', '*']
-    - chooses one: '+'
-
-    notes
-    - xtype was optional. (xtype=None)
-    """
-    func_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
-    if not func_list:
-        print_e('No function found with xtype={}, arity={}.\nfunc_arr_dummy:\n{}'.format(xtype, arity, choose_oparray))
-    func = np.random.choice(func_list)
+    func = np.random.choice(func_list, p=probability_list)
+    # todo group function probability... larger arity? winkelfunktionen? manchmal ohne p-setzen?
+    # todo load the operators file must be updated (?)
     arity = label_get_arity(func)
     xtype = op[func]['xtype']
     return func, arity, xtype
@@ -163,35 +147,40 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
     function 'b2f2f' -> '_2f', arity
 
     Note: arity-0 functions (e.g. dummies, that calculate a problem specific value) are terminals!
+    todo most of this is irrelevant. just make a better array
     """
-    func_list = []
+    func_tuple_list = []
     funcs_float = [f2f, b2f, b2f2f]
     funcs_bool = [f2b, b2b]
 
     # arity and xtype
     if arity is not None and xtype:
         xtype_row = ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index(xtype)
-        func_list.extend(choose_oparray[xtype_row][arity])
+        func_tuple_list.extend(choose_oparray[xtype_row][arity])
 
     # arity
     if arity is not None and xtype is None:
-        func_list = sum([xtype_row[arity] for xtype_row in choose_oparray], [])
+        func_tuple_list = sum([xtype_row[arity] for xtype_row in choose_oparray], [])
 
     # xtype
     if arity is None and xtype is not None:
         if '2f' in xtype:
-            func_list = sum([sum(choose_oparray[funcs], []) for funcs in funcs_float], [])
+            func_tuple_list = sum([sum(choose_oparray[funcs], []) for funcs in funcs_float], [])
         elif '2b' in xtype:
-            func_list = sum([sum(choose_oparray[funcs], []) for funcs in funcs_bool], [])
+            func_tuple_list = sum([sum(choose_oparray[funcs], []) for funcs in funcs_bool], [])
         else:
             print_e('xtype {} is not accepted. Must be \'2f\' or \'2b\'.'.format(xtype))
             raise
 
     # return all functions
     if arity is None and xtype is None:
-        func_list = sum(sum(choose_oparray, []), [])
+        func_tuple_list = sum(sum(choose_oparray, []), [])
 
-    return func_list
+    func_list = [x[0] for x in func_tuple_list]
+    probability_list = [x[1] for x in func_tuple_list]
+    probability_normalised = [x/sum(probability_list) for x in probability_list]
+
+    return func_list, probability_normalised
 
 
 def xtype_get_func_list_OLD(oparray, xtype=None, arity=None):

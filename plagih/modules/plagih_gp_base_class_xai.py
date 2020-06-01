@@ -772,8 +772,11 @@ class ExplainableGP(object):
 
         """
 
-        if self.env_variables['action_at'][0]['type'] == 'int':
-            action_min, action_max = self.env_variables['action_at'][0]['minmax']
+        dummy_eval_action = self.config.get('eval_action')
+        if dummy_eval_action is None:
+            dummy_eval_action = 0
+        if self.env_variables['action_at'][dummy_eval_action]['type'] == 'int':
+            action_min, action_max = self.env_variables['action_at'][dummy_eval_action]['minmax']
             action_min, action_max = int(action_min), int(action_max)
             py_return_action = 'return max({}, min({}, int(round(action))))\n'.format(action_min, action_max)
         else:
@@ -823,7 +826,7 @@ class ExplainableGP(object):
 
         # sfeh remove this (?)
 
-        if Path.is_file(root_dir / self.config.get('pycode_load')):
+        if Path.is_file(Path(self.config.get('pycode_load'))):
             #  if direct execution is wished...# exec(Path.open("custom_eval_agents.py").read())
 
             # auto_import_eval = 'import sys\n' \
@@ -854,6 +857,7 @@ class ExplainableGP(object):
             with Path.open(root_dir / file_pycode_eval, 'w') as file:
                 file.write(executable_python_evaluation)
                 self.printpl('f', '{}'.format(file_pycode_eval))
+        return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Population specific                       +
@@ -1440,7 +1444,6 @@ class ExplainableGP(object):
         self.pareto_update()
         self.pop_base_transfer()
         self.pop_analyse()
-        # write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)  # better in periodic file write
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_lut)
         self.print_g('g', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(

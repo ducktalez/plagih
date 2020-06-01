@@ -41,7 +41,7 @@ tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
 tree_numpy_csv = 'run_files/tree_numpy.csv'
 
-pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
+pycode_load = '/benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
 
 folder_histograms = 'agents/'
 trees_tex = 'agents_trees.tex'

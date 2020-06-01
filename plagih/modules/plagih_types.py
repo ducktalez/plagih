@@ -18,7 +18,8 @@ def label_get_arity(node_label):
     """
 
     if node_label in op:
-        return op[node_label]['arity']
+        arity_sfehdebug = op[node_label]['arity']
+        return arity_sfehdebug
     else:
         return 0
 

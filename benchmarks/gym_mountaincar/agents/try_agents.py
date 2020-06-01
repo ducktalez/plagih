@@ -17,79 +17,6 @@ def compare_plot_styles():
     # mtc_plot_heatmap(sarsa_agent_75, name='sarsa75 states 3', splits=128, cmap='binary', dummy=True, nan_style=('black', '///', 'grey', 0.2), no_colorbar=True)
 
 
-    # # background style
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 1', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('black', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 2', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('black', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 3', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('xkcd:dark grey', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 4', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:dark grey', None, 'grey', 0.2))
-    #
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 5', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 6', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('xkcd:off white', None, 'grey', 0.2))
-    #
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 7', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 8', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('grey', None, 'grey', 0.2))
-
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 color 9', abs_diff=False, agent_a_dummy=True, cmap='cool', nan_style=('xkcd:dark grey', None, 'xkcd:dark grey', 0.2))
-
-    # hatch patterns
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 2 hatch 1', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '///', 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 2 hatch 2', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', 'XXX', 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 2 hatch 3', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '...', 'black', 0.2))
-
-    # hatch pattern density
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 3 hatchdense 1', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '/', 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 3 hatchdense 2', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '//', 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 3 hatchdense 3', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '///', 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 3 hatchdense 4', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '////', 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 3 hatchdense 5', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '/////', 'black', 0.2))
-
-    # hatch line thickness
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick 1', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('white', '///', 'black', 0.1))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick 2', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('white', '///', 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick 3', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('white', '///', 'black', 0.3))
-    # hatch line thickness compared with a lighter color
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick gr 1', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('white', '///', 'grey', 0.1))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick gr 2', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('white', '///', 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick gr 3', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('white', '///', 'grey', 0.3))
-    # # hatch line thickness light grey
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick ow 1', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:dark grey', '///', 'xkcd:off white', 0.1))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick ow 2', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:dark grey', '///', 'xkcd:off white', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 4 hatchthick ow 3', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:dark grey', '///', 'xkcd:off white', 0.3))
-    #
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 5 cmap 1', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', '///', 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 5 cmap 1', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('white', '///', 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 5 cmap 1', abs_diff=False, agent_a_dummy=True, cmap='PiYG', nan_style=('white', '///', 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 5 cmap 1', abs_diff=False, agent_a_dummy=True, cmap='gray', nan_style=('white', '///', 'grey', 0.2))
-
-    # Final options?
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt bwr 2', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '...', 'grey', 0.3))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt bwr 3', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt bwr 4', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('grey', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt bwr 5', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '///', 'xkcd:dark grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt bwr 6', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('grey', '///', 'xkcd:dark grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt bwr 7', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:dark grey', '///', 'black', 0.2))
-
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt cw 1', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('white', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt cw 3', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('xkcd:off white', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt cw 4', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('xkcd:off white', '///', 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt cw 5', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('xkcd:off white', '///', 'xkcd:dark grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff opt cw 6', abs_diff=False, agent_a_dummy=True, cmap='coolwarm', nan_style=('xkcd:dark grey', '///', 'black', 0.2))
-
-    # Just for fun, experiments
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-diff 1 fun 1', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:magenta', 'XXX', 'black', 1))
-    #
-
-    # black/white data scale
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-abs opt 2', abs_diff=True, agent_a_dummy=True, cmap='Greys', nan_style=('xkcd:off white', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-abs opt 2', abs_diff=True, agent_a_dummy=True, cmap='Greys', nan_style=('xkcd:off white', '///', 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-abs opt 3', abs_diff=True, agent_a_dummy=True, cmap='Greys', nan_style=('xkcd:light grey', None, 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-abs opt 3', abs_diff=True, agent_a_dummy=True, cmap='Greys', nan_style=('xkcd:light grey', '///', 'grey', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-abs opt 3', abs_diff=True, agent_a_dummy=True, cmap='Greys', nan_style=('xkcd:light grey', None, 'black', 0.2))
-    # mtc_plot_differences(SimpleAgent(), sarsa_agent_75, name='vs-abs opt 3', abs_diff=True, agent_a_dummy=True, cmap='Greys', nan_style=('xkcd:light grey', '///', 'black', 0.2))
-    #
-    # mtc_plot_episode_performance(sarsa_agent_75, name='sarsa75 individual performance', color='y')
-    # mtc_plot_episode_performance(SimpleAgent(), name='simple individual performance', color='b')
-
 sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sarsas()
 
 mountain_agents = [('simple', SimpleAgent()),
@@ -154,5 +81,5 @@ class Test_Agent:
 
 # eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
 
-print('results:', mtc_play(Test_Agent(), n=100))
-# print('results:', mtc_play(sarsa_agent_200, n=100))
+print('results:', mtc_play(Good_Expert(), n=100))
+# print('results:', mtc_play(sarsa_agent_75, n=100))

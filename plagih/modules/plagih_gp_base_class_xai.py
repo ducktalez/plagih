@@ -30,8 +30,7 @@ class ExplainableGP(object):
     def __init__(self, root_dir, config=None):
 
         self.name = root_dir.name
-        print(
-            '\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET,
+        print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET,
                                                                                  root_dir))
         self.time_start = time.perf_counter()
         self.restart_vers = 'v0.8'
@@ -48,21 +47,19 @@ class ExplainableGP(object):
                 'default': 'random'
             },
             # (!) Relevant for result
-            'pop_max': 1000,
-            # Maximum amount of trees in a population. Only used evolve rates, condition is never tested.
-            'parsimony_max': 90,
+            'pop_max': 1000,  # amount is never tested
+            'parsimony_max': 80,
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
             'complexity_measure': 'tree_edit_distance',
             'eval_action': 0,  # Only one action at a time! If the data has more than one action, runs have to be split. This can be specified here.
+            'obs_past:max': 9,  # How long a variables history be used? (Only required if historic values do exist)
 
-            # rather irrelevant
             'parsimony_tmp': 15,
             'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators_csv) for each Tree entering the gene_pool
-            'print_type': 'ggwwsiivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
-            'overwrite periodic gp_files': True,
-            # If True, the file gets overwritten. If False, in every generation a new file is created.
+            'print_type': 'ggwsiivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
             'force_new_run': False,  # especially for testing. Otherwise, delete the folder. can be set via command line.
             'monitor': {'gen_fitness_average': 'y',
                         'sympify_errors': 'y',
@@ -82,7 +79,8 @@ class ExplainableGP(object):
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
             'gen_max': 1000,  # Maximum amount of generations
 
-            'pycode_load': pycode_load
+            'pycode_load': pycode_load,
+            'remove superfluous config entries': False,  # guess you should do that
         }
 
         self.config.update(config)  # overwrites the default config-values with user-loaded config
@@ -189,6 +187,7 @@ class ExplainableGP(object):
                 self.env_variables['obs_name'][col_label]['temp_diff'] = temp_diff
                 self.env_variables['obs_name'][col_label]['core_label'] = core_label
             self.printpl('w', 'Attention, we updated self.env_variables for an old run')
+            # todo should we save the update?
         return
 
     def load_backup_pickle(self, path_backup):
@@ -200,7 +199,6 @@ class ExplainableGP(object):
             run_data = pickle.load(file)
 
         self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
-
         self.restart_count += 1
 
         self.update_old_runs()
@@ -266,7 +264,7 @@ class ExplainableGP(object):
 
         # filename = self.root_dir / info_config_yaml
         filename = file_make_dir(self.root_dir / info_config_yaml)
-        yaml_dump(filename, self.config)
+        yaml_dump(filename, self.config, print_type=self.print_type)
 
         return
 
@@ -505,6 +503,18 @@ class ExplainableGP(object):
     #   Load and Archive Data                     +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
+    def remove_old_variables(self):
+        """
+
+        """
+        max_past = self.config['obs_past:max']
+
+        for obs_name, obs_info in self.env_variables['obs_name'].items():
+            if obs_info['temp_diff'] > max_past:
+                xtype = obs_info['xtype']
+                self.env_variables[xtype].remove(obs_name)
+        return
+
     def activate_dataset(self, data_prepared):
         """
         separate loading the prepared data into the main class.
@@ -512,22 +522,24 @@ class ExplainableGP(object):
         did not want to start the whole stuff everytime
         """
         self.env_variables, data_train, data_control = data_prepared  # sfeh what data is used?
+
+        # remove old entries
         self.data_train, self.data_control = data_train, data_control  # what is that good for: self.data_train_rows, = data_train_rows,
         # self.data_train = dataq_train  # data_train currently not needed (?)
 
         self.update_old_runs()
+        self.remove_old_variables()
 
         return
 
-    def avtivate_evolve_functions(self, evolve_list):
+    def activate_evolve_functions(self, evolve_list):
         """
         Example entry of the list could be:
         {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
         'custom_params': {'build_spec': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
         """
         for ii, evolve_spec in enumerate(evolve_list):
-            # tourn_size
-            tourn_size = evolve_spec.get('tourn_size')  # can be custom set
+            tourn_size = evolve_spec.get('tourn_size')  # can be custom set. e.g. larger tournament for a high-end optimisation
             if not tourn_size:
                 tourn_size = self.tourn_size
                 evolve_list[ii]['tourn_size'] = tourn_size

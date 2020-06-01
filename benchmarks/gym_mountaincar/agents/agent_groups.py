@@ -94,6 +94,16 @@ class SimpleAgent:
             return 2
 
 
+class SimpleAgent_lel:
+
+    def decide(self, observation):
+        observation0, observation1 = observation
+        if observation1 <= 0:
+            return 0
+        else:
+            return 2
+
+
 class FixAgent:
 
     def decide(self, observation):
@@ -249,18 +259,15 @@ class SARSALambdaAgent(SARSAAgent):
 def load_sarsas(root_path=''):
     with Path.open(Path(root_path) / sarsa_file_75, 'rb') as file:
         sarsa_agent_75 = pickle.load(file)
-        print('Loaded sarsa 75 backup')
 
     with Path.open(Path(root_path) / sarsa_file_200, 'rb') as file:
         sarsa_agent_200 = pickle.load(file)
-        print('Loaded sarsa 200 backup')
-    #
-    # with Path.open(Path(root_path) / sarsa_file_1000, 'rb') as file:
-    #     sarsa_agent_1000 = pickle.load(file)
-    #     print('Loaded sarsa 1000')
-    #
-    # with Path.open(Path(root_path) / sarsa_file_10000, 'rb') as file:
-    #     sarsa_agent_10000 = pickle.load(file)
-    #     print('Loaded sarsa 10000')
-    return sarsa_agent_75, sarsa_agent_200, False, False
+
+    with Path.open(Path(root_path) / sarsa_file_1000, 'rb') as file:
+        sarsa_agent_1000 = pickle.load(file)
+
+    with Path.open(Path(root_path) / sarsa_file_10000, 'rb') as file:
+        sarsa_agent_10000 = pickle.load(file)
+
+    return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000
 

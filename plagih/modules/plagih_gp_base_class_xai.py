@@ -20,6 +20,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
+PLAGIH_VERSION = 0.95
 
 
 class ExplainableGP(object):
@@ -38,6 +39,7 @@ class ExplainableGP(object):
         self.root_dir = root_dir
 
         self.config = {
+            'pl_version': PLAGIH_VERSION,  # version important when loading old run
             'mode': 'run',  # ['run', 'analyse']
             'description': 'No description set',
             'choose': {
@@ -106,7 +108,7 @@ class ExplainableGP(object):
         self.kernel = FitnessKernel(self.config['kernel_name'])
         self.print_type = self.config['print_type']
         self.precision = self.config['precision']  # the number of floating points for the round function
-        self.parsimony_tmp = self.config['parsimony_tmp']
+        # self.parsimony_tmp = self.config['parsimony_tmp']
         self.parsimony_max = self.config['parsimony_max']
         self.monitor_dict = self.config['monitor']
         self.tourn_size = self.config['tourn_size']
@@ -144,8 +146,9 @@ class ExplainableGP(object):
                                 'total_found_trees': {},
                                 'gen_time': {},
                                 'complexity_average': {},
-                                'complexity_variance': {},
-                                'tmp_pop_fitness_distribution': {}}
+                                'complexity_variance': {},  # variance can be deleted, only std-error is needed
+                                'pop:trees:complexity:std_error': {}}
+                                # 'tmp_pop_fitness_distribution': {}# sfeh delete this version1
         self.pop_analysis_dict = {}  # similar to monitoring_dict
 
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
@@ -189,6 +192,7 @@ class ExplainableGP(object):
                 self.env_variables['obs_name'][col_label]['core_label'] = core_label
             self.printpl('w', 'Attention, we updated self.env_variables for an old run')
             # todo should we save the update?
+
         return
 
     def load_backup_pickle(self, path_backup):
@@ -199,10 +203,22 @@ class ExplainableGP(object):
         with Path.open(path_backup, 'rb') as file:
             run_data = pickle.load(file)
 
-        self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
+        try:
+            self.config['pl_version'], self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
+            # todo test
+        except:
+            # todo remove this in version1
+            self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
+            self.version = 0.9
+
         self.restart_count += 1
 
         self.update_old_runs()
+
+        # update monitoring dict (average vs variance)
+        if self.config['pl_version'] <= 0.9:
+            pass
+            # self.monitoring_dict['pop:trees:complexity:std_error'] = np.sqrt(self.monitoring_dict['complexity_variance'])
 
         printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
 
@@ -216,7 +232,7 @@ class ExplainableGP(object):
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
-        run_backup_data = self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict
+        run_backup_data = self.config['pl_version'], self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict
 
         path_backup = file_make_dir(self.root_dir / file_backup_pickle)
         with Path.open(path_backup, 'wb') as file:
@@ -236,7 +252,7 @@ class ExplainableGP(object):
         self.write_config_yaml()  # sfeh or json?
 
         if self.gen_id == 0:
-            self.gen_create_first()
+            self.gen_create_initial()
 
         while self.run_continues():  # max generation, max time, done...
             self.printpl('gg', 'Evolving Generation {}'.format(self.gen_id))
@@ -288,7 +304,7 @@ class ExplainableGP(object):
                 return True
         return False
 
-    def gen_create_first(self):
+    def gen_create_initial(self):
         """
         Everything that needs to be custom_done for the first generation
         - Extracts "origin_meta Tree" from file
@@ -297,6 +313,7 @@ class ExplainableGP(object):
         - Monitoring initialisation and monitoring
         """
         self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
+        self.gen_id = 0
         self.gen_reset_parameters()
 
         random_rate = 0  # The total amount of random creations in the evolve configuration. usually like 0.3 or so
@@ -307,7 +324,7 @@ class ExplainableGP(object):
         for ii, evolve_specs in enumerate(self.evolve_list):
             if evolve_specs['evolve_name'] == 'random trees':
                 # time_evolve = time.perf_counter()
-                evolve_num = int(self.config['gen_max'] * (evolve_specs['evolve_rate'] / random_rate))
+                evolve_num = int(self.config['pop_max'] * (evolve_specs['evolve_rate'] / random_rate))
                 call_params = evolve_specs.get('custom_params')
                 tag = evolve_specs['tag']
 
@@ -333,6 +350,7 @@ class ExplainableGP(object):
         # All gp creators: name, function, num of trees from tournament selection
         # sfehsfeh idee: print every written file
 
+        self.gen_id += 1
         self.gen_reset_parameters()
 
         # ########
@@ -446,10 +464,6 @@ class ExplainableGP(object):
         Every few generations, update the created gp_files
         - default is in every generation, but saving every n-th gen or after time passed is possible aswell
         """
-        if self.config['overwrite periodic gp_files']:
-            tmp_path = folder_make_dir(self.root_dir)
-        else:
-            tmp_path = folder_make_dir(self.root_dir / folder_steps / 'Gen-{}'.format(self.gen_id))
 
         time_now = time.perf_counter()
 
@@ -476,7 +490,11 @@ class ExplainableGP(object):
                 save_run = True
 
         if plots_show:
-            self.file_all_plots(tmp_path)
+            if self.config['overwrite periodic gp_files']:
+                subfolder = ''
+            else:
+                subfolder = Path(folder_steps / 'Gen-{}'.format(self.gen_id))
+            self.file_all_plots(self.root_dir, subfolder=subfolder)
 
         if save_run:
             self.run_backup_save()
@@ -1107,12 +1125,11 @@ class ExplainableGP(object):
         - Linearly increase threshold for parsimony
         """
 
-        self.gen_id += 1
         self.time_genstart = time.perf_counter()
         self.population_tmp_done = []
         self.population_tmp_eval = []
-        self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max,
-                                 self.parsimony_max)
+        # self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max,
+        #                          self.parsimony_max)
 
         return
 
@@ -1600,16 +1617,7 @@ class ExplainableGP(object):
     #   Monitoring                                +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def get_pareto_plot_values(self):
-        """
-        sfeh i think there is a more beautiful solution?
-        """
-        tuples = []
-        for key in sorted(self.pareto):
-            tuples.append((key, self.pareto[key]['fitness_train']))
-        return tuples
-
-    def file_all_plots(self, path):
+    def file_all_plots(self, root_path, subfolder=''):
         """
         Make all plots
         'fitness_average'
@@ -1620,27 +1628,39 @@ class ExplainableGP(object):
         'tmp_pop_fitness_distribution'
         """
 
-        path_plots = folder_make_dir(path / folder_plots)
+        path_plots = folder_make_dir(root_path / folder_plots / subfolder)
+
+        def plotendify_me(data_dict):
+            # sfeh delete this version1 (working only with np-arrays, no dicts)
+            npdata_dict = np.array([list(x) for x in sorted(data_dict.items())]).T
+            return npdata_dict
+
+        def get_pareto_plot_values():
+            # sfeh i think there is a more beautiful solution?
+            tuples = []
+            for key in sorted(self.pareto):
+                tuples.append([key, self.pareto[key]['fitness_train']])
+            npdata_dict = np.array(tuples).T
+            return npdata_dict
 
         if self.monitor_dict['gen_fitness_average'] == 'y':
-            data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
+            data_tuples = plotendify_me(self.monitoring_dict['fitness_average'])
             plot_end(data_tuples, path_plots, plt_title='average error', plt_y_label='fitness',
-                     set_left=data_tuples[0][0],
-                     fill_variance=self.monitoring_dict.get('fitness_variance'))
+                     set_left=data_tuples[0][0])
 
         if self.monitor_dict['population_tmp_done-size'] == 'y':
-            data_tuples = sorted(list(self.monitoring_dict['population_tmp_done-size'].items()))
+            data_tuples = plotendify_me(self.monitoring_dict['population_tmp_done-size'])
             plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='None',
                      marker='.',
                      set_left=data_tuples[0][0])
 
-        data_tuples = sorted(list(self.monitoring_dict['gen_time'].items()))
+        data_tuples = plotendify_me(self.monitoring_dict['gen_time'])
         plot_end(data_tuples, path_plots, plt_title='Generation time', plt_y_label='time', linestyle='None',
                  marker='.',
                  set_left=data_tuples[0][0])
 
-        data_tuples = self.get_pareto_plot_values()
-        plot_end(data_tuples, path, plt_title='pareto dominant candidates', plt_x_label='parsimony',
+        data_tuples = get_pareto_plot_values()
+        plot_end(data_tuples, root_path, plt_title='pareto dominant candidates', plt_x_label='parsimony',
                  plt_y_label='fitness',
                  linestyle='dashed',
                  marker='.',
@@ -1649,38 +1669,43 @@ class ExplainableGP(object):
                  beyond_lines=True,
                  save_tikz=True)
 
-        dist_fit = self.monitoring_dict['tmp_pop_fitness_distribution']
-        plot_end(dist_fit, path_plots, plt_title='population distribution Gen {}'.format(self.gen_id),
-                 plt_x_label='tree ids',
-                 plt_y_label='fitness',
-                 marker='',
-                 set_right=self.config['pop_max'],
-                 right_padding=1,
-                 subfolder=folder_pop_analysis)
-
         if self.monitor_dict.get('fitness_variance') == 'y':
-            data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
+            data_tuples = plotendify_me(self.monitoring_dict['fitness_variance'])
             plot_end(data_tuples, path_plots, plt_title='variance in error', plt_y_label='variance',
                      marker='')
 
-        data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
-        plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes',
-                 set_left=data_tuples[0][0])
+        data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
+        data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
+        plot_end(data_tuples, path_plots, plt_title='tree complexity (avg and std. error)', plt_y_label='variance',
+                 marker='', fill_variance=data_tuples_variance)
 
-        data_tuples = sorted(list(self.monitoring_dict['complexity_variance'].items()))
-        plot_end(data_tuples, path_plots, plt_title='variance in complexity', plt_y_label='variance',
-                 marker='')
-
-        data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
+        data_tuples = plotendify_me(self.monitoring_dict['total_found_trees'])
         plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='None',
                  marker='.',
                  set_left=data_tuples[0][0])
 
-        data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
+        data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
         plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation',
                  plt_y_label='error',
                  linestyle='dashed',
                  step_where='post')
+
+        # data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
+        # plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes',
+        #          set_left=data_tuples[0][0])
+        #
+        # data_tuples = plotendify_me(self.monitoring_dict['complexity_variance'])
+        # plot_end(data_tuples, path_plots, plt_title='variance in complexity', plt_y_label='variance',
+        #          marker='')
+
+        # data_tuples = np.array([list(x) for x in self.monitoring_dict['tmp_pop_fitness_distribution']]).T  # sfeh delete list version1 [(1,234),(2,544), ..]
+        # plot_end(data_tuples, path_plots, plt_title='population distribution Gen {}'.format(self.gen_id),
+        #          plt_x_label='tree ids',
+        #          plt_y_label='fitness',
+        #          marker='',
+        #          set_right=self.config['pop_max'],
+        #          right_padding=1,
+        #          subfolder=folder_pop_analysis)
 
         # sfeh https://github.com/linkedin/naarad/issues/114 UserWarning: Attempting to set identical bottom==top results
 
@@ -1725,8 +1750,8 @@ class ExplainableGP(object):
         self.monitoring_dict['best_candidate'][self.gen_id] = self.best_fitness
 
         # Tree fitness distribution
-        dist_fit = [(i, x) for i, x in enumerate([x['fitness'] for x in pop_tree_analysis])]  # sorted() was here based on fitness
-        self.monitoring_dict['tmp_pop_fitness_distribution'] = dist_fit
+        # dist_fit = [[i, x] for i, x in enumerate([x['fitness'] for x in pop_tree_analysis])]
+        # self.monitoring_dict['tmp_pop_fitness_distribution'] = dist_fit
 
         # Tree complexity
         complexity_sum = 0
@@ -1740,9 +1765,11 @@ class ExplainableGP(object):
         fitness_variance = np.var(todo)
         self.monitoring_dict['fitness_variance'][self.gen_id] = fitness_variance
 
-        # complexity variance
-        parsimony_variance = np.var([x['complexity'] for x in pop_tree_analysis])
-        self.monitoring_dict['complexity_variance'][self.gen_id] = parsimony_variance
+        # complexity standard-error
+        if delete_this and self.monitoring_dict.get('pop:trees:complexity:std_error') is None:
+            self.monitoring_dict['pop:trees:complexity:std_error'] = {}  # sfeh delete this version1
+        self.monitoring_dict['pop:trees:complexity:std_error'][self.gen_id] = np.std([x['complexity'] for x in pop_tree_analysis])
+        self.monitoring_dict['complexity_variance'][self.gen_id] = np.var([x['complexity'] for x in pop_tree_analysis])  # sfeh version1 delete this shit
 
         return
 

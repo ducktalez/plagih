@@ -43,7 +43,6 @@ file_evolve_functions = 'run_files/evolve_functions.yaml'
 samples_csv = 'run_files/samples.csv'
 operators_csv = 'run_files/operators_csv.csv'
 operators_yaml = 'run_files/operators_csv.yaml'
-operators_info = 'run_files/operators_csv.yaml'
 distributions_file = 'run_files/distributions_file.yaml'
 tree_expr_txt = 'run_files/tree_expr.txt'
 tree_labels_csv = 'run_files/tree_labels.csv'
@@ -260,12 +259,7 @@ def plot_end(data_2d, plotname_path,
         print_e('Plotting empty array is not possible! Data={}'.format(data_2d))
         return
 
-    x, y = [], []
-    for a, b in data_2d:
-        x.append(a)
-        y.append(b)
-
-    # x, y = data_2d.reshape(-1, 2).T  # sfeh this could be a more pythonic way, but tuples can not be reshaped.
+    x, y = data_2d
 
     # bottom, top = plt.ylim()
     # left, right = plt.xlim()
@@ -277,19 +271,6 @@ def plot_end(data_2d, plotname_path,
         y = [new_top + 1] + y + [y[-1]]
 
     fig, ax = plt.subplots()
-
-    x = np.array(x)  # sfeh this could have been done earlier...
-    y = np.array(y)
-
-    if step_where:
-        ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
-    else:
-        ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
-        if fill_variance:
-            pass  # todo
-            # fill_variance = np.array([x[1] for x in fill_variance.items()])  # first, extract 2nd val from tuple, then make the list a np-array
-            # ax.fill_between(x, y-fill_variance, y+fill_variance, alpha=0.2)
-
     ax.set_yscale(yscale)
     ax.set_ylim(min(bottom, 0), new_top)
     ax.set_xlim(min(left, 0), new_right)
@@ -298,6 +279,18 @@ def plot_end(data_2d, plotname_path,
     ax.set_xlabel(plt_x_label)
     ax.set_ylabel(plt_y_label)
     ax.set_title(plt_title)
+
+    if step_where:
+        ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
+    else:
+        ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+        if fill_variance is not None:
+            x_std, y_var = fill_variance
+            y_std = np.sqrt(y_var)
+            lower_bound_stderr = y-y_std
+            upper_bound_stderr = y+y_std
+            ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
+            ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
 
     # plt.legend()
     if subfolder:  #
@@ -311,8 +304,8 @@ def plot_end(data_2d, plotname_path,
 
     plt.tight_layout()
     plt.savefig(plotname_path / '{}.png'.format(plt_title))
-    # plt.close()  # Stackoverflow said that this is too much, clf should be better
-    plt.clf()
+    plt.close()  # Stackoverflow said that this is too much, clf should be better
+    # plt.clf()
     return
 
 #

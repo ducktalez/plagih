@@ -8,7 +8,6 @@ from plagih.modules.plagih_data import *
 from plagih.modules.operators import oparray_from_list
 import yaml
 
-
 # import warnings
 # warnings.filterwarnings('error')
 
@@ -43,7 +42,7 @@ def labellists_from_csv(csv_path):
                 if row[0] == 'label_list' or row[0] == 'node_label':
                     label_list = [x.replace(' ', '') for x in row[1:]]
                 elif row[0] == 'modify_list' or row[0] == 'node_modify':
-                    modify_list = [int(x.replace(' ')) for x in row[1:]]
+                    modify_list = [int(x.replace(' ', '')) for x in row[1:]]
                 elif row[0] == '':
                     pass
                 else:
@@ -221,12 +220,12 @@ def load_tree_builders(root_dir, data_prepared=None):
 
     """
     # Load operators_csv
-    path = root_dir / operators_yaml
+    path_opyaml = root_dir / operators_yaml
     # if Path.is_file(operators_csv):  # sfeh test yaml
     #     functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators_csv)
 
-    if Path.is_file(path):
-        operators = yaml_load(path)
+    if Path.is_file(path_opyaml):
+        operators = yaml_load(path_opyaml)
     else:
         # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
         print_warning('ww', 'Opt-in not specified. Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
@@ -253,7 +252,6 @@ def load_tree_builders(root_dir, data_prepared=None):
         #                       ['Tanh', 1], ['usub', 1],
         #                       ['+', 2], ['Ifte', 2]])
         # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
-        yaml_dump(operators_info, operators)
 
     choose_oparray = oparray_from_list(operators)
 

@@ -54,48 +54,52 @@ op: Dict to work as 'Database' for every expression-bit and its features
 Features should always be defined, even though they might not occur at all. If not used, they CAN be filled with dummy values like äöü
 Some, which are known of not being used yet are commented with '# not tested' or '# not used'
 sfeh: write test that checks all operators_csv for sympificytion (...+branch-combinations, and more?)
+sfeh: use function-types (-> 'kommuttative'?)
 """
 op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float to float
-    '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.add, 'latex1': '$+$', 'latexF': '{}+{}',
+    '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.add, 'opgroup': ['aritygroup'], 'latex1': '$+$', 'latexF': '{}+{}',
           'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
-    '-': {'fun': '-', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.subtract, 'latex1': '$-$', 'latexF': '{}-{}',
+    '-': {'fun': '-', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.subtract, 'opgroup': ['aritygroup'], 'latex1': '$-$', 'latexF': '{}-{}',
           'sym_str': '({} - {})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
-    'usub': {'fun': 'usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.negative, 'latex1': '$-$', 'latexF': '-{}',
+    'usub': {'fun': 'usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.negative, 'opgroup': [], 'latex1': '$-$', 'latexF': '-{}',
              'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},
-    '*': {'fun': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.multiply, 'latex1': '$\\cdot$', 'latexF': '{}\\cdot{}',
+    '*': {'fun': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.multiply,  'opgroup': ['aritygroup'], 'latex1': '$\\cdot$', 'latexF': '{}\\cdot{}',
           'sym_str': '({} * {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
-    '/': {'fun': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.math.divide_no_nan, 'latex1': '$\\div$', 'latexF': '\\frac{{{}}}{{{}}}',
+    '/': {'fun': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.math.divide_no_nan, 'opgroup': [], 'latex1': '$\\div$', 'latexF': '\\frac{{{}}}{{{}}}',
           'sym_str': '({} / {})',
           'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
-    '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.pow, 'latex1': '$**$', 'latexF': '{{{}}}^{{{}}}',  # sfeh latexf requires some testing...
+    '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.pow,  'opgroup': [], 'latex1': '$**$', 'latexF': '{{{}}}^{{{}}}',  # sfeh latexf requires some testing...
            'sym_str': '({} ** {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
 
-    'abs': {'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.abs, 'latex1': '$abs$', 'latexF': '|{{{}}}|',
+    'abs': {'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.abs, 'opgroup': [], 'latex1': '$abs$', 'latexF': '|{{{}}}|',
             'sym_str': 'abs({})', 'pycode': lambda a: 'abs({})'.format(a)},
-    'sign': {'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.sign, 'latex1': '$sign$', 'latexF': 'sign({{{}}})',
+    'sign': {'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.sign, 'opgroup': [], 'latex1': '$sign$', 'latexF': 'sign({{{}}})',
              'sym_str': 'sign({})', 'pycode': lambda a: 'np.sign({})'.format(a)},
-    'Square': {'fun': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.math.square, 'latex1': '$x^2$', 'latexF': '{{{}}}^2',
+    
+    'Square': {'fun': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.math.square, 'opgroup': [], 'latex1': '$x^2$', 'latexF': '{{{}}}^2',
                'sym_str': 'Square({})', 'pycode': lambda a: '({}**2)'.format(a)},
-    'sqrt': {'fun': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.sqrt, 'latex1': '$\\sqrt{x}$', 'latexF': '\\sqrt{{{}}}',
+    'sqrt': {'fun': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.sqrt, 'opgroup': [], 'latex1': '$\\sqrt{x}$', 'latexF': '\\sqrt{{{}}}',
              'sym_str': 'sqrt({})', 'pycode': lambda a: 'math.sqrt({})'.format(a)},
-    'log': {'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log, 'latex1': '$\\ln$', 'latexF': '\\ln{{{}}}',
+
+    'log': {'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '$\\ln$', 'latexF': '\\ln{{{}}}',
             'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},  # python log is actual ln
-    'log1p': {'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log1p, 'latex1': '$\\log(1+x)$', 'latexF': '\\log(1+{{{}}})',
+    'log1p': {'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '$\\log(1+x)$', 'latexF': '\\log(1+{{{}}})',
               'sym_str': 'log1p({})', 'pycode': lambda a: 'math.log1p({})'.format(a)},
-    'cos': {'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.cos, 'latex1': '$\\cos$', 'latexF': '\\cos({{{}}})',
+    
+    'cos': {'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.cos, 'opgroup': ['angle'], 'latex1': '$\\cos$', 'latexF': '\\cos({{{}}})',
             'sym_str': 'cos({})', 'pycode': lambda a: 'math.cos({})'.format(a)},
-    'sin': {'fun': 'sin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.sin, 'latex1': '$\\sin$', 'latexF': '\\sin({{{}}})',
+    'sin': {'fun': 'sin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.sin, 'opgroup': ['angle'], 'latex1': '$\\sin$', 'latexF': '\\sin({{{}}})',
             'sym_str': 'sin({})', 'pycode': lambda a: 'math.sin({})'.format(a)},
-    'tan': {'fun': 'tan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.atan, 'latex1': '$\\tan$', 'latexF': '\\tan({{{}}})',
+    'tan': {'fun': 'tan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.atan, 'opgroup': ['angle'], 'latex1': '$\\tan$', 'latexF': '\\tan({{{}}})',
             'sym_str': 'tan({})', 'pycode': lambda a: 'math.tan({})'.format(a)},
-    'acos': {'fun': 'acos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.acos, 'latex1': '$\\acos$', 'latexF': '\\acos({{{}}})',
+    'acos': {'fun': 'acos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.acos, 'opgroup': ['angle'], 'latex1': '$\\acos$', 'latexF': '\\acos({{{}}})',
              'sym_str': 'acos({})', 'pycode': lambda a: 'math.acos({})'.format(a)},
-    'asin': {'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.asin, 'latex1': '$\\asin$', 'latexF': '\\asin({{{}}})',
+    'asin': {'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.asin, 'opgroup': ['angle'], 'latex1': '$\\asin$', 'latexF': '\\asin({{{}}})',
              'sym_str': 'asin({})', 'pycode': lambda a: 'math.asin({})'.format(a)},
-    'atan': {'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.atan, 'latex1': '$\atan$', 'latexF': '\\atan({{{}}})',
+    'atan': {'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.atan, 'opgroup': ['angle'], 'latex1': '$\atan$', 'latexF': '\\atan({{{}}})',
              'sym_str': 'atan({})', 'pycode': lambda a: 'math.atan({})'.format(a)},
-    'tanh': {'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.tanh, 'latex1': '$\tanh$', 'latexF': '\\tanh({{{}}})',
+    'tanh': {'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.tanh, 'opgroup': ['angle'], 'latex1': '$\tanh$', 'latexF': '\\tanh({{{}}})',
              'sym_str': 'tanh({})', 'pycode': lambda a: 'math.tanh({})'.format(a)},
     # 'Integer': {'fun': 'Integer', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.cast({}, tf.int32), 'latex1': None, 'latexF': '{}', 
     # 'sym_str': 'N({}, )', 'pycode': lambda a: 'math.tanh({})'.format(a)},

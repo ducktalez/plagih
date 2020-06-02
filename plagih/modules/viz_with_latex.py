@@ -120,7 +120,7 @@ def latex_tree_get_vistree(tree):
     vis_xtype_list = []
     vis_modify_list = []
 
-    tex_replace = latex_get_replace_tupels()  # sfeh quick code
+    # tex_replace = latex_get_replace_tupels()  # sfeh quick code
 
     for node_id in tree_ids:
         if node_id in node_dict:
@@ -192,7 +192,7 @@ def latex_get_replace_tupels():
     label_string_replace = {}
     for key, value in op.items():
         if isinstance(key, str):
-            latex_replace = value['latex']
+            latex_replace = value['latex1']
             if latex_replace is not None:
                 label_string_replace[key] = latex_replace
     return label_string_replace

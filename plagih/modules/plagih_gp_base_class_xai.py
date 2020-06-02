@@ -142,6 +142,7 @@ class ExplainableGP(object):
                                 'fitness_variance': {},
                                 'best_candidate': {},
                                 'total_found_trees': {},
+                                'gen_time': {},
                                 'complexity_average': {},
                                 'complexity_variance': {},
                                 'tmp_pop_fitness_distribution': {}}
@@ -580,8 +581,8 @@ class ExplainableGP(object):
 
         path_hist = folder_make_dir(root_path / folder_histograms)
 
-        np_data = self.data_train  # todo sfeh?
-        agent_dimatrix2 = {}  # todo
+        np_data = self.data_train  # sfeh, also non-train data?
+        agent_dimatrix = {}
         obs_x_info = {}  # [None] * data_dims
 
         max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
@@ -616,20 +617,20 @@ class ExplainableGP(object):
 
             pairwise_fitness = tf_results['pairwise_fitness']
             tf_fitness = tf_results['fitness']
-            agent_dimatrix2[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
-            agent_dimatrix2[a_ii]['tf_fitness'] = tf_fitness
-            agent_dimatrix2[a_ii]['pairwise_fitness'] = copy.deepcopy(pairwise_fitness)
-            agent_dimatrix2[a_ii]['parsim'] = parsim
+            agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
+            agent_dimatrix[a_ii]['tf_fitness'] = tf_fitness
+            agent_dimatrix[a_ii]['pairwise_fitness'] = copy.deepcopy(pairwise_fitness)
+            agent_dimatrix[a_ii]['parsim'] = parsim
             deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
-            agent_dimatrix2[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
+            agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
             for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
                 col = obs_info.get('pos')
                 histogram_data = np_data[:, col]
                 hist, _ = np.histogram(histogram_data, bins=obs_x_info[ii]['bins'], weights=pairwise_fitness)
                 max_fails_per_bin = max(max(hist), max_fails_per_bin)
-                agent_dimatrix2[a_ii]['obs-specific'] = {}
-                agent_dimatrix2[a_ii]['obs-specific'][ii] = histogram_data
+                agent_dimatrix[a_ii]['obs-specific'] = {}
+                agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
                 obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
 
         # todo when there are more than 3 (?) dimensions, these plots make no sense.
@@ -639,7 +640,7 @@ class ExplainableGP(object):
         # data_dims = len(self.env_variables['obs_name'])
         #
         # # for enum_aii, agent_ii in enumerate(agent_dimatrix):
-        # for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix2.items()):
+        # for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
         #     fig, axs = plt.subplots(data_dims, 1)
         #
         #     # pairwise_fitness = agent_ii[-1]
@@ -659,7 +660,7 @@ class ExplainableGP(object):
 
         # >>> Histograms for every action
         # for enum_aii, agent_ii in enumerate(agent_dimatrix):
-        for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix2.items()):
+        for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
 
             # Histograms action-based
             act_min, act_max = self.env_variables['action_at'][self.config['eval_action']]['minmax']
@@ -747,7 +748,7 @@ class ExplainableGP(object):
 
     def file_pareto_latex(self, pareto, root_path):
         """
-        Save all pareto entries as latex gp_files
+        Generates latex-file with the computational tree structure of all pareto agents
         - build tree from expression
         - fill tree meta-data, just in case we want to visualise anything of it
         - create latex-forest representation
@@ -994,15 +995,12 @@ class ExplainableGP(object):
                     pareto_fit = self.pareto.get(parsim)['fitness_train']
                     if self.kernel.fitness_compare(fitness, pareto_fit):
                         self.pareto[parsim] = meta
-                        self.printpl('a', 'Pareto update at {}, with new {}-error: {}. Old was: {}!'.format(parsim,
-                                                                                                            self.config[
-                                                                                                                'kernel_name'],
-                                                                                                            fitness,
-                                                                                                            best_fit))
+                        self.printpl('a', 'Pareto update at {}, with new {}-error: {}. Old was: {}'.format(
+                            parsim, self.config['kernel_name'], fitness, best_fit))
                         pareto_improved = True
                 else:
                     self.pareto[parsim] = meta
-                    self.printpl('a', 'New pareto entry at {:.0f} with {}-error: {:4.2f}!'.format(parsim, self.config[
+                    self.printpl('a', 'New pareto entry at {:.0f} with {}-error: {:4.2f}'.format(parsim, self.config[
                         'kernel_name'], fitness))
                     pareto_improved = True
                 best_fit = fitness
@@ -1455,6 +1453,10 @@ class ExplainableGP(object):
         # write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)  # better in periodic file write
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_lut)
+        gen_time = time.perf_counter() - self.time_genstart
+        if delete_this and self.monitoring_dict.get('gen_time') is None:
+            self.monitoring_dict['gen_time'] = {}
+        self.monitoring_dict['gen_time'][self.gen_id] = gen_time
         self.print_g('g', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(
             len(self.population_tmp_done), self.config['pop_max'], self.gen_id,
             time.perf_counter() - self.time_genstart))
@@ -1623,23 +1625,17 @@ class ExplainableGP(object):
         if self.monitor_dict['gen_fitness_average'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_average'].items()))
             plot_end(data_tuples, path_plots, plt_title='average error', plt_y_label='fitness',
-                     linestyle='-',
                      set_left=data_tuples[0][0],
                      fill_variance=self.monitoring_dict.get('fitness_variance'))
 
         if self.monitor_dict['population_tmp_done-size'] == 'y':
             data_tuples = sorted(list(self.monitoring_dict['population_tmp_done-size'].items()))
-            plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='',
+            plot_end(data_tuples, path_plots, plt_title='genepool size', plt_y_label='amount', linestyle='None',
                      marker='.',
                      set_left=data_tuples[0][0])
 
-        data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
-        plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes',
-                 linestyle='-',
-                 set_left=data_tuples[0][0])
-
-        data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
-        plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='',
+        data_tuples = sorted(list(self.monitoring_dict['gen_time'].items()))
+        plot_end(data_tuples, path_plots, plt_title='Generation time', plt_y_label='time', linestyle='None',
                  marker='.',
                  set_left=data_tuples[0][0])
 
@@ -1657,7 +1653,6 @@ class ExplainableGP(object):
         plot_end(dist_fit, path_plots, plt_title='population distribution Gen {}'.format(self.gen_id),
                  plt_x_label='tree ids',
                  plt_y_label='fitness',
-                 linestyle='-',
                  marker='',
                  set_right=self.config['pop_max'],
                  right_padding=1,
@@ -1666,13 +1661,20 @@ class ExplainableGP(object):
         if self.monitor_dict.get('fitness_variance') == 'y':
             data_tuples = sorted(list(self.monitoring_dict['fitness_variance'].items()))
             plot_end(data_tuples, path_plots, plt_title='variance in error', plt_y_label='variance',
-                     linestyle='-',
                      marker='')
+
+        data_tuples = sorted(list(self.monitoring_dict['complexity_average'].items()))
+        plot_end(data_tuples, path_plots, plt_title='average tree complexity', plt_y_label='#nodes',
+                 set_left=data_tuples[0][0])
 
         data_tuples = sorted(list(self.monitoring_dict['complexity_variance'].items()))
         plot_end(data_tuples, path_plots, plt_title='variance in complexity', plt_y_label='variance',
-                 linestyle='-',
                  marker='')
+
+        data_tuples = sorted(list(self.monitoring_dict['total_found_trees'].items()))
+        plot_end(data_tuples, path_plots, plt_title='number of created trees', plt_y_label='amount', linestyle='None',
+                 marker='.',
+                 set_left=data_tuples[0][0])
 
         data_tuples = sorted(list(self.monitoring_dict['best_candidate'].items()))
         plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='generation',

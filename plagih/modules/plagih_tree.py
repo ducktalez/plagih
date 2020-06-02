@@ -2275,19 +2275,21 @@ def latex_tree_node_get_forest(tree, node_id=root_id):
 
     # Get the best math-like representation for functions
     if label in op:
-        op_tex = op[label]['latex']
+        op_tex = op[label]['latex1']
         if op_tex is not None:
             latex_label = op_tex
 
     # todo float labels too long
+    # todo underline makes lower indices... good or bad?
 
-    latex_label = '{{{}}}'.format(latex_label)  # e.g. ->{cartPos}
+    latex_label = '${{{}}}$'.format(latex_label)  # e.g. ->{cartPos}
 
     # custom node design
-    if arity > 0:
-        extras += ',nonterminal'
-    else:
+    if arity == 0:
         extras += ',terminal'
+    #     extras += ',nonterminal'
+    # else:
+    #
 
         if tree_node_is_variable(tree, node_id):
             extras += ',variable'

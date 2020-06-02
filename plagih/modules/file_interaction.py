@@ -222,7 +222,7 @@ def plot_styleup(x, y, set_left=None, set_right=None, set_top=None, right_paddin
 def plot_end(data_2d, plotname_path,
              plt_title='', plt_curve_label='', plt_x_label='', plt_y_label='', yscale='linear',
              step_where='', plt_xparam='', plt_hist=False,
-             linestyle='None',
+             linestyle='-',
              marker='',
              set_left=None, set_right=None, set_top=None,
              right_padding=1.05, top_padding=1.05,

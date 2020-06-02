@@ -41,9 +41,9 @@ def labellists_from_csv(csv_path):
         for row in reader:
             if len(row) > 0:
                 if row[0] == 'label_list' or row[0] == 'node_label':
-                    label_list = row[1:]
-                elif row[0] == 'modify_list' or row[0] == 'node_modify':  # sfeh
-                    modify_list = [int(x) for x in row[1:]]  # N_modify sfeh
+                    label_list = [x.replace(' ', '') for x in row[1:]]
+                elif row[0] == 'modify_list' or row[0] == 'node_modify':
+                    modify_list = [int(x.replace(' ')) for x in row[1:]]
                 elif row[0] == '':
                     pass
                 else:
@@ -159,32 +159,59 @@ def load_evolve_functions(root_dir, evolve_file=file_evolve_functions):
         print_warning('ww', 'Opt-in not specified. Evolve-file for GP evolve functions defined! Trying to choose them for you.')
 
         evolve_list = [
-            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.10},
+            # Reproduction (15%)
+            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.10,
+             'custom_params': {}},
             {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
              'custom_params': {'sympify_tree': True}},
-            {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02},
-            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.10},  # sum 0.25
+            {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02,
+             'custom_params': {}},
+
+            # Mutation (35%)
+            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.10,
+             'custom_params': {}},  # sum 0.25
             {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 2, 5, 0.8), 'build_method': 'full'}}},
             {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 2, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
              'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 6, 24, 4), 'build_method': 'grow'}}},
-            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30},  # sum 0.70
-            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.05,
+            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.10,
              'custom_params': {'mode': 'branch'}},
             {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.0,
              'custom_params': {'mode': 'point'}},
+
+            # Crossover (30%)
+            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30,  # sum 0.70
+             'custom_params': {}},
+
+            # Random (25%)
             {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 3, 5, 1), 'build_method': 'full'}}},
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'build_method': 'full'}}},
             {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 6, 1), 'build_method': 'grow'}}},
+             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 6, 1), 'build_method': 'grow'}}},
             {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}},
+             'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 45, 6), 'build_method': 'full'}}},
         ]
 
+        # todo todotodo
+        evolve_list_first = {
+            'from_origin': [
+                {'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}}
+            ],
+            'from_scratch': [
+                {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
+                 'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'build_method': 'full'}}},
+                {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
+                 'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 6, 1), 'build_method': 'grow'}}},
+                {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.40,
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}}
+            ],
+        }
+
     yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_list)
-    # sfeh: if you want to load informations from extra file, check for this file here
+    # sfeh: if you want to load information from extra file, check for this file here
 
     return evolve_list
 
@@ -306,7 +333,6 @@ def gp_run(root_dir, force_new_run, eval_action):
 
     if force_new_run:  # for convenience. Makes restarting runs possible from command line
         config['force_new_run'] = True
-
     config['eval_action'] = eval_action
 
     gp = ExplainableGP(root_dir, config=config)

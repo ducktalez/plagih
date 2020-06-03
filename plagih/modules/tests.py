@@ -68,26 +68,6 @@ class TestHelpers:
         label_list = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
         label_list = workaround_remove_tilde_operator(label_list)
 
-    def auto_operator_tree_build(self):
-        """
-        test building all potential trees with all genetic operators_csv
-        """
-        # sfeh float + bool
-        result_xtype = '2f'
-        goal_max_nodes = 14
-        env_variables = self.env_bundle
-        oparray = get_all_oparrays()
-        choose_distributions = self.distributions_as_string
-        build_type='grow'
-        # origin_tree = TEST_karoo_tree_from_labellist(['+', '1', '2'], env_variables, modify_list=[0, 1, 1])
-
-        label_list, arity_list, xtype_list = invent_label_list_nodes(result_xtype, goal_max_nodes, env_variables, oparray, choose_distributions, build_method=build_type)
-        modify_list = [0] + ([1] * len(label_list))[1:]
-        tree = TEST_karoo_tree_from_labellist(label_list, env_variables, modify_list=modify_list)
-
-        return tree
-
-
 
 class MountainCarExamples:
 

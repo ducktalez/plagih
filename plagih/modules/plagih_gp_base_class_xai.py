@@ -570,11 +570,12 @@ class ExplainableGP(object):
 
         self.evolve_list = evolve_list
 
-    def activate_operators(self, choose_oparray, choose_distributions):
+    def activate_operators(self, choose_oparray, choose_oparray2, choose_distributions):
         """
         operators_csv were loaded already and need to be set in the gp run
         """
-        self.choose_oparray = choose_oparray
+        self.choose_oparray = choose_oparray  # sfeh delete this version1
+        self.choose_oparray2 = choose_oparray2
         self.choose_distributions = choose_distributions  # sfeh samples from csv?
 
         if not self.config['force_new_run']:
@@ -1168,7 +1169,7 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        tree = tree_evolve_mutate_point(tree, self.config['float_accuracy'], self.choose_oparray, self.env_variables,
+        tree = tree_evolve_mutate_point(tree, self.config['float_accuracy'], self.choose_oparray2, self.env_variables,
                                         self.choose_distributions)
 
         return tree
@@ -1223,14 +1224,14 @@ class ExplainableGP(object):
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_accuracy,
-                                                                         self.env_variables, self.choose_oparray,
+                                                                         self.env_variables, self.choose_oparray2,
                                                                          self.choose_distributions,
                                                                          build_method=build_method)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_accuracy,
-                                                                         self.env_variables, self.choose_oparray,
+                                                                         self.env_variables, self.choose_oparray2,
                                                                          self.choose_distributions,
                                                                          build_method=build_method)
         else:
@@ -1306,8 +1307,9 @@ class ExplainableGP(object):
     def pop_mutate_branch(self, call_params, tree):
 
         """
-        Mutates a whole tree branch.
+        Mutate branch of a tree.
 
+        todo read this, care about same branch size
         If the evolutionary run is
         designated as Full, the size and shape of the Tree will remain identical, each old_node mutated sequentially, where
         functions remain functions and terminals remain terminals. If the evolutionary run is designated as Grow or
@@ -1325,9 +1327,9 @@ class ExplainableGP(object):
         node_ids = tree_get_mutatable_nodes(tree, no_root=True)
         old_node = np.random.choice(node_ids)
         old_xtype = tree_node_get_xtype(tree, old_node)
-
         build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree,
-                                       node_id=old_node)  # sfeh anderer name für branch
+                                       node_id=old_node)
+
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, build_method,
                                                                     self.config['float_accuracy'])
 

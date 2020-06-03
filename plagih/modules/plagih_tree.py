@@ -815,7 +815,7 @@ def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
                 raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray, choose_distributions, min_depth=0, build_method=None):
+def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray2, choose_distributions, min_depth=0, build_method=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -848,7 +848,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
-                    label, arity, xtype = choose_operator(xtype[-2:], choose_oparray, arity=None)
+                    label, arity, xtype = choose_operator(xtype[-2:], choose_oparray2=choose_oparray2, arity=None)
                 else:
                     raise
 
@@ -881,7 +881,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, oparray, choose_distributions, build_method='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, choose_oparray2, choose_distributions, build_method='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -929,7 +929,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variabl
         for enum, index in enumerate(func_at):  #
             t_xtype = tbdo_xtypes[index]
 
-            label, arity, label_xtype = choose_operator(t_xtype, oparray)
+            label, arity, label_xtype = choose_operator(t_xtype, choose_oparray2=choose_oparray2)
             # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), num_inserts, '>', arity, ')', (len(result_label_list) + num_inserts + arity), goal_max_nodes)
             if goal_max_nodes > (len(result_label_list) + num_inserts) + arity + 1:  # +1 = the start node which we must not forget
 
@@ -1868,7 +1868,7 @@ def tree_check_meta_exists(tree):
         return True
 
 
-def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray, env_variables, choose_distributions):
+def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray2, env_variables, choose_distributions):
     """
     Mutate a single mutatable point in any Tree.
     """
@@ -1879,7 +1879,7 @@ def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray, env_variables
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
     if arity > 0:
-        new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray, arity=arity)  # Function is same type, same arity
+        new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
         tree = tree_node_set_label(tree, node_id, new_label)
     else:
         new_label = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)  # 3 -> '2f' -> 5

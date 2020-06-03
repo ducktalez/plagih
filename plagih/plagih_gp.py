@@ -244,16 +244,10 @@ def load_tree_builders(root_dir, data_prepared=None):
                               ['Ifte', 2],
                               ['Mini', 1],
                               ['Maxi', 1]])
-        # operators = np.array([['+', 2], ['-', 2], ['*', 2], ['/', 2],
-        #                       ['sin', 2], ['Square', 2], ['sqrt', 2],
-        #                       ['Mini', 2], ['Maxi', 2], ['abs', 2],
-        #                       ['<', 2], ['<=', 2], ['==', 2],
-        #                       ['Andb', 2], ['Orb', 2], ['Notb', 2], ['Ifte', 2],
-        #                       ['Tanh', 1], ['usub', 1],
-        #                       ['+', 2], ['Ifte', 2]])
+
         # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
 
-    choose_oparray = oparray_from_list(operators)
+    choose_oparray, choose_oparray2 = oparray_from_list(operators)
 
     # load distributions_file
     distributions_yaml = root_dir / distributions_file
@@ -283,7 +277,7 @@ def load_tree_builders(root_dir, data_prepared=None):
     distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),
     distributions['2b'].extend([eval(x) for x in distributions_as_string['2b']])
 
-    return choose_oparray, distributions
+    return choose_oparray, choose_oparray2, distributions
 
 
 def load_label_list(root_dir):
@@ -338,8 +332,8 @@ def gp_run(root_dir, force_new_run, eval_action):
     data_prepared = load_data_prepared(root_dir)
     gp.activate_dataset(data_prepared)
 
-    choose_oparray, distributions = load_tree_builders(root_dir, data_prepared=data_prepared)
-    gp.activate_operators(choose_oparray, distributions)
+    choose_oparray, choose_oparray2, distributions = load_tree_builders(root_dir, data_prepared=data_prepared)
+    gp.activate_operators(choose_oparray, choose_oparray2, distributions)
 
     label_list, modify_list = load_label_list(root_dir)
     if label_list is not None and modify_list is not None:

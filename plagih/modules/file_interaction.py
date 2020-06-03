@@ -267,8 +267,10 @@ def plot_end(data_2d, plotname_path,
     top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
 
     if beyond_lines:  # adding a point to the edges to imply that there are no more (better pareto) values
-        x = [x[0]] + x + [new_right + 1]
-        y = [new_top + 1] + y + [y[-1]]
+        # x = [x[0]] + x + [new_right + 1]
+        # y = [new_top + 1] + y + [y[-1]]
+        x = np.concatenate([[x[0]], x, [new_right + 1]])
+        y = np.concatenate([[new_top + 1], y, [y[-1]]])
 
     fig, ax = plt.subplots()
     ax.set_yscale(yscale)
@@ -304,8 +306,8 @@ def plot_end(data_2d, plotname_path,
 
     plt.tight_layout()
     plt.savefig(plotname_path / '{}.png'.format(plt_title))
-    plt.close()  # Stackoverflow said that this is too much, clf should be better
-    # plt.clf()
+    # plt.close()  # Stackoverflow said that this is too much, clf should be better
+    plt.clf()
     return
 
 #

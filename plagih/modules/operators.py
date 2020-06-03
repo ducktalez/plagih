@@ -10,6 +10,7 @@ first_gen_id = 1  # maybe take care to make this 0 for base gen
 karoo_skip = 1
 
 delete_this = True
+delete_this_version1 = True
 debug_this_please = False
 
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
@@ -63,20 +64,20 @@ op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float 
           'sym_str': '({} - {})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
     'usub': {'fun': 'usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.negative, 'opgroup': [], 'latex1': '$-$', 'latexF': '-{}',
              'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},
-    '*': {'fun': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.multiply,  'opgroup': ['aritygroup'], 'latex1': '$\\cdot$', 'latexF': '{}\\cdot{}',
+    '*': {'fun': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.multiply, 'opgroup': ['aritygroup'], 'latex1': '$\\cdot$', 'latexF': '{}\\cdot{}',
           'sym_str': '({} * {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
     '/': {'fun': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.math.divide_no_nan, 'opgroup': [], 'latex1': '$\\div$', 'latexF': '\\frac{{{}}}{{{}}}',
           'sym_str': '({} / {})',
           'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
-    '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.pow,  'opgroup': [], 'latex1': '$**$', 'latexF': '{{{}}}^{{{}}}',  # sfeh latexf requires some testing...
+    '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.pow, 'opgroup': [], 'latex1': '$**$', 'latexF': '{{{}}}^{{{}}}',  # sfeh latexf requires some testing...
            'sym_str': '({} ** {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
 
     'abs': {'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.abs, 'opgroup': [], 'latex1': '$abs$', 'latexF': '|{{{}}}|',
             'sym_str': 'abs({})', 'pycode': lambda a: 'abs({})'.format(a)},
     'sign': {'fun': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.sign, 'opgroup': [], 'latex1': '$sign$', 'latexF': 'sign({{{}}})',
              'sym_str': 'sign({})', 'pycode': lambda a: 'np.sign({})'.format(a)},
-    
+
     'Square': {'fun': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.math.square, 'opgroup': [], 'latex1': '$x^2$', 'latexF': '{{{}}}^2',
                'sym_str': 'Square({})', 'pycode': lambda a: '({}**2)'.format(a)},
     'sqrt': {'fun': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.sqrt, 'opgroup': [], 'latex1': '$\\sqrt{x}$', 'latexF': '\\sqrt{{{}}}',
@@ -86,7 +87,7 @@ op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float 
             'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},  # python log is actual ln
     'log1p': {'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '$\\log(1+x)$', 'latexF': '\\log(1+{{{}}})',
               'sym_str': 'log1p({})', 'pycode': lambda a: 'math.log1p({})'.format(a)},
-    
+
     'cos': {'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.cos, 'opgroup': ['angle'], 'latex1': '$\\cos$', 'latexF': '\\cos({{{}}})',
             'sym_str': 'cos({})', 'pycode': lambda a: 'math.cos({})'.format(a)},
     'sin': {'fun': 'sin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.sin, 'opgroup': ['angle'], 'latex1': '$\\sin$', 'latexF': '\\sin({{{}}})',
@@ -207,7 +208,7 @@ op = {
 op_test = {
     # no (easy-to use) tensorflow-operations available
     # ast.BitOr
-    'Power3': {'fun': '', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.pow, 'latex1': None, 'latexF': '{}', 
+    'Power3': {'fun': '', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.pow, 'latex1': None, 'latexF': '{}',
                'sym_str': '({}**2)', 'pycode': lambda a: '({}**2)'.format(a)},
     'Nand': {'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
              'sym_str': 'Nand({}, {})', 'pycode': lambda a, b: 'Notb({} and {})'.format(a, b)},
@@ -310,7 +311,30 @@ def oparray_from_list(functions):
         elif xtype == 'b2f2f':
             choose_oparray[b2f2f][arity].append(labael_and_prob)
 
-    return choose_oparray
+    # sfeh all the above was from an old version
+    choose_oparray2 = {
+
+        # # all operators (not needed (?))
+        # None: {0: [], 1: [], 2: [], 3: [], None: []},
+
+        # all operators with a certain xtype-result
+        '2f': {0: [], 1: [], 2: [], 3: [], None: []},
+        '2b': {0: [], 1: [], 2: [], None: []},
+
+        # all operators for point mutation
+        'f2f': {1: [], 2: [], None: []},
+        'f2b': {1: [], 2: [], None: []},
+        'b2b': {1: [], 2: [], None: []},
+        'b2f': {1: []},
+        'b2f2f': {3: [], None: []}
+    }
+    # todo check the probability sums?
+    from plagih.modules.plagih_types import xtype_get_func_list
+    for xtype_dummy, vals in choose_oparray2.items():
+        for ari_dummy in vals.keys():
+            choose_oparray2[xtype_dummy][ari_dummy] = xtype_get_func_list(choose_oparray, xtype=xtype_dummy, arity=ari_dummy)
+
+    return choose_oparray, choose_oparray2
 
 
 # def get_all_oparrays():

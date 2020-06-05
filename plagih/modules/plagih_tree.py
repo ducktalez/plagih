@@ -1911,6 +1911,7 @@ def tree_evolve_reduce(tree, env_variables, completely=True):
                     tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
                 except Exception as ex:
                     print_e('This failed tree should have been kicked out earlier: ex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
+                    tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
                     pass  # This might occur when a tree is sympified (?)
         return tree
     except Exception as ex:

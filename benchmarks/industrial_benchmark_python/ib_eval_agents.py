@@ -42,6 +42,33 @@ def get_max_history(index, history_list):
         return history_list[index]
 
 
+def envstate_normalize(env_state, to_normal=True):
+    """
+    velocity, gain, shift (v, g, h)
+    p, v, g, h, f, c
+    'p', 'v', 'g', 'h', 'f', 'c'
+    """
+
+    IB_norm_dict = {
+        'p': [55.0, 28.72],
+        'v': [48.75, 12.31],
+        'g': [50.53, 29.91],
+        'h': [49.45, 29.22],
+        'f': [37.51, 31.17],
+        'c': [166.33, 139.44]}
+
+    if to_normal:
+        norm_values = {}
+        for k, val in IB_norm_dict.items():
+            norm_values[k] = (env_state[k] - val[0]) / val[1]
+        return norm_values
+    else:
+        real_values = {}
+        for k, val in IB_norm_dict.items():
+            real_values[k] = (env_state[k] * val[1]) + val[0]
+        return real_values
+
+
 class Agent_nothing():
     """
     ...does nothing, kind of.
@@ -78,26 +105,6 @@ class Agent_random():
         # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
         at = 2 * np.random.rand(3) - 1
         return at
-
-
-def envstate_normalize(env_state, observable_keys=None):
-    """
-    p, v, g, h, f, c
-    'p', 'v', 'g', 'h', 'f', 'c'
-    """
-
-    norm_dict = {
-        'p': [55.0, 28.72],
-        'v': [48.75, 12.31],
-        'g': [50.53, 29.91],
-        'h': [49.45, 29.22],
-        'f': [37.51, 31.17],
-        'c': [166.33, 139.44]}
-
-    norm_values = {}
-    for k, v in norm_dict.items():
-        norm_values[k] = (env_state[k] - v[0]) / v[1]
-    return norm_values
 
 
 class Ib_Agent():
@@ -162,6 +169,26 @@ class Agent_Daniel_29_Best(Ib_Agent):
         return at
 
 
+class Agent_Test():
+    """
+    ...does nothing, kind of.
+    """
+    def __init__(self):
+        self.state_history = collections.deque()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        at[0] = -self.get_h('g', 5) - 1.8  # 27
+        at[1] = 0.41 * self.get_h('f', 1) + self.get_h('f', 4) - 0.59 * self.get_h('p', 0) + 0.77  # -13.8*Consumption_30
+        at[2] = -4.05 * self.get_h('h', 3) - self.get_h('h', 4) + 2.26 * self.get_h('p', 0) + 0.90  # 27
+        return at
+
+
 def eval_agents():
 
     T = 100
@@ -172,7 +199,8 @@ def eval_agents():
         Agent_nothing(),
         Agent_daniel_21(),
         Agent_daniel_27(),
-        Agent_Daniel_29_Best()]
+        Agent_Daniel_29_Best(),
+        Agent_Test()]
 
     data = np.zeros((len(agents), T))
     data_cost = np.zeros((len(agents), T))

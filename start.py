@@ -4,7 +4,6 @@ This extra file was added to have a file in the root directory that can be start
 """
 from pathlib import Path
 from plagih import plagih_gp
-from plagih.modules.file_interaction import example_runs
 import sys
 import getopt
 
@@ -52,8 +51,8 @@ def main(argv):
                 print('Could not convert action. Exception, just fyi, is: {}'.format(ex))
 
     if ipath is None:
-        print('No run-folder provided. Starting an example run.\n')
-        ipath = Path.cwd() / example_runs / 'cartpole_v1/'  # / 'plagih'
+        print('No run-folder provided. Starting NOTHING (TODO an example run).\n')
+        # ipath = Path.cwd() / example_runs / 'cartpole_v1/'  # / 'plagih'
     # print('Starting plagih-run in {}'.format(Path(run_folder)))
 
     if task == 'run':

@@ -44,20 +44,20 @@ op: Dict to work as 'Database' for every expression-bit and its features
 - KEY: expression-bit: can occur in various forms, which group into following uses:
     - ast.KEY: Found by pythons 'ast' when inline op like [+, -, *, ...] occurs
     - 'KEY': Found by pythons 'ast' when non-inline functions are found as string
-    -> some operators_csv are identical, but occur several times, e. g. ('And', '&', ast.BitAnd)
+    -> some operators are identical, but occur several times, e. g. ('And', '&', ast.BitAnd)
 - VALUE: several features that have to be regarded. Some are irrelevant or have to be done.
-    - name: (irrelevant) information what this function actually does. identical operators_csv can be found like this.
+    - name: (irrelevant) information what this function actually does. identical operators can be found like this.
     - arity: Amount of inputs an operator has to have. This must always be constant (reason why pythons min/max does not work)
     - tf: Tensorflow graph representation for the key. Was separated earlier. (!): [tf.bool, tf.float] are just variables of the used tf.cast function.
-    - gpbp: Genetic Programming Backpropagation: An open idea from sfeh to introduce backpropagation for genetic operators_csv.
+    - gpbp: Genetic Programming Backpropagation: An open idea from sfeh to introduce backpropagation for genetic operators.
     - latex: For visualizing trees with latex, these representations might look better
 
 Features should always be defined, even though they might not occur at all. If not used, they CAN be filled with dummy values like äöü
 Some, which are known of not being used yet are commented with '# not tested' or '# not used'
-sfeh: write test that checks all operators_csv for sympificytion (...+branch-combinations, and more?)
+sfeh: write test that checks all operators for sympificytion (...+branch-combinations, and more?)
 sfeh: use function-types (-> 'kommuttative'?)
 """
-op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float to float
+op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.add, 'opgroup': ['aritygroup'], 'latex1': '$+$', 'latexF': '{}+{}',
           'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
     '-': {'fun': '-', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.subtract, 'opgroup': ['aritygroup'], 'latex1': '$-$', 'latexF': '{}-{}',
@@ -105,7 +105,7 @@ op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float 
     # 'Integer': {'fun': 'Integer', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.cast({}, tf.int32), 'latex1': None, 'latexF': '{}', 
     # 'sym_str': 'N({}, )', 'pycode': lambda a: 'math.tanh({})'.format(a)},
 
-    # 'b2b' Classical logical operators_csv, evaluate from bool to bool
+    # 'b2b' Classical logical operators, evaluate from bool to bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
     'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': 'and', 'latexF': '({{{}}}\\wedge{{{}}})',
@@ -121,7 +121,7 @@ op_what = {  # 'f2f': Classical mathematical operators_csv, evaluate from float 
     '|': {'fun': '|', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': '$\\lor$', 'latexF': '({{{}}}\\vee{{{}}})',
           'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
 
-    # 'f2b' Classical comparative operators_csv, evaluate from float to bool
+    # 'f2b' Classical comparative operators, evaluate from float to bool
     '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.equal, 'latex1': '$\\eq$', 'latexF': '({{{}}}\\eq{{{}}})',
            'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
     '!=': {'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.not_equal, 'latex1': '$\\neq', 'latexF': '({{{}}}\\neq{{{}}})',
@@ -232,7 +232,7 @@ op_test = {
     'bool': {'fun': 'bool', 'arity': 1, 'xtype': 'f2b', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
              'sym_str': '', 'pycode': lambda a: 'bool({})'.format(a)},  # not tested
 
-    # Not tested: Converters: Dummy operators_csv that convert between float and bool
+    # Not tested: Converters: Dummy operators that convert between float and bool
     'Ftob': {'fun': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.bool, 'latex1': None, 'latexF': '{}',
              'sym_str': 'bool', 'pycode': lambda a: 'bool({})'.format(a)},  # not tested, same as bool
     'Btof': {'fun': 'Btof', 'arity': 1, 'xtype': 'b2f', 'c-weight': 1, 'tf': tf.float32, 'latex1': None, 'latexF': '{}',
@@ -274,7 +274,7 @@ op_test = {
 
 def oparray_from_list(functions):
     """
-    Load all operators_csv ready-to-use from a file
+    Load all operators ready-to-use from a file
     """
 
     # rows are the function types (f2f)
@@ -334,7 +334,7 @@ def oparray_from_list(functions):
         for ari_dummy in vals.keys():
             choose_oparray2[xtype_dummy][ari_dummy] = xtype_get_func_list(choose_oparray, xtype=xtype_dummy, arity=ari_dummy)
 
-    return choose_oparray, choose_oparray2
+    return choose_oparray2
 
 
 # def get_all_oparrays():

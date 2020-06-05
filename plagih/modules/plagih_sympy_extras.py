@@ -189,6 +189,19 @@ class Square(Function):
         return eval(self, a)
 
 
+class Usub(Function):
+    """
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+        return -a  # see
+
+    def _sympy_(self, a):
+        return eval(self, a)
+
+
 # class Ftob(Function):
 #     """
 #     Dummy function to convert Float to boolean
@@ -229,7 +242,8 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Andb': Andb,
                     'Orb': Orb,
                     'Notb': Notb,
-                    'Square': Square,}
+                    'Square': Square,
+                    'usub': Usub}
 
 
 def plagih_sympify(function_string):

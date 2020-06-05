@@ -40,7 +40,7 @@ def pause(menu_dict):
         print('\t\033[36m\033[1m ts \t\033[0;0m adjust tournament size')
         print('\t\033[36m\033[1m min \t\033[0;0m adjust minimum number of nodes')
         # print ('\t\033[36m\033[1m max \t\033[0;0m adjust maximum Tree depth') # NEED TO ADD
-        print('\t\033[36m\033[1m bal \t\033[0;0m adjust balance of genetic operators_csv')
+        print('\t\033[36m\033[1m bal \t\033[0;0m adjust balance of genetic operators')
         print('')
         print('\t\033[36m\033[1m l \t\033[0;0m list Trees with leading fitness scores')
         print('\t\033[36m\033[1m pop \t\033[0;0m list Trees in current population')
@@ -120,8 +120,8 @@ def pause(menu_dict):
     #		except ValueError: print ('\n\t\033[32m Enter a number from 1 including 10. Try again ...\033[0;0m')
     #		except KeyboardInterrupt: print ('\n\n\t\033[32m Enter \033[1mq\033[0;0m\033[32m to quit\033[0;0m')
 
-    elif menu == 'bal':  # adjust the balance of genetic operators_csv'
-        print('\n\t The current balance of genetic operators_csv is:')
+    elif menu == 'bal':  # adjust the balance of genetic operators'
+        print('\n\t The current balance of genetic operators is:')
         print('\t\t Reproduction:', menu_dict['evolve_repro'])
         tmp_repro = menu_dict['evolve_repro']
         print('\t\t Point Mutation:', menu_dict['evolve_point'])
@@ -195,7 +195,7 @@ def pause(menu_dict):
             print('\n\t The sum of the above does not equal %s. Try again ...' % str(menu_dict['tree_pop_max']))
 
         else:
-            print('\n\t The revised balance of genetic operators_csv is:')
+            print('\n\t The revised balance of genetic operators is:')
             print('\t\t Reproduction:', tmp_repro)
             menu_dict['evolve_repro'] = tmp_repro
             print('\t\t Point Mutation:', tmp_point)

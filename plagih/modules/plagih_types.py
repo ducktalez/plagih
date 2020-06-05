@@ -67,6 +67,7 @@ def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
 
     # insert a ?
     if np.random.choice(['obs', 'distrib']) == 'obs' and env_variables[xtype]:
+        # todo take temp_diff into consideration
         term = np.random.choice(env_variables[xtype])
     else:
         term = choose_constant(xtype, choose_distribution, float_accuracy)
@@ -74,6 +75,18 @@ def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
     term = str(term)  # sfeh
 
     return term
+
+
+def random_choose_tempobs(var_list):
+    """
+    # todo filter
+    """
+    x = len(var_list)
+    fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
+    p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
+    p = p / np.sum(p)  # the sum must be equal to 1
+    new_obs = np.random.choice(var_list, p=p)
+    return new_obs
 
 
 def choose_constant(xtype, choose_distributions, accuracy):
@@ -242,6 +255,8 @@ def xtype_get_func_list_OLD(oparray, xtype=None, arity=None):
 def xtypes_from_labels(label_list, env_variables):
     xtype_list = [xtype_get_from_label(label, env_variables) for label in label_list]
     return xtype_list
+
+# todo random: tree complexity steigt zu stark mit generationen an?
 
 
 def xtype_get_from_label(label, env_variables):

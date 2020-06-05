@@ -21,7 +21,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
-PLAGIH_VERSION = 0.95
+PLAGIH_VERSION = 0.953  # must only update if vital changes were made
 
 
 class ExplainableGP(object):
@@ -29,39 +29,54 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, root_dir, opt_config=None, opt_file_locs=None, opt_evolve_list=None, opt_distributions_as_string=None):
+    def __init__(self, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, opt_distributions_as_string=None, data_prepared_p_path=None, opt_origin_tree_csv=None):
 
-        self.name = root_dir.name
-        print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET,
-                                                                                   root_dir))
+        self.name = root_dir.name  # sfeh probably there are better names
+        print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET, root_dir))
         self.time_start = time.perf_counter()
         self.restart_vers = 'v0.8'
-
         self.root_dir = root_dir
 
         self.config = {
+            'remove superfluous config entries': False,  # guess you should do that
+
             'pl_version': PLAGIH_VERSION,  # version important when loading old run
-            'mode': 'run',  # ['run', 'analyse']
             'description': 'No description set',
+            'force_new_run': False,  # especially for testing. Otherwise, delete the folder. can be set via command line.
+            # When to stop the run
+            'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
+            'gen_max': 1000,  # Maximum amount of generations
+
             # (!) Relevant for result
-            'population': {
-                'pop_max': 1000,  # amount is never tested
+            'pop': {
 
             },
             'pop_max': 1000,  # amount is never tested
+            'tree_depth_max': 10,  # maximum Tree depth for entire run
+            'tree_depth_min': 2,
+            'tourn_size': 3,  # [7 per 100] number of trees selected for tournament
+            'parsimony_mean': 20,  # If you wnt your population to be a certain size
             'parsimony_max': 30,
+            'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
+
+            'evalue': {
+
+            },
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
             'complexity_measure': 'tree_edit_distance',
             'eval_action': 0,  # Only one action at a time! If the data has more than one action, runs have to be split. This can be specified here.
             'obs_past:max': 9,  # How long a variables history be used? (Only required if historic values do exist)
+            'fitness_accuracy': 3,  # rounding the fitness
 
             'parsimony_tmp': 15,
-            'precision': 3,  # rounding the fitness
             'float_accuracy': 10,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
+
+            'user_feedback': {
+
+            },
             'print_type': 'ggwsiivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
-            'force_new_run': False,  # especially for testing. Otherwise, delete the folder. can be set via command line.
             'plot_verbosity': {'gen_fitness_average': 'y',
                                'sympify_errors': 'y',
                                'population_tmp_done-size': 'y',
@@ -70,17 +85,6 @@ class ExplainableGP(object):
                        'time_save': None,  # in sec
                        'gen_monitor': 10,  # in gen counts
                        'gen_save': 1},  # in gen counts
-            'crossover_type_safety_mode': 'replace_same_types',
-            'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
-            'tree_depth_max': 10,  # maximum Tree depth for entire run
-            'tree_depth_min': 2,
-            'tourn_size': 3,  # [7 per 100] number of trees selected for tournament
-
-            # When to stop the run
-            'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
-            'gen_max': 1000,  # Maximum amount of generations
-
-            'remove superfluous config entries': False,  # guess you should do that
 
             'evolve_list': [
                 # Reproduction (15%)
@@ -120,7 +124,7 @@ class ExplainableGP(object):
                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 45, 6), 'build_method': 'full'}}}],
 
             # todo todotodo
-            'evolve_list_first': {
+            'evolve_list_initial': {
                 'from_origin': [
                     {'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
                      'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}}
@@ -136,6 +140,8 @@ class ExplainableGP(object):
 
             },
 
+            # todo these are irrelevant, when the actual paths are used. file-loc updates might even be wrong.
+            #  make a difference between write/read?
             'file_locs': {
                 'pycode_load': '../../benchmarks/gym_mountaincar/agents/quick_eval.py',  # todo make pretty solution
                 'example_runs': 'run_examples/',
@@ -181,14 +187,6 @@ class ExplainableGP(object):
                  'observed_floats': 100}
         }
 
-        self.evolve_list = self.config['evolve_list']
-        self.file_locs = self.config['file_locs']
-
-        distributions_as_string = self.config['distributions_as_string']
-        if opt_distributions_as_string:
-            distributions_as_string.update(opt_distributions_as_string)
-        self.load_tree_builders_distributions(distributions_as_string, opt_path_distributions_yaml=opt_distributions_as_string)
-
         def update_dict_nested(d, u):
             for k, v in u.items():
                 if isinstance(v, collections.abc.Mapping):
@@ -197,12 +195,31 @@ class ExplainableGP(object):
                     d[k] = v
             return d
 
-        # self.config = update_dict_nested(self.config, config)
+        self.config = update_dict_nested(self.config, user_config)  # overwrites the default config-values with user-loaded config
 
-        if opt_config:  # sfeh test
-            self.config = update_dict_nested(self.config, opt_config)  # overwrites the default config-values with user-loaded config
-        if opt_file_locs:
-            self.file_locs.update(opt_file_locs)
+        if True:  # some config_dict values have to be used quite often...
+            self.kernel = FitnessKernel(self.config['kernel_name'])
+            self.print_type = self.config['print_type']
+            self.precision = self.config['fitness_accuracy']  # the number of floating points for the round function
+            self.parsimony_max = self.config['parsimony_max']
+            self.monitoring_verbosity = self.config['plot_verbosity']
+            self.tourn_size = self.config['tourn_size']
+            self.evolve_list = self.config['evolve_list']
+            self.file_locs = self.config['file_locs']
+
+        # Making useable files from the raw string format
+        self.root_paths = {}
+        for file_key, file_loc in self.config['file_locs'].items():
+            self.root_paths[file_key] = Path(root_dir / file_loc)
+        # self.root_paths.update(user_file_paths)
+
+        self.activate_dataset(data_prepared_p_path=data_prepared_p_path)
+
+        distributions_as_string = self.config['distributions_as_string']
+        if opt_distributions_as_string:
+            distributions_as_string.update(opt_distributions_as_string)
+        self.load_tree_builders_distributions(distributions_as_string, opt_path_distributions_yaml=opt_distributions_as_string)
+
         if opt_evolve_list:
             self.evolve_list.update(opt_evolve_list)
 
@@ -225,17 +242,8 @@ class ExplainableGP(object):
         self.time_last_files = self.time_start
         self.pop_next = None
 
-        # some config_dict values have to be used quite often...
-        self.kernel = FitnessKernel(self.config['kernel_name'])
-        self.print_type = self.config['print_type']
-        self.precision = self.config['precision']  # the number of floating points for the round function
-        # self.parsimony_tmp = self.config['parsimony_tmp']
-        self.parsimony_max = self.config['parsimony_max']
-        self.monitoring_verbosity = self.config['plot_verbosity']
-        self.tourn_size = self.config['tourn_size']
-
         # special variables
-        self.tf_device = "/gpu:0"  # Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
+        self.tf_device = "/gpu:0"  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
         self.tf_device_log = False  # TF device usage logging (for debugging)
 
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.tf_device_log, allow_soft_placement=True)
@@ -269,8 +277,6 @@ class ExplainableGP(object):
                                 'complexity_average': {},
                                 'complexity_variance': {},  # variance can be deleted, only std-error is needed
                                 'pop:trees:complexity:std_error': {}}
-        # 'tmp_pop_fitness_distribution': {}# sfeh delete this version1
-        self.pop_analysis_dict = {}  # similar to monitoring_dict
 
         self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
@@ -280,7 +286,7 @@ class ExplainableGP(object):
         """
         If a backup-file is found...
         """
-        path_backup = self.root_dir / self.file_locs['file_backup_pickle']
+        path_backup = self.root_paths['file_backup_pickle']
         if Path.is_file(path_backup):
             self.print_g('g', 'Backup-file was found. Loading data...')
             try:
@@ -321,8 +327,8 @@ class ExplainableGP(object):
         Loading the state of the run from the pickle file
         """
 
-        with Path.open(path_backup, 'rb') as file:
-            run_data = pickle.load(file)
+        with Path.open(path_backup, 'rb') as file_backup:
+            run_data = pickle.load(file_backup)
 
         try:
             self.config['pl_version'], self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
@@ -355,7 +361,7 @@ class ExplainableGP(object):
 
         run_backup_data = self.config['pl_version'], self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict
 
-        path_backup = file_make_dir(self.root_dir / self.file_locs['file_backup_pickle'])
+        path_backup = file_make_dir(self.root_paths['file_backup_pickle'])
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.printpl('ff', 'Saved: {}'.format(path_backup))
@@ -411,7 +417,7 @@ class ExplainableGP(object):
         """
 
         # filename = self.root_dir / info_config_yaml
-        filename = file_make_dir(self.root_dir / self.file_locs['info_config_yaml'])
+        filename = file_make_dir(self.root_paths['info_config_yaml'])
         yaml_dump(filename, self.config, print_type=self.print_type)
 
         return
@@ -421,7 +427,7 @@ class ExplainableGP(object):
         write the parameters to a .csv file which can also be loaded
         """
 
-        path = file_make_dir(self.root_dir / self.file_locs['file_info_config_json'])
+        path = file_make_dir(self.root_paths['file_info_config_json'])
 
         with Path.open(path, 'w') as file:
             json.dump(self.config, file, indent=4)
@@ -444,27 +450,32 @@ class ExplainableGP(object):
         - Monitoring initialisation and monitoring
         """
 
-        random_rate = 0  # The total amount of random creations in the evolve configuration. usually like 0.3 or so. sfeh: make first gen randomly?
-        for ii, evolve_specs in enumerate(self.evolve_list):
-            if evolve_specs['evolve_name'] == 'random trees':
-                random_rate += evolve_specs['evolve_rate']
+        if self.origin_exists():
+            # self.config['evolve_list_initial']['from_origin']
+            # todo todotodo todo todo this needs a quick fix
+            self.pop_append(self.origin_tree, last_evolution='initial')
+        else:
+            random_rate = 0  # The total amount of random creations in the evolve configuration. usually like 0.3 or so. sfeh: make first gen randomly?
+            for ii, evolve_specs in enumerate(self.evolve_list):
+                if evolve_specs['evolve_name'] == 'random trees':
+                    random_rate += evolve_specs['evolve_rate']
 
-        for ii, evolve_specs in enumerate(self.evolve_list):
-            if evolve_specs['evolve_name'] == 'random trees':
-                # time_evolve = time.perf_counter()
-                evolve_num = int(self.config['pop_max'] * (evolve_specs['evolve_rate'] / random_rate))
-                call_params = evolve_specs.get('custom_params')
-                tag = evolve_specs['tag']
+            for ii, evolve_specs in enumerate(self.evolve_list):
+                if evolve_specs['evolve_name'] == 'random trees':
+                    # time_evolve = time.perf_counter()
+                    evolve_num = int(self.config['pop_max'] * (evolve_specs['evolve_rate'] / random_rate))
+                    call_params = evolve_specs.get('custom_params')
+                    tag = evolve_specs['tag']
 
-                if self.origin_is_fix():
-                    origin_tree = self.origin_tree_get()
-                    for nn in range(evolve_num):
-                        new_tree = self.pop_random_from_origin(call_params, origin_tree)
-                        self.pop_append(new_tree, last_evolution=tag)
-                else:
-                    for nn in range(evolve_num):
-                        new_tree = self.pop_random(call_params)
-                        self.pop_append(new_tree, last_evolution=tag)
+                    if self.origin_is_fix():
+                        origin_tree = self.origin_tree_get()
+                        for nn in range(evolve_num):
+                            new_tree = self.pop_random_from_origin(call_params, origin_tree)
+                            self.pop_append(new_tree, last_evolution=tag)
+                    else:
+                        for nn in range(evolve_num):
+                            new_tree = self.pop_random(call_params)
+                            self.pop_append(new_tree, last_evolution=tag)
 
         self.gen_finalize()
         write_file_population_karoo(self.population_base, 'first', self.root_dir, self.gen_id, print_type=self.print_type)  # first gen only
@@ -658,22 +669,33 @@ class ExplainableGP(object):
                 self.env_variables[xtype].remove(obs_name)
         return
 
-    def load_data_prepared(self, delimiter=',', print_type=None):
+    def get_path(self, file_key):
+        real_path = self.root_paths[file_key]
+        return real_path
+
+    def activate_dataset(self, data_prepared_p_path=None, delimiter=','):
         """
         loading the data which the GP will be working on.
         The .csv-file is prepared (loading correct data-type, splitting data, ...)
         and saved as pickle-file for reloading runs.
         This is especially important, as the split in training and test-data must be the same.
+
+        separate loading the prepared data into the main class.
+        Why like this? I needed to find a bug in the data_from_csv file and
+        did not want to start the whole stuff everytime
+
+            # self.data_train_panda, self.data_control_panda  # todo version1 data_test_panda
         """
-        if Path.is_file(self.root_dir / self.file_locs['samples_ready_p']):  # maybe the data was already prepared earlier
-            data_prepared = pickle_load(self.root_dir / self.file_locs['samples_ready_p'])
-        elif Path.is_file(self.root_dir / self.file_locs['samples_csv']):  # We have to split and check the data
-            # preparing the data from raw csv-file
-            # todo data_test_panda
-            self.env_variables, self.data_train_panda, self.data_control_panda, self.data_train, self.data_control = data_from_csv(self.root_dir / self.file_locs['samples_csv'], delimiter=delimiter)
-            data_prepared = self.env_variables, self.data_train, self.data_control  # sfeh version1 remove numpy version
+        if data_prepared_p_path:
+            data_prepared = pickle_load(data_prepared_p_path)
+        elif Path.is_file(self.root_paths['samples_ready_p']):  # maybe the data was already prepared earlier
+            data_prepared = pickle_load(self.root_paths['samples_ready_p'])
+        elif Path.is_file(self.root_paths['samples_csv']):  # Preprocess the raw data: training/test split, env-variables, ...
+            self.env_variables, _, _, self.data_train, self.data_control = data_from_csv(self.root_paths['samples_csv'], delimiter=delimiter)
+
             print('Prepared the raw {} behaviour. Saving for next run.'.format(self.file_locs['samples_csv']))
-            pickle_dump(self.root_dir / self.file_locs['samples_ready_p'], data_prepared)
+            data_prepared = (self.env_variables, self.data_train, self.data_control)  # sfeh version1 remove numpy version
+            pickle_dump(self.root_paths['samples_ready_p'], data_prepared)
         else:
             raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')  # samples_ready_p or samples_csv required
 
@@ -682,16 +704,8 @@ class ExplainableGP(object):
             pass  # sfeh: if you want to load information from extra file, check for this file here
         else:
             # sfeh env_variables, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
-            yaml_dump(self.root_dir / self.file_locs['env_variables_yaml'], data_prepared[0], print_type=print_type)
+            yaml_dump(self.root_paths['env_variables_yaml'], data_prepared[0], print_type=self.print_type)
 
-        return data_prepared
-
-    def activate_dataset(self, data_prepared):
-        """
-        separate loading the prepared data into the main class.
-        Why like this? I needed to find a bug in the data_from_csv file and
-        did not want to start the whole stuff everytime
-        """
         self.env_variables, self.data_train, self.data_control = data_prepared  # data_control is data_test
         self.update_old_runs()
         self.remove_old_variables()
@@ -703,7 +717,7 @@ class ExplainableGP(object):
 
         """
         if not file_evolverates:
-            file_evolverates = self.root_dir / self.file_locs['evolve_file']
+            file_evolverates = self.root_paths['evolve_file']
 
         file_evolverates = Path(file_evolverates)
         if Path.is_file(file_evolverates):
@@ -713,7 +727,7 @@ class ExplainableGP(object):
         else:
             print_warning('ww', 'Opt-in not specified: Evolve-file for GP evolve functions defined! Trying to choose them for you.')
 
-        # yaml_dump(self.root_dir / self.file_locs['file_info_evolve_dict_yaml'], evolve_list)  # todo todo save the config
+        # yaml_dump(self.root_paths['file_info_evolve_dict_yaml'], evolve_list)  # todo todo save the config
         # sfeh: if you want to load information from extra file, check for this file here
 
         return
@@ -768,7 +782,7 @@ class ExplainableGP(object):
             print_warning('ww', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
             # distributions_as_string is already given...
             # sfeh samples from csv?
-            # info_file = file_make_dir(self.root_dir / self.file_locs['info_distributions_yaml'])
+            # info_file = file_make_dir(self.root_paths['info_distributions_yaml'])
             # yaml_dump(info_file, distributions_as_string)
 
         choose_distributions = {'2f': [], '2b': []}
@@ -1765,7 +1779,7 @@ class ExplainableGP(object):
             tree_id = pop_tree_choose(self.population_base)
             tree = self.population_base[tree_id]
 
-            fitness = tree_get_fitness(tree, precision=self.config['precision'])
+            fitness = tree_get_fitness(tree, precision=self.config['fitness_accuracy'])
 
             if self.kernel.fitness_compare(fitness, best_fitness, mode='better'):
                 best_id = tree_id
@@ -1800,13 +1814,13 @@ class ExplainableGP(object):
         #                          ''.format(expr_raw, expr_sym))
 
         self.origin_tree = copy.deepcopy(tree)
-        self.origin_meta = {'expr_raw': expr_raw, 'expr_sym': expr_sym, 'parsimony': 0}
 
         fitness_train = self.tree_eval_fitness_train(tree)
-        # except Exception as ex:
-        #     raise Exception('Your origin_meta algorithm already caused an exception: {}'.format(ex))
 
-        self.origin_meta['fitness_train'] = fitness_train
+        self.origin_meta = {'expr_raw': expr_raw,
+                            'expr_sym': expr_sym,
+                            'parsimony': 0,
+                            'fitness_train': fitness_train}
 
         self.parsimony_best_meta[0] = self.origin_meta
         self.pareto[0] = copy.deepcopy(self.origin_meta)
@@ -1841,6 +1855,8 @@ class ExplainableGP(object):
 
         if not check_value_is_real(fitness_train):
             raise Exception('Fitness is inf or nan: {}'.format(fitness_train))  # happens, eg when values are soo wrong that it leaves the float-range
+
+        fitness_train = round(fitness_train, self.config['fitness_accuracy'])
 
         return fitness_train
 

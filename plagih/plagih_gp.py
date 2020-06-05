@@ -20,7 +20,6 @@ env_variables_yaml = 'info/env_variables.yaml'
 # /run_files/
 file_config_yaml = 'run_files/config.yaml'
 file_config_json = 'run_files/config.json'
-samples_ready_p = 'run_files/samples_ready.p'
 file_evolve_functions = 'run_files/evolve_functions.yaml'
 samples_csv = 'run_files/samples.csv'
 distributions_file = 'run_files/distributions_file.yaml'
@@ -116,26 +115,7 @@ def load_startconfig(root_dir):
     # return config
 
 
-def load_config(root_dir):
-    config_yaml_path = root_dir / file_config_yaml
-
-    if Path.is_file(config_yaml_path):  # Load config.yaml
-        with Path.open(config_yaml_path, 'r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-    else:
-        config_json_path = root_dir / file_config_json
-
-        if Path.is_file(config_json_path):  # Load config.yaml
-            printez('i', 'Loading json-config, yaml-version was not found...')
-            with Path.open(config_yaml_path, 'r') as file:
-                json.load(file)
-        else:
-            print_warning('w', 'No config (yaml/json) found in:\n{}'.format(config_yaml_path))
-            config = {}
-    return config
-
-
-def load_label_list(root_dir):
+def load_label_list(root_dir, user_origin_csv=None):
     """
 
     """
@@ -144,8 +124,10 @@ def load_label_list(root_dir):
     tree_numpy_csv_path = root_dir / tree_numpy_csv
     label_list = None
     modify_list = None
-    if Path.is_file(tree_labels_csv_path):
-        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)
+    if user_origin_csv:
+        label_list, modify_list = labellists_from_csv(user_origin_csv)
+    elif Path.is_file(tree_labels_csv_path):
+        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)  # sfeh lol it does just the same?
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
         print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
         raise
@@ -156,9 +138,7 @@ def load_label_list(root_dir):
             print('Assuming all variables are floats, ö')
             ptree = karoo_ptree_from_expr(expr, 'ö')
             tree = ptree.get_uninstanced_tree()
-            print('ASD', tree)
-            # tree_pretty_print(tree)  # sfeh not working??
-            print('ASD DONE')
+            tree_pretty_print(tree)  # sfeh not working?? todo debug
             tree_save_csv(tree, tree_labels_csv_path)
             raise  # sfeh
     else:
@@ -166,29 +146,42 @@ def load_label_list(root_dir):
     return label_list, modify_list
 
 
-def gp_run(root_dir, force_new_run, eval_action):
+def load_config(config_path):
     """
-    Loads important files in your run-folder
-    - load config.yaml
-    - load samples_ready_p.p or samples.csv
-    - load operators.csv
-    - load tree
+
     """
-    # start_configuration = load_startconfig(root_dir)
+    try:
+        root_dir = config_path.parent
+        file_extension = config_path.suffix
+        if file_extension == '.yaml':
+            with Path.open(config_path, 'r') as file:
+                config = yaml.load(file, Loader=yaml.FullLoader)
+        elif file_extension == '.json':
+            with Path.open(config_path, 'r') as file:
+                config = json.load(file)
+        else:
+            raise
+    except IOError as ioex:
+        raise IOError('Config file could not be loaded. Path: {}\nException: {}'.format(config_path, ioex))
 
-    config = load_config(root_dir)
+    return root_dir, config
 
-    if force_new_run:  # for convenience. Makes restarting runs possible from command line
-        config['force_new_run'] = True
+
+def gp_run(config_path, force_new_run, eval_action, data_prepared_p_path, origin_tree):
+    """
+    
+    """
+
+    root_dir, config = load_config(config_path)
+
+    config['force_new_run'] = force_new_run
     config['eval_action'] = eval_action
 
-    gp = ExplainableGP(root_dir, opt_config=config)
+    gp = ExplainableGP(root_dir, config, data_prepared_p_path=data_prepared_p_path, opt_origin_tree_csv=origin_tree)
 
-    data_prepared = load_data_prepared(root_dir)
-    gp.activate_dataset(data_prepared)
-
-    label_list, modify_list = load_label_list(root_dir)
+    label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:
+        # todo beautify
         env_variables = gp.get_env_variables()
         xtype_list = xtypes_from_labels(label_list, env_variables)
         origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
@@ -200,18 +193,16 @@ def gp_run(root_dir, force_new_run, eval_action):
     sys.exit()
 
 
-def analyse(root_dir):
+def analyse(config_path):
     """
     write all analysing files.
     - pareto (txt, latex_trees, agents)
     - plots (pareto, best)
     """
 
-    config = load_config(root_dir)
-    gp = ExplainableGP(root_dir, opt_config=config)
+    root_dir, config = load_config(config_path)
+    gp = ExplainableGP(root_dir, config)
 
-    data_prepared = load_data_prepared(root_dir)
-    gp.activate_dataset(data_prepared)
     gp.plagih_update_analysis()
 
 

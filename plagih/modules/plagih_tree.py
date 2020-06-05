@@ -1911,7 +1911,7 @@ def tree_evolve_reduce(tree, env_variables, completely=True):
                     tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
                 except Exception as ex:
                     print_e('This failed tree should have been kicked out earlier: ex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
-                    tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
+                    # tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)  # sfeh todo debug
                     pass  # This might occur when a tree is sympified (?)
         return tree
     except Exception as ex:
@@ -2101,6 +2101,11 @@ def tree_evolve_complexify(tree, same_arity=True):
     sfeh open
     a function that inserts certain functions that hopefully give good opportunities for next generations
     eg: in old_node '+', inserting Ifte(True, '+', 1.23) or so...
+
+    todo Discussion: which filters?
+    - filter applied on constant: large values will have large changes.
+    - add a regular filter
+    # constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
     """
     pass
 
@@ -2112,14 +2117,21 @@ def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter',
 
     if term_type == 'float':
         if filter_type == 'gaussian_filter':
-            constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
+            if np.random.choice(['v1', 'v2']) == 'v1' or constant == 0:
+                filter = np.random.normal(0, 0.1)  # sfeh better adjustments?
+                constant += filter
+            else:
+                constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
         else:
-            print_warning('w', 'Warning: Filter  not specified. Please specify a filter_type.')
-            constant = np.random.normal(constant, 0.1)
+            raise Exception('w', 'Warning: Filter  not specified. Please specify a filter_type.')
         constant = round_constant(constant, float_accuracy)
 
     if term_type == 'int':
-        constant = int(np.random.normal(constant, 1))  # sfeh
+        if np.random.choice(['v1', 'v2']) == 'v1' or constant == 0:
+            filter = np.random.normal(0, 1)  # sfeh better adjustments?
+            constant += filter
+        else:
+            constant = int(np.random.normal(constant, 1))  # sfeh
 
     if term_type == 'bool':
         constant = not constant

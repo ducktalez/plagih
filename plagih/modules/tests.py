@@ -34,11 +34,6 @@ class TestHelpers:
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
 
-        self.distributions_as_string = {'2f': [lambda: np.random.normal(1, 2),
-                                               lambda: np.random.normal(1, 1),
-                                               lambda: np.random.randint(0, 10)],
-                                        '2b': [lambda: np.random.choice([True, False])]}
-
         self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
         self.tree1 = TEST_karoo_tree_from_labellist(['+', '+', '*', '-', '1', '2', '3', '4', '5'], self.env_bundle)
         self.tree2 = TEST_karoo_tree_from_labellist(['+', '-', '*', '1', '2', '3', '4'], self.env_bundle)

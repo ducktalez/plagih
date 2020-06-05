@@ -29,7 +29,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, root_dir, opt_config=None, opt_file_locs=None, opt_evolve_list=None):
+    def __init__(self, root_dir, opt_config=None, opt_file_locs=None, opt_evolve_list=None, opt_distributions_as_string=None):
 
         self.name = root_dir.name
         print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET,
@@ -173,11 +173,21 @@ class ExplainableGP(object):
                 'tree_labels_csv': 'run_files/tree_labels.csv',
                 'tree_numpy_csv': 'run_files/tree_numpy.csv',
             },
+            'distributions_as_string':
+                {'2f': ['lambda: np.random.normal(1,2)',
+                        'lambda: np.random.normal(1,1)',
+                        'lambda: np.random.randint(0, 10)'],
+                 '2b': ['lambda: np.random.choice([True, False])'],
+                 'observed_floats': 100}
         }
 
         self.evolve_list = self.config['evolve_list']
         self.file_locs = self.config['file_locs']
-        self.evolve_list = self.config['evolve_list']
+
+        distributions_as_string = self.config['distributions_as_string']
+        if opt_distributions_as_string:
+            distributions_as_string.update(opt_distributions_as_string)
+        self.load_tree_builders_distributions(distributions_as_string, opt_path_distributions_yaml=opt_distributions_as_string)
 
         def update_dict_nested(d, u):
             for k, v in u.items():
@@ -186,6 +196,7 @@ class ExplainableGP(object):
                 else:
                     d[k] = v
             return d
+
         # self.config = update_dict_nested(self.config, config)
 
         if opt_config:  # sfeh test
@@ -195,8 +206,7 @@ class ExplainableGP(object):
         if opt_evolve_list:
             self.evolve_list.update(opt_evolve_list)
 
-        self.load_tree_builders_choose_oparray()
-        self.load_tree_builders_distributions()
+        self.load_tree_builders_choose_oparray(opt_path_opyaml=None)  # todo
 
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
@@ -607,7 +617,7 @@ class ExplainableGP(object):
             if self.config['overwrite periodic gp_files']:
                 subfolder = ''
             else:
-                subfolder = Path(self.file_locs['folder_steps'] / 'Gen-{}'.format(self.gen_id))
+                subfolder = Path(self.file_locs['folder_steps']) / 'Gen-{}'.format(self.gen_id)
             self.file_all_plots(self.root_dir, subfolder=subfolder)
 
         if save_run:
@@ -648,13 +658,41 @@ class ExplainableGP(object):
                 self.env_variables[xtype].remove(obs_name)
         return
 
+    def load_data_prepared(self, delimiter=',', print_type=None):
+        """
+        loading the data which the GP will be working on.
+        The .csv-file is prepared (loading correct data-type, splitting data, ...)
+        and saved as pickle-file for reloading runs.
+        This is especially important, as the split in training and test-data must be the same.
+        """
+        if Path.is_file(self.root_dir / self.file_locs['samples_ready_p']):  # maybe the data was already prepared earlier
+            data_prepared = pickle_load(self.root_dir / self.file_locs['samples_ready_p'])
+        elif Path.is_file(self.root_dir / self.file_locs['samples_csv']):  # We have to split and check the data
+            # preparing the data from raw csv-file
+            # todo data_test_panda
+            self.env_variables, self.data_train_panda, self.data_control_panda, self.data_train, self.data_control = data_from_csv(self.root_dir / self.file_locs['samples_csv'], delimiter=delimiter)
+            data_prepared = self.env_variables, self.data_train, self.data_control  # sfeh version1 remove numpy version
+            print('Prepared the raw {} behaviour. Saving for next run.'.format(self.file_locs['samples_csv']))
+            pickle_dump(self.root_dir / self.file_locs['samples_ready_p'], data_prepared)
+        else:
+            raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')  # samples_ready_p or samples_csv required
+
+        dataspec_file = self.root_dir / 'run_files/data_specification.yaml'  # todo
+        if dataspec_file.is_file():
+            pass  # sfeh: if you want to load information from extra file, check for this file here
+        else:
+            # sfeh env_variables, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
+            yaml_dump(self.root_dir / self.file_locs['env_variables_yaml'], data_prepared[0], print_type=print_type)
+
+        return data_prepared
+
     def activate_dataset(self, data_prepared):
         """
         separate loading the prepared data into the main class.
         Why like this? I needed to find a bug in the data_from_csv file and
         did not want to start the whole stuff everytime
         """
-        self.env_variables, self.data_train, self.data_control = data_prepared
+        self.env_variables, self.data_train, self.data_control = data_prepared  # data_control is data_test
         self.update_old_runs()
         self.remove_old_variables()
 
@@ -715,34 +753,32 @@ class ExplainableGP(object):
 
         return
 
-    def load_tree_builders_distributions(self, data_prepared=None):
+    def load_tree_builders_distributions(self, distributions_as_string, opt_path_distributions_yaml=None):
         """
 
         """
-
-        # load distributions_file
-        distributions_yaml = self.root_dir / self.file_locs['distributions_file']
-        if Path.is_file(distributions_yaml):
-            with Path.open(Path(distributions_yaml), 'r') as file:
+        # double check load
+        if not opt_path_distributions_yaml:
+            opt_path_distributions_yaml = self.file_locs['distributions_file']
+        opt_path_distributions_yaml = self.root_dir / opt_path_distributions_yaml
+        if Path.is_file(opt_path_distributions_yaml):
+            with Path.open(opt_path_distributions_yaml, 'r') as file:
                 distributions_as_string = yaml.load(file, Loader=yaml.FullLoader)
         else:
             print_warning('ww', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
-            distributions_as_string = {'2f': ['lambda: np.random.normal(1,2)',
-                                              'lambda: np.random.normal(1,1)',
-                                              'lambda: np.random.randint(0, 10)'],
-                                       '2b': ['lambda: np.random.choice([True, False])'],
-                                       'observed_floats': 100}  # sfeh samples from csv?
-            info_file = file_make_dir(self.root_dir / self.file_locs['info_distributions_yaml'])
-            yaml_dump(info_file, distributions_as_string)
+            # distributions_as_string is already given...
+            # sfeh samples from csv?
+            # info_file = file_make_dir(self.root_dir / self.file_locs['info_distributions_yaml'])
+            # yaml_dump(info_file, distributions_as_string)
 
         choose_distributions = {'2f': [], '2b': []}
 
-        if data_prepared and distributions_as_string.get('observed_floats'):
-            env_variables, data_train, _ = data_prepared
-            action_columns = list(range(len(env_variables['obs_name']), len(data_train[0])))  # remove these
+        take_data_samples = distributions_as_string.get('observed_floats')
+        if take_data_samples:
+            action_columns = list(range(len(self.env_variables['obs_name']), len(self.data_train[0])))  # remove these
             # non_float_columns = ... # sfeh: data types must be float for this to work, remove non-float values. probably, these do not really exist.
-            observ_values = np.delete(data_train, action_columns, 1)
-            variables_set = np.random.choice(observ_values.flatten(), distributions_as_string.get('observed_floats'))  # 2nd param is probably '100'
+            observ_values = np.delete(self.data_train, action_columns, 1)
+            variables_set = np.random.choice(observ_values.flatten(), take_data_samples)  # 2nd param is probably '100'
             choose_distributions['2f'].extend([lambda: np.random.choice(variables_set)]),
 
         choose_distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),

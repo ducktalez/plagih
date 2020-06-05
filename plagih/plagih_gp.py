@@ -135,35 +135,6 @@ def load_config(root_dir):
     return config
 
 
-def load_data_prepared(root_dir, delimiter=',', print_type=None):
-    """
-    loading the data which the GP will be working on.
-    The .csv-file is prepared (loading correct data-type, splitting data, ...)
-    and saved as pickle-file for reloading runs.
-    This is especially important, as the split in training and test-data must be the same.
-    """
-    if Path.is_file(root_dir / samples_ready_p):  # maybe the data was already prepared earlier
-        data_prepared = pickle_load(root_dir / samples_ready_p)
-    elif Path.is_file(root_dir / samples_csv):  # We have to split and check the data
-        # preparing the data from raw csv-file
-        env_variables, data_train_panda, data_test_panda, data_train_numpy, data_test_numpy = data_from_csv(root_dir / samples_csv, delimiter=delimiter)
-        data_prepared = env_variables, data_train_numpy, data_test_numpy  # sfeh version 1.0 remove numpy version
-        print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
-        pickle_dump(root_dir / samples_ready_p, data_prepared)
-    else:
-        raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
-
-    dataspec_file = root_dir / 'run_files/data_specification.yaml'
-    if dataspec_file.is_file():
-        pass  # sfeh: if you want to load information from extra file, check for this file here
-    else:
-        # sfeh env_variables, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
-        # todo only, if these files are meant to be created. (not in gen 0, make special operator for this. wird eh überschrieben)
-        yaml_dump(root_dir / env_variables_yaml, data_prepared[0], print_type=print_type)
-
-    return data_prepared
-
-
 def load_label_list(root_dir):
     """
 
@@ -237,9 +208,9 @@ def analyse(root_dir):
     """
 
     config = load_config(root_dir)
-    data_prepared = load_data_prepared(root_dir)
-
     gp = ExplainableGP(root_dir, opt_config=config)
+
+    data_prepared = load_data_prepared(root_dir)
     gp.activate_dataset(data_prepared)
     gp.plagih_update_analysis()
 

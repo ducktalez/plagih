@@ -1,1 +1,0 @@
-Ifte(Andb((cartVel == 0), Andb((-0.6 <= cartPos), (cartPos <= -0.4))), Ifte(True, 2, 0), Ifte(False, Ifte((cartVel < 0), 0, 2), Ifte((cartVel < 0), 0, 2)))

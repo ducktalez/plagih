@@ -27,11 +27,11 @@ def main(argv):
     # parser.add_argument('integers', metavar='N', type=int, nargs='+', help='an integer for the accumulator')
     # parser.add_argument('--sum', dest='accumulate', action='store_const', const=sum, default=max, help='sum the integers (default: find the max)')
     # parser.add_argument("--data_dir", type=Path, default=Path(__file__).absolute().parent / "data", help="Path to the data directory",)
-    # parser.add_argument('-config_file', type=argparse.FileType('r'))
 
     parser.add_argument('-config', type=Path, metavar='CONFIG_YAML', help='The config file in the run directory.')
+    parser.add_argument('-out_dir', type=Path, help='A custom output folder (root_dir). Not stable yet.')  # sfeh
     parser.add_argument('-action', type=int, default=0, help='If there is more than one action, choose the right one.')
-    parser.add_argument('-data_prepared_p', type=Path)
+    parser.add_argument('-data_prepared', '-samples_ready', type=Path)
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-data_csv', type=Path)
     parser.add_argument('-force_new_run', action='store_true')
@@ -40,15 +40,16 @@ def main(argv):
     # print(args)
 
     config_path = args.config
+    out_dir = args.out_dir
     force_new_run = args.force_new_run
     eval_action = args.action
-    data_prepared_p = args.data_prepared_p
+    data_prepared = args.data_prepared
     origin_tree = args.origin_tree
 
     if args.analyse:
         plagih_gp.analyse(config_path)
     else:
-        plagih_gp.gp_run(config_path, force_new_run, eval_action, data_prepared_p, origin_tree)
+        plagih_gp.gp_run(config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
 
 
 if __name__ == "__main__":

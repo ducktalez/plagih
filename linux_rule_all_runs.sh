@@ -1,0 +1,2 @@
+echo 'Starting all runs in this file! Todo: Parallel runs'
+python start.py -config run_examples/testrun/config.yaml -samples_ready benchmarks/run_load_files/#MTC/MTC200_data_prepared.p -origin_tree  benchmarks/run_load_files/#MTC/tree_gpFriendly_fix.csv

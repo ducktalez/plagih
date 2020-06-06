@@ -160,24 +160,27 @@ def load_config(config_path):
             with Path.open(config_path, 'r') as file:
                 config = json.load(file)
         else:
-            raise
+            config = {}  # sfeh test this
     except IOError as ioex:
         raise IOError('Config file could not be loaded. Path: {}\nException: {}'.format(config_path, ioex))
 
     return root_dir, config
 
 
-def gp_run(config_path, force_new_run, eval_action, data_prepared_p_path, origin_tree):
+def gp_run(config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
     """
     
     """
 
     root_dir, config = load_config(config_path)
+    if out_dir:
+        root_dir = out_dir  # todo test
 
     config['force_new_run'] = force_new_run
     config['eval_action'] = eval_action
 
-    gp = ExplainableGP(root_dir, config, data_prepared_p_path=data_prepared_p_path, opt_origin_tree_csv=origin_tree)
+    # sfeh , opt_origin_tree_csv=origin_tree, out_dir=out_dir
+    gp = ExplainableGP(root_dir, config, data_prepared_path=data_prepared_path)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:

@@ -143,7 +143,9 @@ def pickle_dump(path, data, print_type=None):
 
 
 def yaml_load(yaml_path):
-
+    """
+    .yaml-file loader (saves two lines that I had to look up all the time)
+    """
     with Path.open(yaml_path, 'r') as file:
         loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)
     return loaded_yaml

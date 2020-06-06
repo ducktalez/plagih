@@ -14,8 +14,6 @@ from pathlib import Path
 import textwrap
 from plagih.modules.plagih_data import *
 
-# todo (in start) check if the folder where the run should be in actually exists. currently traps in the operators.csv-loading process
-
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
@@ -29,7 +27,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, opt_distributions_as_string=None, data_prepared_p_path=None, opt_origin_tree_csv=None):
+    def __init__(self, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, data_prepared_path=None, opt_origin_tree_csv=None, out_dir=None):
 
         self.name = root_dir.name  # sfeh probably there are better names
         print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET, root_dir))
@@ -213,12 +211,13 @@ class ExplainableGP(object):
             self.root_paths[file_key] = Path(root_dir / file_loc)
         # self.root_paths.update(user_file_paths)
 
-        self.activate_dataset(data_prepared_p_path=data_prepared_p_path)
+        self.activate_dataset(data_prepared_p_path=data_prepared_path)
 
-        distributions_as_string = self.config['distributions_as_string']
-        if opt_distributions_as_string:
-            distributions_as_string.update(opt_distributions_as_string)
-        self.load_tree_builders_distributions(distributions_as_string, opt_path_distributions_yaml=opt_distributions_as_string)
+        # distributions_as_string = self.config['distributions_as_string']
+        # sfeh
+        # if opt_distributions_as_string:
+        #     distributions_as_string.update(opt_distributions_as_string)
+        self.load_tree_builders_distributions(path_user_distributions=None)
 
         if opt_evolve_list:
             self.evolve_list.update(opt_evolve_list)
@@ -767,19 +766,19 @@ class ExplainableGP(object):
 
         return
 
-    def load_tree_builders_distributions(self, distributions_as_string, opt_path_distributions_yaml=None):
+    def load_tree_builders_distributions(self, path_user_distributions=None):
         """
 
         """
         # double check load
-        if not opt_path_distributions_yaml:
-            opt_path_distributions_yaml = self.file_locs['distributions_file']
-        opt_path_distributions_yaml = self.root_dir / opt_path_distributions_yaml
-        if Path.is_file(opt_path_distributions_yaml):
-            with Path.open(opt_path_distributions_yaml, 'r') as file:
-                distributions_as_string = yaml.load(file, Loader=yaml.FullLoader)
+        if not path_user_distributions:
+            path_user_distributions = self.root_paths.get('distributions_file')
+
+        if Path.is_file(path_user_distributions):
+            distributions_as_string = yaml_load(path_user_distributions)
         else:
-            print_warning('ww', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
+            print_warning('www', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
+            distributions_as_string = self.config['distributions_as_string']
             # distributions_as_string is already given...
             # sfeh samples from csv?
             # info_file = file_make_dir(self.root_paths['info_distributions_yaml'])

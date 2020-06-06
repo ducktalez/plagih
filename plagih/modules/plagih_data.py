@@ -14,18 +14,17 @@ import re
 def samples_header_line(row):
     """
     samples.csv headerline:
-    cartVel|type=float|role=input|minmax=(-0.07, 0.07)  # todo better solution please
+    cartVel|type=float|role=input|minmax=(-0.07, 0.07)
     goal_action: (todo) only one action can be the result. vectors should be implemented someday
 
-    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, cartPos: {}, cartVel: {}}  # todo name vs label??
+    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, cartPos: {}, cartVel: {}}  # sfeh name vs label??
     env_variables['obs_name'] = {'type': 'float', 'role': None, 'pos': ii}
     env_variables['action_at'}[0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii, 'unique_outputs_num': None}
 
     param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
-    # delete name or label from dict todo
     """
     env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, 'param_at': {}}  # to identify all observation types
-    env_observation = {}  # todo
+    env_observation = {}
     env_xtype_list = {'2b': [], '2f': []}  # for choosing random variables
     env_param_at = {}  #
     param_at = {}  #

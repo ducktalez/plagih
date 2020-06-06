@@ -121,7 +121,7 @@ class ExplainableGP(object):
                 {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.05,
                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 45, 6), 'build_method': 'full'}}}],
 
-            # todo todotodo
+            # todo
             'evolve_list_initial': {
                 'from_origin': [
                     {'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
@@ -451,7 +451,7 @@ class ExplainableGP(object):
 
         if self.origin_exists():
             # self.config['evolve_list_initial']['from_origin']
-            # todo todotodo todo todo this needs a quick fix
+            # sfeh why not :P
             self.pop_append(self.origin_tree, last_evolution='initial')
         else:
             random_rate = 0  # The total amount of random creations in the evolve configuration. usually like 0.3 or so. sfeh: make first gen randomly?
@@ -760,7 +760,7 @@ class ExplainableGP(object):
                                   ['Ifte', 2],
                                   ['Mini', 1], ['Maxi', 1]])
 
-            # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s') # todo
+            # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s') # sfeh save in config?
 
         self.choose_oparray2 = oparray_from_list(operators)
 
@@ -838,7 +838,6 @@ class ExplainableGP(object):
         # histogram_data = np.concatenate((histogram_data.reshape(-1, 1), pairwise_fitness.reshape(-1, 1)), axis=1)
         # histogram_data = np.multiply.reduce(histogram_data, axis=1)
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
-            # todo add the min max to the csv standard and warn if it is not specified
             # todo only histograms for the variables that are in a tree?
         # todo random histogramme werte am Rand?
         """
@@ -933,10 +932,9 @@ class ExplainableGP(object):
             if 'discrete' in self.kernel.kernel:
                 # todo test
                 unique_actions = self.env_variables['action_at'][self.config['eval_action']]['unique_outputs_num']
-                action_bins = np.linspace(-0.5 + act_min, 0.5 + act_max, unique_actions + 1)
+                action_bins = np.linspace(-0.5 + act_min, 0.5 + act_max, 2*unique_actions + 1)
             else:
                 action_bins = np.linspace(act_min, act_max, 10)  # check out histogram_bin_edges, maybe it is better todo also 10 bins?
-            # action_bins = np.linspace(-2-.5, 2+.5, 5+1)  # todo
 
             fig, ax = plt.subplots()
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
@@ -950,7 +948,6 @@ class ExplainableGP(object):
             plt.close()  # todo
 
     def file_conclusion(self, path):
-
         """
         write the performance of the config to disc
         """

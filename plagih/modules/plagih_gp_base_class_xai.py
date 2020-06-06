@@ -141,7 +141,7 @@ class ExplainableGP(object):
             # todo these are irrelevant, when the actual paths are used. file-loc updates might even be wrong.
             #  make a difference between write/read?
             'file_locs': {
-                'pycode_load': '../../benchmarks/gym_mountaincar/agents/quick_eval.py',  # todo make pretty solution
+                'pycode_load': '/benchmarks/gym_mountaincar/agents/quick_eval.py',  # todo make pretty solution
                 'example_runs': 'run_examples/',
 
                 'folder_plots': 'plots/',
@@ -1086,7 +1086,7 @@ class ExplainableGP(object):
                                  '{}\n\n' \
                                  '{}'.format(pycode_agents, pycode_names, py_agent_tuples)
 
-        pth = file_make_dir(root_path / self.file_locs['file_pycode'])
+        pth = file_make_dir(root_path / self.config['file_locs']['file_pycode'])  # todo where did self.file_locs go? oh wait, analysis? :P
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
             self.printpl('ff', '{}'.format(pth))
@@ -1099,7 +1099,7 @@ class ExplainableGP(object):
 
         # sfeh remove this (?)
 
-        if Path.is_file(root_dir / self.file_locs.get('pycode_load')):
+        if Path.is_file(Path.cwd() / self.file_locs.get('pycode_load')):
             #  if direct execution is wished...# exec(Path.open("custom_eval_agents.py").read())
 
             # auto_import_eval = 'import sys\n' \

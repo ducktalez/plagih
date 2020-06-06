@@ -135,8 +135,8 @@ def load_label_list(root_dir, user_origin_csv=None):
         print('SFEH needs to create an option to make trees from expression')
         with Path.open(tree_expr_txt_path) as txt_file:
             expr = txt_file.read()  # sfeh requires separate handling?
-            print('Assuming all variables are floats, ö')
-            ptree = karoo_ptree_from_expr(expr, 'ö')
+            print('Assuming all variables are floats, sfeh')
+            ptree = karoo_ptree_from_expr(expr, 'sfeh')
             tree = ptree.get_uninstanced_tree()
             tree_pretty_print(tree)  # sfeh not working?? todo debug
             tree_save_csv(tree, tree_labels_csv_path)

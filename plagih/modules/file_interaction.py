@@ -11,51 +11,6 @@ try:
 except Exception as ex:
     print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
 
-example_runs = 'run_examples/'
-
-run_files = 'run_files/'
-folder_plots = 'plots/'
-folder_steps = 'steps/'
-folder_pop_analysis = 'pop_dist/'
-folder_histograms = 'agents/'
-
-file_backup_pickle = 'backup/backup.p'  # backup-version is set here
-file_conclusion = 'conclusion.txt'
-
-# /agents/
-trees_tex = 'agents/agents_trees.tex'
-file_pycode = 'agents/agents.py'
-file_pycode_eval = 'agents/eval_agents.py'
-
-# /info/
-file_pareto = 'info/pareto.txt'
-info_config_yaml = 'info/config.yaml'
-file_info_config_json = 'info/config.json'
-file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
-info_distributions_yaml = 'info/distributions_file.yaml'
-env_variables_yaml = 'info/env_variables.yaml'
-
-# /run_files/
-file_config_yaml = 'run_files/config.yaml'
-file_config_json = 'run_files/config.json'
-samples_ready_p = 'run_files/samples_ready.p'
-file_evolve_functions = 'run_files/evolve_functions.yaml'
-samples_csv = 'run_files/samples.csv'
-operators_csv = 'run_files/operators_csv.csv'
-operators_yaml = 'run_files/operators_csv.yaml'
-operators_info = 'run_files/operators_csv.yaml'
-distributions_file = 'run_files/distributions_file.yaml'
-tree_expr_txt = 'run_files/tree_expr.txt'
-tree_labels_csv = 'run_files/tree_labels.csv'
-tree_numpy_csv = 'run_files/tree_numpy.csv'
-
-pycode_load = 'benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
-
-folder_histograms = 'agents/'
-trees_tex = 'agents_trees.tex'
-file_pycode = 'agents/agents.py'
-file_pycode_eval = 'eval_agents.py'
-
 T_num_lines = 15  # sfeh this var is not found otherwise
 
 
@@ -80,7 +35,7 @@ def file_make_dir(file_path):
     return p
 
 
-def write_file_pareto_text(pareto, root_path):
+def write_file_pareto_text(pareto, root_path, file_pareto):
     """
     Save all the pareto efficient candidates to file
     """
@@ -227,7 +182,7 @@ def plot_styleup(x, y, set_left=None, set_right=None, set_top=None, right_paddin
 def plot_end(data_2d, plotname_path,
              plt_title='', plt_curve_label='', plt_x_label='', plt_y_label='', yscale='linear',
              step_where='', plt_xparam='', plt_hist=False,
-             linestyle='None',
+             linestyle='-',
              marker='',
              set_left=None, set_right=None, set_top=None,
              right_padding=1.05, top_padding=1.05,
@@ -258,6 +213,8 @@ def plot_end(data_2d, plotname_path,
     :param subfolder: save plot in plots/*subfolder*, e.g. if this plot is created in every generation
     :return:
 
+    Options that are not used
+    # plt.legend()
     sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
     """
 
@@ -265,46 +222,35 @@ def plot_end(data_2d, plotname_path,
         print_e('Plotting empty array is not possible! Data={}'.format(data_2d))
         return
 
-    x, y = [], []
-    for a, b in data_2d:
-        x.append(a)
-        y.append(b)
-
-    # x, y = data_2d.reshape(-1, 2).T  # sfeh this could be a more pythonic way, but tuples can not be reshaped.
-
-    # bottom, top = plt.ylim()
-    # left, right = plt.xlim()
+    x, y = data_2d
 
     top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
 
-    if beyond_lines:  # adding a point to the edges to imply that there are no more (better pareto) values
-        x = [x[0]] + x + [new_right + 1]
-        y = [new_top + 1] + y + [y[-1]]
+    if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
+        x = np.concatenate([[x[0]], x, [new_right + 1]])
+        y = np.concatenate([[new_top + 1], y, [y[-1]]])
 
     fig, ax = plt.subplots()
-
-    x = np.array(x)  # sfeh this could have been done earlier...
-    y = np.array(y)
-
-    if step_where:
-        ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
-    else:
-        ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
-        if fill_variance:
-            pass  # todo
-            # fill_variance = np.array([x[1] for x in fill_variance.items()])  # first, extract 2nd val from tuple, then make the list a np-array
-            # ax.fill_between(x, y-fill_variance, y+fill_variance, alpha=0.2)
-
     ax.set_yscale(yscale)
     ax.set_ylim(min(bottom, 0), new_top)
     ax.set_xlim(min(left, 0), new_right)
-    # fig.set_margins(x=0, y=0)
     fig.tight_layout()
     ax.set_xlabel(plt_x_label)
     ax.set_ylabel(plt_y_label)
     ax.set_title(plt_title)
 
-    # plt.legend()
+    if step_where:
+        ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
+    else:
+        ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+        if fill_variance is not None:
+            x_std, y_var = fill_variance
+            y_std = np.sqrt(y_var)
+            lower_bound_stderr = y-y_std
+            upper_bound_stderr = y+y_std
+            ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
+            ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
+
     if subfolder:  #
         plotname_path = folder_make_dir(plotname_path / subfolder)
 
@@ -316,22 +262,6 @@ def plot_end(data_2d, plotname_path,
 
     plt.tight_layout()
     plt.savefig(plotname_path / '{}.png'.format(plt_title))
-    # plt.close()  # Stackoverflow said that this is too much, clf should be better
-    plt.clf()
+    plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
     return
 
-#
-# def plot_histogram(x, plt):
-#     """
-#     Creating histograms for the agents
-#     todo delete?
-#     """
-#     top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
-#     n, bins, patches = plt.hist(x, bins='auto', density=1, alpha=0.75)  # not used: facecolor='blue', bins=20
-#
-#     # import matplotlib.mlab as mlab
-#     # # add a 'best fit' line
-#     # y = mlab.normpdf( bins, mu, sigma)
-#     # l = plt.plot(bins, y, 'r--', linewidth=1)
-#
-#     plt.show()

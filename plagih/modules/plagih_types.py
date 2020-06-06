@@ -68,6 +68,7 @@ def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
 
     # insert a ?
     if np.random.choice(['obs', 'distrib']) == 'obs' and env_variables[xtype]:
+        # todo take temp_diff into consideration
         term = np.random.choice(env_variables[xtype])
     else:
         term = choose_constant(xtype, choose_distribution, float_accuracy)
@@ -75,6 +76,18 @@ def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
     term = str(term)  # sfeh
 
     return term
+
+
+def random_choose_tempobs(var_list):
+    """
+    # todo filter
+    """
+    x = len(var_list)
+    fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
+    p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
+    p = p / np.sum(p)  # the sum must be equal to 1
+    new_obs = np.random.choice(var_list, p=p)
+    return new_obs
 
 
 def choose_constant(xtype, choose_distributions, accuracy):
@@ -122,18 +135,21 @@ def choose_constant(xtype, choose_distributions, accuracy):
 #     return label, op[str(label)]['arity']
 
 
-def choose_operator(xtype, choose_oparray, arity=None):
+def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None):
     """
     Randomly choosing an operator for a given xtype.
     choose_oparray must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
+    # todo group function probability... larger arity? winkelfunktionen? manchmal ohne p-setzen?
+    # todo load the operators file must be updated (?)
     """
-    func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
+    if delete_this_version1 and choose_oparray2 is not None:
+        func_list, probability_list = choose_oparray2[xtype][arity]
+    else:
+        func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
     if not func_list:
         print_e('No function found with xtype={}, arity={}.\nfunc_arr_dummy:\n{}'.format(xtype, arity, choose_oparray))
     func = np.random.choice(func_list, p=probability_list)
-    # todo group function probability... larger arity? winkelfunktionen? manchmal ohne p-setzen?
-    # todo load the operators file must be updated (?)
     arity = label_get_arity(func)
     xtype = op[func]['xtype']
     return func, arity, xtype
@@ -156,8 +172,19 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
 
     # arity and xtype
     if arity is not None and xtype:
-        xtype_row = ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index(xtype)
-        func_tuple_list.extend(choose_oparray[xtype_row][arity])
+        try:
+            xtype_row = ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index(xtype)
+            func_tuple_list.extend(choose_oparray[xtype_row][arity])
+        except ValueError:
+            all_xfuncs = funcs_float if '2f' in xtype else funcs_bool
+            func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in all_xfuncs], [])
+            # if '2f' in xtype:
+            #     func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in funcs_float], [])
+            # elif '2b' in xtype:
+            #     func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in funcs_bool], [])
+            # else:
+            #     print_e('Arity given. xtype {} is not accepted. Must be \'2f\' or \'2b\'.'.format(xtype))
+            #     raise
 
     # arity
     if arity is not None and xtype is None:
@@ -177,11 +204,15 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
     if arity is None and xtype is None:
         func_tuple_list = sum(sum(choose_oparray, []), [])
 
-    func_list = [x[0] for x in func_tuple_list]
-    probability_list = [x[1] for x in func_tuple_list]
-    probability_normalised = [x/sum(probability_list) for x in probability_list]
+    try:
+        func_list = [x[0] for x in func_tuple_list]
+        probability_list = [x[1] for x in func_tuple_list]
+        probability_normalised = [x/sum(probability_list) for x in probability_list]
 
-    return func_list, probability_normalised
+        return func_list, probability_normalised
+
+    except:
+        return [], []
 
 
 def xtype_get_func_list_OLD(oparray, xtype=None, arity=None):
@@ -225,6 +256,8 @@ def xtype_get_func_list_OLD(oparray, xtype=None, arity=None):
 def xtypes_from_labels(label_list, env_variables):
     xtype_list = [xtype_get_from_label(label, env_variables) for label in label_list]
     return xtype_list
+
+# todo random: tree complexity steigt zu stark mit generationen an?
 
 
 def xtype_get_from_label(label, env_variables):

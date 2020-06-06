@@ -815,7 +815,7 @@ def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
                 raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray, choose_distributions, min_depth=0, build_method=None):
+def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray2, choose_distributions, min_depth=0, build_method=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -848,7 +848,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
-                    label, arity, xtype = choose_operator(xtype[-2:], choose_oparray, arity=None)
+                    label, arity, xtype = choose_operator(xtype[-2:], choose_oparray2=choose_oparray2, arity=None)
                 else:
                     raise
 
@@ -881,7 +881,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, oparray, choose_distributions, build_method='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, choose_oparray2, choose_distributions, build_method='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -929,7 +929,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variabl
         for enum, index in enumerate(func_at):  #
             t_xtype = tbdo_xtypes[index]
 
-            label, arity, label_xtype = choose_operator(t_xtype, oparray)
+            label, arity, label_xtype = choose_operator(t_xtype, choose_oparray2=choose_oparray2)
             # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), num_inserts, '>', arity, ')', (len(result_label_list) + num_inserts + arity), goal_max_nodes)
             if goal_max_nodes > (len(result_label_list) + num_inserts) + arity + 1:  # +1 = the start node which we must not forget
 
@@ -1868,7 +1868,7 @@ def tree_check_meta_exists(tree):
         return True
 
 
-def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray, env_variables, choose_distributions):
+def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray2, env_variables, choose_distributions):
     """
     Mutate a single mutatable point in any Tree.
     """
@@ -1879,7 +1879,7 @@ def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray, env_variables
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
     if arity > 0:
-        new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray, arity=arity)  # Function is same type, same arity
+        new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
         tree = tree_node_set_label(tree, node_id, new_label)
     else:
         new_label = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)  # 3 -> '2f' -> 5
@@ -1911,6 +1911,7 @@ def tree_evolve_reduce(tree, env_variables, completely=True):
                     tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
                 except Exception as ex:
                     print_e('This failed tree should have been kicked out earlier: ex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
+                    # tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)  # sfeh todo debug
                     pass  # This might occur when a tree is sympified (?)
         return tree
     except Exception as ex:
@@ -2100,6 +2101,11 @@ def tree_evolve_complexify(tree, same_arity=True):
     sfeh open
     a function that inserts certain functions that hopefully give good opportunities for next generations
     eg: in old_node '+', inserting Ifte(True, '+', 1.23) or so...
+
+    todo Discussion: which filters?
+    - filter applied on constant: large values will have large changes.
+    - add a regular filter
+    # constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
     """
     pass
 
@@ -2111,14 +2117,21 @@ def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter',
 
     if term_type == 'float':
         if filter_type == 'gaussian_filter':
-            constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
+            if np.random.choice(['v1', 'v2']) == 'v1' or constant == 0:
+                filter = np.random.normal(0, 0.1)  # sfeh better adjustments?
+                constant += filter
+            else:
+                constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
         else:
-            print_warning('w', 'Warning: Filter  not specified. Please specify a filter_type.')
-            constant = np.random.normal(constant, 0.1)
+            raise Exception('w', 'Warning: Filter  not specified. Please specify a filter_type.')
         constant = round_constant(constant, float_accuracy)
 
     if term_type == 'int':
-        constant = int(np.random.normal(constant, 1))  # sfeh
+        if np.random.choice(['v1', 'v2']) == 'v1' or constant == 0:
+            filter = np.random.normal(0, 1)  # sfeh better adjustments?
+            constant += filter
+        else:
+            constant = int(np.random.normal(constant, 1))  # sfeh
 
     if term_type == 'bool':
         constant = not constant
@@ -2275,19 +2288,21 @@ def latex_tree_node_get_forest(tree, node_id=root_id):
 
     # Get the best math-like representation for functions
     if label in op:
-        op_tex = op[label]['latex']
+        op_tex = op[label]['latex1']
         if op_tex is not None:
             latex_label = op_tex
 
     # todo float labels too long
+    # todo underline makes lower indices... good or bad?
 
-    latex_label = '{{{}}}'.format(latex_label)  # e.g. ->{cartPos}
+    latex_label = '${{{}}}$'.format(latex_label)  # e.g. ->{cartPos}
 
     # custom node design
-    if arity > 0:
-        extras += ',nonterminal'
-    else:
+    if arity == 0:
         extras += ',terminal'
+    #     extras += ',nonterminal'
+    # else:
+    #
 
         if tree_node_is_variable(tree, node_id):
             extras += ',variable'

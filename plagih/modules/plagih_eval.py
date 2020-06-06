@@ -180,39 +180,39 @@ class FitnessKernel:
         return pairwise_fitness
 
 
-class RegressionKernel(FitnessKernel):
-    """
-    first try to make separate classes
-    """
-
-    def __init__(self, kernel_name):
-        # super('regression')
-        self.name = 'regression'
-        super().__init__(kernel_name)
-
-    # def fitness_compare(self, fitness1, fitness2, mode='better'):
-    #     """
-    #     Compares the fitness of two candidates according to the kernel
-    #
-    #     Example:
-    #         >
-    #         fitness_compare
-    #     """
-    #
-    #     if fitness2 is None:
-    #         return True
-    #     elif fitness1 < fitness2:
-    #         return True
-    #     elif fitness1 == fitness2 and mode == 'better_or_equal':
-    #         return True
-    #     else super(RegressionKernel, self).fitness_compare()
-    #
-    # def tf_get_pairwise_fitness(self, solution, tf_result):
-    #     pairwise_fitness = tf.abs(solution - tf_result)
-    #     return pairwise_fitness
-    #
-    # def conclusion_get_text(self):
-    #     return
+# class RegressionKernel(FitnessKernel):
+#     """
+#     first try to make separate classes
+#     """
+#
+#     def __init__(self, kernel_name):
+#         # super('regression')
+#         self.name = 'regression'
+#         super().__init__(kernel_name)
+#
+#     # def fitness_compare(self, fitness1, fitness2, mode='better'):
+#     #     """
+#     #     Compares the fitness of two candidates according to the kernel
+#     #
+#     #     Example:
+#     #         >
+#     #         fitness_compare
+#     #     """
+#     #
+#     #     if fitness2 is None:
+#     #         return True
+#     #     elif fitness1 < fitness2:
+#     #         return True
+#     #     elif fitness1 == fitness2 and mode == 'better_or_equal':
+#     #         return True
+#     #     else super(RegressionKernel, self).fitness_compare()
+#     #
+#     # def tf_get_pairwise_fitness(self, solution, tf_result):
+#     #     pairwise_fitness = tf.abs(solution - tf_result)
+#     #     return pairwise_fitness
+#     #
+#     # def conclusion_get_text(self):
+#     #     return
 
 
 def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, specific_action=0):
@@ -327,7 +327,7 @@ def labels_from_nestedexpr(labels_nested_list, result_accum):
     for x in labels_nested_list:  # all elements, that are not lists themselves
         if type(x) is not list:
             x = str(x)  # labels must be string!
-            # x = str(x).replace('~', '-')  # workaround for usub/sub problem
+            # x = str(x).replace('~', '-')  # ~-workaround for usub/sub problem
             result_accum.append(x)
 
     only_lists = [x for x in labels_nested_list if (type(x) == list)]

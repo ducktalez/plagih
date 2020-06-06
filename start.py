@@ -4,9 +4,9 @@ This extra file was added to have a file in the root directory that can be start
 """
 from pathlib import Path
 from plagih import plagih_gp
-from plagih.modules.file_interaction import example_runs
 import sys
 import getopt
+import argparse
 
 # sys.root_dir = sys.root_dir / 'plagih'
 sys.path.append('plagih/')
@@ -20,55 +20,35 @@ def main(argv):
    -run_folder
     # sfeh: options for other functions? run, visualise_tree, analyse_run, check_files, tests
    """
-    ipath = None
-    task = 'run'
-    force_new_run = False
-    eval_action = 0  # Usually, the dataset only has one action
 
-    try:
-        opts, args = getopt.getopt(argv, 'i:o:h', ['ipath=', 'opath=', 'task=', 'force_new_run', 'action='])  # i: -> i requires arg, task= -> task requires arg
-    except getopt.GetoptError:
-        print('Failed, try: start.py -i <input FOLDER>')
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ('-h', '--help'):
-            print('start_run.py -i <input FOLDER>\n'
-                  'options:\n'
-                  '--task=<run, analyse, tree-latex>')
-            sys.exit(2)
-        elif opt in ('-i', '--ipath'):
-            ipath = Path(arg)
-        elif opt in ('-o', '--opath'):
-            opath = arg
-            print('Your input -o {} is not used'.format(opath))
-        elif opt in '--task':
-            task = arg
-        elif opt in '--force_new_run':
-            force_new_run = True
-        elif opt in '--action':
-            try:
-                eval_action = int(arg)
-            except Exception as ex:
-                print('Could not convert action. Exception, just fyi, is: {}'.format(ex))
+    import argparse
 
-    if ipath is None:
-        print('No run-folder provided. Starting an example run.\n')
-        ipath = Path.cwd() / example_runs / 'cartpole_v1/'  # / 'plagih'
-    # print('Starting plagih-run in {}'.format(Path(run_folder)))
+    parser = argparse.ArgumentParser(description='Plagih genetic programming (name changes!)')
+    # parser.add_argument('integers', metavar='N', type=int, nargs='+', help='an integer for the accumulator')
+    # parser.add_argument('--sum', dest='accumulate', action='store_const', const=sum, default=max, help='sum the integers (default: find the max)')
+    # parser.add_argument("--data_dir", type=Path, default=Path(__file__).absolute().parent / "data", help="Path to the data directory",)
+    # parser.add_argument('-config_file', type=argparse.FileType('r'))
 
-    if task == 'run':
-        plagih_gp.gp_run(ipath, force_new_run, eval_action=eval_action)
-    elif task == 'analyse':
-        plagih_gp.analyse(ipath)
-    elif task == 'tree-latex':
-        print('Creating a Latex-file from tree (complete tree) csv-file. Can not be used yet. ...')
-        # plagih_gp.visualize_labellist(ipath)
-    elif task == 'show-default_config':
-        plagih_gp.show_default_config(ipath)
-    elif task == 'show-default_operators':
-        plagih_gp.show_default_operators(ipath)
+    parser.add_argument('-config', type=Path, metavar='CONFIG_YAML', help='The config file in the run directory.')
+    parser.add_argument('-action', type=int, default=0, help='If there is more than one action, choose the right one.')
+    parser.add_argument('-data_prepared_p', type=Path)
+    parser.add_argument('-origin_tree', type=Path)
+    parser.add_argument('-data_csv', type=Path)
+    parser.add_argument('-force_new_run', action='store_true')
+    parser.add_argument('-analyse', '-analyze', '-files', '-results', action='store_true')
+    args = parser.parse_args()
+    # print(args)
+
+    config_path = args.config
+    force_new_run = args.force_new_run
+    eval_action = args.action
+    data_prepared_p = args.data_prepared_p
+    origin_tree = args.origin_tree
+
+    if args.analyse:
+        plagih_gp.analyse(config_path)
     else:
-        print('Task not known: {}'.format(task))
+        plagih_gp.gp_run(config_path, force_new_run, eval_action, data_prepared_p, origin_tree)
 
 
 if __name__ == "__main__":

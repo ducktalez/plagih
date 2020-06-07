@@ -4,4 +4,4 @@ parsimony_max: 30
 kernel_name: regression discrete
 complexity_measure: tree_edit_distance
 print_type: ggwsiivoaaf
-gen_max: 50
+gen_max: 30

@@ -1034,8 +1034,8 @@ class ExplainableGP(object):
             forest_grouped.append(latex_get_forest_title(parsim, meta['fitness_train'], tikz_code, tree_sep))
 
         latex_full_doc = latex_complete_tree_summary(forest_grouped)
-        self.file_locs = {'agents_trees.tex': 'agents/agents_trees.tex'}
-        path_trees_tex = file_make_dir(root_path / self.file_locs['agents_trees.tex'])
+        # self.file_locs = {'agents_trees.tex': 'agents/agents_trees.tex'}
+        path_trees_tex = file_make_dir(root_path / self.file_locs['trees_tex'])
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 

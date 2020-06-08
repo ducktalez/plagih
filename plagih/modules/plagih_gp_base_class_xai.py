@@ -141,7 +141,7 @@ class ExplainableGP(object):
             # todo these are irrelevant, when the actual paths are used. file-loc updates might even be wrong.
             #  make a difference between write/read?
             'file_locs': {
-                'pycode_load': '/benchmarks/gym_mountaincar/agents/quick_eval.py',  # todo make pretty solution
+                'pycode_load': 'benchmarks/gym_mountaincar/agents/quick_eval.py',  # todo make pretty solution
                 'example_runs': 'run_examples/',
 
                 'folder_plots': 'plots/',

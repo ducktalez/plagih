@@ -3,6 +3,8 @@ from benchmarks.industrial_benchmark_python.IDS import IDS
 import numpy as np
 import matplotlib.pyplot as plt
 import collections
+from pathlib import Path
+import csv
 
 '''
 The MIT License (MIT)
@@ -75,6 +77,7 @@ class Agent_nothing():
     """
     def __init__(self):
         self.state_history = collections.deque()
+        super().__init__()
 
     def decide(self, state):
         self.state_history.appendleft(state)
@@ -95,6 +98,8 @@ class Agent_random():
     """
     def __init__(self):
         self.state_history = collections.deque()
+        self.name = 'random'
+        super().__init__()
 
     def decide(self, state):
         self.state_history.appendleft(state)
@@ -121,6 +126,10 @@ class Agent_daniel_21(Ib_Agent):
     Daniel Hein's best agent for complexity 21
     """
 
+    def __init__(self):
+        self.name = 'Daniel_21'
+        super().__init__()
+
     def decide(self, env_state):
         self.state_history.appendleft(env_state)
 
@@ -135,6 +144,10 @@ class Agent_daniel_21(Ib_Agent):
 
 
 class Agent_daniel_27(Ib_Agent):
+
+    def __init__(self):
+        self.name = 'Daniel_27'
+        super().__init__()
 
     def decide(self, state):
 
@@ -155,6 +168,10 @@ class Agent_daniel_27(Ib_Agent):
 
 class Agent_Daniel_29_Best(Ib_Agent):
 
+    def __init__(self):
+        self.name = 'Daniel_29'
+        super().__init__()
+
     def decide(self, state):
 
         self.state_history.appendleft(state)
@@ -169,12 +186,14 @@ class Agent_Daniel_29_Best(Ib_Agent):
         return at
 
 
-class Agent_Test():
+class Agent_Test(Ib_Agent):
     """
     ...does nothing, kind of.
     """
     def __init__(self):
         self.state_history = collections.deque()
+        self.name = 'Testagent'
+        super().__init__()
 
     def decide(self, state):
         self.state_history.appendleft(state)
@@ -191,16 +210,17 @@ class Agent_Test():
 
 def eval_agents():
 
-    T = 100
+    T = 100000
 
     # agents = [Agent_Daniel_Best()]
     agents = [
         # # Agent_random(),
-        Agent_nothing(),
+        # Agent_nothing(),
         Agent_daniel_21(),
         Agent_daniel_27(),
         Agent_Daniel_29_Best(),
-        Agent_Test()]
+        # Agent_Test()
+    ]
 
     data = np.zeros((len(agents), T))
     data_cost = np.zeros((len(agents), T))
@@ -211,18 +231,18 @@ def eval_agents():
         # state_debug = []
         for t in range(T):
             env_state = envstate_normalize(env.state)
-            # state_debug.append(list(env_state.values()))
             at = agent.decide(env_state)
-            # at = at * np.array([1, 10, 5.75])  # daniel hein phd scales
-
-            # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
-            # at = 2 * np.random.rand(3) - 1
             markovStates = env.step(at)
             data[k, t] = env.visibleState()[-1]
-        print('Average fitness: {}'.format(np.average(data[k])))
-        # debug_array = np.array(state_debug).T
-        # for x in range(6):
-        #     print('Variable {}: {:.5f} {:.5f}'.format(x, np.mean(debug_array[x]), np.var(debug_array[x])))
+
+        factor = 0.97
+        sum = 0
+        time_horizon = 100
+        for x in range(time_horizon):
+            entry = data[k][-1-x]
+            sum += factor**x * entry
+
+        print('Discounted reward sum after 100.000 steps', agent.name, sum)
 
     # plt.plot(data.T)
     # plt.xlabel('T')
@@ -230,10 +250,7 @@ def eval_agents():
     # plt.show()
 
 
-def agent_samples_csv(T=10000):
-
-    from pathlib import Path
-    import csv
+def agent_create_samples_csv(T=10000):
 
     history_t = 5
     csv_data = np.zeros((T, 6 * history_t + 3))
@@ -275,5 +292,7 @@ def agent_samples_csv(T=10000):
         writer.writerows(csv_data)
 
     print('DONE!')
+
+
 
 eval_agents()

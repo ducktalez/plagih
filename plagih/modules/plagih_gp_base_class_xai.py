@@ -43,7 +43,7 @@ class ExplainableGP(object):
             'force_new_run': False,  # especially for testing. Otherwise, delete the folder. can be set via command line.
             # When to stop the run
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
-            'gen_max': 1000,  # Maximum amount of generations
+            'gen_max': 1001,  # Maximum amount of generations
 
             # (!) Relevant for result
             'pop': {
@@ -82,7 +82,7 @@ class ExplainableGP(object):
             'period': {'time_monitor': None,  # in sec
                        'time_save': None,  # in sec
                        'gen_monitor': 10,  # in gen counts
-                       'gen_save': 1},  # in gen counts
+                       'gen_save': 100},  # in gen counts
 
             'evolve_list': [
                 # Reproduction (15%)
@@ -756,7 +756,7 @@ class ExplainableGP(object):
                                   ['tanh', 0.2],
                                   ['Andb', 1], ['Orb', 1], ['Notb', 0.5],  # ['Xor', 1],
                                   ['==', 1], ['!=', 0.5],
-                                  ['<', 0.5], ['<=', 0.5], ['>', 0.25], ['>=', 0.25],
+                                  ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
                                   ['Ifte', 2],
                                   ['Mini', 1], ['Maxi', 1]])
 

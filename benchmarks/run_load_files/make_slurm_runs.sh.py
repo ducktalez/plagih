@@ -5,7 +5,7 @@ config4ib = 'IB/config4IB.yaml'
 config4mtc = 'MTC/config4mtc.yaml'
 samples4mtc200 = 'MTC/MTC200_data_prepared.p'
 samples4mtc75 = 'MTC/MTC75_data_prepared.p'
-PLAGIH_ROOT = '../../'
+PLAGIH_ROOT = '../../../'
 copypaste_path = PLAGIH_ROOT + 'benchmarks/run_load_files/'
 
 run_starts = {

@@ -5,8 +5,8 @@ config4ib = 'IB/config4IB.yaml'
 config4mtc = 'MTC/config4mtc.yaml'
 samples4mtc200 = 'MTC/MTC200_data_prepared.p'
 samples4mtc75 = 'MTC/MTC75_data_prepared.p'
-
-copypaste_path = '../../' + 'benchmarks/run_load_files/'
+PLAGIH_ROOT = '../../'
+copypaste_path = PLAGIH_ROOT + 'benchmarks/run_load_files/'
 
 run_starts = {
     'IB_50s_0': [config4ib, samples4ib, 0, 'IB/ib_tree_50s_0.csv'],
@@ -32,7 +32,7 @@ run_starts = {
     'MTC75_tree_simple_fix': [config4mtc, samples4mtc75, 0, 'MTC/tree_simple_fix.csv'],
 }
 
-main_format = 'python3 start.py -config {} -out_dir {} -samples_ready {} -action {}'
+main_format = 'python3 ' + PLAGIH_ROOT + 'start.py -config {} -out_dir {} -samples_ready {} -action {}'
 complete_params = []
 
 for name, param in run_starts.items():

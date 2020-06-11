@@ -1,0 +1,436 @@
+#LyX file created by tex2lyx 2.3
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin C:/Users/Rapid/Desktop/MA_lyx/tikz/neural_networks/
+\textclass article
+\use_default_options false
+\maintain_unincluded_children false
+\language english
+\language_package none
+\inputencoding auto
+\fontencoding default
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 0
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+
+\begin_layout Standard
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "l"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100text%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+
+\begin_layout Plain Layout
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+centering
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+%
+\backslash
+resizebox{
+\backslash
+columnwidth}{!}{
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+begin{tikzpicture}[plain/.style=
+\end_layout
+
+\begin_layout Plain Layout
+        scale=1,
+\end_layout
+
+\begin_layout Plain Layout
+        draw=none,
+\end_layout
+
+\begin_layout Plain Layout
+        fill=none,,
+\end_layout
+
+\begin_layout Plain Layout
+        net/.style=matrix of nodes,
+\end_layout
+
+\begin_layout Plain Layout
+        nodes=draw, circle, inner sep=10pt,
+\end_layout
+
+\begin_layout Plain Layout
+        nodes in empty cells,  column sep=2cm,  row sep=-9pt,
+\end_layout
+
+\begin_layout Plain Layout
+        >=latex
+\end_layout
+
+\begin_layout Plain Layout
+    ]
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+    
+\backslash
+matrix[net] (mat)
+\end_layout
+
+\begin_layout Plain Layout
+    {|[plain]| 
+\backslash
+parbox{1.3cm}{
+\backslash
+centering Input
+\backslash
+
+\backslash
+layer} & |[plain]| 
+\backslash
+parbox{1.3cm}{
+\backslash
+centering Hidden
+\backslash
+
+\backslash
+layer} & |[plain]| 
+\backslash
+parbox{1.3cm}{
+\backslash
+centering Output
+\backslash
+
+\backslash
+layer} 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+    & |[plain]| 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+    |[plain]| & 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+    & |[plain]| 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+      |[plain]| & |[plain]| 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+    & & 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+      |[plain]| & |[plain]| 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+    & |[plain]| 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+      |[plain]| & 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+    & |[plain]| 
+\backslash
+
+\backslash
+    };
+\end_layout
+
+\begin_layout Plain Layout
+    
+\backslash
+foreach 
+\backslash
+ai [count=
+\backslash
+mi ]in {2,4,...,10}
+\end_layout
+
+\begin_layout Plain Layout
+      
+\backslash
+draw[<-] (mat-
+\backslash
+ai-1) -- node[above] {Input 
+\backslash
+mi} +(-2cm,0);
+\end_layout
+
+\begin_layout Plain Layout
+    
+\backslash
+foreach 
+\backslash
+ai in {2,4,...,10}
+\end_layout
+
+\begin_layout Plain Layout
+    {
+\backslash
+foreach 
+\backslash
+aii in {3,6,9}
+\end_layout
+
+\begin_layout Plain Layout
+      
+\backslash
+draw[->] (mat-
+\backslash
+ai-1) -- (mat-
+\backslash
+aii-2);
+\end_layout
+
+\begin_layout Plain Layout
+    }
+\end_layout
+
+\begin_layout Plain Layout
+    
+\backslash
+foreach 
+\backslash
+ai in {3,6,9}
+\end_layout
+
+\begin_layout Plain Layout
+      
+\backslash
+draw[->] (mat-
+\backslash
+ai-2) -- (mat-6-3);
+\end_layout
+
+\begin_layout Plain Layout
+    
+\backslash
+draw[->] (mat-6-3) -- node[above] {Ouput} +(2cm,0);
+\end_layout
+
+\begin_layout Plain Layout
+    
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+\backslash
+end{tikzpicture}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+%}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+neural network with one fully connected hidden layer
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "tikz neural network layers"
+
+\end_inset
+
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

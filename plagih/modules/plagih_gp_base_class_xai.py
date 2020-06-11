@@ -27,13 +27,14 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, data_prepared_path=None, opt_origin_tree_csv=None, out_dir=None):
+    def __init__(self, plagih_root, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, data_prepared_path=None, opt_origin_tree_csv=None, out_dir=None):
 
         self.name = root_dir.name  # sfeh probably there are better names
         print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET, root_dir))
         self.time_start = time.perf_counter()
         self.restart_vers = 'v0.8'
         self.root_dir = root_dir
+        self.sfeh_plagih_root = plagih_root
 
         self.config = {
             'remove superfluous config entries': False,  # guess you should do that
@@ -46,9 +47,9 @@ class ExplainableGP(object):
             'gen_max': 1001,  # Maximum amount of generations
 
             # (!) Relevant for result
-            'pop': {
-
-            },
+            # 'pop': {
+            #
+            # },
             'pop_max': 1000,  # amount is never tested
             'tree_depth_max': 10,  # maximum Tree depth for entire run
             'tree_depth_min': 2,
@@ -57,9 +58,9 @@ class ExplainableGP(object):
             'parsimony_max': 30,
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
 
-            'evalue': {
-
-            },
+            # 'evalue': {
+            #
+            # },
             'kernel_name': 'regression discrete',  # [regression, regression bounded, classification, match]
             'complexity_measure': 'tree_edit_distance',
             'eval_action': 0,  # Only one action at a time! If the data has more than one action, runs have to be split. This can be specified here.
@@ -158,7 +159,7 @@ class ExplainableGP(object):
                 'file_pycode_eval': 'agents/eval_agents.py',
 
                 # /info/
-                'file_pareto': 'info/pareto.txt',
+                'file_pareto': 'info/pareto.yaml',
                 'info_config_yaml': 'info/config.yaml',
                 'file_info_config_json': 'info/config.json',
                 'file_info_evolve_dict_yaml': 'info/evolve_list.yaml',
@@ -645,7 +646,7 @@ class ExplainableGP(object):
         """
         self.file_pareto_histograms(root_path)
         self.file_conclusion(root_path)
-        write_file_pareto_text(self.pareto, root_path, self.file_locs['file_pareto'])
+        write_file_pareto_txt(self.pareto, root_path, self.file_locs['file_pareto'])  # todo "get path" instead?
         self.file_pareto_latex(self.pareto, root_path)
         self.file_generate_pycode(self.pareto, root_path)
         write_file_population_karoo(self.population_base, 'last', root_path, self.gen_id, print_type=self.print_type)
@@ -932,7 +933,7 @@ class ExplainableGP(object):
             if 'discrete' in self.kernel.kernel:
                 # todo test
                 unique_actions = self.env_variables['action_at'][self.config['eval_action']]['unique_outputs_num']
-                action_bins = np.linspace(-0.5 + act_min, 0.5 + act_max, 2*unique_actions + 1)
+                action_bins = np.linspace(-0.5 + act_min, 0.5 + act_max, 2 * unique_actions + 1)
             else:
                 action_bins = np.linspace(act_min, act_max, 10)  # check out histogram_bin_edges, maybe it is better todo also 10 bins?
 
@@ -1083,10 +1084,10 @@ class ExplainableGP(object):
 
         pycode_complete_agents = 'import math\n\n' \
                                  '{}\n\n' \
-                                 '{}\n\n' \
-                                 '{}'.format(pycode_agents, pycode_names, py_agent_tuples)
+                                 '{}\n' \
+                                 '{}\n'.format(pycode_agents, pycode_names, py_agent_tuples)
 
-        pth = file_make_dir(root_path / self.config['file_locs']['file_pycode'])  # todo where did self.file_locs go? oh wait, analysis? :P
+        pth = file_make_dir(root_path / self.config['file_locs']['file_pycode'])
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
             self.printpl('ff', '{}'.format(pth))
@@ -1114,14 +1115,14 @@ class ExplainableGP(object):
 
             executable_python_evaluation = 'import sys\n' + \
                                            'from pathlib import Path\n' \
-                                           'sys.path.append(str(Path(\'' + str(Path.cwd().absolute().as_posix()) + '\')))\n' + \
+                                           'sys.path.append(str(Path(\'' + str(self.sfeh_plagih_root.absolute().as_posix()) + '\')))\n' + \
                                            'from benchmarks.gym_mountaincar.agents.quick_eval import *\n' + \
                                            pycode_complete_agents + '\n' + \
                                            'from pathlib import Path\n' + \
                                            'folder = Path.cwd() / \'custom_files\'\n\n' + \
                                            auto_import_eval + '\n' + \
                                            'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import * \n' + \
-                                           'with Path.open(Path(\'' + str(Path('benchmarks/gym_mountaincar/agents/sarsa_agent_200.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
+                                           'with Path.open(Path(\'' + str(Path(self.sfeh_plagih_root / 'benchmarks/gym_mountaincar/agents/sarsa_agent_200.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
                                            '\tsarsa_agent = pickle.load(file)\n\n' + \
                                            'if __name__ == \'__main__\':\n' + \
                                            '\tprint(\'executing!\')\n' + \

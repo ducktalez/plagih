@@ -37,6 +37,33 @@ root_id = 1
 node_is_modifiable = 1
 
 
+class Node2:
+
+    def __init__(self, state, root=True, parent=None, action=-1, depth=0, node_id=0, terminal=False, fully_expanded=False):
+        """
+
+        """
+        self.root = root
+        self.parent = parent
+        self.state = state
+        self.action = action
+        self.terminal = terminal
+        self.fully_expanded = fully_expanded
+        self.children = []
+        self.Q = 0.0
+        self.Q_list = []
+        self.visits = 1
+        self.depth = depth
+        self.unexplored_actions = copy.deepcopy(state.action_space)
+        self.node_id = node_id
+
+    def __str__(self):
+        """
+
+        """
+        return "Q / Reward: {}, visits: {}, terminal: {}, fully_expanded: {}, depth: {}, node_id: {}, root: {}".format(self.Q, self.visits, self.terminal, self.fully_expanded, self.depth, self.node_id, self.root)
+
+
 class Tree_Node():
 
     def __init__(self, label):
@@ -173,6 +200,7 @@ class Ptree_karoo():
         if not arity_list:
             arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
         core = core_from_labels(label_list, arity_list, xtype_list)
+
         if modify_list:
             for i, val in enumerate(modify_list):
                 core[N_modify][i] = val
@@ -2289,8 +2317,9 @@ def latex_tree_node_get_forest(tree, node_id=root_id):
     # Get the best math-like representation for functions
     if label in op:
         op_tex = op[label]['latex1']
-        if op_tex is not None:
-            latex_label = op_tex
+        # this must now not be None! always
+        # if op_tex is not None:
+        #     latex_label = op_tex
 
     # todo float labels too long
     # todo underline makes lower indices... good or bad?

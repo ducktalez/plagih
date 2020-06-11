@@ -49,6 +49,7 @@ def envstate_normalize(env_state, to_normal=True):
     velocity, gain, shift (v, g, h)
     p, v, g, h, f, c
     'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
     """
 
     IB_norm_dict = {
@@ -208,6 +209,28 @@ class Agent_Test(Ib_Agent):
         return at
 
 
+class Agent_Udluft(Ib_Agent):
+    """
+
+    """
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Udluft'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        at[0] = -self.get_h('f', 0) -self.get_h('v', 3)  # 27
+        at[1] = self.get_h('f', 4)
+        at[2] = -6 * self.get_h('h', 4)
+        return at
+
+
 def eval_agents():
 
     T = 100000
@@ -219,6 +242,7 @@ def eval_agents():
         Agent_daniel_21(),
         Agent_daniel_27(),
         Agent_Daniel_29_Best(),
+        Agent_Udluft(),
         # Agent_Test()
     ]
 
@@ -292,7 +316,6 @@ def agent_create_samples_csv(T=10000):
         writer.writerows(csv_data)
 
     print('DONE!')
-
 
 
 eval_agents()

@@ -5,6 +5,7 @@ This extra file was added to have a file in the root directory that can be start
 from pathlib import Path
 from plagih import plagih_gp
 import sys
+import os
 import getopt
 import argparse
 
@@ -46,10 +47,12 @@ def main(argv):
     data_prepared = args.data_prepared
     origin_tree = args.origin_tree
 
+    plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
+
     if args.analyse:
-        plagih_gp.analyse(config_path)
+        plagih_gp.analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
     else:
-        plagih_gp.gp_run(config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
+        plagih_gp.gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
 
 
 if __name__ == "__main__":

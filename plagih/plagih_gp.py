@@ -167,20 +167,20 @@ def load_config(config_path):
     return root_dir, config
 
 
-def gp_run(config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
+def gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
     """
     
     """
 
     root_dir, config = load_config(config_path)
     if out_dir:
-        root_dir = out_dir  # todo test
+        root_dir = out_dir
 
     config['force_new_run'] = force_new_run
     config['eval_action'] = eval_action
 
     # sfeh , opt_origin_tree_csv=origin_tree, out_dir=out_dir
-    gp = ExplainableGP(root_dir, config, data_prepared_path=data_prepared_path)
+    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:
@@ -196,15 +196,22 @@ def gp_run(config_path, out_dir, force_new_run, eval_action, data_prepared_path,
     sys.exit()
 
 
-def analyse(config_path):
+def analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
     """
     write all analysing files.
     - pareto (txt, latex_trees, agents)
     - plots (pareto, best)
     """
+    # todo the same code is in gp_run...
+    root_dir, config = load_config(config_path)
+    if out_dir:
+        root_dir = out_dir
+
+    config['force_new_run'] = force_new_run
+    config['eval_action'] = eval_action
 
     root_dir, config = load_config(config_path)
-    gp = ExplainableGP(root_dir, config)
+    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
 
     gp.plagih_update_analysis()
 

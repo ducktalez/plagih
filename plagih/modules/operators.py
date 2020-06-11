@@ -108,9 +108,9 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # 'b2b' Classical logical operators, evaluate from bool to bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
-    'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': 'and', 'latexF': '({{{}}}\\wedge{{{}}})',
+    'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': '$and$', 'latexF': '({{{}}}\\wedge{{{}}})',
              'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
-    'Orb': {'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': 'or', 'latexF': '({{{}}}\\vee{{{}}})',
+    'Orb': {'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': '$or$', 'latexF': '({{{}}}\\vee{{{}}})',
             'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     'Xor': {'fun': 'Xor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.math.logical_xor, 'latex1': '$\\oplus$', 'latexF': '({{{}}}\\oplus{{{}}})',
             'sym_str': 'Xor({}, {})', 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
@@ -122,21 +122,21 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
           'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
 
     # 'f2b' Classical comparative operators, evaluate from float to bool
-    '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.equal, 'latex1': '$\\eq$', 'latexF': '({{{}}}\\eq{{{}}})',
+    '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.equal, 'latex1': '$=$', 'latexF': '({{{}}}={{{}}})',
            'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
     '!=': {'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.not_equal, 'latex1': '$\\neq', 'latexF': '({{{}}}\\neq{{{}}})',
            'sym_str': '({} != {})', 'pycode': lambda a, b: '({}!={})'.format(a, b)},
     '<': {'fun': '<', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less, 'latex1': '$<$', 'latexF': '{{{}}}<{{{}}}',
           'sym_str': '({} < {})', 'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
-    '<=': {'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less_equal, 'latex1': '$<=$', 'latexF': '{{{}}}<={{{}}}',
+    '<=': {'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less_equal, 'latex1': '$leq$', 'latexF': '{{{}}}\leq{{{}}}',
            'sym_str': '({} <= {})', 'pycode': lambda a, b: '({}<={})'.format(a, b)},  # a <= b
     '>': {'fun': '>', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater, 'latex1': '$>$', 'latexF': '{{{}}}>{{{}}}',
           'sym_str': '({} > {})', 'pycode': lambda a, b: '({}>{})'.format(a, b)},  # a > b
-    '>=': {'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater_equal, 'latex1': '$>=$', 'latexF': '{{{}}}>={{{}}}',
+    '>=': {'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater_equal, 'latex1': '$\geq$', 'latexF': '{{{}}}\geq{{{}}}',
            'sym_str': '({} >= {})', 'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
 
     # Functions which need separate handling in sympify
-    'Ifte': {'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf': tf.compat.v2.where, 'latex1': 'if .. then .. else ..', 'latexF': 'if({{{}}} then {{{}}} else {{{}}})',
+    'Ifte': {'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf': tf.compat.v2.where, 'latex1': '$if .. then .. else ..$', 'latexF': 'if({{{}}} then {{{}}} else {{{}}})',
              'sym_str': 'Ifte({}, {}, {})', 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
     # long version of Ifte-'pycode': lambda a, b, c: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
     'Mini': {'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.minimum, 'latex1': '$\\min$', 'latexF': '\\min({{{}}}, {{{}}})',
@@ -241,8 +241,6 @@ op_test = {
     # Never used yet, trying to get rid of the ** function
     'Power': {'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
               'sym_str': '({})**({})', 'pycode': lambda a, b: '({}**{})'.format(a, b)},  # sfeh: round the exponent
-    'Sqrt': {'fun': 'inverse', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-             'sym_str': None, 'pycode': None},  # not used # 1/float. important for squareroots.
     # sfeh sqrt, is only 2nd root, also 3rd-root?
 
     # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.

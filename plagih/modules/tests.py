@@ -98,5 +98,7 @@ class MountainCarExamples:
     expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, pos) > -0.97, 0.0, 2.0)'
 
 
-live_test = TestHelpers()
-live_test.test_ted_weighting()
+# live_test = TestHelpers()
+# live_test.test_ted_weighting()
+
+print(ast_convert_from_expr('(a ** 2) * 4', build=True))

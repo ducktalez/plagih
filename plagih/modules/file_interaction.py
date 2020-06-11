@@ -35,25 +35,19 @@ def file_make_dir(file_path):
     return p
 
 
-def write_file_pareto_text(pareto, root_path, file_pareto):
+def write_file_pareto_txt(pareto, root_path, file_pareto):
     """
     Save all the pareto efficient candidates to file
+    sfeh save as yaml?
     """
 
-    pth = file_make_dir(root_path / file_pareto)
+    path_pareto = file_make_dir(root_path / file_pareto)
 
-    with Path.open(pth, 'w') as file:
+    with Path.open(path_pareto, 'w') as file:
         for parsim, meta in sorted(list(pareto.items())):
             fitness = meta['fitness_train']
             algo_sym = meta['expr_sym']  # save raw version, not the sympified one
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
-
-
-def open_force_write_text(p, text):
-    p = Path(p)
-    if not p.parent.is_dir():
-        p.parent.mkdir(parents=True)
-    p.write_text(text)
 
 
 def experiment_data(experiment_yaml):

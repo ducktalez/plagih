@@ -104,7 +104,7 @@ class SimpleAgent_lel:
             return 2
 
 
-class FixAgent:
+class XiaoPresetAgent:
 
     def decide(self, observation):
         pos, vel = observation
@@ -126,7 +126,7 @@ class FixAgentRe:
         return max(0, min(2, int(round(action))))
 
 
-class TestFixNoLowerbound:
+class XiaoPresetNoLowerbound:
     """
     I randomly found out, that the upper bound is not good for anything
     """

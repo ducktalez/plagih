@@ -21,17 +21,17 @@ sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000 = load_sars
 
 mountain_agents = [('simple', SimpleAgent()),
                    ('v1_improved', PlagihAgent_A()),
-                   ('xiao_base', FixAgent()),
-                   ('xiao_short', TestFixNoLowerbound()),
+                   ('xiao_base', XiaoPresetAgent()),
+                   ('xiao_short', XiaoPresetNoLowerbound()),
                    ('sarsa_75', sarsa_agent_75),
                    ('sarsa_200', sarsa_agent_200),
                    ('sarsa_1000', sarsa_agent_1000),
                    ('sarsa_10000', sarsa_agent_10000),
-                   ('test_tmp', TestTmp()),
                    ('AgentV1p40', AgentV1p40()),
                    ('Good Expert', Good_Expert()),
-                   ('test', SimonsCheckpoints()),
                    ('TestCombined', TestCombined()),
+                   ('test_tmp', TestTmp()),
+                   ('test', SimonsCheckpoints()),
                    ('SimonTesting', SimonsTesting())]
 
 
@@ -80,6 +80,21 @@ class Test_Agent:
 
 
 # eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
+def thesis_decision_plots():
+    # sarsa agents
+    mtc_plot_decisions_space(sarsa_agent_75, name='decisions-sarsa_agent_75')
+    mtc_plot_decisions_space(sarsa_agent_200, name='decisions-sarsa_agent_200')
+    mtc_plot_decisions_space(sarsa_agent_1000, name='decisions-sarsa_agent_1000')
+    mtc_plot_decisions_space(sarsa_agent_10000, name='decisions-sarsa_agent_10000')
 
-print('results:', mtc_play(Good_Expert(), n=100))
+mtc_plot_decisions_space(SimpleAgent(), name='decisions-SimpleAgent')
+mtc_plot_decisions_space(PlagihAgent_A(), name='decisions-Xiao_preset')
+mtc_plot_decisions_space(XiaoPresetAgent(), name='decisions-XiaoPresetAgent')
+mtc_plot_decisions_space(XiaoPresetNoLowerbound(), name='decisions-XiaoPresetNoLowerbound')
+mtc_plot_decisions_space(AgentV1p40(), name='decisions-AgentV1p40')
+mtc_plot_decisions_space(Good_Expert(), name='decisions-Good_Expert')
+mtc_plot_decisions_space(TestCombined(), name='TestCombined-AgentV1p40')
+
+
+# print('results:', mtc_play(Good_Expert(), n=100))
 # print('results:', mtc_play(sarsa_agent_75, n=100))

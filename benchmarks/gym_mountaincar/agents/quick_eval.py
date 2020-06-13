@@ -100,7 +100,6 @@ def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
 def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', splits=128, dummy=False, cmap='Greys', boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
 
     x_linspace, y_linspace, result = mtc_heatmap_helper(agent, splits, n, dummy=dummy)
-
     mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
     return
@@ -201,7 +200,9 @@ def mtc_play(agent, render=False, n=1):
 
 
 def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path('img/'), n=100, color='b'):
-
+    """
+    plot the performance of all tested episodes (e.g. for showing outliers)
+    """
     if not Path.is_dir(folder):
         Path.mkdir(folder)
     #
@@ -222,6 +223,9 @@ def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path(
 
 def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_splits=256, name='diff', folder='img/',
                          abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False):
+    """
+    Creates the difference-plot
+    """
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -268,7 +272,9 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
 
 
 def eval_agent_list(agent_list, goal_agent, n=40, folder=Path('img/')):
-
+    """
+    Automatically evalueate gp-agents (difference plot, decision plot, performance)
+    """
     if not Path.is_dir(folder):
         Path.mkdir(folder)
 

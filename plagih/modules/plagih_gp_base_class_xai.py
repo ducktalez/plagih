@@ -727,7 +727,7 @@ class ExplainableGP(object):
         else:
             print_warning('ww', 'Opt-in not specified: Evolve-file for GP evolve functions defined! Trying to choose them for you.')
 
-        # yaml_dump(self.root_paths['file_info_evolve_dict_yaml'], evolve_list)  # todo todo save the config
+        # yaml_dump(self.root_paths['file_info_evolve_dict_yaml'], evolve_list)  # todo save the config
         # sfeh: if you want to load information from extra file, check for this file here
 
         return

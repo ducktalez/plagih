@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -29,6 +29,8 @@
 \global\abgabetermin{29.02.2019}
 \global\ort{Munich}
 \global\fach{Computer Science}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -46,8 +48,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures false
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -77,7 +77,6 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -86,10 +85,7 @@
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -135,6 +131,28 @@ erklaerung
 \end_layout
 
 \begin_layout Abstract
+Machine learning approaches achieve superhuman performance in more and more
+ areas.
+ However, since the structures used are accepted as a black box and decisions
+ cannot be explained, people still rely on heuristics written by humans,
+ especially in sensitive areas.
+ With the help of genetic programming it is possible to generate interpretable
+ results, but often the solutions still have a complex structure, not correspond
+ing to the thinking structure of a developer.
+ We therefore present a novel approach that uses pareto genetic programming
+ to extend a man-made program with as few changes as possible to adapt the
+ logic of any black box machine learning approach.
+ For this purpose, the Tree Edit Distance was implemented as a distance
+ measure, which reflects the number of changes to the reference program.
+ For the implementation a regression on offline data of the benchmarks was
+ performed.
+\end_layout
+
+\begin_layout Abstract
+\begin_inset Note Comment
+status open
+
+\begin_layout Abstract
 Machine learning Ansätze erzielen in immer mehr Bereichen übermenschliche
  Performance, da die Verwendeten Strukturen allerdings als Black Box akzeptiert
  werden und Entscheidungen nicht erklärt werden können, wird vor allem in
@@ -151,6 +169,11 @@ es Programm mithilfe von pareto genetischer Programmierung mit möglichst
  die Anzahl der Änderungen am Referenzprogramm wiedergibt.
  Für die Umsetzung wurde eine Regression auf offline-daten der Benchmarks
  durchgeführt.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
@@ -252,6 +275,13 @@ Machine Learning ist ein bedeutender Teil der künstlichen Intelligenz, bei
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+Machine Learning is an important part of Artificial Intelligence, in which
+ a machine learns to solve a task without human instructions.
+ This can be divided into two areas, supervised learning and reinforcement
+ learning.
 \end_layout
 
 \begin_layout Subsection
@@ -386,9 +416,6 @@ Maschine Learning Lösungen haben so schon in vielen Bereichen übermenschliche
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "TODO"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -440,7 +467,6 @@ status open
 LatexCommand href
 name "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
-literal "false"
 
 \end_inset
 
@@ -448,7 +474,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "false"
 
 \end_inset
 
@@ -478,9 +503,6 @@ Große Fortschritte konnten in den letzten Jahren vor allem mithilfe von
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "TODO"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -511,7 +533,6 @@ target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "false"
 
 \end_inset
 
@@ -709,7 +730,6 @@ oll ich ein paar erwähnen?]
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "false"
 
 \end_inset
 
@@ -973,8 +993,18 @@ The goal of GP is to find the one program over many generations that is
  better than all the others.
  To find this program, the population of programs must both promote the
  best programs and create space for new approaches.
- (todo Exploration-exploitation tradeoff?) For this purpose, both the selection
- and the genetic modifications must be chosen accordingly.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+(todo Exploration-exploitation tradeoff?)
+\end_layout
+
+\end_inset
+
+ For this purpose, both the selection and the genetic modifications must
+ be chosen accordingly.
 \end_layout
 
 \begin_layout Subsection
@@ -1249,7 +1279,6 @@ se in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "false"
 
 \end_inset
 
@@ -1296,13 +1325,13 @@ Approach
 \end_layout
 
 \begin_layout Standard
-{In the following, we will present an approach that carries out genetic
- programming on the basis of a program provided by the expert.
+In the following, we will present an approach that carries out genetic programmi
+ng on the basis of a program provided by the expert.
  The program will be improved so that it makes the same decisions as the
  black box.
  The changes to the original program should only include the most necessary
  and show the expert the most manageable extensions with which he can improve
- his program.}
+ his program.
 \end_layout
 
 \begin_layout Section
@@ -1336,20 +1365,65 @@ The approach starts from the point of view of a developer who has dealt
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
 
-\backslash
-begin{figure}[ht] 
-\backslash
-centering 
-\backslash
-includegraphics[scale=0.8]{img/plausibility-concept.pdf} 
-\backslash
-caption{TODO, tikz.
- Combining two known approaches} 
-\backslash
-label{img:plausibility-concept} 
-\backslash
-end{figure}
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/plausibility-concept.pdf
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "img:plausibility-concept"
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+centering?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Combining two known approaches
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1385,8 +1459,12 @@ Experts reference solution.
 \end_layout
 
 \begin_layout Enumerate
-Best performing “black box” solution: A solution that outperforms all other
- approaches which has to be explained.
+Best performing 
+\begin_inset Quotes eld
+\end_inset
+
+black box” solution: A solution that outperforms all other approaches which
+ has to be explained.
  
 \end_layout
 
@@ -1396,9 +1474,6 @@ Plausible improvements.
  the level of the Machine-learning solution while letting the developer
  understand the changes and where the most substantial improvements can
  be made.
- 
-\backslash
-end{enumerate}
 \end_layout
 
 \begin_layout Subsection
@@ -1481,8 +1556,15 @@ Offline learning: We have the possibility to improve our program offline.Genetic
  an immense speedup.
  During this process, large rates of candidates can make decisions that
  can be very bad.
- For example, a good candidate might undergo a tiny change- a '$<$'-sign
- gets replaced with '$>$'.
+ For example, a good candidate might undergo a tiny change- a 
+\begin_inset Formula $<$
+\end_inset
+
+-sign gets replaced with 
+\begin_inset Formula $>$
+\end_inset
+
+.
  This will reverse all the good results to bad decisions.
  Genetic programming is no option for online learning on delicate environments.
  It is also no option if parallelization is not an option.
@@ -1566,10 +1648,17 @@ Explanability can already be improved by an adapted parameterization.
  This includes, among others:
 \end_layout
 
-\begin_layout Standard
-- strong typing.
- Automated type-casts seem very unintuitive - small function set - small
- complexity as second optimisation
+\begin_layout Itemize
+strong typing.
+ Automated type-casts seem very unintuitive 
+\end_layout
+
+\begin_layout Itemize
+small function set 
+\end_layout
+
+\begin_layout Itemize
+small complexity as second optimisation
 \end_layout
 
 \begin_layout Subsection
@@ -1584,9 +1673,37 @@ The essential goal of this approach is therefore to find a measure of the
 \end_layout
 
 \begin_layout Standard
-The selected complexity measures usually depend on the node [cite], the
- depth of the tree [cite] and variations thereof [todo, evaluation of func,
- ...].
+The selected complexity measures usually depend on the node 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[cite]
+\end_layout
+
+\end_inset
+
+, the depth of the tree 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[cite]
+\end_layout
+
+\end_inset
+
+ and variations thereof 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[todo, evaluation of func, ...]
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -1632,7 +1749,7 @@ function types.
 \end_layout
 
 \begin_layout Itemize
-variable types: 
+variable types
 \end_layout
 
 \begin_layout Itemize
@@ -1654,7 +1771,7 @@ encapsulation of the variable.
 \end_layout
 
 \begin_layout Itemize
-order of logic: 
+order of logic
 \end_layout
 
 \begin_layout Itemize
@@ -1662,7 +1779,7 @@ encapsulation of isolated complexity:
 \end_layout
 
 \begin_layout Itemize
-if then else: 
+if then else
 \end_layout
 
 \begin_layout Itemize
@@ -1754,9 +1871,6 @@ Univariate or low-dimansional multivariate formula.
 
 \begin_layout Itemize
 No fundamental limits the possibilities of the GP occur.
- 
-\backslash
-end{itemize}
 \end_layout
 
 \begin_layout Standard
@@ -2267,7 +2381,7 @@ $test$ [todo proves triangle inequality]
 \end_layout
 
 \begin_layout Paragraph
-TODO weighting functions
+Weighting functions
 \end_layout
 
 \begin_layout Standard
@@ -2310,25 +2424,55 @@ The Tree Edit Distance (TED) was selected as basis measurement, as it fits
 
 \begin_layout Standard
 “The tree-to-tree correction problem is to determine, for two labeled ordered
- trees {
-\backslash
-tt{T}} and {
-\backslash
-tt{T'}}, the distance from T to T' as measured by the minimum cost sequence
- of edit operations needed to transform T into T'.
+ trees 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+T
+\end_layout
+
+\end_inset
+
+ and 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+T'
+\end_layout
+
+\end_inset
+
+ , the distance from T to T' as measured by the minimum cost sequence of
+ edit operations needed to transform T into T'.
  The edit operations investigated allow changing one node of a tree into
  another node, deleting one node from a tree, or inserting a node into a
  tree.” 
-\backslash
-cite{tedOldestPaper}
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedOldestPaper"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 The TED computes the minimum amount of delete, insert and rename steps that
  are needed to transform one tree (the origin tree) to the gp-candidate
  tree as can be seen in 
-\backslash
-ref{fig:TED_explain_operators}.
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:TED_explain_operators"
+
+\end_inset
+
+.
  Computing this distance is a challenge itself and was widely researched
  on.
  Thanks to numerous improvements made in the last years, the state of the
@@ -2338,7 +2482,61 @@ ref{fig:TED_explain_operators}.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/general/ted_explain.png
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\backslash
+centering 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:TED_explain_operators"
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Basic TED operators
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \end_inset
 
@@ -2353,12 +2551,6 @@ status open
 
 \backslash
 begin{figure} 
-\end_layout
-
-\begin_layout Plain Layout
-
-\backslash
-centering 
 \end_layout
 
 \begin_layout Plain Layout
@@ -2419,25 +2611,84 @@ This significantly limits the genetic programming on the logical parts it
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/trees/tree_modifiable_nodes.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 
 \backslash
-begin{figure}[ht] 
-\backslash
-centering 
-\backslash
-includegraphics[scale=0.6]{img/trees/tree_modifiable_nodes.png} 
-\backslash
 caption{Red nodes have to stay the same, green ones can be modified} 
+\end_layout
+
+\begin_layout Plain Layout
+
 \backslash
 label{img:tree_modifiable_nodes} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/trees/tree_modifiable_nodes_improved.png
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
 \backslash
-includegraphics[scale=0.6]{img/trees/tree_modifiable_nodes_improved.png} 
-\backslash
-caption{The same tree with inserted nodes in blue} 
-\backslash
-label{img:tree_modifiable_nodes_modified} 
-\backslash
-end{figure}
+centering 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "img:tree_modifiable_nodes_modified"
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The same tree with inserted nodes in blue
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
@@ -2464,22 +2715,49 @@ Explainable Neural Networks
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
 
-\backslash
-begin{figure}[ht] 
-\backslash
-centering 
-\backslash
-includegraphics[width=1
-\backslash
-textwidth]{img/MTC/sarsa_100_decision_plot.png} 
-\backslash
-caption{State-Action mapping on SARSA-policy with several arbitrary fragments}
- 
-\backslash
-label{img:SARSA-plot-fragments} 
-\backslash
-end{figure}
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/sarsa_100_decision_plot.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "SARSA-plot-fragments"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+State-Action mapping on SARSA-policy with several arbitrary fragments
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -2606,8 +2884,18 @@ Another interesting option is to provide an incomplete tree that does not
  represent a good candidate.
  It does not even have to be a complete mathematical expression.
  Especially for problems that might have a structure but are extremely hard
- to parameterize (for example gym's cart pole balance [TODO ref] can be
- outlined roughly to help the genetic programming find solutions easier.
+ to parameterize (for example gym's cart pole balance 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[TODO ref]
+\end_layout
+
+\end_inset
+
+ can be outlined roughly to help the genetic programming find solutions
+ easier.
 \end_layout
 
 \begin_layout Subsection
@@ -2792,10 +3080,10 @@ Branch mutation replaces one node of the computational tree with a randomly
  new generated subtree, the branch.
  It allows the candidate to introduce a completely new, random aspect to
  the candidate.
-\backslash
+\end_layout
 
-\backslash
- It also is unsafe regarding the distance measurement.
+\begin_layout Standard
+It also is unsafe regarding the distance measurement.
  It can both decrease and increase the distance to the origin.
  This operation therefore had to be treated with caution if we do not want
  too many trees to exceed the parsimony threshold.
@@ -2901,10 +3189,6 @@ if-then-else
 \backslash
  Finding the optimal weight for the adjustments is not part of this paper,
  it shall only be shown that improvements based on one factor can be made.
-\backslash
-
-\backslash
-
 \end_layout
 
 \begin_layout Subsection
@@ -2950,18 +3234,50 @@ tt{['
 \end_inset
 
 ']} 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+asdasd
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
 expression: 
-\backslash
-tt{todo} 
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+todo
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
 Tree ({.csv})
-\backslash
-tt{todo}
+\begin_inset listings
+inline true
+status open
+
+\begin_layout Plain Layout
+
+TODO
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -2976,9 +3292,7 @@ To define the core program you have to select the core nodes.
 \end_layout
 
 \begin_layout Subsection
-
-\backslash
-subsection{TODO Explainable GP Framework, layer0 mutations}
+Explainable GP Framework, layer0 mutations
 \end_layout
 
 \begin_layout Standard
@@ -3238,9 +3552,6 @@ Tree depth: Tree depth is said to be a good measurement for complexity of
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tree-difference-capsuled"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3367,7 +3678,6 @@ The most complex part of the improvement process is to compute the fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "false"
 
 \end_inset
 
@@ -3492,12 +3802,8 @@ Many ways to fit outliers.
 \end_layout
 
 \begin_layout Itemize
-Sparse data can easily be fit:
-\backslash
-
-\backslash
- Improvement can often be achieved with relatively few effort leaving the
- program core untouched.
+Sparse data can easily be fit: Improvement can often be achieved with relatively
+ few effort leaving the program core untouched.
  Using only a couple of elemental mathematical operations or an if-condition
  is often enough.
  On one hand, it supports capsulating the program into more parts, however,
@@ -3519,9 +3825,6 @@ Capsulated changes
 
 \begin_layout Itemize
 overfitting occurs randomly and often.
-\backslash
-
-\backslash
  functions can “accidentally” fit a sample, improving the regression error
  by only a few.
 \end_layout
@@ -3596,8 +3899,10 @@ ly long endgames that a beginner would never be able to achieve.
 \begin_layout Itemize
 Pro: playing against yourself excludes the states emerging from playing
  silly openings or some blunders a priori 
-\backslash
-item Noob: often does not have an endgame to perfect 
+\end_layout
+
+\begin_layout Itemize
+Noob: often does not have an endgame to perfect 
 \backslash
 item combining both can both be the best and worst of both worlds?
 \end_layout
@@ -3744,11 +4049,14 @@ status open
 \end_layout
 
 \begin_layout Section
+Mountain car
+\begin_inset CommandInset label
+LatexCommand label
+name "experiment:mountaincar"
 
-\backslash
-section{Mountain car}
-\backslash
-label{experiment:mountaincar}
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3825,15 +4133,27 @@ In the discrete version of MC there are three possible actions:
 \backslash
 begin{tabular}{ll} 
 \backslash
-hline Num & Action
+hline 
+\end_layout
+
+\begin_layout Standard
+Num & Action
 \backslash
 tabularnewline 
 \backslash
-hline 0 & push left
+hline 
+\end_layout
+
+\begin_layout Standard
+0 & push left
 \backslash
 tabularnewline 1 & no push
 \backslash
-tabularnewline 2 & push right
+tabularnewline 
+\end_layout
+
+\begin_layout Standard
+2 & push right
 \backslash
 tabularnewline 
 \backslash
@@ -3847,7 +4167,6 @@ The problem was first introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "false"
 
 \end_inset
 
@@ -4159,7 +4478,15 @@ The SARSA approach was chosen because it was the fastest that could solve
 \end_layout
 
 \begin_layout Standard
-funfact: cartvel < 0 then 0 else 2 cartvel <= 0 then 0 else 2 
+funfact: cartvel 
+\begin_inset Formula $<$
+\end_inset
+
+ 0 then 0 else 2 cartvel 
+\begin_inset Formula $\leq$
+\end_inset
+
+ 0 then 0 else 2 
 \end_layout
 
 \begin_layout Standard
@@ -4178,9 +4505,14 @@ Close-form preset policy
 
 \begin_layout Standard
 In 
-\backslash
-cite{xiao2019}, a close-form preset policy was proposed, defining a lower
- and upper bound for the car to determine the actions.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+
+\end_inset
+
+, a close-form preset policy was proposed, defining a lower and upper bound
+ for the car to determine the actions.
 \end_layout
 
 \begin_layout Standard
@@ -4653,9 +4985,7 @@ For this initial experiment, the black box is explicitly not , the way it
 \end_layout
 
 \begin_layout Paragraph
-
-\backslash
-paragraph{First evaluation} 
+First evaluation
 \end_layout
 
 \begin_layout Standard
@@ -5369,7 +5699,6 @@ The Industrial benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "false"
 
 \end_inset
 

@@ -458,9 +458,9 @@ class ExplainableGP(object):
         else:
             evolve_list_random = self.config['evolve_list_random']['from_scratch']
 
-        total_rate = sum([x['evolve_rate'] for x in evolve_list_random.values()])
+        total_rate = sum([x['evolve_rate'] for x in evolve_list_random])
 
-        for ii, evolve_specs in enumerate(evolve_list_random.items()):
+        for ii, evolve_specs in enumerate(evolve_list_random):
             evolve_num = int(amount * (evolve_specs['evolve_rate'] / total_rate))
             call_params = evolve_specs.get('custom_params')
             tag = evolve_specs['tag']
@@ -1548,7 +1548,7 @@ class ExplainableGP(object):
         mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
         mean_min_max_var = list(mean_min_max_var)
         if 'depth' in size_mode:
-            max_dummy = self.config['depth_max']
+            max_dummy = self.config['tree_depth_max']
         elif 'nodes' in size_mode:
             max_dummy = self.config['parsimony_max']
         else:

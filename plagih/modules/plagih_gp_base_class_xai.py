@@ -491,7 +491,7 @@ class ExplainableGP(object):
             #         new_tree = self.pop_random_from_origin_fix(call_params, origin_tree)
             #         self.pop_append(new_tree, last_evolution=tag)
         else:
-            self.gen_create_random(self.config('pop_max'))
+            self.gen_create_random(self.config['pop_max'])
 
         self.gen_finalize()
         write_file_population_karoo(self.population_base, 'first', self.root_dir, self.gen_id, print_type=self.print_type)  # first gen only

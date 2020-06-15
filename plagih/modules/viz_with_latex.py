@@ -3,6 +3,7 @@ Visualising Trees with latex.
 """
 # from plagih.modules.operators import op
 from plagih.modules.plagih_tree import *
+import re
 
 tree_sep = ''  # ''\\newpage'
 
@@ -11,7 +12,7 @@ def latex_get_forest_title(parsim, fitness, tikz_code, tree_sep):
     return 'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, fitness, tikz_code, tree_sep)
 
 
-def latex_complete_tree_summary(tikz_forest_list, preamble=''):
+def latex_treeviz_full(tikz_forest_list, preamble=''):
     """
     Latex standalone document of forest trees.
     Possible \documentclass options:
@@ -38,38 +39,167 @@ def latex_complete_tree_summary(tikz_forest_list, preamble=''):
 def latex_wrap_forest(tikz_forest_tree):
     """
     tikz-forest wrap for a tree in latex-tikz-forest notation.
-    - Wraps the 'forest' for latex
-    - prepares a number of node styles
-        - terminal:
-            - variable
-            - constant
-        - non-terminal
-        - fixnode: If user specified this as fix node
-        - originalnode: todo, if node is the same as in origin_meta (exactly the same, changed variable?, ...)
-        - point: sfeh, guess this is currently not used
+    todo, if node is the same as in origin_meta (exactly the same, changed variable?, ...)
     """
 
     # '\n  point/.style={{coordinate,}},' \
     # '\n  symbol/.style={{text height=1.5ex,text depth=.25ex,}},' \
 
+    # '\n  operation/.style={{}},' \
+    # '\n  nonterminal/.style={{rectangle}},' \
+    # '\n  variable/.style={{rounded corners,}},' \
     latex_tikz_forest = '\n\\begin{{forest}}' \
-                        '\n  for tree={{rounded corners,align=center,draw=black!100,fill=blue!20}},' \
-                        '\n  terminal/.style={{}},' \
-                        '\n  nonterminal/.style={{rectangle}},' \
-                        '\n  operation/.style={{}},' \
-                        '\n  fixnode/.style={{fill=blue!60,}},' \
+                        '\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
                         '\n  terminal/.style={{rectangle,}},' \
-                        '\n  variable/.style={{rounded corners,}},' \
+                        '\n  fixnode/.style={{fill=blue!60,}},' \
                         '\n  constant/.style={{rectangle,}},' \
                         '\n {}' \
                         '\n\\end{{forest}}\n'.format(tikz_forest_tree)
     return latex_tikz_forest
 
 
-
 ##########
 # Latex tree visualisation
 ##########
+
+def tree_viz_get_nel(tree):
+    """
+    Deprecated.
+    Returns nodes, edges and labels to visualize a tree with NetworkX or pygraphviz. Similar to deap gp visualisation.
+    Deprecated? -> Used for NetworkX- which is not used as pygrapviz could not be installed on windows. Latex is used now.
+    E. g. the tree with labels [+, 1, 2]
+    -> node_list = [1, 2, 3], edge_list = [[1, 2],[1, 3]], label_list = [x, 1, 2]
+    """
+    # iteratte over all nodes
+    # save nodes in list, all edges in list
+    node_list, edge_list, label_list = [], [], []
+    for node_id in tree_nodes_get_ids(tree):
+        node_list.append(node_id)  # node id
+        for child_id in tree_node_get_childs(tree, node_id):
+            edge_list.append([node_id, child_id])
+        label_list.append(tree_node_get_label(tree, node_id))
+    return node_list, edge_list, label_list
+
+
+def latex_tree_get_brackets(tree, node_id=root_id):
+    """
+    creates a tex file with a tikz figure of a tree.
+
+    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
+    """
+    extras = ''
+    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
+
+    # todo i guess this is superfluous
+    # # Get the best math-like representation for functions
+    # if label in op:
+    #     latex_label = op[label]['latex1']
+    # else:
+    #     latex_label = '${{{}}}$'.format(label)
+
+    # todo float labels too long
+    # todo underline makes lower indices... good or bad?
+
+    # custom node design
+    if arity == 0:
+        extras += ',terminal'
+
+        if tree_node_is_variable(tree, node_id):
+            extras += ',variable'
+        else:
+            extras += ',constant'
+
+    if not tree_node_is_modifiable(tree, node_id):
+        extras += ',fixnode'
+
+    label += extras
+
+    child_ids = tree_node_get_childs(tree, node_id)
+    for child_id in child_ids:
+        label += (latex_tree_get_brackets(tree, child_id))
+    else:
+        latex_label = '[{}]'.format(label)
+
+    return latex_label
+
+
+def visualize_tree_node_force_show(tree, node_id):
+    """
+    Check if a node must be displayed as full node
+    changes_xtypes or complex_label or close_to_root or fix_node
+    - if it changes datatypes
+    """
+
+    modifiable = tree_node_get_modify(tree, node_id)
+    fix_node = True if modifiable == 0 else False  # show (at least) the root node as tree?
+    if fix_node:
+        return True
+
+    label = tree_node_get_label(tree, node_id)
+    complex_label = label in ['Ifte', 'Maxi', 'Mini']  # ideas: min, max, if, abs (sfeh: or let the user specify)
+    if complex_label:
+        return True
+
+    xtype = tree_node_get_xtype(tree, node_id)
+    changes_xtypes = 'b' in xtype and 'f' in xtype  # Attention: (xtype in ['f2b', 'b2f', 'b2f2f']) is slower
+    if changes_xtypes:
+        return True
+
+    depth = tree_node_get_depth(tree, node_id)
+    close_to_root = depth < 0  # show (at least) the root node as tree?
+    if close_to_root:
+        return True
+
+    return False
+
+
+def tree_node_is_numeric_constant(tree, node_id):
+    """
+    returns if the label is float/int constant (aka numeric value)
+    """
+    if tree_node_get_xtype(tree, node_id) == '2f':
+        try:
+            label = float(tree_node_get_label(tree, node_id))
+            return True
+        except:
+            pass
+
+    return False
+
+
+def latex_tree_get_forest(tree, tightviz=True):
+    """
+    whole procedure from tree to foret core
+    """
+
+    # first, shorten all long labels (e.g. 2.44423443344534 -> 2.444)
+    tree = latex_tree_shorten_labels(tree)
+
+    if tightviz:
+        ### optional. merges sympifiable nodes, for large trees
+        tree = latex_tree_get_vistree(tree)
+        ###
+
+    bracket_tree = latex_tree_get_brackets(tree)
+    forest_viz = latex_wrap_forest(bracket_tree)
+    return forest_viz
+
+
+def latex_tree_shorten_labels(tree):
+    # First, shorten floats to a 3-decimal form
+    tree_ids = list(tree_iterate_range(tree))
+
+    for node_id in tree_ids:
+        if tree_node_is_numeric_constant(tree, node_id):
+            label = float(tree_node_get_label(tree, node_id))
+            if label == 0:  # e.g. '0'
+                pass
+            elif label % 1 != 0:  # e.g. '2.0442'
+                label = '{:0.3f}'.format(label)
+            else:  # e.g. 2
+                label = '{}'.format(int(label))
+            tree = tree_node_set_label(tree, node_id, label)
+    return tree
 
 
 def latex_tree_get_vistree(tree):
@@ -78,20 +208,12 @@ def latex_tree_get_vistree(tree):
     # todo idee: alle teil-terme, die eine einzige variable beinhalten?
     """
 
-    node_dict = dict()  # key: node_id, value: number of nodes to paste
+    node_dict = dict()  # key: node_id, value: number of nodes to paste into the viz-node
     tree_ids = list(tree_iterate_range(tree))
 
-    # before calculating more, shorten floats to a 3-decimal form
-    for node_id in tree_ids:
-        if tree_node_is_numeric_constant(tree, node_id):
-            label = float(tree_node_get_label(tree, node_id))
-
-            if label % 1 > 0.001:
-                label = '{:0.3f}'.format(label)
-            else:
-                label = '{}'.format(int(label))
-            tree = tree_node_set_label(tree, node_id, label)
-
+    # All nodes, that have to be shown -> node_dict
+    # All nodes, that can be sympified -> open_sym
+    # node_dict -> {1: 1, 2: 1, ...}
     open_sym = []  # the nodes where the expression can be sympified
     open_fix = tree_ids[:]
     while open_fix:
@@ -106,6 +228,7 @@ def latex_tree_get_vistree(tree):
             open_sym.append(node_id)
             open_fix.remove(node_id)
 
+    # node_dict -> {5: 8, 6: 9, ...} (updating the above version)
     open_sym = sorted(open_sym)
     while open_sym:
         node_id = open_sym[0]
@@ -120,7 +243,7 @@ def latex_tree_get_vistree(tree):
     vis_xtype_list = []
     vis_modify_list = []
 
-    # tex_replace = latex_get_replace_tupels()  # sfeh quick code
+    tex_replace = latex_get_replace_tupels()  # sfeh quick code
 
     for node_id in tree_ids:
         if node_id in node_dict:
@@ -128,13 +251,14 @@ def latex_tree_get_vistree(tree):
             if node_dict[node_id] == 1:
                 arity = tree_node_get_arity(tree, node_id)
                 label = tree_node_get_label(tree, node_id)
-                # label = latex_string_replace(label, tex_replace)
-                vis_label_list.append(label)
             elif node_dict[node_id] > 1:
                 expr_raw = tree_get_expr_raw(tree, node_id)
                 label = expr_sympify(expr_raw)
-                # label = latex_string_replace(label, tex_replace)
-                vis_label_list.append(label)
+
+            label = re.sub('(?<=[0-9]{3})(\d+)', '', label)  # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
+            for opraw, optex in tex_replace.items():
+                label = label.replace(opraw, optex)
+            vis_label_list.append(label)
 
             vis_arity_list.append(arity)
 
@@ -150,19 +274,6 @@ def latex_tree_get_vistree(tree):
 
     vis_tree = latex_vistree_from_labellist(vis_label_list, vis_xtype_list, modify_list=vis_modify_list, arity_list=vis_arity_list, force_np_size=longest_label)
     return vis_tree
-
-
-def latex_tree_get_forest(tree):
-    """
-    Creates forest tree representation (based on tikz) for LaTeX.
-    The file can easily ne included in a .tex file with '\input{file_name}'
-    optional: stand_alone = True for a complete latex file
-    """
-
-    bracket_tree = latex_tree_node_get_forest(tree)
-    forest_viz = latex_wrap_forest(bracket_tree)
-
-    return forest_viz
 
 
 def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity_list=None, force_np_size=None):
@@ -189,6 +300,9 @@ def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity
 
 
 def latex_get_replace_tupels():
+    """
+    'Mini(a, 2.3)' -> min(a, 2.3)
+    """
     label_string_replace = {}
     for key, value in op.items():
         if isinstance(key, str):

@@ -1045,17 +1045,12 @@ class ExplainableGP(object):
             ptree = karoo_ptree_from_expr(expr_raw, self.env_variables)
             tree = ptree.get_uninstanced_tree()
             tree = self.tree_finish(tree, last_evolution='texify')
-            ###
-            vistree = latex_tree_get_vistree(tree)
-            ###
 
-            tikz_code = latex_tree_get_forest(vistree)  # generate the small forest inputs
+            forest_viz = latex_tree_get_forest(tree)
 
-            # save a ready-to-use tex file with all pareto trees
-            forest_grouped.append(latex_get_forest_title(parsim, meta['fitness_train'], tikz_code, tree_sep))
+            forest_grouped.append(latex_get_forest_title(parsim, meta['fitness_train'], forest_viz, tree_sep))
 
-        latex_full_doc = latex_complete_tree_summary(forest_grouped)
-        # self.file_locs = {'agents_trees.tex': 'agents/agents_trees.tex'}
+        latex_full_doc = latex_treeviz_full(forest_grouped)
         path_trees_tex = file_make_dir(root_path / self.file_locs['trees_tex'])
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)

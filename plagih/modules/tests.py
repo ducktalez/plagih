@@ -1,6 +1,7 @@
 from plagih.modules.plagih_eval import *
 from plagih.modules.plagih_tree import *
 from plagih.modules.operators import *
+from plagih.modules.viz_with_latex import *
 import time
 from pathlib import Path
 from plagih.tree_distances.tree_edit_distance import *
@@ -63,6 +64,11 @@ class TestHelpers:
         label_list = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
         label_list = workaround_remove_tilde_operator(label_list)
 
+    def test_visualisation(self):
+        tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
+        result = latex_tree_get_forest(tree)
+        print(result)
+
 
 class MountainCarExamples:
 
@@ -98,7 +104,7 @@ class MountainCarExamples:
     expr_test1 = 'Ifte(1.019*(-0.09)**b*(0.98 - 0.13) + Mini(b, pos) > -0.97, 0.0, 2.0)'
 
 
-# live_test = TestHelpers()
-# live_test.test_ted_weighting()
+live_test = TestHelpers()
+live_test.test_visualisation()
 
-print(ast_convert_from_expr('Ifte((((Mini(((-0.09)*(((cartPos)+(0.25))**(2)))+(0.03), ((0.3)*(((cartPos)+(0.9))**(4)))-(0.008)))<=(cartVel))&((cartVel)<=(((-0.07)*(((cartPos)+(0.38))**(2)))+(0.7)))), (2), (0))', build=True))
+# print(ast_convert_from_expr('Ifte((((Mini(((-0.09)*(((cartPos)+(0.25))**(2)))+(0.03), ((0.3)*(((cartPos)+(0.9))**(4)))-(0.008)))<=(cartVel))&((cartVel)<=(((-0.07)*(((cartPos)+(0.38))**(2)))+(0.7)))), (2), (0))', build=True))

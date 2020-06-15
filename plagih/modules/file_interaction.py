@@ -1,56 +1,20 @@
 import pickle
-from plagih.modules.plagih_tree import *
 from plagih.modules.printing import *
 import csv
-from pydoc import locate  # convert stringed-type to type. ('float' -> float)
-import sklearn.model_selection as skcv
-import numpy as np
+import matplotlib.pyplot as plt
 import yaml
+from pathlib import Path
+import numpy as np
 
-example_runs = 'run_examples/'
-
-run_files = 'run_files/'
-folder_plots = 'plots/'
-folder_steps = 'steps/'
-folder_pop_analysis = 'pop_dist/'
-
-file_backup_pickle = 'backup/backup.p'  # backup-version is set here
-file_conclusion = 'conclusion.txt'
-
-file_pareto = 'info/pareto.txt'
-info_config_yaml = 'info/config.yaml'
-file_info_config_json = 'info/config.json'
-file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
-info_distributions_yaml = 'info/distributions_file.yaml'
-
-file_config_yaml = 'run_files/config.yaml'
-file_config_json = 'run_files/config.json'
-samples_ready_p = 'run_files/samples_ready.p'
-file_evolve_functions = 'run_files/evolve_functions.yaml'
-env_variables_yaml = 'run_files/env_variables.yaml'
-samples_csv = 'run_files/samples.csv'
-operators_csv = 'run_files/operators_csv.csv'
-operators_yaml = 'run_files/operators_csv.yaml'
-operators_info = 'run_files/operators_csv.yaml'
-distributions_file = 'run_files/distributions_file.yaml'
-tree_expr_txt = 'run_files/tree_expr.txt'
-tree_labels_csv = 'run_files/tree_labels.csv'
-tree_numpy_csv = 'run_files/tree_numpy.csv'
-
-file_sarsa_agent = '../../benchmarks/gym_mountaincar/agents/sarsa_agent_200.p'  # todo
-
-# pycode_load = 'run_files/custom_agent_eval.py'  # sfeh make pretty solution
-pycode_load = '../../benchmarks/gym_mountaincar/agents/quick_eval.py'  # sfeh make pretty solution
-
-folder_solutions = 'agents/'
-trees_tex = 'agents_trees.tex'
-file_pycode = 'agents.py'
-file_pycode_eval = 'eval_agents.py'
+try:
+    import tikzplotlib
+except Exception as ex:
+    print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
 
 T_num_lines = 15  # sfeh this var is not found otherwise
 
 
-def make_dir(path):
+def folder_make_dir(path):
     """
     Checks if the folders for the specified path exist and creates them otherwise.
     Apparently, this procedure is used often.
@@ -71,26 +35,19 @@ def file_make_dir(file_path):
     return p
 
 
-def write_file_pareto_text(pareto, root_path):
+def write_file_pareto_txt(pareto, root_path, file_pareto):
     """
     Save all the pareto efficient candidates to file
+    sfeh save as yaml?
     """
 
-    pth = file_make_dir(root_path / file_pareto)
+    path_pareto = file_make_dir(root_path / file_pareto)
 
-    with Path.open(pth, 'w') as file:
+    with Path.open(path_pareto, 'w') as file:
         for parsim, meta in sorted(list(pareto.items())):
             fitness = meta['fitness_train']
             algo_sym = meta['expr_sym']  # save raw version, not the sympified one
             file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
-    printez('f', '{}'.format(pth))
-
-
-def open_force_write_text(p, text):
-    p = Path(p)
-    if not p.parent.is_dir():
-        p.parent.mkdir(parents=True)
-    p.write_text(text)
 
 
 def experiment_data(experiment_yaml):
@@ -133,27 +90,12 @@ def experiment_data(experiment_yaml):
     }
 
 
-def save_data_pickle(data_prepared, data_pickle_path):
-    """
-    saves prepared plagih data to pickle file
-    """
-
-    with Path.open(data_pickle_path, 'wb') as file:
-        pickle.dump(data_prepared, file, protocol=pickle.HIGHEST_PROTOCOL)  # not sure if the protocol matters
-
-    printez('f', '{}'.format(data_pickle_path))
-
-    return
-
-
-def write_file_population_karoo(population, pop_name, path, gen_id):
+def write_file_population_karoo(population, pop_name, path, gen_id, print_type=None):
     """
     Save population_* to disk.
 
     """
-    file_name = 'population_{}.csv'.format(str(pop_name))
-    file_path = path / 'info/' / file_name
-    file_path = file_make_dir(file_path)
+    file_path = file_make_dir(path / 'info/' / 'population_{}.csv'.format(str(pop_name)))
     # sfeh? function to tree_ and append each tree
     with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')
@@ -166,7 +108,7 @@ def write_file_population_karoo(population, pop_name, path, gen_id):
             for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
                 target.writerows([population[ii][row]])
 
-    printez('f', '{}'.format(file_name))
+    printez('f', '{}'.format(file_path), print_type=print_type)
 
     return
 
@@ -182,7 +124,7 @@ def pickle_load(path):
     return pickle_data
 
 
-def pickle_dump(path, data):
+def pickle_dump(path, data, print_type=None):
     """
     saves prepared plagih data to pickle file
     """
@@ -190,18 +132,20 @@ def pickle_dump(path, data):
     path = file_make_dir(path)
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        printez('f', '{}'.format(path))
+        printez('f', '{}'.format(path), print_type=print_type)
     return
 
 
 def yaml_load(yaml_path):
-
+    """
+    .yaml-file loader (saves two lines that I had to look up all the time)
+    """
     with Path.open(yaml_path, 'r') as file:
         loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)
     return loaded_yaml
 
 
-def yaml_dump(path, data):
+def yaml_dump(path, data, print_type=None):
     """
     saves prepared plagih data to pickle file
     """
@@ -209,5 +153,111 @@ def yaml_dump(path, data):
     path = file_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
-        printez('f', '{}'.format(path))
+        printez('ff', '{}'.format(path), print_type=print_type)
     return
+
+
+def plot_styleup(x, y, set_left=None, set_right=None, set_top=None, right_padding=1.05, top_padding=1.05):
+
+    top, bottom, left, right = max(y), min(y), min(x), max(x)
+    if set_left:
+        left = set_left
+
+    if set_top:
+        new_top = set_top
+    else:
+        new_top = (top - min(bottom, 0)) * top_padding  # top * 1.05 for better style
+
+    if set_right:
+        right = max(right, set_right)
+    new_right = right * right_padding
+
+    return top, bottom, left, right, new_right, new_top
+
+
+def plot_end(data_2d, plotname_path,
+             plt_title='', plt_curve_label='', plt_x_label='', plt_y_label='', yscale='linear',
+             step_where='', plt_xparam='', plt_hist=False,
+             linestyle='-',
+             marker='',
+             set_left=None, set_right=None, set_top=None,
+             right_padding=1.05, top_padding=1.05,
+             beyond_lines=False,
+             save_tikz=False,
+             subfolder=None,
+             fill_variance=None):
+    """
+    Make all plots in the same style - and also saving space.
+    - Makes pyplots
+
+
+    :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
+    :param plotname_path: where to save the result
+    :param plt_title:
+    :param plt_curve_label: irrelevant for a single curve
+    :param plt_x_label: label the x-axis
+    :param plt_y_label: label the y-axis
+    :param yscale: only 'linear'.
+    :param step_where: makes 'step' plots- can be 'post', 'pre' or [pls google]
+    :param plt_xparam: not in use, the same adjustment can be done with optional parameters
+    :param linestyle: E. g. 'None', 'dashed', '-', ''
+    :param set_left: Smallest left value
+    :param set_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40
+    :param top_padding: How much padding to the top border
+    :param beyond_lines: in step plots, draw the line further to the left and right
+    :param save_tikz: Also save the plot as tikzpicture (for Latex)(requires tikzplotlib)
+    :param subfolder: save plot in plots/*subfolder*, e.g. if this plot is created in every generation
+    :return:
+
+    Options that are not used
+    # plt.legend()
+    sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
+    """
+
+    if len(data_2d) == 0:
+        print_e('Plotting empty array is not possible! Data={}'.format(data_2d))
+        return
+
+    x, y = data_2d
+
+    top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
+
+    if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
+        x = np.concatenate([[x[0]], x, [new_right + 1]])
+        y = np.concatenate([[new_top + 1], y, [y[-1]]])
+
+    fig, ax = plt.subplots()
+    ax.set_yscale(yscale)
+    ax.set_ylim(min(bottom, 0), new_top)
+    ax.set_xlim(min(left, 0), new_right)
+    fig.tight_layout()
+    ax.set_xlabel(plt_x_label)
+    ax.set_ylabel(plt_y_label)
+    ax.set_title(plt_title)
+
+    if step_where:
+        ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
+    else:
+        ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+        if fill_variance is not None:
+            x_std, y_var = fill_variance
+            y_std = np.sqrt(y_var)
+            lower_bound_stderr = y-y_std
+            upper_bound_stderr = y+y_std
+            ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
+            ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
+
+    if subfolder:  #
+        plotname_path = folder_make_dir(plotname_path / subfolder)
+
+    if save_tikz:
+        try:
+            tikzplotlib.save(plotname_path / '{}.tex'.format(plt_title))
+        except Exception as ex:
+            pass
+
+    plt.tight_layout()
+    plt.savefig(plotname_path / '{}.png'.format(plt_title))
+    plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
+    return
+

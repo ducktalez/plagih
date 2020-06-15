@@ -170,20 +170,20 @@ class DeepQNetwork:
         else:
             # Exploit: Get action from Q-network
             observation = np.reshape(observation, (1, self.s_dim))
-            Qs = sess.gp_run(self.q, feed_dict={self.s: observation})  # shape (1, a_dim)
+            Qs = sess.run(self.q, feed_dict={self.s: observation})  # shape (1, a_dim)
             action = np.argmax(Qs[0])
         return action
 
     def learn_a_batch(self, sess):
         # update target every C learning steps
         if self.learn_step_counter % self.update_target_C == 0:
-            sess.gp_run(self.update_op)
+            sess.run(self.update_op)
 
         # Sample a batch
         s_batch, a_batch, r_batch, done_batch, s2_batch = self.replay_buffer.sample_batch(self.minibatch_size)
 
         # Train
-        _, _, Qhat, loss = sess.gp_run([self.train_op, self.Qa_op, self.q_at_a, self.loss], feed_dict={
+        _, _, Qhat, loss = sess.run([self.train_op, self.Qa_op, self.q_at_a, self.loss], feed_dict={
             self.s: s_batch, self.a: a_batch, self.r: r_batch, self.done: done_batch, self.s_: s2_batch})
 
         # count learning steps

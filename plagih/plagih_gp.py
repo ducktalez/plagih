@@ -8,9 +8,24 @@ from plagih.modules.plagih_data import *
 from plagih.modules.operators import oparray_from_list
 import yaml
 
-
 # import warnings
 # warnings.filterwarnings('error')
+
+# /info/
+file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
+
+info_distributions_yaml = 'info/distributions_file.yaml'
+env_variables_yaml = 'info/env_variables.yaml'
+
+# /run_files/
+file_config_yaml = 'run_files/config.yaml'
+file_config_json = 'run_files/config.json'
+file_evolve_functions = 'run_files/evolve_functions.yaml'
+samples_csv = 'run_files/samples.csv'
+distributions_file = 'run_files/distributions_file.yaml'
+tree_expr_txt = 'run_files/tree_expr.txt'
+tree_labels_csv = 'run_files/tree_labels.csv'
+tree_numpy_csv = 'run_files/tree_numpy.csv'
 
 
 def plagih_config_update_from_yaml(config_yaml=Path('config.yaml')):
@@ -32,15 +47,18 @@ def plagih_config_update_from_json(config_json=Path('config.json')):
 
 
 def labellists_from_csv(csv_path):
+    """
+    from the labellist-csv, loading the label list
+    """
     modify_list = []
     with Path.open(csv_path, newline='') as csvFile:
         reader = csv.reader(csvFile, delimiter=',')
         for row in reader:
             if len(row) > 0:
-                if row[0] == 'label_list':
-                    label_list = row[1:]
-                elif row[0] == 'modify_list':
-                    modify_list = [int(x) for x in row[1:]]  # N_modify sfeh
+                if row[0] == 'label_list' or row[0] == 'node_label':
+                    label_list = [x.replace(' ', '') for x in row[1:]]
+                elif row[0] == 'modify_list' or row[0] == 'node_modify':
+                    modify_list = [int(x.replace(' ', '')) for x in row[1:]]
                 elif row[0] == '':
                     pass
                 else:
@@ -63,7 +81,7 @@ def show_default_config(output_file):
 
 def show_default_operators(output_file=None):
     """
-    - operators_csv.csv
+    - operators.csv
     """
 
     if not Path.is_dir(output_file.parent):
@@ -79,215 +97,129 @@ def runfolder_exists(root_dir):
         raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
 
 
-def load_config(root_dir):
-    config_yaml_path = root_dir / file_config_yaml
-    if Path.is_file(config_yaml_path):  # Load config.yaml
-        with Path.open(config_yaml_path, 'r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-    else:
-        printez('i', 'Loading json-config, yaml-version was not found...')
-        config_json_path = root_dir / file_config_json
-        if Path.is_file(config_json_path):  # Load config.yaml
-            with Path.open(config_yaml_path, 'r') as file:
-                json.load(file)
-        else:
-            print_warning('w', 'You should have a {} here:\n{}'.format(file_config_yaml, config_yaml_path))
-            config = {}
-    return config
+def load_startconfig(root_dir):
+    """
+    todo
+    single file that can specify
+    - the files to be loaded (which can be somewhere else)
+    - the action for the regression
+    - the
+    """
+    # loading_configuration = root_dir / 'loading.yaml'
+    #
+    # if Path.is_file(loading_configuration):  # Load config.yaml
+    #     with Path.open(loading_configuration, 'r') as file:
+    #         config = yaml.load(file, Loader=yaml.FullLoader)
+    # else:
+    #     print_warning('w', 'You can specify the files that are loaded here blabla sfeh')
+    # return config
 
 
-def load_data_prepared(root_dir):
+def load_label_list(root_dir, user_origin_csv=None):
     """
 
     """
-    if Path.is_file(root_dir / samples_ready_p):
-        data_prepared = pickle_load(root_dir / samples_ready_p)
-    elif Path.is_file(root_dir / samples_csv):
-        data_prepared = data_from_csv(root_dir / samples_csv)
-        print('Prepared the raw {} behaviour. Saving for next run.'.format(samples_csv))
-        pickle_dump(root_dir / samples_ready_p, data_prepared)
-        yaml_dump(root_dir / env_variables_yaml, data_prepared)  # sfeh todo
-    else:
-        raise FileNotFoundError('No data provided? Please provide {} or {}.'.format(samples_ready_p, samples_csv))
-
-    # sfeh: if you want to load informations from extra file, check for this file here
-
-    return data_prepared
-
-
-def load_evolve_functions(root_dir):
-    """
-
-    """
-    if Path.is_file(root_dir / file_evolve_functions):
-        evolve_list = yaml_load(root_dir / file_evolve_functions)
-    else:
-        print_warning('w', 'No gp evolve procedure or functions defined! Trying to choose them for you.')
-
-        evolve_list = [
-            {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06},
-            {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
-             'custom_params': {'sympify_tree': True}},
-            {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01},
-            {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05},
-            {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (3, 1, 5, 0.8), 'build_method': 'full'}}},
-            {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (3, 1, 6, 1), 'build_method': 'grow'}}},
-            {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (12, 1, 20, 4), 'build_method': 'grow'}}},
-            {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30},
-            {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.09,
-             'custom_params': {'mode': 'branch'}},
-            {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.01,
-             'custom_params': {'mode': 'point'}},
-            {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.06,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 6, 1), 'build_method': 'full'}}},
-            {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.06,
-             'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 7, 1), 'build_method': 'grow'}}},
-            {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.03,
-             'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 50, 6), 'build_method': 'full'}}},
-        ]
-
-    yaml_dump(root_dir / file_info_evolve_dict_yaml, evolve_list)
-    # sfeh: if you want to load informations from extra file, check for this file here
-
-    return evolve_list
-
-
-def load_tree_builders(root_dir, data_prepared=None):
-    # Load operators_csv
-    path = root_dir / operators_yaml
-    # if Path.is_file(operators_csv):  # sfeh test yaml
-    #     functions = np.loadtxt(operators_csv, delimiter=',', skiprows=1, dtype=str)  # load the user defined functions (operators_csv)
-
-    if Path.is_file(path):
-        operators = yaml_load(path)
-    else:
-        # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
-        print_warning('w', 'Operators-file does not exist. Creating one with a default list of mathematical operators_csv.')
-        operators = np.array([['+', 2], ['+', 2], ['-', 2], ['*', 2], ['/', 2], ['Mini', 2], ['Maxi', 2], ['<', 2], ['<=', 2],
-                              ['==', 2], ['abs', 2], ['Andb', 2], ['Orb', 2], ['Notb', 2], ['sin', 2], ['Ifte', 2], ['Ifte', 2]])
-        # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s')
-        yaml_dump(operators_info, operators)
-
-    choose_oparray = oparray_from_list(operators)
-
-    # load distributions_file
-    distributions_yaml = root_dir / distributions_file
-    if Path.is_file(distributions_yaml):
-        with Path.open(Path(distributions_yaml), 'r') as file:
-            distributions_as_string = yaml.load(file, Loader=yaml.FullLoader)
-    else:
-        print_warning('w', 'Distributions file does not exist. Using default set.')
-        distributions_as_string = {'2f': ['lambda: np.random.normal(1,2)',
-                                          'lambda: np.random.normal(1,1)',
-                                          'lambda: np.random.randint(0, 10)'],
-                                   '2b': ['lambda: np.random.choice([True, False])'],
-                                   'observed_floats': 100}  # todo variables from csv
-        info_file = file_make_dir(root_dir / info_distributions_yaml)
-        yaml_dump(info_file, distributions_as_string)
-
-    distributions = {'2f': [], '2b': []}
-
-    if data_prepared and distributions_as_string.get('observed_floats'):
-        env_variables, data_train, _ = data_prepared  # todo data types must be float for this to work
-        action_columns = list(range(len(env_variables['obs_name']), len(data_train[0])))
-        subset = np.delete(data_train, action_columns, 1)
-        variables_set = np.random.choice(subset.flatten(), distributions_as_string.get('observed_floats'))  # 2nd param is probably '100'
-        distributions['2f'].extend([lambda: np.random.choice(variables_set)]),
-
-    distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),
-    distributions['2b'].extend([eval(x) for x in distributions_as_string['2b']])
-
-    return choose_oparray, distributions
-
-
-def load_label_list(root_dir):
     tree_expr_txt_path = root_dir / tree_expr_txt
     tree_labels_csv_path = root_dir / tree_labels_csv
     tree_numpy_csv_path = root_dir / tree_numpy_csv
     label_list = None
     modify_list = None
-    if Path.is_file(tree_labels_csv_path):
-        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)
+    if user_origin_csv:
+        label_list, modify_list = labellists_from_csv(user_origin_csv)
+    elif Path.is_file(tree_labels_csv_path):
+        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)  # sfeh lol it does just the same?
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
         print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
         raise
-    elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
+    elif Path.is_file(tree_expr_txt_path):  # karoo_ptree_from_expr(expr)
         print('SFEH needs to create an option to make trees from expression')
-        raise
+        with Path.open(tree_expr_txt_path) as txt_file:
+            expr = txt_file.read()  # sfeh requires separate handling?
+            print('Assuming all variables are floats, sfeh')
+            ptree = karoo_ptree_from_expr(expr, 'sfeh')
+            tree = ptree.get_uninstanced_tree()
+            tree_pretty_print(tree)  # sfeh not working?? todo debug
+            tree_save_csv(tree, tree_labels_csv_path)
+            raise  # sfeh
     else:
-        print_warning('ww', 'No origin-tree file was provided. Continuing.')
+        print_warning('ii', 'No origin-tree file was provided. Continuing.')
     return label_list, modify_list
 
 
-def gp_run(root_dir):
-    """
-    Loads important files in your run-folder
-    - load config.yaml
-    - load samples_ready_p.p or samples.csv
-    - load operators_csv.csv
-    - load tree
+def load_config(config_path):
     """
 
-    config = load_config(root_dir)
-    gp = ExplainableGP(root_dir, config=config)
+    """
+    try:
+        root_dir = config_path.parent
+        file_extension = config_path.suffix
+        if file_extension == '.yaml':
+            with Path.open(config_path, 'r') as file:
+                config = yaml.load(file, Loader=yaml.FullLoader)
+        elif file_extension == '.json':
+            with Path.open(config_path, 'r') as file:
+                config = json.load(file)
+        else:
+            config = {}  # sfeh test this
+    except IOError as ioex:
+        raise IOError('Config file could not be loaded. Path: {}\nException: {}'.format(config_path, ioex))
 
-    data_prepared = load_data_prepared(root_dir)
-    gp.activate_dataset(data_prepared)
+    return root_dir, config
 
-    choose_oparray, distributions = load_tree_builders(root_dir, data_prepared=data_prepared)
-    gp.activate_operators(choose_oparray, distributions)
 
-    label_list, modify_list = load_label_list(root_dir)
+def gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
+    """
+    
+    """
+
+    root_dir, config = load_config(config_path)
+    if out_dir:
+        root_dir = out_dir
+
+    config['force_new_run'] = force_new_run
+    config['eval_action'] = eval_action
+
+    # sfeh , opt_origin_tree_csv=origin_tree, out_dir=out_dir
+    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
+
+    label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:
-        observation_bundle = gp.get_observation_bundle()
-        origin_tree = karoo_tree_from_labellist(label_list, observation_bundle, modify_list=modify_list)
-        gp.activate_origin_tree(origin_tree)
+        # todo beautify
+        env_variables = gp.get_env_variables()
+        xtype_list = xtypes_from_labels(label_list, env_variables)
+        origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
+        gp.activate_origin_tree(origin_ptree)
 
-    evolve_list = load_evolve_functions(root_dir)
-    gp.avtivate_evolve_functions(evolve_list)
+    gp.prepare_evolve_functions()
 
     gp.plagih_gp_run()
     sys.exit()
 
 
-def analyze(root_dir):
+def analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
     """
     write all analysing files.
     - pareto (txt, latex_trees, agents)
     - plots (pareto, best)
     """
+    # todo the same code is in gp_run...
+    root_dir, config = load_config(config_path)
+    if out_dir:
+        root_dir = out_dir
 
-    config = load_config(root_dir)
-    data_prepared = load_data_prepared(root_dir)
+    config['force_new_run'] = force_new_run
+    config['eval_action'] = eval_action
 
-    gp = ExplainableGP(root_dir, config=config)
-    gp.activate_dataset(data_prepared)
+    root_dir, config = load_config(config_path)
+    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
+
     gp.plagih_update_analysis()
 
 
-def visualize_labellist(csv_file, output_file=None):
-    """
-    visualize a label list
-    e.g. if you want to check, if you made your tree correctly
-    """
-    print('can not create tree from label list anymore, xtype_list required')
-    # if Path.is_file(csv_file):
-    #     label_list, modify_list = labellists_from_csv(csv_file)
-    #     tree = karoo_tree_from_labellist(label_list, modify_list=modify_list)
-    #     forest_input = latex_tree_get_forest(tree)
-    #     latex_full_doc = latex_complete_tree_summary(forest_input)
-    #     if not output_file:
-    #         output_file = csv_file.with_suffix('.tex')
-    #     with Path.open(output_file, 'w') as csv_file:
-    #         csv_file.write(latex_full_doc)
-    # else:
-    #     print_e('File {}  does not exist!'.format(csv_file))
-
-
 if __name__ == "__main__":
-    runs_dir = Path.cwd() / '../{}'.format(example_runs)
-    root_dir = runs_dir / 'cartpole_v1/'
-    gp_run(root_dir)
+    """
+    
+    """
+    runs_dir = Path.cwd() / '../run_examples/'
+    root_dir = runs_dir / 'cartpole_v1/'  # todo this is outdated
+    gp_run(root_dir, False)

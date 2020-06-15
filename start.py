@@ -4,61 +4,55 @@ This extra file was added to have a file in the root directory that can be start
 """
 from pathlib import Path
 from plagih import plagih_gp
-from plagih.modules.file_interaction import example_runs
 import sys
+import os
 import getopt
+import argparse
 
 # sys.root_dir = sys.root_dir / 'plagih'
 sys.path.append('plagih/')
 sys.path.append('plagih/modules')
-sys.path.append('mountaincar/')
+# sys.path.append('mountaincar/')
 
 
 def main(argv):
     """
    -h, -help
    -run_folder
-   """
-    ipath = None
-    task = 'run'
-    try:
-        opts, args = getopt.getopt(argv, 'hi:o:f', ['ipath=', 'opath=', 'task='])
-    except getopt.GetoptError:
-        print('Failed, try: start.py -i <input FOLDER>')
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ('-h', '--help'):
-            print('start_run.py -i <input FOLDER>\n'
-                  'options:\n'
-                  '--task=<run, analyze, tree-latex>')
-            sys.exit(2)
-        elif opt in ('-i', '--ipath'):
-            ipath = Path(arg)
-        elif opt in ('-o', '--opath'):
-            opath = arg
-            print('Your input -o {} is not used'.format(opath))
-        elif opt in ('--task'):
-            task = arg
-
-    if ipath is None:
-        print('No run-folder provided. Starting an example run.\n')
-        ipath = Path.cwd() / example_runs / 'cartpole_v1/'  # / 'plagih'
-    # print('Starting plagih-run in {}'.format(Path(run_folder)))
-
-    if task == 'run':
-        plagih_gp.gp_run(ipath)
-    elif task == 'analyze':
-        plagih_gp.analyze(ipath)
-    elif task == 'tree-latex':
-        print('Creating a Latex-file from tree (complete tree, todo) csv-file...')
-        # plagih_gp.visualize_labellist(ipath)
-    elif task == 'show-default_config':
-        plagih_gp.show_default_config(ipath)
-    elif task == 'show-default_operators':
-        plagih_gp.show_default_operators(ipath)
-    else:
-        print('Task not known: {}'.format(task))
     # sfeh: options for other functions? run, visualise_tree, analyse_run, check_files, tests
+   """
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Plagih genetic programming (name changes!)')
+    # parser.add_argument('integers', metavar='N', type=int, nargs='+', help='an integer for the accumulator')
+    # parser.add_argument('--sum', dest='accumulate', action='store_const', const=sum, default=max, help='sum the integers (default: find the max)')
+    # parser.add_argument("--data_dir", type=Path, default=Path(__file__).absolute().parent / "data", help="Path to the data directory",)
+
+    parser.add_argument('-config', type=Path, metavar='CONFIG_YAML', help='The config file in the run directory.')
+    parser.add_argument('-out_dir', type=Path, help='A custom output folder (root_dir). Not stable yet.')  # sfeh
+    parser.add_argument('-action', type=int, default=0, help='If there is more than one action, choose the right one.')
+    parser.add_argument('-data_prepared', '-samples_ready', type=Path)
+    parser.add_argument('-origin_tree', type=Path)
+    parser.add_argument('-data_csv', type=Path)
+    parser.add_argument('-force_new_run', action='store_true')
+    parser.add_argument('-analyse', '-analyze', '-files', '-results', action='store_true')
+    args = parser.parse_args()
+    # print(args)
+
+    config_path = args.config
+    out_dir = args.out_dir
+    force_new_run = args.force_new_run
+    eval_action = args.action
+    data_prepared = args.data_prepared
+    origin_tree = args.origin_tree
+
+    plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
+
+    if args.analyse:
+        plagih_gp.analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
+    else:
+        plagih_gp.gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,12 @@
+\chapter{Introduction}
+
+In this thesis, a novel approach for explaining black box machine learning solutions is proposed and evaluated.
+
+The current state of the art in artificial intelligence (AI) is mostly based on the use of complex data structures such as neural networks. Although their performance is beyond question, they must nevertheless be considered as black boxes due to their scope and complexity, which means that humans lose the ability to control and understand decisions made by machines.
+
+Originating from an explainable solution provided by an expert, genetic programming (gp) is used to generate improved solutions which perform like neural network while being as explainable to the expert as possible.
+Several techniques were implemented to improve explainability. This includes the use of a distance measurement to the experts program, genetic evolve operators that are strongly linked to the original program, having the opportunity to leave a core of the origin untouched and many more.
+
+The Pareto efficient candidates, which always represent the greatest improvement to a given complexity increase, can ultimately be weighed on the basis of explainability and fitness. If the expert already had the wrong approach, it can be uncovered and thus reveal core problems in the solution.
+
+To verify the approach, many versions of the approach were tested. As a benchmark, well-known reinforcement learning environments such as the gym mountain car and cart pole were chosen, as well as the industrial benchmark to test more complex controllers in sensitive environments.

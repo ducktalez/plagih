@@ -1,0 +1,15 @@
+install (pip, pip3, conda)
+
+Pathlib: for paths that work on linux and windows
+sympy: simplifying
+
+pathlib
+sympy
+apted
+tikzplotlib
+tensorflow
+sklearn
+pandas
+
+update of the yaml module might be necessary:
+pip install -U PyYaml

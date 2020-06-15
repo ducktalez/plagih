@@ -1,5 +1,7 @@
 from apted import APTED, Config
 from apted.helpers import Tree as aptree
+from plagih.modules.operators import *
+from plagih.modules.plagih_tree import *
 
 
 class CustomConfig(Config):
@@ -28,6 +30,148 @@ def apted_distance(expr1, expr2):
     # print(ted, '\t', mapping)
 
     return ted, mapping
+
+
+def print_apted_tree(tree):
+    tree_vis_dic = {}
+
+    def print_apted_tree_helper(subtree, depth=0):
+        if tree_vis_dic.get(depth) is None:
+            tree_vis_dic[depth] = []
+        tree_vis_dic[depth].append(subtree.name)
+
+        depth += 1
+
+        for child in subtree.children:
+            print_apted_tree_helper(child, depth)
+        return subtree.name
+
+    print_apted_tree_helper(tree)
+
+    for k, v in tree_vis_dic.items():
+        print('->', k, v)
+
+
+def is_float_constant(x):
+    try:
+        float(x)
+        return True
+    except ValueError:
+        return False
+
+
+def is_bool_constant(x):
+    try:
+        float(x)
+        return False
+    except ValueError:
+        try:
+            bool(x)
+            return True
+        except ValueError:
+            return False
+
+
+def weight_ted_mapping(mapping):
+    """
+    todo: make clear how this distance is meant to be used...
+    """
+    weighted_distance = 0
+    for map_i in mapping:
+        a, b = map_i[0], map_i[1]
+        if a is None:
+            b_name = b.name
+            if b_name not in op:  # weight can be 0, so check for None
+                weighted_distance += 1  # all inserted constants
+                print('Inserted', b_name, 'weight 1 (non-op dummy)')
+            else:
+                b_weight = op.get(b_name).get('weight')
+                weighted_distance += b_weight
+                print('Inserted', b_name, 'weight', b_weight, '(op)')
+            continue
+        elif b is None:
+            print('Deleted, weight 0 (no penalty)')
+            continue
+        else:
+            a_name = a.name
+            b_name = b.name
+            if a_name == b_name:
+                print('No change, no weight.')
+            else:
+                if a_name in op:
+                    a_weight = op.get(a_name).get('weight')
+                elif is_float_constant(a_name):
+                    a_weight = None
+
+                if b_name in op:
+                    b_weight = op.get(b_name).get('weight')
+                else:
+                    b_weight = None
+
+                if a_weight is None:  # a_name is either env-variable, float, bool
+
+                    if b_weight:
+                        weighted_distance += b_weight
+                        print('Substituted non-op with op, weight', b_weight)
+                    # elif True:  # sfeh
+                    #     weighted_distance += 0
+                    #     print('dummy exir with weight=0 for constants')
+                    elif is_float_constant(a_name) and is_float_constant(b_name):
+                        weight_diff = max(0, min(1, abs(float(a_name) - float(b_name))))
+                        weighted_distance += weight_diff
+                        print('Substituted float parameters, weight', weight_diff)
+                    elif is_bool_constant(a_name) and is_bool_constant(b_name):
+                        weighted_distance += 1
+                        print('Substituted bool parameters, weight 1.')
+                    else:
+                        weighted_distance += 1
+                        print('Substituted leaves, weight 1.')
+
+                else:
+                    if b_weight is not None:
+                        weighted_distance += b_weight
+                        print('Substituted non-op with op, weight', b_weight)
+                    # elif True:  # sfeh
+                    #     weighted_distance += max(0.5, b_weight-(0.5*a_weight))
+                    #     print('dummy exit with weight=0 for constants')
+                    elif is_float_constant(a_name) and is_float_constant(b_name):
+                        weighted_distance += 0.5
+                        print('Substituted float parameters, weight 0.1.')
+                    elif is_bool_constant(a_name) and is_bool_constant(b_name):
+                        weighted_distance += 0.5
+                        print('Substituted bool parameters, weight 0.1.')
+                    else:
+                        weighted_distance += 1
+                        print('Substituted leaves, weight 0.1.')
+
+                # constant weight for the occurance of an env-variables?
+    return weighted_distance
+
+
+# tree1 = aptree.from_text('{A{B{X}{Y}{F}}{C}}')
+# tree2 = aptree.from_text('{A{C{D}{E}}{F}}')
+# tree3, tree4 = aptree.from_text('{a{b}{c}}'), aptree.from_text('{a{b{d}}}')
+# tree5, tree6 = aptree.from_text('{a}'), aptree.from_text('{b}')
+# tree7, tree8 = aptree.from_text('{a}'), aptree.from_text('{a}')
+# tree9, tree10 = aptree.from_text('{Ifte{<{pos}{0}}{0}{2}}'), aptree.from_text('{Ifte{<{+{{vel}{1.02}}{0}}{0}{2}}}')
+# print('tree1', tree1)
+#
+# apted = APTED(tree1, tree2)
+#
+# ted = apted.compute_edit_distance()
+# mapping = apted.compute_edit_mapping()
+# print('Distance1:', ted)
+# print('Mappinmg1:', mapping)
+#
+#
+# weighted_distance = weight_ted_mapping(mapping)
+# print('weighted_distance', weighted_distance)
+#
+# # apted = APTED(tree9, tree10)
+# # ted = apted.compute_edit_distance()
+# # mapping = apted.compute_edit_mapping()
+# # print('DistanceB:', ted)
+# # print('MappinmgB:', mapping)
 
 
 # Ifte,<,0,2,observation1,0

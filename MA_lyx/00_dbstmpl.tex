@@ -1,0 +1,99 @@
+% Mit twoside als weitere Option werden die Seitenränder angepasst, sodass beidseitig gedruckt werden kann
+\documentclass[pdftex,12pt,a4paper]{report}
+
+\usepackage[]{dbstmpl}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{microtype}
+%\usepackage{subfig}
+\usepackage{amsmath}
+
+\usepackage{tikz}
+\usetikzlibrary{matrix,chains,positioning,decorations.pathreplacing,arrows}
+\usepackage{forest}
+\usepackage{subfigure}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.8}
+\usepackage{layout}
+%\usepackage{showframe}
+\usepackage{geometry}
+
+%Simons latex code start
+\usepackage{listings}
+%\usepackage{microtype}
+
+
+\lstset
+{
+    basicstyle=\ttfamily\scriptsize,
+    numbers=left,
+    stepnumber=1,
+    showstringspaces=false,
+    tabsize=1,
+    breaklines=true,
+    frame=TLrb,
+    breakatwhitespace=false,
+}
+\renewcommand{\thesubsection}{\alph{subsection})}
+\renewcommand{\labelitemi}{$-$}
+\newcommand{\inlinecode}[2]{\lstinline[language=#1]$#2$}
+%\fxusetheme{color}
+%Simons latex code end
+
+\global\arbeit{Master Thesis}
+%\global\arbeit{Masterarbeit}
+%\global\arbeit{Seminararbeit}
+
+
+% Hier die eigenen Daten eintragen
+\global\titel{Explainable Artificial Intelligence by Expanding Expert Solutions with Genetic Programming}
+\global\bearbeiter{Simon Fehrer}
+\global\betreuer{Dr. Michel Tokic, Dr. Steffen Udluft, Dr. Daniel Hein}
+\global\aufgabensteller{Prof. Volker Tresp}
+\global\abgabetermin{29.02.2019}
+\global\ort{Munich}
+\global\fach{Computer Science}
+
+\begin{document}
+\deckblatt
+
+\erklaerung
+
+\begin{abstract}
+Abstract will soon be updates...
+Machine-learning offers great potential for finding high performance solutions in plenty of areas.  However, the more delicate an environment gets, the higher is the reserve to use ``blackbox'' solutions, which can make momentous decisions. We propose a new approach, which addresses this problem by improving heuristics with genetic programming that creates easily understandable policies.
+
+\end{abstract}
+
+% Inhaltsverzeichnis (abhaengig von der Laenge des Dokuments)
+\tableofcontents
+
+% Hier beginnt der Hauptteil
+
+%\input{texfiles/01_Intro}
+%\input{texfiles/02_Related_Work}
+%\input{texfiles/03_Approach}
+%\input{texfiles/04_0_Experiments}
+\input{texfiles/04_1_Mountain_Car}
+%\input{04_2_cartpole.tex}
+%\input{04_3_industrial_benchmark}
+%\input{05_Discussion}
+%\input{10_conclusion}
+%\input{99_ideas}
+
+%% Ende Hauptteil
+
+% Abbildungsverzeichnis (kann auch nach dem Inhaltsverzeichnis kommen)
+\listoffigures
+
+% Tabellenverzeichnis (kann auch nach dem Inhaltsverzeichnis kommen)
+\listoftables
+
+% Literaturverzeichnis
+\newpage
+\bibliographystyle{plain} 
+\bibliography{dbstmpl}         % verwendet dbstmpl.bib
+
+\end{document}

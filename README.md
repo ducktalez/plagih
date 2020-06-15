@@ -1,10 +1,18 @@
 # PLAGIH Genetic Programming (Name will change (soon?))
 
+TODO. This read-me is outdated.
+
 ...is a genetic programming framework.
 
 Its main goal is to improve a human written program without making too many changes.
 
 *Please note that a lot of stuff is about to change in the future (last update 18.03.2020)*
+
+Main features:
+- Tree-based genetic programming
+- tensorflow-based evaluation
+- visualisation with latex
+
 
 ## How to
 
@@ -35,7 +43,7 @@ The data set contains decisions and the associated observations that the agent h
 
 The .csv must (currently) have a header line that looks like this example:
 
-| observation0:float | observation1:float | action0:float |
+| cartPos:float | cartVel:float | action0:float |
 |:------------------ | ------------------ |:------------- |
 | 0.1                | 0.2                | 0.3           |
 | 0.1                | 0.2                | 0.3           |
@@ -59,7 +67,7 @@ Possible operators are:
 
 |Group|examples|
 |:------------------ |:-----------------|
-|Mathematical operators|`+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `Mini`, `Maxi`|
+|Mathematical operators|`+`, `-`, `*`, `/`, `**`, `abs`, `sign`, `Square`, `sqrt`, `log`, `log1p`, `cos`, `sin`, `tan`, `acos`, `asin`, `atan`, `Mini`, `Maxi`|
 |Logical operators | `Andb`, `Orb`, `not`|
 |Comparative operators|`==`, `!=`, `<`, `<=`, `>`, `>=`|
 |Conditional (If-then-else)|`Ifte`|
@@ -76,25 +84,25 @@ Possible operators are:
 
 Code:
 ```
-if (observation0 < 0):
+if (cartPos < 0):
     return 1
 else:
     return 2
 ```
 `tree_labels.csv`:
 ```
-label_list,Ifte, <, 1, 2, observation0, 0
+label_list,Ifte, <, 1, 2, cartPos, 0
 ```
 
 `tree_labels.csv` (with `if`,`return 1`,`return 2` as fix nodes):
 ```
-label_list,Ifte, <, 1, 2, observation0, 0
+label_list,Ifte, <, 1, 2, cartPos, 0
 modify_list,0,1,0,0,1,1
 ```
 
 ...Breadth-first seems counter-intuitive, but that is what Karoo gave me :P
 
-### How I analyze results:
+### How I analyse results:
 - `plots/average-fitness.png` - to see if there was an improvement
 - `plots/best_candidate.png` - for the current best solution
 - `plots/pareto.png` - showing the best candidates related to the complexity. Find your prefered combination of performance and complexity
@@ -127,7 +135,6 @@ plausible addition to the original program which the developer does understand.
 
 
 ### All included Plagih stuff
-Todo: Describe all files and folders + their functions here
 
 ## Run Plagih
 Required packages: `tensorflow` `numpy` `sympy` `Apted` `pickle`

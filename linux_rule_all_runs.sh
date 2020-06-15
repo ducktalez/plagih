@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#-*- coding:utf-8 -*-
+echo 'Starting all runs in this file!'
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_50s_0/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0 -origin_tree benchmarks/run_load_files/IB/ib_tree_50s_0.csv
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_50s_1/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0 -origin_tree benchmarks/run_load_files/IB/ib_tree_50s_1.csv
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_50s_2/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0 -origin_tree benchmarks/run_load_files/IB/ib_tree_50s_2.csv
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_mean_0/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0 -origin_tree benchmarks/run_load_files/IB/ib_tree_mean_0.csv
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_mean_1/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0 -origin_tree benchmarks/run_load_files/IB/ib_tree_mean_1.csv
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_mean_2/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0 -origin_tree benchmarks/run_load_files/IB/ib_tree_mean_2.csv
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_scratch_0/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_scratch_1/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0
+python3 start.py -config benchmarks/run_load_files/IB/config4IB.yaml -out_dir run_examples/IB_scratch_2/ -samples_ready benchmarks/run_load_files/IB/samples_ready.p -action 0
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC200_scratch/ -samples_ready benchmarks/run_load_files/MTC/MTC200_data_prepared.p -action 0
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC200_GP_friendly/ -samples_ready benchmarks/run_load_files/MTC/MTC200_data_prepared.p -action 0 -origin_tree benchmarks/run_load_files/MTC/tree_gpFriendly_fix.csv
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC200_preset/ -samples_ready benchmarks/run_load_files/MTC/MTC200_data_prepared.p -action 0 -origin_tree benchmarks/run_load_files/MTC/tree_preset_fix.csv
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC200_tree_simple/ -samples_ready benchmarks/run_load_files/MTC/MTC200_data_prepared.p -action 0 -origin_tree benchmarks/run_load_files/MTC/tree_simple.csv
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC200_tree_simple_fix/ -samples_ready benchmarks/run_load_files/MTC/MTC200_data_prepared.p -action 0 -origin_tree benchmarks/run_load_files/MTC/tree_simple_fix.csv
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC200_tree_simplePlus_fix/ -samples_ready benchmarks/run_load_files/MTC/MTC200_data_prepared.p -action 0 -origin_tree benchmarks/run_load_files/MTC/tree_simplePlus_fix.csv
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC75_scratch/ -samples_ready benchmarks/run_load_files/MTC/MTC75_data_prepared.p -action 0
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC75_tree_simple/ -samples_ready benchmarks/run_load_files/MTC/MTC75_data_prepared.p -action 0 -origin_tree benchmarks/run_load_files/MTC/tree_simple.csv
+python3 start.py -config benchmarks/run_load_files/MTC/config4mtc.yaml -out_dir run_examples/MTC75_tree_simple_fix/ -samples_ready benchmarks/run_load_files/MTC/MTC75_data_prepared.p -action 0 -origin_tree benchmarks/run_load_files/MTC/tree_simple_fix.csv

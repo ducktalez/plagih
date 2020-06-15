@@ -94,7 +94,17 @@ class SimpleAgent:
             return 2
 
 
-class FixAgent:
+class SimpleAgent_lel:
+
+    def decide(self, observation):
+        observation0, observation1 = observation
+        if observation1 <= 0:
+            return 0
+        else:
+            return 2
+
+
+class XiaoPresetAgent:
 
     def decide(self, observation):
         pos, vel = observation
@@ -108,14 +118,23 @@ class FixAgent:
         return action
 
 
-class TestFixNoLowerbound:
+class FixAgentRe:
+
+    def decide(self, input):
+        cartPos, cartVel = input
+        action = 2 if ((cartVel <= (0.7 - (0.07 * ((cartPos + 0.38) * 2)))) and (min((0.03 - (0.09 * ((cartPos + 0.25) * 2))), ((0.3 * ((cartPos + 0.9) * 4)) - 0.008)) <= cartVel)) else 0
+        return max(0, min(2, int(round(action))))
+
+
+class XiaoPresetNoLowerbound:
     """
     I randomly found out, that the upper bound is not good for anything
     """
+
     def decide(self, observation):
         pos, vel = observation
-        lb = min(-0.09 * (pos + 0.25)**2 + 0.03,
-                 0.3*(pos + 0.9)**4 - 0.008)
+        lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03,
+                 0.3 * (pos + 0.9) ** 4 - 0.008)
 
         if lb < vel:
             return 2
@@ -127,9 +146,10 @@ class TestCombined:
     """
     I found this candidate within 1 minute of gp
     """
+
     def decide(self, observation):
         pos, vel = observation
-        if (vel <= 0.63) and (min(-0.09*(pos + 0.25)**2.0 + 0.03, 0.3*(pos + 0.9)**4.0 - 0.01) <= vel):
+        if (vel <= 0.63) and (min(-0.09 * (pos + 0.25) ** 2.0 + 0.03, 0.3 * (pos + 0.9) ** 4.0 - 0.01) <= vel):
             return 2
         else:
             return 0
@@ -249,18 +269,14 @@ class SARSALambdaAgent(SARSAAgent):
 def load_sarsas(root_path=''):
     with Path.open(Path(root_path) / sarsa_file_75, 'rb') as file:
         sarsa_agent_75 = pickle.load(file)
-        print('Loaded sarsa 75 backup')
 
     with Path.open(Path(root_path) / sarsa_file_200, 'rb') as file:
         sarsa_agent_200 = pickle.load(file)
-        print('Loaded sarsa 200 backup')
-    #
-    # with Path.open(Path(root_path) / sarsa_file_1000, 'rb') as file:
-    #     sarsa_agent_1000 = pickle.load(file)
-    #     print('Loaded sarsa 1000')
-    #
-    # with Path.open(Path(root_path) / sarsa_file_10000, 'rb') as file:
-    #     sarsa_agent_10000 = pickle.load(file)
-    #     print('Loaded sarsa 10000')
-    return sarsa_agent_75, sarsa_agent_200, False, False
 
+    with Path.open(Path(root_path) / sarsa_file_1000, 'rb') as file:
+        sarsa_agent_1000 = pickle.load(file)
+
+    with Path.open(Path(root_path) / sarsa_file_10000, 'rb') as file:
+        sarsa_agent_10000 = pickle.load(file)
+
+    return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000

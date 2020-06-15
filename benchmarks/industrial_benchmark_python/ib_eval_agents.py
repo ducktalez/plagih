@@ -225,9 +225,33 @@ class Agent_Udluft(Ib_Agent):
             self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
-        at[0] = -self.get_h('f', 0) -self.get_h('v', 3)  # 27
+        at[0] = -self.get_h('f', 0) - self.get_h('v', 3)  # 27
         at[1] = self.get_h('f', 4)
         at[2] = -6 * self.get_h('h', 4)
+        return at
+
+
+class Agent_Test(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        at[0] = 12.31*self.get_h('g', 8) - 11.079
+        at[1] = -2.6/(self.get_h('c', 30) - self.get_h('f', 12) + self.get_h('f', 17))
+        at[2] = 7.0442545165*self.get_h('p', 30) - 9.3079051182*self.get_h('h', 26) - 7.0442545165*self.get_h('h', 27) + 3.0
         return at
 
 
@@ -239,11 +263,11 @@ def eval_agents():
     agents = [
         # # Agent_random(),
         # Agent_nothing(),
-        Agent_daniel_21(),
-        Agent_daniel_27(),
+        # Agent_daniel_21(),
+        # Agent_daniel_27(),
         Agent_Daniel_29_Best(),
         Agent_Udluft(),
-        # Agent_Test()
+        Agent_Test()
     ]
 
     data = np.zeros((len(agents), T))

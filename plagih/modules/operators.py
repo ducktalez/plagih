@@ -84,7 +84,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
              'sym_str': 'sqrt({})', 'pycode': lambda a: 'math.sqrt({})'.format(a)},
 
     'log': {'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '$\\ln$', 'latexF': '\\ln{{{}}}',
-            'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},  # python log is actual ln
+            'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},  # todo log needs further requirements (no values <=0)
     'log1p': {'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '$\\log(1+x)$', 'latexF': '\\log(1+{{{}}})',
               'sym_str': 'log1p({})', 'pycode': lambda a: 'math.log1p({})'.format(a)},
 

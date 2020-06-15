@@ -1,0 +1,11 @@
+\begin{forest}
+  for tree={rounded corners,align=center,draw=black!100,fill=blue!20},
+  terminal/.style={},
+  nonterminal/.style={rectangle},
+  operation/.style={},
+  fixnode/.style={fill=blue!60,},
+  terminal/.style={rectangle,},
+  variable/.style={rounded corners,},
+  constant/.style={rectangle,},
+ [{if .. then .. else ..}[$<$[cartVel,terminal,constant][$0$,terminal,constant]][$0$,terminal,constant][$2$,terminal,constant]]
+\end{forest}

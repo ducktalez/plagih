@@ -101,4 +101,4 @@ class MountainCarExamples:
 # live_test = TestHelpers()
 # live_test.test_ted_weighting()
 
-print(ast_convert_from_expr('(a ** 2) * 4', build=True))
+print(ast_convert_from_expr('Ifte((((Mini(((-0.09)*(((cartPos)+(0.25))**(2)))+(0.03), ((0.3)*(((cartPos)+(0.9))**(4)))-(0.008)))<=(cartVel))&((cartVel)<=(((-0.07)*(((cartPos)+(0.38))**(2)))+(0.7)))), (2), (0))', build=True))

@@ -843,7 +843,7 @@ def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
                 raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray2, choose_distributions, min_depth=0, build_method=None):
+def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray2, choose_distributions, min_depth=0, full_or_grow=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -862,9 +862,9 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
 
             functerm_list = ['func']
             for _ in range(len(tbdo_xtypes) - 1):  # 1 -> at least one function
-                if build_method == 'grow' and depth >= min_depth:
+                if full_or_grow == 'grow' and depth >= min_depth:
                     functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
-                elif build_method == 'full':
+                elif full_or_grow == 'full':
                     functerm_list.append('func')
                 else:
                     raise
@@ -909,7 +909,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, choose_oparray2, choose_distributions, build_method='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, choose_oparray2, choose_distributions, full_or_grow='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -937,9 +937,9 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variabl
 
         functerm_list = ['func']
         for _ in range(num_inserts - 1):  # 1 -> at least one function
-            if build_method == 'grow':
+            if full_or_grow == 'grow':
                 functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice
-            elif build_method == 'full':
+            elif full_or_grow == 'full':
                 functerm_list.append('func')
             else:
                 raise

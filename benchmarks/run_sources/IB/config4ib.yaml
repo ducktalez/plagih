@@ -1,7 +1,6 @@
 
-pop_max: 1000
-parsimony_max: 50
+pop_max: 2000
+parsimony_max: 35
 kernel_name: regression bounded
 complexity_measure: tree_edit_distance
-print_type: ggwsiivoaaf
-gen_max: 1001
+gen_max: 1000

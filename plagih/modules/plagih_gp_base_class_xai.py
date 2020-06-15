@@ -55,7 +55,7 @@ class ExplainableGP(object):
             'tree_depth_min': 2,
             'tourn_size': 3,  # [7 per 100] number of trees selected for tournament
             'parsimony_mean': 20,  # If you wnt your population to be a certain size
-            'parsimony_max': 30,
+            'parsimony_max': 50,
             'gen_num_max_parsimony': 50,  # Increase tmp_parsim to this generation
 
             # 'evalue': {
@@ -83,58 +83,66 @@ class ExplainableGP(object):
             'period': {'time_monitor': None,  # in sec
                        'time_save': None,  # in sec
                        'gen_monitor': 10,  # in gen counts
-                       'gen_save': 100},  # in gen counts
+                       'gen_save': 50},  # in gen counts
 
             'evolve_list': [
-                # Reproduction (15%)
-                {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.05,
+                # Reproduction (10%)
+                {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06,
                  'custom_params': {}},
                 {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03,
                  'custom_params': {'sympify_tree': True}},
-                {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.02,
+                {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01,
                  'custom_params': {}},
 
-                # Mutation (35%)
-                {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.10,
-                 'custom_params': {}},  # sum 0.25
-                {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'build_method': 'full'}}},
-                {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'build_method': 'grow'}}},
-                {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 20, 6), 'build_method': 'grow'}}},
-                {'tag': 'BranchShrink', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'build_method': 'grow'}}},
-                {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.10,
+                # Mutation (25%)
+                {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05,
+                 'custom_params': {}},
+                # todo point branch mutate?
+                # {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+                #  'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'full_or_grow': 'full'}}},
+                # {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+                #  'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'full_or_grow': 'grow'}}},
+                {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 1, 20, 5), 'full_or_grow': 'full'}}},
+                {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 1, 20, 5), 'full_or_grow': 'grow'}}},
+                {'tag': 'BranchShrink', 'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
+                {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.10, 'tourn_size': 5,
                  'custom_params': {'mode': 'branch'}},
                 {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.0, 'tourn_size': 5,
                  'custom_params': {'mode': 'point'}},
 
-                # Crossover (30%)
-                {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.30,  # sum 0.70
+                # Crossover (35%)
+                {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.35,  # sum 0.70
                  'custom_params': {}},
 
+                # Leftovers are automatically filled with random trees
+
                 # Random (25%)
-                {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'build_method': 'full'}}},
-                {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 6, 1), 'build_method': 'grow'}}},
-                {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, 45, 6), 'build_method': 'full'}}}],
+                # {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
+                #  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'full_or_grow': 'full'}}},
+                # {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
+                #  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
+                {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, None, 6), 'full_or_grow': 'grow'}}},
+                {'tag': 'Rand4', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, None, 6), 'full_or_grow': 'full'}}},
+                ],
 
             # todo
-            'evolve_list_initial': {
+            'evolve_list_random': {
                 'from_origin': [
                     {'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
-                     'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}}
+                     'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'full_or_grow': 'full'}}}
                 ],
                 'from_scratch': [
                     {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                     'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'build_method': 'full'}}},
+                     'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'full'}}},
                     {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                     'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 6, 1), 'build_method': 'grow'}}},
+                     'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 6, 1), 'full_or_grow': 'grow'}}},
                     {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.40,
-                     'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'build_method': 'full'}}}
+                     'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 10, 45, 6), 'full_or_grow': 'full'}}}
                 ],
 
             },
@@ -441,6 +449,29 @@ class ExplainableGP(object):
                 return True
         return False
 
+    def gen_create_random(self, amount):
+        """
+        Add an amount of random trees to the population
+        """
+        if self.origin_is_fix():
+            evolve_list_random = self.config['evolve_list_random']['from_origin']
+        else:
+            evolve_list_random = self.config['evolve_list_random']['from_scratch']
+
+        total_rate = sum([x['evolve_rate'] for x in evolve_list_random.values()])
+
+        for ii, evolve_specs in enumerate(evolve_list_random.items()):
+            evolve_num = int(amount * (evolve_specs['evolve_rate'] / total_rate))
+            call_params = evolve_specs.get('custom_params')
+            tag = evolve_specs['tag']
+
+            for nn in range(evolve_num):
+                if self.origin_is_fix():
+                    new_tree = self.pop_random_from_origin_fix(call_params, self.origin_tree)
+                else:
+                    new_tree = self.pop_random(call_params)
+                self.pop_append(new_tree, last_evolution=tag)
+
     def gen_create_initial(self):
         """
         Everything that needs to be custom_done for the first generation
@@ -451,31 +482,16 @@ class ExplainableGP(object):
         """
 
         if self.origin_exists():
-            # self.config['evolve_list_initial']['from_origin']
+            # self.config['evolve_list_random']['from_origin']
             # sfeh why not :P
             self.pop_append(self.origin_tree, last_evolution='initial')
+            # if self.origin_is_fix():
+            #     origin_tree = self.origin_tree_get()
+            #     for nn in range(evolve_num):
+            #         new_tree = self.pop_random_from_origin_fix(call_params, origin_tree)
+            #         self.pop_append(new_tree, last_evolution=tag)
         else:
-            random_rate = 0  # The total amount of random creations in the evolve configuration. usually like 0.3 or so. sfeh: make first gen randomly?
-            for ii, evolve_specs in enumerate(self.evolve_list):
-                if evolve_specs['evolve_name'] == 'random trees':
-                    random_rate += evolve_specs['evolve_rate']
-
-            for ii, evolve_specs in enumerate(self.evolve_list):
-                if evolve_specs['evolve_name'] == 'random trees':
-                    # time_evolve = time.perf_counter()
-                    evolve_num = int(self.config['pop_max'] * (evolve_specs['evolve_rate'] / random_rate))
-                    call_params = evolve_specs.get('custom_params')
-                    tag = evolve_specs['tag']
-
-                    if self.origin_is_fix():
-                        origin_tree = self.origin_tree_get()
-                        for nn in range(evolve_num):
-                            new_tree = self.pop_random_from_origin(call_params, origin_tree)
-                            self.pop_append(new_tree, last_evolution=tag)
-                    else:
-                        for nn in range(evolve_num):
-                            new_tree = self.pop_random(call_params)
-                            self.pop_append(new_tree, last_evolution=tag)
+            self.gen_create_random(self.config('pop_max'))
 
         self.gen_finalize()
         write_file_population_karoo(self.population_base, 'first', self.root_dir, self.gen_id, print_type=self.print_type)  # first gen only
@@ -557,7 +573,7 @@ class ExplainableGP(object):
                 if self.origin_is_fix():
                     origin_tree = self.origin_tree_get()
                     for nn in range(evolve_num):
-                        new_tree = self.pop_random_from_origin(call_params, origin_tree)
+                        new_tree = self.pop_random_from_origin_fix(call_params, origin_tree)
                         self.pop_append(new_tree, last_evolution=tag)
                 else:
                     for nn in range(evolve_num):
@@ -566,8 +582,12 @@ class ExplainableGP(object):
             else:
                 print_e('the specified evolve call is not known: \'{}\''.format(evolve_name))
 
-            self.print_g('ggg', '->Evolving \'{}\' {} times took: {:4.2f}s.'.format(tag, evolve_num,
-                                                                                    time.perf_counter() - time_evolve))
+            self.print_g('ggg', '->Evolving \'{}\' {} times took: {:4.2f}s.'.format(tag, evolve_num, time.perf_counter() - time_evolve))
+
+        # sfeh automatically fill with random trees
+        # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
+        # if total_rate < 0:
+        #     self.gen_create_random(int(self.config['pop_max'] * (1 - total_rate)))
 
         self.gen_finalize()
 
@@ -1496,25 +1516,54 @@ class ExplainableGP(object):
 
         return tree
 
-    def invent_label_list(self, size_mode, first_xtype, build_size, build_method, float_accuracy):
+    def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow, float_accuracy):
+        """
+        Creates a random label list
+        """
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_accuracy,
                                                                          self.env_variables, self.choose_oparray2,
                                                                          self.choose_distributions,
-                                                                         build_method=build_method)
+                                                                         full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_accuracy,
                                                                          self.env_variables, self.choose_oparray2,
                                                                          self.choose_distributions,
-                                                                         build_method=build_method)
+                                                                         full_or_grow=full_or_grow)
         else:
-            raise Exception('Known build_method was not found for building random trees.')
+            raise Exception('Known full_or_grow was not found for building random trees.')
         return label_list, arity_list, xtype_list
 
-    def pop_random_from_origin(self, call_params, origin_tree):
+    def helper_evolve_params_branch(self, call_params):
+        """
+
+        """
+        build_spec = call_params.get('build_spec')
+
+        size_mode = build_spec['size_mode']
+
+        mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
+        mean_min_max_var = list(mean_min_max_var)
+        if 'depth' in size_mode:
+            max_dummy = self.config['depth_max']
+        elif 'nodes' in size_mode:
+            max_dummy = self.config['parsimony_max']
+        else:
+            raise
+        if mean_min_max_var[2] is None:
+            mean_min_max_var[2] = max_dummy
+        else:
+            mean_min_max_var[2] = min(mean_min_max_var[2], self.config['parsimony_max'])
+        mean_min_max_var = tuple(mean_min_max_var)
+
+        full_or_grow = build_spec['full_or_grow']
+
+        return build_spec, size_mode, mean_min_max_var, full_or_grow
+
+    def pop_random_from_origin_fix(self, call_params, origin_tree):
         """
         insert a (random) number of branches at the first possible "layer"
         (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
@@ -1524,11 +1573,11 @@ class ExplainableGP(object):
         """
 
         # tree_origin = self.origin_tree_get()origin_tree
-        build_spec, size_mode, mean_min_max_var, build_method = helper_evolve_params_branch(call_params)
+        build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
 
         # tree_base = tree.copy()
-        layer0_ids = tree_get_mutatable_layer(origin_tree,
-                                              0)  # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
+        # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
+        layer0_ids = tree_get_mutatable_layer(origin_tree, 0)
 
         build_split = []
         if 'depth' in size_mode:
@@ -1538,8 +1587,7 @@ class ExplainableGP(object):
                 build_split.append(build_size)
 
         elif 'nodes' in size_mode:
-            build_nodes = choose_build_size(size_mode, mean_min_max_var,
-                                            force='branch')  # sfeh actually, this does not care about tree depth
+            build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
             build_split = randomly_split_range(build_nodes, len(layer0_ids))
         else:
             raise
@@ -1552,10 +1600,8 @@ class ExplainableGP(object):
             old_branch = tree_node_get_branch(tree, node_id, karoo=True)
             build_size = build_split[i]
 
-            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size,
-                                                                        build_method, self.config['float_accuracy'])
+            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow, self.config['float_accuracy'])
 
-            # core = core_from_labels(label_list, arity_list, xtype_list)
             c_core = Core_From_Labels(label_list, arity_list, xtype_list)
             core = c_core.get_uninstanced_core()
             tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
@@ -1567,11 +1613,11 @@ class ExplainableGP(object):
         Creates completely random trees from scratch
         """
 
-        build_spec, size_mode, mean_min_max_var, build_method = helper_evolve_params_branch(call_params)
+        build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
         action_xtype = self.env_variables['action_at'][0]['xtype']
         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
 
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, build_method,
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow,
                                                                     self.config['float_accuracy'])
 
         p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
@@ -1593,19 +1639,18 @@ class ExplainableGP(object):
 
         """
 
-        build_spec, size_mode, mean_min_max_var, build_method = helper_evolve_params_branch(call_params)
+        build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
 
-        build_method = build_spec.get('build_method')
-        if build_method is None:
-            build_method = np.random.choice(['full', 'grow'])
+        full_or_grow = build_spec.get('full_or_grow')
+        if full_or_grow is None:
+            full_or_grow = np.random.choice(['full', 'grow'])
 
         node_ids = tree_get_mutatable_nodes(tree, no_root=True)
         old_node = np.random.choice(node_ids)
         old_xtype = tree_node_get_xtype(tree, old_node)
-        build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree,
-                                       node_id=old_node)
+        build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)
 
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, build_method,
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow,
                                                                     self.config['float_accuracy'])
 
         if label_list:
@@ -2099,14 +2144,6 @@ class ExplainableGP(object):
         return
 
 
-def helper_evolve_params_branch(call_params):
-    build_spec = call_params.get('build_spec')
-    size_mode = build_spec['size_mode']
-    mean_min_max_var = build_spec.get('mean_min_max_var')  # (base, min, max, normal_distrib)
-    build_method = build_spec['build_method']
-    return build_spec, size_mode, mean_min_max_var, build_method
-
-
 def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
     """
 
@@ -2133,7 +2170,8 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, forc
         relative_size = tree_size - node_size
 
     build_size = int(np.random.normal(mean, size_variance))
-    build_size = min(size_max - relative_size, build_size)
+    if size_max is not None:
+        build_size = min(size_max - relative_size, build_size)
     build_size = max(size_min, build_size)
 
     return int(build_size)

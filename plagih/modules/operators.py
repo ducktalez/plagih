@@ -116,8 +116,6 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
             'sym_str': 'Xor({}, {})', 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
     'Notb': {'fun': 'Notb', 'arity': 1, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_not, 'latex1': '$\\neg$', 'latexF': '\\neg{{{}}}',
              'sym_str': 'Notb({})', 'pycode': lambda a: 'not({})'.format(a)},  # not a
-    '&': {'fun': '&', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': '$\\land$', 'latexF': '({{{}}}\\wedge{{{}}})',
-          'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
     '|': {'fun': '|', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': '$\\lor$', 'latexF': '({{{}}}\\vee{{{}}})',
           'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
 
@@ -208,6 +206,8 @@ op = {
 op_test = {
     # no (easy-to use) tensorflow-operations available
     # ast.BitOr
+    '&': {'fun': '&', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': '$\\land$', 'latexF': '({{{}}}\\wedge{{{}}})',
+          'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
     'Power3': {'fun': '', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.pow, 'latex1': None, 'latexF': '{}',
                'sym_str': '({}**2)', 'pycode': lambda a: '({}**2)'.format(a)},
     'Nand': {'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',

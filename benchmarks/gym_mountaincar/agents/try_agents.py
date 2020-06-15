@@ -61,8 +61,6 @@ class Test_Agent:
                     return 2
 
 
-
-
 # eval_agent_list([('lelel_MTC_simple13', MTC_simple13())])
 
 # mtc_plot_differences(MTC_simple13(), sarsa_agent_75, name='lelel_MTC_simple13 vs sarsa', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '///', 'xkcd:dark grey', 0.2))

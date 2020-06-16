@@ -9,7 +9,7 @@ tree_sep = ''  # ''\\newpage'
 
 
 def latex_get_forest_title(parsim, fitness, tikz_code, tree_sep):
-    return 'Pareto entry at parsimony {} with fitness {}.\n{}\n{}\n'.format(parsim, fitness, tikz_code, tree_sep)
+    return
 
 
 def latex_treeviz_full(tikz_forest_list, preamble=''):
@@ -22,17 +22,13 @@ def latex_treeviz_full(tikz_forest_list, preamble=''):
     sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
-    tikz_combined = ''
+    forest_trees = '\n'.join(tikz_forest_list)
 
-    for tikz in tikz_forest_list:
-        tikz_combined += tikz
-
-    # \documentclass[varwidth,convert]{standalone}
     latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{{standalone}}' \
                        '\n\\usepackage{{forest}}' \
                        '\n\\begin{{document}}' \
                        '\n{}' \
-                       '\n\\end{{document}}'.format(tikz_combined)
+                       '\n\\end{{document}}'.format(forest_trees)
     return latex_doc_forest
 
 
@@ -93,9 +89,9 @@ def latex_tree_get_brackets(tree, node_id=root_id):
     # todo i guess this is superfluous
     # # Get the best math-like representation for functions
     # if label in op:
-    #     latex_label = op[label]['latex1']
+    #     bracket_string = op[label]['latex1']
     # else:
-    #     latex_label = '${{{}}}$'.format(label)
+    #     bracket_string = '${{{}}}$'.format(label)
 
     # todo float labels too long
     # todo underline makes lower indices... good or bad?
@@ -118,9 +114,9 @@ def latex_tree_get_brackets(tree, node_id=root_id):
     for child_id in child_ids:
         label += (latex_tree_get_brackets(tree, child_id))
     else:
-        latex_label = '[{}]'.format(label)
+        bracket_string = '[{}]'.format(label)
 
-    return latex_label
+    return bracket_string
 
 
 def visualize_tree_node_force_show(tree, node_id):
@@ -167,42 +163,74 @@ def tree_node_is_numeric_constant(tree, node_id):
     return False
 
 
-def latex_tree_get_forest(tree, tightviz=True):
+# def latex_tree_shorten_labels(tree):
+#     """
+#     replace
+#     """
+#     # First, shorten floats to a 3-decimal form
+#     tree_ids = list(tree_iterate_range(tree))
+#
+#     for node_id in tree_ids:
+#         if tree_node_is_numeric_constant(tree, node_id):
+#             label = float(tree_node_get_label(tree, node_id))
+#             if label == 0:  # e.g. '0'
+#                 pass
+#             elif label % 1 != 0:  # e.g. '2.0442'
+#                 label = '{:0.3f}'.format(label)
+#             else:  # e.g. 2
+#                 label = '{}'.format(int(label))
+#             tree = tree_node_set_label(tree, node_id, label)
+#     return tree
+
+
+def latextree_stringreplace_labels(tree):
     """
-    whole procedure from tree to foret core
+
     """
 
-    # first, shorten all long labels (e.g. 2.44423443344534 -> 2.444)
-    tree = latex_tree_shorten_labels(tree)
+    # get all the replacements from the op-dict
+    tex_replace = {}
+    for key, value in op.items():
+        if isinstance(key, str):
+            latex_replace = value['latex1']
+            if latex_replace is not None:
+                tex_replace[key] = latex_replace
 
-    if tightviz:
-        ### optional. merges sympifiable nodes, for large trees
-        tree = latex_tree_get_vistree(tree)
-        ###
+    # replace all the labels with the latex1 representation
+    for node_id in tree_iterate_range(tree):
+        label = tree_node_get_label(tree, node_id)
 
-    bracket_tree = latex_tree_get_brackets(tree)
-    forest_viz = latex_wrap_forest(bracket_tree)
-    return forest_viz
+        # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
+        label = re.sub('(?<=[0-9]{3})(\d+)', '', label)
 
-
-def latex_tree_shorten_labels(tree):
-    # First, shorten floats to a 3-decimal form
-    tree_ids = list(tree_iterate_range(tree))
-
-    for node_id in tree_ids:
-        if tree_node_is_numeric_constant(tree, node_id):
-            label = float(tree_node_get_label(tree, node_id))
-            if label == 0:  # e.g. '0'
-                pass
-            elif label % 1 != 0:  # e.g. '2.0442'
-                label = '{:0.3f}'.format(label)
-            else:  # e.g. 2
-                label = '{}'.format(int(label))
-            tree = tree_node_set_label(tree, node_id, label)
+        # replace all occurences of operations with op
+        for opraw, optex in tex_replace.items():
+            label = label.replace(opraw, optex)
+        tree = tree_node_set_label(tree, node_id, label)
     return tree
 
 
-def latex_tree_get_vistree(tree):
+def latex_tree_get_forest(tree, tight_viz=True):
+    """
+    whole procedure from tree to forest core
+    """
+
+    # tree = latex_tree_shorten_labels(tree)
+    tree = tree.copy()
+
+    # first, shorten all long labels (e.g. 2.44423443344534 -> 2.444)
+    if tight_viz:
+        tree = latex_tree_get_tighttree(tree)
+
+    tree = latextree_stringreplace_labels(tree)
+
+    bracket_tree = latex_tree_get_brackets(tree)
+    forest_viz = latex_wrap_forest(bracket_tree)
+
+    return forest_viz
+
+
+def latex_tree_get_tighttree(tree):
     """
     reduce
     # todo idee: alle teil-terme, die eine einzige variable beinhalten?
@@ -243,8 +271,6 @@ def latex_tree_get_vistree(tree):
     vis_xtype_list = []
     vis_modify_list = []
 
-    tex_replace = latex_get_replace_tupels()  # sfeh quick code
-
     for node_id in tree_ids:
         if node_id in node_dict:
             arity = 0
@@ -254,26 +280,18 @@ def latex_tree_get_vistree(tree):
             elif node_dict[node_id] > 1:
                 expr_raw = tree_get_expr_raw(tree, node_id)
                 label = expr_sympify(expr_raw)
+            else:
+                raise
 
-            label = re.sub('(?<=[0-9]{3})(\d+)', '', label)  # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
-            for opraw, optex in tex_replace.items():
-                label = label.replace(opraw, optex)
             vis_label_list.append(label)
-
             vis_arity_list.append(arity)
+            vis_xtype_list.append(tree_node_get_xtype(tree, node_id)[-2:])
+            vis_modify_list.append(tree_node_get_modify(tree, node_id))
 
-            xtype = tree_node_get_xtype(tree, node_id)
-            vis_xtype_list.append(xtype[-2:])
+    longest_label = max(10, max([len(x) for x in vis_label_list]))
 
-            modify = tree_node_get_modify(tree, node_id)
-            vis_modify_list.append(modify)
-
-    longest_label = 10
-    for label in vis_label_list:
-        longest_label = max(longest_label, len(label))
-
-    vis_tree = latex_vistree_from_labellist(vis_label_list, vis_xtype_list, modify_list=vis_modify_list, arity_list=vis_arity_list, force_np_size=longest_label)
-    return vis_tree
+    tight_tree = latex_vistree_from_labellist(vis_label_list, vis_xtype_list, modify_list=vis_modify_list, arity_list=vis_arity_list, force_np_size=longest_label)
+    return tight_tree
 
 
 def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity_list=None, force_np_size=None):
@@ -282,7 +300,7 @@ def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity
     """
 
     if force_np_size:
-        np_dtype_size = 'U' + str(force_np_size)  # todo sfeh
+        np_dtype_size = 'U{}'.format(force_np_size)  # sfeh
     else:
         np_dtype_size = None
 
@@ -303,10 +321,3 @@ def latex_get_replace_tupels():
     """
     'Mini(a, 2.3)' -> min(a, 2.3)
     """
-    label_string_replace = {}
-    for key, value in op.items():
-        if isinstance(key, str):
-            latex_replace = value['latex1']
-            if latex_replace is not None:
-                label_string_replace[key] = latex_replace
-    return label_string_replace

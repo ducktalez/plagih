@@ -1038,7 +1038,7 @@ class ExplainableGP(object):
         - create latex-forest representation
         """
 
-        forest_grouped = []
+        latex_element = []
 
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
@@ -1046,11 +1046,17 @@ class ExplainableGP(object):
             tree = ptree.get_uninstanced_tree()
             tree = self.tree_finish(tree, last_evolution='texify')
 
-            forest_viz = latex_tree_get_forest(tree)
+            latex_element.append('Pareto entry at parsimony {} with fitness {}.\n'.format(parsim, meta['fitness_train']))
 
-            forest_grouped.append(latex_get_forest_title(parsim, meta['fitness_train'], forest_viz, tree_sep))
+            forest_viz = latex_tree_get_forest(tree, tight_viz=False)
+            latex_element.append(forest_viz)
 
-        latex_full_doc = latex_treeviz_full(forest_grouped)
+            latex_element.append('Tight layout:\n')
+
+            tight_forest_viz = latex_tree_get_forest(tree)
+            latex_element.append(tight_forest_viz)
+
+        latex_full_doc = latex_treeviz_full(latex_element)
         path_trees_tex = file_make_dir(root_path / self.file_locs['trees_tex'])
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)

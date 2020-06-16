@@ -66,8 +66,10 @@ class TestHelpers:
 
     def test_visualisation(self):
         tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
-        result = latex_tree_get_forest(tree)
-        print(result)
+        forest_viz = latex_tree_get_forest(tree, tight_viz=False)
+        print(forest_viz)
+        tight_viz = latex_tree_get_forest(tree)
+        print(tight_viz)
 
 
 class MountainCarExamples:

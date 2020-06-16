@@ -157,8 +157,10 @@ def yaml_dump(path, data, print_type=None):
     return
 
 
-def plot_styleup(x, y, set_left=None, set_right=None, set_top=None, right_padding=1.05, top_padding=1.05):
+def plot_sexyfy(x, y, set_left=None, set_right=None, set_top=None, right_padding=1.05, top_padding=1.05):
+    """
 
+    """
     top, bottom, left, right = max(y), min(y), min(x), max(x)
     if set_left:
         left = set_left
@@ -175,15 +177,15 @@ def plot_styleup(x, y, set_left=None, set_right=None, set_top=None, right_paddin
     return top, bottom, left, right, new_right, new_top
 
 
-def plot_end(data_2d, plotname_path,
+def plot_end(data_2d, path_plot,
              plt_title='', plt_curve_label='', plt_x_label='', plt_y_label='', yscale='linear',
-             step_where='', plt_xparam='', plt_hist=False,
+             step_where='', plt_xparam='',
              linestyle='-',
              marker='',
              set_left=None, set_right=None, set_top=None,
              right_padding=1.05, top_padding=1.05,
              beyond_lines=False,
-             save_tikz=False,
+             save_tikz=True,  # for the final runs...
              subfolder=None,
              fill_variance=None):
     """
@@ -191,8 +193,12 @@ def plot_end(data_2d, plotname_path,
     - Makes pyplots
 
 
+    :param set_top:
+    :param fill_variance:
+    :param right_padding:
+    :param marker:
     :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
-    :param plotname_path: where to save the result
+    :param path_plot: where to save the result
     :param plt_title:
     :param plt_curve_label: irrelevant for a single curve
     :param plt_x_label: label the x-axis
@@ -220,7 +226,7 @@ def plot_end(data_2d, plotname_path,
 
     x, y = data_2d
 
-    top, bottom, left, right, new_right, new_top = plot_styleup(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
+    top, bottom, left, right, new_right, new_top = plot_sexyfy(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
 
     if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
         x = np.concatenate([[x[0]], x, [new_right + 1]])
@@ -247,17 +253,16 @@ def plot_end(data_2d, plotname_path,
             ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
             ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
 
-    if subfolder:  #
-        plotname_path = folder_make_dir(plotname_path / subfolder)
+    if subfolder:
+        path_plot = folder_make_dir(path_plot / subfolder)
 
     if save_tikz:
         try:
-            tikzplotlib.save(plotname_path / '{}.tex'.format(plt_title))
+            tikzplotlib.save(path_plot / '{}.tex'.format(plt_title))
         except Exception as ex:
-            pass
+            print_e('tikzplotlib.save failed, exception: {}'.format(ex))
 
     plt.tight_layout()
-    plt.savefig(plotname_path / '{}.png'.format(plt_title))
+    plt.savefig(path_plot / '{}.png'.format(plt_title))
     plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
     return
-

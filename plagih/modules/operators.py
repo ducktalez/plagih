@@ -134,7 +134,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
            'sym_str': '({} >= {})', 'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
 
     # Functions which need separate handling in sympify
-    'Ifte': {'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf': tf.compat.v2.where, 'latex1': 'if .. then .. else ..', 'latexF': 'if({{{}}} then {{{}}} else {{{}}})',
+    'Ifte': {'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf': tf.compat.v2.where, 'latex1': 'if-then-else', 'latexF': 'if({{{}}} then {{{}}} else {{{}}})',
              'sym_str': 'Ifte({}, {}, {})', 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
     # long version of Ifte-'pycode': lambda a, b, c: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
     'Mini': {'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.minimum, 'latex1': '$\\min$', 'latexF': '\\min({{{}}}, {{{}}})',

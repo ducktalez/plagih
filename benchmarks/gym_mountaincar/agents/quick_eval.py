@@ -12,6 +12,8 @@ import numpy as np
 import gym
 import pickle
 
+import tikzplotlib
+
 
 def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
     np.random.seed(0)
@@ -34,9 +36,6 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr'
     if dummy:
         _, _, result_dummy = mtc_heatmap_helper(agent, 256, n, dummy=dummy)
         results = results * result_dummy
-
-    # boundaries = [-.5, .5, 1.5, 2.5]
-    # ticks = [0, 1, 2]
 
     mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
@@ -121,11 +120,8 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
 
     if dummy:
         mask_nan = np.ma.masked_where(result == np.nan, result)
-        plt.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
+        ax.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
-        # sfeh envstate_normalize?
-        # plt.cm.get_cmap().set_bad(color='white')
-        # plt.imshow(result)
 
     else:
         fig.colorbar(c, ax=ax)  # needed, plot is stretched otherwise
@@ -159,11 +155,15 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         # plt.rcParams['hatch.linewidth'] = 0.2
     ax.add_patch(p)
 
-    # saving as jpg
+    # saving as png
     folder = Path(folder)
     if not Path.is_dir(folder):
         Path.mkdir(folder)
     plt.savefig(Path(folder) / '{}.png'.format(name))
+    # try:
+    #     tikzplotlib.save('TEST.tex'.format(name))
+    # except Exception as ex:
+    #     print('tikzplotlib save failed for mtc decision plots, exception: {}'.format(ex))
     plt.close()
 
 

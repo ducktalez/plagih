@@ -345,7 +345,7 @@ def tree_set_last_evolution(tree, last_modification):
     return tree
 
 
-def tree_check_quick(tree, karoo=True, print_type=None):
+def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
     """
     without some of the heavy tests
     """
@@ -358,11 +358,13 @@ def tree_check_quick(tree, karoo=True, print_type=None):
         tree_works = False
     elif not tree_check_types(tree):
         tree_works = False
-    elif tree_node_get_arity(tree, root_id) == 0:
-        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)  #
-        tree_works = False
     else:
         tree_works = True
+
+    if tree_node_get_arity(tree, root_id) == 0:
+        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)  #
+        tree_works = allow_root_only
+
     return tree_works
 
 
@@ -775,13 +777,13 @@ def tree_try_get_swapids(a_tree, b_tree, version='default'):
     """
     if version == 'default':
         # choose a node from parent a
-        a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
+        a_ids = tree_get_mutatable_nodes(a_tree, no_root=False)
         # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
         a_id = np.random.choice(a_ids)
         a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
 
         # create a list from parent b with same xtype
-        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
+        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=False)
         b_sametype_ids = b_node_ids[:]
         for b_id in b_node_ids:
             b_label, _, b_xtype = tree_node_get_lax_v3(b_tree, b_id)
@@ -1221,6 +1223,7 @@ def tree_get_leaves(tree, karoo=False):
 def tree_get_mutatable_nodes(tree, no_root=False, karoo=True):
     """
     Returns a list with mutatable ids
+      # todo no_root had to be set to False in some calls. This does not work for one-node origins (IB Udluft 1)
     """
 
     node_ids = []
@@ -1486,8 +1489,9 @@ def evolve_node_arity_fix(tree):
     """
 
     for n in range(1, len(tree[N_id])):  # increment through all nodes (exclude 0) in array 'tree'
-        if len(tree[N_id]) <= 2:
-            print_warning('ww', 'Tree has <=2 nodes. Change configuration. {}'.format(tree))
+        # # sfeh root-only problem, had to comment the following lines. They never occured otherwise
+        # if len(tree[N_id]) <= 2:
+        #     print_warning('ww', 'Tree has <=2 nodes. Change configuration. {}'.format(tree))
         if tree[N_arity][n] == '0':  # check for discrepency
             # tree[N_arity][n] = '0'  # set arity to 0
             tree[N_c1][n] = ''  # wipe 'node_c1'

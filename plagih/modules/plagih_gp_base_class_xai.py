@@ -1646,7 +1646,7 @@ class ExplainableGP(object):
         if full_or_grow is None:
             full_or_grow = np.random.choice(['full', 'grow'])
 
-        node_ids = tree_get_mutatable_nodes(tree, no_root=True)
+        node_ids = tree_get_mutatable_nodes(tree, no_root=False)
         old_node = np.random.choice(node_ids)
         old_xtype = tree_node_get_xtype(tree, old_node)
         build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)
@@ -1751,7 +1751,7 @@ class ExplainableGP(object):
         - check if the tree is actually valid
         ->
         """
-
+        # sfeh this check might be important...
         if not tree_check_quick(tree):
             return
 
@@ -1842,7 +1842,10 @@ class ExplainableGP(object):
         """
         tree = ptree.get_uninstanced_tree()
         if not tree_check_deep(tree, self.env_variables):
-            raise
+            if tree_node_get_arity(tree, root_id) == 0:
+                print_warning('w', 'Origin tree is only a root node!')
+            else:
+                raise
 
         expr_raw = tree_get_expr_raw(tree, node_id=root_id)
 
@@ -1970,14 +1973,12 @@ class ExplainableGP(object):
 
         if self.monitoring_verbosity['gen_fitness_average'] == 'y':
             data_tuples = plotendify_me(self.monitoring_dict['fitness_average'])
-            plot_end(data_tuples, path_plots, plt_title='average error', plt_x_label='Generation', plt_y_label='fitness',
-                     set_left=data_tuples[0][0])
+            plot_end(data_tuples, path_plots, plt_title='average error', plt_x_label='Generation', plt_y_label='fitness', set_left=data_tuples[0][0])
 
         if self.monitoring_verbosity['population_tmp_done-size'] == 'y':
             data_tuples = plotendify_me(self.monitoring_dict['population_tmp_done-size'])
             plot_end(data_tuples, path_plots, plt_title='genepool size', plt_x_label='Generation', plt_y_label='amount', linestyle='None',
-                     marker='.',
-                     set_left=data_tuples[0][0])
+                     marker='.', set_left=data_tuples[0][0])
 
         data_tuples = plotendify_me(self.monitoring_dict['gen_time'])
         plot_end(data_tuples, path_plots, plt_title='Generation time', plt_x_label='Generation', plt_y_label='time (sec)', linestyle='None',
@@ -2047,7 +2048,7 @@ class ExplainableGP(object):
 
         # How many survived in the selection?
         self.monitoring_dict['population_tmp_done-size'][int(self.gen_id)] = len(self.population_tmp_done)
-        if len(self.population_tmp_done) <= 0:
+        if len(self.population_tmp_done) == 0:
             self.terminate_run(self.root_dir)
 
         # Find the fittest + average fitness

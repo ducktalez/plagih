@@ -362,7 +362,7 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
         tree_works = True
 
     if tree_node_get_arity(tree, root_id) == 0:
-        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)  #
+        # print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)  # todo todotodo
         tree_works = allow_root_only
 
     return tree_works

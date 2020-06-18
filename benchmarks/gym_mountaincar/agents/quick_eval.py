@@ -15,7 +15,10 @@ import pickle
 import tikzplotlib
 
 
-def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
+def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
+    """
+    plotting the decision space
+    """
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -36,6 +39,9 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr'
     if dummy:
         _, _, result_dummy = mtc_heatmap_helper(agent, 256, n, dummy=dummy)
         results = results * result_dummy
+
+    ticks = np.linspace(0, 2, 3)
+    boundaries = np.linspace(-0.5, 2.5, 4)
 
     mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
 
@@ -124,7 +130,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
 
     else:
-        fig.colorbar(c, ax=ax)  # needed, plot is stretched otherwise
+        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # insert empty colorbar, plot is stretched otherwise
 
     # get data you will need to create a "nan_style patch" to your plot
     xmin, xmax = ax.get_xlim()

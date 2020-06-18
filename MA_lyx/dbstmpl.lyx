@@ -4761,9 +4761,765 @@ velocity
 
 \end_layout
 
+\begin_layout Subsection
+MC Black box approach (Sarsa)
+\end_layout
+
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/mtc_simple_tree.png
+	lyxscale 50
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mtc_simple_tree"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational tree of the simplest program
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The gym-environment has a leaderboard containing the approaches that have
+ been able to learn the fastest to create a policy that solves the problem
+ in steps of less than 
+\begin_inset Formula $110$
+\end_inset
+
+.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset href
+LatexCommand href
+name "https://github.com/openai/gym/wiki/Leaderboard"
+target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ We chose the best black box approach at the time, which uses a SARSA approach
+ paired with tiling to achieve the goal of less than 110 steps in 75 episodes.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "false"
+
+\end_inset
+
+ 
 \begin_inset Note Comment
 status open
+
+\begin_layout Plain Layout
+Wir haben den zum damaligen Zeitpunkt besten black box approach gewählt,
+ welcher einen SARSA Ansatz, gepaart mit Tiling, nutzt um in 75 Episoden
+ das Ziel von unter 110 Schritten erreicht.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the chosen approach, cherrypicking was actively not used, since every
+ approach should work if its average performance is better.
+ Nevertheless, it should be mentioned that the approaches used on the Leaderboar
+d were explicitly not designed for robustness, but for rapid learning success.
+ In the case of the Sarsa75 approach, this manifests itself in a generally
+ poor exploration, coupled with clearly "wrong" decisions in some areas.
+ This can lead to problems in the GP process, as shown in todo ref.
+\end_layout
+
+\begin_layout Standard
+To compare a slightly better explored approach, the same approach was trained
+ for 200 steps.
+ Uncertainties still occur, but they play a much smaller role and the performanc
+e increases accordingly by almost 5 steps.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Decision plots for the full state space.Sarsa75 (left), Sarsa200 (right)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/dummy_plots/dummy-sarsa_agent_200.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Decision plots for the occuring states.
+ Sarsa75 (left), Sarsa200 (right)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+tret
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+tretzedfgb
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the chosen approach, cherrypicking was actively not used, since every
+ approach should work if its average performance is better.
+ Nevertheless, it should be mentioned that the approaches used on the Leaderboar
+d were explicitly not designed for robustness, but for rapid learning success.
+ In the case of the Sarsa75 approach, this manifests itself in a generally
+ poor exploration, coupled with clearly 
+\begin_inset Quotes eld
+\end_inset
+
+wrong
+\begin_inset Quotes erd
+\end_inset
+
+ decisions in some areas
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo show in image
+\end_layout
+
+\end_inset
+
+.
+ This can lead to problems in the GP process, as discussed in 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+in todo ref
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+To compare a slightly better explored approach, the same Sarsa approach
+ was trained for 200 steps.
+ Uncertainties still exist, but they play a much smaller role and the performanc
+e increases accordingly by almost 5 steps to -200
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Bei dem gewählten Ansatz wurde aktiv kein cherrypicking verwendet, da jeder
+ Ansatz funktionieren sollte, wenn seine Durchschnittsperformance besser
+ ist.
+ Dennoch sollte erwähnt werden, dass die Ansätze die auf dem Leaderboard
+ verwendet wurden, explizit nicht auf robustheit ausgelegt wurden, sondern
+ auf einen schnellen Lernerfolg.
+ Dies äußert sich im Fall des Sarsa75 Ansatzes durch eine allgemein schlechte
+ exploration, gepaart mit teilweise flächendeckend klar 
+\begin_inset Quotes eld
+\end_inset
+
+falschen
+\begin_inset Quotes erd
+\end_inset
+
+ Entscheidungen.
+ Dies kann beim GP Prozess zu Problemen führen, wie in 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo ref
+\end_layout
+
+\end_inset
+
+gezeigt wird.
+\end_layout
+
+\begin_layout Plain Layout
+Um einen etwas besser explorierten Ansatz im Vergleich zu sehen, wurde derselbe
+ Ansatz für 200 Schritte trainiert.
+ Unsicherheiten kommen zwar immernoch vor, spielen aber eine viel geringere
+ Rolle und die Performance steigt entsprechend auch um fast 5 Schritte.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\approx-103.4$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The same approach war also trained for 200 episodes but a better average
+ result of 
+\begin_inset Formula $\approx-98.7$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="8" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Agent
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Training episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Average episode reward (100 runs)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa 75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-103.41
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa 200
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+200
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-98.68
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa 1000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-106.78
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa 10000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-109.31
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Simple agent (
+\begin_inset Formula $>$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-119.41
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Simple agent (<=)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-129.62
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Fix preset Policy
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-102.61
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For this initial experiment, the black box is explicitly not , the way it
+ works was deliberately not looked at in detail.
+\end_layout
+
+\begin_layout Paragraph
+First evaluation
+\end_layout
+
+\begin_layout Standard
+The “simple” policy reached the target with an average episode reward of
+ 
+\begin_inset Formula $-119$
+\end_inset
+
+ without fails very constantly.
+ The average reward of the SARSA-agent is, with an average reward of 
+\begin_inset Formula $103$
+\end_inset
+
+, outperforming the “simple” approach with about 
+\begin_inset Formula $14\%$
+\end_inset
+
+.
+ A grain of salt however is, that the SARSA Approach seems to be relatively
+ unstable, even causing the policy to almost fail to reach the target in
+ 200 steps, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "img:MTC-heuristic-vs-sarsa-reward"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ The reason for poor performance was not evaluated, even though it can be
+ assumed that this is caused by uncommon starting states where not enough
+ experience was made yet.
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[todo epsilon wert = 0?]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10-average.jpg
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10.jpg
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "img:MTC-heuristic-vs-sarsa-reward"
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa75 implementation learns to outperform the heuristic on average, but
+ with outliers
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Decision plots
+\end_layout
+
+\begin_layout Standard
+In addition to histograms, MC offers the opportunity to create decision
+ plots.
+ These show which decisions have been made for the respective observation
+ dimensions.
+\begin_inset Note Comment
+status collapsed
 
 \begin_layout Plain Layout
 Zusätzlich zu Histogrammen wurden für MC Entscheidungs-plots erstellt.
@@ -4777,9 +5533,117 @@ Zusätzlich zu Histogrammen wurden für MC Entscheidungs-plots erstellt.
 \end_layout
 
 \begin_layout Standard
-In addition to histograms, decision plots were created for MC.
- These show which decisions have been made for the respective observation
- dimensions.
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-SimpleAgent.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-AgentV1p40.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-XiaoPresetAgent.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-Good_Expert.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+asd
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Subsection
@@ -4787,8 +5651,27 @@ Learning goals on the way to the perfect solution
 \end_layout
 
 \begin_layout Standard
+Attempts to reduce the distance to the target by accelerating in its direction
+ are quickly recognized as unsuccessful.
+ In order to reach the target at all, the agent must learn to gain momentum
+ with the help of the counter slope.
+ This can be achieved, for example, with the 
+\begin_inset Quotes eld
+\end_inset
+
+simple
+\begin_inset Quotes erd
+\end_inset
+
+ heuristic of always accelerating in the direction in which one is currently
+ moving.
+\end_layout
+
+\begin_layout Standard
+This way the cart will always reach the goal, but there is still plenty
+ of room for optimization.
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Versuche, die Entfernung zum Ziel durch Beschleunigung in dessen Richtung
@@ -4813,68 +5696,28 @@ Auf diese Weise wird der Wagen immer das Ziel erreichen, aber es gibt noch
  viel Raum für Optimierung.
 \end_layout
 
-\begin_layout Itemize
-Vorzeitig umkehren: Um das Ziel zu erreichen, muss man nicht den maximalen
- Schwung nehmen.
- Wenn Sie früher umkehren, können Sie viel Zeit sparen.
- 
-\end_layout
-
-\begin_layout Itemize
-Verwerfen Sie Aktion 1 
-\begin_inset Quotes eld
-\end_inset
-
-Nichts tun
-\begin_inset Quotes erd
-\end_inset
-
-: Nichtstun macht im Prinzip keinen Sinn - die Geschwindigkeit geht beim
- Schwung verloren, und beim Umdrehen könnten Sie statt zweimal hintereinander
- nichts zu tun, normalerweise in die entgegengesetzte Richtung beschleunigen.
- 
-\end_layout
-
-\begin_layout Itemize
-Mindestanzahl der erforderlichen Umdrehungen.
- Je nach Ausgangslage kann das Ziel deterministisch mit zwei Drehungen (nach
- links, nach rechts) oder mit drei Drehungen (nach rechts, nach links, nach
- rechts) erreicht werden.
- Da diese Entscheidung relativ weit vom Ziel entfernt ist, ist es schwierig,
- von einem Agenten erlernt zu werden.
-\end_layout
-
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-Attempts to reduce the distance to the target by accelerating in its direction
- are quickly recognized as unsuccessful.
- In order to reach the target at all, the agent must learn to gain momentum
- with the help of the counter slope.
- This can be achieved, for example, with the 
-\begin_inset Quotes eld
-\end_inset
-
-simple
-\begin_inset Quotes erd
-\end_inset
-
- heuristic of always accelerating in the direction in which one is currently
- moving.
-\end_layout
-
-\begin_layout Standard
-This way the cart will always reach the goal, but there is still plenty
- of room for optimization.
 \end_layout
 
 \begin_layout Itemize
 Reverse early: To reach the goal, you don't have to take the maximum momentum.
  If you turn back earlier, a lot of time can be saved.
  
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Vorzeitig umkehren: Um das Ziel zu erreichen, muss man nicht den maximalen
+ Schwung nehmen.
+ Wenn Sie früher umkehren, können Sie viel Zeit sparen.
+ 
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
@@ -4899,76 +5742,25 @@ Minimum number of necessary turns.
  right, to the left, to the right).
  Since this decision is relatively far from the end, it is difficult to
  be learn by an agent.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Mindestanzahl der erforderlichen Umdrehungen.
+ Je nach Ausgangslage kann das Ziel deterministisch mit zwei Drehungen (nach
+ links, nach rechts) oder mit drei Drehungen (nach rechts, nach links, nach
+ rechts) erreicht werden.
+ Da diese Entscheidung relativ weit vom Ziel entfernt ist, ist es schwierig,
+ von einem Agenten erlernt zu werden.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
 All mountaincar runs
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Als 
-\begin_inset Quotes eld
-\end_inset
-
-Expertenprogramm
-\begin_inset Quotes erd
-\end_inset
-
- wurden eine Vielzahl an verschieden strukturierten Agenten getestet.
- Die Unterschiede teilen sich in verschiedene Aspekte auf.
-\end_layout
-
-\begin_layout Itemize
-Heuristik
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-In die aktuelle Richtung beschleunigen
-\end_layout
-
-\begin_layout Enumerate
-Preset policy mit parabelartiger Ober- und Untergrenze
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Black box Daten
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sarsa Agent nach 75 Trainingsschritten (Sarsa75)
-\end_layout
-
-\begin_layout Enumerate
-Sarsa Agent nach 200 Trainingsschritten (Sarsa200)
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Einige Knoten sind als Kernstruktur fix
-\end_layout
-
-\begin_layout Itemize
-Aktion 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- im Vornhinein ausschließen
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -4993,7 +5785,7 @@ Heuristics
 accelerate in the current direction
 \end_layout
 
-\begin_layout Itemize
+\begin_layout Enumerate
 preset policy with parabolic upper and lower limit
 \end_layout
 
@@ -5045,7 +5837,12 @@ if cartVel <= 0:
 
 \begin_layout Plain Layout
 
-bbbb
+else
+\end_layout
+
+\begin_layout Plain Layout
+
+	push right
 \end_layout
 
 \end_inset
@@ -6045,459 +6842,6 @@ ref{todo}
 \end_layout
 
 \begin_layout Subsection
-Machine learning approach
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/mtc_simple_tree.png
-	lyxscale 50
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mtc_simple_tree"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Computational tree of the simplest program
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The only real requirement of the approach is that it performs better on
- average than the explainable approach and is based on a neural network.
- Conveniently, the gym-environment has a leaderboard containing the approaches
- that have been able to learn the fastest to create a policy that solves
- the problem in steps of less than 
-\begin_inset Formula $110$
-\end_inset
-
-.
- 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-ref{mtc_leaderboards}
-\end_layout
-
-\end_inset
-
- The approach chosen here is a SARSA procedure
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[TODO paper Sarsa? Approach?]
-\end_layout
-
-\end_inset
-
- with tiling that is able to learn a sufficient policy after 75 episodes
- with an average episode reward of 
-\begin_inset Formula $\approx-103.4$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-The same approach war also trained for 200 episodes but a better average
- result of 
-\begin_inset Formula $\approx-98.7$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Tabular
-<lyxtabular version="3" rows="8" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Agent
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Training episodes
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Average episode reward (100 runs)
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Sarsa 75
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-75
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--103.41
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Sarsa 200
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-200
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--98.68
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Sarsa 1000
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1000
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--106.78
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Sarsa 10000
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-10000
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--109.31
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Simple agent (
-\begin_inset Formula $>$
-\end_inset
-
-)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--119.41
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Simple agent (<=)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--129.62
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Fix preset Policy
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--102.61
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-For this initial experiment, the black box is explicitly not , the way it
- works was deliberately not looked at in detail.
-\end_layout
-
-\begin_layout Paragraph
-First evaluation
-\end_layout
-
-\begin_layout Standard
-The “simple” policy reached the target with an average episode reward of
- 
-\begin_inset Formula $-119$
-\end_inset
-
- without fails very constantly.
- The average reward of the SARSA-agent is, with an average reward of 
-\begin_inset Formula $103$
-\end_inset
-
-, outperforming the “simple” approach with about 
-\begin_inset Formula $14\%$
-\end_inset
-
-.
- A grain of salt however is, that the SARSA Approach seems to be relatively
- unstable, even causing the policy to almost fail to reach the target in
- 200 steps, as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "img:MTC-heuristic-vs-sarsa-reward"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-.
- The reason for poor performance was not evaluated, even though it can be
- assumed that this is caused by uncommon starting states where not enough
- experience was made yet.
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo epsilon wert = 0?] 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10-average.jpg
-	lyxscale 40
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10.jpg
-	lyxscale 40
-	scale 40
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "img:MTC-heuristic-vs-sarsa-reward"
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa75 implementation learns to outperform the heuristic on average, but
- with outliers
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
 GP preparation
 \end_layout
 
@@ -6612,120 +6956,6 @@ More effort at the GP
 
 \begin_layout Itemize
 more complex trees
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-SimpleAgent.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-AgentV1p40.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetAgent.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-Good_Expert.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-asd
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection

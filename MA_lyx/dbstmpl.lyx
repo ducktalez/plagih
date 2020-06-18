@@ -4870,9 +4870,6 @@ To compare a slightly better explored approach, the same approach was trained
  Uncertainties still occur, but they play a much smaller role and the performanc
 e increases accordingly by almost 5 steps.
  
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -4880,17 +4877,30 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
 	lyxscale 50
-	scale 40
+	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
+	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
 	lyxscale 50
-	scale 40
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+uniform height 5cm?
+\end_layout
 
 \end_inset
 
@@ -4901,7 +4911,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Decision plots for the full state space.Sarsa75 (left), Sarsa200 (right)
+Sarsa75 decision plot for the complete state space (left) and for the occuring
+ states only (right)
 \end_layout
 
 \end_inset
@@ -4919,7 +4930,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
+	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
 	lyxscale 50
 	scale 40
 
@@ -4940,115 +4951,14 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Decision plots for the occuring states.
- Sarsa75 (left), Sarsa200 (right)
+Sarsa200 decision plot for the complete state space (left) and for the occuring
+ states only (right)
 \end_layout
 
 \end_inset
 
 
 \end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="2">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-tret
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-tretzedfgb
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
 
 \end_inset
 
@@ -5097,7 +5007,11 @@ in todo ref
 To compare a slightly better explored approach, the same Sarsa approach
  was trained for 200 steps.
  Uncertainties still exist, but they play a much smaller role and the performanc
-e increases accordingly by almost 5 steps to -200
+e increases accordingly by almost 5 steps to 
+\begin_inset Formula $\approx-103.4$
+\end_inset
+
+.
 \begin_inset Note Comment
 status collapsed
 
@@ -5141,13 +5055,6 @@ Um einen etwas besser explorierten Ansatz im Vergleich zu sehen, wurde derselbe
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $\approx-103.4$
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Standard
@@ -5706,7 +5613,7 @@ Reverse early: To reach the goal, you don't have to take the maximum momentum.
  If you turn back earlier, a lot of time can be saved.
  
 \begin_inset Note Comment
-status collapsed
+status open
 
 \begin_layout Plain Layout
 Vorzeitig umkehren: Um das Ziel zu erreichen, muss man nicht den maximalen
@@ -5850,427 +5757,8 @@ else
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="9" columns="4">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Nr.
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Main heuristic
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-special feature
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Findings
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.0
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="3" alignment="center" valignment="middle" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Move towards moving direction
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-condition 
-\begin_inset Quotes eld
-\end_inset
-
-<=
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Condition should be 
-\begin_inset Quotes eld
-\end_inset
-
-<
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.1
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-condition 
-\begin_inset Quotes eld
-\end_inset
-
-<
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-TED has no influence on large changes
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.2
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fix nodes
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-structure is kept throughout the approach
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.3
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-consider 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- as separate decision
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- is superfluous
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.4
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-gp-friendly architecture
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.5
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-improvements-only (preview)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2.0
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Preset policy
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-very good complex and extensive third party approach
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-3.0
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Improved experts approach
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-very good if-then-else heavy approach
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Overview of Mountain car expert approaches
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsubsection
-Simple heuristic 
+Simple, two actions, 
 \begin_inset Quotes eld
 \end_inset
 
@@ -6327,7 +5815,7 @@ if cartVel <= 0:
 
 \begin_layout Plain Layout
 
-	push left
+  push left
 \end_layout
 
 \begin_layout Plain Layout
@@ -6337,7 +5825,7 @@ else:
 
 \begin_layout Plain Layout
 
-	push right
+  push right
 \end_layout
 
 \end_inset
@@ -6431,30 +5919,12 @@ Under condition
 \end_layout
 
 \begin_layout Subsubsection
-Simple heuristic 
+Simple, two actions, 
 \begin_inset Quotes eld
 \end_inset
 
 <
 \begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Die beste Version des einfachsten Agenten wird als Startprogramm verwendet.
-\end_layout
-
-\begin_layout Plain Layout
-Der Computational tree besteht aus 6 Knoten, die alle verändert werden können.
- 
-\end_layout
-
 \end_inset
 
 
@@ -6467,6 +5937,20 @@ The best version of the simplest agent is used as the starting program.
 \begin_layout Standard
 The computational tree consists of 6 nodes, all of which can be modified.
  
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Die beste Version des einfachsten Agenten wird als Startprogramm verwendet.
+\end_layout
+
+\begin_layout Plain Layout
+Der Computational tree besteht aus 6 Knoten, die alle verändert werden können.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -6487,7 +5971,7 @@ if cartVel < 0:
 
 \begin_layout Plain Layout
 
-	push left
+  push left
 \end_layout
 
 \begin_layout Plain Layout
@@ -6497,7 +5981,7 @@ else:
 
 \begin_layout Plain Layout
 
-	push right
+  push right
 \end_layout
 
 \end_inset
@@ -6623,54 +6107,23 @@ if
 -decision to the two cases 0 and 2.
 \end_layout
 
-\begin_layout Paragraph
-Problems
-\end_layout
-
-\begin_layout Standard
-The initial state is a major problem for regression analyses because, despite
- its crucial role, it occurs only once in the data set.
- For this reason, there are sometimes large differences in performance when
- testing the agents.
- Just past is also beside the point.
- Some Sarsa runs end with very tight finishes.
- Some runs of the trained agents are unfortunately not lucky and have to
- turn back shortly before the finish.
-\end_layout
-
-\begin_layout Standard
-The SARSA approach was chosen because it was the fastest that could solve
- mountain car well.
- However, this meant that little was explored in the learning process and
- often there are wrong decisions that but there's still a lot of air up
- there.
- Very easy to learn that the goal can be achieved with less momentum and
- you can turn with 
-\end_layout
-
-\begin_layout Standard
-funfact: cartvel 
-\begin_inset Formula $<$
+\begin_layout Subsubsection
+Simple, three actions, 
+\begin_inset Quotes eld
 \end_inset
 
- 0 then 0 else 2 cartvel 
-\begin_inset Formula $\leq$
+<=
+\begin_inset Quotes erd
 \end_inset
 
- 0 then 0 else 2 
+
 \end_layout
 
 \begin_layout Standard
-Reverse early
+This version 
 \end_layout
 
-\begin_layout Standard
-This simple policy can further be improved, where the most efficient way
- is probably by reversing early on the opposite side.
- 
-\end_layout
-
-\begin_layout Paragraph
+\begin_layout Subsubsection
 Close-form preset policy
 \end_layout
 
@@ -6769,10 +6222,6 @@ name "code:MC-agent:preset_policy"
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -6815,6 +6264,53 @@ Thus two essential improvements could be found here.
  the MC experiment.
  In the second case an enormous improvement was achieved by a small change.
  This improvement is even better than the Sarsa75 policy in the real experiment.
+\end_layout
+
+\begin_layout Paragraph
+Problems
+\end_layout
+
+\begin_layout Standard
+The initial state is a major problem for regression analyses because, despite
+ its crucial role, it occurs only once in the data set.
+ For this reason, there are sometimes large differences in performance when
+ testing the agents.
+ Just past is also beside the point.
+ Some Sarsa runs end with very tight finishes.
+ Some runs of the trained agents are unfortunately not lucky and have to
+ turn back shortly before the finish.
+\end_layout
+
+\begin_layout Standard
+The SARSA approach was chosen because it was the fastest that could solve
+ mountain car well.
+ However, this meant that little was explored in the learning process and
+ often there are wrong decisions that but there's still a lot of air up
+ there.
+ Very easy to learn that the goal can be achieved with less momentum and
+ you can turn with 
+\end_layout
+
+\begin_layout Standard
+funfact: cartvel 
+\begin_inset Formula $<$
+\end_inset
+
+ 0 then 0 else 2 cartvel 
+\begin_inset Formula $\leq$
+\end_inset
+
+ 0 then 0 else 2 
+\end_layout
+
+\begin_layout Standard
+Reverse early
+\end_layout
+
+\begin_layout Standard
+This simple policy can further be improved, where the most efficient way
+ is probably by reversing early on the opposite side.
+ 
 \end_layout
 
 \begin_layout Paragraph

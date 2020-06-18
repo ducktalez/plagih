@@ -659,7 +659,7 @@ class ExplainableGP(object):
 
         return 0
 
-    def file_save_files(self, root_path):
+    def file_make_analysis(self, root_path):
         """
         writes all important gp_files
 
@@ -878,7 +878,7 @@ class ExplainableGP(object):
             histogram_data = np_data[:, obs_info.get('pos')]  # pos is the same as col
             obs_minmax = obs_info.get('minmax')  # todo this should be set, no matter what.
             if obs_minmax is None:
-                # print('SHOULD NOT HAPPEN, SFEH. Must be set earlier!')  # todo
+                print_e('SHOULD NOT HAPPEN, SFEH. obs_minmax must be set earlier!')  # todo
                 obs_minmax = (np.min(histogram_data), np.max(histogram_data))
 
             # todo delete this
@@ -952,8 +952,10 @@ class ExplainableGP(object):
             act_min, act_max = self.env_variables['action_at'][self.config['eval_action']]['minmax']
             if 'discrete' in self.kernel.kernel:
                 # todo test
-                unique_actions = self.env_variables['action_at'][self.config['eval_action']]['unique_outputs_num']
-                action_bins = np.linspace(-0.5 + act_min, 0.5 + act_max, 2 * unique_actions + 1)
+                # unique_actions = self.env_variables['action_at'][self.config['eval_action']]['unique_outputs_num']
+                act_range = act_max - act_min
+                num_outputs = len(range(-act_range, act_range + 1))  # (+1 for range, -1 neutral element)
+                action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)
             else:
                 action_bins = np.linspace(act_min, act_max, 10)  # check out histogram_bin_edges, maybe it is better todo also 10 bins?
 
@@ -2110,7 +2112,8 @@ class ExplainableGP(object):
         """
         Program is done after writing all gp_files one last time.
         """
-        self.file_save_files(root_dir)
+        self.run_backup_save()
+        self.file_make_analysis(root_dir)
 
         # if Path.is_file(root_dir / file_pycode_eval):
         #     # exec(Path.open(root_dir / file_pycode_eval).read())

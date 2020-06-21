@@ -352,7 +352,7 @@ class ExplainableGP(object):
             pass
             # self.monitoring_dict['pop:trees:complexity:std_error'] = np.sqrt(self.monitoring_dict['complexity_variance'])
 
-        printez('g', 'Loading Generation: {}'.format(self.gen_id), self.print_type)
+        printez('g', 'Starting at generation: {}'.format(self.gen_id), self.print_type)
 
         return
 
@@ -665,6 +665,8 @@ class ExplainableGP(object):
         self.file_conclusion(root_path)
         write_file_pareto_txt(self.pareto, root_path, self.file_locs['file_pareto'])  # todo "get path" instead?
         self.file_pareto_latex(self.pareto, root_path)
+        if delete_this:
+            self.file_population_base_latex(root_path)
         self.file_generate_pycode(self.pareto, root_path)
         write_file_population_karoo(self.population_base, 'last', root_path, self.gen_id, print_type=self.print_type)
 
@@ -1062,6 +1064,32 @@ class ExplainableGP(object):
             file.write(latex_full_doc)
 
         self.printpl('f', '{}'.format(path_trees_tex))
+
+        return
+
+    def file_population_base_latex(self, root_path):
+        """
+        """
+
+        latex_element = []
+
+        for ii, tree in enumerate(self.population_base):
+            latex_element.append('Pop_base tree {} with fitness {} from last-mod {}.\n'.format(ii, tree_get_fitness(tree, precision=self.precision), tree_get_last_evolution(tree)))
+
+            forest_viz = latex_tree_get_forest(tree, tight_viz=False)
+            latex_element.append(forest_viz)
+            latex_element.append('Tight layout:\n')
+            try:
+                tight_forest_viz = latex_tree_get_forest(tree)
+            except:
+                tight_forest_viz = latex_tree_get_forest(tree)
+            latex_element.append(tight_forest_viz)
+
+        pop_viz = latex_treeviz_full(latex_element)
+        path_tex = file_make_dir(root_path / 'info/test_pop_latex.tex')
+        with Path.open(path_tex, 'w') as file:
+            file.write(pop_viz)
+        self.printpl('f', '{}'.format(path_tex))
 
         return
 

@@ -201,7 +201,9 @@ def latextree_stringreplace_labels(tree):
         label = tree_node_get_label(tree, node_id)
 
         # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
-        label = re.sub('(?<=[0-9]{3})(\d+)', '', label)
+
+        label = re.sub('0\.000[0]+[1-9]+', '0.001', label)  # displaying very small values as '0.001'
+        label = re.sub('(?<=[0-9]\.[0-9]{3})(\d+)', '', label)  # removing over-accurate decimals
 
         # replace all occurences of operations with op
         for opraw, optex in tex_replace.items():

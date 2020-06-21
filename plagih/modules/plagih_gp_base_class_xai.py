@@ -27,12 +27,12 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, plagih_root, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, data_prepared_path=None, opt_origin_tree_csv=None, out_dir=None):
+    def __init__(self, plagih_root, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, user_prepared_path=None, opt_origin_tree_csv=None, out_dir=None):
 
         self.name = root_dir.name  # sfeh probably there are better names
         print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET, root_dir))
         self.time_start = time.perf_counter()
-        self.restart_vers = 'v0.8'
+        self.restart_vers = 'v0.95'
         self.root_dir = root_dir
         self.sfeh_plagih_root = plagih_root
 
@@ -46,10 +46,6 @@ class ExplainableGP(object):
             'time_max': None,  # int(60 * 60 * 12),  # 60 = 1 min
             'gen_max': 1001,  # Maximum amount of generations
 
-            # (!) Relevant for result
-            # 'pop': {
-            #
-            # },
             'pop_max': 1000,  # amount is never tested
             'tree_depth_max': 10,  # maximum Tree depth for entire run
             'tree_depth_min': 2,
@@ -214,19 +210,20 @@ class ExplainableGP(object):
             self.evolve_list = self.config['evolve_list']
             self.file_locs = self.config['file_locs']
 
-        # Making useable files from the raw string format
+        if user_prepared_path is not None:
+            self.config['file_locs']['samples_ready_p'] = user_prepared_path
+
         self.root_paths = {}
         for file_key, file_loc in self.config['file_locs'].items():
             self.root_paths[file_key] = Path(root_dir / file_loc)
-        # self.root_paths.update(user_file_paths)
 
-        self.activate_dataset(data_prepared_p_path=data_prepared_path)
+        self.activate_dataset(user_prepared_p_path=user_prepared_path)
 
         # distributions_as_string = self.config['distributions_as_string']
         # sfeh
         # if opt_distributions_as_string:
         #     distributions_as_string.update(opt_distributions_as_string)
-        self.load_tree_builders_distributions(path_user_distributions=None)
+        self.load_tree_builders_distributions(user_path_distributions=None)
 
         if opt_evolve_list:
             self.evolve_list.update(opt_evolve_list)
@@ -693,7 +690,7 @@ class ExplainableGP(object):
         real_path = self.root_paths[file_key]
         return real_path
 
-    def activate_dataset(self, data_prepared_p_path=None, delimiter=','):
+    def activate_dataset(self, user_prepared_p_path=None, delimiter=','):
         """
         loading the data which the GP will be working on.
         The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -706,8 +703,8 @@ class ExplainableGP(object):
 
             # self.data_train_panda, self.data_control_panda  # todo version1 data_test_panda
         """
-        if data_prepared_p_path:
-            data_prepared = pickle_load(data_prepared_p_path)
+        if user_prepared_p_path:
+            data_prepared = pickle_load(user_prepared_p_path)
         elif Path.is_file(self.root_paths['samples_ready_p']):  # maybe the data was already prepared earlier
             data_prepared = pickle_load(self.root_paths['samples_ready_p'])
         elif Path.is_file(self.root_paths['samples_csv']):  # Preprocess the raw data: training/test split, env-variables, ...
@@ -754,6 +751,7 @@ class ExplainableGP(object):
 
     def load_tree_builders_choose_oparray(self, opt_path_opyaml=None):
         """
+        .͜.
 
         """
         # double check load
@@ -767,12 +765,12 @@ class ExplainableGP(object):
             # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
             print_warning('ww', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operators.')
             operators = np.array([['+', 3],
-                                  ['-', 1], ['usub', 2],
+                                  ['-', 1], ['usub', 1],
                                   ['*', 2], ['/', 1],
                                   ['Square', 0.75], ['**', 0.25],
                                   ['abs', 0.4], ['sign', 0.1],
                                   ['sqrt', 0.2],
-                                  ['log', 0.1], ['log1p', 0.1],
+                                  # ['log', 0.1], ['log1p', 0.1],
                                   ['sin', 0.1],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
                                   ['tanh', 0.2],
                                   ['Andb', 1], ['Orb', 1], ['Notb', 0.5],  # ['Xor', 1],
@@ -787,16 +785,16 @@ class ExplainableGP(object):
 
         return
 
-    def load_tree_builders_distributions(self, path_user_distributions=None):
+    def load_tree_builders_distributions(self, user_path_distributions=None):
         """
 
         """
         # double check load
-        if not path_user_distributions:
-            path_user_distributions = self.root_paths.get('distributions_file')
+        if not user_path_distributions:
+            user_path_distributions = self.root_paths.get('distributions_file')
 
-        if Path.is_file(path_user_distributions):
-            distributions_as_string = yaml_load(path_user_distributions)
+        if Path.is_file(user_path_distributions):
+            distributions_as_string = yaml_load(user_path_distributions)
         else:
             print_warning('www', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
             distributions_as_string = self.config['distributions_as_string']

@@ -156,9 +156,6 @@ def load_config(config_path):
         if file_extension == '.yaml':
             with Path.open(config_path, 'r') as file:
                 config = yaml.load(file, Loader=yaml.FullLoader)
-        elif file_extension == '.json':
-            with Path.open(config_path, 'r') as file:
-                config = json.load(file)
         else:
             config = {}  # sfeh test this
     except IOError as ioex:
@@ -167,7 +164,7 @@ def load_config(config_path):
     return root_dir, config
 
 
-def gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
     """
     
     """
@@ -180,7 +177,7 @@ def gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_p
     config['eval_action'] = eval_action
 
     # sfeh , opt_origin_tree_csv=origin_tree, out_dir=out_dir
-    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
+    gp = ExplainableGP(plagih_root, root_dir, config, user_prepared_path=data_prepared_path)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:
@@ -196,7 +193,7 @@ def gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_p
     sys.exit()
 
 
-def analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
+def analyse(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
     """
     write all analysing files.
     - pareto (txt, latex_trees, agents)
@@ -211,7 +208,7 @@ def analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_
     config['eval_action'] = eval_action
 
     root_dir, config = load_config(config_path)
-    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
+    gp = ExplainableGP(plagih_root, root_dir, config, user_prepared_path=data_prepared_path)
 
     gp.plagih_update_analysis()
 

@@ -30,6 +30,7 @@ def main(argv):
     # parser.add_argument("--data_dir", type=Path, default=Path(__file__).absolute().parent / "data", help="Path to the data directory",)
 
     parser.add_argument('-config', type=Path, metavar='CONFIG_YAML', help='The config file in the run directory.')
+    parser.add_argument('-load_backup', type=Path, help='Starting a run from a backup file (backup.p).')
     parser.add_argument('-out_dir', type=Path, help='A custom output folder (root_dir). Not stable yet.')  # sfeh
     parser.add_argument('-action', type=int, default=0, help='If there is more than one action, choose the right one.')
     parser.add_argument('-data_prepared', '-samples_ready', type=Path)
@@ -41,6 +42,7 @@ def main(argv):
     # print(args)
 
     config_path = args.config
+    load_backup = args.load_backup
     out_dir = args.out_dir
     force_new_run = args.force_new_run
     eval_action = args.action
@@ -50,9 +52,9 @@ def main(argv):
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
     if args.analyse:
-        plagih_gp.analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
+        plagih_gp.analyse(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
     else:
-        plagih_gp.gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
+        plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
 
 
 if __name__ == "__main__":

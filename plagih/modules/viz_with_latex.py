@@ -224,10 +224,11 @@ def latex_tree_get_forest(tree, tight_viz=True):
     if tight_viz:
         tree = latex_tree_get_tighttree(tree)
 
-    tree = latextree_stringreplace_labels(tree)
-
     bracket_tree = latex_tree_get_brackets(tree)
     forest_viz = latex_wrap_forest(bracket_tree)
+    # tree = 'ASD TODO FUCK THIS SHIT: {}'.format(tree)
+
+    forest_viz = latextree_stringreplace_labels(forest_viz)
 
     return forest_viz
 
@@ -265,7 +266,10 @@ def latex_tree_get_tighttree(tree):
         branch_ids = tree_node_get_branch(tree, node_id)
         node_dict[node_id] = len(branch_ids)
         for x in branch_ids:
-            open_sym.remove(x)
+            try:
+                open_sym.remove(x)
+            except:
+                pass  # removing an element that is not in list
 
     # Building the new tree
     vis_label_list = []
@@ -293,6 +297,7 @@ def latex_tree_get_tighttree(tree):
     longest_label = max(10, max([len(x) for x in vis_label_list]))
 
     tight_tree = latex_vistree_from_labellist(vis_label_list, vis_xtype_list, modify_list=vis_modify_list, arity_list=vis_arity_list, force_np_size=longest_label)
+
     return tight_tree
 
 
@@ -308,7 +313,9 @@ def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity
 
     if not arity_list:
         arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
+
     core = core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=np_dtype_size)
+
     if modify_list:
         for i, val in enumerate(modify_list):
             core[N_modify][i] = val

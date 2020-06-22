@@ -1081,9 +1081,11 @@ class ExplainableGP(object):
             latex_element.append('Tight layout:\n')
             try:
                 tight_forest_viz = latex_tree_get_forest(tree)
+                latex_element.append(tight_forest_viz)
             except:
-                tight_forest_viz = latex_tree_get_forest(tree)
-            latex_element.append(tight_forest_viz)
+                # tight_forest_viz = latex_tree_get_forest(tree)
+                print('PYTHON WARUM BIST DU SO EIN HURENSOHN???!=!=!=!!!!!1111!!!!')
+                print(tree)
 
         pop_viz = latex_treeviz_full(latex_element)
         path_tex = file_make_dir(root_path / 'info/test_pop_latex.tex')

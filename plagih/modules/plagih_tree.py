@@ -145,7 +145,9 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype='U15'):
 
     # and also, fill all the leftover rows
     parent_list = parents_from_arities(arity_list)
+
     tree = tree_core_init_row(tree, N_parent, parent_list)
+
     tree = tree_core_build_childs(tree)
     tree = tree_core_init_depth(tree, parent_list)
 

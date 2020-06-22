@@ -65,7 +65,18 @@ class TestHelpers:
         label_list = workaround_remove_tilde_operator(label_list)
 
     def test_visualisation(self):
-        tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
+        tree_labels = ['Ifte',
+                       'Andb', '0', '2',
+                       '<', 'Orb',
+                       '*', '0', '>', 'Andb',
+                       '6.0', 'cartVel', '*', '-', '<', 'Orb',
+                       'cartPos', 'cartVel', '~', '1.0372722469', 'tanh', 'cartVel', '>', 'Orb',
+                       'cartPos', '2.1365828912', 'Maxi', '*', '!=', 'Andb',
+                       'cartPos', '*', 'usub', 'cartPos', 'cartPos', 'cartVel', 'True', 'Andb',
+                       'cartPos', '~', '2.0', '<=', 'Andb',
+                       '0.1', '22.5', '~', '<', 'False',
+                       'cartVel', 'cartVel', '~', '0.0374348335']
+        tree = self.karoo_tree_from_only_labellist(tree_labels)
         forest_viz = latex_tree_get_forest(tree, tight_viz=False)
         print(forest_viz)
         tight_viz = latex_tree_get_forest(tree)

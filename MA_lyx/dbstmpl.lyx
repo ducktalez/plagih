@@ -3526,24 +3526,21 @@ Explainable GP Framework, layer0 mutations
 \end_layout
 
 \begin_layout Standard
+The possibility to implement fixed nodes requires some adjustments to the
+ operators of the GP, because all trees need the same node core.
+ The changes include: 
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Die Möglichkeit, fixe Knoten zu implementieren, erfordert einige Anpassungen
  an die Operatoren der GP, da alle Bäume denselben Knotenkern benötigen.
- Die Änderungen umfassen: 
+ Die Änderungen umfassen:
 \end_layout
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-The possibility to implement fixed nodes requires some adjustments to the
- operators of the GP, because all trees need the same node core.
- The changes include: 
 \end_layout
 
 \begin_layout Itemize

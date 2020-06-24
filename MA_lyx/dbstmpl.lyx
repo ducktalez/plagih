@@ -202,11 +202,8 @@ Explainable artificial intelligence, in contrast, is a relatively young
  To explain a machine-learned (ML) solution is not trivial, since the structures
  used are mostly chaotic and incredibly complex and can only be optimized
  by lengthy training processes.
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Künstliche Intelligenz (AI) erfährt seit einigen Jahren einen Boom, dessen

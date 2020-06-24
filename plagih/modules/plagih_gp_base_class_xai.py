@@ -168,7 +168,7 @@ class ExplainableGP(object):
                 'file_info_config_json': 'info/config.json',
                 'file_info_evolve_dict_yaml': 'info/evolve_list.yaml',
                 'info_distributions_yaml': 'info/distributions_file.yaml',
-                'env_variables_yaml': 'info/env_variables.yaml',
+                'env_vars_yaml': 'info/env_vars.yaml',
 
                 # /run_files/
                 'file_config_yaml': 'run_files/config.yaml',
@@ -308,21 +308,21 @@ class ExplainableGP(object):
         """
         If features were added between versions, you can try to update this from here
         """
-        if self.env_variables.get('env_observation_family') is None:
-            self.env_variables['env_observation_family'] = {}
+        if self.env_vars.get('env_observation_family') is None:
+            self.env_vars['env_observation_family'] = {}
             # sfeh delete this sometimes
-            for x in self.env_variables['obs_name'].values():
+            for x in self.env_vars['obs_name'].values():
                 col_label = x['label']
                 temp_diff = envvariable_get_tempdiff(col_label)
                 core_label = envvariable_get_corelabel(col_label)
                 try:
-                    self.env_variables['env_observation_family'][core_label].extend([col_label])
+                    self.env_vars['env_observation_family'][core_label].extend([col_label])
                 except (IndexError, KeyError):
-                    self.env_variables['env_observation_family'][core_label] = [col_label]
+                    self.env_vars['env_observation_family'][core_label] = [col_label]
 
-                self.env_variables['obs_name'][col_label]['temp_diff'] = temp_diff
-                self.env_variables['obs_name'][col_label]['core_label'] = core_label
-            self.printpl('w', 'Attention, we updated self.env_variables for an old run')
+                self.env_vars['obs_name'][col_label]['temp_diff'] = temp_diff
+                self.env_vars['obs_name'][col_label]['core_label'] = core_label
+            self.printpl('w', 'Attention, we updated self.env_vars for an old run')
             # todo should we save the update?
 
         return
@@ -682,10 +682,10 @@ class ExplainableGP(object):
         """
         max_past = self.config['obs_past:max']
 
-        for obs_name, obs_info in self.env_variables['obs_name'].items():
+        for obs_name, obs_info in self.env_vars['obs_name'].items():
             if obs_info['temp_diff'] > max_past:
                 xtype = obs_info['xtype']
-                self.env_variables[xtype].remove(obs_name)
+                self.env_vars[xtype].remove(obs_name)
         return
 
     def get_path(self, file_key):
@@ -710,10 +710,10 @@ class ExplainableGP(object):
         elif Path.is_file(self.root_paths['samples_ready_p']):  # maybe the data was already prepared earlier
             data_prepared = pickle_load(self.root_paths['samples_ready_p'])
         elif Path.is_file(self.root_paths['samples_csv']):  # Preprocess the raw data: training/test split, env-variables, ...
-            self.env_variables, _, _, self.data_train, self.data_control = data_from_csv(self.root_paths['samples_csv'], delimiter=delimiter)
+            self.env_vars, _, _, self.data_train, self.data_control = data_from_csv(self.root_paths['samples_csv'], delimiter=delimiter)
 
             print('Prepared the raw {} behaviour. Saving for next run.'.format(self.file_locs['samples_csv']))
-            data_prepared = (self.env_variables, self.data_train, self.data_control)  # sfeh version1 remove numpy version
+            data_prepared = (self.env_vars, self.data_train, self.data_control)  # sfeh version1 remove numpy version
             pickle_dump(self.root_paths['samples_ready_p'], data_prepared)
         else:
             raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')  # samples_ready_p or samples_csv required
@@ -722,10 +722,10 @@ class ExplainableGP(object):
         if dataspec_file.is_file():
             pass  # sfeh: if you want to load information from extra file, check for this file here
         else:
-            # sfeh env_variables, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
-            yaml_dump(self.root_paths['env_variables_yaml'], data_prepared[0], print_type=self.print_type)
+            # sfeh env_vars, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
+            yaml_dump(self.root_paths['env_vars_yaml'], data_prepared[0], print_type=self.print_type)
 
-        self.env_variables, self.data_train, self.data_control = data_prepared  # data_control is data_test
+        self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
         self.update_old_runs()
         self.remove_old_variables()
 
@@ -809,7 +809,7 @@ class ExplainableGP(object):
 
         take_data_samples = distributions_as_string.get('observed_floats')
         if take_data_samples:
-            action_columns = list(range(len(self.env_variables['obs_name']), len(self.data_train[0])))  # remove these
+            action_columns = list(range(len(self.env_vars['obs_name']), len(self.data_train[0])))  # remove these
             # non_float_columns = ... # sfeh: data types must be float for this to work, remove non-float values. probably, these do not really exist.
             observ_values = np.delete(self.data_train, action_columns, 1)
             variables_set = np.random.choice(observ_values.flatten(), take_data_samples)  # 2nd param is probably '100'
@@ -873,7 +873,7 @@ class ExplainableGP(object):
 
         max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
 
-        for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
+        for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
             obs_x_info[ii] = {}  # 'bins': None, 'obs_name': None
             histogram_data = np_data[:, obs_info.get('pos')]  # pos is the same as col
             obs_minmax = obs_info.get('minmax')  # todo this should be set, no matter what.
@@ -891,14 +891,14 @@ class ExplainableGP(object):
 
         for a_ii, (parsim, meta) in enumerate(sorted(list(self.pareto.items()))):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            ptree = karoo_ptree_from_expr(expr_raw, self.env_variables)
+            ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
             tree = ptree.get_uninstanced_tree()
             expr_sym = tree_get_expr_sym(tree)
 
             tf_results = eval_tf(expr_sym,
                                  np_data,
                                  self.kernel,
-                                 self.env_variables,
+                                 self.env_vars,
                                  self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, specific_action=self.config['eval_action'])  # ['fitness'] only needed if return is dict
 
             pairwise_fitness = tf_results['pairwise_fitness']
@@ -910,7 +910,7 @@ class ExplainableGP(object):
             deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
             agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
-            for ii, (obs_name, obs_info) in enumerate(self.env_variables['obs_name'].items()):
+            for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
                 col = obs_info.get('pos')
                 histogram_data = np_data[:, col]
                 hist, _ = np.histogram(histogram_data, bins=obs_x_info[ii]['bins'], weights=pairwise_fitness)
@@ -923,7 +923,7 @@ class ExplainableGP(object):
         #  check for all vars in the tree, mark all observations of the same type with the same color?
         # # >>> Histograms for every dimension
         #
-        # data_dims = len(self.env_variables['obs_name'])
+        # data_dims = len(self.env_vars['obs_name'])
         #
         # # for enum_aii, agent_ii in enumerate(agent_dimatrix):
         # for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
@@ -949,10 +949,10 @@ class ExplainableGP(object):
         for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
 
             # Histograms action-based
-            act_min, act_max = self.env_variables['action_at'][self.config['eval_action']]['minmax']
+            act_min, act_max = self.env_vars['action_at'][self.config['eval_action']]['minmax']
             if 'discrete' in self.kernel.kernel:
                 # todo test
-                # unique_actions = self.env_variables['action_at'][self.config['eval_action']]['unique_outputs_num']
+                # unique_actions = self.env_vars['action_at'][self.config['eval_action']]['unique_outputs_num']
                 act_range = act_max - act_min
                 num_outputs = len(range(-act_range, act_range + 1))  # (+1 for range, -1 neutral element)
                 action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)
@@ -963,7 +963,7 @@ class ExplainableGP(object):
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
             # todo options: density = True, cumulative = True, np.clip(), np.diff(np.unique(data)).min() for
             ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            ax.set_ylim(0, len(self.data_train))  # sfeh better size? max? # self.env_variables['action_at'][self.config['eval_action']]
+            ax.set_ylim(0, len(self.data_train))  # sfeh better size? max? # self.env_vars['action_at'][self.config['eval_action']]
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
             fig.tight_layout()
@@ -1044,7 +1044,7 @@ class ExplainableGP(object):
 
         for parsim, meta in sorted(list(pareto.items())):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            ptree = karoo_ptree_from_expr(expr_raw, self.env_variables)
+            ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
             tree = ptree.get_uninstanced_tree()
             tree = self.tree_finish(tree, last_evolution='texify')
 
@@ -1074,18 +1074,22 @@ class ExplainableGP(object):
         latex_element = []
 
         for ii, tree in enumerate(self.population_base):
-            latex_element.append('Pop_base tree {} with fitness {} from last-mod {}.\n'.format(ii, tree_get_fitness(tree, precision=self.precision), tree_get_last_evolution(tree)))
+            # if ii % 10 == 0 and ii < 61:
+            if tree_check_deep(tree):
+                latex_element.append('Pop\_base tree {} with fitness {} from last-mod {}.\n'.format(ii, tree_get_fitness(tree, precision=self.precision), tree_get_last_evolution(tree)))
 
-            forest_viz = latex_tree_get_forest(tree, tight_viz=False)
-            latex_element.append(forest_viz)
-            latex_element.append('Tight layout:\n')
-            try:
-                tight_forest_viz = latex_tree_get_forest(tree)
-                latex_element.append(tight_forest_viz)
-            except:
-                # tight_forest_viz = latex_tree_get_forest(tree)
-                print('PYTHON WARUM BIST DU SO EIN HURENSOHN???!=!=!=!!!!!1111!!!!')
-                print(tree)
+                forest_viz = latex_tree_get_forest(tree, tight_viz=False)
+                latex_element.append(forest_viz)
+                latex_element.append('Tight layout:\n')
+                try:
+                    tight_forest_viz = latex_tree_get_forest(tree)
+                    latex_element.append(tight_forest_viz)
+                except:
+                    # tight_forest_viz = latex_tree_get_forest(tree)
+                    print('tightviz at tree did not work. {}'.format(ii))
+                    print(tree)
+                else:
+                    print_e('ASD TODO WHYYYYYY. {}'.format(ii))
 
         pop_viz = latex_treeviz_full(latex_element)
         path_tex = file_make_dir(root_path / 'info/test_pop_latex.tex')
@@ -1100,14 +1104,14 @@ class ExplainableGP(object):
 
         """
 
-        if self.env_variables['action_at'][0]['type'] == 'int':
-            action_min, action_max = self.env_variables['action_at'][0]['minmax']
+        if self.env_vars['action_at'][0]['type'] == 'int':
+            action_min, action_max = self.env_vars['action_at'][0]['minmax']
             action_min, action_max = int(action_min), int(action_max)
             py_return_action = 'return max({}, min({}, int(round(action))))\n'.format(action_min, action_max)
         else:
             py_return_action = 'return action\n'
 
-        py_operations_assign = '{} = input\n'.format(', '.join(self.env_variables['obs_name']))
+        py_operations_assign = '{} = input\n'.format(', '.join(self.env_vars['obs_name']))
         py_decide_body = '{}{{}}\n{}'.format(py_operations_assign, py_return_action)
         py_decide = 'def decide(self, input):\n{}\n'.format(textwrap.indent(py_decide_body, '\t'))
         py_class_code = 'class {{}}:\n\n{}'.format(textwrap.indent(py_decide, '\t'))
@@ -1118,8 +1122,8 @@ class ExplainableGP(object):
             expr_raw = meta['expr_raw']
             expr_sym = expr_sympify(expr_raw)
             # label_list_sym = ast_convert_from_expr(expr_sym, build=True)
-            # tree = TEST_karoo_tree_from_labellist(label_list_sym, self.env_variables)
-            ptree = karoo_ptree_from_expr(expr_sym, self.env_variables)
+            # tree = TEST_karoo_tree_from_labellist(label_list_sym, self.env_vars)
+            ptree = karoo_ptree_from_expr(expr_sym, self.env_vars)
             tree = ptree.get_uninstanced_tree()
             py_action = 'action = {}'.format(tree_get_pycode(tree))
 
@@ -1274,7 +1278,7 @@ class ExplainableGP(object):
 
         tree = self.tree_finish(tree, last_evolution='par-s')
 
-        if not tree_check_deep(tree, self.env_variables):
+        if not tree_check_deep(tree, self.env_vars):
             self.printpl('w', 'todo: remove w, tree could not be added midrun.')
             return
 
@@ -1321,10 +1325,10 @@ class ExplainableGP(object):
                 best_fit = fitness
             if pareto_improved:
                 expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
-                ptree = karoo_ptree_from_expr(expr_raw, self.env_variables)
+                ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
                 tree = ptree.get_uninstanced_tree()
                 tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-                sym_tree = tree_evolve_reduce(tree, self.env_variables, completely=True)
+                sym_tree = tree_evolve_reduce(tree, self.env_vars, completely=True)
                 if list(tree_get_labellist(sym_tree)) != list(tree_get_labellist(tree)):
                     if len(list(tree_get_labellist(sym_tree))) > len(list(tree_get_labellist(tree))):
                         print_warning('w', 'Sympified tree is larger than raw version?')
@@ -1468,7 +1472,7 @@ class ExplainableGP(object):
         copy a tree from the last population without changing its outcome
         """
         if call_params.get('sympify_tree'):
-            tree = tree_evolve_reduce(tree, self.env_variables, completely=False)
+            tree = tree_evolve_reduce(tree, self.env_vars, completely=False)
 
         return tree
 
@@ -1482,7 +1486,7 @@ class ExplainableGP(object):
             meta = np.random.choice(list(self.parsimony_best_meta.values()))
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
-            xtype_list = xtypes_from_labels(label_list, self.env_variables)
+            xtype_list = xtypes_from_labels(label_list, self.env_vars)
             p_tree = Ptree_karoo(label_list, xtype_list)
             tree = p_tree.get_uninstanced_tree()
         else:
@@ -1496,7 +1500,7 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        tree = tree_evolve_mutate_point(tree, self.config['float_accuracy'], self.choose_oparray2, self.env_variables,
+        tree = tree_evolve_mutate_point(tree, self.config['float_accuracy'], self.choose_oparray2, self.env_vars,
                                         self.choose_distributions)
 
         return tree
@@ -1536,7 +1540,7 @@ class ExplainableGP(object):
             for nodeobs_id in variables_node:
                 obs_name = tree_node_get_label(tree, nodeobs_id)
                 core_label = envvariable_get_corelabel(obs_name)
-                var_list = self.env_variables['env_observation_family'].get(core_label)
+                var_list = self.env_vars['env_observation_family'].get(core_label)
                 if var_list is not None:
                     new_obs = random_choose_tempobs(var_list)
                     tree = tree_node_set_label(tree, nodeobs_id, new_obs)
@@ -1554,14 +1558,14 @@ class ExplainableGP(object):
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_accuracy,
-                                                                         self.env_variables, self.choose_oparray2,
+                                                                         self.env_vars, self.choose_oparray2,
                                                                          self.choose_distributions,
                                                                          full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_accuracy,
-                                                                         self.env_variables, self.choose_oparray2,
+                                                                         self.env_vars, self.choose_oparray2,
                                                                          self.choose_distributions,
                                                                          full_or_grow=full_or_grow)
         else:
@@ -1645,7 +1649,7 @@ class ExplainableGP(object):
         """
 
         build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
-        action_xtype = self.env_variables['action_at'][0]['xtype']
+        action_xtype = self.env_vars['action_at'][0]['xtype']
         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
 
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow,
@@ -1692,7 +1696,7 @@ class ExplainableGP(object):
 
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
-            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_variables, self.choose_distributions,
+            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_vars, self.choose_distributions,
                                     self.config['float_accuracy'])
         else:
             tree = None
@@ -1727,11 +1731,11 @@ class ExplainableGP(object):
         right_core = core_from_labels(right_labels, right_aritys, right_xtypes)
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_variables,
+        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars,
                                           self.choose_distributions, self.config['float_accuracy'])
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_variables,
+        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_vars,
                                            self.choose_distributions, self.config['float_accuracy'])
 
         return left_offspring, right_offspring
@@ -1871,7 +1875,7 @@ class ExplainableGP(object):
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
         tree = ptree.get_uninstanced_tree()
-        if not tree_check_deep(tree, self.env_variables):
+        if not tree_check_deep(tree, self.env_vars):
             if tree_node_get_arity(tree, root_id) == 0:
                 print_warning('w', 'Origin tree is only a root node!')
             else:
@@ -1926,7 +1930,7 @@ class ExplainableGP(object):
         fitness_train = eval_tf(expr_sym,
                                 self.data_train,
                                 self.kernel,
-                                self.env_variables,
+                                self.env_vars,
                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, specific_action=self.config['eval_action'])
 
         if not check_value_is_real(fitness_train):
@@ -1956,7 +1960,7 @@ class ExplainableGP(object):
             else: fitness = 0 # no class match
 
         """
-        unique_outputs_num = self.env_variables['action_at'][0]['unique_outputs_num']
+        unique_outputs_num = self.env_vars['action_at'][0]['unique_outputs_num']
         skew = (unique_outputs_num / 2) - 1
         label_rules = {unique_outputs_num - 1: (
             tf.constant(unique_outputs_num - 1), tf.constant(' > {}'.format(unique_outputs_num - 2 - skew)))}
@@ -2129,12 +2133,12 @@ class ExplainableGP(object):
 
         return
 
-    def get_env_variables(self):
+    def get_env_vars(self):
         """
         xtypes_list is required to build trees
         this helps creating it
         """
-        return self.env_variables
+        return self.env_vars
 
     def terminate_run(self, root_dir):
         """

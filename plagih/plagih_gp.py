@@ -15,7 +15,7 @@ import yaml
 file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
 
 info_distributions_yaml = 'info/distributions_file.yaml'
-env_variables_yaml = 'info/env_variables.yaml'
+env_vars_yaml = 'info/env_vars.yaml'
 
 # /run_files/
 file_config_yaml = 'run_files/config.yaml'
@@ -182,8 +182,8 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:
         # todo beautify
-        env_variables = gp.get_env_variables()
-        xtype_list = xtypes_from_labels(label_list, env_variables)
+        env_vars = gp.get_env_vars()
+        xtype_list = xtypes_from_labels(label_list, env_vars)
         origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
         gp.activate_origin_tree(origin_ptree)
 

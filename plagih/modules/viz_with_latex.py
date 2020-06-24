@@ -32,28 +32,6 @@ def latex_treeviz_full(tikz_forest_list, preamble=''):
     return latex_doc_forest
 
 
-def latex_wrap_forest(tikz_forest_tree):
-    """
-    tikz-forest wrap for a tree in latex-tikz-forest notation.
-    todo, if node is the same as in origin_meta (exactly the same, changed variable?, ...)
-    """
-
-    # '\n  point/.style={{coordinate,}},' \
-    # '\n  symbol/.style={{text height=1.5ex,text depth=.25ex,}},' \
-
-    # '\n  operation/.style={{}},' \
-    # '\n  nonterminal/.style={{rectangle}},' \
-    # '\n  variable/.style={{rounded corners,}},' \
-    latex_tikz_forest = '\n\\begin{{forest}}' \
-                        '\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
-                        '\n  terminal/.style={{rectangle,}},' \
-                        '\n  fixnode/.style={{fill=blue!60,}},' \
-                        '\n  constant/.style={{rectangle,}},' \
-                        '\n {}' \
-                        '\n\\end{{forest}}\n'.format(tikz_forest_tree)
-    return latex_tikz_forest
-
-
 ##########
 # Latex tree visualisation
 ##########
@@ -86,12 +64,11 @@ def latex_tree_get_brackets(tree, node_id=root_id):
     extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
-    # todo i guess this is superfluous
-    # # Get the best math-like representation for functions
-    # if label in op:
-    #     bracket_string = op[label]['latex1']
-    # else:
-    #     bracket_string = '${{{}}}$'.format(label)
+    # Get the best math-like representation for functions
+    if label in op:
+        bracket_string = op[label]['latex1']
+    else:
+        bracket_string = '${{{}}}$'.format(label)
 
     # todo float labels too long
     # todo underline makes lower indices... good or bad?
@@ -182,33 +159,45 @@ def tree_node_is_numeric_constant(tree, node_id):
 #             tree = tree_node_set_label(tree, node_id, label)
 #     return tree
 
+def label_tex_replace_all(label, tex_replace):
+    return label
 
-def latextree_stringreplace_labels(tree):
+
+def label_tex_replace_digits(label):
+    # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
+    label = re.sub('0\.000[0]+[1-9]+', '0.001', label)  # displaying very small values as '0.001'
+    label = re.sub('(?<=[0-9]\.[0-9]{3})(\d+)', '', label)  # removing over-accurate decimals
+    return label
+
+
+def label_tex_replace_opwhat(label, tex_replace):
+    # replace all occurences of operations with op
+    for find, replace in tex_replace.items():
+        label = label.replace(find, replace)
+    return label
+
+
+def get_tex_replace():
+    tex_replace = {}
+    for key, value in op.items():
+        if isinstance(key, str):
+            replace = value['latex1']
+            tex_replace[key] = replace
+
+    # tex_replace.pop('*')
+    # tex_replace['*'] = op_what['*']['latex1'][1]
+
+    return tex_replace
+
+
+def tree_stringreplace_labels(tree, tex_replace=None):
     """
 
     """
 
     # get all the replacements from the op-dict
-    tex_replace = {}
-    for key, value in op.items():
-        if isinstance(key, str):
-            latex_replace = value['latex1']
-            if latex_replace is not None:
-                tex_replace[key] = latex_replace
-
     # replace all the labels with the latex1 representation
-    for node_id in tree_iterate_range(tree):
-        label = tree_node_get_label(tree, node_id)
 
-        # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
-
-        label = re.sub('0\.000[0]+[1-9]+', '0.001', label)  # displaying very small values as '0.001'
-        label = re.sub('(?<=[0-9]\.[0-9]{3})(\d+)', '', label)  # removing over-accurate decimals
-
-        # replace all occurences of operations with op
-        for opraw, optex in tex_replace.items():
-            label = label.replace(opraw, optex)
-        tree = tree_node_set_label(tree, node_id, label)
     return tree
 
 
@@ -222,15 +211,30 @@ def latex_tree_get_forest(tree, tight_viz=True):
 
     # first, shorten all long labels (e.g. 2.44423443344534 -> 2.444)
     if tight_viz:
-        tree = latex_tree_get_tighttree(tree)
+        viztree = latex_tree_get_tighttree(tree)
+    else:
+        tex_replace = get_tex_replace()
+        for node_id in tree_iterate_range(tree):
+            label = tree_node_get_label(tree, node_id)
+            if label in op:
+                label = op[label]['latex1']
+            else:
+                label = label_tex_replace_digits(label)
+            label = '{{{}}}'.format(label)
+            tree = tree_node_set_label(tree, node_id, label)
+        viztree = tree_stringreplace_labels(tree, tex_replace=tex_replace)
 
-    bracket_tree = latex_tree_get_brackets(tree)
-    forest_viz = latex_wrap_forest(bracket_tree)
-    # tree = 'ASD TODO FUCK THIS SHIT: {}'.format(tree)
+    bracket_tree = latex_tree_get_brackets(viztree)
 
-    forest_viz = latextree_stringreplace_labels(forest_viz)
+    forest_complete = '\n\\begin{{forest}}' \
+                      '\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
+                      '\n  terminal/.style={{rectangle,}},' \
+                      '\n  fixnode/.style={{fill=blue!60,}},' \
+                      '\n  constant/.style={{rectangle,}},' \
+                      '\n {}' \
+                      '\n\\end{{forest}}\n'.format(bracket_tree)
 
-    return forest_viz
+    return forest_complete
 
 
 def latex_tree_get_tighttree(tree):
@@ -277,6 +281,8 @@ def latex_tree_get_tighttree(tree):
     vis_xtype_list = []
     vis_modify_list = []
 
+    # tex_replace = get_tex_replace()
+
     for node_id in tree_ids:
         if node_id in node_dict:
             arity = 0
@@ -286,6 +292,8 @@ def latex_tree_get_tighttree(tree):
             elif node_dict[node_id] > 1:
                 expr_raw = tree_get_expr_raw(tree, node_id)
                 label = expr_sympify(expr_raw)
+                label = label_tex_replace_digits(label)
+                # label = label_tex_replace_opwhat(label, tex_replace)  # todo
             else:
                 raise
 

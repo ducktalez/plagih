@@ -48,7 +48,6 @@ main_format = 'python3 ' + str(plagih_startpy) + ' -config {} -out_dir {} -sampl
 complete_params = []
 
 for name, param in run_starts.items():
-    # folder = 'benchmarks/run_load_files/'
     param0 = param[0]
     param1 = param[1]
     param2 = param[2]

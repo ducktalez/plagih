@@ -68,14 +68,21 @@ class TestHelpers:
         tree_labels = ['Ifte',
                        'Andb', '0', '2',
                        '<', 'Orb',
-                       '*', '0', '>', 'Andb',
-                       '6.0', 'cartVel', '*', '-', '<', 'Orb',
-                       'cartPos', 'cartVel', '~', '1.0372722469', 'tanh', 'cartVel', '>', 'Orb',
-                       'cartPos', '2.1365828912', 'Maxi', '*', '!=', 'Andb',
-                       'cartPos', '*', 'usub', 'cartPos', 'cartPos', 'cartVel', 'True', 'Andb',
-                       'cartPos', '~', '2.0', '<=', 'Andb',
-                       '0.1', '22.5', '~', '<', 'False',
-                       'cartVel', 'cartVel', '~', '0.0374348335']
+                       'cartVel', '0', 'True', 'Andb',
+                       'Andb', '!=',
+                       'False', 'Orb', 'log1p', 'usub',
+                       'Andb', 'True', 'Mini', '2.4', '<', 'Orb', '1.0', '0.8', 'cartVel', '0', '>', 'Andb', '0.9', '-', 'False', 'Andb', 'cartPos', '2.0', 'True', 'True']
+        # tree_labels = ['Ifte',
+        #                'Andb', '0', '2',
+        #                '<', 'Orb',
+        #                '*', '0', '>', 'Andb',
+        #                '6.0', 'cartVel', '*', '-', '<', 'Orb',
+        #                'cartPos', 'cartVel', '~', '1.0372722469', 'tanh', 'cartVel', '>', 'Orb',
+        #                'cartPos', '2.1365828912', 'Maxi', '*', '!=', 'Andb',
+        #                'cartPos', '*', 'usub', 'cartPos', 'cartPos', 'cartVel', 'True', 'Andb',
+        #                'cartPos', '~', '2.0', '<=', 'Andb',
+        #                '0.1', '22.5', '~', '<', 'False',
+        #                'cartVel', 'cartVel', '~', '0.0374348335']
         tree = self.karoo_tree_from_only_labellist(tree_labels)
         forest_viz = latex_tree_get_forest(tree, tight_viz=False)
         print(forest_viz)

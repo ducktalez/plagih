@@ -23,9 +23,8 @@
 
 
 % Hier die eigenen Daten eintragen
-\global\titel{Explainable Artificial Intelligence by Expanding Expert Solutions with Genetic Programming}
 \global\bearbeiter{Simon Fehrer}
-\global\betreuer{Dr. Michel Tokic, Dr. Steffen Udluft, Dr. Daniel Hein}
+\global\betreuer{Dr. Steffen Udluft, Dr. Michel Tokic, Dr. Daniel Hein}
 \global\aufgabensteller{Prof. Volker Tresp}
 \global\abgabetermin{29.02.2019}
 \global\ort{Munich}
@@ -103,6 +102,24 @@
 \end_header
 
 \begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+global
+\backslash
+titel{Learning optimization of interpretable and familiar rules}
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \begin_layout Standard
 \begin_inset ERT

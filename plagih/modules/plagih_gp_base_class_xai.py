@@ -78,8 +78,8 @@ class ExplainableGP(object):
                                'fitness_variance': 'n'},
             'period': {'time_monitor': None,  # in sec
                        'time_save': None,  # in sec
-                       'gen_monitor': 10,  # in gen counts
-                       'gen_save': 50},  # in gen counts
+                       'gen_monitor': 1,  # in gen counts
+                       'gen_save': 5},  # in gen counts
 
             'evolve_list': [
                 # Reproduction (10%)
@@ -369,7 +369,7 @@ class ExplainableGP(object):
         path_backup = file_make_dir(self.root_paths['file_backup_pickle'])
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.printpl('ff', 'Saved: {}'.format(path_backup))
+        self.printpl('f', 'Saved: {}'.format(path_backup))
         return
 
     def plagih_gp_run(self):
@@ -500,7 +500,6 @@ class ExplainableGP(object):
         - Create a gene pool (kick out too complex candidates)
         """
         # All gp creators: name, function, num of trees from tournament selection
-        # sfehsfeh idee: print every written file
 
         self.gen_id += 1
         self.gen_reset_parameters()
@@ -665,7 +664,7 @@ class ExplainableGP(object):
         self.file_conclusion(root_path)
         write_file_pareto_txt(self.pareto, root_path, self.file_locs['file_pareto'])  # todo "get path" instead?
         self.file_pareto_latex(self.pareto, root_path)
-        if delete_this:
+        if delete_this and False:
             self.file_population_base_latex(root_path)
         self.file_generate_pycode(self.pareto, root_path)
         write_file_population_karoo(self.population_base, 'last', root_path, self.gen_id, print_type=self.print_type)
@@ -878,7 +877,7 @@ class ExplainableGP(object):
             histogram_data = np_data[:, obs_info.get('pos')]  # pos is the same as col
             obs_minmax = obs_info.get('minmax')  # todo this should be set, no matter what.
             if obs_minmax is None:
-                print_e('SHOULD NOT HAPPEN, SFEH. obs_minmax must be set earlier!')  # todo
+                # print_e('SHOULD NOT HAPPEN, SFEH.   must be set earlier!')  # todo
                 obs_minmax = (np.min(histogram_data), np.max(histogram_data))
 
             # todo delete this
@@ -1085,11 +1084,7 @@ class ExplainableGP(object):
                     tight_forest_viz = latex_tree_get_forest(tree)
                     latex_element.append(tight_forest_viz)
                 except:
-                    # tight_forest_viz = latex_tree_get_forest(tree)
-                    print('tightviz at tree did not work. {}'.format(ii))
-                    print(tree)
-                else:
-                    print_e('ASD TODO WHYYYYYY. {}'.format(ii))
+                    print_e('tightviz at tree did not work. {} labels: {}'.format(ii, tree_get_labellist(tree)))
 
         pop_viz = latex_treeviz_full(latex_element)
         path_tex = file_make_dir(root_path / 'info/test_pop_latex.tex')
@@ -1460,8 +1455,7 @@ class ExplainableGP(object):
         self.time_genstart = time.perf_counter()
         self.population_tmp_done = []
         self.population_tmp_eval = []
-        # self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max,
-        #                          self.parsimony_max)
+        # self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)
 
         return
 
@@ -1752,12 +1746,8 @@ class ExplainableGP(object):
         ! The tree must exist, it is not checked whether the tree is None
         """
 
-        # if tree is None:
-        #     print_warning('ww', 'Tree from last_evolution: \'{}\' failed. Continuing.'.format(last_evolution))  # reasons: sympify, last tree too large
-        # else:
-
         tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())  # sfeh: somewhere else
-        tree = tree_normalize_exponentiation(tree)  # sfeh: somewhere else
+        tree = tree_normalize_exponentiation(tree)  # sfeh: somewhere else?
         tree = tree_set_last_evolution(tree, last_evolution)  # sfeh: should this be done during the evolve process?
 
         return tree
@@ -1787,7 +1777,10 @@ class ExplainableGP(object):
         """
         # sfeh this check might be important...
         if not tree_check_quick(tree):
+            print_warning('ww', 'tree failed the quick check. last-mod: {}'.format(tree_get_last_evolution(tree)))
             return
+
+        # sfeh idea plot: x=complexity, y=fitness for all trees of a population
 
         tree = self.tree_finish(tree, last_evolution=last_evolution)
 

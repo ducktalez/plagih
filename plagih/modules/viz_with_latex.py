@@ -66,12 +66,7 @@ def latex_tree_get_brackets(tree, node_id=root_id):
 
     # Get the best math-like representation for functions
     if label in op:
-        bracket_string = op[label]['latex1']
-    else:
-        bracket_string = '${{{}}}$'.format(label)
-
-    # todo float labels too long
-    # todo underline makes lower indices... good or bad?
+        label = op[label]['latex1']
 
     # custom node design
     if arity == 0:
@@ -139,30 +134,6 @@ def tree_node_is_numeric_constant(tree, node_id):
 
     return False
 
-
-# def latex_tree_shorten_labels(tree):
-#     """
-#     replace
-#     """
-#     # First, shorten floats to a 3-decimal form
-#     tree_ids = list(tree_iterate_range(tree))
-#
-#     for node_id in tree_ids:
-#         if tree_node_is_numeric_constant(tree, node_id):
-#             label = float(tree_node_get_label(tree, node_id))
-#             if label == 0:  # e.g. '0'
-#                 pass
-#             elif label % 1 != 0:  # e.g. '2.0442'
-#                 label = '{:0.3f}'.format(label)
-#             else:  # e.g. 2
-#                 label = '{}'.format(int(label))
-#             tree = tree_node_set_label(tree, node_id, label)
-#     return tree
-
-def label_tex_replace_all(label, tex_replace):
-    return label
-
-
 def label_tex_replace_digits(label):
     # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
     label = re.sub('0\.000[0]+[1-9]+', '0.001', label)  # displaying very small values as '0.001'
@@ -184,21 +155,7 @@ def get_tex_replace():
             replace = value['latex1']
             tex_replace[key] = replace
 
-    # tex_replace.pop('*')
-    # tex_replace['*'] = op_what['*']['latex1'][1]
-
     return tex_replace
-
-
-def tree_stringreplace_labels(tree, tex_replace=None):
-    """
-
-    """
-
-    # get all the replacements from the op-dict
-    # replace all the labels with the latex1 representation
-
-    return tree
 
 
 def latex_tree_get_forest(tree, tight_viz=True):
@@ -206,23 +163,16 @@ def latex_tree_get_forest(tree, tight_viz=True):
     whole procedure from tree to forest core
     """
 
-    # tree = latex_tree_shorten_labels(tree)
     tree = tree.copy()
 
-    # first, shorten all long labels (e.g. 2.44423443344534 -> 2.444)
     if tight_viz:
         viztree = latex_tree_get_tighttree(tree)
     else:
-        tex_replace = get_tex_replace()
-        for node_id in tree_iterate_range(tree):
-            label = tree_node_get_label(tree, node_id)
-            if label in op:
-                label = op[label]['latex1']
-            else:
-                label = label_tex_replace_digits(label)
-            label = '{{{}}}'.format(label)
-            tree = tree_node_set_label(tree, node_id, label)
-        viztree = tree_stringreplace_labels(tree, tex_replace=tex_replace)
+        viztree = tree.copy()
+        for node_id in tree_iterate_range(viztree):
+            label = tree_node_get_label(viztree, node_id)
+            label = tex_label_beautify_end(label)
+            viztree = tree_node_set_label(viztree, node_id, label)
 
     bracket_tree = latex_tree_get_brackets(viztree)
 
@@ -235,6 +185,15 @@ def latex_tree_get_forest(tree, tight_viz=True):
                       '\n\\end{{forest}}\n'.format(bracket_tree)
 
     return forest_complete
+
+
+def tex_label_beautify_end(label):
+
+    if label in op:
+        label = op[label]['latex1']
+    label = label_tex_replace_digits(label)
+    label = '{{{}}}'.format(label)
+    return label
 
 
 def latex_tree_get_tighttree(tree):
@@ -281,8 +240,6 @@ def latex_tree_get_tighttree(tree):
     vis_xtype_list = []
     vis_modify_list = []
 
-    # tex_replace = get_tex_replace()
-
     for node_id in tree_ids:
         if node_id in node_dict:
             arity = 0
@@ -292,15 +249,17 @@ def latex_tree_get_tighttree(tree):
             elif node_dict[node_id] > 1:
                 expr_raw = tree_get_expr_raw(tree, node_id)
                 label = expr_sympify(expr_raw)
-                label = label_tex_replace_digits(label)
-                # label = label_tex_replace_opwhat(label, tex_replace)  # todo
             else:
                 raise
+
+            label = tex_label_beautify_end(label)
 
             vis_label_list.append(label)
             vis_arity_list.append(arity)
             vis_xtype_list.append(tree_node_get_xtype(tree, node_id)[-2:])
             vis_modify_list.append(tree_node_get_modify(tree, node_id))
+        else:
+            pass  # if a node is not in the dict, it must be part of a reducable tree
 
     longest_label = max(10, max([len(x) for x in vis_label_list]))
 

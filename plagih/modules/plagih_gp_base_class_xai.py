@@ -233,8 +233,8 @@ class ExplainableGP(object):
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-        self.pareto = {}  # a dict with all pareto candidates. key is complexity, value is tree meta
-        self.population_tmp_done = []
+        self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
+        self.population_tmp = []
         self.population_tmp_eval = []
         self.population_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
@@ -341,7 +341,7 @@ class ExplainableGP(object):
         except:
             # todo remove this in version1
             self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
-            self.version = 0.9
+            self.version = 0.95
 
         self.restart_count += 1
 
@@ -351,6 +351,9 @@ class ExplainableGP(object):
         if self.config['pl_version'] <= 0.9:
             pass
             # self.monitoring_dict['pop:trees:complexity:std_error'] = np.sqrt(self.monitoring_dict['complexity_variance'])
+
+        if isinstance(self.pareto, dict):  # version before 0.95
+            self.pareto = [[p, meta['fitness_train'], meta] for p, meta in self.pareto.items()]
 
         printez('g', 'Starting at generation: {}'.format(self.gen_id), self.print_type)
 
@@ -655,19 +658,19 @@ class ExplainableGP(object):
 
         return 0
 
-    def file_make_analysis(self, root_path):
+    def file_make_analysis(self):
         """
         writes all important gp_files
 
         """
-        self.file_pareto_histograms(root_path)
-        self.file_conclusion(root_path)
-        write_file_pareto_txt(self.pareto, root_path, self.file_locs['file_pareto'])  # todo "get path" instead?
-        self.file_pareto_latex(self.pareto, root_path)
+        self.file_pareto_histograms()
+        self.file_conclusion()
+        write_file_pareto_txt(self.pareto, self.root_dir, self.file_locs['file_pareto'])  # todo "get path" instead?
+        self.file_pareto_latex()
         if delete_this and False:
-            self.file_population_base_latex(root_path)
-        self.file_generate_pycode(self.pareto, root_path)
-        write_file_population_karoo(self.population_base, 'last', root_path, self.gen_id, print_type=self.print_type)
+            self.file_population_base_latex()
+        self.file_generate_pycode()
+        write_file_population_karoo(self.population_base, 'last', self.root_dir, self.gen_id, print_type=self.print_type)
 
         return
 
@@ -848,7 +851,7 @@ class ExplainableGP(object):
         self.evolve_list = evolve_list
         return
 
-    def file_pareto_histograms(self, root_path):
+    def file_pareto_histograms(self):
         """
         Make histograms for all pareto-efficient candidates
         sfeh: based on training data- maybe use test data...
@@ -864,7 +867,7 @@ class ExplainableGP(object):
 
         # todo allow very simple IB-solutions...
 
-        path_hist = folder_make_dir(root_path / self.file_locs['folder_histograms'])
+        path_hist = folder_make_dir(self.root_dir / self.file_locs['folder_histograms'])
 
         np_data = self.data_train  # sfeh, also non-train data?
         agent_dimatrix = {}
@@ -888,7 +891,7 @@ class ExplainableGP(object):
 
             obs_x_info[ii]['bins'] = np.linspace(obs_minmax[0], obs_minmax[1], 32 + 1)  # todo 32 bins?
 
-        for a_ii, (parsim, meta) in enumerate(sorted(list(self.pareto.items()))):
+        for a_ii, (parsim, fitness, meta) in enumerate(sorted(self.pareto)):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
             ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
             tree = ptree.get_uninstanced_tree()
@@ -969,7 +972,7 @@ class ExplainableGP(object):
             plt.savefig(path_hist / 'acthist_{}.png'.format(parsim))
             plt.close()  # todo
 
-    def file_conclusion(self, path):
+    def file_conclusion(self):
         """
         write the performance of the config to disc
         """
@@ -1031,7 +1034,7 @@ class ExplainableGP(object):
 
         return
 
-    def file_pareto_latex(self, pareto, root_path):
+    def file_pareto_latex(self):
         """
         Generates latex-file with the computational tree structure of all pareto agents
         - build tree from expression
@@ -1041,11 +1044,11 @@ class ExplainableGP(object):
 
         latex_element = []
 
-        for parsim, meta in sorted(list(pareto.items())):
+        for (parsim, fitness, meta) in sorted(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
             ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
             tree = ptree.get_uninstanced_tree()
-            tree = self.tree_finish(tree, last_evolution='texify')
+            tree = self.tree_finish_nodes(tree, last_evolution='texify')
 
             latex_element.append('Pareto entry at parsimony {} with fitness {}.\n'.format(parsim, meta['fitness_train']))
 
@@ -1058,7 +1061,7 @@ class ExplainableGP(object):
             latex_element.append(tight_forest_viz)
 
         latex_full_doc = latex_treeviz_full(latex_element)
-        path_trees_tex = file_make_dir(root_path / self.file_locs['trees_tex'])
+        path_trees_tex = file_make_dir(self.root_dir / self.file_locs['trees_tex'])
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
@@ -1066,7 +1069,7 @@ class ExplainableGP(object):
 
         return
 
-    def file_population_base_latex(self, root_path):
+    def file_population_base_latex(self):
         """
         """
 
@@ -1087,14 +1090,14 @@ class ExplainableGP(object):
                     print_e('tightviz at tree did not work. {} labels: {}'.format(ii, tree_get_labellist(tree)))
 
         pop_viz = latex_treeviz_full(latex_element)
-        path_tex = file_make_dir(root_path / 'info/test_pop_latex.tex')
+        path_tex = file_make_dir(self.root_dir / 'info/test_pop_latex.tex')
         with Path.open(path_tex, 'w') as file:
             file.write(pop_viz)
         self.printpl('f', '{}'.format(path_tex))
 
         return
 
-    def file_generate_pycode(self, pareto, root_path):
+    def file_generate_pycode(self):
         """
 
         """
@@ -1113,7 +1116,7 @@ class ExplainableGP(object):
 
         all_agents = []
         all_agent_names = []
-        for parsim, meta in sorted(list(pareto.items())):
+        for (parsim, fitness, meta) in sorted(self.pareto):
             expr_raw = meta['expr_raw']
             expr_sym = expr_sympify(expr_raw)
             # label_list_sym = ast_convert_from_expr(expr_sym, build=True)
@@ -1137,16 +1140,16 @@ class ExplainableGP(object):
                                  '{}\n' \
                                  '{}\n'.format(pycode_agents, pycode_names, py_agent_tuples)
 
-        pth = file_make_dir(root_path / self.config['file_locs']['file_pycode'])
+        pth = file_make_dir(self.root_dir / self.config['file_locs']['file_pycode'])
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
             self.printpl('ff', '{}'.format(pth))
 
-        self.call_custom_mountaincar_file(root_path, pycode_complete_agents)  # sfeh root path is instance variabel
+        self.call_custom_mountaincar_file(pycode_complete_agents)  # sfeh root path is instance variabel
 
         return
 
-    def call_custom_mountaincar_file(self, root_dir, pycode_complete_agents):
+    def call_custom_mountaincar_file(self, pycode_complete_agents):
 
         # sfeh remove this (?)
 
@@ -1178,7 +1181,7 @@ class ExplainableGP(object):
                                            '\tprint(\'executing!\')\n' + \
                                            '\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n'
 
-            with Path.open(root_dir / self.file_locs['file_pycode_eval'], 'w') as file:
+            with Path.open(self.root_dir / self.file_locs['file_pycode_eval'], 'w') as file:
                 file.write(executable_python_evaluation)
                 self.printpl('f', '{}'.format(self.file_locs['file_pycode_eval']))
 
@@ -1261,185 +1264,182 @@ class ExplainableGP(object):
         parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
         return parsimony
 
-    def pop_add_tree_midrun(self, tree):
-        """
-        Trying to add another tree to the current population
-        - evaluate the tree
-        - append to population
-        - update gene_pool
-        -
-        """
-        self.printpl('i', 'Trying to add tree mid-run...')
+    # def pop_add_tree_midrun(self, tree):
+    #     """
+    #     Trying to add another tree to the current population
+    #     - evaluate the tree
+    #     - append to population
+    #     - update gene_pool
+    #     -
+    #     """
+    #     self.printpl('ii', 'Trying to add tree mid-run...')
+    #     tree = self.tree_finish_nodes(tree, last_evolution='par-s')
+    #
+    #     if not tree_check_deep(tree, self.env_vars):
+    #         print_e('todo: remove w, tree could not be added midrun.')
+    #         return
+    #
+    #     parsimony = self.tree_eval_parsimony_easywrapper(tree)
+    #     tree = tree_set_parsimony(tree, parsimony)
+    #     self.treelut_tree_add(tree, parsimony=parsimony)
+    #     self.population_tmp.append(tree)
+    #
+    #     self.pareto_update_insert()
+    #     return
 
-        tree = self.tree_finish(tree, last_evolution='par-s')
+    # def pareto_update_insert(self):
+    #     """
+    #     update new entries in the pareto dict (part of the whole update process)
+    #     Requires: self.parsimony_best_meta entries
+    #     """
+    #
+    #     self.parsimony_best_update()
+    #
+    #     sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
+    #     try:
+    #         best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
+    #     except StopIteration:
+    #         best_fit = None
+    #
+    #     for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
+    #         fitness = meta['fitness_train']
+    #         parsim = meta['parsimony']
+    #         pareto_improved = None
+    #
+    #         if self.kernel.fitness_compare(fitness, best_fit):
+    #             if self.pareto.get(parsim):
+    #                 pareto_fit = self.pareto.get(parsim)['fitness_train']
+    #                 if self.kernel.fitness_compare(fitness, pareto_fit):
+    #                     self.pareto[parsim] = meta
+    #                     self.printpl('a', 'Pareto update at {}, with new {}-error: {}. Old was: {}'.format(
+    #                         parsim, self.config['kernel_name'], fitness, best_fit))
+    #                     pareto_improved = True
+    #             else:
+    #                 self.pareto[parsim] = meta
+    #                 self.printpl('a', 'New pareto entry at {:.0f} with {}-error: {:4.2f}'.format(parsim, self.config[
+    #                     'kernel_name'], fitness))
+    #                 pareto_improved = True
+    #             best_fit = fitness
+    #         if pareto_improved:
+    #             expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
+    #             ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
+    #             tree = ptree.get_uninstanced_tree()
+    #             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
+    #             sym_tree = tree_evolve_reduce(tree, self.env_vars, completely=True)
+    #             if list(tree_get_labellist(sym_tree)) != list(tree_get_labellist(tree)):
+    #                 if len(list(tree_get_labellist(sym_tree))) > len(list(tree_get_labellist(tree))):
+    #                     print_warning('w', 'Sympified tree is larger than raw version?')
+    #                 self.printpl('aa', 'Pareto entry could be further sympified!')
+    #                 sym_tree = tree_set_fitness(sym_tree, fitness)
+    #                 self.pop_add_tree_midrun(sym_tree)
+    #             else:
+    #                 print_warning('iii', 'The found pareto entry was already in its sympified version')
+    #     return
+    #
+    # def pareto_update_clean(self):
+    #     """
+    #     remove superfluous pareto entries
+    #     """
+    #     sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
+    #     try:
+    #         last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
+    #     except StopIteration:
+    #         last_fitness = None  # todo is None actually correct here?
+    #     for parsim, meta in sorted_pareto[1:]:
+    #         fitness = meta['fitness_train']
+    #         if self.kernel.fitness_compare(fitness, last_fitness):
+    #             last_fitness = fitness
+    #         else:
+    #             self.pareto.pop(parsim)
+    #             self.printpl('aa', 'Pareto entry at {} became obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(
+    #                 parsim, last_fitness, fitness))
+    #     return
 
-        if not tree_check_deep(tree, self.env_vars):
-            self.printpl('w', 'todo: remove w, tree could not be added midrun.')
-            return
-
-        parsimony = self.tree_eval_parsimony_easywrapper(tree)
-        tree = tree_set_parsimony(tree, parsimony)
-        self.treelut_tree_add(tree, parsimony=parsimony)
-        self.population_tmp_done.append(tree)
-
-        self.pareto_update_insert()
-        return
-
-    def pareto_update_insert(self):
-        """
-        update new entries in the pareto dict (part of the whole update process)
-        Requires: self.parsimony_best_meta entries
-        """
-
-        self.parsimony_best_update()
-
-        sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
-        try:
-            best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
-        except StopIteration:
-            best_fit = None
-
-        for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-            fitness = meta['fitness_train']
-            parsim = meta['parsimony']
-            pareto_improved = None
-
-            if self.kernel.fitness_compare(fitness, best_fit):
-                if self.pareto.get(parsim):
-                    pareto_fit = self.pareto.get(parsim)['fitness_train']
-                    if self.kernel.fitness_compare(fitness, pareto_fit):
-                        self.pareto[parsim] = meta
-                        self.printpl('a', 'Pareto update at {}, with new {}-error: {}. Old was: {}'.format(
-                            parsim, self.config['kernel_name'], fitness, best_fit))
-                        pareto_improved = True
-                else:
-                    self.pareto[parsim] = meta
-                    self.printpl('a', 'New pareto entry at {:.0f} with {}-error: {:4.2f}'.format(parsim, self.config[
-                        'kernel_name'], fitness))
-                    pareto_improved = True
-                best_fit = fitness
-            if pareto_improved:
-                expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
-                ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
-                tree = ptree.get_uninstanced_tree()
-                tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-                sym_tree = tree_evolve_reduce(tree, self.env_vars, completely=True)
-                if list(tree_get_labellist(sym_tree)) != list(tree_get_labellist(tree)):
-                    if len(list(tree_get_labellist(sym_tree))) > len(list(tree_get_labellist(tree))):
-                        print_warning('w', 'Sympified tree is larger than raw version?')
-                    self.printpl('aa', 'Pareto entry could be further sympified!')
-                    sym_tree = tree_set_fitness(sym_tree, fitness)
-                    self.pop_add_tree_midrun(sym_tree)
-                else:
-                    print_warning('iii', 'The found pareto entry was already in its sympified version')
-        return
-
-    def pareto_update_clean(self):
-        """
-        remove superfluous pareto entries
-        """
-        sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
-        try:
-            last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
-        except StopIteration:
-            last_fitness = None  # todo is None actually correct here?
-        for parsim, meta in sorted_pareto[1:]:
-            fitness = meta['fitness_train']
-            if self.kernel.fitness_compare(fitness, last_fitness):
-                last_fitness = fitness
-            else:
-                self.pareto.pop(parsim)
-                self.printpl('aa', 'Pareto entry at {} became obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(
-                    parsim, last_fitness, fitness))
-        return
-
-    def todo_update_pareto(self, pareto, candidates):
+    def todo_update_pareto(self):
 
         """
         kernel_fun = min() todo
         todo
         """
-        pareto = []
-        candidates = [(20, 2000), (5, 900), (5, 800), (10, 700), (7, 800)]
 
-        if not pareto:  # no pareto entries found yet
-            pareto.append(candidates[0])  # print('First pareto entry')
+        if len(self.pareto) == 0:  # no pareto entries found yet
+            tree = self.population_base[0]
+            parsimony = tree_get_parsimony(tree)
+            meta = tree_get_meta(tree)
+            # self.pareto[parsimony] = meta
+            self.pareto.append([parsimony, meta['fitness_train'], meta])
 
-        for entry in candidates:
+        for tree in self.population_base:
             try:
-                p_simpler = [p for p in pareto if p[0] <= entry[0]]
+                p_simpler = [p for p in self.pareto if p[0] <= entry[0]]  # all pareto entries that are less complex
                 best = min(p_simpler, key=lambda p: p[1])
             except:
-                best = min(pareto, key=lambda p: p[1])  # fittest pareto entry
+                best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
 
             if entry[1] < best[1]:
-                pareto.append(entry)  #
-                pareto = [x for x in pareto[:] if x[0] < entry[0] or x[1] < entry[1] or x is entry]
-                pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
+                self.pareto.append(entry)  #
+                self.pareto = [x for x in self.pareto[:] if x[0] < entry[0] or x[1] < entry[1] or x is entry]
+                self.pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
             else:
                 continue  # Not a pareto entry
 
         # print('Pareto', '\t\t', pareto)
         return
 
-    def pareto_update(self):
-        """
-        Builds up the pareto front
-        1. adds new entries from parsimony_best_meta
-        2. deletes entries that are now obsolete
+    # def pareto_update(self):
+    #     """
+    #     Builds up the pareto front
+    #     1. adds new entries from parsimony_best_meta
+    #     2. deletes entries that are now obsolete
+    #
+    #
+    #     """
+    #
+    #     self.pareto_update_insert()
+    #     self.pareto_update_clean()
+    #
+    #     return
 
+    # def pareto_update_try(self):
+    #     """
+    #     sfeh tbd #
+    #     """
+    #     for i, tree in enumerate(self.population_tmp):
+    #         fitness = tree_get_fitness(tree, precision=self.precision)
+    #         parsimony = tree_get_parsimony(tree)
+    #         meta = tree_get_meta(tree)
+    #         for p_fit, p_meta in self.pareto.items():
+    #             p_parsim = p_meta['parsimony']
+    #             if self.kernel.fitness_compare(fitness, p_fit):
+    #                 if parsimony < p_parsim:
+    #                     self.pareto[parsimony] = meta
+    #                     self.pareto_update_clean()
+    #
+    #                 else:
+    #                     break  # pareto is already sufficient
 
-        """
-
-        self.pareto_update_insert()
-        self.pareto_update_clean()
-
-        return
-
-    def pareto_update_try(self):
-        """
-        sfeh tbd #
-        """
-        for i, tree in enumerate(self.population_tmp_done):
-            fitness = tree_get_fitness(tree, precision=self.precision)
-            parsimony = tree_get_parsimony(tree)
-            meta = tree_get_meta(tree)
-            for p_fit, p_meta in self.pareto.items():
-                p_parsim = p_meta['parsimony']
-                if self.kernel.fitness_compare(fitness, p_fit):
-                    if parsimony < p_parsim:
-                        # Found a new entry on pareto
-                        # 1. insert new entry
-                        self.pareto[parsimony] = meta
-                        # 2. clean pareto
-                        self.pareto_update_clean()
-
-                    else:
-                        # pareto is already sufficient
-                        break
-
-    def parsimony_best_update(self):
-        """
-        Updates a list with the best candidates for each parsimony.
-        Do not confuse with pareto-entries
-        """
-
-        for ii, tree in enumerate(self.population_tmp_done):
-
-            parsim = tree_get_parsimony(tree)
-            fitness_train = tree_get_fitness(tree)
-
-            # 3. is the tree better than the current best at this parsimony dim_y?
-            if parsim in self.parsimony_best_meta:
-                comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
-                if self.kernel.fitness_compare(fitness_train, comp_fit):
-                    self.printpl('iii', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
-                    self.parsimony_best_meta[parsim] = tree_get_meta(tree)
-            else:
-                self.printpl('iii', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
-                self.parsimony_best_meta[parsim] = tree_get_meta(tree)
-
-        return
+    # def parsimony_best_update(self):
+    #     """
+    #     Updates a list with the best candidates for each parsimony.
+    #     Do not confuse with pareto-entries
+    #     """
+    #
+    #     for ii, tree in enumerate(self.population_tmp):
+    #
+    #         parsim = tree_get_parsimony(tree)
+    #         fitness_train = tree_get_fitness(tree)
+    #
+    #         # 3. is the tree better than the current best at this parsimony dim_y?
+    #         if parsim in self.parsimony_best_meta:
+    #             comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
+    #             if self.kernel.fitness_compare(fitness_train, comp_fit):
+    #                 self.printpl('iii', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
+    #                 self.parsimony_best_meta[parsim] = tree_get_meta(tree)
+    #         else:
+    #             self.printpl('iii', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
+    #             self.parsimony_best_meta[parsim] = tree_get_meta(tree)
+    #
+    #     return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   What happens in a Generation              +
@@ -1453,7 +1453,7 @@ class ExplainableGP(object):
         """
 
         self.time_genstart = time.perf_counter()
-        self.population_tmp_done = []
+        self.population_tmp = []
         self.population_tmp_eval = []
         # self.parsimony_tmp = max(1 / min(self.gen_id, self.config['gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)
 
@@ -1734,7 +1734,7 @@ class ExplainableGP(object):
 
         return left_offspring, right_offspring
 
-    def tree_finish(self, tree, last_evolution=''):
+    def tree_finish_nodes(self, tree, last_evolution=''):
         """
         The np-tree needs more information than only the expression.
         -> set modifyable nodes (mandatory)
@@ -1752,16 +1752,41 @@ class ExplainableGP(object):
 
         return tree
 
-    def pop_base_transfer(self):
-        """
+    def todo_update_pareto2(self, tree):
 
         """
-        self.population_base = []
+        inserts a tree into the pareto front
+        """
+        # pareto = []
+        # candidates = [(20, 2000), (5, 900), (5, 800), (10, 700), (7, 800)]
+        
+        # # todo todotodo asd try to simplify the tree first!
+        # try:
+        #     tree_sym = tree_evolve_reduce(tree, self.env_vars, completely=True)
+        #     parsim_sym = tree_eval_parsimony(tree_sym, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
+        #     if parsim_sym < tree_get_parsimony(tree):
+        #         tree = tree_sym  # sfeh copy?
+        # except:
+        #     pass
 
-        for i, tree in enumerate(self.population_tmp_done):
-            tree_copy = np.copy(tree)
-            # tree_copy = tree_set_id(tree_copy, i)  # sfeh delete this?
-            self.population_base.append(tree_copy)
+        if len(self.pareto) == 0:  # no pareto entries found yet
+            parsimony = tree_get_parsimony(tree)
+            meta = tree_get_meta(tree)
+            self.pareto.append([parsimony, meta['fitness_train'], meta])  # aka [3, 423, meta{}]
+
+        for entry in self.population_base:
+            try:
+                p_simpler = [p for p in self.pareto if p[0] <= entry[0]]  # less complex candidates
+                best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
+            except:
+                best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
+
+            if entry[1] < best[1]:
+                self.pareto.append(entry)  #
+                self.pareto = [x for x in self.pareto[:] if x[0] < entry[0] or x[1] < entry[1] or x is entry]
+                self.pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
+            else:
+                continue  # Not a pareto entry
 
         return
 
@@ -1777,31 +1802,39 @@ class ExplainableGP(object):
         """
         # sfeh this check might be important...
         if not tree_check_quick(tree):
-            print_warning('ww', 'tree failed the quick check. last-mod: {}'.format(tree_get_last_evolution(tree)))
+            print_warning('w', 'tree failed the quick check. last-mod: {}'.format(last_evolution))
             return
 
         # sfeh idea plot: x=complexity, y=fitness for all trees of a population
 
-        tree = self.tree_finish(tree, last_evolution=last_evolution)
+        tree = self.tree_finish_nodes(tree, last_evolution=last_evolution)
 
         tree_ident = tree_hash(tree)
         if tree_ident in self.tree_lut:
             tree_meta = self.tree_lut[tree_ident]  # tree_hash: fitness_train, parsimony, expr_sym, expr_raw
             parsimony = tree_meta['parsimony']
             fitness_train = tree_meta['fitness_train']
-            tree = tree_set_parsimony(tree, parsimony)
-            tree = tree_set_fitness(tree, fitness_train)
-
-            self.population_tmp_done.append(tree)
         else:
-            # sfeh idea: evaluate already when the trees are constructed? evaluating later seems kind of dull
             parsimony = self.tree_eval_parsimony_easywrapper(tree)
             if parsimony <= self.parsimony_max:
-                tree = tree_set_parsimony(tree, parsimony)
-                tree = tree_set_fitness(tree, '')
-                self.population_tmp_eval.append(tree)
-            else:
-                print_warning('wwww', 'Parsimony too high, last evolution: {}'.format(last_evolution), print_type=self.print_type)
+                print_warning('www', 'Parsimony too high, last evolution: {}'.format(last_evolution), print_type=self.print_type)
+                return
+
+            try:
+                fitness_train = self.tree_eval_fitness_train(tree)
+            except Exception as ex:
+                print_warning('ww', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
+                # eval_fails.append(str(ex))
+                # continue
+                return
+
+        tree = tree_set_parsimony(tree, parsimony)
+        tree = tree_set_fitness(tree, fitness_train)
+        tree = tree_set_last_evolution(tree, last_evolution)
+        self.treelut_tree_add(tree, fitness_train=fitness_train, parsimony=parsimony)
+        self.population_tmp.append(tree)
+
+        self.todo_update_pareto2(tree)
 
         return
 
@@ -1813,21 +1846,20 @@ class ExplainableGP(object):
 
         """
 
-        self.pop_eval_remaining()
-        self.pareto_update()
-        self.pop_base_transfer()
-        self.pop_analyse()
-        # write_file_population_karoo(self.population_tmp_done, 'last', self.root_dir, self.gen_id, print_type=self.print_type)  # better in periodic file write
+        # self.todo_update_pareto()
+        # self.pareto_update()
 
-        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_lut)
+        self.population_base = self.population_tmp[:]  # deepcopy might also work
+
+        self.pop_analyse()
+
         gen_time = time.perf_counter() - self.time_genstart
         if delete_this and self.monitoring_dict.get('gen_time') is None:
             self.monitoring_dict['gen_time'] = {}
         self.monitoring_dict['gen_time'][self.gen_id] = gen_time
         self.print_g('gg', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(
-            len(self.population_tmp_done), self.config['pop_max'], self.gen_id,
+            len(self.population_tmp), self.config['pop_max'], self.gen_id,
             time.perf_counter() - self.time_genstart))
-        # todo why is gen_time going up with generations? why does ib take so much longer than mc?
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1896,7 +1928,7 @@ class ExplainableGP(object):
                             'fitness_train': fitness_train}
 
         self.parsimony_best_meta[0] = self.origin_meta
-        self.pareto[0] = copy.deepcopy(self.origin_meta)
+        self.todo_update_pareto2(copy.deepcopy(self.origin_meta))
 
         self.print_g('gg', 'Loading origin_meta, fitness {}. Time: {:4.2f}s'.format(fitness_train,
                                                                                     time.perf_counter() - self.time_start))
@@ -2073,17 +2105,17 @@ class ExplainableGP(object):
         - average tree complexity
         """
 
-        # How many survived in the selection?
-        self.monitoring_dict['population_tmp_done-size'][int(self.gen_id)] = len(self.population_tmp_done)
-        if len(self.population_tmp_done) == 0:
+        ## How many survived in the selection?
+        self.monitoring_dict['population_tmp_done-size'][int(self.gen_id)] = len(self.population_tmp)
+        if len(self.population_tmp) == 0:
             self.terminate_run(self.root_dir)
 
-        # Find the fittest + average fitness
-        pop_best_fitness = tree_get_fitness(self.population_tmp_done[FIRST_TREE])
+        ## Find the fittest + average fitness
+        pop_best_fitness = tree_get_fitness(self.population_tmp[FIRST_TREE])
         fitness_train_sum = 0
         tree_cnt = 0
         pop_tree_analysis = []
-        for ii, tree in enumerate(self.population_tmp_done):
+        for ii, tree in enumerate(self.population_tmp):
             fitness = tree_get_fitness(tree)
             complexity = tree_get_parsimony(tree)
             last_evolve = tree_get_last_evolution(tree)
@@ -2102,27 +2134,25 @@ class ExplainableGP(object):
                 self.best_fitness = pop_best_fitness
         self.monitoring_dict['best_candidate'][self.gen_id] = self.best_fitness
 
-        # Tree fitness distribution
-        # dist_fit = [[i, x] for i, x in enumerate([x['fitness'] for x in pop_tree_analysis])]
-        # self.monitoring_dict['tmp_pop_fitness_distribution'] = dist_fit
-
-        # Tree complexity
+        ## population tree complexity
         complexity_sum = 0
-        for ii, tree in enumerate(self.population_tmp_done):
+        for ii, tree in enumerate(self.population_tmp):
             complexity_sum += len(tree_nodes_get_ids(tree, karoo=True))
         avg_complexity = complexity_sum / tree_cnt
         self.monitoring_dict['complexity_average'][self.gen_id] = avg_complexity
 
-        # fitness variance
+        ## fitness variance
         todo = [x['fitness'] for x in pop_tree_analysis]
         fitness_variance = np.var(todo)
         self.monitoring_dict['fitness_variance'][self.gen_id] = fitness_variance
 
-        # complexity standard-error
+        ## complexity standard-error
         if delete_this and self.monitoring_dict.get('pop:trees:complexity:std_error') is None:
             self.monitoring_dict['pop:trees:complexity:std_error'] = {}  # sfeh delete this version1
         self.monitoring_dict['pop:trees:complexity:std_error'][self.gen_id] = np.std([x['complexity'] for x in pop_tree_analysis])
         self.monitoring_dict['complexity_variance'][self.gen_id] = np.var([x['complexity'] for x in pop_tree_analysis])  # sfeh version1 delete this shit
+
+        self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_lut)
 
         return
 
@@ -2133,18 +2163,18 @@ class ExplainableGP(object):
         """
         return self.env_vars
 
-    def terminate_run(self, root_dir):
+    def terminate_run(self):
         """
         Program is done after writing all gp_files one last time.
         """
         self.run_backup_save()
-        self.file_make_analysis(root_dir)
+        self.file_make_analysis(self.root_dir)
 
         # if Path.is_file(root_dir / file_pycode_eval):
         #     # exec(Path.open(root_dir / file_pycode_eval).read())
         #     os.system('python ' + str(root_dir / file_pycode_eval))  # sfeh nothing to be proud of
 
-        self.file_all_plots(root_dir)
+        self.file_all_plots(self.root_dir)
         self.print_g('gg', ' Terminating. \tTime since start: {:4.2f}s'.format(time.perf_counter() - self.time_start))
 
     # +++++++++++++++++++++++++++++++++++++++++++++

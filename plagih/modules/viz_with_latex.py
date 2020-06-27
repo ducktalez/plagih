@@ -228,7 +228,7 @@ def latex_tree_get_tighttree(tree):
         node_id = open_sym[0]
         branch_ids = tree_node_get_branch(tree, node_id)
         node_dict[node_id] = len(branch_ids)
-        for x in branch_ids:
+        for todoii, x in enumerate(branch_ids):
             try:
                 open_sym.remove(x)
             except:

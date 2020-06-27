@@ -359,6 +359,9 @@ class ExplainableGP(object):
 
         return
 
+    def pareto_sort(self):
+        self.pareto.sort(key=lambda x: x[0])
+
     def run_backup_save(self):
         """
         automatically saves everything important after a certain amount of time
@@ -405,7 +408,7 @@ class ExplainableGP(object):
         else:
             printez('g', 'Done after Generation {}.'.format(self.gen_id), print_type=self.print_type)
 
-        self.terminate_run(self.root_dir)
+        self.terminate_run()
         return
 
     def plagih_update_analysis(self):
@@ -482,7 +485,6 @@ class ExplainableGP(object):
         """
 
         if self.origin_exists():
-            # self.config['evolve_list_random']['from_origin']
             # sfeh why not :P
             self.pop_append(self.origin_tree, last_evolution='initial')
             # if self.origin_is_fix():
@@ -665,6 +667,7 @@ class ExplainableGP(object):
         """
         self.file_pareto_histograms()
         self.file_conclusion()
+        self.pareto_sort()
         write_file_pareto_txt(self.pareto, self.root_dir, self.file_locs['file_pareto'])  # todo "get path" instead?
         self.file_pareto_latex()
         if delete_this and False:
@@ -1355,36 +1358,36 @@ class ExplainableGP(object):
     #                 parsim, last_fitness, fitness))
     #     return
 
-    def todo_update_pareto(self):
-
-        """
-        kernel_fun = min() todo
-        todo
-        """
-
-        if len(self.pareto) == 0:  # no pareto entries found yet
-            tree = self.population_base[0]
-            parsimony = tree_get_parsimony(tree)
-            meta = tree_get_meta(tree)
-            # self.pareto[parsimony] = meta
-            self.pareto.append([parsimony, meta['fitness_train'], meta])
-
-        for tree in self.population_base:
-            try:
-                p_simpler = [p for p in self.pareto if p[0] <= entry[0]]  # all pareto entries that are less complex
-                best = min(p_simpler, key=lambda p: p[1])
-            except:
-                best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
-
-            if entry[1] < best[1]:
-                self.pareto.append(entry)  #
-                self.pareto = [x for x in self.pareto[:] if x[0] < entry[0] or x[1] < entry[1] or x is entry]
-                self.pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
-            else:
-                continue  # Not a pareto entry
-
-        # print('Pareto', '\t\t', pareto)
-        return
+    # def todo_update_pareto(self):
+    #
+    #     """
+    #     kernel_fun = min() todo
+    #     todo
+    #     """
+    #
+    #     if len(self.pareto) == 0:  # no pareto entries found yet
+    #         tree = self.population_base[0]
+    #         parsimony = tree_get_parsimony(tree)
+    #         meta = tree_get_meta(tree)
+    #         # self.pareto[parsimony] = meta
+    #         self.pareto.append([parsimony, meta['fitness_train'], meta])
+    #
+    #     for tree in self.population_base:
+    #         try:
+    #             p_simpler = [p for p in self.pareto if p[0] <= entry[0]]  # all pareto entries that are less complex
+    #             best = min(p_simpler, key=lambda p: p[1])
+    #         except:
+    #             best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
+    #
+    #         if entry[1] < best[1]:
+    #             self.pareto.append(entry)  #
+    #             self.pareto = [x for x in self.pareto[:] if x[0] < entry[0] or x[1] < entry[1] or x is entry]
+    #             self.pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
+    #         else:
+    #             continue  # Not a pareto entry
+    #
+    #     # print('Pareto', '\t\t', pareto)
+    #     return
 
     # def pareto_update(self):
     #     """
@@ -1759,8 +1762,7 @@ class ExplainableGP(object):
         """
         # pareto = []
         # candidates = [(20, 2000), (5, 900), (5, 800), (10, 700), (7, 800)]
-        
-        # # todo todotodo asd try to simplify the tree first!
+
         # try:
         #     tree_sym = tree_evolve_reduce(tree, self.env_vars, completely=True)
         #     parsim_sym = tree_eval_parsimony(tree_sym, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
@@ -1769,24 +1771,26 @@ class ExplainableGP(object):
         # except:
         #     pass
 
-        if len(self.pareto) == 0:  # no pareto entries found yet
-            parsimony = tree_get_parsimony(tree)
-            meta = tree_get_meta(tree)
-            self.pareto.append([parsimony, meta['fitness_train'], meta])  # aka [3, 423, meta{}]
+        parsimony = tree_get_parsimony(tree)
+        meta = tree_get_meta(tree)
+        tree_entry = [parsimony, meta['fitness_train'], meta]
 
-        for entry in self.population_base:
+        if len(self.pareto) == 0:  # no pareto entries found yet
+            self.pareto.append(tree_entry)  # aka [3, 423, meta{}]
+        else:
+
             try:
-                p_simpler = [p for p in self.pareto if p[0] <= entry[0]]  # less complex candidates
+                p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # less complex candidates
                 best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
             except:
                 best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
 
-            if entry[1] < best[1]:
-                self.pareto.append(entry)  #
-                self.pareto = [x for x in self.pareto[:] if x[0] < entry[0] or x[1] < entry[1] or x is entry]
+            if tree_entry[1] < best[1]:
+                self.pareto.append(tree_entry)  #
+                self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
                 self.pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
             else:
-                continue  # Not a pareto entry
+                return
 
         return
 
@@ -1900,6 +1904,7 @@ class ExplainableGP(object):
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
         tree = ptree.get_uninstanced_tree()
+
         if not tree_check_deep(tree, self.env_vars):
             if tree_node_get_arity(tree, root_id) == 0:
                 print_warning('w', 'Origin tree is only a root node!')
@@ -1918,17 +1923,20 @@ class ExplainableGP(object):
         #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
         #                          ''.format(expr_raw, expr_sym))
 
-        self.origin_tree = copy.deepcopy(tree)
 
         fitness_train = self.tree_eval_fitness_train(tree)
+
+        tree = tree_set_fitness(tree, fitness_train)
+        tree = tree_set_parsimony(tree, 0)
+        self.origin_tree = copy.deepcopy(tree)
 
         self.origin_meta = {'expr_raw': expr_raw,
                             'expr_sym': expr_sym,
                             'parsimony': 0,
                             'fitness_train': fitness_train}
 
-        self.parsimony_best_meta[0] = self.origin_meta
-        self.todo_update_pareto2(copy.deepcopy(self.origin_meta))
+        # self.parsimony_best_meta[0] = self.origin_meta
+        self.todo_update_pareto2(tree)
 
         self.print_g('gg', 'Loading origin_meta, fitness {}. Time: {:4.2f}s'.format(fitness_train,
                                                                                     time.perf_counter() - self.time_start))
@@ -2025,8 +2033,8 @@ class ExplainableGP(object):
         def get_pareto_plot_values():
             # sfeh i think there is a more beautiful solution?
             tuples = []
-            for key in sorted(self.pareto):
-                tuples.append([key, self.pareto[key]['fitness_train']])
+            for (parsim, fitness, meta) in self.pareto:
+                tuples.append([parsim, fitness])
             npdata_dict = np.array(tuples).T
             return npdata_dict
 
@@ -2168,7 +2176,7 @@ class ExplainableGP(object):
         Program is done after writing all gp_files one last time.
         """
         self.run_backup_save()
-        self.file_make_analysis(self.root_dir)
+        self.file_make_analysis()
 
         # if Path.is_file(root_dir / file_pycode_eval):
         #     # exec(Path.open(root_dir / file_pycode_eval).read())

@@ -71,13 +71,13 @@ class Pnode:
         if self.is_fix:
             meta_str.append('is_fix: True')
         if meta_str:
-            label_info += '{{{}}}'.format(', '.join(meta_str))
+            label_info += f"{{{', '.join(meta_str)}}}"
 
         if not self.childs:
-            return '{}'.format(label_info)
+            return f"{label_info}"
         else:
             childstr = ', '.join([str(x) for x in self.childs])
-            return '[{}, {}]'.format(label_info, childstr)
+            return f"[{label_info}, {childstr}]"
 
     def __len__(self):
         """
@@ -136,27 +136,38 @@ class PlaTree2:
             self.depth = None
             self.complete = None
 
-        # def __str__(self):
-        #     return 'hash: {}, fitness: {}, complexity: {}'.format(self.hash, self.fitness, self.complexity)
+        def __str__(self):
+            return f"hash: {self.hash}, fitness: {self.fitness}, complexity: {self.complexity}"
 
     def __init__(self, root_node: Pnode, fitness=None):
-        self.root = root_node
-
+        self.core = root_node
         self.meta = self.PtreeMeta(fitness)
         self.history = deque([], maxlen=10)  # sfeh arbitrary value of 10 historic metainfo of this tree
         self.finalize()
 
     def finalize(self):
-        self.root.set_depth(depth=self.root.depth)
+        self.core.set_depth(depth=self.core.depth)
         self.complete = True
 
-    def reset_meta(self, update_history=None):
-        if update_history:
-            self.history.append(self.meta)
+    def evolve_start(self):
+        """
+        Before evolving, delete all tree information
+        so the tree is not holding "wrong" information about fitness, etc.
+        - (append last meta value to history)
+        - delete meta info
+        - set status to not complete
+        """
+        self.history.append(self.meta)
         self.meta = self.PtreeMeta()
         self.complete = False
+        
+    def meta_set(self, meta):
+        self.history.append(self.meta)
 
     def childs_insert_list_width(self, node_list):
+        """
+
+        """
         iter_nodes = iter(node_list)
         while True:
             try:
@@ -164,10 +175,13 @@ class PlaTree2:
             except StopIteration:
                 break
 
-            self.root.node_insert_width(node)
+            self.core.node_insert_width(node)
     
     def __str__(self):
-        return 'Ptree2: {}. Tree meta: {}'.format(self.root, self.meta)
+        """
+
+        """
+        return f"Ptree2: {self.core}. Tree meta: {self.meta}"
 
 
 def pnode_from_oldtree(tree, node_id=root_id):
@@ -190,12 +204,13 @@ def pnode2_from_treenode(tree, node_id, is_fix=True):
 
 def tree_from_ptree2(platree2: PlaTree2):
     label_list = []
-    max_depth = platree2.root.childs_depth_max
+    max_depth = platree2.core.childs_depth_max
     print('max depth', max_depth)
     for depth in range(0, max_depth + 1):
-        labels_at_depth = [x.label for x in platree2.root.get_nodes_at_depth(depth)]
+        labels_at_depth = [x.label for x in platree2.core.get_nodes_at_depth(depth)]
         label_list.extend(labels_at_depth)
     return label_list
+
 
 def test_sdf():
     label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']

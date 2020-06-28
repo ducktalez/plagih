@@ -34,6 +34,15 @@ class TestHelpers:
                                       'cartVel', '1', '<', '<', '<', 'Andb', '<', '0', '2',
                                       'cartVel', '0.1', 'cartPos', '-0.05', 'cartPos', '0.02', '>', '<', 'cartPos', '0',
                                       'cartVel', '-0.45', 'cartVel', '-0.05']
+        self.tree_reducing = ['Ifte',
+                              'Andb', '2', '0',
+                              '<=', '<=',
+                              'Mini', 'cartVel', 'cartVel', '+',
+                              '+', '-', '*', '0.7',
+                              '*', '0.03', '*', '0.008', '-0.07', '**',
+                              '-0.09', '**', '0.3', '**', '+', '2.0',
+                              '+', '2.0', '+', '4.0', 'cartPos', '0.38',
+                              'cartPos', '0.25', 'cartPos', '0.874488804']
 
         self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
         self.tree1 = TEST_karoo_tree_from_labellist(['+', '+', '*', '-', '1', '2', '3', '4', '5'], self.env_bundle)
@@ -56,13 +65,20 @@ class TestHelpers:
         expr_raw = tree_get_expr_raw(tree, root_id)
         expr_sym = expr_sympify(expr_raw)
         print(expr_sym)
-        # tree_sym = karoo_ptree_from_expr(expr_sym, self.env_bundle)
+        # tree_sym = karoo_tree_from_expr(expr_sym, self.env_bundle)
         # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
         sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
         print(tree_check_deep(sym_tree2, self.env_bundle))
 
         label_list = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
-        label_list = workaround_remove_tilde_operator(label_list)
+
+    def reduce_any_tree(self):
+        tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
+        tree_sym = tree_evolve_reduce(tree, self.env_bundle)
+        print(tree_get_labellist(tree))
+        print(tree_get_labellist(tree_sym))
+        return
+
 
     def test_visualisation(self):
         tree_labels = ['Ifte',
@@ -125,6 +141,6 @@ class MountainCarExamples:
 
 
 live_test = TestHelpers()
-live_test.test_visualisation()
+live_test.reduce_any_tree()
 
 # print(ast_convert_from_expr('Ifte((((Mini(((-0.09)*(((cartPos)+(0.25))**(2)))+(0.03), ((0.3)*(((cartPos)+(0.9))**(4)))-(0.008)))<=(cartVel))&((cartVel)<=(((-0.07)*(((cartPos)+(0.38))**(2)))+(0.7)))), (2), (0))', build=True))

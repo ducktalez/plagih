@@ -131,13 +131,12 @@ def load_label_list(root_dir, user_origin_csv=None):
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
         print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
         raise
-    elif Path.is_file(tree_expr_txt_path):  # karoo_ptree_from_expr(expr)
+    elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
         print('SFEH needs to create an option to make trees from expression')
         with Path.open(tree_expr_txt_path) as txt_file:
             expr = txt_file.read()  # sfeh requires separate handling?
             print('Assuming all variables are floats, sfeh')
-            ptree = karoo_ptree_from_expr(expr, 'sfeh')
-            tree = ptree.get_uninstanced_tree()
+            tree = karoo_tree_from_expr(expr, 'sfeh')
             tree_pretty_print(tree)  # sfeh not working?? todo debug
             tree_save_csv(tree, tree_labels_csv_path)
             raise  # sfeh
@@ -146,12 +145,11 @@ def load_label_list(root_dir, user_origin_csv=None):
     return label_list, modify_list
 
 
-def load_config(config_path):
+def load_config(config_path, out_dir=None):
     """
 
     """
     try:
-        root_dir = config_path.parent
         file_extension = config_path.suffix
         if file_extension == '.yaml':
             with Path.open(config_path, 'r') as file:
@@ -161,6 +159,11 @@ def load_config(config_path):
     except IOError as ioex:
         raise IOError('Config file could not be loaded. Path: {}\nException: {}'.format(config_path, ioex))
 
+    if out_dir:
+        root_dir = out_dir
+    else:
+        root_dir = config_path.parent
+
     return root_dir, config
 
 
@@ -169,9 +172,7 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     
     """
 
-    root_dir, config = load_config(config_path)
-    if out_dir:
-        root_dir = out_dir
+    root_dir, config = load_config(config_path, out_dir=out_dir)
 
     config['force_new_run'] = force_new_run
     config['eval_action'] = eval_action
@@ -200,17 +201,19 @@ def analyse(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_
     - plots (pareto, best)
     """
     # todo the same code is in gp_run...
-    root_dir, config = load_config(config_path)
-    if out_dir:
-        root_dir = out_dir
+    root_dir, config = load_config(config_path, out_dir=out_dir)
 
     config['force_new_run'] = force_new_run
     config['eval_action'] = eval_action
 
-    root_dir, config = load_config(config_path)
     gp = ExplainableGP(plagih_root, root_dir, config, user_prepared_path=data_prepared_path)
 
-    gp.plagih_update_analysis()
+    try:
+        gp.try_load_backup(path_backup=None)
+    except FileNotFoundError as no_file_ex:
+        raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
+
+    gp.terminate_run()
 
 
 if __name__ == "__main__":

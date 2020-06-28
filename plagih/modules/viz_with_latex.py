@@ -281,7 +281,7 @@ def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity
     if not arity_list:
         arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
 
-    core = core_from_labels(label_list, arity_list, xtype_list, force_np_dtype=np_dtype_size)
+    core = Core_From_Labels(label_list, arity_list, xtype_list, force_np_dtype=np_dtype_size).get_uninstanced_core()
 
     if modify_list:
         for i, val in enumerate(modify_list):

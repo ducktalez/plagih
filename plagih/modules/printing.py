@@ -66,7 +66,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = ''
     elif 'g' in message_type:
         message_style = BColors.BLUE
-        message_pretxt = '{:3.0f}s. '.format(time_total)
+        message_pretxt = '{:3.0f}s. '.format(time_total)  # sfeh current time instead and local time at the end?
     elif 'v' in message_type:
         message_style = BColors.WHITE
         message_pretxt = 'Verbose: '

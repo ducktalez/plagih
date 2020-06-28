@@ -82,31 +82,7 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype='U15'):
     this function builds the core of a tree (no node_modify)
     """
 
-    if len(label_list) == 0:
-        print_warning('w', 'label list is empty')
-        raise
-
-    # if arity_list is None:
-    #     arity_list = [label_get_arity(label) for label in label_list]
-    #
-    # if xtype_list is None:
-
-    size = len(label_list)
-    tree = tree_init_core(size, force_np_dtype)
-
-    # set all the rows that are super easy
-    tree = tree_core_init_row(tree, N_id, [x for x in range(0, size)])
-    tree = tree_core_init_row(tree, N_label, label_list)
-    tree = tree_core_init_row(tree, N_arity, arity_list)
-    tree = tree_core_init_row(tree, N_xtype, xtype_list)
-
-    # and also, fill all the leftover rows
-    parent_list = parents_from_arities(arity_list)
-
-    tree = tree_core_init_row(tree, N_parent, parent_list)
-
-    tree = tree_core_build_childs(tree)
-    tree = tree_core_init_depth(tree, parent_list)
+    tree = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
 
     return tree
 
@@ -158,7 +134,8 @@ class Ptree_karoo():
         """
         if not arity_list:
             arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
-        core = core_from_labels(label_list, arity_list, xtype_list)
+
+        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
 
         if modify_list:
             for i, val in enumerate(modify_list):
@@ -183,8 +160,6 @@ def TEST_karoo_tree_from_labellist(label_list, env_vars, modify_list=None, arity
     returns: tree, from label_list (newest version)
     """
 
-    # label_list = workaround_remove_tilde_operator(label_list)
-
     xtype_list = xtypes_from_labels(label_list, env_vars)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     # tree = p_tree.get_uninstanced_tree()
@@ -192,7 +167,7 @@ def TEST_karoo_tree_from_labellist(label_list, env_vars, modify_list=None, arity
     return p_tree
 
 
-def karoo_ptree_from_expr(expr, env_vars, modify_list=None):
+def karoo_tree_from_expr(expr, env_vars, modify_list=None):
     """
     DELETE later sfeh
     Generate tree from a raw or sympified expression
@@ -201,23 +176,8 @@ def karoo_ptree_from_expr(expr, env_vars, modify_list=None):
     label_list = ast_convert_from_expr(expr, build=True)
     xtype_list = xtypes_from_labels(label_list, env_vars)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
-    return p_tree
-
-
-def workaround_remove_tilde_operator(label_list):
-    """
-    ~- workaround
-    """
-    arity_list = [label_get_arity(label) for label in label_list]
-    parent_list = parents_from_arities(arity_list)
-    tilde_ids = [i for i, x in enumerate(label_list) if x == '~']
-    for child, parent in enumerate(parent_list):
-        if parent in tilde_ids:
-            if arity_list[child] == 0:
-                label_list[parent] = '-{}'.format(label_list[child])
-                label_list[child] = ''
-    label_list = [x for x in label_list if x != '']
-    return label_list
+    tree = p_tree.get_uninstanced_tree()
+    return tree
 
 
 def tree_save_csv(tree, path_csv):
@@ -321,7 +281,7 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
         tree_works = True
 
     if tree_node_get_arity(tree, root_id) == 0:
-        # print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)  # todo todotodo
+        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)
         tree_works = allow_root_only
 
     return tree_works
@@ -388,7 +348,7 @@ def tree_set_parsimony(tree, parsimony):
     if parsimony == '':
         pass  # This is actually done when 'wiping' the tree's data
     elif parsimony < 0:
-        print_warning('w', 'Warning: Parsimony is: {}'.format(parsimony))
+        print_warning('w', f'Warning: Parsimony is: {parsimony}')
 
     tree[T_parsimony][1] = parsimony
     return tree
@@ -462,7 +422,6 @@ def tree_nodes_get_ids_string(tree, node_id):
 
     This method generates a list of all 'node_id's from the given Node and below. It is used primarily to generate
     'branch' for the multi-generational mutation of Trees.
-    """
 
     node_id = int(node_id)
 
@@ -484,6 +443,9 @@ def tree_nodes_get_ids_string(tree, node_id):
             tree_nodes_get_ids_string(tree, tree[9, node_id]),
             tree_nodes_get_ids_string(tree, tree[10, node_id]),
             tree_nodes_get_ids_string(tree, tree[11, node_id]))
+    """
+
+    return None
 
 
 def tree_node_get_xtype(tree, node_id):
@@ -1022,7 +984,8 @@ def tree_get_ids_depthfirst(tree, node_id=root_id):
 
 def tree_get_fitness(tree, precision=None, karoo=True):
     """
-    Get the fitness of a tree
+    Get the fitness that a tree holds.
+    For evaluation the fitness, use ? plagih_eval -> tree_eval_fitness_train()
     """
     if not karoo:
         raise
@@ -1129,8 +1092,6 @@ def tree_get_pycode(tree, node_id=root_id):
         for child in childs:
             results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
         return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
-        # except:
-        #     return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
 
 
 def tree_raw_depth_prefix(tree, node_id):
@@ -1215,21 +1176,25 @@ def tree_get_fix_nodes(tree, karoo=True):
     return node_ids
 
 
-def tree_node_get_branch(tree, node, karoo=True):
+def tree_node_get_branch(tree, node_id, karoo=True):
     """
     return all child-nodes as list
     """
     if not karoo:
         raise Exception
 
-    branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-
     # 2. Also return all child nodes
-    branch_eval = tree_nodes_get_ids_string(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
-    branch_symp = sympify(branch_eval)  # convert string into something useful
+    # branch_eval = tree_nodes_get_ids_string(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
 
-    branch = np.append(branch, branch_symp)
-    branch = np.sort(branch)
+    # node_id = int(node_id)
+
+    branch = [node_id]
+
+    child_ids = tree_node_get_childs(tree, node_id)
+    for child in child_ids:
+        branch.extend(tree_node_get_branch(tree, child))
+
+    branch = np.sort(branch)  # may be required for getting numpy array
 
     return branch
 
@@ -1605,11 +1570,15 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
 
 
 def core_from_expr(expr, env_vars):
+    """
+    Creating a karoo tree from a raw expression
+    """
+
     label_list = ast_convert_from_expr(expr, build=True)
     # label_list = workaround_remove_tilde_operator(label_list)
     arity_list = [label_get_arity(label) for label in label_list]
     xtype_list = xtypes_from_labels(label_list, env_vars)
-    core = core_from_labels(label_list, arity_list, xtype_list)
+    core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
     return core
 
 
@@ -1841,12 +1810,11 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     delete_ids = tree_node_get_branch(tree, node_id, karoo=karoo)
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
     expr_sym = expr_sympify(expr_raw=expr_raw)
-
     core = core_from_expr(expr_sym, env_vars)
+    tree_sym = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
+    tree_sym_tildefree = tree_remove_tilde(tree_sym)
 
-    tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
-
-    return tree_sympified
+    return tree_sym_tildefree
 
 
 def tree_check_meta_exists(tree):
@@ -1884,6 +1852,41 @@ def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray2, env_vars, ch
     return tree  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
 
+def tree_remove_tilde(tree):
+    """
+    ~- workaround
+    """
+    while True:
+        for node_id in tree_iterate_range(tree, karoo=True):
+            if tree_node_get_label(tree, node_id) == '~':
+                try:
+                    c_id = tree_node_get_child(tree, node_id, 0)
+                except IndexError:
+                    return tree
+                clabel, carity, cxtype = tree_node_get_lax_v3(tree, c_id)
+                if carity == 0:
+                    tree = tree_node_set_label(tree, c_id, f'-{clabel}')
+                    tree = tree_remove_node_with_child0(tree, node_id)
+                    break
+            else:
+                pass
+        else:
+            break
+    return tree
+
+
+def tree_remove_node_with_child0(tree, node_id):
+    child0 = tree_node_get_child(tree, node_id, 0)
+    if child0 != '':
+        ids, labels, aritys, xtypes = tree_get_branch_ilax(tree, child0)
+        core = Core_From_Labels(labels, aritys, xtypes).get_uninstanced_core()
+        delete_ids = tree_node_get_branch(tree, node_id)
+        tree = tree_insert_subtree(tree, core, delete_ids, karoo=True)
+    else:
+        raise  # should only call this when secure
+    return tree
+
+
 def tree_evolve_reduce(tree, env_vars, completely=True):
     """
     Reducing a tree to its most basic form with sympify.
@@ -1904,8 +1907,8 @@ def tree_evolve_reduce(tree, env_vars, completely=True):
                 try:
                     tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)
                 except Exception as ex:
-                    print_e('This failed during reduce process: ex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
-                    # tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)  # sfeh todo debug
+                    print_e(f'This failed during reduce process: ex: {ex}\nTree labels:\n{tree_get_labellist(tree)}')
+                    tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)  # sfeh todo debug
                     pass  # This might occur when a tree is sympified (?)
         return tree
     except Exception as ex:
@@ -1990,7 +1993,7 @@ def tree_check_rebuild(tree, karoo=True):
     xtype_list = [tree_node_get_xtype(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
 
     try:
-        core = core_from_labels(label_list, arity_list, xtype_list)
+        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
     except:
         return False
     return True
@@ -2072,7 +2075,7 @@ def tree_evolve_node_insert(tree, env_vars):
         new_labels = ['DUMMY'] + old_labels
         new_aritys = [1] + old_aritys
         new_xtypes = ['f2f'] + old_xtypes
-        insert_core = core_from_labels(new_labels, new_aritys, new_xtypes)
+        insert_core = Core_From_Labels(new_labels, new_aritys, new_xtypes).get_uninstanced_core()
         tree_insert_subtree(tree, insert_core, old_ids, karoo=False)
 
     return tree

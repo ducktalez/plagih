@@ -13,6 +13,7 @@ import collections.abc
 from pathlib import Path
 import textwrap
 from plagih.modules.plagih_data import *
+import random
 
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -30,7 +31,7 @@ class ExplainableGP(object):
     def __init__(self, plagih_root, root_dir, user_config, user_file_paths=None, opt_evolve_list=None, user_prepared_path=None, opt_origin_tree_csv=None, out_dir=None):
 
         self.name = root_dir.name  # sfeh probably there are better names
-        print('\n\tInitializing Plagih. Name: {}{}{}. Located in: \n\t{}\n'.format(BColors.CYAN, self.name, BColors.RESET, root_dir))
+        print(f'\n\tInitializing Plagih. Name: {BColors.CYAN}{self.name}{BColors.RESET}. Located in: \n\t{root_dir}\n')
         self.time_start = time.perf_counter()
         self.restart_vers = 'v0.95'
         self.root_dir = root_dir
@@ -124,7 +125,7 @@ class ExplainableGP(object):
                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, None, 6), 'full_or_grow': 'grow'}}},
                 {'tag': 'Rand4', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, None, 6), 'full_or_grow': 'full'}}},
-                ],
+            ],
 
             # todo
             'evolve_list_random': {
@@ -208,14 +209,9 @@ class ExplainableGP(object):
             self.monitoring_verbosity = self.config['plot_verbosity']
             self.tourn_size = self.config['tourn_size']
             self.evolve_list = self.config['evolve_list']
-            self.file_locs = self.config['file_locs']
 
         if user_prepared_path is not None:
             self.config['file_locs']['samples_ready_p'] = user_prepared_path
-
-        self.root_paths = {}
-        for file_key, file_loc in self.config['file_locs'].items():
-            self.root_paths[file_key] = Path(root_dir / file_loc)
 
         self.activate_dataset(user_prepared_p_path=user_prepared_path)
 
@@ -232,7 +228,7 @@ class ExplainableGP(object):
 
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-        self.parsimony_best_meta = {}  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
+        # self.parsimony_best_meta = None  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
         self.population_tmp = []
         self.population_tmp_eval = []
@@ -283,26 +279,39 @@ class ExplainableGP(object):
                                 'complexity_variance': {},  # variance can be deleted, only std-error is needed
                                 'pop:trees:complexity:std_error': {}}
 
-        self.print_g('ggg', 'Init. Time: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('ggg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return
 
-    def try_load_backup(self):
+    def file_loc(self, file_key): 
+        file_loc = self.config['file_locs'].get(file_key)
+        if file_loc is None:
+            raise KeyError(f'Did not find for file_key {file_key}')
+        else:
+            return file_loc
+
+    def root_path(self, file_key):
+        file_loc = self.config['file_locs'].get(file_key)
+        if file_loc is None:
+            raise KeyError(f'Did not find for file_key {file_key}')
+        else:
+            return Path(self.root_dir / file_loc)
+
+    def try_load_backup(self, path_backup=None):
         """
         If a backup-file is found...
         """
-        path_backup = self.root_paths['file_backup_pickle']
+        if path_backup is None:
+            path_backup = self.root_path('file_backup_pickle')  # asd write to config load-path of pickle
+
         if Path.is_file(path_backup):
-            self.print_g('g', 'Backup-file was found. Loading data...')
+            self.print_g('g', 'Loading data from backup-file...')
             try:
                 self.load_backup_pickle(path_backup)
-                return True
             except Exception as ex:
-                print_warning('w',
-                              'Even though a backup exists for this run, it could not be loaded because of: {}.'.format(ex))
-                raise
+                raise Exception(f'Even though a backup exists for this run, it could not be loaded because of\n{ex}')
         else:
-            return False
+            raise FileNotFoundError(f'No backup-file found at {path_backup}.')
 
     def update_old_runs(self):
         """
@@ -336,11 +345,12 @@ class ExplainableGP(object):
             run_data = pickle.load(file_backup)
 
         try:
-            self.config['pl_version'], self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
+            self.config['pl_version'], self.restart_count, self.gen_id, _, self.pareto, self.population_base, self.monitoring_dict = run_data
             # todo test
         except:
             # todo remove this in version1
-            self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
+            self.restart_count, self.gen_id, _, self.pareto, self.population_base, self.monitoring_dict = run_data
+            # self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
             self.version = 0.95
 
         self.restart_count += 1
@@ -355,7 +365,7 @@ class ExplainableGP(object):
         if isinstance(self.pareto, dict):  # version before 0.95
             self.pareto = [[p, meta['fitness_train'], meta] for p, meta in self.pareto.items()]
 
-        printez('g', 'Starting at generation: {}'.format(self.gen_id), self.print_type)
+        printez('g', f'Starting at generation: {self.gen_id}', self.print_type)
 
         return
 
@@ -370,12 +380,13 @@ class ExplainableGP(object):
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
-        run_backup_data = self.config['pl_version'], self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict
+        # todo save complete config?
+        run_backup_data = self.config['pl_version'], self.restart_count, self.gen_id, None, self.pareto, self.population_base, self.monitoring_dict
 
-        path_backup = file_make_dir(self.root_paths['file_backup_pickle'])
+        path_backup = file_make_dir(self.root_path('file_backup_pickle'))
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.printpl('f', 'Saved: {}'.format(path_backup))
+        self.printpl('f', f'Saved: {path_backup}')
         return
 
     def plagih_gp_run(self):
@@ -384,7 +395,12 @@ class ExplainableGP(object):
         """
 
         if not self.config['force_new_run']:
-            self.try_load_backup()
+            try:
+                self.try_load_backup()
+            except FileNotFoundError as fnfex:
+                print_warning(f'No backup file found. {fnfex}')
+            except Exception:
+                raise
             # sfeh: delete old files?
 
         if not self.origin_exists():
@@ -395,32 +411,22 @@ class ExplainableGP(object):
         self.write_config_yaml()  # just to see what config is running and what the user can set
 
         if self.gen_id == 0:
-            self.print_g('gg', 'Preparing to create first Generation. Gen {}.'.format(self.gen_id))
-            self.gen_id = 0
+            self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
             self.gen_reset_parameters()
             self.gen_create_initial()
 
         while self.run_continues():  # max generation, max time, done...
-            self.printpl('gggg', 'Evolving Generation {}'.format(self.gen_id))
+            self.printpl('gggg', f'Evolving Generation {self.gen_id}')
             self.gen_create_loop()
             self.periodical_procedures()
-            self.print_g('ggg', 'Generation {} took a total time of: {:4.2f}. '.format(self.gen_id, time.perf_counter() - self.time_genstart))
+            self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')
         else:
-            printez('g', 'Done after Generation {}.'.format(self.gen_id), print_type=self.print_type)
+            printez('g', f'Done after Generation {self.gen_id}.', print_type=self.print_type)
 
         self.terminate_run()
         return
 
-    def plagih_update_analysis(self):
-        """
-        Without starting a new run, get the most important gp_files
-        """
 
-        loading_done = self.try_load_backup()
-        if not loading_done:
-            print_e('You need to load a backup file to analyse!')
-        else:
-            self.terminate_run(self.root_dir)
 
     def write_config_yaml(self):
         """
@@ -428,7 +434,7 @@ class ExplainableGP(object):
         """
 
         # filename = self.root_dir / info_config_yaml
-        filename = file_make_dir(self.root_paths['info_config_yaml'])
+        filename = file_make_dir(self.root_path('info_config_yaml'))
         yaml_dump(filename, self.config, print_type=self.print_type)
 
         return
@@ -438,7 +444,7 @@ class ExplainableGP(object):
         write the parameters to a .csv file which can also be loaded
         """
 
-        path = file_make_dir(self.root_paths['file_info_config_json'])
+        path = file_make_dir(self.root_path('file_info_config_json'))
 
         with Path.open(path, 'w') as file:
             json.dump(self.config, file, indent=4)
@@ -524,7 +530,7 @@ class ExplainableGP(object):
 
             # believe me, debugging with this is much more fun
 
-            self.print_g('gggg', '->Evolving \'{}\' {}x starting...'.format(tag, evolve_num))
+            self.print_g('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
 
             if evolve_name == 'reproduce':
                 # sfeh one parameter
@@ -566,7 +572,7 @@ class ExplainableGP(object):
             elif evolve_name == 'revive pareto':
 
                 for nn in range(evolve_num):
-                    new_tree = self.pop_reproduce_olymp()
+                    new_tree = self.pop_reproduce_pareto()
                     self.pop_append(new_tree, last_evolution=tag)
 
             elif evolve_name == 'random trees':
@@ -581,9 +587,9 @@ class ExplainableGP(object):
                         new_tree = self.pop_random(call_params)
                         self.pop_append(new_tree, last_evolution=tag)
             else:
-                print_e('the specified evolve call is not known: \'{}\''.format(evolve_name))
+                print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
 
-            self.print_g('ggg', '->Evolving \'{}\' {} times took: {:4.2f}s.'.format(tag, evolve_num, time.perf_counter() - time_evolve))
+            self.print_g('ggg', f'->Evolving \'{tag}\' {evolve_num} times took: {time.perf_counter() - time_evolve:4.2f}s.')
 
         # sfeh automatically fill with random trees
         # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
@@ -649,7 +655,7 @@ class ExplainableGP(object):
             if self.config['overwrite periodic gp_files']:
                 subfolder = ''
             else:
-                subfolder = Path(self.file_locs['folder_steps']) / 'Gen-{}'.format(self.gen_id)
+                subfolder = Path(self.file_loc('folder_steps')) / f'Gen-{self.gen_id}'
             self.file_all_plots(self.root_dir, subfolder=subfolder)
 
         if save_run:
@@ -668,7 +674,7 @@ class ExplainableGP(object):
         self.file_pareto_histograms()
         self.file_conclusion()
         self.pareto_sort()
-        write_file_pareto_txt(self.pareto, self.root_dir, self.file_locs['file_pareto'])  # todo "get path" instead?
+        write_file_pareto_txt(self.pareto, self.root_dir, self.file_loc('file_pareto'))  # todo "get path" instead?
         self.file_pareto_latex()
         if delete_this and False:
             self.file_population_base_latex()
@@ -694,7 +700,7 @@ class ExplainableGP(object):
         return
 
     def get_path(self, file_key):
-        real_path = self.root_paths[file_key]
+        real_path = self.root_path(file_key)
         return real_path
 
     def activate_dataset(self, user_prepared_p_path=None, delimiter=','):
@@ -712,14 +718,14 @@ class ExplainableGP(object):
         """
         if user_prepared_p_path:
             data_prepared = pickle_load(user_prepared_p_path)
-        elif Path.is_file(self.root_paths['samples_ready_p']):  # maybe the data was already prepared earlier
-            data_prepared = pickle_load(self.root_paths['samples_ready_p'])
-        elif Path.is_file(self.root_paths['samples_csv']):  # Preprocess the raw data: training/test split, env-variables, ...
-            self.env_vars, _, _, self.data_train, self.data_control = data_from_csv(self.root_paths['samples_csv'], delimiter=delimiter)
+        elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier
+            data_prepared = pickle_load(self.root_path('samples_ready_p'))
+        elif Path.is_file(self.root_path('samples_csv')):  # Preprocess the raw data: training/test split, env-variables, ...
+            self.env_vars, _, _, self.data_train, self.data_control = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
 
-            print('Prepared the raw {} behaviour. Saving for next run.'.format(self.file_locs['samples_csv']))
+            print(f'Prepared the raw {self.file_loc("samples_csv")} behaviour. Saving for next run.')
             data_prepared = (self.env_vars, self.data_train, self.data_control)  # sfeh version1 remove numpy version
-            pickle_dump(self.root_paths['samples_ready_p'], data_prepared)
+            pickle_dump(self.root_path('samples_ready_p'), data_prepared)
         else:
             raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')  # samples_ready_p or samples_csv required
 
@@ -728,7 +734,7 @@ class ExplainableGP(object):
             pass  # sfeh: if you want to load information from extra file, check for this file here
         else:
             # sfeh env_vars, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
-            yaml_dump(self.root_paths['env_vars_yaml'], data_prepared[0], print_type=self.print_type)
+            yaml_dump(self.root_path('env_vars_yaml'), data_prepared[0], print_type=self.print_type)
 
         self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
         self.update_old_runs()
@@ -741,7 +747,7 @@ class ExplainableGP(object):
 
         """
         if not file_evolverates:
-            file_evolverates = self.root_paths['evolve_file']
+            file_evolverates = self.root_path('evolve_file')
 
         file_evolverates = Path(file_evolverates)
         if Path.is_file(file_evolverates):
@@ -751,7 +757,7 @@ class ExplainableGP(object):
         else:
             print_warning('ww', 'Opt-in not specified: Evolve-file for GP evolve functions defined! Trying to choose them for you.')
 
-        # yaml_dump(self.root_paths['file_info_evolve_dict_yaml'], evolve_list)  # todo save the config
+        # yaml_dump(self.root_path('file_info_evolve_dict_yaml'], evolve_list)  # todo save the config
         # sfeh: if you want to load information from extra file, check for this file here
 
         return
@@ -763,7 +769,7 @@ class ExplainableGP(object):
         """
         # double check load
         if not opt_path_opyaml:
-            opt_path_opyaml = self.file_locs['operators_yaml']
+            opt_path_opyaml = self.file_loc('operators_yaml')
         opt_path_opyaml = Path(self.root_dir / opt_path_opyaml)
 
         if Path.is_file(opt_path_opyaml):
@@ -798,7 +804,7 @@ class ExplainableGP(object):
         """
         # double check load
         if not user_path_distributions:
-            user_path_distributions = self.root_paths.get('distributions_file')
+            user_path_distributions = self.root_path('distributions_file')
 
         if Path.is_file(user_path_distributions):
             distributions_as_string = yaml_load(user_path_distributions)
@@ -807,7 +813,7 @@ class ExplainableGP(object):
             distributions_as_string = self.config['distributions_as_string']
             # distributions_as_string is already given...
             # sfeh samples from csv?
-            # info_file = file_make_dir(self.root_paths['info_distributions_yaml'])
+            # info_file = file_make_dir(self.root_path('info_distributions_yaml'])
             # yaml_dump(info_file, distributions_as_string)
 
         choose_distributions = {'2f': [], '2b': []}
@@ -864,13 +870,32 @@ class ExplainableGP(object):
         # histogram_data = np.concatenate((histogram_data.reshape(-1, 1), pairwise_fitness.reshape(-1, 1)), axis=1)
         # histogram_data = np.multiply.reduce(histogram_data, axis=1)
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
-            # todo only histograms for the variables that are in a tree?
-        # todo random histogramme werte am Rand?
         """
 
-        # todo allow very simple IB-solutions...
+        def histograms_actions(self):
 
-        path_hist = folder_make_dir(self.root_dir / self.file_locs['folder_histograms'])
+            # todo when there are more than 3 (?) dimensions, these plots make no sense.
+            #  check for all vars in the tree, mark all observations of the same type with the same color?
+            # >>> Histograms for every dimension
+
+            data_dims = len(self.env_vars['obs_name'])
+
+            # for enum_aii, agent_ii in enumerate(agent_dimatrix):
+            for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
+                fig, axs = plt.subplots(data_dims, 1)
+
+                pairwise_fitness = agent_info['pairwise_fitness']
+                for obs_ii, agent_obs_info in agent_info['obs-specific'].items():  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
+                    hist_data = agent_obs_info['histogram_data']
+                    axs[obs_ii].hist(hist_data, bins=obs_x_info[obs_ii]['bins'], weights=pairwise_fitness)
+                    axs[obs_ii].set_title(obs_x_info[obs_ii].get('obs_name'))
+                    axs[obs_ii].set_ylim(top=max_fails_per_bin)
+
+                plt.tight_layout()
+                plt.savefig(path_hist / 'obs_hist_{}.png'.format(parsim))
+                plt.clf()
+
+        path_hist = folder_make_dir(self.root_dir / self.file_loc('folder_histograms'))
 
         np_data = self.data_train  # sfeh, also non-train data?
         agent_dimatrix = {}
@@ -881,23 +906,22 @@ class ExplainableGP(object):
         for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
             obs_x_info[ii] = {}  # 'bins': None, 'obs_name': None
             histogram_data = np_data[:, obs_info.get('pos')]  # pos is the same as col
-            obs_minmax = obs_info.get('minmax')  # todo this should be set, no matter what.
-            if obs_minmax is None:
-                # print_e('SHOULD NOT HAPPEN, SFEH.   must be set earlier!')  # todo
+            obs_minmax = obs_info.get('minmax')
+            if obs_minmax is None and delete_this_version1:  # minmax must be set at version 1
+                # print_e('SHOULD NOT HAPPEN, SFEH.   must be set earlier!')
                 obs_minmax = (np.min(histogram_data), np.max(histogram_data))
 
-            # todo delete this
-            if obs_name == 'cartVel':  # todo
-                obs_minmax = (-0.07, 0.07)
-            elif obs_name == 'cartPos':
-                obs_minmax = (-1.2, 0.6)
+            if delete_this_version1:
+                if obs_name == 'cartVel':
+                    obs_minmax = (-0.07, 0.07)
+                elif obs_name == 'cartPos':
+                    obs_minmax = (-1.2, 0.6)
 
-            obs_x_info[ii]['bins'] = np.linspace(obs_minmax[0], obs_minmax[1], 32 + 1)  # todo 32 bins?
+            obs_x_info[ii]['bins'] = np.linspace(obs_minmax[0], obs_minmax[1], 32 + 1)  # sfeh 32 bins?
 
-        for a_ii, (parsim, fitness, meta) in enumerate(sorted(self.pareto)):
+        for a_ii, (parsim, fitness, meta) in enumerate(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
-            tree = ptree.get_uninstanced_tree()
+            tree = karoo_tree_from_expr(expr_raw, self.env_vars)
             expr_sym = tree_get_expr_sym(tree)
 
             tf_results = eval_tf(expr_sym,
@@ -924,31 +948,6 @@ class ExplainableGP(object):
                 agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
                 obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
 
-        # todo when there are more than 3 (?) dimensions, these plots make no sense.
-        #  check for all vars in the tree, mark all observations of the same type with the same color?
-        # # >>> Histograms for every dimension
-        #
-        # data_dims = len(self.env_vars['obs_name'])
-        #
-        # # for enum_aii, agent_ii in enumerate(agent_dimatrix):
-        # for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
-        #     fig, axs = plt.subplots(data_dims, 1)
-        #
-        #     # pairwise_fitness = agent_ii[-1]
-        #     pairwise_fitness = agent_info['pairwise_fitness']
-        #     # parsim = agent_ii['parsim']
-        #     for obs_ii, agent_obs_info in agent_info['obs-specific'].items():  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
-        #         # histogram_data, parsim, obs_name, fitness = dim_ii
-        #         hist_data = agent_obs_info['histogram_data']
-        #         axs[obs_ii].hist(hist_data, bins=obs_x_info[obs_ii]['bins'], weights=pairwise_fitness)  # todo
-        #         # ax[enum_ii].hist(histogram_data, bins='auto', weights=pairwise_fitness)  # todo
-        #         axs[obs_ii].set_title(obs_x_info[obs_ii].get('obs_name'))
-        #         axs[obs_ii].set_ylim(top=max_fails_per_bin)
-        #
-        #     plt.tight_layout()
-        #     plt.savefig(path_hist / 'obs_hist_{}.png'.format(parsim))
-        #     plt.clf()
-
         # >>> Histograms for every action
         # for enum_aii, agent_ii in enumerate(agent_dimatrix):
         for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
@@ -956,13 +955,10 @@ class ExplainableGP(object):
             # Histograms action-based
             act_min, act_max = self.env_vars['action_at'][self.config['eval_action']]['minmax']
             if 'discrete' in self.kernel.kernel:
-                # todo test
-                # unique_actions = self.env_vars['action_at'][self.config['eval_action']]['unique_outputs_num']
-                act_range = act_max - act_min
-                num_outputs = len(range(-act_range, act_range + 1))  # (+1 for range, -1 neutral element)
-                action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)
+                act_range = act_max - act_min  # [0, 1, 2] -> 2
+                action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
             else:
-                action_bins = np.linspace(act_min, act_max, 10)  # check out histogram_bin_edges, maybe it is better todo also 10 bins?
+                action_bins = np.linspace(act_min, act_max, 10)  # sfeh 10 bins?
 
             fig, ax = plt.subplots()
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
@@ -972,7 +968,7 @@ class ExplainableGP(object):
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
             fig.tight_layout()
-            plt.savefig(path_hist / 'acthist_{}.png'.format(parsim))
+            plt.savefig(path_hist / f'acthist_{parsim}.png')
             plt.close()  # todo
 
     def file_conclusion(self):
@@ -1047,13 +1043,12 @@ class ExplainableGP(object):
 
         latex_element = []
 
-        for (parsim, fitness, meta) in sorted(self.pareto):
+        for (parsim, fitness, meta) in self.pareto:
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
-            tree = ptree.get_uninstanced_tree()
+            tree = karoo_tree_from_expr(expr_raw, self.env_vars)
             tree = self.tree_finish_nodes(tree, last_evolution='texify')
 
-            latex_element.append('Pareto entry at parsimony {} with fitness {}.\n'.format(parsim, meta['fitness_train']))
+            latex_element.append(f'Pareto entry at parsimony {parsim} with fitness {meta["fitness_train"]}.\n')
 
             forest_viz = latex_tree_get_forest(tree, tight_viz=False)
             latex_element.append(forest_viz)
@@ -1064,11 +1059,11 @@ class ExplainableGP(object):
             latex_element.append(tight_forest_viz)
 
         latex_full_doc = latex_treeviz_full(latex_element)
-        path_trees_tex = file_make_dir(self.root_dir / self.file_locs['trees_tex'])
+        path_trees_tex = file_make_dir(self.root_dir / self.file_loc('trees_tex'))
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
-        self.printpl('f', '{}'.format(path_trees_tex))
+        self.printpl('f', f'{path_trees_tex}')
 
         return
 
@@ -1081,7 +1076,7 @@ class ExplainableGP(object):
         for ii, tree in enumerate(self.population_base):
             # if ii % 10 == 0 and ii < 61:
             if tree_check_deep(tree):
-                latex_element.append('Pop\_base tree {} with fitness {} from last-mod {}.\n'.format(ii, tree_get_fitness(tree, precision=self.precision), tree_get_last_evolution(tree)))
+                latex_element.append(f'Pop\_base tree {ii} with fitness {tree_get_fitness(tree, precision=self.precision)} from last-mod {tree_get_last_evolution(tree)}.\n')
 
                 forest_viz = latex_tree_get_forest(tree, tight_viz=False)
                 latex_element.append(forest_viz)
@@ -1090,13 +1085,13 @@ class ExplainableGP(object):
                     tight_forest_viz = latex_tree_get_forest(tree)
                     latex_element.append(tight_forest_viz)
                 except:
-                    print_e('tightviz at tree did not work. {} labels: {}'.format(ii, tree_get_labellist(tree)))
+                    print_e(f'tightviz at tree did not work. {ii} labels: {tree_get_labellist(tree)}')
 
         pop_viz = latex_treeviz_full(latex_element)
         path_tex = file_make_dir(self.root_dir / 'info/test_pop_latex.tex')
         with Path.open(path_tex, 'w') as file:
             file.write(pop_viz)
-        self.printpl('f', '{}'.format(path_tex))
+        self.printpl('f', f'{path_tex}')
 
         return
 
@@ -1105,43 +1100,46 @@ class ExplainableGP(object):
 
         """
 
-        if self.env_vars['action_at'][0]['type'] == 'int':
+        if 'discrete' in self.kernel.kernel:
             action_min, action_max = self.env_vars['action_at'][0]['minmax']
-            action_min, action_max = int(action_min), int(action_max)
-            py_return_action = 'return max({}, min({}, int(round(action))))\n'.format(action_min, action_max)
+            if isinstance(action_min, int) and isinstance(action_max, int) and TEST_PHASE:
+                pass
+            else:
+                print_e(f'not correct types (integer) {action_min}')
+                action_min, action_max = int(action_min), int(action_max)
+            py_return = f'return max({action_min}, min({action_max}, int(round(action))))\n'
         else:
-            py_return_action = 'return action\n'
+            py_return = 'return action\n'
 
-        py_operations_assign = '{} = input\n'.format(', '.join(self.env_vars['obs_name']))
-        py_decide_body = '{}{{}}\n{}'.format(py_operations_assign, py_return_action)
-        py_decide = 'def decide(self, input):\n{}\n'.format(textwrap.indent(py_decide_body, '\t'))
-        py_class_code = 'class {{}}:\n\n{}'.format(textwrap.indent(py_decide, '\t'))
+        # indent_body
+        # cartPos, cartVel = input
+        # {}
+        # return max(0, min(2, int(round(action))))
+        indent_twice = textwrap.indent(f"{', '.join(self.env_vars['obs_name'])} = input\n"
+                                       "{}\n"
+                                       f"{py_return}", '\t')
 
+        indent_once = textwrap.indent(f"def decide(self, input):\n"
+                                      f"{indent_twice}\n", '\t')
+
+        # Agents
         all_agents = []
         all_agent_names = []
-        for (parsim, fitness, meta) in sorted(self.pareto):
-            expr_raw = meta['expr_raw']
-            expr_sym = expr_sympify(expr_raw)
-            # label_list_sym = ast_convert_from_expr(expr_sym, build=True)
-            # tree = TEST_karoo_tree_from_labellist(label_list_sym, self.env_vars)
-            ptree = karoo_ptree_from_expr(expr_sym, self.env_vars)
-            tree = ptree.get_uninstanced_tree()
-            py_action = 'action = {}'.format(tree_get_pycode(tree))
-
-            py_agent_name = '{}{:.0f}'.format(self.name, parsim)
+        for (parsim, fitness, meta) in self.pareto:
+            py_agent_name = f'{self.name}{parsim:.0f}'
+            tree = karoo_tree_from_expr(meta['expr_sym'], self.env_vars)
             all_agent_names.append(py_agent_name)
-            all_agents.append(py_class_code.format(py_agent_name, py_action))
+            all_agents.append(f"class {py_agent_name}:\n\n"
+                              f"{indent_once}"
+                              f"action = {tree_get_pycode(tree)}")
 
-        pycode_names = 'all_agents = [{}]\n'.format(', '.join(all_agent_names))
-        py_agent_tuples = 'agent_tuples = [{}]\n'.format(
-            ', '.join(['(\'{}\', {}())'.format(x, x) for x in all_agent_names]))
-
-        pycode_agents = '{}'.format('\n'.join(all_agents))
-
-        pycode_complete_agents = 'import math\n\n' \
-                                 '{}\n\n' \
-                                 '{}\n' \
-                                 '{}\n'.format(pycode_agents, pycode_names, py_agent_tuples)
+        pycode_agents = '\n'.join(all_agents)
+        pycode_names = ', '.join(all_agent_names)
+        agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
+        pycode_complete_agents = "import math\n\n" \
+            f"{pycode_agents}\n\n" \
+            f"all_agents = [{pycode_names}]\n" \
+            f"agent_tuples = [{agent_tuples}]\n\n"  # -> ('Agent_34', Agent_34())
 
         pth = file_make_dir(self.root_dir / self.config['file_locs']['file_pycode'])
         with Path.open(pth, 'w') as file:
@@ -1178,15 +1176,16 @@ class ExplainableGP(object):
                                            'folder = Path.cwd() / \'custom_files\'\n\n' + \
                                            auto_import_eval + '\n' + \
                                            'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import * \n' + \
-                                           'with Path.open(Path(\'' + str(Path(self.sfeh_plagih_root / 'benchmarks/gym_mountaincar/agents/sarsa_agent_200.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
+                                           'with Path.open(Path(\'' + str(
+                Path(self.sfeh_plagih_root / 'benchmarks/gym_mountaincar/agents/sarsa_agent_200.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
                                            '\tsarsa_agent = pickle.load(file)\n\n' + \
                                            'if __name__ == \'__main__\':\n' + \
                                            '\tprint(\'executing!\')\n' + \
                                            '\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n'
 
-            with Path.open(self.root_dir / self.file_locs['file_pycode_eval'], 'w') as file:
+            with Path.open(self.root_dir / self.file_loc('file_pycode_eval'), 'w') as file:
                 file.write(executable_python_evaluation)
-                self.printpl('f', '{}'.format(self.file_locs['file_pycode_eval']))
+                self.printpl('f', '{}'.format(self.file_loc('file_pycode_eval')))
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Population specific                       +
@@ -1211,7 +1210,7 @@ class ExplainableGP(object):
             try:
                 fitness_train = self.tree_eval_fitness_train(tree)
             except Exception as ex:
-                print_warning('wwww', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
+                print_warning('wwww', 'fException while evaluating: {ex}', print_type=self.print_type)
                 eval_fails.append(str(ex))
                 continue
             else:
@@ -1221,8 +1220,7 @@ class ExplainableGP(object):
                 self.pop_append(tree, last_evolution=last_evolution)
 
         if len(eval_fails) > 0:
-            print_warning('www', 'Evaluating {} new trees in gen {} caused {} exceptions:\n{}'.format(
-                len(self.population_tmp_eval), self.gen_id, len(eval_fails), ', '.join(eval_fails)), print_type=self.print_type)
+            print_warning('www', f"Evaluating {len(self.population_tmp_eval)} new trees in gen {self.gen_id} caused {len(eval_fails)} exceptions:\n{', '.join(eval_fails)}", print_type=self.print_type)
 
         return
 
@@ -1267,183 +1265,6 @@ class ExplainableGP(object):
         parsimony = tree_eval_parsimony(tree, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
         return parsimony
 
-    # def pop_add_tree_midrun(self, tree):
-    #     """
-    #     Trying to add another tree to the current population
-    #     - evaluate the tree
-    #     - append to population
-    #     - update gene_pool
-    #     -
-    #     """
-    #     self.printpl('ii', 'Trying to add tree mid-run...')
-    #     tree = self.tree_finish_nodes(tree, last_evolution='par-s')
-    #
-    #     if not tree_check_deep(tree, self.env_vars):
-    #         print_e('todo: remove w, tree could not be added midrun.')
-    #         return
-    #
-    #     parsimony = self.tree_eval_parsimony_easywrapper(tree)
-    #     tree = tree_set_parsimony(tree, parsimony)
-    #     self.treelut_tree_add(tree, parsimony=parsimony)
-    #     self.population_tmp.append(tree)
-    #
-    #     self.pareto_update_insert()
-    #     return
-
-    # def pareto_update_insert(self):
-    #     """
-    #     update new entries in the pareto dict (part of the whole update process)
-    #     Requires: self.parsimony_best_meta entries
-    #     """
-    #
-    #     self.parsimony_best_update()
-    #
-    #     sorted_parsimony_best = sorted(self.parsimony_best_meta.items(), key=lambda x: x[0])
-    #     try:
-    #         best_fit = next(iter(sorted_parsimony_best))[1]['fitness_train']  # [1] accesses the meta, ['fitness_train'] the fitness
-    #     except StopIteration:
-    #         best_fit = None
-    #
-    #     for key, meta in sorted_parsimony_best:  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-    #         fitness = meta['fitness_train']
-    #         parsim = meta['parsimony']
-    #         pareto_improved = None
-    #
-    #         if self.kernel.fitness_compare(fitness, best_fit):
-    #             if self.pareto.get(parsim):
-    #                 pareto_fit = self.pareto.get(parsim)['fitness_train']
-    #                 if self.kernel.fitness_compare(fitness, pareto_fit):
-    #                     self.pareto[parsim] = meta
-    #                     self.printpl('a', 'Pareto update at {}, with new {}-error: {}. Old was: {}'.format(
-    #                         parsim, self.config['kernel_name'], fitness, best_fit))
-    #                     pareto_improved = True
-    #             else:
-    #                 self.pareto[parsim] = meta
-    #                 self.printpl('a', 'New pareto entry at {:.0f} with {}-error: {:4.2f}'.format(parsim, self.config[
-    #                     'kernel_name'], fitness))
-    #                 pareto_improved = True
-    #             best_fit = fitness
-    #         if pareto_improved:
-    #             expr_raw = meta['expr_raw']  # expy_sym will can cause exceptions while setting fix nodes
-    #             ptree = karoo_ptree_from_expr(expr_raw, self.env_vars)
-    #             tree = ptree.get_uninstanced_tree()
-    #             tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
-    #             sym_tree = tree_evolve_reduce(tree, self.env_vars, completely=True)
-    #             if list(tree_get_labellist(sym_tree)) != list(tree_get_labellist(tree)):
-    #                 if len(list(tree_get_labellist(sym_tree))) > len(list(tree_get_labellist(tree))):
-    #                     print_warning('w', 'Sympified tree is larger than raw version?')
-    #                 self.printpl('aa', 'Pareto entry could be further sympified!')
-    #                 sym_tree = tree_set_fitness(sym_tree, fitness)
-    #                 self.pop_add_tree_midrun(sym_tree)
-    #             else:
-    #                 print_warning('iii', 'The found pareto entry was already in its sympified version')
-    #     return
-    #
-    # def pareto_update_clean(self):
-    #     """
-    #     remove superfluous pareto entries
-    #     """
-    #     sorted_pareto = sorted(self.pareto.items(), key=lambda x: x[0])
-    #     try:
-    #         last_fitness = copy.deepcopy(next(iter(sorted_pareto))[1]['fitness_train'])
-    #     except StopIteration:
-    #         last_fitness = None  # todo is None actually correct here?
-    #     for parsim, meta in sorted_pareto[1:]:
-    #         fitness = meta['fitness_train']
-    #         if self.kernel.fitness_compare(fitness, last_fitness):
-    #             last_fitness = fitness
-    #         else:
-    #             self.pareto.pop(parsim)
-    #             self.printpl('aa', 'Pareto entry at {} became obsolete. Its fitness: {} was surpassed by simpler entry with fitness: {}.'.format(
-    #                 parsim, last_fitness, fitness))
-    #     return
-
-    # def todo_update_pareto(self):
-    #
-    #     """
-    #     kernel_fun = min() todo
-    #     todo
-    #     """
-    #
-    #     if len(self.pareto) == 0:  # no pareto entries found yet
-    #         tree = self.population_base[0]
-    #         parsimony = tree_get_parsimony(tree)
-    #         meta = tree_get_meta(tree)
-    #         # self.pareto[parsimony] = meta
-    #         self.pareto.append([parsimony, meta['fitness_train'], meta])
-    #
-    #     for tree in self.population_base:
-    #         try:
-    #             p_simpler = [p for p in self.pareto if p[0] <= entry[0]]  # all pareto entries that are less complex
-    #             best = min(p_simpler, key=lambda p: p[1])
-    #         except:
-    #             best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
-    #
-    #         if entry[1] < best[1]:
-    #             self.pareto.append(entry)  #
-    #             self.pareto = [x for x in self.pareto[:] if x[0] < entry[0] or x[1] < entry[1] or x is entry]
-    #             self.pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
-    #         else:
-    #             continue  # Not a pareto entry
-    #
-    #     # print('Pareto', '\t\t', pareto)
-    #     return
-
-    # def pareto_update(self):
-    #     """
-    #     Builds up the pareto front
-    #     1. adds new entries from parsimony_best_meta
-    #     2. deletes entries that are now obsolete
-    #
-    #
-    #     """
-    #
-    #     self.pareto_update_insert()
-    #     self.pareto_update_clean()
-    #
-    #     return
-
-    # def pareto_update_try(self):
-    #     """
-    #     sfeh tbd #
-    #     """
-    #     for i, tree in enumerate(self.population_tmp):
-    #         fitness = tree_get_fitness(tree, precision=self.precision)
-    #         parsimony = tree_get_parsimony(tree)
-    #         meta = tree_get_meta(tree)
-    #         for p_fit, p_meta in self.pareto.items():
-    #             p_parsim = p_meta['parsimony']
-    #             if self.kernel.fitness_compare(fitness, p_fit):
-    #                 if parsimony < p_parsim:
-    #                     self.pareto[parsimony] = meta
-    #                     self.pareto_update_clean()
-    #
-    #                 else:
-    #                     break  # pareto is already sufficient
-
-    # def parsimony_best_update(self):
-    #     """
-    #     Updates a list with the best candidates for each parsimony.
-    #     Do not confuse with pareto-entries
-    #     """
-    #
-    #     for ii, tree in enumerate(self.population_tmp):
-    #
-    #         parsim = tree_get_parsimony(tree)
-    #         fitness_train = tree_get_fitness(tree)
-    #
-    #         # 3. is the tree better than the current best at this parsimony dim_y?
-    #         if parsim in self.parsimony_best_meta:
-    #             comp_fit = self.parsimony_best_meta[parsim]['fitness_train']
-    #             if self.kernel.fitness_compare(fitness_train, comp_fit):
-    #                 self.printpl('iii', 'Found a better candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
-    #                 self.parsimony_best_meta[parsim] = tree_get_meta(tree)
-    #         else:
-    #             self.printpl('iii', 'Found a new candidate. Fit: {} Parsim: {}'.format(fitness_train, parsim))
-    #             self.parsimony_best_meta[parsim] = tree_get_meta(tree)
-    #
-    #     return
-
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   What happens in a Generation              +
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1473,19 +1294,19 @@ class ExplainableGP(object):
 
         return tree
 
-    def pop_reproduce_olymp(self):
+    def pop_reproduce_pareto(self):
 
         """
         Copy an entry from the pareto candidates into the population
         """
 
-        if self.parsimony_best_meta:
-            meta = np.random.choice(list(self.parsimony_best_meta.values()))
+        if self.pareto:
+            fitness_train, parsim, meta = random.choice(self.pareto)
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
             xtype_list = xtypes_from_labels(label_list, self.env_vars)
-            p_tree = Ptree_karoo(label_list, xtype_list)
-            tree = p_tree.get_uninstanced_tree()
+            tree = Ptree_karoo(label_list, xtype_list).get_uninstanced_tree()
+            tree = tree_remove_tilde(tree)
         else:
             tree = None
 
@@ -1511,7 +1332,7 @@ class ExplainableGP(object):
 
         node_ids = tree_get_mutatable_nodes(tree)
         if mode == 'branch':
-            node_id = np.random.choice(node_ids)  # todo should this be completely random?
+            node_id = random.choice(node_ids)  # sfeh should this be completely random?
             node_ids = tree_node_get_branch(tree, node_id)  # select the whole branch
 
         float_nodes = []
@@ -1721,11 +1542,11 @@ class ExplainableGP(object):
         right_ids, right_labels, right_aritys, right_xtypes = tree_get_branch_ilax(right_tree, right_id)
 
         if not success:
-            print_warning('ww', 'Crossover conversion between trees not possible: \n{}\n{}'.format(left_tree, right_tree))
+            print_warning('ww', f'Crossover conversion between trees not possible: \n{left_tree}\n{right_tree}')
             return None, None
 
-        left_core = core_from_labels(left_labels, left_aritys, left_xtypes)
-        right_core = core_from_labels(right_labels, right_aritys, right_xtypes)
+        left_core = Core_From_Labels(left_labels, left_aritys, left_xtypes).get_uninstanced_core()
+        right_core = Core_From_Labels(right_labels, right_aritys, right_xtypes).get_uninstanced_core()
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
         left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars,
@@ -1755,40 +1576,57 @@ class ExplainableGP(object):
 
         return tree
 
-    def todo_update_pareto2(self, tree):
+    def update_pareto(self, tree):
 
         """
         inserts a tree into the pareto front
         """
-        # pareto = []
-        # candidates = [(20, 2000), (5, 900), (5, 800), (10, 700), (7, 800)]
 
-        # try:
-        #     tree_sym = tree_evolve_reduce(tree, self.env_vars, completely=True)
-        #     parsim_sym = tree_eval_parsimony(tree_sym, self.config['complexity_measure'], origin_tree=self.origin_tree_get())
-        #     if parsim_sym < tree_get_parsimony(tree):
-        #         tree = tree_sym  # sfeh copy?
-        # except:
-        #     pass
+        def tree_get_simplest_version(tree):
+            """
+            Get simplest tree from raw expression
+            """
+            self.printpl('a', 'Trying to simplify for pareto entry.')
+            tree_sym = tree_evolve_reduce(tree, self.env_vars, completely=True)
+
+            if len(tree_get_labellist(tree_sym)) < len(tree_get_labellist(tree)):
+
+                sym_fitness = self.tree_eval_fitness_train(tree_sym)
+                if sym_fitness != tree_get_fitness(tree) and TEST_PHASE:
+                    print_e('Fitness of a sympified tree is different!')
+                    return
+
+                self.printpl('a', 'Successfully reduced tree: for new paretofront entry')
+                tree_sym = tree_set_fitness(tree_sym, sym_fitness)
+                self.update_pareto(tree_sym)
+            else:
+                self.printpl('aaa', 'Pareto entry was already simplified')
+
+            return
 
         parsimony = tree_get_parsimony(tree)
         meta = tree_get_meta(tree)
-        tree_entry = [parsimony, meta['fitness_train'], meta]
+        fitness_train = meta['fitness_train']
+        tree_entry = [parsimony, fitness_train, meta]
 
         if len(self.pareto) == 0:  # no pareto entries found yet
+            self.printpl('a', f"Paretofront inserted first candidate at {parsimony, fitness_train, meta['expr_sym']}")
             self.pareto.append(tree_entry)  # aka [3, 423, meta{}]
         else:
 
             try:
                 p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # less complex candidates
                 best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
-            except:
+            except:  # catches, when p_simpler is empty
                 best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
 
             if tree_entry[1] < best[1]:
+                self.printpl('a', f"Paretofront new entry was inserted: {parsimony, fitness_train, meta['expr_sym']}")
                 self.pareto.append(tree_entry)  #
                 self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
                 self.pareto.sort(key=lambda x: x[0])  # as far as I can tell, not really necessary without using iter()
+
+                tree_get_simplest_version(tree)
             else:
                 return
 
@@ -1806,7 +1644,7 @@ class ExplainableGP(object):
         """
         # sfeh this check might be important...
         if not tree_check_quick(tree):
-            print_warning('w', 'tree failed the quick check. last-mod: {}'.format(last_evolution))
+            print_warning('w', f'tree failed the quick check. last-mod: {last_evolution}')
             return
 
         # sfeh idea plot: x=complexity, y=fitness for all trees of a population
@@ -1820,14 +1658,14 @@ class ExplainableGP(object):
             fitness_train = tree_meta['fitness_train']
         else:
             parsimony = self.tree_eval_parsimony_easywrapper(tree)
-            if parsimony <= self.parsimony_max:
-                print_warning('www', 'Parsimony too high, last evolution: {}'.format(last_evolution), print_type=self.print_type)
+            if parsimony > self.parsimony_max:
+                print_warning('www', 'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
                 return
 
             try:
                 fitness_train = self.tree_eval_fitness_train(tree)
             except Exception as ex:
-                print_warning('ww', 'Exception while evaluating: {}'.format(ex), print_type=self.print_type)
+                print_warning('ww', f'Exception while evaluating: {ex}', print_type=self.print_type)
                 # eval_fails.append(str(ex))
                 # continue
                 return
@@ -1838,7 +1676,7 @@ class ExplainableGP(object):
         self.treelut_tree_add(tree, fitness_train=fitness_train, parsimony=parsimony)
         self.population_tmp.append(tree)
 
-        self.todo_update_pareto2(tree)
+        self.update_pareto(tree)
 
         return
 
@@ -1850,20 +1688,9 @@ class ExplainableGP(object):
 
         """
 
-        # self.todo_update_pareto()
-        # self.pareto_update()
-
-        self.population_base = self.population_tmp[:]  # deepcopy might also work
-
         self.pop_analyse()
+        self.population_base = self.population_tmp[:]
 
-        gen_time = time.perf_counter() - self.time_genstart
-        if delete_this and self.monitoring_dict.get('gen_time') is None:
-            self.monitoring_dict['gen_time'] = {}
-        self.monitoring_dict['gen_time'][self.gen_id] = gen_time
-        self.print_g('gg', 'Created {}/{} unique trees in generation {}. Gen took {:4.2f}s'.format(
-            len(self.population_tmp), self.config['pop_max'], self.gen_id,
-            time.perf_counter() - self.time_genstart))
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -1916,13 +1743,12 @@ class ExplainableGP(object):
         try:
             expr_sym = expr_sympify(expr_raw=expr_raw)
         except Exception as ex:
-            raise Exception('Your tree\'s algorithm could not be sympified. excep: {}'.format(ex))
+            raise Exception(f'Your tree\'s algorithm could not be sympified. excep: {ex}')
 
         # sfeh, this does not work
         # if not tree_check_is_sympified(tree):
         #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
         #                          ''.format(expr_raw, expr_sym))
-
 
         fitness_train = self.tree_eval_fitness_train(tree)
 
@@ -1936,10 +1762,9 @@ class ExplainableGP(object):
                             'fitness_train': fitness_train}
 
         # self.parsimony_best_meta[0] = self.origin_meta
-        self.todo_update_pareto2(tree)
+        self.update_pareto(tree)
 
-        self.print_g('gg', 'Loading origin_meta, fitness {}. Time: {:4.2f}s'.format(fitness_train,
-                                                                                    time.perf_counter() - self.time_start))
+        self.print_g('gg', f'Loading origin_meta, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return
 
@@ -1958,7 +1783,7 @@ class ExplainableGP(object):
         try:
             expr_sym = tree_get_expr_sym(tree)
         except Exception as ex:
-            raise Exception('eval:{}'.format(ex))
+            raise Exception(f'eval:{ex}')
 
         fitness_train = eval_tf(expr_sym,
                                 self.data_train,
@@ -1967,7 +1792,7 @@ class ExplainableGP(object):
                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, specific_action=self.config['eval_action'])
 
         if not check_value_is_real(fitness_train):
-            raise Exception('Fitness is inf or nan: {}'.format(fitness_train))  # happens, eg when values are soo wrong that it leaves the float-range
+            raise Exception(f'Fitness is inf or nan: {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
 
         fitness_train = round(fitness_train, self.config['fitness_accuracy'])
 
@@ -1996,15 +1821,14 @@ class ExplainableGP(object):
         unique_outputs_num = self.env_vars['action_at'][0]['unique_outputs_num']
         skew = (unique_outputs_num / 2) - 1
         label_rules = {unique_outputs_num - 1: (
-            tf.constant(unique_outputs_num - 1), tf.constant(' > {}'.format(unique_outputs_num - 2 - skew)))}
+            tf.constant(unique_outputs_num - 1), tf.constant(f' > {unique_outputs_num - 2 - skew}'))}
 
         for class_label in range(unique_outputs_num - 2, 0, -1):
             cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
             label_rules[class_label] = tf.cond(cond, lambda: (
-                tf.constant(class_label), tf.constant(' <= {}'.format(class_label - skew))),
-                                               lambda: label_rules[class_label + 1])
+                tf.constant(class_label), tf.constant(f' <= {class_label - skew}')), lambda: label_rules[class_label + 1])
 
-        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(' <= {}'.format(0 - skew))), lambda: label_rules[1])
+        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(f' <= {0 - skew}')), lambda: label_rules[1])
 
         return pred_label
 
@@ -2023,7 +1847,7 @@ class ExplainableGP(object):
         'tmp_pop_fitness_distribution'
         """
 
-        path_plots = folder_make_dir(root_path / self.file_locs['folder_plots'] / subfolder)
+        path_plots = folder_make_dir(root_path / self.file_loc('folder_plots') / subfolder)
 
         def plotendify_me(data_dict):
             # sfeh delete this version1 (working only with np-arrays, no dicts)
@@ -2116,7 +1940,7 @@ class ExplainableGP(object):
         ## How many survived in the selection?
         self.monitoring_dict['population_tmp_done-size'][int(self.gen_id)] = len(self.population_tmp)
         if len(self.population_tmp) == 0:
-            self.terminate_run(self.root_dir)
+            self.terminate_run()
 
         ## Find the fittest + average fitness
         pop_best_fitness = tree_get_fitness(self.population_tmp[FIRST_TREE])
@@ -2150,8 +1974,7 @@ class ExplainableGP(object):
         self.monitoring_dict['complexity_average'][self.gen_id] = avg_complexity
 
         ## fitness variance
-        todo = [x['fitness'] for x in pop_tree_analysis]
-        fitness_variance = np.var(todo)
+        fitness_variance = np.var([x['fitness'] for x in pop_tree_analysis])
         self.monitoring_dict['fitness_variance'][self.gen_id] = fitness_variance
 
         ## complexity standard-error
@@ -2162,6 +1985,13 @@ class ExplainableGP(object):
 
         self.monitoring_dict['total_found_trees'][self.gen_id] = len(self.tree_lut)
 
+        # get the time
+        gen_time = time.perf_counter() - self.time_genstart
+        if TEST_PHASE and self.monitoring_dict.get('gen_time') is None:
+            print_e('monitoring_dict gen_time does not exist?!')
+            self.monitoring_dict['gen_time'] = {}
+        self.monitoring_dict['gen_time'][self.gen_id] = gen_time
+        self.print_g('gg', f'Created {len(self.population_tmp)}/{self.config["pop_max"]} unique trees in generation {self.gen_id}. Gen took {gen_time:4.2f}s')
         return
 
     def get_env_vars(self):
@@ -2183,7 +2013,7 @@ class ExplainableGP(object):
         #     os.system('python ' + str(root_dir / file_pycode_eval))  # sfeh nothing to be proud of
 
         self.file_all_plots(self.root_dir)
-        self.print_g('gg', ' Terminating. \tTime since start: {:4.2f}s'.format(time.perf_counter() - self.time_start))
+        self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Methods to print_type output information  +

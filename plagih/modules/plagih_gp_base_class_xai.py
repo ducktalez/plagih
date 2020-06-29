@@ -77,10 +77,12 @@ class ExplainableGP(object):
                                'sympify_errors': 'y',
                                'population_tmp_done-size': 'y',
                                'fitness_variance': 'n'},
-            'period': {'time_monitor': None,  # in sec
+            'period': {'time_plots': None,  # in sec
+                       'gen_plots': 1,  # in gen counts
                        'time_save': None,  # in sec
-                       'gen_monitor': 1,  # in gen counts
-                       'gen_save': 5},  # in gen counts
+                       'gen_save': 5,  # in gen counts
+                       'time_analysis': None,  # in gen counts
+                       'gen_analysis': 1},  # in gen counts
 
             'evolve_list': [
                 # Reproduction (10%)
@@ -239,8 +241,9 @@ class ExplainableGP(object):
         self.gen_id = 0
         self.custom_done = False
         self.restart_count = 0
+        # self.run_info = {} time_last_monitor, time_last_files
         self.time_last_monitor = self.time_start
-        self.time_last_files = self.time_start
+        self.time_last_backup = self.time_start
         self.pop_next = None
 
         # special variables
@@ -312,6 +315,13 @@ class ExplainableGP(object):
                 raise Exception(f'Even though a backup exists for this run, it could not be loaded because of\n{ex}')
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}.')
+
+    def gp_analyze(self):
+        try:
+            self.try_load_backup(path_backup=None)
+        except FileNotFoundError as no_file_ex:
+            raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
+        self.terminate_run()
 
     def update_old_runs(self):
         """
@@ -424,6 +434,7 @@ class ExplainableGP(object):
             printez('g', f'Done after Generation {self.gen_id}.', print_type=self.print_type)
 
         self.terminate_run()
+
         return
 
 
@@ -621,7 +632,7 @@ class ExplainableGP(object):
         else:
             return False
 
-    def periodical_procedures(self, plots_show=None, save_run=None):
+    def periodical_procedures(self, plots_show=None, save_run=None, write_analysis=None):
         """
         Every few generations, update the created gp_files
         - default is in every generation, but saving every n-th gen or after time passed is possible aswell
@@ -629,42 +640,54 @@ class ExplainableGP(object):
 
         time_now = time.perf_counter()
 
-        if self.config['period']['time_monitor']:
-            if self.config['period']['time_monitor'] < (time_now - self.time_last_monitor):
-                self.printpl('iii', 'auto-plots (time)')
-                plots_show = True
+        def check_show_plots(plots_show=None):
+            if self.config['period']['time_plots']:
+                plots_show = self.config['period']['time_plots'] < (time_now - self.time_last_monitor)
+
+            if self.config['period']['gen_plots']:
+                plots_show = (self.gen_id % int(self.config['period']['gen_plots'])) == 0
+
+            if plots_show:
                 self.time_last_monitor = time_now
+                if self.config['overwrite periodic gp_files']:
+                    subfolder = ''
+                else:
+                    subfolder = Path(self.file_loc('folder_steps')) / f'Gen-{self.gen_id}'
+                self.file_all_plots(self.root_dir, subfolder=subfolder)
 
-        if self.config['period']['time_save']:
-            if self.config['period']['time_save'] < (time_now - self.time_last_files):
-                self.printpl('iii', 'auto-save (time)')
-                save_run = True
-                self.time_last_files = time_now
+        def check_save_backup(save_run=None):
+            if self.config['period']['time_save']:
+                if self.config['period']['time_save'] < (time_now - self.time_last_backup):
+                    save_run = True
 
-        if self.config['period']['gen_monitor']:
-            if self.gen_id % int(self.config['period']['gen_monitor']) == 0:
-                self.printpl('iii', 'auto-plots (gen)')
-                plots_show = True
+            if self.config['period']['gen_save']:
+                if self.gen_id % int(self.config['period']['gen_save']) == 0:
+                    save_run = True
 
-        if self.config['period']['gen_save']:
-            if self.gen_id % int(self.config['period']['gen_save']) == 0:
-                self.printpl('iii', 'auto-save (gen)')
-                save_run = True
+            if save_run:
+                self.time_last_backup = time_now
+                self.run_backup_save()
 
-        if plots_show:
-            if self.config['overwrite periodic gp_files']:
-                subfolder = ''
-            else:
-                subfolder = Path(self.file_loc('folder_steps')) / f'Gen-{self.gen_id}'
-            self.file_all_plots(self.root_dir, subfolder=subfolder)
+        def check_write_analysis(write_analysis=None):
+            if self.config['period']['time_analysis']:
+                if self.config['period']['time_analysis'] < (time_now - self.time_last_backup):
+                    write_analysis = True
 
-        if save_run:
-            self.run_backup_save()
-            # self.file_save_files(tmp_path)  # todo
+            if self.config['period']['gen_analysis']:
+                if self.gen_id % int(self.config['period']['gen_analysis']) == 0:
+                    write_analysis = True
+
+            if write_analysis:
+                self.file_make_analysis()
+            return
+
+        check_show_plots(plots_show=plots_show)
+        check_save_backup(save_run=save_run)
+        check_write_analysis(write_analysis=write_analysis)
 
         self.printpl('iii', 'Done with auto-procedures')
 
-        return 0
+        return
 
     def file_make_analysis(self):
         """
@@ -1152,36 +1175,33 @@ class ExplainableGP(object):
 
     def call_custom_mountaincar_file(self, pycode_complete_agents):
 
-        # sfeh remove this (?)
+        # todo remove this (?)
+        try:
+            self.file_loc('pycode_load')
+        except KeyError:
+            print_warning('w', 'pycode_load not found in keys, but is superfluous anyways...')
+            return
 
-        if Path.is_file(Path.cwd() / self.file_locs.get('pycode_load')):
-            #  if direct execution is wished...# exec(Path.open("custom_eval_agents.py").read())
-
-            # auto_import_eval = 'import sys\n' \
-            #                    'from pathlib import Path\n' \
-            #                    'sys.path.append(Path({}))\n' \
-            #                    'import {} as custom_eval_agents\n' \
-            #                    'custom_eval_agents.eval_agent_list(agent_tuples, folder=Path(\'img\'))'.format(pycode_load, Path(pycode_load).stem)
-
-            auto_import_eval = ''
+        if Path.is_file(Path.cwd() / self.file_loc('pycode_load')):
 
             # 'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *\n\n' + \
 
-            executable_python_evaluation = 'import sys\n' + \
-                                           'from pathlib import Path\n' \
-                                           'sys.path.append(str(Path(\'' + str(self.sfeh_plagih_root.absolute().as_posix()) + '\')))\n' + \
-                                           'from benchmarks.gym_mountaincar.agents.quick_eval import *\n' + \
-                                           pycode_complete_agents + '\n' + \
-                                           'from pathlib import Path\n' + \
-                                           'folder = Path.cwd() / \'custom_files\'\n\n' + \
-                                           auto_import_eval + '\n' + \
-                                           'from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import * \n' + \
-                                           'with Path.open(Path(\'' + str(
-                Path(self.sfeh_plagih_root / 'benchmarks/gym_mountaincar/agents/sarsa_agent_200.p').absolute().as_posix()) + '\'), \'rb\') as file:\n' + \
-                                           '\tsarsa_agent = pickle.load(file)\n\n' + \
-                                           'if __name__ == \'__main__\':\n' + \
-                                           '\tprint(\'executing!\')\n' + \
-                                           '\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n'
+            helper_agnt_lcatin = str(Path(self.sfeh_plagih_root / 'benchmarks/gym_mountaincar/agents/sarsa_agent_200.p').absolute().as_posix())
+
+            executable_python_evaluation = "import sys\n" + \
+                                           "from pathlib import Path\n" \
+                                           f"sys.path.append(str(Path('{self.sfeh_plagih_root.absolute().as_posix()})\')))\n" + \
+                                           "from benchmarks.gym_mountaincar.agents.quick_eval import *\n" + \
+                                           f"{pycode_complete_agents}\n" + \
+                                           "from pathlib import Path\n" + \
+                                           "folder = Path.cwd() / \'custom_files\'\n\n" + \
+                                           f"auto_import_eval \n" + \
+                                           "from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import * \n" + \
+                                           f"with Path.open(Path('{helper_agnt_lcatin}'), 'rb') as file:\n" \
+                                           "\tsarsa_agent = pickle.load(file)\n\n" + \
+                                           "if __name__ == '__main__':\n" + \
+                                           "\tprint('executing!')\n" + \
+                                           "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
 
             with Path.open(self.root_dir / self.file_loc('file_pycode_eval'), 'w') as file:
                 file.write(executable_python_evaluation)
@@ -1940,7 +1960,8 @@ class ExplainableGP(object):
         ## How many survived in the selection?
         self.monitoring_dict['population_tmp_done-size'][int(self.gen_id)] = len(self.population_tmp)
         if len(self.population_tmp) == 0:
-            self.terminate_run()
+            raise Exception(f'population_tmp is empty! {self.gen_id}')
+            # self.terminate_run()
 
         ## Find the fittest + average fitness
         pop_best_fitness = tree_get_fitness(self.population_tmp[FIRST_TREE])

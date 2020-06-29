@@ -167,7 +167,7 @@ def load_config(config_path, out_dir=None):
     return root_dir, config
 
 
-def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree, analyze=False):
     """
     
     """
@@ -188,32 +188,13 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
         origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
         gp.activate_origin_tree(origin_ptree)
 
-    gp.prepare_evolve_functions()
+    if analyze:
+        gp.gp_analyze()
+    else:
+        gp.prepare_evolve_functions()
+        gp.plagih_gp_run()
 
-    gp.plagih_gp_run()
     sys.exit()
-
-
-def analyse(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
-    """
-    write all analysing files.
-    - pareto (txt, latex_trees, agents)
-    - plots (pareto, best)
-    """
-    # todo the same code is in gp_run...
-    root_dir, config = load_config(config_path, out_dir=out_dir)
-
-    config['force_new_run'] = force_new_run
-    config['eval_action'] = eval_action
-
-    gp = ExplainableGP(plagih_root, root_dir, config, user_prepared_path=data_prepared_path)
-
-    try:
-        gp.try_load_backup(path_backup=None)
-    except FileNotFoundError as no_file_ex:
-        raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
-
-    gp.terminate_run()
 
 
 if __name__ == "__main__":

@@ -52,9 +52,7 @@ def main(argv):
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
     if args.analyse:
-        plagih_gp.analyse(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
-    else:
-        plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree)
+        plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, analyze=args.analyse)
 
 
 if __name__ == "__main__":

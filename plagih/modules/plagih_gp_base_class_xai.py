@@ -150,10 +150,9 @@ class ExplainableGP(object):
 
             },
 
-            # todo these are irrelevant, when the actual paths are used. file-loc updates might even be wrong.
-            #  make a difference between write/read?
+            # todo make a difference between write/read?, make pretty solution
             'file_locs': {
-                'pycode_load': 'benchmarks/gym_mountaincar/agents/quick_eval.py',  # todo make pretty solution
+                'pycode_load': 'benchmarks/gym_mountaincar/agents/quick_eval.py',
                 'example_runs': 'run_examples/',
 
                 'folder_plots': 'plots/',
@@ -178,16 +177,10 @@ class ExplainableGP(object):
                 'env_vars_yaml': 'info/env_vars.yaml',
 
                 # /run_files/
-                'file_config_yaml': 'run_files/config.yaml',
-                'file_config_json': 'run_files/config.json',
                 'samples_ready_p': 'run_files/samples_ready.p',
-                'file_evolve_functions': 'run_files/evolve_functions.yaml',
                 'samples_csv': 'run_files/samples.csv',
                 'operators_yaml': 'run_files/operators.yaml',
                 'distributions_file': 'run_files/distributions_file.yaml',
-                'tree_expr_txt': 'run_files/tree_expr.txt',
-                'tree_labels_csv': 'run_files/tree_labels.csv',
-                'tree_numpy_csv': 'run_files/tree_numpy.csv',
             },
             'distributions_as_string':
                 {'2f': ['lambda: np.random.normal(1,2)',
@@ -217,7 +210,7 @@ class ExplainableGP(object):
             self.evolve_list = self.config['evolve_list']
 
         if user_prepared_path is not None:
-            self.config['file_locs']['samples_ready_p'] = user_prepared_path
+            self.config['file_loc']['samples_ready_p'] = user_prepared_path
 
         self.activate_dataset(user_prepared_p_path=user_prepared_path)
 
@@ -345,7 +338,6 @@ class ExplainableGP(object):
                 self.env_vars['obs_name'][col_label]['temp_diff'] = temp_diff
                 self.env_vars['obs_name'][col_label]['core_label'] = core_label
             self.printpl('w', 'Attention, we updated self.env_vars for an old run')
-            # todo should we save the update?
 
         return
 
@@ -713,8 +705,7 @@ class ExplainableGP(object):
         Save population_* to disk.
 
         """
-        file_path = file_make_dir(self.root_dir / 'info/' / 'population_{}.csv'.format(str(pop_name)))
-        # sfeh? function to tree_ and append each tree
+        file_path = file_make_dir(self.root_dir / f'info/population_{pop_name}.csv')
         with Path.open(file_path, 'w', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
             target = csv.writer(csv_file, delimiter=',')
             if self.gen_id != 0:
@@ -786,7 +777,7 @@ class ExplainableGP(object):
             data_prepared = (self.env_vars, self.data_train, self.data_control)  # sfeh version1 remove numpy version
             pickle_dump(self.root_path('samples_ready_p'), data_prepared)
         else:
-            raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')  # samples_ready_p or samples_csv required
+            raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')
 
         dataspec_file = self.root_dir / 'run_files/data_specification.yaml'  # todo
         if dataspec_file.is_file():
@@ -829,12 +820,11 @@ class ExplainableGP(object):
         # double check load
         if not opt_path_opyaml:
             opt_path_opyaml = self.file_loc('operators_yaml')
-        opt_path_opyaml = Path(self.root_dir / opt_path_opyaml)
+        path_opyaml = Path(self.root_dir / opt_path_opyaml)
 
-        if Path.is_file(opt_path_opyaml):
-            operators = yaml_load(opt_path_opyaml)
+        if Path.is_file(path_opyaml):
+            operators = yaml_load(path_opyaml)
         else:
-            # raise FileNotFoundError('File does not exist: {}.'.format(operators_csv))
             print_warning('ww', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operators.')
             operators = np.array([['+', 3],
                                   ['-', 1], ['usub', 1],
@@ -951,7 +941,7 @@ class ExplainableGP(object):
                     axs[obs_ii].set_ylim(top=max_fails_per_bin)
 
                 plt.tight_layout()
-                plt.savefig(path_hist / 'obs_hist_{}.png'.format(parsim))
+                plt.savefig(path_hist / f'obs_hist_{parsim}.png')
                 plt.clf()
 
         path_hist = folder_make_dir(self.root_dir / self.file_loc('folder_histograms'))
@@ -1039,7 +1029,7 @@ class ExplainableGP(object):
         #     Path.mkdir(path_conclusion)
         #
         # open(path_conclusion / file_conclusion, 'w')
-        # file.write('Plagih GP\n launched: {}'.format(str(date_time)))
+        # file.write('Plagih GP\n launched: {}'.forlmat(str(date_time)))
         #
         # if self.origin_exists():
         #     origin_fitness = eval_tf(self.origin_meta['expr_sym'], self.data_control, self.tf_parameters, get_predicted_labels=True)['fitness']
@@ -1048,7 +1038,7 @@ class ExplainableGP(object):
         #     fittest_algo = self.origin_meta['expr_sym']
         #     fittest_parsimony = 0
         #
-        #     file.write('\n\t Origin fitness score: {}'.format(origin_fitness))
+        #     file.write('\n\t Origin fitness score: {}'.lorigin_fitness))
         #
         # elif self.pareto:
         #     file.write('\n No origin_meta was provided')
@@ -1085,9 +1075,9 @@ class ExplainableGP(object):
         #
         # else:
         #     # Info about the best Tree
-        #     file.write('\n\n The best candidate has parsimony: {}'.format(str(fittest_parsimony)))
-        #     file.write('\n With fitness: {}'.format(fitness_control_best))
-        #     file.write('\n\n With the following sympify-algorithm:\n {}'.format(fittest_algo))
+        #     file.write('\n\n The best candidate has parsimony: {}'.forlmat(str(fittest_parsimony)))
+        #     file.write('\n With fitness: {}'.forlmat(fitness_control_best))
+        #     file.write('\n\n With the following sympify-algorithm:\n {}'.forlmat(fittest_algo))
         #     file.write('\n\n')
 
         return
@@ -1199,10 +1189,10 @@ class ExplainableGP(object):
             f"all_agents = [{pycode_names}]\n" \
             f"agent_tuples = [{agent_tuples}]\n\n"  # -> ('Agent_34', Agent_34())
 
-        pth = file_make_dir(self.root_dir / self.config['file_locs']['file_pycode'])
+        pth = file_make_dir(self.root_path('file_pycode'))
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
-            self.printpl('ff', '{}'.format(pth))
+            self.printpl('ff', f'{pth.as_posix()}')
 
         self.call_custom_mountaincar_file(pycode_complete_agents)  # sfeh root path is instance variabel
 
@@ -1240,7 +1230,7 @@ class ExplainableGP(object):
 
             with Path.open(self.root_dir / self.file_loc('file_pycode_eval'), 'w') as file:
                 file.write(executable_python_evaluation)
-                self.printpl('f', '{}'.format(self.file_loc('file_pycode_eval')))
+                self.printpl('f', f"{self.file_loc('file_pycode_eval')}")
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Population specific                       +
@@ -1484,7 +1474,7 @@ class ExplainableGP(object):
         build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
 
         # tree_base = tree.copy()
-        # ('We are about to create new branches randomly at nodes {}.'.format(layer0_ids))
+        # ('We are about to create new branches randomly at nodes {}.'.formjat(layer0_ids))
         layer0_ids = tree_get_mutatable_layer(origin_tree, 0)
 
         build_split = []
@@ -1802,7 +1792,7 @@ class ExplainableGP(object):
         # sfeh, this does not work
         # if not tree_check_is_sympified(tree):
         #     print_warning('www', 'There is a sympified Version of your raw expression:\nRaw: {}\nSym: {}\n'
-        #                          ''.format(expr_raw, expr_sym))
+        #                          ''.forjmat(expr_raw, expr_sym))
 
         fitness_train = self.tree_eval_fitness_train(tree)
 
@@ -1969,7 +1959,7 @@ class ExplainableGP(object):
         #          marker='')
 
         # data_tuples = np.array([list(x) for x in self.monitoring_dict['tmp_pop_fitness_distribution']]).T  # sfeh delete list version1 [(1,234),(2,544), ..]
-        # plot_end(data_tuples, path_plots, plt_title='population distribution Gen {}'.format(self.gen_id),
+        # plot_end(data_tuples, path_plots, plt_title='population distribution Gen {}'.forjmat(self.gen_id),
         #          plt_x_label='tree ids',
         #          plt_y_label='fitness',
         #          marker='',

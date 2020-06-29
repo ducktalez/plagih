@@ -6,10 +6,8 @@ from pathlib import Path
 from plagih import plagih_gp
 import sys
 import os
-import getopt
 import argparse
 
-# sys.root_dir = sys.root_dir / 'plagih'
 sys.path.append('plagih/')
 sys.path.append('plagih/modules')
 # sys.path.append('mountaincar/')
@@ -21,8 +19,6 @@ def main(argv):
    -run_folder
     # sfeh: options for other functions? run, visualise_tree, analyse_run, check_files, tests
    """
-
-    import argparse
 
     parser = argparse.ArgumentParser(description='Plagih genetic programming (name changes!)')
     # parser.add_argument('integers', metavar='N', type=int, nargs='+', help='an integer for the accumulator')
@@ -37,7 +33,7 @@ def main(argv):
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-data_csv', type=Path)
     parser.add_argument('-force_new_run', action='store_true')
-    parser.add_argument('-analyse', '-analyze', '-files', '-results', action='store_true')
+    parser.add_argument('-analyse', '-analyze', '-files', '-results', action='store_true', default=None)
     args = parser.parse_args()
     # print(args)
 
@@ -48,11 +44,11 @@ def main(argv):
     eval_action = args.action
     data_prepared = args.data_prepared
     origin_tree = args.origin_tree
+    analyze = args.analyse
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
-    if args.analyse:
-        plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, analyze=args.analyse)
+    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, analyze=analyze)
 
 
 if __name__ == "__main__":

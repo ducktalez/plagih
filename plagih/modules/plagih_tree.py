@@ -308,7 +308,7 @@ def tree_check_deep(tree, env_vars=None, karoo=True):
 def tree_check_xtypes(tree):
     for node in tree_iterate_range(tree):
         if tree[N_xtype][node] == '':  # are xtypes set?
-            # print_warning('ww', 'xtypes in tree were not set correctly.\n{}'.format(tree))
+            # print_warning('ww', 'xtypes in tree were not set correctly.\n{}'.forsmat(tree))
             return False
     return True
 
@@ -414,39 +414,6 @@ def tree_node_set_modify(tree, node_id, value):
     tree[N_modify][node_id] = value
 
     return tree
-
-
-def tree_nodes_get_ids_string(tree, node_id):
-    """
-    return a list of s nodes childs.
-    + Evaluate all or part of a Tree and
-
-    This method generates a list of all 'node_id's from the given Node and below. It is used primarily to generate
-    'branch' for the multi-generational mutation of Trees.
-
-    node_id = int(node_id)
-
-    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[node_id]'
-        return tree[3, node_id]
-
-    elif tree[N_arity, node_id] == '1':  # arity of 1 for the pattern '[node_id], [node_id]'
-        return '{}, {}'.format(tree[3, node_id], tree_nodes_get_ids_string(tree, tree[9, node_id]))
-
-    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[node_id], [node_id], [node_id]'
-        return '{}, {}, {}'.format(
-            tree[3, node_id],
-            tree_nodes_get_ids_string(tree, tree[9, node_id]),
-            tree_nodes_get_ids_string(tree, tree[10, node_id]))
-
-    elif tree[N_arity, node_id] == '3':  # arity of 3 for the pattern '[node_id], [node_id], [node_id], [node_id]'
-        return '{}, {}, {}, {}'.format(
-            tree[3, node_id],
-            tree_nodes_get_ids_string(tree, tree[9, node_id]),
-            tree_nodes_get_ids_string(tree, tree[10, node_id]),
-            tree_nodes_get_ids_string(tree, tree[11, node_id]))
-    """
-
-    return None
 
 
 def tree_node_get_xtype(tree, node_id):
@@ -563,19 +530,6 @@ def tree_node_all_info(tree, node_id):
                  'depth': tree_node_get_depth(tree, node_id)}
 
     return node_info
-
-
-def tree_node_debug_print(tree, node_id):
-    """
-    print some node-info, maybe also tree info
-    """
-    node_parent = tree_node_get_parent(tree, node_id)
-    # parent_info = tree_node_all_info(tree, node_id)
-    debug_print = 'Tree node_id {}: \n' \
-                  'Node-info: {}\n' \
-                  'Tree_labels: {}\n' \
-                  'Tree-modify:'.format(node_id, tree_node_all_info(tree, node_id), node_parent, tree_get_labellist(tree), tree[N_modify])
-    return debug_print
 
 
 def tree_set_modifyable_nodes(tree, origin_tree=None):
@@ -756,7 +710,7 @@ def randomly_split_range(range_max, num_splits):
 
 def raise_if_empty(name, val):
     if val == '' or val is None:
-        print('This variable did not work'.format(name))
+        print(f'This variable did not work {name}')
         raise
 
 
@@ -995,7 +949,7 @@ def tree_get_fitness(tree, precision=None, karoo=True):
     if fitness != '':
         fitness = round(float(fitness), precision)
     else:
-        raise Exception('This tree does not contain float fitness: {}.'.format(fitness))
+        raise Exception(f'This tree does not contain float fitness: {fitness}.')
     return fitness
 
 
@@ -1044,12 +998,13 @@ def tree_get_expr_raw(tree, node_id=root_id):
     """
     Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
     The large amount of () is required doe to some sympify errors. But feel free to reduce them.
+    sfeh update this crapshit
     """
     node_id = int(node_id)
     arity = tree[N_arity, node_id]
     label = tree[N_label, node_id]
     if arity == '0':  # arity of 0 for the pattern '[term]'
-        return '{}'.format(label)  # 'node_label' (function or terminal)
+        return f'{label}'  # 'node_label' (function or terminal)
 
     elif arity == '1':  # arity of 1 for the explicit pattern 'not [eval]'
         fun = label
@@ -1086,13 +1041,13 @@ def tree_get_pycode(tree, node_id=root_id):
     label = tree_node_get_label(tree, node_id)
 
     if arity == 0:
-        return '{}'.format(label)
+        return f'{label}'
     else:
         childs = tree_node_get_childs(tree, node_id)
         results = []
         for child in childs:
             results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
-        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
+        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
 
 
 def tree_raw_depth_prefix(tree, node_id):
@@ -1376,11 +1331,11 @@ def expr_sympify(expr_raw):
     try:
         expr_sym = str(plagih_sympify(expr_raw))
     except Exception as ex:
-        raise Exception('sympify_1: {} reason: ({})'.format(expr_raw, ex))
+        raise Exception(f'sympify_1: {expr_raw} reason: ({ex})')
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:
-            raise Exception('sympify_2: {}'.format(fail_reason))
+            raise Exception(f'sympify_2: {fail_reason}')
 
     return expr_sym
 
@@ -1913,7 +1868,7 @@ def tree_evolve_reduce(tree, env_vars, completely=True):
                     pass  # This might occur when a tree is sympified (?)
         return tree
     except Exception as ex:
-        print_warning('ww', 'Could not reduce tree/branch due to Exception: {}'.format(ex))
+        print_warning('ww', f'Could not reduce tree/branch due to Exception: {ex}')
         raise
 
 
@@ -1937,7 +1892,7 @@ def tree_pretty_print(tree, karoo=True):
         if int(node_depth) == depth:
             layer_labels.append(label)
         else:
-            # print(print_style.format(node_depth, layer_labels))
+            # print(print_style.formjat(node_depth, layer_labels))
             print_str += print_style.format(node_depth, layer_labels)
             layer_labels = [label]
             depth += 1
@@ -2042,13 +1997,10 @@ def tree_check_types(tree, karoo=True):
             c_label = tree_node_get_label(tree, c_id)
             c_xtype = tree_node_get_xtype(tree, c_id)
             if not xtypes_required[ii] == c_xtype[-2:]:
-                print_e('Tree check failed. Node ({}, {}, {}) at child {} reqquires {}, but node is ({}, {}, {}).\n'
-                        'tree (pretty print):\n{}\n'
-                        'xtype_list: {}\n'
-                        'Last modification was: {} '.format(node_id, label, xtype, ii, xtypes_required[ii], c_id, c_label, c_xtype,
-                                                            tree_pretty_print(tree, karoo=True),
-                                                            [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)],
-                                                            tree_get_history(tree)))
+                print_e(f'Tree check failed. Node ({node_id}, {label}, {xtype}) at child {ii} reqquires {xtypes_required[ii]}, but node is ({c_id}, {c_label}, {c_xtype}).\n'
+                        f'tree (pretty print):\n{tree_pretty_print(tree, karoo=True)}\n'
+                        f'xtype_list: {[tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)]}\n'
+                        f'Last modification was: {tree_get_history(tree)}')
                 if debug_this_please:
                     raise
                 return False
@@ -2222,7 +2174,7 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
         else:
             raise
     else:
-        print_e('Complexity measurement not available: {}'.format(parsimony_distance))
+        print_e(f'Complexity measurement not available: {parsimony_distance}')
         raise
 
 

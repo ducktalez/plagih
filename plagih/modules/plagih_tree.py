@@ -15,10 +15,10 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
-N_label = 6
 N_id = 3
 N_depth = 4
 N_xtype = 5
+N_label = 6
 N_parent = 7
 N_arity = 8
 N_c1 = 9
@@ -26,10 +26,11 @@ N_c2 = 10
 N_c3 = 11
 N_modify = 13
 
-TR_ID = 0  # sfeh I think the id is irrelevant
 TR_lastEvolve = 1
 T_fitness = 12
 T_parsimony = 14
+
+T_deleteable = [0, 2]  # TR_ID = 0, tree_depth_base = 2
 
 T_num_lines = 15
 root_id = 1

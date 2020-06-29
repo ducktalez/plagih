@@ -185,8 +185,8 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
         # todo beautify
         env_vars = gp.get_env_vars()
         xtype_list = xtypes_from_labels(label_list, env_vars)
-        origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
-        gp.activate_origin_tree(origin_ptree)
+        origin_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
+        gp.activate_origin_tree(origin_tree)
 
     if analyze:
         gp.gp_analyze()

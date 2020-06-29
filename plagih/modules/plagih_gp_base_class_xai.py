@@ -23,6 +23,13 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 PLAGIH_VERSION = 0.953  # must only update if vital changes were made
 
 
+class GpConfig():
+    # todo replace shitty config dict
+    def __init__(self, config):
+        self.remove_superfluous_config_entries = False  # sfeh you should do that
+        self.pl_version = PLAGIH_VERSION  # version important when loading old run
+
+
 class ExplainableGP(object):
     """
 
@@ -33,13 +40,10 @@ class ExplainableGP(object):
         self.name = root_dir.name  # sfeh probably there are better names
         print(f'\n\tInitializing Plagih. Name: {BColors.CYAN}{self.name}{BColors.RESET}. Located in: \n\t{root_dir}\n')
         self.time_start = time.perf_counter()
-        self.restart_vers = 'v0.95'
         self.root_dir = root_dir
         self.sfeh_plagih_root = plagih_root
 
         self.config = {
-            'remove superfluous config entries': False,  # guess you should do that
-
             'pl_version': PLAGIH_VERSION,  # version important when loading old run
             'description': 'No description set',
             'force_new_run': False,  # especially for testing. Otherwise, delete the folder. can be set via command line.
@@ -236,7 +240,6 @@ class ExplainableGP(object):
         self.population_tmp_eval = []
         self.population_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
-        self.origin_meta = None
         self.origin_tree = None
         self.gen_id = 0
         self.custom_done = False
@@ -513,7 +516,7 @@ class ExplainableGP(object):
             self.gen_create_random(self.config['pop_max'])
 
         self.gen_finalize()
-        write_file_population_karoo(self.population_base, 'first', self.root_dir, self.gen_id, print_type=self.print_type)  # first gen only
+        self.write_file_population_base_karoo('first')  # first gen only
 
     def gen_create_loop(self):
         """
@@ -689,6 +692,41 @@ class ExplainableGP(object):
 
         return
 
+    def write_file_pareto_txt(self):
+        """
+        Save all the pareto efficient candidates to file
+        sfeh save as yaml?
+        """
+
+        path_pareto = file_make_dir(self.root_dir / self.file_loc('file_pareto'))
+
+        with Path.open(path_pareto, 'w') as file:
+            for (parsim, fitness, meta) in self.pareto:
+                # fitness = meta['fitness_train']
+                algo_sym = meta['expr_sym']  # save raw version, not the sympified one
+                file.write(f'\nParsimony: \t{parsim} Fitness: \t{fitness} Expr: \t{algo_sym}')
+
+        return
+
+    def write_file_population_base_karoo(self, pop_name):
+        """
+        Save population_* to disk.
+
+        """
+        file_path = file_make_dir(self.root_dir / 'info/' / 'population_{}.csv'.format(str(pop_name)))
+        # sfeh? function to tree_ and append each tree
+        with Path.open(file_path, 'w', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+            target = csv.writer(csv_file, delimiter=',')
+            if self.gen_id != 0:
+                target.writerows([''])  # empty row before each generation
+            target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)]])
+
+            for ii, tree in enumerate(self.population_base):
+                target.writerows([''])  # empty row before each Tree
+                target.writerows(tree)
+
+        return
+
     def file_make_analysis(self):
         """
         writes all important gp_files
@@ -697,12 +735,10 @@ class ExplainableGP(object):
         self.file_pareto_histograms()
         self.file_conclusion()
         self.pareto_sort()
-        write_file_pareto_txt(self.pareto, self.root_dir, self.file_loc('file_pareto'))  # todo "get path" instead?
+        self.write_file_pareto_txt()
         self.file_pareto_latex()
-        if delete_this and False:
-            self.file_population_base_latex()
         self.file_generate_pycode()
-        write_file_population_karoo(self.population_base, 'last', self.root_dir, self.gen_id, print_type=self.print_type)
+        self.write_file_population_base_karoo('last')
 
         return
 
@@ -1134,10 +1170,9 @@ class ExplainableGP(object):
         else:
             py_return = 'return action\n'
 
-        # indent_body
-        # cartPos, cartVel = input
-        # {}
-        # return max(0, min(2, int(round(action))))
+        ## cartPos, cartVel = input
+        ## {}
+        ## return max(0, min(2, int(round(action))))
         indent_twice = textwrap.indent(f"{', '.join(self.env_vars['obs_name'])} = input\n"
                                        "{}\n"
                                        f"{py_return}", '\t')
@@ -1746,11 +1781,10 @@ class ExplainableGP(object):
     #   Work with trees                           +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def activate_origin_tree(self, ptree: Ptree_karoo):
+    def activate_origin_tree(self, tree):
         """
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
-        tree = ptree.get_uninstanced_tree()
 
         if not tree_check_deep(tree, self.env_vars):
             if tree_node_get_arity(tree, root_id) == 0:
@@ -1776,15 +1810,14 @@ class ExplainableGP(object):
         tree = tree_set_parsimony(tree, 0)
         self.origin_tree = copy.deepcopy(tree)
 
-        self.origin_meta = {'expr_raw': expr_raw,
-                            'expr_sym': expr_sym,
-                            'parsimony': 0,
-                            'fitness_train': fitness_train}
+        origin_meta = {'expr_raw': expr_raw,
+                       'expr_sym': expr_sym,
+                       'parsimony': 0,
+                       'fitness_train': fitness_train}
 
         # self.parsimony_best_meta[0] = self.origin_meta
-        self.update_pareto(tree)
-
-        self.print_g('gg', f'Loading origin_meta, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        self.pareto.append([0, fitness_train, origin_meta])  # aka [3, 423, meta{}]
+        self.print_g('gg', f'Loading, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return
 
@@ -1831,7 +1864,7 @@ class ExplainableGP(object):
 
         For comparison, the original (pre-TensorFlow) cod follows:
 
-            skew = (self.unique_outputs_num / 2) - 1 # '-1' keeps a binary classification splitting over the origin_meta
+            skew = (self.unique_outputs_num / 2) - 1 # '-1' keeps a binary classification splitting over the
             if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
             elif solution == self.unique_outputs_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
             elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last

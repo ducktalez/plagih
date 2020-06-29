@@ -34,22 +34,6 @@ def file_make_dir(file_path):
         p.parent.mkdir(parents=True)
     return p
 
-
-def write_file_pareto_txt(pareto, root_path, file_pareto):
-    """
-    Save all the pareto efficient candidates to file
-    sfeh save as yaml?
-    """
-
-    path_pareto = file_make_dir(root_path / file_pareto)
-
-    with Path.open(path_pareto, 'w') as file:
-        for (parsim, fitness, meta) in pareto:
-            # fitness = meta['fitness_train']
-            algo_sym = meta['expr_sym']  # save raw version, not the sympified one
-            file.write('\nParsimony: \t{0} Fitness: \t{1} Expr: \t{2}'.format(parsim, fitness, algo_sym))
-
-
 def experiment_data(experiment_yaml):
     if Path.is_file(experiment_yaml):  # Load config.yaml
         with Path.open(experiment_yaml, 'r') as file:
@@ -88,29 +72,6 @@ def experiment_data(experiment_yaml):
             'number of actions': 1,
         }
     }
-
-
-def write_file_population_karoo(population, pop_name, path, gen_id, print_type=None):
-    """
-    Save population_* to disk.
-
-    """
-    file_path = file_make_dir(path / 'info/' / 'population_{}.csv'.format(str(pop_name)))
-    # sfeh? function to tree_ and append each tree
-    with Path.open(file_path, 'w+', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-        target = csv.writer(csv_file, delimiter=',')
-        if gen_id != 0:
-            target.writerows([''])  # empty row before each generation
-        target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(gen_id)]])
-
-        for ii, tree in enumerate(population):
-            target.writerows([''])  # empty row before each Tree
-            for row in range(0, T_num_lines):  # increment through each row in the array Tree (+ row 0)
-                target.writerows([population[ii][row]])
-
-    printez('f', '{}'.format(file_path), print_type=print_type)
-
-    return
 
 
 def pickle_load(path):

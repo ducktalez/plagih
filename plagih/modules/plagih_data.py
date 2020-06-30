@@ -17,13 +17,13 @@ def samples_header_line(row):
     cartVel|type=float|role=input|minmax=(-0.07, 0.07)
     goal_action: (todo) only one action can be the result. vectors should be implemented someday
 
-    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, cartPos: {}, cartVel: {}}  # sfeh name vs label??
-    env_variables['obs_name'] = {'type': 'float', 'role': None, 'pos': ii}
-    env_variables['action_at'}[0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii, 'unique_outputs_num': None}
+    env_vars = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, cartPos: {}, cartVel: {}}  # sfeh name vs label??
+    env_vars['obs_name'] = {'type': 'float', 'role': None, 'pos': ii}
+    env_vars['action_at'}[0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii, 'unique_outputs_num': None}
 
     param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
     """
-    env_variables = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, 'param_at': {}}  # to identify all observation types
+    env_vars = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, 'param_at': {}}  # to identify all observation types
     env_observation = {}
     env_xtype_list = {'2b': [], '2f': []}  # for choosing random variables
     env_param_at = {}  #
@@ -75,13 +75,13 @@ def samples_header_line(row):
 
         param_at[ii] = {'name': col_label, 'type': col_type, 'xtype': xtype, 'role': role}
 
-    # last-chance use of env_variables. sfeh: use many dicts instead! hmmm
-    env_variables['action_at'].update(env_action_at)
-    env_variables['obs_name'].update(env_observation)
-    env_variables.update(env_xtype_list)  # sfeh that is ugly code
-    env_variables['env_observation_family'] = env_observation_family
+    # last-chance use of env_vars. sfeh: use many dicts instead! hmmm
+    env_vars['action_at'].update(env_action_at)
+    env_vars['obs_name'].update(env_observation)
+    env_vars.update(env_xtype_list)  # sfeh that is ugly code
+    env_vars['env_observation_family'] = env_observation_family
 
-    return env_variables, param_at
+    return env_vars, param_at
 
 
 def header_entry_get_type(column_meta_values):
@@ -192,9 +192,9 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
         header_row = list(pd.read_csv(samples_csv_file, delimiter=delimiter, nrows=1))
 
         #######
-        env_variables, param_at = samples_header_line(header_row)
-        # env_observation = env_variables['obs_name']
-        env_action_at = env_variables['action_at']
+        env_vars, param_at = samples_header_line(header_row)
+        # env_observation = env_vars['obs_name']
+        env_action_at = env_vars['action_at']
         #######
 
         dtypes_from_header = {}
@@ -219,15 +219,15 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
 
         df = pd.read_csv(samples_csv_file, skiprows=1, names=colnames_from_header, dtype=dtypes_from_header)
 
-        # # num_observations = min(len(env_variables['obs_name']), len(header_row) - 1)  # obsolete, is now observation_count
+        # # num_observations = min(len(env_vars['obs_name']), len(header_row) - 1)  # obsolete, is now observation_count
         # observation_columns = [x['pos'] for x in env_observation.values()]
         # action_columns = [x['pos'] for x in env_action_at.values()]
 
     #     for i, row in enumerate(data_nparray):  # all lines containing actual data (leaving out the header line)
     #         # if i == 0:
-    #         #     # env_variables
-    #         #     env_variables, param_at = samples_header_line(row)
-    #         #     num_observations = min(len(env_variables['obs_name']), len(row) - 1)
+    #         #     # env_vars
+    #         #     env_vars, param_at = samples_header_line(row)
+    #         #     num_observations = min(len(env_vars['obs_name']), len(row) - 1)
     #         # else:  # convert every 'string' element to its data_csv_path type
     #
     #         types = [param_at[x]['type'] for x in range(len(row))]  # sfeh allow int again
@@ -239,19 +239,19 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
     #
     #     unique_outputs_num = len(np.unique(data_results))  # load the user defined true labels for classification or solutions for regression
     #     action_min_max = min(data_results)[0], max(data_results)[0]
-    #     env_variables['action_at'][x]['unique_outputs_num'] = unique_outputs_num
-    #     env_variables['action_at'][x]['minmax'] = action_min_max
+    #     env_vars['action_at'][x]['unique_outputs_num'] = unique_outputs_num
+    #     env_vars['action_at'][x]['minmax'] = action_min_max
 
     for act_ii, action_info in env_action_at.items():
         # action_name = action_info['name']
         df_col = df[action_info['name']]
         unique_outputs_num = len(df_col.unique())  # load the user defined true labels for classification or solutions for regression
-        env_variables['action_at'][act_ii]['unique_outputs_num'] = unique_outputs_num
+        env_vars['action_at'][act_ii]['unique_outputs_num'] = unique_outputs_num
 
-        if env_variables['action_at'][act_ii].get('minmax') is None:  # find out own min-max (if not provided)
+        if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min-max (if not provided)
             action_min = df_col.min()
             action_max = df_col.max()
-            env_variables['action_at'][act_ii]['minmax'] = (action_min, action_max)
+            env_vars['action_at'][act_ii]['minmax'] = (action_min, action_max)
 
     data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size)  # splitting the data in 80% train and 20% testdata for validation
 
@@ -259,4 +259,4 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
     data_train_numpy = data_train_panda.to_numpy()
     data_test_numpy = data_test_panda.to_numpy()
 
-    return env_variables, data_train_panda, data_test_panda, data_train_numpy, data_test_numpy
+    return env_vars, data_train_panda, data_test_panda, data_train_numpy, data_test_numpy

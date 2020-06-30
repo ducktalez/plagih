@@ -15,10 +15,10 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 sympy_dummy = plagih_sympify(1)
 np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
-N_label = 6
 N_id = 3
 N_depth = 4
 N_xtype = 5
+N_label = 6
 N_parent = 7
 N_arity = 8
 N_c1 = 9
@@ -26,58 +26,16 @@ N_c2 = 10
 N_c3 = 11
 N_modify = 13
 
-TR_ID = 0  # sfeh I think the id is irrelevant
 TR_lastEvolve = 1
 T_fitness = 12
 T_parsimony = 14
+
+T_deleteable = [0, 2]  # TR_ID = 0, tree_depth_base = 2
 
 T_num_lines = 15
 root_id = 1
 
 node_is_modifiable = 1
-
-
-class Node2:
-
-    def __init__(self, state, root=True, parent=None, action=-1, depth=0, node_id=0, terminal=False, fully_expanded=False):
-        """
-
-        """
-        self.root = root
-        self.parent = parent
-        self.state = state
-        self.action = action
-        self.terminal = terminal
-        self.fully_expanded = fully_expanded
-        self.children = []
-        self.Q = 0.0
-        self.Q_list = []
-        self.visits = 1
-        self.depth = depth
-        self.unexplored_actions = copy.deepcopy(state.action_space)
-        self.node_id = node_id
-
-    def __str__(self):
-        """
-
-        """
-        return "Q / Reward: {}, visits: {}, terminal: {}, fully_expanded: {}, depth: {}, node_id: {}, root: {}".format(self.Q, self.visits, self.terminal, self.fully_expanded, self.depth, self.node_id, self.root)
-
-
-class Tree_Node():
-
-    def __init__(self, label):
-        node = np.array(label)
-
-
-class Plagih_Tree():
-
-    def __init__(self, fitness=None, complexity=None):
-
-        self.fitness = fitness
-        self.complexity = complexity
-        self.hash_id = None
-        # self.nodes = Plagih_KarooTreecore()
 
 
 class Core_From_Labels():
@@ -125,29 +83,7 @@ def core_from_labels(label_list, arity_list, xtype_list, force_np_dtype='U15'):
     this function builds the core of a tree (no node_modify)
     """
 
-    if len(label_list) == 0:
-        print_warning('w', 'label list is empty')
-        raise
-
-    # if arity_list is None:
-    #     arity_list = [label_get_arity(label) for label in label_list]
-    #
-    # if xtype_list is None:
-
-    size = len(label_list)
-    tree = tree_init_core(size, force_np_dtype)
-
-    # set all the rows that are super easy
-    tree = tree_core_init_row(tree, N_id, [x for x in range(0, size)])
-    tree = tree_core_init_row(tree, N_label, label_list)
-    tree = tree_core_init_row(tree, N_arity, arity_list)
-    tree = tree_core_init_row(tree, N_xtype, xtype_list)
-
-    # and also, fill all the leftover rows
-    parent_list = parents_from_arities(arity_list)
-    tree = tree_core_init_row(tree, N_parent, parent_list)
-    tree = tree_core_build_childs(tree)
-    tree = tree_core_init_depth(tree, parent_list)
+    tree = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
 
     return tree
 
@@ -183,7 +119,7 @@ class Ptree_karoo():
     - pop_id (NO!)
 
     node:
-    todo branch depth
+    branch depth
     """
 
     #
@@ -199,7 +135,8 @@ class Ptree_karoo():
         """
         if not arity_list:
             arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
-        core = core_from_labels(label_list, arity_list, xtype_list)
+
+        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
 
         if modify_list:
             for i, val in enumerate(modify_list):
@@ -219,52 +156,34 @@ class Ptree_karoo():
         pass
 
 
-def TEST_karoo_tree_from_labellist(label_list, env_variables, modify_list=None, arity_list=None):
+def TEST_karoo_tree_from_labellist(label_list, env_vars, modify_list=None, arity_list=None):
     """
     returns: tree, from label_list (newest version)
     """
 
-    # label_list = workaround_remove_tilde_operator(label_list)
-
-    xtype_list = xtypes_from_labels(label_list, env_variables)
+    xtype_list = xtypes_from_labels(label_list, env_vars)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
-    # tree = p_tree.get_uninstanced_tree()
+    tree = p_tree.get_uninstanced_tree()
 
-    return p_tree
+    return tree
 
 
-def karoo_ptree_from_expr(expr, env_variables, modify_list=None):
+def karoo_tree_from_expr(expr, env_vars, modify_list=None):
     """
     DELETE later sfeh
     Generate tree from a raw or sympified expression
     # label_list = workaround_remove_tilde_operator(label_list)
     """
     label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, env_variables)
+    xtype_list = xtypes_from_labels(label_list, env_vars)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
-    return p_tree
-
-
-def workaround_remove_tilde_operator(label_list):
-    """
-    ~- workaround
-    """
-    arity_list = [label_get_arity(label) for label in label_list]
-    parent_list = parents_from_arities(arity_list)
-    tilde_ids = [i for i, x in enumerate(label_list) if x == '~']
-    for child, parent in enumerate(parent_list):
-        if parent in tilde_ids:
-            if arity_list[child] == 0:
-                label_list[parent] = '-{}'.format(label_list[child])
-                label_list[child] = ''
-    label_list = [x for x in label_list if x != '']
-    return label_list
+    tree = p_tree.get_uninstanced_tree()
+    return tree
 
 
 def tree_save_csv(tree, path_csv):
     """
     Writing one tree to a .csv file. As it is appended, many can be added.
-    todo remove ~ operator!!
     """
     with Path.open(path_csv, 'a', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')
@@ -345,7 +264,7 @@ def tree_set_last_evolution(tree, last_modification):
     return tree
 
 
-def tree_check_quick(tree, karoo=True, print_type=None):
+def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
     """
     without some of the heavy tests
     """
@@ -358,15 +277,17 @@ def tree_check_quick(tree, karoo=True, print_type=None):
         tree_works = False
     elif not tree_check_types(tree):
         tree_works = False
-    elif tree_node_get_arity(tree, root_id) == 0:
-        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)  #
-        tree_works = False
     else:
         tree_works = True
+
+    if tree_node_get_arity(tree, root_id) == 0:
+        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)
+        tree_works = allow_root_only
+
     return tree_works
 
 
-def tree_check_deep(tree, env_variables, karoo=True):
+def tree_check_deep(tree, env_vars=None, karoo=True):
     """
     Performs all checks that we currently have
     # sfeh do not use this if trees are safely generated
@@ -386,22 +307,22 @@ def tree_check_deep(tree, env_variables, karoo=True):
 def tree_check_xtypes(tree):
     for node in tree_iterate_range(tree):
         if tree[N_xtype][node] == '':  # are xtypes set?
-            # print_warning('ww', 'xtypes in tree were not set correctly.\n{}'.format(tree))
+            # print_warning('ww', 'xtypes in tree were not set correctly.\n{}'.forsmat(tree))
             return False
     return True
 
 
-def tree_set_xtypes(tree, env_variables):
+def tree_set_xtypes(tree, env_vars):
     """
     Set xtype for all nodes in the tree.
     Faster than 'looking up' the xtype every time with xtype_get_from_label which needs extra dicts
     :param tree:
-    :param env_variables:
+    :param env_vars:
     :return:
     """
     for node_id in tree_nodes_get_ids(tree):
         label = tree_node_get_label(tree, node_id)
-        xtype = xtype_get_from_label(label, env_variables)
+        xtype = xtype_get_from_label(label, env_vars)
         tree = tree_node_set_xtype(tree, node_id, xtype)
     return tree
 
@@ -427,7 +348,7 @@ def tree_set_parsimony(tree, parsimony):
     if parsimony == '':
         pass  # This is actually done when 'wiping' the tree's data
     elif parsimony < 0:
-        print_warning('w', 'Warning: Parsimony is: {}'.format(parsimony))
+        print_warning('w', f'Warning: Parsimony is: {parsimony}')
 
     tree[T_parsimony][1] = parsimony
     return tree
@@ -492,37 +413,6 @@ def tree_node_set_modify(tree, node_id, value):
     tree[N_modify][node_id] = value
 
     return tree
-
-
-def tree_nodes_get_ids_string(tree, node_id):
-    """
-    return a list of s nodes childs.
-    + Evaluate all or part of a Tree and
-
-    This method generates a list of all 'node_id's from the given Node and below. It is used primarily to generate
-    'branch' for the multi-generational mutation of Trees.
-    """
-
-    node_id = int(node_id)
-
-    if tree[N_arity, node_id] == '0':  # arity of 0 for the pattern '[node_id]'
-        return tree[3, node_id]
-
-    elif tree[N_arity, node_id] == '1':  # arity of 1 for the pattern '[node_id], [node_id]'
-        return '{}, {}'.format(tree[3, node_id], tree_nodes_get_ids_string(tree, tree[9, node_id]))
-
-    elif tree[N_arity, node_id] == '2':  # arity of 2 for the pattern '[node_id], [node_id], [node_id]'
-        return '{}, {}, {}'.format(
-            tree[3, node_id],
-            tree_nodes_get_ids_string(tree, tree[9, node_id]),
-            tree_nodes_get_ids_string(tree, tree[10, node_id]))
-
-    elif tree[N_arity, node_id] == '3':  # arity of 3 for the pattern '[node_id], [node_id], [node_id], [node_id]'
-        return '{}, {}, {}, {}'.format(
-            tree[3, node_id],
-            tree_nodes_get_ids_string(tree, tree[9, node_id]),
-            tree_nodes_get_ids_string(tree, tree[10, node_id]),
-            tree_nodes_get_ids_string(tree, tree[11, node_id]))
 
 
 def tree_node_get_xtype(tree, node_id):
@@ -607,6 +497,8 @@ def tree_node_get_parents(tree, node_id):
     node_list = [node_id]
     while node_id > root_id:
         node_id = tree_node_get_parent(tree, node_id)
+        if len(node_list) > 200:
+            raise  # tree has intrinsic parent node recursion (node is its own parent?)
         node_list.append(node_id)
     return node_list
 
@@ -637,19 +529,6 @@ def tree_node_all_info(tree, node_id):
                  'depth': tree_node_get_depth(tree, node_id)}
 
     return node_info
-
-
-def tree_node_debug_print(tree, node_id):
-    """
-    print some node-info, maybe also tree info
-    """
-    node_parent = tree_node_get_parent(tree, node_id)
-    # parent_info = tree_node_all_info(tree, node_id)
-    debug_print = 'Tree node_id {}: \n' \
-                  'Node-info: {}\n' \
-                  'Tree_labels: {}\n' \
-                  'Tree-modify:'.format(node_id, tree_node_all_info(tree, node_id), node_parent, tree_get_labellist(tree), tree[N_modify])
-    return debug_print
 
 
 def tree_set_modifyable_nodes(tree, origin_tree=None):
@@ -716,14 +595,14 @@ def tree_node_is_modifiable(tree, node_id):
     return modify == 1
 
 
-def tree_node_get_parent_functype(tree, node_id, env_variables):
+def tree_node_get_parent_functype(tree, node_id, env_vars):
     """
 
     """
     parent_id = tree[N_parent][node_id]
     if tree_node_get_arity(tree, parent_id) > 0:
         parent_label = tree_node_get_label(tree, parent_id)
-        fun_type = xtype_get_from_label(parent_label, env_variables)
+        fun_type = xtype_get_from_label(parent_label, env_vars)
         return fun_type
     else:
         print_e('That was not a function.')
@@ -830,20 +709,20 @@ def randomly_split_range(range_max, num_splits):
 
 def raise_if_empty(name, val):
     if val == '' or val is None:
-        print('This variable did not work'.format(name))
+        print(f'This variable did not work {name}')
         raise
 
 
-def labels_xtypes_check(label_list, xtype_list, env_variables, raising=True):
+def labels_xtypes_check(label_list, xtype_list, env_vars, raising=True):
     for ii, delete_this in enumerate(label_list):
-        xt = xtype_get_from_label(delete_this, env_variables)
+        xt = xtype_get_from_label(delete_this, env_vars)
         if xt != xtype_list[ii]:
             print('OMG FAIL as', ii, '\n', label_list, '\n', xtype_list)
             if raising:
                 raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variables, choose_oparray2, choose_distributions, min_depth=0, full_or_grow=None):
+def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_vars, choose_oparray2, choose_distributions, min_depth=0, full_or_grow=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -872,7 +751,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
 
             for ii, xtype in enumerate(tbdo_xtypes):
                 if functerm_list[ii] == 'term':
-                    label = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)
+                    label = choose_term(xtype[-2:], env_vars, choose_distributions, float_accuracy)
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
@@ -884,7 +763,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
                 if label == 'Ifte':
                     next_xtype_list.extend(['2b', '2f', '2f'])
                 else:
-                    tmp_xtype = xtype_get_from_label(label, env_variables)
+                    tmp_xtype = xtype_get_from_label(label, env_vars)
                     child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
                     for _ in range(0, arity):  # when arity==2, add 2 times
                         next_xtype_list.append(child_type)
@@ -896,7 +775,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
         else:  # now, we are on the lowest dim_y.
 
             for xtype in tbdo_xtypes:  # Build terminals now.
-                label, arity = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy), 0
+                label, arity = choose_term(xtype[-2:], env_vars, choose_distributions, float_accuracy), 0
 
                 # Add the label to the result list
                 result_label_list.append(label)
@@ -909,7 +788,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_accuracy, env_variable
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variables, choose_oparray2, choose_distributions, full_or_grow='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_vars, choose_oparray2, choose_distributions, full_or_grow='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -972,8 +851,8 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variabl
 
         for index in term_at:
             t_xtype = tbdo_xtypes[index]
-            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions, float_accuracy), 0
-            label_xtype = xtype_get_from_label(label, env_variables)
+            label, arity = choose_term(t_xtype[-2:], env_vars, choose_distributions, float_accuracy), 0
+            label_xtype = xtype_get_from_label(label, env_vars)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
             tmp_xtype_list[index] = label_xtype
@@ -985,7 +864,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variabl
             if label == 'Ifte':
                 tbdo_xtypes.extend(['2b', '2f', '2f'])
             else:
-                t_xtype = xtype_get_from_label(label, env_variables)
+                t_xtype = xtype_get_from_label(label, env_vars)
                 child_type = t_xtype[:2][::-1]  # e. g. 'f2b' requires '2f' input
                 arity = tmp_arity_list[index]
                 tbdo_xtypes.extend([child_type] * arity)
@@ -997,8 +876,8 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_accuracy, env_variabl
     else:
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
-            label, arity = choose_term(t_xtype[-2:], env_variables, choose_distributions, float_accuracy), 0
-            label_xtype = xtype_get_from_label(label, env_variables)
+            label, arity = choose_term(t_xtype[-2:], env_vars, choose_distributions, float_accuracy), 0
+            label_xtype = xtype_get_from_label(label, env_vars)
             result_label_list.append(label)
             result_arity_list.append(arity)
             result_xtype_list.append(label_xtype)
@@ -1059,7 +938,8 @@ def tree_get_ids_depthfirst(tree, node_id=root_id):
 
 def tree_get_fitness(tree, precision=None, karoo=True):
     """
-    Get the fitness of a tree
+    Get the fitness that a tree holds.
+    For evaluation the fitness, use ? plagih_eval -> tree_eval_fitness_train()
     """
     if not karoo:
         raise
@@ -1068,7 +948,7 @@ def tree_get_fitness(tree, precision=None, karoo=True):
     if fitness != '':
         fitness = round(float(fitness), precision)
     else:
-        raise Exception('This tree does not contain float fitness: {}.'.format(fitness))
+        raise Exception(f'This tree does not contain float fitness: {fitness}.')
     return fitness
 
 
@@ -1117,12 +997,13 @@ def tree_get_expr_raw(tree, node_id=root_id):
     """
     Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
     The large amount of () is required doe to some sympify errors. But feel free to reduce them.
+    sfeh update this crapshit
     """
     node_id = int(node_id)
     arity = tree[N_arity, node_id]
     label = tree[N_label, node_id]
     if arity == '0':  # arity of 0 for the pattern '[term]'
-        return '{}'.format(label)  # 'node_label' (function or terminal)
+        return f'{label}'  # 'node_label' (function or terminal)
 
     elif arity == '1':  # arity of 1 for the explicit pattern 'not [eval]'
         fun = label
@@ -1159,21 +1040,20 @@ def tree_get_pycode(tree, node_id=root_id):
     label = tree_node_get_label(tree, node_id)
 
     if arity == 0:
-        return '{}'.format(label)
+        return f'{label}'
     else:
         childs = tree_node_get_childs(tree, node_id)
         results = []
         for child in childs:
             results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
-        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
-        # except:
-        #     return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.format(a) (result1)
+        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
 
 
 def tree_raw_depth_prefix(tree, node_id):
     """
     Does the same as tree_expr_raw, but evaluates infix functions in prefix notation (functional form)
-
+    input: +, Ifte, 3, True, 1, 2
+    result: {+{Ifte{True}{1}{2}}{3}}
     """
 
     node_id = int(node_id)
@@ -1181,7 +1061,7 @@ def tree_raw_depth_prefix(tree, node_id):
     label = tree[N_label, node_id]
 
     if arity == '0':  # arity of 0 for the pattern '[term]'
-        return '{{{}}}'.format(label)  # '{{{}}}'
+        return '{{{}}}'.format(label)  # '{{{}}}'.format('test') -> {test}
 
     elif arity == '1':  # arity of 1 for the explicit pattern 'not [eval]'
         return '{{{}{}}}'.format(label, tree_raw_depth_prefix(tree, tree[9, node_id]))
@@ -1231,7 +1111,8 @@ def tree_get_mutatable_nodes(tree, no_root=False, karoo=True):
             node_ids.append(int(node_id))
 
     if no_root and root_id in node_ids:
-        node_ids.remove(root_id)
+        if len(tree_get_labellist(tree)) > 1:  # sfeh dummy if the tree is only one node # sfeh no_root?
+            node_ids.remove(root_id)
 
     return node_ids
 
@@ -1250,21 +1131,25 @@ def tree_get_fix_nodes(tree, karoo=True):
     return node_ids
 
 
-def tree_node_get_branch(tree, node, karoo=True):
+def tree_node_get_branch(tree, node_id, karoo=True):
     """
     return all child-nodes as list
     """
     if not karoo:
         raise Exception
 
-    branch = np.array([])  # the array is necessary in order to len(branch) when 'branch' has only one element
-
     # 2. Also return all child nodes
-    branch_eval = tree_nodes_get_ids_string(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
-    branch_symp = sympify(branch_eval)  # convert string into something useful
+    # branch_eval = tree_nodes_get_ids_string(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
 
-    branch = np.append(branch, branch_symp)
-    branch = np.sort(branch)
+    # node_id = int(node_id)
+
+    branch = [node_id]
+
+    child_ids = tree_node_get_childs(tree, node_id)
+    for child in child_ids:
+        branch.extend(tree_node_get_branch(tree, child))
+
+    branch = np.sort(branch)  # may be required for getting numpy array
 
     return branch
 
@@ -1420,8 +1305,8 @@ def tree_parsimony_ted(tree1, tree2):
     """
     apted_tree1 = tree_raw_depth_prefix(tree1, root_id)
     apted_tree2 = tree_raw_depth_prefix(tree2, root_id)
-    distance, mapping = apted_distance(apted_tree1, apted_tree2)
-    # sfeh the mapping could be handy somewhere
+    distance, mapping = apted_distance(apted_tree1, apted_tree2)  # sfeh the mapping could be handy somewhere
+
     return distance, mapping
 
 
@@ -1445,11 +1330,11 @@ def expr_sympify(expr_raw):
     try:
         expr_sym = str(plagih_sympify(expr_raw))
     except Exception as ex:
-        raise Exception('sympify_1: {} reason: ({})'.format(expr_raw, ex))
+        raise Exception(f'sympify_1: {expr_raw} reason: ({ex})')
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:
-            raise Exception('sympify_2: {}'.format(fail_reason))
+            raise Exception(f'sympify_2: {fail_reason}')
 
     return expr_sym
 
@@ -1486,8 +1371,9 @@ def evolve_node_arity_fix(tree):
     """
 
     for n in range(1, len(tree[N_id])):  # increment through all nodes (exclude 0) in array 'tree'
-        if len(tree[N_id]) <= 2:
-            print_warning('ww', 'Tree has <=2 nodes. Change configuration. {}'.format(tree))
+        # # sfeh root-only problem, had to comment the following lines. They never occured otherwise
+        # if len(tree[N_id]) <= 2:
+        #     print_warning('ww', 'Tree has <=2 nodes. Change configuration. {}'.format(tree))
         if tree[N_arity][n] == '0':  # check for discrepency
             # tree[N_arity][n] = '0'  # set arity to 0
             tree[N_c1][n] = ''  # wipe 'node_c1'
@@ -1638,12 +1524,16 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
     return tree
 
 
-def core_from_expr(expr, env_variables):
+def core_from_expr(expr, env_vars):
+    """
+    Creating a karoo tree from a raw expression
+    """
+
     label_list = ast_convert_from_expr(expr, build=True)
     # label_list = workaround_remove_tilde_operator(label_list)
     arity_list = [label_get_arity(label) for label in label_list]
-    xtype_list = xtypes_from_labels(label_list, env_variables)
-    core = core_from_labels(label_list, arity_list, xtype_list)
+    xtype_list = xtypes_from_labels(label_list, env_vars)
+    core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
     return core
 
 
@@ -1796,21 +1686,6 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
     return ztree
 
 
-# def tree_fix_link_child_karoo(tree):
-#     """
-#     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
-# ## sfeh: todo can this REALLY be deleted? how is this not used?^^
-#     This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
-#
-#     """
-#
-#     for node_id in range(root_id, len(tree[3])):
-#         c_buffer = evolve_c_buffer(tree, node_id, karoo=True)  # generate c_buffer for each node
-#         tree = tree_node_set_childs_ids(tree, node_id, c_buffer, karoo=True)  # update child links for each node
-#
-#     return tree
-
-
 def tree_fix_link_child(tree, karoo=False):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
@@ -1868,19 +1743,18 @@ def evolve_node_renum(tree):
     return tree
 
 
-def treegp_reduce_branch(tree, node_id, env_variables, karoo=True):
+def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     """
     Reduce a branch of a tree with sympify
     """
     delete_ids = tree_node_get_branch(tree, node_id, karoo=karoo)
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
     expr_sym = expr_sympify(expr_raw=expr_raw)
+    core = core_from_expr(expr_sym, env_vars)
+    tree_sym = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
+    tree_sym_tildefree = tree_remove_tilde(tree_sym)
 
-    core = core_from_expr(expr_sym, env_variables)
-
-    tree_sympified = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
-
-    return tree_sympified
+    return tree_sym_tildefree
 
 
 def tree_check_meta_exists(tree):
@@ -1896,7 +1770,7 @@ def tree_check_meta_exists(tree):
         return True
 
 
-def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray2, env_variables, choose_distributions):
+def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray2, env_vars, choose_distributions):
     """
     Mutate a single mutatable point in any Tree.
     """
@@ -1910,7 +1784,7 @@ def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray2, env_variable
         new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
         tree = tree_node_set_label(tree, node_id, new_label)
     else:
-        new_label = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)  # 3 -> '2f' -> 5
+        new_label = choose_term(xtype[-2:], env_vars, choose_distributions, float_accuracy)  # 3 -> '2f' -> 5
         tree = tree_node_set_label(tree, node_id, new_label)
 
     # All node info should stay the same. xtype, arity
@@ -1918,7 +1792,42 @@ def tree_evolve_mutate_point(tree, float_accuracy, choose_oparray2, env_variable
     return tree  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
 
-def tree_evolve_reduce(tree, env_variables, completely=True):
+def tree_remove_tilde(tree):
+    """
+    ~- workaround
+    """
+    while True:
+        for node_id in tree_iterate_range(tree, karoo=True):
+            if tree_node_get_label(tree, node_id) == '~':
+                try:
+                    c_id = tree_node_get_child(tree, node_id, 0)
+                except IndexError:
+                    return tree
+                clabel, carity, cxtype = tree_node_get_lax_v3(tree, c_id)
+                if carity == 0:
+                    tree = tree_node_set_label(tree, c_id, f'-{clabel}')
+                    tree = tree_remove_node_with_child0(tree, node_id)
+                    break
+            else:
+                pass
+        else:
+            break
+    return tree
+
+
+def tree_remove_node_with_child0(tree, node_id):
+    child0 = tree_node_get_child(tree, node_id, 0)
+    if child0 != '':
+        ids, labels, aritys, xtypes = tree_get_branch_ilax(tree, child0)
+        core = Core_From_Labels(labels, aritys, xtypes).get_uninstanced_core()
+        delete_ids = tree_node_get_branch(tree, node_id)
+        tree = tree_insert_subtree(tree, core, delete_ids, karoo=True)
+    else:
+        raise  # should only call this when secure
+    return tree
+
+
+def tree_evolve_reduce(tree, env_vars, completely=True):
     """
     Reducing a tree to its most basic form with sympify.
     (completely = False: reduce just one branch. if you wanted to have more complexity)
@@ -1929,34 +1838,22 @@ def tree_evolve_reduce(tree, env_variables, completely=True):
             for i in range(len(nodes_lv0)):
                 nodes_lv0 = tree_get_mutatable_layer(tree, 0)
                 node_id = nodes_lv0[i]
-                tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
+                tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)
         else:
             node_ids = tree_get_mutatable_nodes(tree)
             func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
             if len(func_ids) > 0:
                 node_id = np.random.choice(node_ids)
                 try:
-                    tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)
+                    tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)
                 except Exception as ex:
-                    print_e('This failed tree should have been kicked out earlier: ex: {}\nTree labels:\n{}'.format(ex, tree_get_labellist(tree)))
-                    # tree = treegp_reduce_branch(tree, node_id, env_variables, karoo=True)  # sfeh todo debug
+                    print_e(f'This failed during reduce process: ex: {ex}\nTree labels:\n{tree_get_labellist(tree)}')
+                    # tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)  # debug
                     pass  # This might occur when a tree is sympified (?)
         return tree
     except Exception as ex:
-        print_warning('ww', 'Could not reduce tree/branch due to Exception: {}'.format(ex))
+        print_warning('ww', f'Could not reduce tree/branch due to Exception: {ex}')
         raise
-
-
-def labels_get_aritys_list(label_list, karoo=False):
-    """
-    returns an arity list for a label list
-    """
-
-    arity_list = [label_get_arity(x) for x in label_list]
-
-    if karoo:
-        arity_list.pop(0)
-    return arity_list
 
 
 def tree_pretty_print(tree, karoo=True):
@@ -1979,7 +1876,7 @@ def tree_pretty_print(tree, karoo=True):
         if int(node_depth) == depth:
             layer_labels.append(label)
         else:
-            # print(print_style.format(node_depth, layer_labels))
+            # print(print_style.formjat(node_depth, layer_labels))
             print_str += print_style.format(node_depth, layer_labels)
             layer_labels = [label]
             depth += 1
@@ -2036,13 +1933,13 @@ def tree_check_rebuild(tree, karoo=True):
     xtype_list = [tree_node_get_xtype(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
 
     try:
-        core = core_from_labels(label_list, arity_list, xtype_list)
+        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
     except:
         return False
     return True
 
 
-def tree_check_node_label_info(tree, env_variables, karoo=True):
+def tree_check_node_label_info(tree, env_vars, karoo=True):
     """
     A method to check if a tree is type consistant:
     - do the values in c1, c2, c3 link to its parent?
@@ -2053,7 +1950,7 @@ def tree_check_node_label_info(tree, env_variables, karoo=True):
     for node_id in tree_iterate_range(tree):
         label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
         label_arity = label_get_arity(label)
-        label_xtype = xtype_get_from_label(label, env_variables)
+        label_xtype = xtype_get_from_label(label, env_vars)
         if arity != label_arity or xtype != label_xtype:
             print_e('Tree node info differs from label-version: arity: {}, {} xtype: {}, {}')
             return False
@@ -2076,7 +1973,7 @@ def tree_check_types(tree, karoo=True):
         else:
             xtypes_required = [xtype[:2][::-1]] * arity + [''] * (3-arity)  # ['2f', '2f', '']
 
-        # children_xtypes = xtype_label_get_child_xtypes(label, arity, env_variables)
+        # children_xtypes = xtype_label_get_child_xtypes(label, arity, env_vars)
         # print('asd tree check types\n',
         #       tree_get_labellist(tree), '\n',
         #       [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)])
@@ -2084,13 +1981,10 @@ def tree_check_types(tree, karoo=True):
             c_label = tree_node_get_label(tree, c_id)
             c_xtype = tree_node_get_xtype(tree, c_id)
             if not xtypes_required[ii] == c_xtype[-2:]:
-                print_e('Tree check failed. Node ({}, {}, {}) at child {} reqquires {}, but node is ({}, {}, {}).\n'
-                        'tree (pretty print):\n{}\n'
-                        'xtype_list: {}\n'
-                        'Last modification was: {} '.format(node_id, label, xtype, ii, xtypes_required[ii], c_id, c_label, c_xtype,
-                                                            tree_pretty_print(tree, karoo=True),
-                                                            [tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)],
-                                                            tree_get_history(tree)))
+                print_e(f'Tree check failed. Node ({node_id}, {label}, {xtype}) at child {ii} reqquires {xtypes_required[ii]}, but node is ({c_id}, {c_label}, {c_xtype}).\n'
+                        f'tree (pretty print):\n{tree_pretty_print(tree, karoo=True)}\n'
+                        f'xtype_list: {[tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)]}\n'
+                        f'Last modification was: {tree_get_history(tree)}')
                 if debug_this_please:
                     raise
                 return False
@@ -2098,7 +1992,7 @@ def tree_check_types(tree, karoo=True):
     return True
 
 
-def tree_evolve_node_insert(tree, env_variables):
+def tree_evolve_node_insert(tree, env_vars):
     """
     Inserts a (arity-1) node into a tree
     Especially useful when a ** power shall be normalized
@@ -2108,7 +2002,7 @@ def tree_evolve_node_insert(tree, env_variables):
     insert_id = None
     for node_id in node_ids:
         label = tree_node_get_label(tree, node_id)
-        # xtype = xtype_get_from_label(label, env_variables)  # '>' -> 'f2b'
+        # xtype = xtype_get_from_label(label, env_vars)  # '>' -> 'f2b'
         if label == '**' and tree_node_get_child(tree, node_id, 1) != 'Power':  # sfeh
             insert_id = node_id
             break
@@ -2118,7 +2012,7 @@ def tree_evolve_node_insert(tree, env_variables):
         new_labels = ['DUMMY'] + old_labels
         new_aritys = [1] + old_aritys
         new_xtypes = ['f2f'] + old_xtypes
-        insert_core = core_from_labels(new_labels, new_aritys, new_xtypes)
+        insert_core = Core_From_Labels(new_labels, new_aritys, new_xtypes).get_uninstanced_core()
         tree_insert_subtree(tree, insert_core, old_ids, karoo=False)
 
     return tree
@@ -2168,7 +2062,7 @@ def gp_mutate_constants(constant, term_type=None, filter_type='gaussian_filter',
     return constant
 
 
-def tree_prune_depth(tree, max_depth, env_variables, choose_distributions, float_accuracy):
+def tree_prune_depth(tree, max_depth, env_vars, choose_distributions, float_accuracy):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
@@ -2183,9 +2077,9 @@ def tree_prune_depth(tree, max_depth, env_variables, choose_distributions, float
         node_arity = tree_node_get_arity(tree, node_id)
         if node_depth == max_depth and node_arity > 0:  # replace this node with terminal
             label = tree_node_get_label(tree, node_id)
-            xtype = xtype_get_from_label(label, env_variables)
+            xtype = xtype_get_from_label(label, env_vars)
             tree = tree_node_set_arity(tree, node_id, 0)
-            new_term = choose_term(xtype[-2:], env_variables, choose_distributions, float_accuracy)  # replace label
+            new_term = choose_term(xtype[-2:], env_vars, choose_distributions, float_accuracy)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)
 
         elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth
@@ -2237,7 +2131,7 @@ def tree_normalize_exponentiation(tree):
                 new_power = float(int(float(old_power)))
                 tree = tree_node_set_label(tree, child_id, new_power)
             except ValueError:
-                pass  # sfeh: This may actually take some time. Every tree gets checked any many have '**'.
+                pass  # sfeh: This may actually take some time. Every tree gets checked and many have '**'.
     return tree
 
 
@@ -2247,11 +2141,11 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
 
     """
 
-    distance_dict = {
-        'tree_node_count': tree_get_size,
-        'tree_depth': tree_get_depth,
-        'tree_edit_distance': tree_parsimony_ted,
-    }
+    # distance_dict = {
+    #     'tree_node_count': tree_get_size,
+    #     'tree_depth': tree_get_depth,
+    #     'tree_edit_distance': tree_parsimony_ted,
+    # }
 
     if parsimony_distance == 'tree_node_count':  # number of nodes
         return tree_get_size(tree)  # returns the number of nodes
@@ -2264,7 +2158,7 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
         else:
             raise
     else:
-        print_e('Complexity measurement not available: {}'.format(parsimony_distance))
+        print_e(f'Complexity measurement not available: {parsimony_distance}')
         raise
 
 
@@ -2273,8 +2167,8 @@ def tree_check_is_sympified(tree):
     Label list from expression
     """
     tree_raw = copy.deepcopy(tree)
-    env_variables = 'ö'
-    tree_sym = tree_evolve_reduce(tree, env_variables, completely=True)
+    env_vars = 'ö'
+    tree_sym = tree_evolve_reduce(tree, env_vars, completely=True)
 
     labellist_raw = tree_get_labellist(tree_raw)
     labellist_sym = tree_get_labellist(tree_sym)
@@ -2282,126 +2176,6 @@ def tree_check_is_sympified(tree):
         return True
     else:
         return False
-
-
-def tree_viz_get_nel(tree):
-    """
-    Deprecated.
-    Returns nodes, edges and labels to visualize a tree with NetworkX or pygraphviz. Similar to deap gp visualisation.
-    Deprecated? -> Used for NetworkX- which is not used as pygrapviz could not be installed on windows. Latex is used now.
-    E. g. the tree with labels [+, 1, 2]
-    -> node_list = [1, 2, 3], edge_list = [[1, 2],[1, 3]], label_list = [x, 1, 2]
-    """
-    # iteratte over all nodes
-    # save nodes in list, all edges in list
-    node_list, edge_list, label_list = [], [], []
-    for node_id in tree_nodes_get_ids(tree):
-        node_list.append(node_id)  # node id
-        for child_id in tree_node_get_childs(tree, node_id):
-            edge_list.append([node_id, child_id])
-        label_list.append(tree_node_get_label(tree, node_id))
-    return node_list, edge_list, label_list
-
-
-def latex_tree_node_get_forest(tree, node_id=root_id):
-    """
-    creates a tex file with a tikz figure of a tree.
-
-    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
-    """
-    extras = ''
-    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
-
-    latex_label = label
-
-    # Get the best math-like representation for functions
-    if label in op:
-        op_tex = op[label]['latex1']
-        # this must now not be None! always
-        # if op_tex is not None:
-        #     latex_label = op_tex
-
-    # todo float labels too long
-    # todo underline makes lower indices... good or bad?
-
-    latex_label = '${{{}}}$'.format(latex_label)  # e.g. ->{cartPos}
-
-    # custom node design
-    if arity == 0:
-        extras += ',terminal'
-    #     extras += ',nonterminal'
-    # else:
-    #
-
-        if tree_node_is_variable(tree, node_id):
-            extras += ',variable'
-        else:
-            extras += ',constant'
-
-    if not tree_node_is_modifiable(tree, node_id):
-        extras += ',fixnode'
-
-    latex_label += extras
-
-    child_ids = tree_node_get_childs(tree, node_id)
-    for child_id in child_ids:
-        latex_label += (latex_tree_node_get_forest(tree, child_id))
-    else:
-        latex_label = '[{}]'.format(latex_label)
-
-    return latex_label
-
-
-def visualize_tree_node_force_show(tree, node_id):
-    """
-    Check if a node must be displayed as full node
-    changes_xtypes or complex_label or close_to_root or fix_node
-    - if it changes datatypes
-    """
-
-    modifiable = tree_node_get_modify(tree, node_id)
-    fix_node = True if modifiable == 0 else False  # show (at least) the root node as tree?
-    if fix_node:
-        return True
-
-    label = tree_node_get_label(tree, node_id)
-    complex_label = label in ['Ifte', 'Maxi', 'Mini']  # ideas: min, max, if, abs (sfeh: or let the user specify)
-    if complex_label:
-        return True
-
-    xtype = tree_node_get_xtype(tree, node_id)
-    changes_xtypes = 'b' in xtype and 'f' in xtype  # Attention: (xtype in ['f2b', 'b2f', 'b2f2f']) is slower
-    if changes_xtypes:
-        return True
-
-    depth = tree_node_get_depth(tree, node_id)
-    close_to_root = depth < 0  # show (at least) the root node as tree?
-    if close_to_root:
-        return True
-
-    return False
-
-
-def tree_node_is_numeric_constant(tree, node_id):
-    """
-    returns if the label is float/int constant (aka numeric value)
-    """
-    if tree_node_get_xtype(tree, node_id) == '2f':
-        try:
-            label = float(tree_node_get_label(tree, node_id))
-            return True
-        except:
-            pass
-
-    return False
-
-
-def tree_remove_minus_workaround(tree):
-    """
-    The ~ operator should be removed and replaced with a
-    """
-    # todo
-    # ~,x should be equal to -x
 
 
 def tree_group_branch_expressions(tree):

@@ -23,9 +23,8 @@
 
 
 % Hier die eigenen Daten eintragen
-\global\titel{Explainable Artificial Intelligence by Expanding Expert Solutions with Genetic Programming}
 \global\bearbeiter{Simon Fehrer}
-\global\betreuer{Dr. Michel Tokic, Dr. Steffen Udluft, Dr. Daniel Hein}
+\global\betreuer{Dr. Steffen Udluft, Dr. Michel Tokic, Dr. Daniel Hein}
 \global\aufgabensteller{Prof. Volker Tresp}
 \global\abgabetermin{29.02.2019}
 \global\ort{Munich}
@@ -103,6 +102,24 @@
 \end_header
 
 \begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+global
+\backslash
+titel{Learning optimization of interpretable and familiar rules}
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \begin_layout Standard
 \begin_inset ERT
@@ -191,6 +208,8 @@ Artificial intelligence (AI) has been experiencing a boom for some years
  now, the end of which is not yet in sight.
  Particularly in the field of reinforcement learning, superhuman performance
  has often been achieved through the use of neural networks.
+ This performance comes at the price of unexplainable decisions - control
+ is given to the machine and its decisions must be trusted.
 \end_layout
 
 \begin_layout Standard
@@ -200,17 +219,20 @@ Explainable artificial intelligence, in contrast, is a relatively young
  To explain a machine-learned (ML) solution is not trivial, since the structures
  used are mostly chaotic and incredibly complex and can only be optimized
  by lengthy training processes.
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Künstliche Intelligenz (AI) erfährt seit einigen Jahren einen Boom, dessen
  Ende nicht absehbar ist.
  Vor allem im Bereich des Reinforcement-learning konnte durch die Verwengung
  von neuronalen Netzen oft übermenschliche Performance erreicht werden.
+\end_layout
+
+\begin_layout Plain Layout
+Diese Leistung kommt aber mit dem Preis der nicht erklärbarkeit von Entscheidung
+en- die Kontrolle wird an die Maschine abgegeben und ihren Entscheidungen
+ muss vertraut werden.
 \end_layout
 
 \begin_layout Plain Layout
@@ -263,7 +285,15 @@ To verify the approach, many versions of the approach were tested.
 \end_layout
 
 \begin_layout Section
-Machine Learning
+Motivation of solving the 
+\begin_inset Quotes eld
+\end_inset
+
+black box
+\begin_inset Quotes erd
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -271,37 +301,229 @@ Machine Learning
 status open
 
 \begin_layout Plain Layout
-Machine Learning ist ein bedeutender Teil der künstlichen Intelligenz, bei
- dem eine Maschine lernt, eine Aufgabe ohne menschliche Anweisungen selbst
- zu lösen.
- Dieser lässt sich in zwei Bereiche unterteilen, das supervised learning
- und das reinforcement learning.
+Maschinen, die sich selbst verbessern können und fatale Fehlentscheidungen
+ treffen, sind für jeden ML-Philosophen ein interessantes Thema.
+ Elon Musk und Stephen Hawking haben beide ausdrücklich vor den Risiken
+ der künstlichen Intelligenz gewarnt.
+ Auch in der Bevölkerung gobt es oftmals Vorbehalte gegenüber ML.
+ Diese müssen nicht zwangweise die Ausmaße von 
+\begin_inset Quotes eld
+\end_inset
+
+Matrix
+\begin_inset Quotes erd
+\end_inset
+
+ haben.
+\end_layout
+
+\begin_layout Plain Layout
+Es gibt bereits einige einige Beispiele, bei denen bereits gut trainierte
+ künstliche Intelligenzen fatale Fehler machten.
+\end_layout
+
+\begin_layout Plain Layout
+Im Jahr 2018 verursachte der Tesla-Autopilot einen tödlichen Unfall, weil
+ er einen quer stehenden Lastwagen mit einem Straßenschild verwechselte.
+ 2015 sorgte ein Unternehmen für Aufsehen, indem es behauptete, mittels
+ Data Mining eine wichtige Rolle bei den Präsidentschaftswahlen in Amerika
+ und bei der Brexit-Entscheidung in Großbritannien gespielt zu haben.
+ Neben diesen Horrorszenarien gibt es weitere Gründe, warum es nicht einfach
+ ist, auf die Erklärungen zu verzichten.
 \end_layout
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+cite tesla, wahlen, musk + hawking
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Maschinen, die sich selbst verbessern können und fatale Fehlentscheidungen
+ treffen, sind für jeden ML-Philosophen ein interessantes Thema.
+ Elon Musk und Stephen Hawking haben beide ausdrücklich vor den Risiken
+ der künstlichen Intelligenz gewarnt.
+ Auch in der Bevölkerung gobt es oftmals Vorbehalte gegenüber ML.
+ Diese müssen nicht zwangweise die Ausmaße von “Matrix” haben.
+ Elon Musk and Stephen Hawking have both explicitly warned about the risks
+ of artificial intelligence.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hawking_AI_warning"
+literal "false"
+
+\end_inset
+
+ There are also often reservations about ML in the population.
+ These do not necessarily have to have the dimensions of 
+\begin_inset Quotes eld
+\end_inset
+
+matrix
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+There are already a few examples where even well trained artificial intelligence
+s made fatal mistakes.
+\end_layout
+
+\begin_layout Standard
+In 2018, the Tesla autopilot caused a fatal accident because it mistook
+ a truck standing crossways for a road sign.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Tesla_Autopilot_crash_article"
+literal "false"
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+citation genug zu tesla? sonst außerordentliche performance erwähnen?
+\end_layout
+
+\end_inset
+
+ In 2015, a company caused a stir by claiming to have played a major role
+ in the presidential election in America and the Brexit decision in Great
+ Britain by means of data mining.
+ Elon Musk and Stephen Hawking have both explicitly warned about the risks
+ of artificial intelligence.
+ Apart from these horror scenarios, there are other reasons why it is not
+ easy to dispense with the explanations.
+\end_layout
+
+\begin_layout Itemize
+Problems cannot be debugged by a developer as in classical programming.
+ Even if the bug is found, it is difficult to adapt it without affecting
+ other parts of the network.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Probleme können nicht, wie in der klassischen Programmierung, von einem
+ Entwickler gedebugged werden.
+ Selbst, wenn der Fehler gefunden wird, kann er nur schwer angepasst werden
+ ohne andere Teile des Netzes zu beeinflussen.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Small changes in the requirements for a neural network require a completely
+ new training process.
+ The old network can only be used to a limited extent.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Kleine Änderungen an die Anforderungen an ein neuronales Netz erfordern
+ einen komplett neuen Trainingsprozess.
+ Das alte Netz kann nur bedingt weiterverwendet werden.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+A constant behaviour of a network cannot be guaranteed, it is a risk factor
+ at all times.
+ Especially in sensitive areas, where individual decisions can often be
+ a big problem, the use of such a solution is very problematic.
+ People who are not familiar with the technology will be even more sceptical
+ about its use - often a manager will decide against a machine solution
+ although it might make sense.
+ This is especially important in court when a developer has to justify the
+ primarily random but nevertheless chosen approach.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Ein konstantes Verhalten eines Netzes kann nicht garantiert werden, es ist
+ zu jeder Zeit ein Risikofaktor.
+ Besonders in sensiblen Bereichen, wo einzelne Entscheidungen oft ein großes
+ Problem sein können, ist der Einsatz einer solchen Lösung sehr problematisch.
+ Menschen, die mit der Technik nicht vertraut sind, werden dem Einsatz gegenüber
+ noch skeptischer sein- oft wird ein Manager sich gegen eine maschinell
+ gestellte Lösung entscheiden, obwohl sie vielleicht Sinn machen würde.
+ Das ist insbesondere auch vor Gericht von Bedeutung, wenn ein Entwickler
+ den vorrangig von Zufall abhängigen, aber dennoch gewählten Ansatz rechtfertige
+n muss.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Especially in sensitive areas, for example controllers in the industry,
+ human written programs are still strongly used.
+ 
+\end_layout
+
+\begin_layout Standard
+If there was an ML solution that the developer could follow, he would be
+ greatly helped.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Besonders in sensiblen Bereichen, beispielsweise bei Controllern in der
+ Industrie, wird deshalb immernoch stark auf menschlich geschriebene Programme
+ gesetzt.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+Gäbe es eine ML Lösung, die für den Entwickler nachvolziehbar ist, wäre
+ ihm sehr stark geholfen.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Machine Learning
 \end_layout
 
 \begin_layout Standard
 Machine Learning is an important part of Artificial Intelligence, in which
  a machine learns to solve a task without human instructions.
- This can be divided into two areas, supervised learning and reinforcement
- learning.
-\end_layout
-
-\begin_layout Subsection
-Supervised learning
-\end_layout
-
-\begin_layout Standard
+ 
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
-Soll ein neuronales Netz beispielsweise, Tiere auf Bildern erkennen, könnte
- das Ziel als erreicht gelten, wenn 99 Prozent der Tiere korrekt identifiziert
- werden.
+Machine Learning ist ein bedeutender Teil der künstlichen Intelligenz, bei
+ dem eine Maschine lernt, eine Aufgabe ohne menschliche Anweisungen selbst
+ zu lösen.
 \end_layout
 
 \end_inset
@@ -310,9 +532,18 @@ Soll ein neuronales Netz beispielsweise, Tiere auf Bildern erkennen, könnte
 \end_layout
 
 \begin_layout Standard
-Supervised learning [todo image] is the task of learning a function that,
- for any given data, maps inputs to outputs only by training on samples
- of known data.
+Supervised learning 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[todo image]
+\end_layout
+
+\end_inset
+
+ is the task of learning a function that, for any given data, maps inputs
+ to outputs only by training on samples of known data.
  This is mostly done by using neural networks which derive a mapping from
  the inputs to outputs.
  An example is labeling animals on image inputs correctly or recognizing
@@ -329,30 +560,63 @@ status open
 
 \end_layout
 
-\begin_layout Subsection
-Reinforcement learning
-\end_layout
-
 \begin_layout Standard
-\begin_inset Note Note
+\begin_inset Note Comment
 status open
 
 \begin_layout Plain Layout
-[todo image]pong, doom or chess.
- [todo cite]
-\end_layout
 
-\begin_layout Plain Layout
-[todo images]
-\end_layout
-
-\begin_layout Plain Layout
-exploration-exploitation [todo cite]
 \end_layout
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+The tasks learned there are often complex, but as the training data is mostly
+ labeled by humans, it can hardly surpass human performance.
+ 
+\end_layout
+
+\begin_layout Standard
+In the case of reinforcing learning, on the other hand, a policy for a problem
+ must be learned for which no clear best solution is known.
+ Whether the decisions made to solve the problem were good is determined
+ by a reward.
+\end_layout
+
+\begin_layout Standard
+In these areas ML solutions can often exceed human solutions many times
+ over.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Die dort gelernten Aufgaben sind oft komplex, können aber vom Menschen sehr
+ gut selbst gelöst werden.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+Beim bestärkenden lernen hingegen muss eine policy für ein Problem erlernt
+ werden, für den meistens keine eindeutig beste Lösung bekannt ist.
+ Ob die getroffenen Entscheidungen zur Lösung des Problems gut waren, wird
+ über eine Belohnung geregelt.
+\end_layout
+
+\begin_layout Plain Layout
+In diesen Bereichen können ML Lösungen menschliche Lösungen oft um ein vielfache
+s übertreffen.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Reinforcement learning
 \end_layout
 
 \begin_layout Standard
@@ -396,6 +660,28 @@ status open
 
 , but the major breakthroughs were achieved by using neural networks aswell.
  In reinforcement learning, they can be used to perform exactly this mapping.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[todo image]pong, doom or chess.
+ [todo cite]
+\end_layout
+
+\begin_layout Plain Layout
+[todo images]
+\end_layout
+
+\begin_layout Plain Layout
+exploration-exploitation [todo cite]
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -489,11 +775,8 @@ literal "true"
  decisions just by inserting a single interfering pixel.
  Mistakes that humans would probably not have made in this way.
  
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Große Fortschritte konnten in den letzten Jahren vor allem mithilfe von
@@ -862,101 +1145,6 @@ Bayesian neural network, dropping out, early stopping, ...
 \end_layout
 
 \begin_layout Section
-Black box approach problems
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Es gibt bereits einige einige Beispiele, bei denen bereits gut trainierte
- künstliche Intelligenzen fatale Fehler machten.
-\end_layout
-
-\begin_layout Plain Layout
-Im Jahr 2018 verursachte der Tesla-Autopilot einen tödlichen Unfall, weil
- er einen quer stehenden Lastwagen mit einem Straßenschild verwechselte.
- 2015 sorgte ein Unternehmen für Aufsehen, indem es behauptete, mittels
- Data Mining eine wichtige Rolle bei den Präsidentschaftswahlen in Amerika
- und bei der Brexit-Entscheidung in Großbritannien gespielt zu haben.
- Elon Musk und Stephen Hawking haben beide ausdrücklich vor den Risiken
- der künstlichen Intelligenz gewarnt.
- Neben diesen Horrorszenarien gibt es weitere Gründe, warum es nicht einfach
- ist, auf die Erklärungen zu verzichten.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-cite tesla, wahlen, musk + hawking
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-There are already a few examples where even well trained artificial intelligence
-s made fatal mistakes.
-\end_layout
-
-\begin_layout Standard
-In 2018, the Tesla autopilot caused a fatal accident because it mistook
- a truck standing crossways for a road sign.
- In 2015, one company caused a stir by claiming to have played a major role
- in the presidential election in America and the Brexit decision in Great
- Britain by means of data mining.
- Elon Musk and Stephen Hawking have both explicitly warned about the risks
- of artificial intelligence.
- Apart from these horror scenarios, there are other reasons why it is not
- easy to dispense with the explanations.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Itemize
-Probleme können nicht, wie in der klassischen Programmierung, von einem
- Entwickler gedebugged werden.
- Selbst, wenn der Fehler gefunden wird, kann er nur schwer angepasst werden
- ohne andere Teile des Netzes zu beeinflussen.
-\end_layout
-
-\begin_layout Itemize
-Kleine Änderungen an die Anforderungen an ein neuronales Netz erfordern
- einen komplett neuen Trainingsprozess.
- Das alte Netz kann nur bedingt weiterverwendet werden.
-\end_layout
-
-\begin_layout Itemize
-Ein konstantes Verhalten eines Netzes kann nicht garantiert werden, es ist
- zu jeder Zeit ein Risikofaktor.
- Besonders in sensiblen Bereichen, wo einzelne Entscheidungen oft ein großes
- Problem sein können, ist der Einsatz einer solchen Lösung sehr problematisch.
- Menschen, die mit der Technik nicht vertraut sind, werden dem Einsatz gegenüber
- noch skeptischer sein- oft wird ein Manager sich gegen eine maschinell
- gestellte Lösung entscheiden, obwohl sie vielleicht Sinn machen würde.
- Das ist insbesondere auch vor Gericht von Bedeutung, wenn ein Entwickler
- den vorrangig von Zufall abhängigen, aber dennoch gewählten Ansatz rechtfertige
-n muss.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
 Genetic programming
 \end_layout
 
@@ -984,9 +1172,8 @@ Das Ziel von GP ist es, über viele Generationen hinweg das eine Programm
  zu finden, das besser ist als alle anderen.
  Um dieses Programm zu finden, muss die Programmpopulation sowohl die besten
  Programme fördern als auch Raum für neue Ansätze schaffen.
- (todo Exploration-Exploitation-Exploitation-Kompromiss?) Zu diesem Zweck
- müssen sowohl die Selektion als auch die genetischen Modifikationen entsprechen
-d gewählt werden.
+ Zu diesem Zweck müssen sowohl die Selektion als auch die genetischen Modifikati
+onen entsprechend gewählt werden.
 \end_layout
 
 \end_inset
@@ -1027,19 +1214,15 @@ Selection (Tournament Selection)
 \end_layout
 
 \begin_layout Standard
-In order to achieve a continuous improvement, the programs are evaluated
+The fitness is the common measurement to rate candidates in a GP population,
+ which represents the performance of the candidate working online in the
+ real environment (or a simulation).
+ In order to achieve a continuous improvement, the programs are evaluated
  and their fitness is calculated.
  The best candidates for the next generation are then evaluated through
  a selection process.
-\end_layout
-
-\begin_layout Standard
-A common way to combine these two approaches is tournament selection.
- 
-\end_layout
-
-\begin_layout Standard
-A tournament is formed from a handful of candidates (often 3 to 
+ A common way to combine these two approaches is tournament selection.
+ A tournament is formed from a handful of candidates (often 3 to 
 \begin_inset Formula $7$
 \end_inset
 
@@ -1078,18 +1261,12 @@ Mutation
 \end_layout
 
 \begin_layout Standard
-During the mutation, parts of programs are changed.
-\end_layout
-
-\begin_layout Standard
-Point Mutation: A single node of a tree is selected and changed.
+During the mutation, parts of programs are changed.Point Mutation: A single
+ node of a tree is selected and changed.
  If the node is a function, it is randomly replaced by a new one.
  If it is a variable, its value is genetically optimized, for which purpose
  it is changed with a Gaussian filter.
-\end_layout
-
-\begin_layout Standard
-Branch Mutation: A random node of the tree is selected and the complete
+ Branch Mutation: A random node of the tree is selected and the complete
  branch is regenerated.
  This allows even larger changes to occur.
  Furthermore, depending on the length of the new branch, the total number
@@ -1283,12 +1460,9 @@ TODO image]
 Complexity threshold
 \end_layout
 
-\begin_layout Standard
-- Complexity
-\end_layout
-
-\begin_layout Standard
-Although fitness is the main criterion, there is often a maximum size that
+\begin_layout Itemize
+Complexity.
+ Although fitness is the main criterion, there is often a maximum size that
  a candidate may not exceed.
  Complex trees greatly increase the evaluation time.
  In addition, above a certain level of complexity, no fundamental improvements
@@ -2337,6 +2511,19 @@ A much more suitable way to have the same function appear more often is
  so some of them can be omitted.
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Random TODO: Developer implement the MC start direction on his own?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsubsection
 (paragraph?) Recognition of origin, number and type of changes
 \end_layout
@@ -3303,65 +3490,6 @@ label list:
 \end_inset
 
  
-\begin_inset listings
-inline true
-status open
-
-\begin_layout Plain Layout
-
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Itemize
@@ -3409,6 +3537,49 @@ To define the core program you have to select the core nodes.
 
 \begin_layout Subsection
 Explainable GP Framework, layer0 mutations
+\end_layout
+
+\begin_layout Standard
+The possibility to implement fixed nodes requires some adjustments to the
+ operators of the GP, because all trees need the same node core.
+ The changes include: 
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Die Möglichkeit, fixe Knoten zu implementieren, erfordert einige Anpassungen
+ an die Operatoren der GP, da alle Bäume denselben Knotenkern benötigen.
+ Die Änderungen umfassen:
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Mutating mofifiably nodes only
+\end_layout
+
+\begin_layout Itemize
+layer-wise crossover
+\end_layout
+
+\begin_layout Itemize
+node-based build options
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Wenn ein Knoten fix ist, wird dies im Knoten mit einer Dummyvariablen vermerkt.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -4028,13 +4199,52 @@ combining both can both be the best and worst of both worlds?
 \end_layout
 
 \begin_layout Section
-Rating candidates with regression error instead of fitness
+Learning offline on a regression surrogate model
 \end_layout
 
 \begin_layout Standard
-The fitness is the common measurement to rate candidates in a population,
- which represents the performance of the candidate working online in the
- real environment (or a simulation).
+As Daniel Hein has found out in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+literal "false"
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Genaue Seite angeben? z.B.
+ S.
+ 125
+\end_layout
+
+\end_inset
+
+ Genaue Seite angeben? e.g.
+ p.
+ 125, policies trained on replacement models (for example also by regression
+ on data) are almost always significantly worse than the versions trained
+ on real system dynamics.
+ Also, the variance in fitness becomes very large for complex candidates
+ where the overfitting becomes noticeable.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Wie Daniel Hein in herausgefunden hat, sind Policies, die auf Ersatzmodellen
+ trainiert worden sind (zum Beispiel auch durch Regression auf Daten) fast
+ immer signifikant schlechter als die auf der echten Systemdynamik trainierten
+ Versionen.
+ Auch wird die Varianz der Fitness bei komplexen Kandidaten sehr groß, bei
+ denen das Overfitting bemerkbar wird.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -4129,7 +4339,11 @@ inal[{$
 \backslash
 cdot$},nonterminal[{5},terminal,constant][{6},terminal,constant]][{$
 \backslash
-cdot$},nonterminal[{7},terminal,constant][{8},terminal,constant]]]] 
+cdot$},nonterminal[{7},terminal,constant][{8},terminal,constant]]]]
+\end_layout
+
+\begin_layout Plain Layout
+
 \backslash
 end{forest}
 \end_layout
@@ -4140,28 +4354,306 @@ end{forest}
 \end_layout
 
 \begin_layout Chapter
-Experiments
+Benchmarks
 \end_layout
 
 \begin_layout Standard
 This chapter presents the benchmarks against which the approach has been
  tested.
- This includes mountain car (MC) and cartpole (CP), as well as the Industrial
+ This includes Mountain car (MC) and Cartpole (CP), as well as the Industrial
  Benchmark (IB).
  The first benchmarks are widely used, simple toy benchmarks, where the
  concept can be tested well.
  The IB is, in contrast, a stochastically independent, high-dimensional
- testbed, which was especially designed for the simulation of very complex
- processes in industry for reinforcement learning.
-\end_layout
-
-\begin_layout Standard
+ testbed, which was especially designed by scientists at Siemens for the
+ simulation of very complex processes in industry for reinforcement learning.
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
 % todo regression aswell?
 \end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="7" columns="4">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+CP
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+IB
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Observation dimensionality
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Action dimensionality
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+discrete
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+discrete
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+continuous
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Episode end
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+at target
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+after fail
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+none
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Stochasticity
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+none
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+none
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+state-dependent
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Markov state observability
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fully
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fully
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+partially
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
 
 \end_inset
 
@@ -4200,7 +4692,7 @@ literal "true"
 
 \begin_layout Standard
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 % todo hein 
@@ -4267,8 +4759,12 @@ A possible starting position in MC
 
 \end_layout
 
+\begin_layout Subsection
+Implementation
+\end_layout
+
 \begin_layout Standard
-In the discrete version of MC there are three possible actions:
+In the discrete version of MC there are three possible actions
 \end_layout
 
 \begin_layout Standard
@@ -4362,6 +4858,12 @@ push right
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+The state space of the environment includes the position and velocity.
+ Es sollte erwähnt werden, dass die Wertemenge der Position um den Faktor
+ 10 größer als die Geschwindugkeit ist.
 \end_layout
 
 \begin_layout Standard
@@ -4493,87 +4995,25 @@ velocity
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Zusätzlich zu Histogrammen wurden für MC Entscheidungs-plots erstellt.
- Diese Zeigen für die jeweiligen Observations-dimensionen, welche Entscheidungen
- getroffen wurden.
+\begin_layout Subsubsection
+Kernel
 \end_layout
 
-\end_inset
-
-
+\begin_layout Subsubsection
+Decision plots
 \end_layout
 
 \begin_layout Standard
-In addition to histograms, decision plots were created for MC.
+MC offers the opportunity to create decision plots.
  These show which decisions have been made for the respective observation
  dimensions.
-\end_layout
-
-\begin_layout Subsection
-Learning goals on the way to the perfect solution
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
 status open
 
 \begin_layout Plain Layout
-Versuche, die Entfernung zum Ziel durch Beschleunigung in dessen Richtung
- zu verringern, werden schnell als erfolglos erkannt.
- Um das Ziel überhaupt zu erreichen, muss der Agent lernen, mit Hilfe der
- Gegenneigung an Schwung zu gewinnen.
- Dies kann z.B.
- mit der 
-\begin_inset Quotes eld
-\end_inset
-
-einfachen
-\begin_inset Quotes erd
-\end_inset
-
- Heuristik erreicht werden, immer in die Richtung zu beschleunigen, in die
- man sich gerade bewegt.
-\end_layout
-
-\begin_layout Plain Layout
-Auf diese Weise wird der Wagen immer das Ziel erreichen, aber es gibt noch
- viel Raum für Optimierung.
-\end_layout
-
-\begin_layout Itemize
-Vorzeitig umkehren: Um das Ziel zu erreichen, muss man nicht den maximalen
- Schwung nehmen.
- Wenn Sie früher umkehren, können Sie viel Zeit sparen.
- 
-\end_layout
-
-\begin_layout Itemize
-Verwerfen Sie Aktion 1 
-\begin_inset Quotes eld
-\end_inset
-
-Nichts tun
-\begin_inset Quotes erd
-\end_inset
-
-: Nichtstun macht im Prinzip keinen Sinn - die Geschwindigkeit geht beim
- Schwung verloren, und beim Umdrehen könnten Sie statt zweimal hintereinander
- nichts zu tun, normalerweise in die entgegengesetzte Richtung beschleunigen.
- 
-\end_layout
-
-\begin_layout Itemize
-Mindestanzahl der erforderlichen Umdrehungen.
- Je nach Ausgangslage kann das Ziel deterministisch mit zwei Drehungen (nach
- links, nach rechts) oder mit drei Drehungen (nach rechts, nach links, nach
- rechts) erreicht werden.
- Da diese Entscheidung relativ weit vom Ziel entfernt ist, ist es schwierig,
- von einem Agenten erlernt zu werden.
+Für die MC Auswertung können dank der niedrigen Eingabedimensionen Entscheidungs
+-plots erstellt, die für die jeweiligen Observations-dimensionen zeigen,
+ welche Entscheidungen getroffen wurden.
 \end_layout
 
 \end_inset
@@ -4582,605 +5022,24 @@ Mindestanzahl der erforderlichen Umdrehungen.
 \end_layout
 
 \begin_layout Standard
-Attempts to reduce the distance to the target by accelerating in its direction
- are quickly recognized as unsuccessful.
- In order to reach the target at all, the agent must learn to gain momentum
- with the help of the counter slope.
- This can be achieved, for example, with the 
-\begin_inset Quotes eld
-\end_inset
-
-simple
-\begin_inset Quotes erd
-\end_inset
-
- heuristic of always accelerating in the direction in which one is currently
- moving.
-\end_layout
-
-\begin_layout Standard
-This way the cart will always reach the goal, but there is still plenty
- of room for optimization.
-\end_layout
-
-\begin_layout Itemize
-Reverse early: To reach the goal, you don't have to take the maximum momentum.
- If you turn back earlier, a lot of time can be saved.
- 
-\end_layout
-
-\begin_layout Itemize
-Discard Action 1 
-\begin_inset Quotes eld
-\end_inset
-
-Do nothing
-\begin_inset Quotes erd
-\end_inset
-
-: Doing nothing makes no sense in principle - speed is lost when taking
- a swing and when turning around, instead of doing nothing two consecutive
- times, you could normally accelerate in the opposite direction.
- 
-\end_layout
-
-\begin_layout Itemize
-Minimum number of necessary turns.
- Depending on the starting position, the goal can be reached deterministically
- with two turns (to the left, to the right) or with three turns (to the
- right, to the left, to the right).
- Since this decision is relatively far from the end, it is difficult to
- be learn by an agent.
-\end_layout
-
-\begin_layout Subsection
-All mountaincar runs
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Als 
-\begin_inset Quotes eld
-\end_inset
-
-Expertenprogramm
-\begin_inset Quotes erd
-\end_inset
-
- wurden eine Vielzahl an verschieden strukturierten Agenten getestet.
- Die Unterschiede teilen sich in verschiedene Aspekte auf.
-\end_layout
-
-\begin_layout Itemize
-Heuristik
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-In die aktuelle Richtung beschleunigen
-\end_layout
-
-\begin_layout Enumerate
-Preset policy mit parabelartiger Ober- und Untergrenze
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Black box Daten
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sarsa Agent nach 75 Trainingsschritten (Sarsa75)
-\end_layout
-
-\begin_layout Enumerate
-Sarsa Agent nach 200 Trainingsschritten (Sarsa200)
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Einige Knoten sind als Kernstruktur fix
-\end_layout
-
-\begin_layout Itemize
-Aktion 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- im Vornhinein ausschließen
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-As an 
-\begin_inset Quotes eld
-\end_inset
-
-expert program
-\begin_inset Quotes erd
-\end_inset
-
- a large number of differently structured agents were tested.
- The differences are divided into different aspects.
-\end_layout
-
-\begin_layout Itemize
-Heuristics
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-accelerate in the current direction
-\end_layout
-
-\begin_layout Itemize
-preset policy with parabolic upper and lower limit
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Black box data
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sarsa Agent after 75 training steps (Sarsa75)
-\end_layout
-
-\begin_layout Enumerate
-Sarsa Agent after 200 training steps (Sarsa200)
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Some nodes are fixed as core structure
-\end_layout
-
-\begin_layout Itemize
-Exclude action 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- in advance
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-if cartVel <= 0:
-\end_layout
-
-\begin_layout Plain Layout
-
-  push left
-\end_layout
-
-\begin_layout Plain Layout
-
-bbbb
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
+\begin_inset Float figure
 wide false
 sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="9" columns="4">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Nr.
-\end_layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 50
+	scale 40
 
 \end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
 
-\begin_layout Plain Layout
-Main heuristic
-\end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-special feature
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Findings
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.0
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="3" alignment="center" valignment="middle" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Move towards moving direction
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-condition 
-\begin_inset Quotes eld
-\end_inset
-
-<=
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Condition should be 
-\begin_inset Quotes eld
-\end_inset
-
-<
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.1
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-condition 
-\begin_inset Quotes eld
-\end_inset
-
-<
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-TED has no influence on large changes
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.2
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fix nodes
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-structure is kept throughout the approach
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.3
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-consider 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- as separate decision
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- is superfluous
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.4
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-gp-friendly architecture
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.5
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-improvements-only (preview)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2.0
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Preset policy
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-very good complex and extensive third party approach
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-3.0
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Improved experts approach
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-very good if-then-else heavy approach
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
+	lyxscale 50
+	scale 40
 
 \end_inset
 
@@ -5188,268 +5047,29 @@ very good if-then-else heavy approach
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Overview of Mountain car expert approaches
-\end_layout
-
-\end_inset
-
-
-\end_layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
+	lyxscale 50
+	scale 40
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-Simple heuristic 
-\begin_inset Quotes eld
-\end_inset
-
-<=
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Als ersten Agenten testen wir den 
-\begin_inset Quotes eld
-\end_inset
-
-einfachsten
-\begin_inset Quotes erd
-\end_inset
-
- Ansatz, der immer in die Richtung beschleunigt, in die er sich gerade bewegt.
-\end_layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
+	lyxscale 50
+	scale 40
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-As the first agent, we test the 
-\begin_inset Quotes eld
-\end_inset
-
-simplest
-\begin_inset Quotes erd
-\end_inset
-
- approach, which always accelerates in the direction in which it is currently
- moving.
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-if cartVel <= 0:
 \end_layout
 
 \begin_layout Plain Layout
-
-	push left
-\end_layout
-
-\begin_layout Plain Layout
-
-else:
-\end_layout
-
-\begin_layout Plain Layout
-
-	push right
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Kleiner-gleich als Bedingung zu nehmen war allerdings bereits ein Fehler.
-\end_layout
-
-\begin_layout Plain Layout
-Unter Bedingung 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Formula $\leq$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
- wird, da die Startgeschwindigkeit 
-\begin_inset Formula $v_{start}=0$
-\end_inset
-
- ist, immer nach links losgefahren.
- Das ist weitaus langsamer als Bedingung 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Formula $<$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, weshalb das Expertenprogramm an dieser Stelle bereits abgeändert wurde.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-To take smaller-even as a condition, however, was already a mistake.
-\end_layout
-
-\begin_layout Standard
-Under condition 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Formula $\leq$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, since the start speed is 
-\begin_inset Formula $v_{start}=0$
-\end_inset
-
-, the vehicle always starts to the left.
- This is much slower than condition 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Formula $<$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, which is why the expert program has already been modified at this point.
- 
-\end_layout
-
-\begin_layout Subsubsection
-Simple heuristic 
-\begin_inset Quotes eld
-\end_inset
-
-<
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Die beste Version des einfachsten Agenten wird als Startprogramm verwendet.
-\end_layout
-
-\begin_layout Plain Layout
-Der Computational tree besteht aus 6 Knoten, die alle verändert werden können.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The best version of the simplest agent is used as the starting program.
-\end_layout
-
-\begin_layout Standard
-The computational tree consists of 6 nodes, all of which can be modified.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float algorithm
+\begin_inset Float figure
 wide false
 sideways false
 status open
-
-\begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-if cartVel < 0:
-\end_layout
-
-\begin_layout Plain Layout
-
-	push left
-\end_layout
-
-\begin_layout Plain Layout
-
-else:
-\end_layout
-
-\begin_layout Plain Layout
-
-	push right
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "tikz/MTC_trees/test_simple_v1.tex"
-
-\end_inset
-
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -5461,9 +5081,113 @@ filename "tikz/MTC_trees/test_simple_v1.tex"
 
 
 \begin_inset Graphics
-	filename img/MTC/decision_plots/diff-MTC200_tree_simple0.png
+	filename img/MTC/decision_plots/decisions-AgentV1p40.png
 	lyxscale 50
 	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Die standard-policy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-XiaoPresetAgent.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Preset policy: Recognizable are used mathematical structures such as parabolas
+ and the renunciation of 
+\begin_inset Quotes eld
+\end_inset
+
+Action 0
+\begin_inset Quotes erd
+\end_inset
+
+.
+ On the right, a simplification is visible, found with the help of gp.
+ It has recognized the upper limit as superfluous.
+ 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Preset policy: Erkennbar sind verwendeten mathematischen Strukturen wie
+ z.
+ B.
+ Parabeln sowie der Verzicht auf 
+\begin_inset Quotes eld
+\end_inset
+
+Aktion 0
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Rechts ist eine Vereinfachung erkennbar, gefunden mithilfe der genetischen
+ Programmierung.
+ Sie hat die Obergrenze als überflüssig erkannt.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -5472,7 +5196,7 @@ filename "tikz/MTC_trees/test_simple_v1.tex"
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/decision_plots/MTC200_tree_simple0.png
+	filename img/MTC/decision_plots/decisions-Good_Expert.png
 	lyxscale 50
 	scale 40
 
@@ -5485,299 +5209,69 @@ filename "tikz/MTC_trees/test_simple_v1.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Simple algorithm
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Wie man vor allem bei den komplexeren Lösungen sehen kann, verliert die
- TED ab einer gewissen Größe ihre Wirkung.
- Die Aktion 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- wird zudem häufig ausgewählt, vor allem In Randbereichen.
-\end_layout
-
-\begin_layout Plain Layout
-Zu beiden Problemen kann der Entwickler bereits im Vorhinein Einschränkungen
- machen, beispielsweise indem die if-Entscheidung auf die beiden Fälle 0
- und 2 beschränkt wird.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-As can be seen especially with the more complex solutions, the TED loses
- its effect after a certain size.
- Action 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- is often selected, especially in marginal areas.
-\end_layout
-
-\begin_layout Standard
-For both problems the developer can make restrictions in advance, for example
- by limiting the 
-\begin_inset Quotes eld
-\end_inset
-
-if
-\begin_inset Quotes erd
-\end_inset
-
--decision to the two cases 0 and 2.
-\end_layout
-
-\begin_layout Paragraph
-Problems
-\end_layout
-
-\begin_layout Standard
-The initial state is a major problem for regression analyses because, despite
- its crucial role, it occurs only once in the data set.
- For this reason, there are sometimes large differences in performance when
- testing the agents.
- Just past is also beside the point.
- Some Sarsa runs end with very tight finishes.
- Some runs of the trained agents are unfortunately not lucky and have to
- turn back shortly before the finish.
-\end_layout
-
-\begin_layout Standard
-The SARSA approach was chosen because it was the fastest that could solve
- mountain car well.
- However, this meant that little was explored in the learning process and
- often there are wrong decisions that but there's still a lot of air up
- there.
- Very easy to learn that the goal can be achieved with less momentum and
- you can turn with 
-\end_layout
-
-\begin_layout Standard
-funfact: cartvel 
-\begin_inset Formula $<$
-\end_inset
-
- 0 then 0 else 2 cartvel 
-\begin_inset Formula $\leq$
-\end_inset
-
- 0 then 0 else 2 
-\end_layout
-
-\begin_layout Standard
-Reverse early
-\end_layout
-
-\begin_layout Standard
-This simple policy can further be improved, where the most efficient way
- is probably by reversing early on the opposite side.
- 
-\end_layout
-
-\begin_layout Paragraph
-Close-form preset policy
-\end_layout
-
-\begin_layout Standard
-In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "xiao2019"
-literal "true"
-
-\end_inset
-
-, a close-form preset policy was proposed, defining a lower and upper bound
- for the car to determine the actions.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-if
-\end_layout
-
-\begin_layout Plain Layout
-
-  min(-0.09(position+0.25)^2+0.03, 0.3(position+0.09)^4-0.008)
-\end_layout
-
-\begin_layout Plain Layout
-
-  <= velocity <=
-\end_layout
-
-\begin_layout Plain Layout
-
-  (-0.07(position+0.38)^{2}+0.07)
-\end_layout
-
-\begin_layout Plain Layout
-
-then
-\end_layout
-
-\begin_layout Plain Layout
-
-  push right
-\end_layout
-
-\begin_layout Plain Layout
-
-else
-\end_layout
-
-\begin_layout Plain Layout
-
-  push left
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Close-form preset polixy by Xiao
-\end_layout
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "code:MC-agent:preset_policy"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Mit 36 Knoten hat dieses Expertenprogramm bereits eine enorme natürliche
- Baumgröße, wodurch die TED selbst bei relativ großen Änderungen nicht ihre
- Wirkung verliert.
-\end_layout
-
-\begin_layout Plain Layout
-Dadurch konnten hier auch zwei essentielle Verbesserungen gefunden werden.
- Zum einen wurde erkannt, dass die Obergrenze keine Bedeutung für das MC-Experim
-ent hat.
- Im zweiten Fall wurde durch eine kleine Änderung eine enorme Verbesserung
- erreicht.
- Diese schneidet beim Test am echten Experiment sogar besser ab, als die
- Sarsa75 policy.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-With 36 nodes, this expert program already has an enormous natural tree
- size, so that the TED does not lose its effect even with relatively large
- changes.
-\end_layout
-
-\begin_layout Standard
-Thus two essential improvements could be found here.
- Firstly, it was recognized that the upper limit has no significance for
- the MC experiment.
- In the second case an enormous improvement was achieved by a small change.
- This improvement is even better than the Sarsa75 policy in the real experiment.
-\end_layout
-
-\begin_layout Paragraph
-Real solution, optimal solution and expert abstraction
-\end_layout
-
-\begin_layout Standard
-As we will see and discuss in
+asd
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-
-\backslash
-ref{todo}
+todo
 \end_layout
 
 \end_inset
 
-, the first decision is most relevant for the optimal solution.
- The starting velocity is always 0, but depending on the starting position,
- you have to take three or four turns to reach the goal.
- For this purpose, another expert policy has been implemented, which explicitly
- emphasizes this state.
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO reference
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Hier erkennt man auch gut die Logik, die bestimmten Lernansätzen zugrunde
+ liegt.
+\end_layout
+
+\begin_layout Plain Layout
+Alle SARSA-Ansätze haben viele wilde Fleckenlandschaften, die ein großer
+ Unsicherheitsfaktor sind.
+\end_layout
+
+\begin_layout Plain Layout
+Der menschlich geschriebene, pragmatische Ansatz lässt hingegen die Unterteilung
+ in if-segmente erkennen.
+\end_layout
+
+\begin_layout Plain Layout
+Die genetische Programmieung
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
-Machine learning approach
+MC Black box approach (Sarsa)
 \end_layout
 
 \begin_layout Standard
@@ -5815,7 +5309,148 @@ Computational tree of the simplest program
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The gym-environment has a leaderboard containing the approaches that have
+ been able to learn the fastest to create a policy that solves the problem
+ in steps of less than 
+\begin_inset Formula $110$
+\end_inset
+
+.
+\begin_inset Foot
+status open
+
 \begin_layout Plain Layout
+\begin_inset CommandInset href
+LatexCommand href
+name "https://github.com/openai/gym/wiki/Leaderboard"
+target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ The best RL approach at that time was chosen as a black box, which uses
+ a SARSA approach paired with tiling to achieve the target of less than
+ 110 steps in 75 episodes.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "false"
+
+\end_inset
+
+ 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Der zum damaligen Zeitpunkt beste RL-Ansatz wurde als Blackbox gewählt,
+ welcher einen SARSA Ansatz, gepaart mit Tiling, nutzt um in 75 Episoden
+ das Ziel von unter 110 Schritten erreicht.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
+	lyxscale 50
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+uniform height 5cm?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-75 decision plot for the complete state space (left) and for the occuring
+ states only (right)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/dummy_plots/dummy-sarsa_agent_200.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-200 decision plot for the complete state space (left) and for the
+ occuring states only (right)
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
@@ -5825,41 +5460,95 @@ Computational tree of the simplest program
 \end_layout
 
 \begin_layout Standard
-The only real requirement of the approach is that it performs better on
- average than the explainable approach and is based on a neural network.
- Conveniently, the gym-environment has a leaderboard containing the approaches
- that have been able to learn the fastest to create a policy that solves
- the problem in steps of less than 
-\begin_inset Formula $110$
+In the chosen approach, cherrypicking was actively not used, since every
+ approach should work if its average performance is better.
+ Nevertheless, it should be mentioned that the approaches used on the Leaderboar
+d were explicitly not designed for robustness, but for rapid learning success.
+ In the case of the Sarsa75 approach, this manifests itself in a generally
+ poor exploration, coupled with clearly 
+\begin_inset Quotes eld
+\end_inset
+
+wrong
+\begin_inset Quotes erd
+\end_inset
+
+ decisions in some areas
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo show in image
+\end_layout
+
 \end_inset
 
 .
- 
+ This can lead to problems in the GP process, as discussed in 
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-ref{mtc_leaderboards}
+in todo ref
 \end_layout
 
 \end_inset
 
- The approach chosen here is a SARSA procedure
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[TODO paper Sarsa? Approach?]
+.
 \end_layout
 
-\end_inset
-
- with tiling that is able to learn a sufficient policy after 75 episodes
- with an average episode reward of 
+\begin_layout Standard
+To compare a slightly better explored approach, the same Sarsa approach
+ was trained for 200 steps.
+ Uncertainties still exist, but they play a much smaller role and the performanc
+e increases accordingly by almost 5 steps to 
 \begin_inset Formula $\approx-103.4$
 \end_inset
 
 .
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Bei dem gewählten Ansatz wurde aktiv kein cherrypicking verwendet, da jeder
+ Ansatz funktionieren sollte, wenn seine Durchschnittsperformance besser
+ ist.
+ Dennoch sollte erwähnt werden, dass die Ansätze die auf dem Leaderboard
+ verwendet wurden, explizit nicht auf robustheit ausgelegt wurden, sondern
+ auf einen schnellen Lernerfolg.
+ Dies äußert sich im Fall des Sarsa75 Ansatzes durch eine allgemein schlechte
+ exploration, gepaart mit teilweise flächendeckend klar 
+\begin_inset Quotes eld
+\end_inset
+
+falschen
+\begin_inset Quotes erd
+\end_inset
+
+ Entscheidungen.
+ Dies kann beim GP Prozess zu Problemen führen, wie in 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo ref
+\end_layout
+
+\end_inset
+
+gezeigt wird.
+\end_layout
+
+\begin_layout Plain Layout
+Um einen etwas besser explorierten Ansatz im Vergleich zu sehen, wurde derselbe
+ Ansatz für 200 Schritte trainiert.
+ Unsicherheiten kommen zwar immernoch vor, spielen aber eine viel geringere
+ Rolle und die Performance steigt entsprechend auch um fast 5 Schritte.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -6122,8 +5811,21 @@ Fix preset Policy
 \end_layout
 
 \begin_layout Standard
-For this initial experiment, the black box is explicitly not , the way it
- works was deliberately not looked at in detail.
+The black box was deliberately not considered, except for the fact that
+ it had to perform better than the expert approach.
+ 
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Die Black box wurde absichtlich nicht betrachtet, bis auf den Fakt, dass
+ sie eine bessere Performance als der Expertenansatz haben musste.
+ 
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
@@ -6166,7 +5868,7 @@ noprefix "false"
 status open
 
 \begin_layout Plain Layout
-[todo epsilon wert = 0?] 
+[todo epsilon wert = 0?]
 \end_layout
 
 \end_inset
@@ -6179,10 +5881,6 @@ status open
 wide false
 sideways false
 status open
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -6220,6 +5918,500 @@ Sarsa75 implementation learns to outperform the heuristic on average, but
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Learning goals on the way to the perfect solution
+\end_layout
+
+\begin_layout Standard
+Attempts to reduce the distance to the target by accelerating in its direction
+ are quickly recognized as unsuccessful.
+ In order to reach the target at all, the agent must learn to gain momentum
+ with the help of the counter slope.
+ This can be achieved, for example, with the 
+\begin_inset Quotes eld
+\end_inset
+
+simple
+\begin_inset Quotes erd
+\end_inset
+
+ heuristic of always accelerating in the direction in which one is currently
+ moving.
+\end_layout
+
+\begin_layout Standard
+This way the cart will always reach the goal, but there is still plenty
+ of room for optimization.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Versuche, die Entfernung zum Ziel durch Beschleunigung in dessen Richtung
+ zu verringern, werden schnell als erfolglos erkannt.
+ Um das Ziel überhaupt zu erreichen, muss der Agent lernen, mit Hilfe der
+ Gegenneigung an Schwung zu gewinnen.
+ Dies kann z.B.
+ mit der 
+\begin_inset Quotes eld
+\end_inset
+
+einfachen
+\begin_inset Quotes erd
+\end_inset
+
+ Heuristik erreicht werden, immer in die Richtung zu beschleunigen, in die
+ man sich gerade bewegt.
+\end_layout
+
+\begin_layout Plain Layout
+Auf diese Weise wird der Wagen immer das Ziel erreichen, aber es gibt noch
+ viel Raum für Optimierung.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Reverse early: To reach the goal, you don't have to take the maximum momentum.
+ If you turn back earlier, a lot of time can be saved.
+ 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Vorzeitig umkehren: Um das Ziel zu erreichen, muss man nicht den maximalen
+ Schwung nehmen.
+ Wenn Sie früher umkehren, können Sie viel Zeit sparen.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Discard Action 1 
+\begin_inset Quotes eld
+\end_inset
+
+Do nothing
+\begin_inset Quotes erd
+\end_inset
+
+: Doing nothing makes no sense in principle - speed is lost when taking
+ a swing and when turning around, instead of doing nothing two consecutive
+ times, you could normally accelerate in the opposite direction.
+ 
+\end_layout
+
+\begin_layout Itemize
+Minimum number of necessary turns.
+ Depending on the starting position, the goal can be reached deterministically
+ with two turns (to the left, to the right) or with three turns (to the
+ right, to the left, to the right).
+ Since this decision is relatively far from the end, it is difficult to
+ be learn by an agent.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Mindestanzahl der erforderlichen Umdrehungen.
+ Je nach Ausgangslage kann das Ziel deterministisch mit zwei Drehungen (nach
+ links, nach rechts) oder mit drei Drehungen (nach rechts, nach links, nach
+ rechts) erreicht werden.
+ Da diese Entscheidung relativ weit vom Ziel entfernt ist, ist es schwierig,
+ von einem Agenten erlernt zu werden.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+All mountaincar runs
+\end_layout
+
+\begin_layout Standard
+As an 
+\begin_inset Quotes eld
+\end_inset
+
+expert program
+\begin_inset Quotes erd
+\end_inset
+
+ a large number of differently structured agents were tested.
+ The differences are divided into different aspects.
+\end_layout
+
+\begin_layout Itemize
+Heuristics
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+accelerate in the current direction
+\end_layout
+
+\begin_layout Enumerate
+preset policy with parabolic upper and lower limit
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Black box data
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Sarsa Agent after 75 training steps (Sarsa75)
+\end_layout
+
+\begin_layout Enumerate
+Sarsa Agent after 200 training steps (Sarsa200)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Some nodes are fixed as core structure
+\end_layout
+
+\begin_layout Itemize
+Exclude action 
+\begin_inset Quotes eld
+\end_inset
+
+no push
+\begin_inset Quotes erd
+\end_inset
+
+ in advance
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if cartVel <= 0:
+\end_layout
+
+\begin_layout Plain Layout
+
+  push left
+\end_layout
+
+\begin_layout Plain Layout
+
+else
+\end_layout
+
+\begin_layout Plain Layout
+
+	push right
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Simple, two actions, 
+\begin_inset Quotes eld
+\end_inset
+
+<=
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Als ersten Agenten testen wir den 
+\begin_inset Quotes eld
+\end_inset
+
+einfachsten
+\begin_inset Quotes erd
+\end_inset
+
+ Ansatz, der immer in die Richtung beschleunigt, in die er sich gerade bewegt.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As the first agent, we test the 
+\begin_inset Quotes eld
+\end_inset
+
+simplest
+\begin_inset Quotes erd
+\end_inset
+
+ approach, which always accelerates in the direction in which it is currently
+ moving.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if cartVel <= 0:
+\end_layout
+
+\begin_layout Plain Layout
+
+  push left
+\end_layout
+
+\begin_layout Plain Layout
+
+else:
+\end_layout
+
+\begin_layout Plain Layout
+
+  push right
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Kleiner-gleich als Bedingung zu nehmen war allerdings bereits ein Fehler.
+\end_layout
+
+\begin_layout Plain Layout
+Unter Bedingung 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Formula $\leq$
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ wird, da die Startgeschwindigkeit 
+\begin_inset Formula $v_{start}=0$
+\end_inset
+
+ ist, immer nach links losgefahren.
+ Das ist weitaus langsamer als Bedingung 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Formula $<$
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+, weshalb das Expertenprogramm an dieser Stelle bereits abgeändert wurde.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To take smaller-even as a condition, however, was already a mistake.
+\end_layout
+
+\begin_layout Standard
+Under condition 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Formula $\leq$
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+, since the start speed is 
+\begin_inset Formula $v_{start}=0$
+\end_inset
+
+, the vehicle always starts to the left.
+ This is much slower than condition 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Formula $<$
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+, which is why the expert program has already been modified at this point.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Simple, two actions, 
+\begin_inset Quotes eld
+\end_inset
+
+<
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The best version of the simplest agent is used as the starting program.
+\end_layout
+
+\begin_layout Standard
+The computational tree consists of 6 nodes, all of which can be modified.
+ 
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Die beste Version des einfachsten Agenten wird als Startprogramm verwendet.
+\end_layout
+
+\begin_layout Plain Layout
+Der Computational tree besteht aus 6 Knoten, die alle verändert werden können.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if cartVel < 0:
+\end_layout
+
+\begin_layout Plain Layout
+
+  push left
+\end_layout
+
+\begin_layout Plain Layout
+
+else:
+\end_layout
+
+\begin_layout Plain Layout
+
+  push right
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "tikz/MTC_trees/test_simple_v1.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-SimpleAgent.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/diff-MTC200_tree_simple0.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/MTC200_tree_simple0.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Simple algorithm
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Plain Layout
 
 \end_layout
@@ -6227,6 +6419,292 @@ Sarsa75 implementation learns to outperform the heuristic on average, but
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Wie man vor allem bei den komplexeren Lösungen sehen kann, verliert die
+ TED ab einer gewissen Größe ihre Wirkung.
+ Die Aktion 
+\begin_inset Quotes eld
+\end_inset
+
+no push
+\begin_inset Quotes erd
+\end_inset
+
+ wird zudem häufig ausgewählt, vor allem In Randbereichen.
+\end_layout
+
+\begin_layout Plain Layout
+Zu beiden Problemen kann der Entwickler bereits im Vorhinein Einschränkungen
+ machen, beispielsweise indem die if-Entscheidung auf die beiden Fälle 0
+ und 2 beschränkt wird.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As can be seen especially with the more complex solutions, the TED loses
+ its effect after a certain size.
+ Action 
+\begin_inset Quotes eld
+\end_inset
+
+no push
+\begin_inset Quotes erd
+\end_inset
+
+ is often selected, especially in marginal areas.
+\end_layout
+
+\begin_layout Standard
+For both problems the developer can make restrictions in advance, for example
+ by limiting the 
+\begin_inset Quotes eld
+\end_inset
+
+if
+\begin_inset Quotes erd
+\end_inset
+
+-decision to the two cases 0 and 2.
+\end_layout
+
+\begin_layout Subsubsection
+Simple, three actions, 
+\begin_inset Quotes eld
+\end_inset
+
+<=
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This version 
+\end_layout
+
+\begin_layout Subsubsection
+Close-form preset policy
+\end_layout
+
+\begin_layout Standard
+In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "true"
+
+\end_inset
+
+, a close-form preset policy was proposed, defining a lower and upper bound
+ for the car to determine the actions.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if
+\end_layout
+
+\begin_layout Plain Layout
+
+  min(-0.09(position+0.25)^2+0.03, 0.3(position+0.09)^4-0.008)
+\end_layout
+
+\begin_layout Plain Layout
+
+  <= velocity <=
+\end_layout
+
+\begin_layout Plain Layout
+
+  (-0.07(position+0.38)^{2}+0.07)
+\end_layout
+
+\begin_layout Plain Layout
+
+then
+\end_layout
+
+\begin_layout Plain Layout
+
+  push right
+\end_layout
+
+\begin_layout Plain Layout
+
+else
+\end_layout
+
+\begin_layout Plain Layout
+
+  push left
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Close-form preset polixy by Xiao
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "code:MC-agent:preset_policy"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Mit 36 Knoten hat dieses Expertenprogramm bereits eine enorme natürliche
+ Baumgröße, wodurch die TED selbst bei relativ großen Änderungen nicht ihre
+ Wirkung verliert.
+\end_layout
+
+\begin_layout Plain Layout
+Dadurch konnten hier auch zwei essentielle Verbesserungen gefunden werden.
+ Zum einen wurde erkannt, dass die Obergrenze keine Bedeutung für das MC-Experim
+ent hat.
+ Im zweiten Fall wurde durch eine kleine Änderung eine enorme Verbesserung
+ erreicht.
+ Diese schneidet beim Test am echten Experiment sogar besser ab, als die
+ Sarsa75 policy.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With 36 nodes, this expert program already has an enormous natural tree
+ size, so that the TED does not lose its effect even with relatively large
+ changes.
+\end_layout
+
+\begin_layout Standard
+Thus two essential improvements could be found here.
+ Firstly, it was recognized that the upper limit has no significance for
+ the MC experiment.
+ In the second case an enormous improvement was achieved by a small change.
+ This improvement is even better than the Sarsa75 policy in the real experiment.
+\end_layout
+
+\begin_layout Paragraph
+Problems
+\end_layout
+
+\begin_layout Standard
+The initial state is a major problem for regression analyses because, despite
+ its crucial role, it occurs only once in the data set.
+ For this reason, there are sometimes large differences in performance when
+ testing the agents.
+ Just past is also beside the point.
+ Some Sarsa runs end with very tight finishes.
+ Some runs of the trained agents are unfortunately not lucky and have to
+ turn back shortly before the finish.
+\end_layout
+
+\begin_layout Standard
+The SARSA approach was chosen because it was the fastest that could solve
+ mountain car well.
+ However, this meant that little was explored in the learning process and
+ often there are wrong decisions that but there's still a lot of air up
+ there.
+ Very easy to learn that the goal can be achieved with less momentum and
+ you can turn with 
+\end_layout
+
+\begin_layout Standard
+funfact: cartvel 
+\begin_inset Formula $<$
+\end_inset
+
+ 0 then 0 else 2 cartvel 
+\begin_inset Formula $\leq$
+\end_inset
+
+ 0 then 0 else 2 
+\end_layout
+
+\begin_layout Standard
+Reverse early
+\end_layout
+
+\begin_layout Standard
+This simple policy can further be improved, where the most efficient way
+ is probably by reversing early on the opposite side.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Real solution, optimal solution and expert abstraction
+\end_layout
+
+\begin_layout Standard
+As we will see and discuss in
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\backslash
+ref{todo}
+\end_layout
+
+\end_inset
+
+, the first decision is most relevant for the optimal solution.
+ The starting velocity is always 0, but depending on the starting position,
+ you have to take three or four turns to reach the goal.
+ For this purpose, another expert policy has been implemented, which explicitly
+ emphasizes this state.
 \end_layout
 
 \begin_layout Subsection
@@ -6344,120 +6822,6 @@ More effort at the GP
 
 \begin_layout Itemize
 more complex trees
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-SimpleAgent.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-AgentV1p40.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetAgent.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-Good_Expert.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-asd
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection
@@ -6858,7 +7222,7 @@ This chapter is commented in Lyx.
 This is only here to leave place for brainstorm ideas or discarded stuff.
 \end_layout
 
-\begin_layout Itemize
+\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -6873,6 +7237,10 @@ Use GP to make neurons superfluous? Use NN to get these last improvements
 
 \begin_layout Itemize
 Function-based backpropagation
+\end_layout
+
+\begin_layout Itemize
+maximum added node depth
 \end_layout
 
 \begin_layout Section

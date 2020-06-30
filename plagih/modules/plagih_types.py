@@ -50,7 +50,7 @@ def xtype_get_converters(xtype):
         raise
 
 
-def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
+def choose_term(xtype, env_vars, choose_distribution, float_accuracy):
     """
     Returns a terminal of xtype.
 
@@ -67,9 +67,9 @@ def choose_term(xtype, env_variables, choose_distribution, float_accuracy):
     """
 
     # insert a ?
-    if np.random.choice(['obs', 'distrib']) == 'obs' and env_variables[xtype]:
+    if np.random.choice(['obs', 'distrib']) == 'obs' and env_vars[xtype]:
         # todo take temp_diff into consideration
-        term = np.random.choice(env_variables[xtype])
+        term = np.random.choice(env_vars[xtype])
     else:
         term = choose_constant(xtype, choose_distribution, float_accuracy)
 
@@ -253,39 +253,27 @@ def xtype_get_func_list_OLD(oparray, xtype=None, arity=None):
     return func_list
 
 
-def xtypes_from_labels(label_list, env_variables):
-    xtype_list = [xtype_get_from_label(label, env_variables) for label in label_list]
+def xtypes_from_labels(label_list, env_vars=None):
+    xtype_list = [xtype_get_from_label(label, env_vars) for label in label_list]
     return xtype_list
 
 # todo random: tree complexity steigt zu stark mit generationen an?
 
 
-def xtype_get_from_label(label, env_variables):
+def xtype_get_from_label(label, env_vars=None):
     """
     returns xtype for a label
     if you are not 100% sure that it is a function.
     """
 
-    if env_variables == 'ö':
-        # todo deleteable?
-        print_warning('www', 'Sfeh, we knowingly create a xtype-dummy')
-        return 'ö'
-
-    if label in env_variables['obs_name']:
-        xtype = env_variables['obs_name'][label]['xtype']
-    elif label in ['True', 'False']:
+    if label in ['True', 'False']:
         xtype = '2b'
     elif label in op:
         xtype = op[label]['xtype']
     else:
-        # if delete_this and isinstance(label, bool):
-        #     xtype = '2b'
-        #     print_e('This should never happen!!! labels  must be string')
-        # try:
-        #     float(label)
-        #     xtype = '2f'
-        # except:
-        #     raise Exception('This label is not known at all: {}'.format(label))
-        xtype = '2f'
+        try:
+            xtype = env_vars['obs_name'][label]['xtype']
+        except:
+            xtype = '2f'
 
     return xtype

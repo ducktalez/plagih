@@ -215,7 +215,7 @@ class FitnessKernel:
 #     #     return
 
 
-def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, specific_action=0):
+def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, specific_action=0):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -235,14 +235,14 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
             'fitness'           - aggregated scalar fitness score
 
     """
-    action_at_here = env_variables['action_at'][specific_action]
+    action_at_here = env_vars['action_at'][specific_action]
     unique_outputs_num = action_at_here['unique_outputs_num']
     action_min_max = action_at_here['minmax']
 
     # Initialize TensorFlow session
     tf.compat.v1.reset_default_graph()
 
-    tensors = get_env_tensors(data, env_variables, eval_action=specific_action)  # sfeh: can this be done once, for all?
+    tensors = get_env_tensors(data, env_vars, eval_action=specific_action)  # sfeh: can this be done once, for all?
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
         with sess.graph.device(tf_device):  # device can be the gpu
@@ -267,7 +267,7 @@ def eval_tf(expr, data, kernel, env_variables, tf_config, tf_device, tf_classify
                 return float(fitness)
 
 
-def get_env_tensors(data, env_variables, eval_action=0):
+def get_env_tensors(data, env_vars, eval_action=0):
     """
     return tensors-dictionary with all the terminals/leaf nodes
     - variables (observation0, ...)
@@ -275,9 +275,9 @@ def get_env_tensors(data, env_variables, eval_action=0):
     """
     tensors = {}
 
-    # for obs_name, obs_info in env_variables['obs_name'].items():
+    # for obs_name, obs_info in env_vars['obs_name'].items():
 
-    for obs_info in env_variables['obs_name'].values():
+    for obs_info in env_vars['obs_name'].values():
         label = obs_info['label']
         pos = obs_info['pos']
         dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool
@@ -287,13 +287,13 @@ def get_env_tensors(data, env_variables, eval_action=0):
         #     raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
 
     # sfeh: if more than one action is provided...
-    action_xtype = env_variables['action_at'][eval_action]['xtype']
-    action_label = env_variables['action_at'][eval_action]['label']
-    column = env_variables['action_at'][eval_action]['pos']
+    action_xtype = env_vars['action_at'][eval_action]['xtype']
+    action_label = env_vars['action_at'][eval_action]['label']
+    column = env_vars['action_at'][eval_action]['pos']
     if '2f' in action_xtype:
         tensors[action_label] = tf.constant(data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
     else:
-        print_e('action {} has these infos: {}.'.format(action_label, env_variables['action_at'][0]))
+        print_e('action {} has these infos: {}.'.format(action_label, env_vars['action_at'][0]))
     return tensors
 
 

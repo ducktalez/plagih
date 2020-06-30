@@ -71,28 +71,36 @@ class Test_Agent:
 # mtc_plot_differences(sarsa_agent_75, SimpleAgent(), name='sarsa vs simple', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '///', 'xkcd:dark grey', 0.2))
 #
 # mtc_plot_differences(sarsa_agent_200, sarsa_agent_75, name='sarsa200 vs sarsa75', abs_diff=False, agent_a_dummy=True)
-# mtc_plot_decisions_space(MTC_simple13(), name='decisions-13', dummy=True)
-# mtc_plot_decisions_space(SimpleAgent(), name='decisions-simple', dummy=True)
+# mtc_plot_decisions_space(MTC_simple13(), name='decisions_13', dummy=True)
+# mtc_plot_decisions_space(SimpleAgent(), name='decisions_simple', dummy=True)
 # mtc_plot_decisions_space(MTC_simple13(), name='decisionsr-13')
 # mtc_plot_decisions_space(SimpleAgent(), name='decisionsr-simple')
 
-
 # eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
-def thesis_decision_plots():
+
+def thesis_decision_plots_fullspace():
     # sarsa agents
     mtc_plot_decisions_space(sarsa_agent_75, name='decisions-sarsa_agent_75')
     mtc_plot_decisions_space(sarsa_agent_200, name='decisions-sarsa_agent_200')
     mtc_plot_decisions_space(sarsa_agent_1000, name='decisions-sarsa_agent_1000')
     mtc_plot_decisions_space(sarsa_agent_10000, name='decisions-sarsa_agent_10000')
 
-mtc_plot_decisions_space(SimpleAgent(), name='decisions-SimpleAgent')
-mtc_plot_decisions_space(PlagihAgent_A(), name='decisions-Xiao_preset')
-mtc_plot_decisions_space(XiaoPresetAgent(), name='decisions-XiaoPresetAgent')
-mtc_plot_decisions_space(XiaoPresetNoLowerbound(), name='decisions-XiaoPresetNoLowerbound')
-mtc_plot_decisions_space(AgentV1p40(), name='decisions-AgentV1p40')
-mtc_plot_decisions_space(Good_Expert(), name='decisions-Good_Expert')
-mtc_plot_decisions_space(TestCombined(), name='TestCombined-AgentV1p40')
+    mtc_plot_decisions_space(SimpleAgent(), name='decisions-SimpleAgent')
+    mtc_plot_decisions_space(PlagihAgent_A(), name='decisions-PlagihAgent_A')
+    mtc_plot_decisions_space(XiaoPresetAgent(), name='decisions-XiaoPresetAgent')
+    mtc_plot_decisions_space(XiaoPresetNoLowerbound(), name='decisions-XiaoPresetNoLowerbound')
+    mtc_plot_decisions_space(AgentV1p40(), name='decisions-AgentV1p40')
+    mtc_plot_decisions_space(Good_Expert(), name='decisions-Good_Expert')
 
+    mtc_plot_decisions_space(TestCombined(), name='decisions-Combined_AgentV1p40')
+
+
+def thesis_decision_plots_dummied():
+    mtc_plot_decisions_space(sarsa_agent_75, name='dummy-sarsa_agent_75', dummy=True)
+    mtc_plot_decisions_space(sarsa_agent_200, name='dummy-sarsa_agent_200', dummy=True)
+
+
+thesis_decision_plots_dummied()
 
 # print('results:', mtc_play(Good_Expert(), n=100))
 # print('results:', mtc_play(sarsa_agent_75, n=100))

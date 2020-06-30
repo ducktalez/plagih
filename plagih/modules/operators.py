@@ -12,6 +12,7 @@ karoo_skip = 1
 delete_this = True
 delete_this_version1 = True
 debug_this_please = False
+TEST_PHASE = True  # For testing new stuff, but if it works perfectly, the confitions might be removed
 
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
@@ -70,7 +71,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     '/': {'fun': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.math.divide_no_nan, 'opgroup': [], 'latex1': '$\\div$', 'latexF': '\\frac{{{}}}{{{}}}',
           'sym_str': '({} / {})',
           'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
-    '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.pow, 'opgroup': [], 'latex1': '$**$', 'latexF': '{{{}}}^{{{}}}',  # sfeh latexf requires some testing...
+    '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.pow, 'opgroup': [], 'latex1': '${x}^{y}$', 'latexF': '{{{}}}^{{{}}}',  # sfeh latexf requires some testing...
            'sym_str': '({} ** {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
 
     'abs': {'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.abs, 'opgroup': [], 'latex1': '$abs$', 'latexF': '|{{{}}}|',
@@ -84,11 +85,11 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
              'sym_str': 'sqrt({})', 'pycode': lambda a: 'math.sqrt({})'.format(a)},
 
     'log': {'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '$\\ln$', 'latexF': '\\ln{{{}}}',
-            'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},  # todo log needs further requirements (no values <=0)
+            'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},  # todo log needs further requirements (no values <=0). log is ln? meh
     'log1p': {'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '$\\log(1+x)$', 'latexF': '\\log(1+{{{}}})',
               'sym_str': 'log1p({})', 'pycode': lambda a: 'math.log1p({})'.format(a)},
 
-    'cos': {'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.cos, 'opgroup': ['angle'], 'latex1': '$\\cos$', 'latexF': '\\cos({{{}}})',
+    'cos': {'fun': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.cos, 'opgroup': ['angle'], 'latex1':  '$\\cos$', 'latexF': '\\cos({{{}}})',
             'sym_str': 'cos({})', 'pycode': lambda a: 'math.cos({})'.format(a)},
     'sin': {'fun': 'sin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.sin, 'opgroup': ['angle'], 'latex1': '$\\sin$', 'latexF': '\\sin({{{}}})',
             'sym_str': 'sin({})', 'pycode': lambda a: 'math.sin({})'.format(a)},
@@ -98,19 +99,19 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
              'sym_str': 'acos({})', 'pycode': lambda a: 'math.acos({})'.format(a)},
     'asin': {'fun': 'asin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.asin, 'opgroup': ['angle'], 'latex1': '$\\asin$', 'latexF': '\\asin({{{}}})',
              'sym_str': 'asin({})', 'pycode': lambda a: 'math.asin({})'.format(a)},
-    'atan': {'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.atan, 'opgroup': ['angle'], 'latex1': '$\atan$', 'latexF': '\\atan({{{}}})',
+    'atan': {'fun': 'atan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.atan, 'opgroup': ['angle'], 'latex1':  '$\\atan$', 'latexF': '\\atan({{{}}})',
              'sym_str': 'atan({})', 'pycode': lambda a: 'math.atan({})'.format(a)},
-    'tanh': {'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.tanh, 'opgroup': ['angle'], 'latex1': '$\tanh$', 'latexF': '\\tanh({{{}}})',
+    'tanh': {'fun': 'tanh', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.tanh, 'opgroup': ['angle'], 'latex1': '$\\tanh$', 'latexF': '\\tanh({{{}}})',
              'sym_str': 'tanh({})', 'pycode': lambda a: 'math.tanh({})'.format(a)},
-    # 'Integer': {'fun': 'Integer', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.cast({}, tf.int32), 'latex1': None, 'latexF': '{}', 
+    # 'Integer': {'fun': 'Integer', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.cast({}, tf.int32), 'latex1': None, 'latexF': '{}',
     # 'sym_str': 'N({}, )', 'pycode': lambda a: 'math.tanh({})'.format(a)},
 
     # 'b2b' Classical logical operators, evaluate from bool to bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
-    'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': '$and$', 'latexF': '({{{}}}\\wedge{{{}}})',
+    'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': 'and', 'latexF': '({{{}}}\\wedge{{{}}})',
              'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
-    'Orb': {'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': '$or$', 'latexF': '({{{}}}\\vee{{{}}})',
+    'Orb': {'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': 'or', 'latexF': '({{{}}}\\vee{{{}}})',
             'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
     'Xor': {'fun': 'Xor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.math.logical_xor, 'latex1': '$\\oplus$', 'latexF': '({{{}}}\\oplus{{{}}})',
             'sym_str': 'Xor({}, {})', 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
@@ -122,19 +123,19 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # 'f2b' Classical comparative operators, evaluate from float to bool
     '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.equal, 'latex1': '$=$', 'latexF': '({{{}}}={{{}}})',
            'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
-    '!=': {'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.not_equal, 'latex1': '$\\neq', 'latexF': '({{{}}}\\neq{{{}}})',
+    '!=': {'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.not_equal, 'latex1': '$\\neq$', 'latexF': '({{{}}}\\neq{{{}}})',
            'sym_str': '({} != {})', 'pycode': lambda a, b: '({}!={})'.format(a, b)},
     '<': {'fun': '<', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less, 'latex1': '$<$', 'latexF': '{{{}}}<{{{}}}',
           'sym_str': '({} < {})', 'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
-    '<=': {'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less_equal, 'latex1': '$leq$', 'latexF': '{{{}}}\leq{{{}}}',
+    '<=': {'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less_equal, 'latex1': '$\\leq$', 'latexF': '{{{}}}\leq{{{}}}',
            'sym_str': '({} <= {})', 'pycode': lambda a, b: '({}<={})'.format(a, b)},  # a <= b
     '>': {'fun': '>', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater, 'latex1': '$>$', 'latexF': '{{{}}}>{{{}}}',
           'sym_str': '({} > {})', 'pycode': lambda a, b: '({}>{})'.format(a, b)},  # a > b
-    '>=': {'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater_equal, 'latex1': '$\geq$', 'latexF': '{{{}}}\geq{{{}}}',
+    '>=': {'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater_equal, 'latex1': '$\\geq$', 'latexF': '{{{}}}\geq{{{}}}',
            'sym_str': '({} >= {})', 'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
 
     # Functions which need separate handling in sympify
-    'Ifte': {'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf': tf.compat.v2.where, 'latex1': '$if .. then .. else ..$', 'latexF': 'if({{{}}} then {{{}}} else {{{}}})',
+    'Ifte': {'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf': tf.compat.v2.where, 'latex1': 'if-then-else', 'latexF': 'if({{{}}} then {{{}}} else {{{}}})',
              'sym_str': 'Ifte({}, {}, {})', 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
     # long version of Ifte-'pycode': lambda a, b, c: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
     'Mini': {'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.minimum, 'latex1': '$\\min$', 'latexF': '\\min({{{}}}, {{{}}})',

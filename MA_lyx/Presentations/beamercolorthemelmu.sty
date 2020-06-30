@@ -1,0 +1,55 @@
+\usecolortheme{default}
+
+% Update colours
+\definecolor{beamer@lmu_green}{RGB}{0,148,64}
+\definecolor{beamer@lmu_dark_gray}{RGB}{127,127,127}
+\definecolor{beamer@lmu_light_gray}{RGB}{192,192,192}
+
+\definecolor{pbblackberry}{HTML}{940054}% filling color for the progress bar
+\definecolor{pbgray}{HTML}{575757}% background color for the progress bar
+\definecolor{pbblue}{HTML}{009440}
+
+\definecolor{blackberry}{HTML}{940054}
+
+% set color options for title page
+\setbeamercolor{meta}{fg=beamer@lmu_dark_gray}
+\setbeamercolor{institute}{fg=beamer@lmu_dark_gray}
+\setbeamercolor{thesistype}{fg=beamer@lmu_dark_gray}
+
+% Set colour of main structure
+\setbeamercolor*{structure}{fg=beamer@lmu_green, bg=}
+\setbeamercolor{frametitle}{bg=beamer@lmu_green!75, fg=white}
+\setbeamerfont{frametitle}{family=\rmfamily,series=\bfseries,size={\fontsize{12}{14}}}
+% Disable background of titlelike objects
+\setbeamercolor*{titlelike}{fg=structure.fg, bg=}
+
+
+
+% Normal block
+\setbeamercolor{block title}{use=structure,fg=white,bg=structure.fg}
+\setbeamercolor{block body}{parent=normal text,use=block title,bg=block title.bg!10}
+
+% Example Block
+\setbeamercolor{block title example}{use=example text,fg=white,bg=beamer@lmu_dark_gray}
+\setbeamercolor{block body example}{parent=normal text,use=block title example,bg=block title example.bg!20}
+
+% Alert Block
+\setbeamercolor{block title alerted}{use=alerted text,fg=white,bg=alerted text.fg}
+\setbeamercolor{block body alerted}{parent=normal text,use=block title alerted,bg=block title alerted.bg!10}
+
+% More color palettes
+% Color Brewer: Pastell
+\definecolor{brewer@qual_set3_1}{RGB}{141,211,199}
+\definecolor{brewer@qual_set3_2}{RGB}{255,255,179}
+\definecolor{brewer@qual_set3_3}{RGB}{190,186,218}
+\definecolor{brewer@qual_set3_4}{RGB}{251,128,114}
+\definecolor{brewer@qual_set3_5}{RGB}{128,177,211}
+\definecolor{brewer@qual_set3_6}{RGB}{253,180,98}
+
+% Color Brewer: Dark
+\definecolor{brewer@qual_dark_1}{RGB}{ 27,158,119}
+\definecolor{brewer@qual_dark_2}{RGB}{217, 95,  2}
+\definecolor{brewer@qual_dark_3}{RGB}{117,112,179}
+\definecolor{brewer@qual_dark_4}{RGB}{231, 41,138}
+\definecolor{brewer@qual_dark_5}{RGB}{102,166, 30}
+\definecolor{brewer@qual_dark_6}{RGB}{230,171,  2}

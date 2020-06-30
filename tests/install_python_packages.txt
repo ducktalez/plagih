@@ -13,3 +13,6 @@ pandas
 
 update of the yaml module might be necessary:
 pip install -U PyYaml
+
+for gym examples:
+gym

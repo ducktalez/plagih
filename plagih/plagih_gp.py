@@ -15,17 +15,9 @@ import yaml
 file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
 
 info_distributions_yaml = 'info/distributions_file.yaml'
-env_variables_yaml = 'info/env_variables.yaml'
+env_vars_yaml = 'info/env_vars.yaml'
 
 # /run_files/
-file_config_yaml = 'run_files/config.yaml'
-file_config_json = 'run_files/config.json'
-file_evolve_functions = 'run_files/evolve_functions.yaml'
-samples_csv = 'run_files/samples.csv'
-distributions_file = 'run_files/distributions_file.yaml'
-tree_expr_txt = 'run_files/tree_expr.txt'
-tree_labels_csv = 'run_files/tree_labels.csv'
-tree_numpy_csv = 'run_files/tree_numpy.csv'
 
 
 def plagih_config_update_from_yaml(config_yaml=Path('config.yaml')):
@@ -62,7 +54,7 @@ def labellists_from_csv(csv_path):
                 elif row[0] == '':
                     pass
                 else:
-                    print_warning('ww', 'Unexpected row start: {}'.format(row[0]))
+                    print_warning('ww', f'Unexpected row start: {row[0]}')
 
     if label_list is None:
         raise Exception('Labels could not be created from file.')
@@ -75,7 +67,7 @@ def show_default_config(output_file):
     - config.yaml
     """
     if not Path.is_dir(output_file.parent):
-        raise Exception('Will not make the path with Path.mkdir(output_file.parent): {}'.format(output_file))
+        raise Exception(f'Will not make the path with Path.mkdir(output_file.parent): {output_file}')
     raise Exception('Coming soon! sfeh.')
 
 
@@ -85,7 +77,7 @@ def show_default_operators(output_file=None):
     """
 
     if not Path.is_dir(output_file.parent):
-        raise Exception('Will not make the path with Path.mkdir(output_file.parent): {}'.format(output_file))
+        raise Exception(f'Will not make the path with Path.mkdir(output_file.parent): {output_file}')
     raise Exception('Coming soon! sfeh.')
 
 
@@ -94,34 +86,17 @@ def runfolder_exists(root_dir):
     If there is no folder, bad times
     """
     if not Path.is_dir(root_dir):
-        raise FileNotFoundError('Folder does not exist: {}.'.format(root_dir))
-
-
-def load_startconfig(root_dir):
-    """
-    todo
-    single file that can specify
-    - the files to be loaded (which can be somewhere else)
-    - the action for the regression
-    - the
-    """
-    # loading_configuration = root_dir / 'loading.yaml'
-    #
-    # if Path.is_file(loading_configuration):  # Load config.yaml
-    #     with Path.open(loading_configuration, 'r') as file:
-    #         config = yaml.load(file, Loader=yaml.FullLoader)
-    # else:
-    #     print_warning('w', 'You can specify the files that are loaded here blabla sfeh')
-    # return config
+        raise FileNotFoundError(f'Folder does not exist: {root_dir}.')
 
 
 def load_label_list(root_dir, user_origin_csv=None):
     """
 
     """
-    tree_expr_txt_path = root_dir / tree_expr_txt
-    tree_labels_csv_path = root_dir / tree_labels_csv
-    tree_numpy_csv_path = root_dir / tree_numpy_csv
+
+    tree_expr_txt_path = root_dir / 'run_files/tree_expr.txt'
+    tree_labels_csv_path = root_dir / 'run_files/tree_labels.csv'
+    tree_numpy_csv_path = root_dir / 'run_files/tree_numpy.csv'
     label_list = None
     modify_list = None
     if user_origin_csv:
@@ -131,13 +106,12 @@ def load_label_list(root_dir, user_origin_csv=None):
     elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
         print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
         raise
-    elif Path.is_file(tree_expr_txt_path):  # karoo_ptree_from_expr(expr)
+    elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
         print('SFEH needs to create an option to make trees from expression')
         with Path.open(tree_expr_txt_path) as txt_file:
             expr = txt_file.read()  # sfeh requires separate handling?
             print('Assuming all variables are floats, sfeh')
-            ptree = karoo_ptree_from_expr(expr, 'sfeh')
-            tree = ptree.get_uninstanced_tree()
+            tree = karoo_tree_from_expr(expr, 'sfeh')
             tree_pretty_print(tree)  # sfeh not working?? todo debug
             tree_save_csv(tree, tree_labels_csv_path)
             raise  # sfeh
@@ -146,74 +120,55 @@ def load_label_list(root_dir, user_origin_csv=None):
     return label_list, modify_list
 
 
-def load_config(config_path):
+def load_config(config_path, out_dir=None):
     """
 
     """
     try:
-        root_dir = config_path.parent
         file_extension = config_path.suffix
         if file_extension == '.yaml':
             with Path.open(config_path, 'r') as file:
                 config = yaml.load(file, Loader=yaml.FullLoader)
-        elif file_extension == '.json':
-            with Path.open(config_path, 'r') as file:
-                config = json.load(file)
         else:
             config = {}  # sfeh test this
     except IOError as ioex:
-        raise IOError('Config file could not be loaded. Path: {}\nException: {}'.format(config_path, ioex))
+        raise IOError(f'Config file could not be loaded. Path: {config_path}\nException: {ioex}')
+
+    if out_dir:
+        root_dir = out_dir
+    else:
+        root_dir = config_path.parent
 
     return root_dir, config
 
 
-def gp_run(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree, analyze=False):
     """
     
     """
 
-    root_dir, config = load_config(config_path)
-    if out_dir:
-        root_dir = out_dir
+    root_dir, config = load_config(config_path, out_dir=out_dir)
 
     config['force_new_run'] = force_new_run
     config['eval_action'] = eval_action
 
     # sfeh , opt_origin_tree_csv=origin_tree, out_dir=out_dir
-    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
+    gp = ExplainableGP(plagih_root, root_dir, config, user_prepared_path=data_prepared_path)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:
-        # todo beautify
-        env_variables = gp.get_env_variables()
-        xtype_list = xtypes_from_labels(label_list, env_variables)
-        origin_ptree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
-        gp.activate_origin_tree(origin_ptree)
+        env_vars = gp.get_env_vars()
+        xtype_list = xtypes_from_labels(label_list, env_vars)
+        origin_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
+        gp.activate_origin_tree(origin_tree)
 
-    gp.prepare_evolve_functions()
+    if analyze:
+        gp.gp_analyze()
+    else:
+        gp.prepare_evolve_functions()
+        gp.plagih_gp_run()
 
-    gp.plagih_gp_run()
     sys.exit()
-
-
-def analyse(plagih_root, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree):
-    """
-    write all analysing files.
-    - pareto (txt, latex_trees, agents)
-    - plots (pareto, best)
-    """
-    # todo the same code is in gp_run...
-    root_dir, config = load_config(config_path)
-    if out_dir:
-        root_dir = out_dir
-
-    config['force_new_run'] = force_new_run
-    config['eval_action'] = eval_action
-
-    root_dir, config = load_config(config_path)
-    gp = ExplainableGP(plagih_root, root_dir, config, data_prepared_path=data_prepared_path)
-
-    gp.plagih_update_analysis()
 
 
 if __name__ == "__main__":

@@ -4,10 +4,79 @@ from plagih.modules.operators import *
 import sklearn.metrics as skm
 
 
+class DummyKernel:
+
+    def __init__(self, name, bounded=False, discrete=False):
+        self.type = name
+        self.bounded = bounded
+        self.discrete = discrete
+
+    def fitness_compare(self, fit1, fit2):
+        if fit2 is None:
+            return True
+
+    def conclusion_text(self):
+        pass
+
+    def tf_wrap_result(self):
+        pass
+
+    def tf_get_pairwise_fitness(self):
+        pass
+
+
+class RegressionDiscrete(DummyKernel):
+
+    def __init__(self, bounded=False, discrete=False):
+        pass
+
+    def tf_wrap_result(self, tf_result, action_min_max):
+        # regression that fits the outputs to a discrete set of actions defined by min and max
+        act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+        act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+        customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+        return customised_result
+
+    def fitness_compare(self, fitness1, fitness2):
+
+        if fitness2 is None:  # try block?
+            return True
+
+        return fitness1 < fitness2
+
+    def conclusion_text(self):
+        pass
+
+    def tf_get_pairwise_fitness(self):
+        pass
+
+
+
+
+
 class FitnessKernel:
 
     def __init__(self, kernel_name):
         self.kernel = kernel_name
+
+    def tf_wrap_result(self, tf_result, action_min_max):
+        """
+        todo other kernels
+        """
+
+        if self.kernel == 'regression bounded':
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+
+        elif self.kernel == 'regression discrete':
+            # regression that fits the outputs to a discrete set of actions defined by min and max
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
+        else:
+            customised_result = tf_result  # tehe sfeh
+        return customised_result
 
     def fitness_compare(self, fitness1, fitness2, mode='better'):
         """
@@ -34,14 +103,14 @@ class FitnessKernel:
         else:
             return False
 
-    def conclusion_get_text(self, result, fitness_control_best):
+    def conclusion_text(self, result, fitness_control_best):
         """
 
         """
         result_str = ''
 
         if self.kernel == 'classification':
-            result_str += ('\n\n Classification fitness score: {}'.format(fitness_control_best))
+            result_str += f'\n\n Classification fitness score: {fitness_control_best}'
             result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
             result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
 
@@ -52,33 +121,16 @@ class FitnessKernel:
 
         elif self.kernel == 'regression bounded':
             mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-            result_str += ('\n\n Regression bounded fitness score: {}'.format(result['fitness']))
-            result_str += ('\n Mean Squared Error: {}'.format(mse))
-        elif self.kernel == 'regression discrete':
-            result_str = 'No summary provided for this kernel'
+            result_str += f"\n\n Regression bounded fitness score: {result['fitness']}"
+            result_str += f'\n Mean Squared Error: {mse}'
+
         elif self.kernel == 'match':
-            result_str += ('\n\n Matching fitness score: {}'.format(result['fitness']))
+            result_str += f"\n\n Matching fitness score: {result['fitness']}"
+
+        else:  # 'regression discrete':
+            result_str = 'No summary provided for this kernel'
+
         return result_str
-
-    def tf_wrap_result(self, tf_result, action_min_max):
-        """
-        todo other kernels
-        """
-
-        if self.kernel == 'regression bounded':
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-
-        elif self.kernel == 'regression discrete':
-            # regression that fits the outputs to a discrete set of actions defined by min and max
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-        else:
-            customised_result = tf_result  # tehe sfeh
-            # todo
-        return customised_result
 
     def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num):
         """
@@ -87,10 +139,8 @@ class FitnessKernel:
         """
         # 3- Add fitness computation into TF graph
         # sfeh add action here if needed for multidimensional results
-        customised_result = tf_result  # todo remove this nonsense line later, thanks
 
         if self.kernel == 'classification':  # CLASSIFY kernel
-
             """
             - The left-most bin includes -inf, the right-most bin includes +inf.
             Those in between are by default confined to the spacing of 1.0 each, as defined by:
@@ -119,8 +169,7 @@ class FitnessKernel:
 
             pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
 
-        elif self.kernel == 'regression':
-
+        elif self.kernel == 'regression' or self.kernel == 'regression discrete':
             """
             Gets the difference to the correct label
             """
@@ -145,7 +194,7 @@ class FitnessKernel:
             # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
             # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
             # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
-            pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
+            pairwise_fitness = tf.compat.v2.where(tf.math.equal(tf_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
 
             # # v3
             # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
@@ -157,15 +206,7 @@ class FitnessKernel:
             # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
             # pairwise_fitness = tf.abs(solution - customised_result)
 
-        elif self.kernel == 'regression discrete':
-            # regression that fits the outputs to a discrete set of actions defined by min and max
-            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            pairwise_fitness = tf.abs(solution - customised_result)
-
         elif self.kernel == 'match':  # MATCH kernel
-
             """
             This is used for demonstration purposes only.
             """
@@ -211,7 +252,7 @@ class FitnessKernel:
 #     #     pairwise_fitness = tf.abs(solution - tf_result)
 #     #     return pairwise_fitness
 #     #
-#     # def conclusion_get_text(self):
+#     # def conclusion_text(self):
 #     #     return
 
 
@@ -354,8 +395,6 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
 
     # Arity 0
     if isinstance(node, ast.Name):  # <tensor_name>
-        # if prnt:
-        #     return '{}'.format(node.id)
         if build:
             return [node.id]
             # sfeh, what is better?
@@ -364,8 +403,6 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
             return tensors[node.id]
 
     elif isinstance(node, ast.Num):  # <number>
-        # if prnt:
-        #     return '{}'.format(node.n)
         if build:
             # return node.n
             return [node.n]
@@ -374,8 +411,6 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
             return tf.constant(node.n, shape=shape, dtype=tf.float32)
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
-        # if prnt:
-        #     return '{}'.format(node.value)
         if build:
             return [node.value]
             # return node.value
@@ -384,10 +419,6 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     #
     # Arity 1
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
-        # if prnt:
-        #     return '({}{})'.format(
-        #         op[type(node.op)]['fun'],
-        #         ast_convert_from_expr_recursive(node.operand, prnt=prnt))
         if build:
             if type(node.op) == ast.USub:
                 return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
@@ -399,11 +430,6 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
 
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
-        # if prnt:
-        #     return '({} {} {})'.format(
-        #         ast_convert_from_expr_recursive(node.left, prnt=True),
-        #         op[type(node.op)]['fun'],
-        #         ast_convert_from_expr_recursive(node.right, prnt=True))
         if build:
             return [op[type(node.op)]['fun'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
@@ -414,16 +440,12 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
                 ast_convert_from_expr_recursive(node.right, tensors=tensors))
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
-        # if prnt:
-        #     return ast_chain_bool(node.values, op[type(node.op)]['fun'], prnt=True)
         if build:
             return ast_chain_bool(node.values, op[type(node.op)]['fun'], build=True)
         else:
             return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
 
     elif isinstance(node, ast.Compare):  # <left> <compare> <right> e.g., a > z
-        # if prnt:
-        #     return ast_chain_compare([node.left] + node.comparators, node.ops, prnt=True)
         if build:
             return ast_chain_compare([node.left] + node.comparators, node.ops, build=True)
         else:
@@ -433,11 +455,6 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     elif isinstance(node, ast.Call):  # <function>(<arguments>) e.g., sin(x) -> or if(a, b, c) -> or Ftob(a)
 
         if node.func.id == 'Ifte':
-            # if prnt:
-            #     return '(If ({}) then ({}) else ({}))'.format(
-            #         ast_convert_from_expr_recursive(node.args[0], prnt=True),
-            #         ast_convert_from_expr_recursive(node.args[1], prnt=True),
-            #         ast_convert_from_expr_recursive(node.args[2], prnt=True))
             if build:
                 return ['Ifte',
                         [ast_convert_from_expr_recursive(node.args[0], build=True),
@@ -450,26 +467,12 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
                     ast_convert_from_expr_recursive(node.args[2], tensors=tensors))
 
         elif node.func.id == 'Ftob' or node.func.id == 'Btof':
-            # if prnt:
-            #     return '({} {})'.format(node.func.id, ast_convert_from_expr_recursive(node.args[0], prnt=prnt))
             if build:
                 return [node.func.id, [ast_convert_from_expr_recursive(node.args[0], build=True)]]
             else:
                 return tf.dtypes.cast(*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args], dtype=op[node.func.id]['tf'])
 
         elif len(node.args) <= 2:
-            # if prnt:
-            #     if len(node.args) == 1:
-            #         return '({} {})'.format(
-            #             op[node.func.id]['fun'],
-            #             ast_convert_from_expr_recursive(node.args[0], prnt=True))
-            #     elif len(node.args) == 2:
-            #         return '({} ({}, {}))'.format(
-            #             op[node.func.id]['fun'],
-            #             ast_convert_from_expr_recursive(node.args[0], prnt=True),
-            #             ast_convert_from_expr_recursive(node.args[1], prnt=True))
-            #     else:
-            #         raise Exception('This arity is not supported')
             if build:
                 if len(node.args) == 1:
                     return [op[node.func.id]['fun'],

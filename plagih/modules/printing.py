@@ -29,8 +29,8 @@ def print_e(text, print_type=None, time_total=0.0):
     Printing errors
     """
     message_style = BColors.MAGENTA  # not red anymore
-    message_pretxt = '{}ERROR: {}'.format(BColors.FAIL, BColors.WARNING)
-    print('{}{}{}{}'.format(message_style, message_pretxt, str(text), BColors.RESET))
+    message_pretxt = '{BColors.FAIL}ERROR: {BColors.WARNING}'
+    print(f'{message_style}{message_pretxt}{text}{BColors.RESET}')
 
 
 def print_warning(message_type, text, print_type=None, time_total=0.0):
@@ -66,7 +66,7 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = ''
     elif 'g' in message_type:
         message_style = BColors.BLUE
-        message_pretxt = '{:3.0f}s. '.format(time_total)  # sfeh current time instead and local time at the end?
+        message_pretxt = f'{time_total:3.0f}s. '  # sfeh current time instead and local time at the end?
     elif 'v' in message_type:
         message_style = BColors.WHITE
         message_pretxt = 'Verbose: '
@@ -82,8 +82,8 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = ''
     else:
         message_style = ''
-        printez('w', 'print_type-mode {} not known.'.format(message_type))
+        printez('w', f'print_type-mode {message_type} not known.')
 
-    print('{}{}{}{}'.format(message_style, message_pretxt, str(text), message_posttxt))
+    print(f'{message_style}{message_pretxt}{text}{message_posttxt}')
     return
 

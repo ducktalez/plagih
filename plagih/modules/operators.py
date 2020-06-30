@@ -1,6 +1,10 @@
-import tensorflow as tf
+
 import ast
-import numpy as np
+from plagih.modules.plagih_types import xtype_get_func_list
+
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+import tensorflow as tf
 
 FIRST_TREE = 0
 name_action = 'action'
@@ -16,6 +20,7 @@ TEST_PHASE = True  # For testing new stuff, but if it works perfectly, the confi
 
 # ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
 f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
+
 
 
 class Plagih_Plus:
@@ -85,7 +90,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
              'sym_str': 'sqrt({})', 'pycode': lambda a: 'math.sqrt({})'.format(a)},
 
     'log': {'fun': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '$\\ln$', 'latexF': '\\ln{{{}}}',
-            'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},  # todo log needs further requirements (no values <=0). log is ln? meh
+            'sym_str': 'log({})', 'pycode': lambda a: 'math.log({})'.format(a)},
     'log1p': {'fun': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '$\\log(1+x)$', 'latexF': '\\log(1+{{{}}})',
               'sym_str': 'log1p({})', 'pycode': lambda a: 'math.log1p({})'.format(a)},
 
@@ -319,8 +324,7 @@ def oparray_from_list(functions):
         'b2f': {1: []},
         'b2f2f': {3: [], None: []}
     }
-    # todo check the probability sums?
-    from plagih.modules.plagih_types import xtype_get_func_list
+
     for xtype_dummy, vals in choose_oparray2.items():
         for ari_dummy in vals.keys():
             choose_oparray2[xtype_dummy][ari_dummy] = xtype_get_func_list(choose_oparray, xtype=xtype_dummy, arity=ari_dummy)

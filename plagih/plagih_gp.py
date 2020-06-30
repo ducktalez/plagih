@@ -5,7 +5,6 @@ sys.path.append('modules/')  # add directory 'modules' to the current root_dir
 
 from plagih.modules.plagih_gp_base_class_xai import *
 from plagih.modules.plagih_data import *
-from plagih.modules.operators import oparray_from_list
 import yaml
 
 # import warnings
@@ -112,7 +111,7 @@ def load_label_list(root_dir, user_origin_csv=None):
             expr = txt_file.read()  # sfeh requires separate handling?
             print('Assuming all variables are floats, sfeh')
             tree = karoo_tree_from_expr(expr, 'sfeh')
-            tree_pretty_print(tree)  # sfeh not working?? todo debug
+            tree_pretty_print(tree)
             tree_save_csv(tree, tree_labels_csv_path)
             raise  # sfeh
     else:
@@ -169,12 +168,3 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
         gp.plagih_gp_run()
 
     sys.exit()
-
-
-if __name__ == "__main__":
-    """
-    
-    """
-    runs_dir = Path.cwd() / '../run_examples/'
-    root_dir = runs_dir / 'cartpole_v1/'  # todo this is outdated
-    gp_run(root_dir, False)

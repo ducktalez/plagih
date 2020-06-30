@@ -1,8 +1,5 @@
-from plagih.modules.plagih_eval import *
-from plagih.modules.plagih_tree import *
-from plagih.modules.operators import *
+
 from plagih.modules.viz_with_latex import *
-import time
 from pathlib import Path
 from plagih.tree_distances.tree_edit_distance import *
 
@@ -54,6 +51,7 @@ class TestHelpers:
         # weighted_distance = weight_ted_mapping(mapping)
         # print('\nDistance:', distance, 'Mapping_distance:', weighted_distance)
         print(tree_nodeid_ted_mapping(mapping))
+        print(tree_pretty_print(self.tree1))
 
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
         xtype_list = xtypes_from_labels(label_list, self.env_bundle)
@@ -69,7 +67,7 @@ class TestHelpers:
         # tree_sym = karoo_tree_from_expr(expr_sym, self.env_bundle)
         # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
         sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
-        print(tree_check_deep(sym_tree2, self.env_bundle))
+        print(tree_check_deep(sym_tree2))
 
         label_list = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
 
@@ -79,7 +77,6 @@ class TestHelpers:
         print(tree_get_labellist(tree))
         print(tree_get_labellist(tree_sym))
         return
-
 
     def test_visualisation(self):
         tree_labels = ['Ifte',

@@ -109,7 +109,7 @@ status open
 
 \begin_layout Plain Layout
 
- 
+
 \backslash
 global
 \backslash
@@ -169,13 +169,10 @@ ing to the thinking structure of a developer.
  measure, which reflects the number of changes to the reference program.
  For the implementation a regression on offline data of the benchmarks was
  performed.
-\end_layout
-
-\begin_layout Abstract
 \begin_inset Note Comment
 status open
 
-\begin_layout Abstract
+\begin_layout Plain Layout
 Machine learning Ansätze erzielen in immer mehr Bereichen übermenschliche
  Performance, da die Verwendeten Strukturen allerdings als Black Box akzeptiert
  werden und Entscheidungen nicht erklärt werden können, wird vor allem in
@@ -4199,7 +4196,7 @@ combining both can both be the best and worst of both worlds?
 \end_layout
 
 \begin_layout Section
-Learning offline on a regression surrogate model
+Surrogate model for offline learning: Regression
 \end_layout
 
 \begin_layout Standard
@@ -4223,11 +4220,9 @@ Genaue Seite angeben? z.B.
 
 \end_inset
 
- Genaue Seite angeben? e.g.
- p.
- 125, policies trained on replacement models (for example also by regression
- on data) are almost always significantly worse than the versions trained
- on real system dynamics.
+, policies trained on surrogate models (for example also by regression on
+ data) are almost always significantly worse than the versions trained on
+ real system dynamics.
  Also, the variance in fitness becomes very large for complex candidates
  where the overfitting becomes noticeable.
 \begin_inset Note Comment
@@ -4316,7 +4311,7 @@ operation/.style={symbol, rounded rectangle,},
 \end_layout
 
 \begin_layout Plain Layout
-fixnode/.style={draw=black!100, fill=red!20,},   
+fixnode/.style={draw=black!100, fill=red!20,}, 
 \end_layout
 
 \begin_layout Plain Layout
@@ -4353,6 +4348,73 @@ end{forest}
 
 \end_layout
 
+\begin_layout Subsection
+Regression Kernels, distance/cost function 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+name this better
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The cost function we used 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/done/regression_kernel_cost.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/done/regression_kernel_cost.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Regression kernels 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 Benchmarks
 \end_layout
@@ -4371,7 +4433,7 @@ This chapter presents the benchmarks against which the approach has been
 status open
 
 \begin_layout Plain Layout
-% todo regression aswell?
+% todo regression aswell? no cartpole?
 \end_layout
 
 \end_inset
@@ -4706,6 +4768,10 @@ o-dimensional state space s = (r, ˙r)
 
 \end_layout
 
+\begin_layout Plain Layout
+make better mountaincar picture?
+\end_layout
+
 \end_inset
 
 
@@ -4765,6 +4831,23 @@ Implementation
 
 \begin_layout Standard
 In the discrete version of MC there are three possible actions
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Tables should be in float figures (?)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Standard
@@ -5008,7 +5091,7 @@ MC offers the opportunity to create decision plots.
  These show which decisions have been made for the respective observation
  dimensions.
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Für die MC Auswertung können dank der niedrigen Eingabedimensionen Entscheidungs
@@ -5066,12 +5149,6 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-SimpleAgent.png
 	lyxscale 50
@@ -5089,38 +5166,6 @@ status open
 
 
 \end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Die standard-policy
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -5159,7 +5204,7 @@ Action 0
  It has recognized the upper limit as superfluous.
  
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Preset policy: Erkennbar sind verwendeten mathematischen Strukturen wie
@@ -5177,11 +5222,6 @@ Aktion 0
  Rechts ist eine Vereinfachung erkennbar, gefunden mithilfe der genetischen
  Programmierung.
  Sie hat die Obergrenze als überflüssig erkannt.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -5924,7 +5964,7 @@ Sarsa75 implementation learns to outperform the heuristic on average, but
 \end_layout
 
 \begin_layout Subsection
-Learning goals on the way to the perfect solution
+Subgoals for the best solution
 \end_layout
 
 \begin_layout Standard
@@ -5982,19 +6022,6 @@ Auf diese Weise wird der Wagen immer das Ziel erreichen, aber es gibt noch
 Reverse early: To reach the goal, you don't have to take the maximum momentum.
  If you turn back earlier, a lot of time can be saved.
  
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Vorzeitig umkehren: Um das Ziel zu erreichen, muss man nicht den maximalen
- Schwung nehmen.
- Wenn Sie früher umkehren, können Sie viel Zeit sparen.
- 
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Itemize
@@ -6861,7 +6888,7 @@ closed policy: current lederboard leader
 \end_layout
 
 \begin_layout Subsection
-fitness kernel fitting error regression 
+Fitness kernel fitting error regression 
 \begin_inset Note Note
 status open
 

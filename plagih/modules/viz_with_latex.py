@@ -1,7 +1,6 @@
 """
 Visualising Trees with latex.
 """
-# from plagih.modules.operators import op
 from plagih.modules.plagih_tree import *
 import re
 
@@ -27,14 +26,10 @@ def latex_treeviz_full(tikz_forest_list, preamble=''):
     latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{{standalone}}' \
                        '\n\\usepackage{{forest}}' \
                        '\n\\begin{{document}}' \
-                       '\n{}' \
-                       '\n\\end{{document}}'.format(forest_trees)
+                       f'\n{forest_trees}' \
+                       '\n\\end{{document}}'
     return latex_doc_forest
 
-
-##########
-# Latex tree visualisation
-##########
 
 def tree_viz_get_nel(tree):
     """
@@ -86,7 +81,7 @@ def latex_tree_get_brackets(tree, node_id=root_id):
     for child_id in child_ids:
         label += (latex_tree_get_brackets(tree, child_id))
     else:
-        bracket_string = '[{}]'.format(label)
+        bracket_string = f'[{label}]'
 
     return bracket_string
 
@@ -181,8 +176,8 @@ def latex_tree_get_forest(tree, tight_viz=True):
                       '\n  terminal/.style={{rectangle,}},' \
                       '\n  fixnode/.style={{fill=blue!60,}},' \
                       '\n  constant/.style={{rectangle,}},' \
-                      '\n {}' \
-                      '\n\\end{{forest}}\n'.format(bracket_tree)
+                      f'\n {bracket_tree}' \
+                      '\n\\end{{forest}}\n'
 
     return forest_complete
 
@@ -192,14 +187,14 @@ def tex_label_beautify_end(label):
     if label in op:
         label = op[label]['latex1']
     label = label_tex_replace_digits(label)
-    label = '{{{}}}'.format(label)
+    label = f'{{{label}}}'
     return label
 
 
 def latex_tree_get_tighttree(tree):
     """
     reduce
-    # todo idee: alle teil-terme, die eine einzige variable beinhalten?
+
     """
 
     node_dict = dict()  # key: node_id, value: number of nodes to paste into the viz-node
@@ -274,7 +269,7 @@ def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity
     """
 
     if force_np_size:
-        np_dtype_size = 'U{}'.format(force_np_size)  # sfeh
+        np_dtype_size = f'U{force_np_size}'  # sfeh
     else:
         np_dtype_size = None
 

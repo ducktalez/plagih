@@ -50,7 +50,7 @@ def print_apted_tree(tree):
         print('->', k, v)
 
 
-def is_float_constant(x):
+def is_float(x):
     try:
         float(x)
         return True
@@ -58,7 +58,7 @@ def is_float_constant(x):
         return False
 
 
-def is_bool_constant(x):
+def is_bool(x):
     try:
         float(x)
         return False
@@ -96,15 +96,9 @@ def weight_ted_mapping(mapping):
             if a_name == b_name:
                 print('No change, no weight.')
             else:
-                if a_name in op:
-                    a_weight = op.get(a_name).get('weight')
-                elif is_float_constant(a_name):
-                    a_weight = None
 
-                if b_name in op:
-                    b_weight = op.get(b_name).get('weight')
-                else:
-                    b_weight = None
+                a_weight = op[a_name]['weight'] if a_name in op else None
+                b_weight = op[b_name]['weight'] if b_name in op else None
 
                 if a_weight is None:  # a_name is either env-variable, float, bool
 
@@ -114,11 +108,11 @@ def weight_ted_mapping(mapping):
                     # elif True:  # sfeh
                     #     weighted_distance += 0
                     #     print('dummy exir with weight=0 for constants')
-                    elif is_float_constant(a_name) and is_float_constant(b_name):
-                        weight_diff = max(0, min(1, abs(float(a_name) - float(b_name))))
-                        weighted_distance += weight_diff
-                        print('Substituted float parameters, weight', weight_diff)
-                    elif is_bool_constant(a_name) and is_bool_constant(b_name):
+                    elif is_float(a_name) and is_float(b_name):
+                        # weight_diff = max(0, min(1, abs(float(a_name) - float(b_name))))
+                        # weighted_distance += weight_diff
+                        print('Substituted float parameters. weight 0.')
+                    elif is_bool(a_name) and is_bool(b_name):
                         weighted_distance += 1
                         print('Substituted bool parameters, weight 1.')
                     else:
@@ -132,10 +126,10 @@ def weight_ted_mapping(mapping):
                     # elif True:  # sfeh
                     #     weighted_distance += max(0.5, b_weight-(0.5*a_weight))
                     #     print('dummy exit with weight=0 for constants')
-                    elif is_float_constant(a_name) and is_float_constant(b_name):
+                    elif is_float(a_name) and is_float(b_name):
                         weighted_distance += 0.5
                         print('Substituted float parameters, weight 0.1.')
-                    elif is_bool_constant(a_name) and is_bool_constant(b_name):
+                    elif is_bool(a_name) and is_bool(b_name):
                         weighted_distance += 0.5
                         print('Substituted bool parameters, weight 0.1.')
                     else:
@@ -183,7 +177,7 @@ def weight_ted_mapping(mapping):
 #
 
 
-def aptree_to_width(aptree):
+def aptree_to_width(curlytree):
     """
     '{+{+{-{4}{5}}{1}}{*{2}{3}}}'
     ->
@@ -192,7 +186,7 @@ def aptree_to_width(aptree):
     xy = []
     y = -1
     buffer = ''
-    for letter in aptree:
+    for letter in curlytree:
         if letter == '{' or letter == '}':
             if buffer != '':
                 xy.append([y, buffer])
@@ -204,7 +198,7 @@ def aptree_to_width(aptree):
     max_y = max(xy, key=lambda x: x[0])[0]
     widtree = [[] for _ in range(max_y + 1)]
 
-    print(aptree)
+    print(curlytree)
     print(xy)
 
     for y, label in xy:
@@ -220,10 +214,10 @@ def tree_nodeid_ted_mapping(mapping):
     for ii, map_i in enumerate(mapping):
         a, b = map_i[0], map_i[1]
         if a is None:
-            # print(f'{ii} Inserted {aptree_to_width(str(b))}')
+            print(f'{ii} Inserted {b.name}')
             pass
         elif b is None:
-            print(f'{ii} inserted {a.name}')
+            print(f'{ii} deleted {a.name}')
         else:
             a_name = a.name
             b_name = b.name
@@ -236,6 +230,6 @@ def tree_nodeid_ted_mapping(mapping):
     return
 
 
-weirdtree = '{+{+{-{4}{5}}{1}}{*{2}{3}}}'
-weirdtree = '{A{B{C{D}{E}}{F}}{G{H}{I}}}'
-print(aptree_to_width(weirdtree))
+# weirdtree = '{+{+{-{4}{5}}{1}}{*{2}{3}}}'
+# weirdtree = '{A{B{C{D}{E}}{F}}{G{H}{I}}}'
+# print(aptree_to_width(weirdtree))

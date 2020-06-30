@@ -1,11 +1,6 @@
-import pickle
-import yaml
 from pathlib import Path
 import sklearn.model_selection as skcv
-import numpy as np
-import csv
 from plagih.modules.printing import *
-from pydoc import locate  # convert stringed-type to type. ('float' -> float)
 from plagih.modules.operators import *
 import pandas as pd
 import re
@@ -187,13 +182,10 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
 
     data_obs, data_results = [], []
     with Path.open(samples_file) as samples_csv_file:
-        # reader = csv.reader(file, delimiter=delimiter)
-        # header_row = next(reader)
         header_row = list(pd.read_csv(samples_csv_file, delimiter=delimiter, nrows=1))
 
         #######
         env_vars, param_at = samples_header_line(header_row)
-        # env_observation = env_vars['obs_name']
         env_action_at = env_vars['action_at']
         #######
 
@@ -245,13 +237,10 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
     for act_ii, action_info in env_action_at.items():
         # action_name = action_info['name']
         df_col = df[action_info['name']]
-        unique_outputs_num = len(df_col.unique())  # load the user defined true labels for classification or solutions for regression
-        env_vars['action_at'][act_ii]['unique_outputs_num'] = unique_outputs_num
+        env_vars['action_at'][act_ii]['unique_outputs_num'] = len(df_col.unique())
 
         if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min-max (if not provided)
-            action_min = df_col.min()
-            action_max = df_col.max()
-            env_vars['action_at'][act_ii]['minmax'] = (action_min, action_max)
+            env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())
 
     data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size)  # splitting the data in 80% train and 20% testdata for validation
 

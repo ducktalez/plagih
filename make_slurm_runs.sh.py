@@ -56,14 +56,14 @@ for name, param in run_starts.items():
 
     if len(str(param[3])) > 0:
         param3 = param[3]
-        origin_param = ' -origin_tree {}'.format(param3)
+        origin_param = f' -origin_tree {param3}'
         final_line += origin_param
 
     single_sh = '#!/usr/bin/env bash\n' \
                 '#-*- coding:utf-8 -*-\n' \
-                'echo Starting run in {}\n' \
-                '{}'.format(out_path, final_line)
-    with Path.open(SLURM_RUNS / '{}.sh'.format(name), 'w') as sh_file:
+                f'echo Starting run in {out_path}\n' \
+                f'{final_line}'
+    with Path.open(SLURM_RUNS / f'{name}.sh', 'w') as sh_file:
         sh_file.write(single_sh)
 
     complete_params.append(final_line)
@@ -71,7 +71,7 @@ for name, param in run_starts.items():
 print('\n'.join(complete_params))
 print('\n')
 
-allstuff = '\n'.join(['sbatch --partition=All {}'.format(SLURM_RUNS / '{}.sh'.format(x)) for x in run_starts.keys()])
+allstuff = '\n'.join(['sbatch --partition=All {}'.format(SLURM_RUNS / f'{x}.sh') for x in run_starts.keys()])
 sbatch_sh = '#!/usr/bin/env bash\n' + allstuff
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

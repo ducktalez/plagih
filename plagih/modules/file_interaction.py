@@ -9,7 +9,7 @@ import numpy as np
 try:
     import tikzplotlib
 except Exception as ex:
-    print_e('Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{}'.format(ex))
+    print_e(f'Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{ex}')
 
 T_num_lines = 15  # sfeh this var is not found otherwise
 
@@ -93,7 +93,7 @@ def pickle_dump(path, data, print_type=None):
     path = file_make_dir(path)
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        printez('f', '{}'.format(path), print_type=print_type)
+        printez('f', f'{path}', print_type=print_type)
     return
 
 
@@ -114,7 +114,7 @@ def yaml_dump(path, data, print_type=None):
     path = file_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
-        printez('ff', '{}'.format(path), print_type=print_type)
+        printez('ff', f'{path}', print_type=print_type)
     return
 
 
@@ -182,7 +182,7 @@ def plot_end(data_2d, path_plot,
     """
 
     if len(data_2d) == 0:
-        print_e('Plotting empty array is not possible! Data={}'.format(data_2d))
+        print_e(f'Plotting empty array is not possible! Data={data_2d}')
         return
 
     x, y = data_2d
@@ -219,11 +219,11 @@ def plot_end(data_2d, path_plot,
 
     if save_tikz:
         try:
-            tikzplotlib.save(path_plot / '{}.tex'.format(plt_title))
-        except Exception as ex:
-            print_e('tikzplotlib.save failed, exception: {}'.format(ex))
+            tikzplotlib.save(path_plot / f'{plt_title}.tex')
+        except Exception as tikzex:
+            print_e(f'tikzplotlib.save failed, exception: {tikzex}')
 
     plt.tight_layout()
-    plt.savefig(path_plot / '{}.png'.format(plt_title))
+    plt.savefig(path_plot / f'{plt_title}.png')
     plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
     return

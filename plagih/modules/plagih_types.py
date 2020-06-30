@@ -140,8 +140,6 @@ def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None
     Randomly choosing an operator for a given xtype.
     choose_oparray must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
-    # todo group function probability... larger arity? winkelfunktionen? manchmal ohne p-setzen?
-    # todo load the operators file must be updated (?)
     """
     if delete_this_version1 and choose_oparray2 is not None:
         func_list, probability_list = choose_oparray2[xtype][arity]

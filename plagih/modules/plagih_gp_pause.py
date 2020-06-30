@@ -1,16 +1,6 @@
-# Karoo GP Pause Menu
-# A text-based user interface for mid-run parameter configuration and population studies
-# by Kai Staats, MSc with TensorFlow support provided by Iurii Milovanov; see LICENSE.md
-# version 2.3 for Python 3.6
-
 def pause(menu_dict):
     """
-	Pause the program execution and invok the user to make one or more valid options.
-
-	Called by: fx_karoo_gp
-
-	Arguments required: menu_dict
-	"""
+    """
 
     options = ['', '?', 'help', 'i', 'm', 'g', 's', 'db', 'ts', 'min', 'bal', 'l', 'pop', 'e', 'p', 'id', 'dir', 'load', 'w', 'add', 'q']
 
@@ -108,17 +98,17 @@ def pause(menu_dict):
 
     # NEED TO ADD
     # elif menu == 'max': # adjust the maximum Tree depth
-    #	while True:
-    #		try:
-    #			print ('\n\t The current \033[3madjusted\033[0;0m maximum Tree depth is:', config.tree_depth_max)
-    #			query = input('\n\t Adjust the global maximum Tree depth to (1 ... 10): ')
-    #			if int(query) not in list(range(1,11)): raise ValueError()
-    #			if query < config.tree_depth_max:
-    #				print ('\n\t\033[32m This c1 is less than the current c1.\033[0;0m')
-    #				conf = input('\n\t Are you ok with this? (y/n) ')
-    #				if conf == 'n': break
-    #		except ValueError: print ('\n\t\033[32m Enter a number from 1 including 10. Try again ...\033[0;0m')
-    #		except KeyboardInterrupt: print ('\n\n\t\033[32m Enter \033[1mq\033[0;0m\033[32m to quit\033[0;0m')
+    #    while True:
+    #        try:
+    #            print ('\n\t The current \033[3madjusted\033[0;0m maximum Tree depth is:', config.tree_depth_max)
+    #            query = input('\n\t Adjust the global maximum Tree depth to (1 ... 10): ')
+    #            if int(query) not in list(range(1,11)): raise ValueError()
+    #            if query < config.tree_depth_max:
+    #                print ('\n\t\033[32m This c1 is less than the current c1.\033[0;0m')
+    #                conf = input('\n\t Are you ok with this? (y/n) ')
+    #                if conf == 'n': break
+    #        except ValueError: print ('\n\t\033[32m Enter a number from 1 including 10. Try again ...\033[0;0m')
+    #        except KeyboardInterrupt: print ('\n\n\t\033[32m Enter \033[1mq\033[0;0m\033[32m to quit\033[0;0m')
 
     elif menu == 'bal':  # adjust the balance of genetic operators'
         print('\n\t The current balance of genetic operators is:')
@@ -207,7 +197,8 @@ def pause(menu_dict):
 
     elif menu == 'l':  # print_type dictionary of Trees with the best fitness score
         print('\n\t The leading Trees and their associated expressions are:')
-        for n in sorted(menu_dict['fittest_dict']): print('\t ', n, ':', menu_dict['fittest_dict'][n])
+        for n in sorted(menu_dict['fittest_dict']):
+            print('\t ', n, ':', menu_dict['fittest_dict'][n])
 
     elif menu == 'pop':  # list Trees in the current population
         if menu_dict['gen_id'] == 1:
@@ -280,14 +271,14 @@ def pause(menu_dict):
 
     # NEED TO REBUILD
     # elif menu == 'load': # load population_s to replace population_a
-    #	while True:
-    #		try:
-    #			query = input('\n\t Overwrite the current population with population_s? (\033[1my\033[0;0m\033[32m/\033[1mn\033[0;0m\033[32m)\033[0;0m ')
-    #			if query == 'y': menu_dict['input_a'] = 'load'; break
-    #			elif query == 'n': break
-    #			else: raise ValueError()
-    #		except ValueError: print ('\n\t\033[32m Enter (\033[1my\033[0;0m)es or (\033[1mn\033[0;0m)o. Try again ...\033[0;0m')
-    #		except KeyboardInterrupt: print ('\n\n\t\033[32m Enter \033[1mq\033[0;0m\033[32m to quit\033[0;0m')
+    #    while True:
+    #        try:
+    #            query = input('\n\t Overwrite the current population with population_s? (\033[1my\033[0;0m\033[32m/\033[1mn\033[0;0m\033[32m)\033[0;0m ')
+    #            if query == 'y': menu_dict['input_a'] = 'load'; break
+    #            elif query == 'n': break
+    #            else: raise ValueError()
+    #        except ValueError: print ('\n\t\033[32m Enter (\033[1my\033[0;0m)es or (\033[1mn\033[0;0m)o. Try again ...\033[0;0m')
+    #        except KeyboardInterrupt: print ('\n\n\t\033[32m Enter \033[1mq\033[0;0m\033[32m to quit\033[0;0m')
 
     elif menu == 'w':  # write the evolving population_b to disk
         if menu_dict['gen_id'] > 1:

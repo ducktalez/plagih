@@ -12,8 +12,6 @@ from pathlib import Path as Path
 ### TensorFlow Imports and Definitions ###
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 
-sympy_dummy = plagih_sympify(1)
-np.set_printoptions(linewidth=320)  # set the terminal to print 320 characters before line-wrapping in order to view Trees
 
 N_id = 3
 N_depth = 4
@@ -287,7 +285,7 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
     return tree_works
 
 
-def tree_check_deep(tree, env_vars=None, karoo=True):
+def tree_check_deep(tree, karoo=True):
     """
     Performs all checks that we currently have
     # sfeh do not use this if trees are safely generated

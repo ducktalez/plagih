@@ -182,7 +182,7 @@ class Square(Function):
         if sympify(a).is_real:
             return a**2  # see
         else:
-            # print('sympy debug, Square(a). a is {} and of type {}'.format(a, type(a)))
+            # print('sympy debug, Square(a). a is {} and of type {}'.forjmat(a, type(a)))
             return
 
     def _sympy_(self, a):

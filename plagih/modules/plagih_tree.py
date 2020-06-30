@@ -119,7 +119,7 @@ class Ptree_karoo():
     - pop_id (NO!)
 
     node:
-    todo branch depth
+    branch depth
     """
 
     #
@@ -163,9 +163,9 @@ def TEST_karoo_tree_from_labellist(label_list, env_vars, modify_list=None, arity
 
     xtype_list = xtypes_from_labels(label_list, env_vars)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
-    # tree = p_tree.get_uninstanced_tree()
+    tree = p_tree.get_uninstanced_tree()
 
-    return p_tree
+    return tree
 
 
 def karoo_tree_from_expr(expr, env_vars, modify_list=None):
@@ -184,7 +184,6 @@ def karoo_tree_from_expr(expr, env_vars, modify_list=None):
 def tree_save_csv(tree, path_csv):
     """
     Writing one tree to a .csv file. As it is appended, many can be added.
-    todo remove ~ operator!!
     """
     with Path.open(path_csv, 'a', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
         target = csv.writer(csv_file, delimiter=',')
@@ -498,8 +497,8 @@ def tree_node_get_parents(tree, node_id):
     node_list = [node_id]
     while node_id > root_id:
         node_id = tree_node_get_parent(tree, node_id)
-        if len(node_list) > 200:  # todo whats wrong with trees like this?
-            raise
+        if len(node_list) > 200:
+            raise  # tree has intrinsic parent node recursion (node is its own parent?)
         node_list.append(node_id)
     return node_list
 
@@ -655,13 +654,13 @@ def tree_try_get_swapids(a_tree, b_tree, version='default'):
     """
     if version == 'default':
         # choose a node from parent a
-        a_ids = tree_get_mutatable_nodes(a_tree, no_root=False)
+        a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
         # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
         a_id = np.random.choice(a_ids)
         a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
 
         # create a list from parent b with same xtype
-        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=False)
+        b_node_ids = tree_get_mutatable_nodes(b_tree, no_root=True)
         b_sametype_ids = b_node_ids[:]
         for b_id in b_node_ids:
             b_label, _, b_xtype = tree_node_get_lax_v3(b_tree, b_id)
@@ -1102,7 +1101,6 @@ def tree_get_leaves(tree, karoo=False):
 def tree_get_mutatable_nodes(tree, no_root=False, karoo=True):
     """
     Returns a list with mutatable ids
-      # todo no_root had to be set to False in some calls. This does not work for one-node origins (IB Udluft 1)
     """
 
     node_ids = []
@@ -1113,7 +1111,8 @@ def tree_get_mutatable_nodes(tree, no_root=False, karoo=True):
             node_ids.append(int(node_id))
 
     if no_root and root_id in node_ids:
-        node_ids.remove(root_id)
+        if len(tree_get_labellist(tree)) > 1:  # sfeh dummy if the tree is only one node # sfeh no_root?
+            node_ids.remove(root_id)
 
     return node_ids
 
@@ -1306,8 +1305,8 @@ def tree_parsimony_ted(tree1, tree2):
     """
     apted_tree1 = tree_raw_depth_prefix(tree1, root_id)
     apted_tree2 = tree_raw_depth_prefix(tree2, root_id)
-    distance, mapping = apted_distance(apted_tree1, apted_tree2)
-    # sfeh the mapping could be handy somewhere
+    distance, mapping = apted_distance(apted_tree1, apted_tree2)  # sfeh the mapping could be handy somewhere
+
     return distance, mapping
 
 
@@ -1687,21 +1686,6 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
     return ztree
 
 
-# def tree_fix_link_child_karoo(tree):
-#     """
-#     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
-# ## sfeh: todo can this REALLY be deleted? how is this not used?^^
-#     This is required anytime the size of the array 'config.tree' has been modified, as with both Grow and Full mutation.
-#
-#     """
-#
-#     for node_id in range(root_id, len(tree[3])):
-#         c_buffer = evolve_c_buffer(tree, node_id, karoo=True)  # generate c_buffer for each node
-#         tree = tree_node_set_childs_ids(tree, node_id, c_buffer, karoo=True)  # update child links for each node
-#
-#     return tree
-
-
 def tree_fix_link_child(tree, karoo=False):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
@@ -1864,7 +1848,7 @@ def tree_evolve_reduce(tree, env_vars, completely=True):
                     tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)
                 except Exception as ex:
                     print_e(f'This failed during reduce process: ex: {ex}\nTree labels:\n{tree_get_labellist(tree)}')
-                    tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)  # sfeh todo debug
+                    # tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)  # debug
                     pass  # This might occur when a tree is sympified (?)
         return tree
     except Exception as ex:
@@ -2147,7 +2131,7 @@ def tree_normalize_exponentiation(tree):
                 new_power = float(int(float(old_power)))
                 tree = tree_node_set_label(tree, child_id, new_power)
             except ValueError:
-                pass  # sfeh: This may actually take some time. Every tree gets checked any many have '**'.
+                pass  # sfeh: This may actually take some time. Every tree gets checked and many have '**'.
     return tree
 
 
@@ -2157,11 +2141,11 @@ def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None
 
     """
 
-    distance_dict = {
-        'tree_node_count': tree_get_size,
-        'tree_depth': tree_get_depth,
-        'tree_edit_distance': tree_parsimony_ted,
-    }
+    # distance_dict = {
+    #     'tree_node_count': tree_get_size,
+    #     'tree_depth': tree_get_depth,
+    #     'tree_edit_distance': tree_parsimony_ted,
+    # }
 
     if parsimony_distance == 'tree_node_count':  # number of nodes
         return tree_get_size(tree)  # returns the number of nodes
@@ -2192,14 +2176,6 @@ def tree_check_is_sympified(tree):
         return True
     else:
         return False
-
-
-def tree_remove_minus_workaround(tree):
-    """
-    The ~ operator should be removed and replaced with a
-    """
-    # todo
-    # ~,x should be equal to -x
 
 
 def tree_group_branch_expressions(tree):

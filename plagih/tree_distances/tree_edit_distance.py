@@ -27,8 +27,6 @@ def apted_distance(expr1, expr2):
     ted = apted.compute_edit_distance()
     mapping = apted.compute_edit_mapping()
 
-    # print(ted, '\t', mapping)
-
     return ted, mapping
 
 
@@ -181,3 +179,63 @@ def weight_ted_mapping(mapping):
 # tree_source = aptree.from_text('{a{b}{c}}')
 # tree_orig = aptree.from_text('{a{b{d}}}')
 # apted_disstance(tree_source, tree_orig)
+#
+#
+
+
+def aptree_to_width(aptree):
+    """
+    '{+{+{-{4}{5}}{1}}{*{2}{3}}}'
+    ->
+    [['+'], ['+', '*'], ['-', '1', '2', '3'], ['4', '5']]
+    """
+    xy = []
+    y = -1
+    buffer = ''
+    for letter in aptree:
+        if letter == '{' or letter == '}':
+            if buffer != '':
+                xy.append([y, buffer])
+                buffer = ''
+            y += (1 if letter == '{' else -1)
+        else:
+            buffer += letter
+
+    max_y = max(xy, key=lambda x: x[0])[0]
+    widtree = [[] for _ in range(max_y + 1)]
+
+    print(aptree)
+    print(xy)
+
+    for y, label in xy:
+        widtree[y].append(label)
+
+    label_list = sum(widtree, [])
+
+    return label_list
+
+
+def tree_nodeid_ted_mapping(mapping):
+
+    for ii, map_i in enumerate(mapping):
+        a, b = map_i[0], map_i[1]
+        if a is None:
+            # print(f'{ii} Inserted {aptree_to_width(str(b))}')
+            pass
+        elif b is None:
+            print(f'{ii} inserted {a.name}')
+        else:
+            a_name = a.name
+            b_name = b.name
+            if a_name == b_name:
+                # print(f'{ii} No change, {a.name}')
+                pass
+            else:
+                print(f'{ii} changed {a.name}')
+
+    return
+
+
+weirdtree = '{+{+{-{4}{5}}{1}}{*{2}{3}}}'
+weirdtree = '{A{B{C{D}{E}}{F}}{G{H}{I}}}'
+print(aptree_to_width(weirdtree))

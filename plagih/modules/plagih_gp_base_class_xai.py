@@ -210,7 +210,7 @@ class ExplainableGP(object):
             self.evolve_list = self.config['evolve_list']
 
         if user_prepared_path is not None:
-            self.config['file_loc']['samples_ready_p'] = user_prepared_path
+            self.config['file_locs']['samples_ready_p'] = user_prepared_path
 
         self.activate_dataset(user_prepared_p_path=user_prepared_path)
 
@@ -223,7 +223,7 @@ class ExplainableGP(object):
         if opt_evolve_list:
             self.evolve_list.update(opt_evolve_list)
 
-        self.load_tree_builders_choose_oparray(opt_path_opyaml=None)  # todo
+        self.load_tree_builders_choose_oparray(opt_path_opyaml=None)
 
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
@@ -351,12 +351,12 @@ class ExplainableGP(object):
 
         try:
             self.config['pl_version'], self.restart_count, self.gen_id, _, self.pareto, self.population_base, self.monitoring_dict = run_data
-            # todo test
+            # done
         except:
-            # todo remove this in version1
-            self.restart_count, self.gen_id, _, self.pareto, self.population_base, self.monitoring_dict = run_data
-            # self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
-            self.version = 0.95
+            if delete_this_version1:
+                self.restart_count, self.gen_id, _, self.pareto, self.population_base, self.monitoring_dict = run_data
+                # self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
+                self.version = 0.95
 
         self.restart_count += 1
 
@@ -385,7 +385,7 @@ class ExplainableGP(object):
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
-        # todo save complete config?
+        # sfeh save complete config?
         run_backup_data = self.config['pl_version'], self.restart_count, self.gen_id, None, self.pareto, self.population_base, self.monitoring_dict
 
         path_backup = file_make_dir(self.root_path('file_backup_pickle'))
@@ -792,29 +792,25 @@ class ExplainableGP(object):
 
         return
 
-    def load_evolve_functions(self, file_evolverates=None):
+    def load_evolve_functions(self, opt_evolverates=None):
         """
 
         """
-        if not file_evolverates:
+        if opt_evolverates:
+            file_evolverates = Path(opt_evolverates)
+        else:
             file_evolverates = self.root_path('evolve_file')
 
-        file_evolverates = Path(file_evolverates)
         if Path.is_file(file_evolverates):
             evolve_list = yaml_load(file_evolverates)
-            # sfeh this was never (?) tested?
             self.config['evolve_list'] = evolve_list  # sfeh build a check for this loaded file?
         else:
             print_warning('ww', 'Opt-in not specified: Evolve-file for GP evolve functions defined! Trying to choose them for you.')
-
-        # yaml_dump(self.root_path('file_info_evolve_dict_yaml'], evolve_list)  # todo save the config
-        # sfeh: if you want to load information from extra file, check for this file here
 
         return
 
     def load_tree_builders_choose_oparray(self, opt_path_opyaml=None):
         """
-        .͜.
 
         """
         # double check load
@@ -921,28 +917,28 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
-        def histograms_actions(self):
-
-            # todo when there are more than 3 (?) dimensions, these plots make no sense.
-            #  check for all vars in the tree, mark all observations of the same type with the same color?
-            # >>> Histograms for every dimension
-
-            data_dims = len(self.env_vars['obs_name'])
-
-            # for enum_aii, agent_ii in enumerate(agent_dimatrix):
-            for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
-                fig, axs = plt.subplots(data_dims, 1)
-
-                pairwise_fitness = agent_info['pairwise_fitness']
-                for obs_ii, agent_obs_info in agent_info['obs-specific'].items():  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
-                    hist_data = agent_obs_info['histogram_data']
-                    axs[obs_ii].hist(hist_data, bins=obs_x_info[obs_ii]['bins'], weights=pairwise_fitness)
-                    axs[obs_ii].set_title(obs_x_info[obs_ii].get('obs_name'))
-                    axs[obs_ii].set_ylim(top=max_fails_per_bin)
-
-                plt.tight_layout()
-                plt.savefig(path_hist / f'obs_hist_{parsim}.png')
-                plt.clf()
+        # def histograms_actions(self):
+        #
+        #     # todo when there are more than 3 (?) dimensions, these plots make no sense.
+        #     #  check for all vars in the tree, mark all observations of the same type with the same color?
+        #     # >>> Histograms for every dimension
+        #
+        #     data_dims = len(self.env_vars['obs_name'])
+        #
+        #     # for enum_aii, agent_ii in enumerate(agent_dimatrix):
+        #     for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
+        #         fig, axs = plt.subplots(data_dims, 1)
+        #
+        #         pairwise_fitness = agent_info['pairwise_fitness']
+        #         for obs_ii, agent_obs_info in agent_info['obs-specific'].items():  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
+        #             hist_data = agent_obs_info['histogram_data']
+        #             axs[obs_ii].hist(hist_data, bins=obs_x_info[obs_ii]['bins'], weights=pairwise_fitness)
+        #             axs[obs_ii].set_title(obs_x_info[obs_ii].get('obs_name'))
+        #             axs[obs_ii].set_ylim(top=max_fails_per_bin)
+        #
+        #         plt.tight_layout()
+        #         plt.savefig(path_hist / f'obs_hist_{parsim}.png')
+        #         plt.clf()
 
         path_hist = folder_make_dir(self.root_dir / self.file_loc('folder_histograms'))
 
@@ -1011,7 +1007,7 @@ class ExplainableGP(object):
 
             fig, ax = plt.subplots()
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            # todo options: density = True, cumulative = True, np.clip(), np.diff(np.unique(data)).min() for
+            # options: density = True, cumulative = True, np.clip(), np.diff(np.unique(data)).min() for
             ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
             ax.set_ylim(0, len(self.data_train))  # sfeh better size? max? # self.env_vars['action_at'][self.config['eval_action']]
             ax.set_ylabel('Frequency')
@@ -1542,8 +1538,7 @@ class ExplainableGP(object):
         full_or_grow = build_spec.get('full_or_grow')
         if full_or_grow is None:
             full_or_grow = np.random.choice(['full', 'grow'])
-
-        node_ids = tree_get_mutatable_nodes(tree, no_root=False)
+        node_ids = tree_get_mutatable_nodes(tree, no_root=True)
         old_node = np.random.choice(node_ids)
         old_xtype = tree_node_get_xtype(tree, old_node)
         build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)

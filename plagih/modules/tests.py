@@ -51,8 +51,9 @@ class TestHelpers:
     def test_ted_weighting(self):
         distance, mapping = tree_parsimony_ted(self.tree1, self.tree2)
         print('Mapping:\n' + '\n'.join([str(x) for x in mapping]))
-        weighted_distance = weight_ted_mapping(mapping)
-        print('\nDistance:', distance, 'Mapping_distance:', weighted_distance)
+        # weighted_distance = weight_ted_mapping(mapping)
+        # print('\nDistance:', distance, 'Mapping_distance:', weighted_distance)
+        print(tree_nodeid_ted_mapping(mapping))
 
     def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
         xtype_list = xtypes_from_labels(label_list, self.env_bundle)
@@ -141,6 +142,6 @@ class MountainCarExamples:
 
 
 live_test = TestHelpers()
-live_test.reduce_any_tree()
+live_test.test_ted_weighting()
 
 # print(ast_convert_from_expr('Ifte((((Mini(((-0.09)*(((cartPos)+(0.25))**(2)))+(0.03), ((0.3)*(((cartPos)+(0.9))**(4)))-(0.008)))<=(cartVel))&((cartVel)<=(((-0.07)*(((cartPos)+(0.38))**(2)))+(0.7)))), (2), (0))', build=True))

@@ -1,6 +1,6 @@
 from plagih.modules.printing import *
 from plagih.modules.operators import *
-
+import numpy as np
 import sklearn.metrics as skm
 
 
@@ -308,7 +308,7 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
                 return float(fitness)
 
 
-def get_env_tensors(data, env_vars, eval_action=0):
+def get_env_tensors(pd_data, env_vars, eval_action=0):
     """
     return tensors-dictionary with all the terminals/leaf nodes
     - variables (observation0, ...)
@@ -319,20 +319,22 @@ def get_env_tensors(data, env_vars, eval_action=0):
     # for obs_name, obs_info in env_vars['obs_name'].items():
 
     for obs_info in env_vars['obs_name'].values():
-        label = obs_info['label']
+        col_label = obs_info['label']
         pos = obs_info['pos']
-        dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool
-
-        tensors[label] = tf.constant(data[:, pos], dtype=dtype)  # converts data_csv_path into vectors
-        # else:
-        #     raise Exception('The xtype of your variable does not exist: {}'.format(xtype))
+        tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
+        if delete_this_version1 or isinstance(pd_data, np.ndarray):
+            tensors[col_label] = tf.constant(pd_data[:, pos], dtype=tf_dtype)  # converts data_csv_path into vectors
+        elif TEST_PHASE:
+            tensors[col_label] = tf.constant(pd_data[col_label], dtype=tf_dtype)
+        else:
+            raise Exception('Tone of these two should happen. need to have tensors x~~D')
 
     # sfeh: if more than one action is provided...
     action_xtype = env_vars['action_at'][eval_action]['xtype']
     action_label = env_vars['action_at'][eval_action]['label']
     column = env_vars['action_at'][eval_action]['pos']
     if '2f' in action_xtype:
-        tensors[action_label] = tf.constant(data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
+        tensors[action_label] = tf.constant(pd_data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
     else:
         print_e('action {} has these infos: {}.'.format(action_label, env_vars['action_at'][0]))
     return tensors

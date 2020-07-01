@@ -7,6 +7,8 @@ This notation offers the opportunity to actually search for parts, e. g.
 > if '2b' in function:  # This returns True if the label evaluates to boolean
 Be careful with if-then-else though. This needs boolean and two float inputs to produce one float
 """
+import random
+
 from plagih.modules.operators import *
 from plagih.modules.printing import *
 import numpy as np
@@ -50,7 +52,25 @@ def xtype_get_converters(xtype):
         raise
 
 
-def choose_term(xtype, env_vars, choose_distribution, float_accuracy):
+def random_choose_tempobs(obs_list):
+    """
+    chooses variables but weighting how old they are.
+    obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4']
+    -> [0.28, 0.23, 0.19, 0.16, 0.13]
+    sfeh: what about larger steps?
+    0, 1, 2, 3 is good, but
+    0, 5, 10, 15 is worse
+    what if variables are not all of same diff?
+    """
+    x = len(obs_list)
+    fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
+    p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
+    p = p / np.sum(p)  # the sum must be equal to 1
+    new_obs = np.random.choice(obs_list, p=p)
+    return new_obs
+
+
+def choose_term(xtype, env_vars, choose_distribution, float_decimals):
     """
     Returns a terminal of xtype.
 
@@ -67,72 +87,16 @@ def choose_term(xtype, env_vars, choose_distribution, float_accuracy):
     """
 
     # insert a ?
-    if np.random.choice(['obs', 'distrib']) == 'obs' and env_vars[xtype]:
-        # todo take temp_diff into consideration
-        term = np.random.choice(env_vars[xtype])
+    if random.choice(['obs', 'distrib']) == 'obs' and len(env_vars[xtype]) > 0:
+        obs_list = random.choice(list(env_vars['env_observation_family'].values()))
+        term = random_choose_tempobs(obs_list)  # sfeh option for completely randomness?
     else:
-        term = choose_constant(xtype, choose_distribution, float_accuracy)
+        dist_fun = random.choice(choose_distribution[xtype])
+        term = dist_fun()
+        if '2f' in xtype:  # sfeh int aswell?
+            term = round(term * float_decimals) / float_decimals
 
-    term = str(term)  # sfeh
-
-    return term
-
-
-def random_choose_tempobs(var_list):
-    """
-    # todo filter
-    """
-    x = len(var_list)
-    fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
-    p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
-    p = p / np.sum(p)  # the sum must be equal to 1
-    new_obs = np.random.choice(var_list, p=p)
-    return new_obs
-
-
-def choose_constant(xtype, choose_distributions, accuracy):
-    """
-
-    Returns a constant that fits into the position
-    -- xtype = 'float'
-    """
-    const = np.random.choice(choose_distributions[xtype])()
-    if '2f' in xtype:
-        const = round(const*accuracy)/accuracy
-
-    return const
-
-#
-# def xtype_choose_func_v2(func_arr_dummy, xtype=None, arity=None):
-#     """
-#     This fills in a function that fits the type of the function/terminal before.
-#     terminal  '2f' -> '_2f', arity
-#     function 'f2f' -> '_2f', arity
-#     function 'b2f2f' -> '_2f', arity
-#     > ->
-#     """
-#     if xtype:
-#         if '2f' in xtype:
-#             choose_operator = sum(func_arr_dummy[f2f] + func_arr_dummy[b2f] + func_arr_dummy[b2f2f], [])
-#         elif '2b' in xtype:
-#             choose_operator = sum(func_arr_dummy[f2b] + func_arr_dummy[b2b], [])
-#         else:
-#             print_e('What kind of type is that? {}'.format(xtype))
-#             raise
-#     else:
-#         choose_operator = sum(func_arr_dummy[f2f] +
-#                           func_arr_dummy[b2f] +
-#                           func_arr_dummy[b2f2f] +
-#                           func_arr_dummy[f2b] +
-#                           func_arr_dummy[b2b], [])
-#
-#     # Attention! do not choose out of an dictionary.
-#     # every function is inside there only once, so no higher chance for functions that are more often in the list
-#     # label = np.random.choice(self.xype_func_dict['2f'])
-#
-#     label = np.random.choice(choose_operator)
-#
-#     return label, op[str(label)]['arity']
+    return str(term)  # sfeh str necessary?
 
 
 def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None):

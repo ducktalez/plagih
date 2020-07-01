@@ -24,13 +24,12 @@ class BColors:  # sfeh can be deleted
     RED2 = '\033[41m'
 
 
-def print_e(text, print_type=None, time_total=0.0):
+def print_e(text):
     """
     Printing errors
     """
-    message_style = BColors.MAGENTA  # not red anymore
-    message_pretxt = '{BColors.FAIL}ERROR: {BColors.WARNING}'
-    print(f'{message_style}{message_pretxt}{text}{BColors.RESET}')
+    message_pretxt = f'{BColors.FAIL}ERROR: {BColors.WARNING}'
+    print(f'{message_pretxt}{BColors.MAGENTA}{text}{BColors.RESET}')
 
 
 def print_warning(message_type, text, print_type=None, time_total=0.0):
@@ -70,10 +69,6 @@ def printez(message_type, text, print_type=None, time_total=0.0):
     elif 'v' in message_type:
         message_style = BColors.WHITE
         message_pretxt = 'Verbose: '
-    elif 'p' in message_type:
-        message_style = BColors.YELLOW
-        message_pretxt = 'Pause(TO-DO): '
-        pause = True
     elif 'f' in message_type:
         message_style = BColors.MAGENTA
         message_pretxt = 'Writing File: '

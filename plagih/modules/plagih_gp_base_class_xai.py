@@ -62,7 +62,7 @@ class ExplainableGP(object):
             'fitness_accuracy': 3,  # rounding the fitness
 
             'parsimony_tmp': 15,
-            'float_accuracy': 10,  # None or 1-30 decimals
+            'float_decimals': 6,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
 
             'user_feedback': {
@@ -104,10 +104,13 @@ class ExplainableGP(object):
                  'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 1, 20, 5), 'full_or_grow': 'grow'}}},
                 {'tag': 'BranchShrink', 'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
                  'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
-                {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.10, 'tourn_size': 5,
-                 'custom_params': {'mode': 'branch'}},
+
+                {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
+                 'custom_params': {'mode': 'branch', 'filter_observations': True}},
+                {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
+                 'custom_params': {'mode': 'branch', 'filter_observations': False}},
                 {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.0, 'tourn_size': 5,
-                 'custom_params': {'mode': 'point'}},
+                 'custom_params': {'mode': 'point', 'filter_observations': True}},
 
                 # Crossover (35%)
                 {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.35,  # sum 0.70
@@ -201,6 +204,7 @@ class ExplainableGP(object):
             self.monitoring_verbosity = self.config['plot_verbosity']
             self.tourn_size = self.config['tourn_size']
             self.evolve_list = self.config['evolve_list']
+            self.float_decimals = int(self.config['float_decimals'])
 
         if user_prepared_path is not None:
             self.config['file_locs']['samples_ready_p'] = user_prepared_path
@@ -314,10 +318,16 @@ class ExplainableGP(object):
         if self.env_vars.get('env_observation_family') is None:
             self.env_vars['env_observation_family'] = {}
             # sfeh delete this sometimes
-            for x in self.env_vars['obs_name'].values():
+            for obs_name, x in self.env_vars['obs_name'].items():
                 col_label = x['label']
-                temp_diff = envvariable_get_tempdiff(col_label)
+                col = x['pos']
+                temp_diff = envvariable_get_timedelta(col_label)
                 core_label = envvariable_get_corelabel(col_label)
+
+                if x.get('minmax') is None:
+                    coldata = self.data_train[:, col]
+                    minmax = (np.min(coldata), np.max(coldata))
+                    env_vars['obs_name'][obs_name]['minmax'] = minmax
                 try:
                     self.env_vars['env_observation_family'][core_label].extend([col_label])
                 except (IndexError, KeyError):
@@ -325,7 +335,7 @@ class ExplainableGP(object):
 
                 self.env_vars['obs_name'][col_label]['temp_diff'] = temp_diff
                 self.env_vars['obs_name'][col_label]['core_label'] = core_label
-            self.printpl('w', 'Attention, we updated self.env_vars for an old run')
+            self.printpl('w', 'Attention, updated self.env_vars for an old run')
 
         return
 
@@ -935,30 +945,32 @@ class ExplainableGP(object):
 
         path_hist = folder_make_dir(self.root_dir / self.file_loc('folder_histograms'))
 
-        if delete_this_version1:
-            np_data = self.data_train  # sfeh, also non-train data?
-        else:
-            np_data = self.data_train.to_numpy()
         agent_dimatrix = {}
         obs_x_info = {}  # [None] * data_dims
 
         max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
 
         for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
-            obs_x_info[ii] = {}  # 'bins': None, 'obs_name': None
-            histogram_data = np_data[:, obs_info.get('pos')]  # pos is the same as col
+
+            # only to get min/max values for bin linspace?? apparently
+            if delete_this_pandas:
+                only_for_minmax_LOL = self.data_train[:, obs_info.get('pos')]  # pos is the same as col
+            else:
+                only_for_minmax_LOL = self.data_train[obs_name]
             obs_minmax = obs_info.get('minmax')
             if obs_minmax is None and delete_this_version1:  # minmax must be set at version 1
-                # print_e('SHOULD NOT HAPPEN, SFEH.   must be set earlier!')
-                obs_minmax = (np.min(histogram_data), np.max(histogram_data))
-
+                print_e('SHOULD NOT HAPPEN, SFEH.   must be set earlier!')
+                if delete_this_pandas:
+                    obs_minmax = (np.min(only_for_minmax_LOL), np.max(only_for_minmax_LOL))
+                else:
+                    obs_minmax = (min(only_for_minmax_LOL), max(only_for_minmax_LOL))
             if delete_this_version1:
                 if obs_name == 'cartVel':
                     obs_minmax = (-0.07, 0.07)
                 elif obs_name == 'cartPos':
                     obs_minmax = (-1.2, 0.6)
 
-            obs_x_info[ii]['bins'] = np.linspace(obs_minmax[0], obs_minmax[1], 32 + 1)  # sfeh 32 bins?
+            obs_x_info[ii] = {'bins': np.linspace(obs_minmax[0], obs_minmax[1], 32 + 1)}  # sfeh 32 bins?
 
         for a_ii, (parsim, fitness, meta) in enumerate(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
@@ -966,23 +978,25 @@ class ExplainableGP(object):
             expr_sym = tree_get_expr_sym(tree)
 
             tf_results = eval_tf(expr_sym,
-                                 np_data,
+                                 self.data_train,
                                  self.kernel,
                                  self.env_vars,
                                  self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, specific_action=self.config['eval_action'])  # ['fitness'] only needed if return is dict
 
+            deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
             pairwise_fitness = tf_results['pairwise_fitness']
-            tf_fitness = tf_results['fitness']
             agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
-            agent_dimatrix[a_ii]['tf_fitness'] = tf_fitness
+            agent_dimatrix[a_ii]['tf_fitness'] = tf_results['fitness']
             agent_dimatrix[a_ii]['pairwise_fitness'] = copy.deepcopy(pairwise_fitness)
             agent_dimatrix[a_ii]['parsim'] = parsim
-            deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
             agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
             for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
                 col = obs_info.get('pos')
-                histogram_data = np_data[:, col]
+                if delete_this_pandas:
+                    histogram_data = self.data_train[:, col]
+                else:
+                    histogram_data = self.data_train[obs_name]
                 hist, _ = np.histogram(histogram_data, bins=obs_x_info[ii]['bins'], weights=pairwise_fitness)
                 max_fails_per_bin = max(max(hist), max_fails_per_bin)
                 agent_dimatrix[a_ii]['obs-specific'] = {}
@@ -990,7 +1004,6 @@ class ExplainableGP(object):
                 obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
 
         # >>> Histograms for every action
-        # for enum_aii, agent_ii in enumerate(agent_dimatrix):
         for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
 
             # Histograms action-based
@@ -1186,13 +1199,13 @@ class ExplainableGP(object):
             file.write(pycode_complete_agents)
             self.printpl('ff', f'{pth.as_posix()}')
 
-        self.call_custom_mountaincar_file(pycode_complete_agents)  # sfeh root path is instance variabel
+        # self.call_custom_mountaincar_file(pycode_complete_agents)  # sfeh root path is instance variabel
 
         return
 
     def call_custom_mountaincar_file(self, pycode_complete_agents):
 
-        # sfeh
+        # todo delete this
         try:
             self.file_loc('pycode_load')
         except KeyError:
@@ -1355,7 +1368,7 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        tree = tree_evolve_mutate_point(tree, self.config['float_accuracy'], self.choose_oparray2, self.env_vars,
+        tree = tree_evolve_mutate_point(tree, self.float_decimals, self.choose_oparray2, self.env_vars,
                                         self.choose_distributions)
 
         return tree
@@ -1365,6 +1378,7 @@ class ExplainableGP(object):
         Mutates a number of float terminal of a tree
         """
         mode = call_params['mode']  # point/branch/all
+        filter_observations = call_params.get('filter_observations')  # point/branch/all
         mutate_filter = 'gaussian_filter'  # sfeh change?
 
         node_ids = tree_get_mutatable_nodes(tree)
@@ -1373,54 +1387,73 @@ class ExplainableGP(object):
             node_ids = tree_node_get_branch(tree, node_id)  # select the whole branch
 
         float_nodes = []
-        variables_node = []
+        obs_nodes = []
         for node_id in node_ids:
             if tree_node_get_xtype(tree, node_id) == '2f':
                 try:
                     _ = float(tree_node_get_label(tree, node_id))
                     float_nodes.append(node_id)
                 except ValueError:
-                    variables_node.append(node_id)
+                    obs_nodes.append(node_id)
+
+        if mode == 'point':  # if poinemutation, return one nodeid as list
+            if filter_observations:
+                filter_id = [np.random.choice(float_nodes + obs_nodes)]
+                if filter_id in float_nodes:
+                    float_nodes = filter_id
+                else:
+                    obs_nodes = filter_id
+            else:
+                float_nodes = [np.random.choice(float_nodes)]
 
         if float_nodes:
-            if mode == 'point':
-                float_nodes = [np.random.choice(float_nodes)]
             for node_id in float_nodes:
                 val = float(tree_node_get_label(tree, node_id))
-                val = gp_mutate_constants(val, term_type='float', filter_type=mutate_filter, float_accuracy=self.config['float_accuracy'])
+                val = gp_mutate_constants(val, term_type=float, filter_type=mutate_filter, float_decimals=self.float_decimals)
                 tree = tree_node_set_label(tree, node_id, val)
 
-        # todo variables should not filtered here
-        #  at least, perform filter and not this. But variables are much more relevant to the structure than float values
-        if variables_node:  # 'filtering' variables when they are from different times
-            for nodeobs_id in variables_node:
-                obs_name = tree_node_get_label(tree, nodeobs_id)
-                core_label = envvariable_get_corelabel(obs_name)
-                var_list = self.env_vars['env_observation_family'].get(core_label)
+        if obs_nodes and filter_observations:  # 'filtering' variables when they are from different times
+            for nodeobs_id in obs_nodes:
+                obs_label = tree_node_get_label(tree, nodeobs_id)
+                label_main = envvariable_get_corelabel(obs_label)
+
+                label_timedelta = envvariable_get_timedelta(obs_label)
+                label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
+
+                var_list = self.env_vars['env_observation_family'].get(label_main)
                 if var_list is not None:
-                    new_obs = random_choose_tempobs(var_list)
-                    tree = tree_node_set_label(tree, nodeobs_id, new_obs)
+                    indexx = var_list.index(obs_label)
+                    indexx = indexx + label_timedelta
+                    indexx = max(min(len(var_list)-1, indexx), 0)
+                    try:
+                        new_obs = var_list[indexx]
+                        tree = tree_node_set_label(tree, nodeobs_id, new_obs)
+                    except Exception as whyyex:
+                        raise Exception(f'WTF min and max should easily keep this in the boarders... {whyyex}')
+
+                else:
+                    print_e('var_list in env_vars is empty? O_Ô')
 
         else:
-            # print_warning('iii', 'Tree does not seem to have any float nodes for filtering.')  # usually happens with point-filtering
+            # print_warning('iii', 'Tree does not seem to have any nodes for filtering.')  # usually happens with point-filtering
             pass
 
         return tree
 
-    def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow, float_accuracy):
+    def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow, float_decimals):
         """
         Creates a random label list
         """
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
-            label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_accuracy,
+            label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_decimals,
                                                                          self.env_vars, self.choose_oparray2,
                                                                          self.choose_distributions,
                                                                          full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
-            label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_accuracy,
+            label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_decimals,
                                                                          self.env_vars, self.choose_oparray2,
                                                                          self.choose_distributions,
                                                                          full_or_grow=full_or_grow)
@@ -1491,7 +1524,7 @@ class ExplainableGP(object):
             old_branch = tree_node_get_branch(tree, node_id, karoo=True)
             build_size = build_split[i]
 
-            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow, self.config['float_accuracy'])
+            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow, self.float_decimals)
 
             c_core = Core_From_Labels(label_list, arity_list, xtype_list)
             core = c_core.get_uninstanced_core()
@@ -1509,7 +1542,7 @@ class ExplainableGP(object):
         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
 
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow,
-                                                                    self.config['float_accuracy'])
+                                                                    self.float_decimals)
 
         p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
         tree = p_tree.get_uninstanced_tree()
@@ -1534,7 +1567,7 @@ class ExplainableGP(object):
         build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)
 
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow,
-                                                                    self.config['float_accuracy'])
+                                                                    self.float_decimals)
 
         if label_list:
             # core_insert = core_from_labels(label_list, arity_list, xtype_list)
@@ -1545,7 +1578,7 @@ class ExplainableGP(object):
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
             tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_vars, self.choose_distributions,
-                                    self.config['float_accuracy'])
+                                    self.float_decimals)
         else:
             tree = None
 
@@ -1580,11 +1613,11 @@ class ExplainableGP(object):
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
         left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars,
-                                          self.choose_distributions, self.config['float_accuracy'])
+                                          self.choose_distributions, self.float_decimals)
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
         right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_vars,
-                                           self.choose_distributions, self.config['float_accuracy'])
+                                           self.choose_distributions, self.float_decimals)
 
         return left_offspring, right_offspring
 

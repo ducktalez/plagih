@@ -175,7 +175,7 @@ class ExplainableGP(object):
                 'operators_yaml': 'run_files/operators.yaml',
                 'distributions_file': 'run_files/distributions_file.yaml',
             },
-            'w':
+            'distributions_as_string':
                 {'2f': ['lambda: np.random.normal(1,2)',
                         'lambda: np.random.normal(1,1)',
                         'lambda: np.random.randint(0, 10)'],

@@ -16,3 +16,6 @@ pip install -U PyYaml
 
 for gym examples:
 gym
+
+if python3.6
+fstring

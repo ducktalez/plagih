@@ -1,29 +1,13 @@
 
 import ast
-from plagih.modules.plagih_types import xtype_get_func_list
+from plagih.modules.import_variables import *
 
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 import tensorflow as tf
 
-FIRST_TREE = 0
-name_action = 'action'
-first_action = name_action + str(0)
-name_observation = 'observation'
-first_gen_id = 1  # maybe take care to make this 0 for base gen
-karoo_skip = 1
 
-delete_this = True
-delete_this_version1 = True
-debug_this_please = False
-TEST_PHASE = True  # For testing new stuff, but if it works perfectly, the confitions might be removed
-
-# ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index('f2f')
-f2f, f2b, b2b, b2f, b2f2f = 0, 1, 2, 3, 4
-
-
-
-class Plagih_Plus:
+class P_Plus:
     """
     +
     '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.add, 'latex1': '$+$', 'latexF': '{}', 'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
@@ -210,7 +194,6 @@ op = {
 }
 
 op_test = {
-    # no (easy-to use) tensorflow-operations available
     # ast.BitOr
     '&': {'fun': '&', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': '$\\land$', 'latexF': '({{{}}}\\wedge{{{}}})',
           'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
@@ -266,6 +249,67 @@ op_test = {
 
 # import tensorflow as tf; import ast; import textwrap
 # print(', '.join(['[\'{}\', {:.2f}]'.format(v['fun'], 1/v['c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
+
+
+def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
+    """
+    returns a function list out of the given 2d-op array randomly
+    This fills in a function that fits the type of the function/terminal before.
+    terminal  '2f' -> '_2f', arity
+    function 'f2f' -> '_2f', arity
+    function 'b2f2f' -> '_2f', arity
+
+    Note: arity-0 functions (e.g. dummies, that calculate a problem specific value) are terminals!
+    todo most of this is irrelevant. just make a better array
+    """
+
+    func_tuple_list = []
+    funcs_float = [f2f, b2f, b2f2f]
+    funcs_bool = [f2b, b2b]
+
+    # arity and xtype
+    if arity is not None and xtype:
+        try:
+            xtype_row = ['f2f', 'f2b', 'b2b', 'b2f', 'b2f2f'].index(xtype)
+            func_tuple_list.extend(choose_oparray[xtype_row][arity])
+        except ValueError:
+            all_xfuncs = funcs_float if '2f' in xtype else funcs_bool
+            func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in all_xfuncs], [])
+            # if '2f' in xtype:
+            #     func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in funcs_float], [])
+            # elif '2b' in xtype:
+            #     func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in funcs_bool], [])
+            # else:
+            #     print_e('Arity given. xtype {} is not accepted. Must be \'2f\' or \'2b\'.'.format(xtype))
+            #     raise
+
+    # arity
+    if arity is not None and xtype is None:
+        func_tuple_list = sum([xtype_row[arity] for xtype_row in choose_oparray], [])
+
+    # xtype
+    if arity is None and xtype is not None:
+        if '2f' in xtype:
+            func_tuple_list = sum([sum(choose_oparray[funcs], []) for funcs in funcs_float], [])
+        elif '2b' in xtype:
+            func_tuple_list = sum([sum(choose_oparray[funcs], []) for funcs in funcs_bool], [])
+        else:
+            print_e('xtype {} is not accepted. Must be \'2f\' or \'2b\'.'.format(xtype))
+            raise
+
+    # return all functions
+    if arity is None and xtype is None:
+        func_tuple_list = sum(sum(choose_oparray, []), [])
+
+    try:
+        func_list = [x[0] for x in func_tuple_list]
+        probability_list = [x[1] for x in func_tuple_list]
+        probability_normalised = [x/sum(probability_list) for x in probability_list]
+
+        return func_list, probability_normalised
+
+    except:
+        return [], []
 
 
 def oparray_from_list(functions):

@@ -1,7 +1,7 @@
 from pathlib import Path
 import sklearn.model_selection as skcv
 from plagih.modules.printing import *
-from plagih.modules.operators import *
+import numpy as np
 import pandas as pd
 import re
 
@@ -18,7 +18,8 @@ def samples_header_line(row):
 
     param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
     """
-    env_vars = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}, 'param_at': {}}  # to identify all observation types
+    env_vars = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {},
+                'param_at': {}}  # to identify all observation types
     env_observation = {}
     env_xtype_list = {'2b': [], '2f': []}  # for choosing random variables
     env_param_at = {}  #
@@ -32,7 +33,8 @@ def samples_header_line(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
         col_label = header_split[0]
         column_meta_values = {}
-        column_meta_values[col_label] = {'type': 'float', 'role': None, 'pos': ii}  # if no type is specified -> float  # todo rename pos
+        column_meta_values[col_label] = {'type': 'float', 'role': None,
+                                         'pos': ii}  # if no type is specified -> float  # todo rename pos
         # param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}
         try:
             for col_param in header_split[1:]:
@@ -46,13 +48,15 @@ def samples_header_line(row):
         minmax = header_entry_get_minmax(column_meta_values)
         role = header_entry_get_roleguess(env_observation, col_label, ii, row)
 
-        all_meta_dict = {'name': col_label, 'type': col_type, 'xtype': xtype, 'label': col_label, 'pos': ii, 'role': role, 'minmax': minmax}
+        all_meta_dict = {'name': col_label, 'type': col_type, 'xtype': xtype, 'label': col_label, 'pos': ii,
+                         'role': role, 'minmax': minmax}
 
         if any(x in role for x in ['input', 'observation', 'obs']):
             temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
             core_label = envvariable_get_corelabel(col_label)
             try:
-                env_observation_family[core_label].extend([col_label])  # todo insert in sorted list... also t = [1,2,5,10]?
+                env_observation_family[core_label].extend(
+                    [col_label])  # todo insert in sorted list... also t = [1,2,5,10]?
             except (IndexError, KeyError):
                 env_observation_family[core_label] = [col_label]
 
@@ -125,7 +129,8 @@ def envvariable_get_tempdiff(name, re_pattern='_\d+$'):
     'cartVel_12' -> core_label = 'cartVel', temp_diff = 12
     can be used to enrich old runs 'manually', otherwise only used in header_entry_get_tempdiff
     """
-    re_search = re.search(re_pattern, name)  # todo what is the best solution? '\_\d+$' is the correct regex using search.
+    re_search = re.search(re_pattern,
+                          name)  # todo what is the best solution? '\_\d+$' is the correct regex using search.
     if re_search:
         temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
     else:
@@ -184,31 +189,33 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
     with Path.open(samples_file) as samples_csv_file:
         header_row = list(pd.read_csv(samples_csv_file, delimiter=delimiter, nrows=1))
 
-        #######
-        env_vars, param_at = samples_header_line(header_row)
-        env_action_at = env_vars['action_at']
-        #######
+    #######
+    env_vars, param_at = samples_header_line(header_row)
+    env_action_at = env_vars['action_at']
+    #######
 
-        dtypes_from_header = {}
-        colnames_from_header = []
+    dtypes_from_header = {}
+    colnames_from_header = []
 
-        # param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
-        for ii, param_values in param_at.items():
-            param_name = param_values['name']
-            ptype = param_values['type']
-            dtype = dtype_dict[ptype]
-            colnames_from_header.append(param_name)
-            dtypes_from_header[param_name] = dtype
+    # param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
+    for ii, param_values in param_at.items():
+        param_name = param_values['name']
+        ptype = param_values['type']
+        dtype = dtype_dict[ptype]
+        colnames_from_header.append(param_name)
+        dtypes_from_header[param_name] = dtype
 
-        # for k, v in env_observation.items():
-        #     dtype = dtype_dict[v['type']]
-        #     dtypes_from_header[k] = dtype
-        #
-        # for action_name in env_action_at.values():
-        #     name = action_name['name']
-        #     dtype = dtype_dict[action_name['type']]
-        #     dtypes_from_header[name] = dtype
+    # for k, v in env_observation.items():
+    #     dtype = dtype_dict[v['type']]
+    #     dtypes_from_header[k] = dtype
+    #
+    # for action_name in env_action_at.values():
+    #     name = action_name['name']
+    #     dtype = dtype_dict[action_name['type']]
+    #     dtypes_from_header[name] = dtype
 
+    # todo better sol than read 2x? iterator?
+    with Path.open(samples_file) as samples_csv_file:
         df = pd.read_csv(samples_csv_file, skiprows=1, names=colnames_from_header, dtype=dtypes_from_header)
 
         # # num_observations = min(len(env_vars['obs_name']), len(header_row) - 1)  # obsolete, is now observation_count
@@ -242,10 +249,20 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
         if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min-max (if not provided)
             env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())
 
-    data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size)  # splitting the data in 80% train and 20% testdata for validation
+    data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size)  # 80% train 20% test-validation
 
-    # Sfeh: no numpy for version 1.0
-    data_train_numpy = data_train_panda.to_numpy()
-    data_test_numpy = data_test_panda.to_numpy()
+    # data_train_numpy = data_train_panda.to_numpy()
+    # data_test_numpy = data_test_panda.to_numpy()
 
-    return env_vars, data_train_panda, data_test_panda, data_train_numpy, data_test_numpy
+    return env_vars, data_train_panda, data_test_panda  #, data_train_numpy, data_test_numpy
+
+
+if __name__ == '__main__':
+    import tensorflow as tf
+    env_vars, data_train_panda, data_test_panda = data_from_csv(Path('../../benchmarks/run_sources/MTC/samples75.csv'))
+    obsnames = env_vars['obs_name'].keys()
+    for (name, data) in data_train_panda.iteritems():
+        print(data.dtype)
+        print(data)
+        x = tf.constant(data, dtype=data.dtype)
+    print(x)

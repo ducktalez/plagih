@@ -14,7 +14,7 @@ from plagih.modules.plagih_data import *
 import random
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
-PLAGIH_VERSION = 0.953  # must only update if vital changes were made
+PLAGIH_VERSION = 0.963  # must only update if vital changes were made
 
 
 class GpConfig():
@@ -206,11 +206,6 @@ class ExplainableGP(object):
             self.config['file_locs']['samples_ready_p'] = user_prepared_path
 
         self.activate_dataset(user_prepared_p_path=user_prepared_path)
-
-        # distributions_as_string = self.config['distributions_as_string']
-        # sfeh
-        # if opt_distributions_as_string:
-        #     distributions_as_string.update(opt_distributions_as_string)
         self.load_tree_builders_distributions(user_path_distributions=None)
 
         if opt_evolve_list:
@@ -765,7 +760,7 @@ class ExplainableGP(object):
         elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier
             data_prepared = pickle_load(self.root_path('samples_ready_p'))
         elif Path.is_file(self.root_path('samples_csv')):  # Preprocess the raw data: training/test split, env-variables, ...
-            self.env_vars, _, _, self.data_train, self.data_control = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
+            self.env_vars, self.data_train, self.data_control = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
 
             print(f'Prepared the raw {self.file_loc("samples_csv")} behaviour. Saving for next run.')
             data_prepared = (self.env_vars, self.data_train, self.data_control)  # sfeh version1 remove numpy version
@@ -859,11 +854,17 @@ class ExplainableGP(object):
 
         take_data_samples = distributions_as_string.get('observed_floats')
         if take_data_samples:
-            action_columns = list(range(len(self.env_vars['obs_name']), len(self.data_train[0])))  # remove these
+            obsnames = self.env_vars['obs_name'].keys()
+            if delete_this_version1:
+                obs_samples = self.data_train.flatten()
+            else:  # this is now pandas
+                obs_samples = self.data_train[obsnames].to_numpy().flatten()
+            obs_samples = np.random.choice(obs_samples, size=take_data_samples)
+            # action_columns = list(range(len(self.env_vars['obs_name']), len(self.data_train[0])))  # remove these
             # non_float_columns = ... # sfeh: data types must be float for this to work, remove non-float values. probably, these do not really exist.
-            observ_values = np.delete(self.data_train, action_columns, 1)
-            variables_set = np.random.choice(observ_values.flatten(), take_data_samples)  # 2nd param is probably '100'
-            choose_distributions['2f'].extend([lambda: np.random.choice(variables_set)]),
+            # observ_values = np.delete(self.data_train, action_columns, 1)
+            # variables_set = np.random.choice(observ_values.flatten(), take_data_samples)  # 2nd param is probably '100'
+            choose_distributions['2f'].extend([lambda: np.random.choice(obs_samples)]),  # take one
 
         choose_distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),
         choose_distributions['2b'].extend([eval(x) for x in distributions_as_string['2b']])
@@ -934,7 +935,10 @@ class ExplainableGP(object):
 
         path_hist = folder_make_dir(self.root_dir / self.file_loc('folder_histograms'))
 
-        np_data = self.data_train  # sfeh, also non-train data?
+        if delete_this_version1:
+            np_data = self.data_train  # sfeh, also non-train data?
+        else:
+            np_data = self.data_train.to_numpy()
         agent_dimatrix = {}
         obs_x_info = {}  # [None] * data_dims
 

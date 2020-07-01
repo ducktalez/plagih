@@ -146,7 +146,7 @@ def plot_end(data_2d, path_plot,
              set_left=None, set_right=None, set_top=None,
              right_padding=1.05, top_padding=1.05,
              beyond_lines=False,
-             save_tikz=True,  # for the final runs...
+             save_tikz=False,  # for the final runs...
              subfolder=None,
              fill_variance=None):
     """

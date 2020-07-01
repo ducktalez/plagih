@@ -1899,13 +1899,14 @@ class ExplainableGP(object):
         data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
         data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
         plot_end(data_tuples, path_plots, plt_title='tree complexity (avg and std. error)', plt_x_label='Generation', plt_y_label='variance',
-                 marker='', fill_variance=data_tuples_variance)
+                 marker='', fill_variance=data_tuples_variance, save_tikz=True)
 
         data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
         plot_end(data_tuples, path_plots, plt_title='best candidate', plt_x_label='Generation',
                  plt_y_label='error',
                  linestyle='dashed',
-                 step_where='post')
+                 step_where='post',
+                 save_tikz=True)
 
         return
 

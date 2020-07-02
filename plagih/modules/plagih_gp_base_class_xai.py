@@ -855,9 +855,9 @@ class ExplainableGP(object):
             has_b2f = any(['b2f' in x for x in opxtypes])
             if not all([has_2f, has_2b, has_f2b, has_b2f]):
                 print_warning('w', f'Operators are not complete')
-            if all([has_2f, has_2b]) and not all(has_f2b, has_b2f):
+            if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
                 print_warning('w', f'Operators do not allow closure')
-        check_allow_closure(check_allow_closure)
+        check_allow_closure(operators)
 
         self.choose_oparray2 = oparray_from_list(operators)
 

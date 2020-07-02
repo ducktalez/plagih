@@ -1,6 +1,5 @@
 import pickle
 from plagih.modules.printing import *
-import csv
 import matplotlib.pyplot as plt
 import yaml
 from pathlib import Path
@@ -139,7 +138,7 @@ def plot_sexyfy(x, y, set_left=None, set_right=None, set_top=None, right_padding
 
 
 def plot_end(data_2d, path_plot,
-             plt_title='', plt_curve_label='', plt_x_label='', plt_y_label='', yscale='linear',
+             title='', plt_curve_label='', x_label='', y_label='', yscale='linear',
              step_where='', plt_xparam='',
              linestyle='-',
              marker='',
@@ -160,10 +159,10 @@ def plot_end(data_2d, path_plot,
     :param marker:
     :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
     :param path_plot: where to save the result
-    :param plt_title:
+    :param title:
     :param plt_curve_label: irrelevant for a single curve
-    :param plt_x_label: label the x-axis
-    :param plt_y_label: label the y-axis
+    :param x_label: label the x-axis
+    :param y_label: label the y-axis
     :param yscale: only 'linear'.
     :param step_where: makes 'step' plots- can be 'post', 'pre' or [pls google]
     :param plt_xparam: not in use, the same adjustment can be done with optional parameters
@@ -198,9 +197,9 @@ def plot_end(data_2d, path_plot,
     ax.set_ylim(min(bottom, 0), new_top)
     ax.set_xlim(min(left, 0), new_right)
     fig.tight_layout()
-    ax.set_xlabel(plt_x_label)
-    ax.set_ylabel(plt_y_label)
-    ax.set_title(plt_title)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
 
     if step_where:
         ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
@@ -219,11 +218,15 @@ def plot_end(data_2d, path_plot,
 
     if save_tikz:
         try:
-            tikzplotlib.save(path_plot / f'{plt_title}.tex')
+            tikzplotlib.save(path_plot / f'{title}.tex')
         except Exception as tikzex:
             print_e(f'tikzplotlib.save failed, exception: {tikzex}')
 
     plt.tight_layout()
-    plt.savefig(path_plot / f'{plt_title}.png')
+    try:
+        plt.savefig(path_plot / f'{title}.png')
+    except PermissionError as permerr:
+        print_warning('w', f'Could not save plot: {permerr}')
+
     plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
     return

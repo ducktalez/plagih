@@ -237,9 +237,9 @@ def tree_get_labellist(tree, karoo=True):
 def tree_get_size(tree, karoo=True):
     size = len(tree[0])
     if karoo:
-        return size + 1
-    else:
         return size
+    else:
+        raise
 
 
 def tree_get_history(tree):

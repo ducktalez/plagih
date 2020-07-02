@@ -151,8 +151,7 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     config['force_new_run'] = force_new_run
     config['eval_action'] = eval_action
 
-    # sfeh , opt_origin_tree_csv=origin_tree, out_dir=out_dir
-    gp = ExplainableGP(plagih_root, root_dir, config, user_prepared_path=data_prepared_path)
+    gp = ExplainableGP(plagih_root, root_dir, config, opth_preparedp=data_prepared_path)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
     if label_list is not None and modify_list is not None:
@@ -161,10 +160,12 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
         origin_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
         gp.activate_origin_tree(origin_tree)
 
+    gp.make_evolve_rates()
+
     if analyze:
         gp.gp_analyze()
     else:
-        gp.prepare_evolve_functions()
+        gp.make_evolve_rates()
         gp.plagih_gp_run()
 
     sys.exit()

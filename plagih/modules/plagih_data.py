@@ -33,8 +33,8 @@ def samples_header_line(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
         col_label = header_split[0]
         column_meta_values = {}
-        column_meta_values[col_label] = {'type': 'float', 'role': None,
-                                         'pos': ii}  # if no type is specified -> float  # todo rename pos to col or anything
+        column_meta_values[col_label] = {'type': 'float', 'role': None, 'pos': ii}
+        # if no type is specified -> float  # todo rename pos to col or anything
         # param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}
         try:
             for col_param in header_split[1:]:
@@ -211,13 +211,15 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
         # action_name = action_info['name']
         df_col = df[action_info['name']]
         env_vars['action_at'][act_ii]['unique_outputs_num'] = len(df_col.unique())
-        if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min-max (if not provided)
+        if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min/max (if not provided)
             env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())  # todo histograms in beide richtungen!! gesamte range * 2
 
     obs_infoz = env_vars['obs_name']
     for ii, (obs_name, obs_info) in enumerate(obs_infoz.items()):
         if obs_info.get('minmax') is None:
-            env_vars['obs_name'][obs_name]['minmax'] = (df[obs_name].min(), df[obs_name].max())
+            minmax = (df[obs_name].min(), df[obs_name].max())
+            print_warning('w', f'Tried to get the actual min/max from data, which is {minmax}.')
+            env_vars['obs_name'][obs_name]['minmax'] = minmax
 
     data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size)  # 80% train 20% test-validation
 

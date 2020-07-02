@@ -18,7 +18,7 @@ class DummyKernel:
     def conclusion_text(self):
         pass
 
-    def tf_wrap_result(self):
+    def tf_wrap_result(self, *args):
         pass
 
     def tf_get_pairwise_fitness(self):
@@ -88,11 +88,7 @@ class FitnessKernel:
         """
         if fitness2 is None:
             return True
-        elif self.kernel == 'regression' and fitness1 < fitness2:
-            return True
-        elif self.kernel == 'regression bounded' and fitness1 < fitness2:
-            return True
-        elif self.kernel == 'regression discrete' and fitness1 < fitness2:
+        elif 'regression' in self.kernel and fitness1 < fitness2:
             return True
         elif self.kernel == 'classification' and fitness1 > fitness2:
             return True
@@ -102,6 +98,27 @@ class FitnessKernel:
             return True
         else:
             return False
+
+    def np_best_fitness(self, fitness_list):
+        """
+        """
+        if 'regression' in self.kernel:
+            return np.min(fitness_list)
+        elif self.kernel in any(['classification', 'match']):
+            return np.max(fitness_list)
+        else:
+            raise
+
+    def best_fitness(self, fit1, fit2):
+        """
+        """
+        if 'regression' in self.kernel:
+            return min(fit1, fit2)
+        elif self.kernel in any(['classification', 'match']):
+            return max(fit1, fit2)
+        else:
+            raise
+
 
     def conclusion_text(self, result, fitness_control_best):
         """
@@ -256,7 +273,7 @@ class FitnessKernel:
 #     #     return
 
 
-def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, specific_action=0):
+def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, eval_action=0):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -276,14 +293,14 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
             'fitness'           - aggregated scalar fitness score
 
     """
-    action_at_here = env_vars['action_at'][specific_action]
+    action_at_here = env_vars['action_at'][eval_action]
     unique_outputs_num = action_at_here['unique_outputs_num']
     action_min_max = action_at_here['minmax']
 
     # Initialize TensorFlow session
     tf.compat.v1.reset_default_graph()
 
-    tensors = get_env_tensors(data, env_vars, eval_action=specific_action)  # sfeh: can this be done once, for all?
+    tensors = get_env_tensors(data, env_vars, eval_action=eval_action)  # sfeh: can this be done once, for all?
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
         with sess.graph.device(tf_device):  # device can be the gpu

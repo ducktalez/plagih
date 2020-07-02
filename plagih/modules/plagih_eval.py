@@ -104,7 +104,8 @@ class FitnessKernel:
         """
         if 'regression' in self.kernel:
             return np.min(fitness_list)
-        elif self.kernel in any(['classification', 'match']):
+
+        elif any([x in self.kernel for x in ['classification', 'match']]):
             return np.max(fitness_list)
         else:
             raise
@@ -114,11 +115,10 @@ class FitnessKernel:
         """
         if 'regression' in self.kernel:
             return min(fit1, fit2)
-        elif self.kernel in any(['classification', 'match']):
+        elif any([x in self.kernel for x in ['classification', 'match']]):
             return max(fit1, fit2)
         else:
             raise
-
 
     def conclusion_text(self, result, fitness_control_best):
         """

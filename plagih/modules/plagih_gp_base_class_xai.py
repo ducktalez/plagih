@@ -825,10 +825,10 @@ class ExplainableGP(object):
         """
 
         """
-        # double check load
 
         try:
             operators = yaml_load(Path(opth_operators))
+
         except:
             print_warning('www', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operators.')
             operators = np.array([['+', 3],
@@ -846,7 +846,18 @@ class ExplainableGP(object):
                                   ['Ifte', 2],
                                   ['Mini', 1], ['Maxi', 1]])
 
-            # np.savetxt(operators_csv, functions, delimiter=',', fmt='%s') # sfeh save in config?
+        def check_allow_closure(operators):
+            # sfeh dunno if that works... 2f not in x
+            opxtypes = [op[oper]['xtype'] for oper, _ in operators]
+            has_2f = any(['2f' in x for x in opxtypes])
+            has_2b = any(['2b' in x for x in opxtypes])
+            has_f2b = any(['f2b' in x for x in opxtypes])
+            has_b2f = any(['b2f' in x for x in opxtypes])
+            if not all([has_2f, has_2b, has_f2b, has_b2f]):
+                print_warning('w', f'Operators are not complete')
+            if all([has_2f, has_2b]) and not all(has_f2b, has_b2f):
+                print_warning('w', f'Operators do not allow closure')
+        check_allow_closure(check_allow_closure)
 
         self.choose_oparray2 = oparray_from_list(operators)
 

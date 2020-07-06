@@ -183,7 +183,7 @@ class ExplainableGP(object):
                                 'fitness_average': {},
                                 'fitness_variance': {},
                                 'best_candidate': {},
-                                'complexity_list': {},
+                                # 'complexity_list': {},  # not used, just uses memory
                                 'complexity_average': {},
                                 'complexity_mean': {},
                                 'complexity_variance': {},  # variance can be deleted, only std-error is needed delete v1
@@ -470,7 +470,6 @@ class ExplainableGP(object):
         """
         write the parameters to a .csv file which can also be loaded
         """
-
         # filename = self.root_dir / info_config_yaml
         filename = self.file_make_dir_root('info_config_yaml')
         yaml_dump(filename, self.config, print_type=self.print_type)
@@ -1680,13 +1679,12 @@ class ExplainableGP(object):
 
         """
 
-        best_id = None
-        best_fitness = None
-
+        tree = [random.choice(self.population_base) for _ in range(tourn_size)]
+        tree = self.kernel.tournanemt_selection()
+        tree = max(tree, key=lambda x: x[1])
+        tree = self.kernel.np_best_fitness()
         for n in range(tourn_size):
 
-            tree_id = pop_tree_choose(self.population_base)
-            tree = self.population_base[tree_id]
 
             fitness = tree_get_fitness(tree, precision=self.config['fitness_accuracy'])
 
@@ -1806,11 +1804,6 @@ class ExplainableGP(object):
     def file_analysis_plots(self, root_path, subfolder=''):
         """
         Make all plots
-        'fitness_average'
-        'population_tmp_done-size'
-        'complexity_average'
-        'pareto dominant candidates'
-        'tmp_pop_fitness_distribution'
         """
 
         path_plots = folder_make_dir(root_path / self.file_loc('folder_plots') / subfolder)

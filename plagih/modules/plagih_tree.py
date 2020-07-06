@@ -607,20 +607,6 @@ def tree_node_get_parent_functype(tree, node_id, env_vars):
         raise
 
 
-def pop_tree_copy(population, tree_id):
-    """
-    copy a tree from a population
-    """
-    return np.copy(population[tree_id])
-
-
-def pop_tree_choose(population):
-    """
-    Returns a random tree_id from a population
-    """
-    return np.random.randint(FIRST_TREE, len(population))  # 1-len is correct. Tested it several times now.
-
-
 def tree_init_core(node_amount, np_dtype):
     """
     returns an empty tree with an amount of nodes, auto fills

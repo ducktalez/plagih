@@ -229,9 +229,9 @@ class ExplainableGP(object):
         except:
             evolve_loop = [
                 # Reproduction (10%)
-                {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06, 'custom_params': {}},
+                {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.07, 'custom_params': {}},
                 {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03, 'custom_params': {'sympify_tree': True}},
-                {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01, 'custom_params': {}},
+                {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.00, 'custom_params': {}},
 
                 # Mutation (25%)
                 {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
@@ -1679,22 +1679,23 @@ class ExplainableGP(object):
 
         """
 
-        tree = [random.choice(self.population_base) for _ in range(tourn_size)]
-        tree = self.kernel.tournanemt_selection()
-        tree = max(tree, key=lambda x: x[1])
-        tree = self.kernel.np_best_fitness()
-        for n in range(tourn_size):
+        tournament_list = [random.choice(self.population_base) for _ in range(tourn_size)]   # random sample (pop, size) does not allow reusing a candidate sfeh todo
+        tourn_winner = self.kernel.best_fitness_function()(tournament_list, key=lambda x: tree_get_fitness(x))
 
+        # tree = max(tree, key=lambda x: x[1])
+        # tree = self.kernel.np_best_fitness()
+        # for n in range(tourn_size):
+        #
+        #
+        #     fitness = tree_get_fitness(tree, precision=self.config['fitness_accuracy'])
+        #
+        #     if self.kernel.fitness_compare(fitness, best_fitness, mode='better'):
+        #         best_id = tree_id
+        #         best_fitness = fitness
+        #
+        # tourn_winner = copy.deepcopy(self.population_base[best_id])
 
-            fitness = tree_get_fitness(tree, precision=self.config['fitness_accuracy'])
-
-            if self.kernel.fitness_compare(fitness, best_fitness, mode='better'):
-                best_id = tree_id
-                best_fitness = fitness
-
-        tourn_winner = copy.deepcopy(self.population_base[best_id])
-
-        return tourn_winner
+        return copy.deepcopy(tourn_winner)
 
     # +++++++++++++++++++++++++++++++++++++++++++++
     #   Work with trees                           +
@@ -1893,7 +1894,7 @@ class ExplainableGP(object):
         self.monitoring_dict['fitness_average'][gen_id] = np.average(pop_fitness)
         self.monitoring_dict['fitness_variance'][gen_id] = np.var(pop_fitness)
         self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
-        self.monitoring_dict['complexity_list'][gen_id] = pop_treelen
+        # self.monitoring_dict['complexity_list'][gen_id] = pop_treelen
         self.monitoring_dict['complexity_average'][gen_id] = np.average(pop_treelen)
         self.monitoring_dict['complexity_mean'][gen_id] = np.mean(pop_treelen)
         self.monitoring_dict['pop:trees:complexity:std_error'][gen_id] = np.std(pop_treelen)

@@ -3,4 +3,4 @@ pop_max: 1000
 parsimony_max: 60
 kernel_name: regression discrete
 complexity_measure: tree_edit_distance
-gen_max: 1000
+gen_max: 2000

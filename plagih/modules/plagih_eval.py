@@ -120,6 +120,28 @@ class FitnessKernel:
         else:
             raise
 
+    def best_fitness_function(self):
+        """
+        Returning either min or max
+        """
+        if 'regression' in self.kernel:
+            return min
+        elif any([x in self.kernel for x in ['classification', 'match']]):
+            return max
+        else:
+            raise
+
+    def best_fitness_function_TRUTH(self):
+        """
+        Returning either min or max
+        """
+        if 'regression' in self.kernel:
+            return lambda y, x: x < y
+        elif any([x in self.kernel for x in ['classification', 'match']]):
+            return lambda y, x: x > y
+        else:
+            raise
+
     def conclusion_text(self, result, fitness_control_best):
         """
 

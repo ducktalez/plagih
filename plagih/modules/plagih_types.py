@@ -52,7 +52,7 @@ def xtype_get_converters(xtype):
         raise
 
 
-def random_choose_tempobs(obs_list):
+def random_choose_tempobs(obs_list, max_hist=10):
     """
     chooses variables but weighting how old they are.
     obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4']
@@ -62,6 +62,7 @@ def random_choose_tempobs(obs_list):
     0, 5, 10, 15 is worse
     what if variables are not all of same diff?
     """
+    obs_list = np.delete(obs_list, np.s_[10:])  # todo to kick out values > 10
     x = len(obs_list)
     fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
     p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
@@ -89,7 +90,7 @@ def choose_term(xtype, env_vars, choose_distribution, float_decimals):
     # insert a ?
     if random.choice(['obs', 'distrib']) == 'obs' and len(env_vars[xtype]) > 0:
         obs_list = random.choice(list(env_vars['env_observation_family'].values()))
-        term = random_choose_tempobs(obs_list)  # sfeh option for completely randomness?
+        term = random_choose_tempobs(obs_list, max_hist=10)  # sfeh option for completely randomness? todo max hist = 10
     else:
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()
@@ -110,7 +111,7 @@ def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None
     else:
         func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
     if not func_list:
-        print_e('No function found with xtype={}, arity={}.\nfunc_arr_dummy:\n{}'.format(xtype, arity, choose_oparray))
+        print_e(f'No function found with xtype={xtype}, arity={arity}.\nfunc_arr_dummy:\n{choose_oparray}')
     func = np.random.choice(func_list, p=probability_list)
     arity = label_get_arity(func)
     xtype = op[func]['xtype']

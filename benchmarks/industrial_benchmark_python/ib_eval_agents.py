@@ -342,4 +342,7 @@ def agent_create_samples_csv(T=10000):
     print('DONE!')
 
 
+agent_list = [
+    ('06_50', '2', )
+]
 eval_agents()

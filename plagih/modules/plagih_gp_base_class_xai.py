@@ -1077,9 +1077,12 @@ class ExplainableGP(object):
             latex_element.append(forest_viz)
 
             latex_element.append('Tight layout:\n')
-
-            tight_forest_viz = latex_tree_get_forest(tree)
-            latex_element.append(tight_forest_viz)
+            try:
+                tight_forest_viz = latex_tree_get_forest(tree)
+                latex_element.append(tight_forest_viz)
+            except Exception as tvex:
+                print_e(f'tight_forest_viz could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
+                latex_element.append(f'tight_forest_viz could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
 
         latex_full_doc = latex_treeviz_full(latex_element)
 

@@ -217,29 +217,24 @@ Intro
 \end_layout
 
 \begin_layout Standard
-Artificial intelligence (AI) has been experiencing a boom for some years
- now, the end of which is not yet in sight.
- Particularly in the field of reinforcement learning, superhuman performance
- has often been achieved through the use of neural networks.
- This performance comes at the price of unexplainable decisions - control
- is given to the machine and its decisions must be trusted.
+Seit Reinforcement learning (RL) ist ein Teilgebiet des machine learning
+ (ML) bei dem ein Agent ohne menschliche Vorgaben lernt, ein Problem zu
+ lösen.
+ Da eine solche künstliche Intelligenz (AI) dabei den Menschen sogar häufig
+ übertrifft, ist es von
 \end_layout
 
 \begin_layout Standard
-Explainable artificial intelligence, in contrast, is a relatively young
- field of research that is primarily concerned with the problem of making
- the learned decisions of a machine explainable.
- To explain a machine-learned (ML) solution is not trivial, since the structures
- used are mostly chaotic and incredibly complex and can only be optimized
- by lengthy training processes.
 \begin_inset Note Comment
 status collapsed
 
 \begin_layout Plain Layout
-Künstliche Intelligenz (AI) erfährt seit einigen Jahren einen Boom, dessen
- Ende nicht absehbar ist.
- Vor allem im Bereich des Reinforcement-learning konnte durch die Verwengung
- von neuronalen Netzen oft übermenschliche Performance erreicht werden.
+Reinforcement Learning (RL) erfährt seit einigen Jahren immer größere Beliebthei
+t.
+ Als Teilgebiet des machine learnings (ML) kann ein Computer nicht nur lernen,
+ Probleme ohne menschliche Vorgaben zu erledigen - oft übertrifft er den
+ Menschen dabei sogar.
+ Hierfür erstellt ein Agent eine policy, deren 
 \end_layout
 
 \begin_layout Plain Layout
@@ -473,6 +468,7 @@ In court
 
 If the question of guilt is to be clarified in court, it must be possible
  to explain how a wrong decision could have been made.
+ The developer's task is to provide an explanation for the agent's behavior.
  If this is not possible, you make yourself legally contestable, even if
  an agent is otherwise considered safe.
  This is particularly important in view of the fact that an agent takes
@@ -480,104 +476,13 @@ If the question of guilt is to be clarified in court, it must be possible
 \end_layout
 
 \begin_layout Section
-Machine Learning
+Machine Learning, Reinforcement learning
 \end_layout
 
 \begin_layout Standard
 Machine Learning is an important part of Artificial Intelligence, in which
  a machine learns to solve a task without human instructions.
-\end_layout
-
-\begin_layout Standard
-Supervised learning 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo image]
-\end_layout
-
-\end_inset
-
- is the task of learning a function that, for any given data, maps inputs
- to outputs only by training on samples of known data.
- This is mostly done by using neural networks which derive a mapping from
- the inputs to outputs.
- An example is labeling animals on image inputs correctly or recognizing
- handwritten letters.
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo cite?]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Die Aufgaben 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The tasks learned there are often complex, but as the training data is mostly
- labeled by humans, it can hardly surpass human performance.
- 
-\end_layout
-
-\begin_layout Standard
-In the case of reinforcing learning, on the other hand, a policy for a problem
- must be learned for which no clear best solution is known.
- Whether the decisions made to solve the problem were good is determined
- by a reward.
-\end_layout
-
-\begin_layout Standard
-In these areas ML solutions can often exceed human solutions many times
- over.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Die dort gelernten Aufgaben sind oft komplex, können aber vom Menschen sehr
- gut selbst gelöst werden.
- 
-\end_layout
-
-\begin_layout Plain Layout
-Beim bestärkenden lernen hingegen muss eine policy für ein Problem erlernt
- werden, für den meistens keine eindeutig beste Lösung bekannt ist.
- Ob die getroffenen Entscheidungen zur Lösung des Problems gut waren, wird
- über eine Belohnung geregelt.
-\end_layout
-
-\begin_layout Plain Layout
-In diesen Bereichen können ML Lösungen menschliche Lösungen oft um ein vielfache
-s übertreffen.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Reinforcement learning
-\end_layout
-
-\begin_layout Standard
-Reinforcement learning features an agent which has the task of learning
+ Reinforcement learning features an agent which has the task of learning
  the optimal behaviour in an environment without any default knowledge.
  To do so, the agent receives a reward for actions it performed as well
  as the state of the environment that it is currently in.
@@ -1771,17 +1676,26 @@ No solution is also a solution.
 \end_layout
 
 \begin_layout Section
-Explainability criteria
+Explainability by familiarity
 \end_layout
 
 \begin_layout Standard
-Explainability in programs is not linked to a specific characteristic and
- cannot be easily achieved.
- Programmers often don't understand their own code after some time, although
- it (hopefully) even has documentation.
- If programs, which are to be understood by the developer, are now to be
- created automatically, much more attention must be paid to clarity so that
- the viewer is not overwhelmed with information.
+Um programmiercode zu verstehen und verändern zu können, muss die ihm zugrunde
+ liegende Logik verstanden werden und nachvollziehbar sein.
+ Erklärbarbeit ist kein klar definierbare Eigenschaft sondern hängt von
+ einer einem multivariaten Modell ab, deren Wertung und mathematischer Zusammenh
+ang von Entwickler als auch Problemart abhängen.
+ programmcode ist selbst bei vom Menschen geschriebenem Code nicht automatisch
+ gegeben, obwohl in diesem mithilfe von Kommentaren oder intuitiv gewählten
+ Variablennamen die Intention des Entwicklers dokumentiert werden können.
+ GP-Kandidaten müssen ohne diese Metainformationen erklärbar sein, weshalb
+ die gefundenen Lösungen aus sich heraus bereits möglich erklärbar sein
+ sollen.
+ Mögliche Einflussfaktoren und deren Potential als Komplexitätsmaß werden
+ dafür analysiert und diskutiert.
+ Als Ergebnis wird ein Distanzmaß verwendet, welches auf Vertrautheit von
+ besondere Form der Erklärbarkeit ist wegen der Vertrautheit bei wird mithilfeAn
+zahl der nötigen Änderungen mit der Tree Edit Distance (TED) berechnet.
 \end_layout
 
 \begin_layout Standard
@@ -3985,7 +3899,7 @@ status open
 \end_layout
 
 \begin_layout Section
-Surrogate model for offline learning
+Surrogate model: Regression
 \end_layout
 
 \begin_layout Standard

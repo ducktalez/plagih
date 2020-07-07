@@ -43,9 +43,11 @@ class ExplainableGP(object):
     def __init__(self, plagih_root, root_dir, user_config, opth_preparedp=None, opth_operators=None):
 
         self.name = root_dir.name  # sfeh probably there are better names
-        print(f'\n\tInitializing Plagih. \n'
-              f'Name: {BColors.CYAN}{self.name}{BColors.RESET}. \n'
-              f'Located in: \n\t{root_dir}\n')
+        print(f'\n'
+              f'\tInitializing Plagih. \n'
+              f'\tName: {BColors.CYAN}{self.name}{BColors.RESET}. \n'
+              f'\tLocated in: \n'
+              f'\t{root_dir}\n')
         self.time_start = time.perf_counter()
         self.root_dir = root_dir
         self.sfeh_plagih_root = plagih_root
@@ -975,8 +977,10 @@ class ExplainableGP(object):
                 act_range = act_max - act_min  # [0, 1, 2] -> 2
                 action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
             else:
-                act_range = act_range = act_max - act_min
-                action_bins = np.linspace(-act_range, +act_range, 10)  # sfeh 10 bins?
+                act_range = act_max - act_min
+                num_bins = 16 + 1  # +1 is extra bin for 0
+                breite = 0.5 * (act_range*2)/num_bins
+                action_bins = np.linspace(-(breite+act_range), +(breite+act_range), num_bins+1)  # sfeh 10 bins?
 
             fig, ax = plt.subplots()
             # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto

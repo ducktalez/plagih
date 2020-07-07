@@ -212,7 +212,7 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
         df_col = df[action_info['name']]
         env_vars['action_at'][act_ii]['unique_outputs_num'] = len(df_col.unique())
         if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min/max (if not provided)
-            env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())  # todo histograms in beide richtungen!! gesamte range * 2
+            env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())
 
     obs_infoz = env_vars['obs_name']
     for ii, (obs_name, obs_info) in enumerate(obs_infoz.items()):

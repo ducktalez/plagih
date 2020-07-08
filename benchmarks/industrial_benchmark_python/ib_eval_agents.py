@@ -280,6 +280,8 @@ def eval_agents():
         for t in range(T):
             env_state = envstate_normalize(env.state)
             at = agent.decide(env_state)
+            # v, g, h = at  # todo
+            # v = max(0, min(100, ))
             markovStates = env.step(at)
             data[k, t] = env.visibleState()[-1]
 

@@ -60,6 +60,7 @@ class ExplainableGP(object):
             'gen_max': 1001,  # Maximum amount of generations
 
             'pop_max': 1000,  # amount is never tested
+            'obs_age_max': 10,
             'tree_depth_max': 10,  # maximum Tree depth for entire run
             'tree_depth_min': 2,
             'tourn_size': 3,  # [7 per 100] number of trees selected for tournament
@@ -91,7 +92,7 @@ class ExplainableGP(object):
                        'time_save': None,  # in sec
                        'gen_save': 5,  # in gen counts
                        'time_analysis': None,  # in gen counts
-                       'gen_analysis': 1},  # in gen counts
+                       'gen_analysis': 5},  # in gen counts
 
             # todo make a difference between write/read?, make pretty solution
             'file_locs': {
@@ -125,10 +126,10 @@ class ExplainableGP(object):
                 'distributions_file': 'run_files/distributions_file.yaml',
             },
             'distributions_as_string':
-                {'2f': ['lambda: np.random.normal(1,2)',
-                        'lambda: np.random.normal(1,1)',
-                        'lambda: np.random.randint(0, 10)'],
-                 '2b': ['lambda: np.random.choice([True, False])'],
+                {'2f': ['lambda: random.normalvariate(1,2)',
+                        'lambda: random.normalvariate(1,1)',
+                        'lambda: random.randint(0, 10)'],
+                 '2b': ['lambda: random.choice([True, False])'],
                  'observed_floats': 100}
         }
 
@@ -166,7 +167,7 @@ class ExplainableGP(object):
         self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
         self.population_tmp = []
         self.population_tmp_eval = []
-        self.population_base = []  # population that is taken to the next generation
+        self.pop_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
         self.origin_tree = None
         self.gen_id = 0
@@ -231,9 +232,9 @@ class ExplainableGP(object):
         except:
             evolve_loop = [
                 # Reproduction (10%)
-                {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.07, 'custom_params': {}},
+                {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06, 'custom_params': {}},
                 {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03, 'custom_params': {'sympify_tree': True}},
-                {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.00, 'custom_params': {}},
+                {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01, 'custom_params': {}},
 
                 # Mutation (25%)
                 {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
@@ -383,11 +384,11 @@ class ExplainableGP(object):
             run_data = pickle.load(file_backup)
 
         try:
-            self.config['pl_version'], self.restart_count, self.gen_id, _, self.pareto, self.population_base, self.monitoring_dict = run_data
+            self.config['pl_version'], self.restart_count, self.gen_id, _, self.pareto, self.pop_base, self.monitoring_dict = run_data
             # done
         except:
             if delete_this_version1:
-                self.restart_count, self.gen_id, _, self.pareto, self.population_base, self.monitoring_dict = run_data
+                self.restart_count, self.gen_id, _, self.pareto, self.pop_base, self.monitoring_dict = run_data
                 # self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
                 self.version = 0.95
 
@@ -422,7 +423,7 @@ class ExplainableGP(object):
         """
 
         # sfeh save complete config?
-        run_backup_data = self.config['pl_version'], self.restart_count, self.gen_id, None, self.pareto, self.population_base, self.monitoring_dict
+        run_backup_data = self.config['pl_version'], self.restart_count, self.gen_id, None, self.pareto, self.pop_base, self.monitoring_dict
 
         path_backup = self.file_make_dir_root('file_backup_pickle')
         with Path.open(path_backup, 'wb') as file:
@@ -528,16 +529,11 @@ class ExplainableGP(object):
         if self.origin_exists():
             # sfeh why not :P
             self.pop_append(self.origin_tree, last_evolution='initial')
-            # if self.origin_is_fix():
-            #     origin_tree = self.origin_tree_get()
-            #     for nn in range(evolve_num):
-            #         new_tree = self.pop_random_from_origin_fix(call_params, origin_tree)
-            #         self.pop_append(new_tree, last_evolution=tag)
         else:
             self.gen_create_random(self.config['pop_max'])
 
         self.pop_analyse()
-        self.population_base = self.population_tmp[:]
+        self.pop_base = self.population_tmp[:]
         self.file_population_base_karoo('first')  # first gen only
 
     def gen_create_loop(self):
@@ -627,7 +623,7 @@ class ExplainableGP(object):
         #     self.gen_create_random(int(self.config['pop_max'] * (1 - total_rate)))
 
         self.pop_analyse()
-        self.population_base = self.population_tmp[:]
+        self.pop_base = self.population_tmp[:]
 
     def run_continues(self):
         """
@@ -737,7 +733,7 @@ class ExplainableGP(object):
                 target.writerows([''])  # empty row before each generation
             target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)]])
 
-            for ii, tree in enumerate(self.population_base):
+            for ii, tree in enumerate(self.pop_base):
                 target.writerows([''])  # empty row before each Tree
                 target.writerows(tree)
 
@@ -888,7 +884,7 @@ class ExplainableGP(object):
             else:  # this is now pandas
                 obs_samples = self.data_train[obsnames].to_numpy().flatten()
             obs_samples = np.random.choice(obs_samples, size=take_data_samples)
-            choose_distributions['2f'].extend([lambda: np.random.choice(obs_samples)]),  # take one
+            choose_distributions['2f'].extend([lambda: random.choice(obs_samples)]),  # take one
 
         choose_distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),
         choose_distributions['2b'].extend([eval(x) for x in distributions_as_string['2b']])
@@ -1100,10 +1096,10 @@ class ExplainableGP(object):
 
         latex_element = []
 
-        for ii, tree in enumerate(self.population_base):
+        for ii, tree in enumerate(self.pop_base):
             # if ii % 10 == 0 and ii < 61:
-            if tree_check_deep(tree):
-                latex_element.append(f'Pop base tree {ii} with fitness {tree_get_fitness(tree, precision=self.precision)} from last-mod {tree_get_last_evolution(tree)}.\n')
+            if tree_check_deep(tree, print_type=self.print_type):
+                latex_element.append(f'Pop base tree {ii} with fitness {tree_get_fitness(tree)} from last-mod {tree_get_last_evolution(tree)}.\n')
 
                 forest_viz = latex_tree_get_forest(tree, tight_viz=False)
                 latex_element.append(forest_viz)
@@ -1180,38 +1176,38 @@ class ExplainableGP(object):
     #   Population specific                       +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def pop_eval_remaining(self):
-
-        """
-        Evaluate all trees in population_tmp_eval.
-        This is the part of the population that could not be found in the dict.
-        - evaluate tree fitness
-        - store fitness in tree, update the dictionary with known trees
-        - append tree to the population
-
-        ...if anything in the try-block fails, the tree will not be appended to the population
-        """
-
-        eval_fails = []
-
-        for tree in self.population_tmp_eval:
-
-            try:
-                fitness_train = self.tree_eval_fitness_train(tree)
-            except Exception as evalex:
-                print_warning('wwww', f'Exception while evaluating: {evalex}', print_type=self.print_type)
-                eval_fails.append(str(evalex))
-                continue
-            else:
-                tree = tree_set_fitness(tree, fitness_train)
-                self.treelut_tree_add(tree, fitness_train=fitness_train)
-                last_evolution = tree_get_last_evolution(tree)
-                self.pop_append(tree, last_evolution=last_evolution)
-
-        if len(eval_fails) > 0:
-            print_warning('www', f"Evaluating {len(self.population_tmp_eval)} new trees in gen {self.gen_id} caused {len(eval_fails)} exceptions:\n{', '.join(eval_fails)}", print_type=self.print_type)
-
-        return
+    # def pop_eval_remaining(self):
+    #
+    #     """
+    #     Evaluate all trees in population_tmp_eval.
+    #     This is the part of the population that could not be found in the dict.
+    #     - evaluate tree fitness
+    #     - store fitness in tree, update the dictionary with known trees
+    #     - append tree to the population
+    #
+    #     ...if anything in the try-block fails, the tree will not be appended to the population
+    #     """
+    #
+    #     eval_fails = []
+    #
+    #     for tree in self.population_tmp_eval:
+    #
+    #         try:
+    #             fitness_train = self.tree_eval_fitness_train(tree)
+    #         except Exception as evalex:
+    #             print_warning('wwww', f'Exception while evaluating: {evalex}', print_type=self.print_type)
+    #             eval_fails.append(str(evalex))
+    #             continue
+    #         else:
+    #             tree = tree_set_fitness(tree, fitness_train)
+    #             self.treelut_tree_add(tree, fitness_train=fitness_train)
+    #             last_evolution = tree_get_last_evolution(tree)
+    #             self.pop_append(tree, last_evolution=last_evolution)
+    #
+    #     if len(eval_fails) > 0:
+    #         print_warning('www', f"Evaluating {len(self.population_tmp_eval)} new trees in gen {self.gen_id} caused {len(eval_fails)} exceptions:\n{', '.join(eval_fails)}", print_type=self.print_type)
+    #
+    #     return
 
     def origin_tree_get(self):
         """
@@ -1308,7 +1304,7 @@ class ExplainableGP(object):
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
         tree = tree_evolve_mutate_point(tree, self.float_decimals, self.choose_oparray2, self.env_vars,
-                                        self.choose_distributions)
+                                        self.choose_distributions, self.config['obs_age_max'])
 
         return tree
 
@@ -1337,13 +1333,13 @@ class ExplainableGP(object):
 
         if mode == 'point':  # if poinemutation, return one nodeid as list
             if filter_observations:
-                filter_id = [np.random.choice(float_nodes + obs_nodes)]
+                filter_id = [random.choice(float_nodes + obs_nodes)]
                 if filter_id in float_nodes:
                     float_nodes = filter_id
                 else:
                     obs_nodes = filter_id
             else:
-                float_nodes = [np.random.choice(float_nodes)]
+                float_nodes = [random.choice(float_nodes)]
 
         if float_nodes:
             for node_id in float_nodes:
@@ -1354,6 +1350,11 @@ class ExplainableGP(object):
         if obs_nodes and filter_observations:  # 'filtering' variables when they are from different times
             for nodeobs_id in obs_nodes:
                 obs_label = tree_node_get_label(tree, nodeobs_id)
+
+                is_negative = obs_label == '-'
+                if is_negative:
+                    obs_label = obs_label[1:]
+
                 label_main = envvariable_get_corelabel(obs_label)
 
                 label_timedelta = envvariable_get_timedelta(obs_label)
@@ -1365,7 +1366,7 @@ class ExplainableGP(object):
                     indexx = indexx + label_timedelta
                     indexx = max(min(len(var_list) - 1, indexx), 0)
                     try:
-                        new_obs = var_list[indexx]
+                        new_obs = '-' + var_list[indexx] if is_negative else var_list[indexx]
                         tree = tree_node_set_label(tree, nodeobs_id, new_obs)
                     except Exception as whyyex:
                         raise Exception(f'WTF min and max should easily keep this in the boarders... {whyyex}')
@@ -1387,14 +1388,14 @@ class ExplainableGP(object):
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_decimals,
                                                                          self.env_vars, self.choose_oparray2,
-                                                                         self.choose_distributions,
+                                                                         self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_decimals,
                                                                          self.env_vars, self.choose_oparray2,
-                                                                         self.choose_distributions,
+                                                                         self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
         else:
             raise Exception('Known full_or_grow was not found for building random trees.')
@@ -1444,7 +1445,6 @@ class ExplainableGP(object):
 
         build_split = []
         if 'depth' in size_mode:
-            # print_warning('ww', 'notagoodidea.origin adding depths without a plan? sfeh sfeh')
             for ii in range(len(layer0_ids)):
                 build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
                 build_split.append(build_size)
@@ -1478,7 +1478,7 @@ class ExplainableGP(object):
 
         build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
         action_xtype = self.env_vars['action_at'][0]['xtype']
-        build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')  # sfeh anderer name für branch
+        build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
 
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow,
                                                                     self.float_decimals)
@@ -1499,9 +1499,9 @@ class ExplainableGP(object):
 
         full_or_grow = build_spec.get('full_or_grow')
         if full_or_grow is None:
-            full_or_grow = np.random.choice(['full', 'grow'])
+            full_or_grow = random.choice(['full', 'grow'])
         node_ids = tree_get_mutatable_nodes(tree, no_root=True)
-        old_node = np.random.choice(node_ids)
+        old_node = random.choice(node_ids)
         old_xtype = tree_node_get_xtype(tree, old_node)
         build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)
 
@@ -1517,7 +1517,7 @@ class ExplainableGP(object):
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
             tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_vars, self.choose_distributions,
-                                    self.float_decimals)
+                                    self.float_decimals, self.config['obs_age_max'])
         else:
             tree = None
 
@@ -1552,11 +1552,11 @@ class ExplainableGP(object):
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
         left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars,
-                                          self.choose_distributions, self.float_decimals)
+                                          self.choose_distributions, self.float_decimals, self.config['obs_age_max'])
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
         right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_vars,
-                                           self.choose_distributions, self.float_decimals)
+                                           self.choose_distributions, self.float_decimals, self.config['obs_age_max'])
 
         return left_offspring, right_offspring
 
@@ -1565,14 +1565,14 @@ class ExplainableGP(object):
         The np-tree needs more information than only the expression.
         -> set modifyable nodes (mandatory)
 
-        -> round all distributions_file
-        -> try to envstate_normalize exponents ('**'). sfeh, not really working.
-        -> set last evolution (for analysing gp operators. e.g. if no good trees originate from crossover, something might be wrong)
+        - round all distributions_file
+        - try to envstate_normalize exponents ('**')
+        - set last evolution (for analysing gp operators. e.g. if no good trees originate from crossover, something might be wrong)
 
         ! The tree must exist, it is not checked whether the tree is None
         """
 
-        tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())  # sfeh: somewhere else
+        tree = tree_set_modifyable_nodes(tree, origin_tree=self.origin_tree_get())
         tree = tree_normalize_exponentiation(tree)  # sfeh: somewhere else?
         tree = tree_set_last_evolution(tree, last_evolution)  # sfeh: should this be done during the evolve process?
 
@@ -1607,17 +1607,20 @@ class ExplainableGP(object):
                 self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
                 # simplify the tree ans save in pareto once again
-                self.printpl('a', 'Trying to simplify for pareto entry.')
+                self.printpl('aaa', 'Trying to simplify for pareto entry.')
                 tree_sym = tree_evolve_reduce(tree, self.env_vars, completely=True)
 
                 if len(tree_get_labellist(tree_sym)) < len(tree_get_labellist(tree)):
 
                     sym_fitness = self.tree_eval_fitness_train(tree_sym)
                     if sym_fitness != tree_get_fitness(tree) and TEST_PHASE:
-                        print_e('Fitness of a sympified tree is different!')
+                        print_e(f'Fitness of a sympified tree is different! sym: {sym_fitness}, before: {tree_get_fitness(tree)}\n'
+                                f'tree: {tree_get_labellist(tree)}\n'
+                                f'symp: {tree_get_labellist(tree_sym)}\n'
+                                f'symp expr: {tree_get_expr_raw(tree_sym)}')
                         return
 
-                    self.printpl('a', 'Successfully reduced tree: for new paretofront entry')
+                    self.printpl('a', 'Successfully reduced pareto tree!')
                     tree_sym = tree_set_fitness(tree_sym, sym_fitness)
                     self.update_pareto(tree_sym)
                 else:
@@ -1638,7 +1641,7 @@ class ExplainableGP(object):
         ->
         """
         # sfeh this check might be important...
-        if not tree_check_quick(tree):
+        if not tree_check_quick(tree, print_type=self.print_type):
             print_warning('w', f'tree failed the quick check. last-mod: {last_evolution}')
             return
 
@@ -1683,24 +1686,9 @@ class ExplainableGP(object):
 
         """
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
-
         """
-
-        tournament_list = [random.choice(self.population_base) for _ in range(tourn_size)]   # random sample (pop, size) does not allow reusing a candidate sfeh todo
+        tournament_list = [random.choice(self.pop_base) for _ in range(tourn_size)]
         tourn_winner = self.kernel.best_fitness_function()(tournament_list, key=lambda x: tree_get_fitness(x))
-
-        # tree = max(tree, key=lambda x: x[1])
-        # tree = self.kernel.np_best_fitness()
-        # for n in range(tourn_size):
-        #
-        #
-        #     fitness = tree_get_fitness(tree, precision=self.config['fitness_accuracy'])
-        #
-        #     if self.kernel.fitness_compare(fitness, best_fitness, mode='better'):
-        #         best_id = tree_id
-        #         best_fitness = fitness
-        #
-        # tourn_winner = copy.deepcopy(self.population_base[best_id])
 
         return copy.deepcopy(tourn_winner)
 
@@ -1713,7 +1701,7 @@ class ExplainableGP(object):
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
 
-        if not tree_check_deep(tree):
+        if not tree_check_deep(tree, print_type=self.print_type):
             if tree_node_get_arity(tree, root_id) == 0:
                 print_warning('w', 'Origin tree is only a root node!')
             else:
@@ -1894,7 +1882,6 @@ class ExplainableGP(object):
         except:
             self.best_fitness = pop_fitness_best
 
-        # todo more plots
         self.monitoring_dict['population_tmp_done-size'][gen_id] = len(popul)
         self.monitoring_dict['pop_parsim'][gen_id] = pop_parsim
         self.monitoring_dict['pop_last_evolves'][gen_id] = pop_last_evolve
@@ -1925,10 +1912,6 @@ class ExplainableGP(object):
         """
         self.run_backup_save()
         self.file_analysis_complex()
-
-        # if Path.is_file(root_dir / file_pycode_eval):
-        #     # exec(Path.open(root_dir / file_pycode_eval).read())
-        #     os.system('python ' + str(root_dir / file_pycode_eval))  # sfeh nothing to be proud of
 
         self.file_analysis_plots(self.root_dir)
         self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
@@ -1985,7 +1968,7 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, forc
 
         relative_size = tree_size - node_size
 
-    build_size = int(np.random.normal(mean, size_variance))
+    build_size = int(random.normalvariate(mean, size_variance))
     if size_max is not None:
         build_size = min(size_max - relative_size, build_size)
     build_size = max(size_min, build_size)

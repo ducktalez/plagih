@@ -196,6 +196,7 @@ def load_pop_from_csv(pop_csv):
     """
     This method is used to load a saved population of Trees, as invoked through the (pause) menu where population_r
     replaces population_a in the karoo_gp/runs/[date-time]/ directory.
+    sfeh... delete if not needed?
     """
 
     with Path.open(pop_csv, 'r') as csv_file:
@@ -285,16 +286,16 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
     return tree_works
 
 
-def tree_check_deep(tree, karoo=True):
+def tree_check_deep(tree, print_type=None):
     """
     Performs all checks that we currently have
     # sfeh do not use this if trees are safely generated
     # sfeh check meta values in separate method? update those aswell?
     """
 
-    if not tree_check_quick(tree, karoo=karoo):
+    if not tree_check_quick(tree):
         tree_works = False
-    elif not tree_check_rebuild(tree, karoo=karoo):
+    elif not tree_check_rebuild(tree):
         tree_works = False
     else:
         tree_works = True
@@ -513,25 +514,10 @@ def tree_node_get_modify(tree, node_id):
     return modify
 
 
-def tree_node_all_info(tree, node_id):
-    """
-    All info in the column of a node
-    """
-    node_info = {'node_id': node_id,
-                 'label': tree_node_get_label(tree, node_id),
-                 'parent': tree_node_get_parent(tree, node_id),
-                 'childs': tree_node_get_childs(tree, node_id),
-                 'modify': tree_node_get_modify(tree, node_id),
-                 'xtype': tree_node_get_xtype(tree, node_id),
-                 'arity': tree_node_get_arity(tree, node_id),
-                 'depth': tree_node_get_depth(tree, node_id)}
-
-    return node_info
-
-
 def tree_set_modifyable_nodes(tree, origin_tree=None):
     """
     Sets all the origin_meta core nodes back to non-modifyable
+      # sfeh: somewhere else
     """
 
     tree = tree_set_modifyable_nodes_true(tree)
@@ -616,21 +602,6 @@ def tree_init_core(node_amount, np_dtype):
     return tree
 
 
-def insert_function_or_term(depth, depth_goal):
-    """
-    on every tree depth
-    """
-    if np.random.choice(['50', 'larger', 'larger', 'larger']) == 'larger':
-        if np.random.uniform(0, depth_goal) > min(depth, depth_goal / 2):
-            decision = 'func'
-        else:
-            decision = 'term'
-    else:
-        decision = np.random.choice(['term', 'func'])
-
-    return decision
-
-
 def tree_try_get_swapids(a_tree, b_tree, version='default'):
     """
     Try to return two branches (aka ids) [for crossover] that can be crossed
@@ -640,7 +611,7 @@ def tree_try_get_swapids(a_tree, b_tree, version='default'):
         # choose a node from parent a
         a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
         # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
-        a_id = np.random.choice(a_ids)
+        a_id = random.choice(a_ids)
         a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
 
         # create a list from parent b with same xtype
@@ -652,10 +623,10 @@ def tree_try_get_swapids(a_tree, b_tree, version='default'):
                 b_sametype_ids.remove(b_id)  # remove one-by-one false partner nodes.
 
         if b_sametype_ids:  # if entries were found, choose one. we are custom_done
-            b_id = np.random.choice(b_sametype_ids)
+            b_id = random.choice(b_sametype_ids)
             success = True
         else:
-            b_id = np.random.choice(b_node_ids)
+            b_id = random.choice(b_node_ids)
             success = False
 
         return a_id, b_id, success
@@ -706,7 +677,7 @@ def labels_xtypes_check(label_list, xtype_list, env_vars, raising=True):
                 raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, float_decimals, env_vars, choose_oparray2, choose_distributions, min_depth=0, full_or_grow=None):
+def invent_label_list_depth(xtype_root, depth_goal, float_decimals, env_vars, choose_oparray2, choose_distributions, obs_age_max, min_depth=0, full_or_grow=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -726,7 +697,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, env_vars, ch
             functerm_list = ['func']
             for _ in range(len(tbdo_xtypes) - 1):  # 1 -> at least one function
                 if full_or_grow == 'grow' and depth >= min_depth:
-                    functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
+                    functerm_list.append(random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
                 elif full_or_grow == 'full':
                     functerm_list.append('func')
                 else:
@@ -735,7 +706,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, env_vars, ch
 
             for ii, xtype in enumerate(tbdo_xtypes):
                 if functerm_list[ii] == 'term':
-                    label = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals)
+                    label = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max)
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
@@ -759,7 +730,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, env_vars, ch
         else:  # now, we are on the lowest dim_y.
 
             for xtype in tbdo_xtypes:  # Build terminals now.
-                label, arity = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals), 0
+                label, arity = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max), 0
 
                 # Add the label to the result list
                 result_label_list.append(label)
@@ -772,7 +743,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, env_vars, ch
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, env_vars, choose_oparray2, choose_distributions, full_or_grow='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, env_vars, choose_oparray2, choose_distributions, obs_age_max, full_or_grow='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -801,7 +772,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, env_vars, c
         functerm_list = ['func']
         for _ in range(num_inserts - 1):  # 1 -> at least one function
             if full_or_grow == 'grow':
-                functerm_list.append(np.random.choice(['func', 'term']))  # sfeh choice
+                functerm_list.append(random.choice(['func', 'term']))  # sfeh choice
             elif full_or_grow == 'full':
                 functerm_list.append('func')
             else:
@@ -835,7 +806,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, env_vars, c
 
         for index in term_at:
             t_xtype = tbdo_xtypes[index]
-            label, arity = choose_term(t_xtype[-2:], env_vars, choose_distributions, float_decimals), 0
+            label, arity = choose_term(t_xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max), 0
             label_xtype = xtype_get_from_label(label, env_vars)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
@@ -860,7 +831,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, env_vars, c
     else:
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
-            label, arity = choose_term(t_xtype[-2:], env_vars, choose_distributions, float_decimals), 0
+            label, arity = choose_term(t_xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max), 0
             label_xtype = xtype_get_from_label(label, env_vars)
             result_label_list.append(label)
             result_arity_list.append(arity)
@@ -920,7 +891,7 @@ def tree_get_ids_depthfirst(tree, node_id=root_id):
     return result
 
 
-def tree_get_fitness(tree, precision=None, karoo=True):
+def tree_get_fitness(tree, karoo=True):
     """
     Get the fitness that a tree holds.
     For evaluation the fitness, use ? plagih_eval -> tree_eval_fitness_train()
@@ -930,7 +901,7 @@ def tree_get_fitness(tree, precision=None, karoo=True):
 
     fitness = tree[T_fitness][1]
     if fitness != '':
-        fitness = round(float(fitness), precision)
+        fitness = float(fitness)
     else:
         raise Exception(f'This tree does not contain float fitness: {fitness}.')
     return fitness
@@ -1121,11 +1092,6 @@ def tree_node_get_branch(tree, node_id, karoo=True):
     """
     if not karoo:
         raise Exception
-
-    # 2. Also return all child nodes
-    # branch_eval = tree_nodes_get_ids_string(tree, node)  # generate tuple of 'branch_top' and subsequent nodes
-
-    # node_id = int(node_id)
 
     branch = [node_id]
 
@@ -1741,34 +1707,21 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     return tree_sym_tildefree
 
 
-def tree_check_meta_exists(tree):
-    """
-
-    """
-    cond1 = str(tree_get_fitness(tree)) == ''
-    cond2 = str(tree_get_parsimony(tree)) == ''
-    # cond3 = str(tree_get_id(tree)) == ''
-    if cond1 or cond2:
-        return False
-    else:
-        return True
-
-
-def tree_evolve_mutate_point(tree, float_decimals, choose_oparray2, env_vars, choose_distributions):
+def tree_evolve_mutate_point(tree, float_decimals, choose_oparray2, env_vars, choose_distributions, obs_age_max):
     """
     Mutate a single mutatable point in any Tree.
     """
 
     # 1. choose a node
     node_ids = tree_get_mutatable_nodes(tree)
-    node_id = np.random.choice(node_ids)
+    node_id = random.choice(node_ids)
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
     if arity > 0:
         new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
         tree = tree_node_set_label(tree, node_id, new_label)
     else:
-        new_label = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+        new_label = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max)  # 3 -> '2f' -> 5
         tree = tree_node_set_label(tree, node_id, new_label)
 
     # All node info should stay the same. xtype, arity
@@ -1827,7 +1780,7 @@ def tree_evolve_reduce(tree, env_vars, completely=True):
             node_ids = tree_get_mutatable_nodes(tree)
             func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
             if len(func_ids) > 0:
-                node_id = np.random.choice(node_ids)
+                node_id = random.choice(node_ids)
                 try:
                     tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)
                 except Exception as ex:
@@ -1905,16 +1858,16 @@ def tree_check_children(tree, karoo=True):
         return False
 
 
-def tree_check_rebuild(tree, karoo=True):
+def tree_check_rebuild(tree):
     """
     Check if a valid tree can be rebuilt from its expression
     sfeh: the expression must currently not be equal.
     The expression can include separate '~' (usub) nodes, which makes expressions not completely equal
     """
 
-    label_list = [tree_node_get_label(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
-    arity_list = [tree_node_get_arity(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
-    xtype_list = [tree_node_get_xtype(tree, ii) for ii in tree_iterate_range(tree, karoo=karoo)]
+    label_list = [tree_node_get_label(tree, ii) for ii in tree_iterate_range(tree)]
+    arity_list = [tree_node_get_arity(tree, ii) for ii in tree_iterate_range(tree)]
+    xtype_list = [tree_node_get_xtype(tree, ii) for ii in tree_iterate_range(tree)]
 
     try:
         core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
@@ -2002,20 +1955,6 @@ def tree_evolve_node_insert(tree, env_vars):
     return tree
 
 
-def tree_evolve_complexify(tree, same_arity=True):
-    """
-    sfeh open
-    a function that inserts certain functions that hopefully give good opportunities for next generations
-    eg: in old_node '+', inserting Ifte(True, '+', 1.23) or so...
-
-    todo Discussion: which filters?
-    - filter applied on constant: large values will have large changes.
-    - add a regular filter
-    # constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
-    """
-    pass
-
-
 def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter', float_decimals=6):
     """
     When this happens, distributions_file get a a small variance
@@ -2023,7 +1962,7 @@ def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter'
 
     if term_type == float:
         if filter_type == 'gaussian_filter':
-            if np.random.choice(['v1', 'v2']) == 'v1' or constant == 0:
+            if random.choice(['v1', 'v2']) == 'v1' or constant == 0:
                 filter = np.random.normal(0, 0.1)  # sfeh better adjustments?
                 constant += filter
             else:
@@ -2033,7 +1972,7 @@ def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter'
         constant = round_constant(constant, float_decimals)
 
     elif term_type == int:
-        if np.random.choice(['v1', 'v2']) == 'v1' or constant == 0:
+        if random.choice(['v1', 'v2']) == 'v1' or constant == 0:
             filter = np.random.normal(0, 1)  # sfeh better adjustments?
             constant += filter
         else:
@@ -2041,13 +1980,13 @@ def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter'
         constant = int(round(constant))
 
     elif term_type == bool:
-        constant = np.random.choice([True, False])
+        constant = random.choice([True, False])
         # random by 50:50?
 
     return constant
 
 
-def tree_prune_depth(tree, max_depth, env_vars, choose_distributions, float_decimals):
+def tree_prune_depth(tree, max_depth, env_vars, choose_distributions, float_decimals, obs_age_max):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
@@ -2064,7 +2003,7 @@ def tree_prune_depth(tree, max_depth, env_vars, choose_distributions, float_deci
             label = tree_node_get_label(tree, node_id)
             xtype = xtype_get_from_label(label, env_vars)
             tree = tree_node_set_arity(tree, node_id, 0)
-            new_term = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals)  # replace label
+            new_term = choose_term(xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)
 
         elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth
@@ -2105,7 +2044,7 @@ def tree_iterate_range(tree, karoo=True):
 
 def tree_normalize_exponentiation(tree):
     """
-    todo: the rounding process should be done earlier - when the tree with the '**' is created.
+    a**b requires b to be discrete.
     """
     # 1. ** should have an int as second number
     for node_id in tree_nodes_get_ids(tree, karoo=True):
@@ -2116,21 +2055,17 @@ def tree_normalize_exponentiation(tree):
                 new_power = float(int(float(old_power)))
                 tree = tree_node_set_label(tree, child_id, new_power)
             except ValueError:
-                pass  # sfeh: This may actually take some time. Every tree gets checked and many have '**'.
+                pass  # todo: implicit round operator in TF-grapf and evaluation?
     return tree
 
 
 def tree_eval_parsimony(tree, parsimony_distance, origin_tree=None, weights=None):
     """
     parsimony_distance: compute the chosen distance by the user.
-
-    """
-
-    # distance_dict = {
     #     'tree_node_count': tree_get_size,
     #     'tree_depth': tree_get_depth,
     #     'tree_edit_distance': tree_parsimony_ted,
-    # }
+    """
 
     if parsimony_distance == 'tree_node_count':  # number of nodes
         return tree_get_size(tree)  # returns the number of nodes

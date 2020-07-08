@@ -15,19 +15,19 @@ def latex_treeviz_full(tikz_forest_list, preamble=''):
     """
     Latex standalone document of forest trees.
     Possible \documentclass options:
-    [varwidth=\\maxdimen,convert,border=5pt]{{standalone}}  # -> newpage does not exist
-    {{article}}     # -> tree_sep should be \newpage
-    {{beamer}}      # -> tree_sep should be \newpage
+    [varwidth=\\maxdimen,convert,border=5pt]{standalone}  # -> newpage does not exist
+    {article}     # -> tree_sep should be \newpage
+    {beamer}      # -> tree_sep should be \newpage
     sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
     forest_trees = '\n'.join(tikz_forest_list)
 
-    latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{{standalone}}' \
-                       '\n\\usepackage{{forest}}' \
-                       '\n\\begin{{document}}' \
+    latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{standalone}' \
+                       '\n\\usepackage{forest}' \
+                       '\n\\begin{document}' \
                        f'\n{forest_trees}' \
-                       '\n\\end{{document}}'
+                       '\n\\end{document}'
     return latex_doc_forest
 
 
@@ -171,13 +171,13 @@ def latex_tree_get_forest(tree, tight_viz=True):
 
     bracket_tree = latex_tree_get_brackets(viztree)
 
-    forest_complete = '\n\\begin{{forest}}' \
-                      '\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
-                      '\n  terminal/.style={{rectangle,}},' \
-                      '\n  fixnode/.style={{fill=blue!60,}},' \
-                      '\n  constant/.style={{rectangle,}},' \
+    forest_complete = f'\n\\begin{{forest}}' \
+                      f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
+                      f'\n  terminal/.style={{rectangle,}},' \
+                      f'\n  fixnode/.style={{fill=blue!60,}},' \
+                      f'\n  constant/.style={{rectangle,}},' \
                       f'\n {bracket_tree}' \
-                      '\n\\end{{forest}}\n'
+                      f'\n\\end{{forest}}\n'
 
     return forest_complete
 

@@ -62,16 +62,16 @@ def random_choose_tempobs(obs_list, max_hist=10):
     0, 5, 10, 15 is worse
     what if variables are not all of same diff?
     """
-    obs_list = np.delete(obs_list, np.s_[10:])  # todo to kick out values > 10
+    obs_list = np.delete(obs_list, np.s_[max_hist:])
     x = len(obs_list)
     fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
     p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
-    p = p / np.sum(p)  # the sum must be equal to 1
-    new_obs = np.random.choice(obs_list, p=p)
+    # p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
+    new_obs = random.choices(obs_list, weights=p)[0]  # random.choices returns a list
     return new_obs
 
 
-def choose_term(xtype, env_vars, choose_distribution, float_decimals):
+def choose_term(xtype, env_vars, choose_distribution, float_decimals, obs_age_max):
     """
     Returns a terminal of xtype.
 
@@ -90,7 +90,7 @@ def choose_term(xtype, env_vars, choose_distribution, float_decimals):
     # insert a ?
     if random.choice(['obs', 'distrib']) == 'obs' and len(env_vars[xtype]) > 0:
         obs_list = random.choice(list(env_vars['env_observation_family'].values()))
-        term = random_choose_tempobs(obs_list, max_hist=10)  # sfeh option for completely randomness? todo max hist = 10
+        term = random_choose_tempobs(obs_list, max_hist=obs_age_max)  # sfeh option for completely randomness?
     else:
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()
@@ -112,7 +112,7 @@ def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None
         func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
     if not func_list:
         print_e(f'No function found with xtype={xtype}, arity={arity}.\nfunc_arr_dummy:\n{choose_oparray}')
-    func = np.random.choice(func_list, p=probability_list)
+    func = random.choices(func_list, weights=probability_list)[0]  # returns a list, so we choose the first element
     arity = label_get_arity(func)
     xtype = op[func]['xtype']
     return func, arity, xtype
@@ -135,6 +135,7 @@ def xtype_get_from_label(label, env_vars=None):
         xtype = op[label]['xtype']
     else:
         try:
+            label = label[1:] if label[0] == '-' else label
             xtype = env_vars['obs_name'][label]['xtype']
         except:
             xtype = '2f'

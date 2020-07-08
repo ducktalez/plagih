@@ -1,6 +1,7 @@
 
 import ast
 from plagih.modules.import_variables import *
+from plagih.modules.printing import *
 
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -10,7 +11,7 @@ import tensorflow as tf
 class P_Plus:
     """
     +
-    '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.add, 'latex1': '$+$', 'latexF': '{}', 'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
+    '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.add, 'latex1': '$+$', 'latexF': '{}', 'sym_str': '({} + {})', 'pycode': lambda *args: '({}+{})'.format(args[0], args[1])},
     """
     fun_label = '+'
     fun_arity = 2
@@ -21,11 +22,11 @@ class P_Plus:
     fun_sym = '({})+({})'
 
     def tf_code(self, a, b):
-        codetf = tf.add(a, b)
+        codetf = tf.add(args[0], args[1])
         return codetf
 
     def fun_pycode(self, a, b):
-        codepy = '({}+{})'.format(a, b)
+        codepy = '({}+{})'.format(args[0], args[1])
         return codepy
 
 
@@ -49,19 +50,19 @@ sfeh: use function-types (-> 'kommuttative'?)
 """
 op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to float
     '+': {'fun': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.add, 'opgroup': ['aritygroup'], 'latex1': '$+$', 'latexF': '{}+{}',
-          'sym_str': '({} + {})', 'pycode': lambda a, b: '({}+{})'.format(a, b)},
+          'sym_str': '({} + {})', 'pycode': lambda *args: '({}+{})'.format(args[0], args[1])},
     '-': {'fun': '-', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.subtract, 'opgroup': ['aritygroup'], 'latex1': '$-$', 'latexF': '{}-{}',
-          'sym_str': '({} - {})', 'pycode': lambda a, b: '({}-{})'.format(a, b)},
+          'sym_str': '({} - {})', 'pycode': lambda *args: '({}-{})'.format(args[0], args[1])},
     'usub': {'fun': 'usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.negative, 'opgroup': [], 'latex1': '$-$', 'latexF': '-{}',
              'sym_str': '(-{})', 'pycode': lambda a: '(-{})'.format(a)},
     '*': {'fun': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.multiply, 'opgroup': ['aritygroup'], 'latex1': '$\\cdot$', 'latexF': '{}\\cdot{}',
-          'sym_str': '({} * {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
+          'sym_str': '({} * {})', 'pycode': lambda *args: '({}*{})'.format(args[0], args[1])},
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
     '/': {'fun': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf': tf.math.divide_no_nan, 'opgroup': [], 'latex1': '$\\div$', 'latexF': '\\frac{{{}}}{{{}}}',
           'sym_str': '({} / {})',
-          'pycode': lambda a, b: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(a, b)},
+          'pycode': lambda *args: '(lambda x, y: x/y if y!=0 else 0)({}, {})'.format(args[0], args[1])},
     '**': {'fun': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf': tf.pow, 'opgroup': [], 'latex1': '${x}^{y}$', 'latexF': '{{{}}}^{{{}}}',  # sfeh latexf requires some testing...
-           'sym_str': '({} ** {})', 'pycode': lambda a, b: '({}*{})'.format(a, b)},
+           'sym_str': '({} ** {})', 'pycode': lambda *args: '({}*{})'.format(args[0], args[1])},
 
     'abs': {'fun': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.abs, 'opgroup': [], 'latex1': '$abs$', 'latexF': '|{{{}}}|',
             'sym_str': 'abs({})', 'pycode': lambda a: 'abs({})'.format(a)},
@@ -99,38 +100,38 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
     'Andb': {'fun': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': 'and', 'latexF': '({{{}}}\\wedge{{{}}})',
-             'sym_str': 'Andb({}, {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
+             'sym_str': 'Andb({}, {})', 'pycode': lambda *args: '({} and {})'.format(args[0], args[1])},
     'Orb': {'fun': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': 'or', 'latexF': '({{{}}}\\vee{{{}}})',
-            'sym_str': 'Orb({}, {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
+            'sym_str': 'Orb({}, {})', 'pycode': lambda *args: '({} or {})'.format(args[0], args[1])},
     'Xor': {'fun': 'Xor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.math.logical_xor, 'latex1': '$\\oplus$', 'latexF': '({{{}}}\\oplus{{{}}})',
-            'sym_str': 'Xor({}, {})', 'pycode': lambda a, b: '({} ^ {})'.format(a, b)},
+            'sym_str': 'Xor({}, {})', 'pycode': lambda *args: '({} ^ {})'.format(args[0], args[1])},
     'Notb': {'fun': 'Notb', 'arity': 1, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_not, 'latex1': '$\\neg$', 'latexF': '\\neg{{{}}}',
              'sym_str': 'Notb({})', 'pycode': lambda a: 'not({})'.format(a)},  # not a
     '|': {'fun': '|', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_or, 'latex1': '$\\lor$', 'latexF': '({{{}}}\\vee{{{}}})',
-          'sym_str': '({} | {})', 'pycode': lambda a, b: '({} or {})'.format(a, b)},
+          'sym_str': '({} | {})', 'pycode': lambda *args: '({} or {})'.format(args[0], args[1])},
 
     # 'f2b' Classical comparative operators, evaluate from float to bool
     '==': {'fun': '==', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.equal, 'latex1': '$=$', 'latexF': '({{{}}}={{{}}})',
-           'sym_str': '({} == {})', 'pycode': lambda a, b: '({}=={})'.format(a, b)},
+           'sym_str': '({} == {})', 'pycode': lambda *args: '({}=={})'.format(args[0], args[1])},
     '!=': {'fun': '!=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.not_equal, 'latex1': '$\\neq$', 'latexF': '({{{}}}\\neq{{{}}})',
-           'sym_str': '({} != {})', 'pycode': lambda a, b: '({}!={})'.format(a, b)},
+           'sym_str': '({} != {})', 'pycode': lambda *args: '({}!={})'.format(args[0], args[1])},
     '<': {'fun': '<', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less, 'latex1': '$<$', 'latexF': '{{{}}}<{{{}}}',
-          'sym_str': '({} < {})', 'pycode': lambda a, b: '({}<{})'.format(a, b)},  # a < b
+          'sym_str': '({} < {})', 'pycode': lambda *args: '({}<{})'.format(args[0], args[1])},  # a < b
     '<=': {'fun': '<=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.less_equal, 'latex1': '$\\leq$', 'latexF': '{{{}}}\leq{{{}}}',
-           'sym_str': '({} <= {})', 'pycode': lambda a, b: '({}<={})'.format(a, b)},  # a <= b
+           'sym_str': '({} <= {})', 'pycode': lambda *args: '({}<={})'.format(args[0], args[1])},  # a <= b
     '>': {'fun': '>', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater, 'latex1': '$>$', 'latexF': '{{{}}}>{{{}}}',
-          'sym_str': '({} > {})', 'pycode': lambda a, b: '({}>{})'.format(a, b)},  # a > b
+          'sym_str': '({} > {})', 'pycode': lambda *args: '({}>{})'.format(args[0], args[1])},  # a > b
     '>=': {'fun': '>=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf': tf.greater_equal, 'latex1': '$\\geq$', 'latexF': '{{{}}}\geq{{{}}}',
-           'sym_str': '({} >= {})', 'pycode': lambda a, b: '({}{}{})'.format(a, '>=', b)},  # a >= 1
+           'sym_str': '({} >= {})', 'pycode': lambda *args: '({}>={})'.format(args[0], args[1])},  # a >= 1
 
     # Functions which need separate handling in sympify
     'Ifte': {'fun': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf': tf.compat.v2.where, 'latex1': 'if-then-else', 'latexF': 'if({{{}}} then {{{}}} else {{{}}})',
-             'sym_str': 'Ifte({}, {}, {})', 'pycode': lambda a, b, c: '{1} if {0} else {2}'.format(a, b, c)},
-    # long version of Ifte-'pycode': lambda a, b, c: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
+             'sym_str': 'Ifte({}, {}, {})', 'pycode': lambda *args: f'{args[0]} if {args[1]} else {args[2]}'},
+    # long version of Ifte-'pycode': lambda *args: 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
     'Mini': {'fun': 'Mini', 'arity': 2, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.minimum, 'latex1': '$\\min$', 'latexF': '\\min({{{}}}, {{{}}})',
-             'sym_str': 'Mini({}, {})', 'pycode': lambda a, b: 'min({}, {})'.format(a, b)},  # with forced arity-2
+             'sym_str': 'Mini({}, {})', 'pycode': lambda *args: 'min({}, {})'.format(args[0], args[1])},  # with forced arity-2
     'Maxi': {'fun': 'Maxi', 'arity': 2, 'xtype': 'f2f', 'c-weight': 0.5, 'tf': tf.math.maximum, 'latex1': '$\\max$', 'latexF': '\\max({{{}}}, {{{}}})',
-             'sym_str': 'Maxi({}, {})', 'pycode': lambda a, b: 'max({}, {})'.format(a, b)},  # with forced arity-2
+             'sym_str': 'Maxi({}, {})', 'pycode': lambda *args: 'max({}, {})'.format(args[0], args[1])},  # with forced arity-2
 }
 
 ## Currently not in use
@@ -196,13 +197,13 @@ op = {
 op_test = {
     # ast.BitOr
     '&': {'fun': '&', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf': tf.logical_and, 'latex1': '$\\land$', 'latexF': '({{{}}}\\wedge{{{}}})',
-          'sym_str': '({} & {})', 'pycode': lambda a, b: '({} and {})'.format(a, b)},
+          'sym_str': '({} & {})', 'pycode': lambda *args: '({} and {})'.format(args[0], args[1])},
     'Power3': {'fun': '', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf': tf.math.pow, 'latex1': None, 'latexF': '{}',
                'sym_str': '({}**2)', 'pycode': lambda a: '({}**2)'.format(a)},
     'Nand': {'fun': 'Nand', 'arity': 2, 'xtype': 'b2b', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-             'sym_str': 'Nand({}, {})', 'pycode': lambda a, b: 'Notb({} and {})'.format(a, b)},
+             'sym_str': 'Nand({}, {})', 'pycode': lambda *args: 'Notb({} and {})'.format(args[0], args[1])},
     'Xand': {'fun': 'Xand', 'arity': 2, 'xtype': 'b2b', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-             'sym_str': 'Xand({}, {})', 'pycode': lambda a, b: 'Notb({} ^ {})'.format(a, b)},
+             'sym_str': 'Xand({}, {})', 'pycode': lambda *args: 'Notb({} ^ {})'.format(args[0], args[1])},
     'Nor': {'fun': 'Nor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
             'sym_str': 'Nor({}, {})', 'pycode': None},
     'Xnor': {'fun': 'Xnor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
@@ -229,7 +230,7 @@ op_test = {
 
     # Never used yet, trying to get rid of the ** function
     'Power': {'fun': 'Power', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf': 'ä', 'latex1': None, 'latexF': '{}',
-              'sym_str': '({})**({})', 'pycode': lambda a, b: '({}**{})'.format(a, b)},  # sfeh: round the exponent
+              'sym_str': '({})**({})', 'pycode': lambda *args: '({}**{})'.format(args[0], args[1])},  # sfeh: round the exponent
     # sfeh sqrt, is only 2nd root, also 3rd-root?
 
     # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
@@ -275,13 +276,6 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
         except ValueError:
             all_xfuncs = funcs_float if '2f' in xtype else funcs_bool
             func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in all_xfuncs], [])
-            # if '2f' in xtype:
-            #     func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in funcs_float], [])
-            # elif '2b' in xtype:
-            #     func_tuple_list = sum([choose_oparray[funcs][arity] for funcs in funcs_bool], [])
-            # else:
-            #     print_e('Arity given. xtype {} is not accepted. Must be \'2f\' or \'2b\'.'.format(xtype))
-            #     raise
 
     # arity
     if arity is not None and xtype is None:
@@ -304,9 +298,9 @@ def xtype_get_func_list(choose_oparray, xtype=None, arity=None):
     try:
         func_list = [x[0] for x in func_tuple_list]
         probability_list = [x[1] for x in func_tuple_list]
-        probability_normalised = [x/sum(probability_list) for x in probability_list]
+        # probability_normalised = [x/sum(probability_list) for x in probability_list]  # only required if using np-random version. can be deleted
 
-        return func_list, probability_normalised
+        return func_list, probability_list
 
     except:
         return [], []

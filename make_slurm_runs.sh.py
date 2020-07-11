@@ -6,6 +6,7 @@ samples4ib = Path.cwd() / 'benchmarks/run_sources/IB/samples_ready.p'
 config4ib = Path.cwd() / 'benchmarks/run_sources/IB/config4ib.yaml'
 
 config4mtc = Path.cwd() / 'benchmarks/run_sources/MTC/config4mtc.yaml'
+config4mtc_rel = Path.cwd() / 'benchmarks/run_sources/MTC/config4mtc_relative.yaml'
 samples4mtc200 = Path.cwd() / 'benchmarks/run_sources/MTC/MTC200_data_prepared.p'
 samples4mtc75 = Path.cwd() / 'benchmarks/run_sources/MTC/MTC75_data_prepared.p'
 
@@ -42,6 +43,8 @@ run_starts = {
     'MTC75_scratch': [config4mtc, samples4mtc75, 0, ''],
     'MTC75_tree_simple': [config4mtc, samples4mtc75, 0, run_sources / 'MTC/tree_simple.csv'],
     'MTC75_tree_simple_fix': [config4mtc, samples4mtc75, 0, run_sources / 'MTC/tree_simple_fix.csv'],
+
+    'MTC200rel_tree_simplePlus_fix': [config4mtc, samples4mtc200, 0, run_sources / 'MTC/tree_simplePlus_fix.csv'],
 }
 
 main_format = 'python3 ' + str(plagih_startpy) + ' -config {} -out_dir {} -samples_ready {} -action {}'

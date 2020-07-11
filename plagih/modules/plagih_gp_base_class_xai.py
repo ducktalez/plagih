@@ -194,7 +194,7 @@ class ExplainableGP(object):
                                 'gen_time': {}}
         # todo save this as pandas?
 
-        self.origin_pairwise_fitness = None
+        self.origin_results = None
 
         self.print_g('ggg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -946,7 +946,7 @@ class ExplainableGP(object):
             expr_sym = tree_get_expr_sym(tree)
 
             tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True,
-                                 eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_pairwise_fitness)
+                                 eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results)
 
             deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
             pairwise_fitness = tf_results['pairwise_fitness']
@@ -1734,8 +1734,8 @@ class ExplainableGP(object):
 
         # self.parsimony_best_meta[0] = self.origin_meta
 
-        self.origin_pairwise_fitness = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map,
-                                               eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_pairwise_fitness, complete=True)['pairwise_fitness']
+        self.origin_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map,
+                                      eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
 
         self.pareto.append([0, fitness_train, origin_meta])  # aka [3, 423, meta{}]
         self.print_g('gg', f'Loading origin tree, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
@@ -1759,7 +1759,7 @@ class ExplainableGP(object):
         except Exception as evalex:
             raise Exception(f'eval:{evalex}')
 
-        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_pairwise_fitness)
+        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results)
 
         if not check_value_is_real(fitness_train):
             raise Exception(f'Fitness is inf or nan: {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range

@@ -51,32 +51,10 @@ class RegressionDiscrete(DummyKernel):
         pass
 
 
-
-
-
 class FitnessKernel:
 
     def __init__(self, kernel_name):
         self.kernel = kernel_name
-
-    def tf_wrap_result(self, tf_result, action_min_max):
-        """
-        todo other kernels
-        """
-
-        if self.kernel == 'regression bounded':
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-
-        elif self.kernel == 'regression discrete':
-            # regression that fits the outputs to a discrete set of actions defined by min and max
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-        else:
-            customised_result = tf_result  # tehe sfeh
-        return customised_result
 
     def fitness_compare(self, fitness1, fitness2, mode='better'):
         """
@@ -94,8 +72,8 @@ class FitnessKernel:
             return True
         elif self.kernel == 'match' and fitness1 > fitness2:
             return True
-        elif fitness1 == fitness2 and mode == 'better_or_equal':
-            return True
+        elif mode == 'better_or_equal':
+            return fitness1 == fitness2
         else:
             return False
 
@@ -142,123 +120,97 @@ class FitnessKernel:
         else:
             raise
 
-    def conclusion_text(self, result, fitness_control_best):
-        """
+    # def conclusion_text(self, result, fitness_control_best):
+    #     """
+    #
+    #     """
+    #     result_str = ''
+    #
+    #     if self.kernel == 'classification':
+    #         result_str += f'\n\n Classification fitness score: {fitness_control_best}'
+    #         result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
+    #         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
+    #
+    #     elif self.kernel == 'regression':
+    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
+    #         result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
+    #         result_str += ('\n Mean Squared Error: {}'.format(mse))
+    #
+    #     elif self.kernel == 'regression bounded':
+    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
+    #         result_str += f"\n\n Regression bounded fitness score: {result['fitness']}"
+    #         result_str += f'\n Mean Squared Error: {mse}'
+    #
+    #     elif self.kernel == 'match':
+    #         result_str += f"\n\n Matching fitness score: {result['fitness']}"
+    #
+    #     else:  # 'regression discrete':
+    #         result_str = 'No summary provided for this kernel'
+    #
+    #     return result_str
 
-        """
-        result_str = ''
+    def tf_wrap_result(self, tf_result, action_min_max):
 
-        if self.kernel == 'classification':
-            result_str += f'\n\n Classification fitness score: {fitness_control_best}'
-            result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
-            result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
+        if 'discrete' in self.kernel:
+            # regression that fits the outputs to a discrete set of actions defined by min and max
+            tf_result = tf.math.round(tf_result)
 
-        elif self.kernel == 'regression':
-            mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-            result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
-            result_str += ('\n Mean Squared Error: {}'.format(mse))
+        if 'bounded' in self.kernel:
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
-        elif self.kernel == 'regression bounded':
-            mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-            result_str += f"\n\n Regression bounded fitness score: {result['fitness']}"
-            result_str += f'\n Mean Squared Error: {mse}'
+        return tf_result
 
-        elif self.kernel == 'match':
-            result_str += f"\n\n Matching fitness score: {result['fitness']}"
-
-        else:  # 'regression discrete':
-            result_str = 'No summary provided for this kernel'
-
-        return result_str
-
-    def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num, origin_pairwise_fitness=None):
+    def tf_get_pairwise_fitness(self, solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=None):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
         """
-        # 3- Add fitness computation into TF graph
-        # sfeh add action here if needed for multidimensional results
 
         if self.kernel == 'classification':  # CLASSIFY kernel
             """
-            - The left-most bin includes -inf, the right-most bin includes +inf.
-            Those in between are by default confined to the spacing of 1.0 each, as defined by:
-
-                (solution - 1) < result <= solution
-
-            The skew adjusts the boundaries of the bins such that they fall on both the negative and positive positive sides of the
-            origin. At the time of this writing, an odd number of class labels will generate an extra bin on the positive 
-            side of origin as it has not yet been determined the effect of enabling the middle bin to include both a 
-            negative and positive result.
             """
 
             skew = (unique_outputs_num / 2) - 1
 
             rule1 = tf.logical_and(
                 tf.equal(solution, 0),
-                tf.less_equal(tf_result, 0 - skew))
+                tf.less_equal(kernel_result, 0 - skew))
 
             rule2 = tf.logical_and(
                 tf.equal(solution, unique_outputs_num - 1),
-                tf.greater(tf_result, solution - 1 - skew))
+                tf.greater(kernel_result, solution - 1 - skew))
 
             rule3 = tf.logical_and(
-                tf.less(solution - 1 - skew, tf_result),
-                tf.less_equal(tf_result, solution - skew))
+                tf.less(solution - 1 - skew, kernel_result),
+                tf.less_equal(kernel_result, solution - skew))
 
             pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
 
-        elif self.kernel == 'regression' or self.kernel == 'regression discrete':
+        elif 'regression' in self.kernel:
             """
-            Gets the difference to the correct label
             """
+            if 'L2_squared' in self.kernel:
+                pairwise_fitness = tf.math.squared_difference(solution, kernel_result)
+            else:
+                pairwise_fitness = tf.abs(solution - kernel_result)
 
-            pairwise_fitness = tf.abs(solution - tf_result)
-
-        elif self.kernel == 'regression bounded':
-            """
-            sfeh: version 4 is slightly different from what it is meant to do exactly
-            special regression for float solutions and discrete labels
-            The result is assigned to the closest value
-                - if the result is between labels
-                - if the solution exceeds the minimum or maximum value
-            ---
-            suitable for:
-            - not fitting labels beforehand
-            - small amount of labels
-            - orderable amount of labels
-            """
-
-            # v4 - largely false decisions should get affected largely
-            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
-            pairwise_fitness = tf.compat.v2.where(tf.math.equal(tf_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - tf_result))
-
-            # # v3
-            # act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            # act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            # customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-            # pairwise_fitness = tf.compat.v2.where(tf.math.equal(customised_result, solution), tf.constant(0, dtype=tf.float32), tf.abs(solution - customised_result))
-
-            # # v1
-            # customised_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
-            # pairwise_fitness = tf.abs(solution - customised_result)
+            if 'relative_regression_fun' in self.kernel and origin_pairwise_fitness is not None:
+                # regression_goal = tf.abs(solution - tf_result)  # double the penalty
+                # exploration_diff = (origin_pairwise_fitness - tf_result)  # ...but
+                # paretodiff = (solution - origin_pairwise_fitness)
+                # pairwise_fitness = tf.abs((2 * regression_goal) - (paretodiff - exploration_diff))
+                pairwise_fitness = tf.abs((2 * pairwise_fitness) - (solution - (2 * origin_pairwise_fitness) + kernel_result))  # faster version
 
         elif self.kernel == 'match':  # MATCH kernel
             """
             This is used for demonstration purposes only.
             """
-
             # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
             rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-            pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), atol + rtol * tf.abs(tf_result)), tf.int32)
-        elif self.kernel == 'relative_regression_fun' and origin_pairwise_fitness is not None:
-            regression_goal = tf.abs(solution - tf_result)  # double the penalty
-            # exploration_diff = (origin_pairwise_fitness - tf_result)  # ...but
-            # paretodiff = (solution - origin_pairwise_fitness)
-            # pairwise_fitness = tf.abs((2 * regression_goal) - (paretodiff - exploration_diff))
-            pairwise_fitness = tf.abs((2 * regression_goal) - (solution - (2 * origin_pairwise_fitness) + tf_result))  # shorter version
+            pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
+
         else:
             raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
 
@@ -312,13 +264,6 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
 
     'get_predicted_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
 
-    Returns:
-        A dict mapping keys to the following outputs:
-            'agent_result'         - array of the results of applying given expression to the data_csv_path
-            'predicted_labels'       - (Classify) an array of the predicted labels extracted from the results
-            'solution_goal'          - array of the solution values extracted from the data_csv_path
-            'fitness'           - aggregated scalar fitness score
-
     """
     action_at_here = env_vars['action_at'][eval_action]
     unique_outputs_num = action_at_here['unique_outputs_num']
@@ -340,7 +285,7 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
 
             if complete:
                 if get_predicted_labels:
-                    predicted_labels = tf.map_fn(tf_classify_labels_map, agent_result, dtype=(tf.int32, tf.string), swap_memory=True)
+                    predicted_labels = tf.map_fn(tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
                 else:
                     predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 

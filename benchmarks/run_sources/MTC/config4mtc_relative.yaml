@@ -1,6 +1,6 @@
 
 pop_max: 1000
 parsimony_max: 60
-kernel_name: regression discrete bounded
+kernel_name: relative_regression_fun
 complexity_measure: tree_edit_distance
 gen_max: 1200

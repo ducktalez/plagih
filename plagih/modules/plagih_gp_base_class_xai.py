@@ -747,15 +747,17 @@ class ExplainableGP(object):
         writes all important gp_files
 
         """
+        try:
+            self.file_pareto_txt()
+            self.file_population_base_karoo('last')
 
-        self.file_pareto_txt()
-        self.file_population_base_karoo('last')
-
-        self.pareto_sort()
-        self.file_pareto_histograms()
-        self.file_pareto_latex()
-        self.file_pareto_pycode()
-
+            self.pareto_sort()
+            self.file_pareto_histograms()
+            self.file_pareto_latex()
+            self.file_pareto_pycode()
+        except Exception as ex:
+            print(f'asdasd exception {ex}')
+        
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++

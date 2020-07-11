@@ -21,11 +21,11 @@ class P_Plus:
     fun_latex = '$+$'
     fun_sym = '({})+({})'
 
-    def tf_code(self, a, b):
+    def tf_code(self, *args):
         codetf = tf.add(args[0], args[1])
         return codetf
 
-    def fun_pycode(self, a, b):
+    def fun_pycode(self, *args):
         codepy = '({}+{})'.format(args[0], args[1])
         return codepy
 

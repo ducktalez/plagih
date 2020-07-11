@@ -53,7 +53,7 @@ def samples_header_line(row):
 
         if any(x in role for x in ['input', 'observation', 'obs']):
             temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
-            core_label = envvariable_get_corelabel(col_label)
+            core_label = obs_get_corelabel(col_label)
             try:
                 env_observation_family[core_label].extend([col_label])  # todo insert in sorted list... also t = [1,2,5,10]?
             except (IndexError, KeyError):
@@ -119,26 +119,25 @@ def header_entry_get_roleguess(env_observation, name, ii, row):
             role = 'input'
         else:
             role = 'action'
-        print_warning('w', 'role not given. Role is interpreted as: {}'.format(role))
+        print_warning('w', f'role not given. Role is interpreted as: {role}')
     return role
 
 
-def envvariable_get_timedelta(name, re_pattern='_\d+$'):
+def obs_get_timedelta(name, re_pattern='_\d+$', none_return=0):
     """
     'cartVel_12' -> core_label = 'cartVel', temp_diff = 12
     can be used to enrich old runs 'manually', otherwise only used in header_entry_get_tempdiff
     """
-    re_search = re.search(re_pattern, name)
+    re_search = re.search(re_pattern, name)  # re_search => ['_12']
     # todo what is the best solution? '\_\d+$' is the correct regex using search.
     if re_search:
         temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
+        return int(temp_diff)
     else:
-        temp_diff = 0  # there is only the latest version
-
-    return int(temp_diff)
+        return none_return  # there is only the latest version
 
 
-def envvariable_get_corelabel(name, re_pattern='_\d+$'):
+def obs_get_corelabel(name, re_pattern='_\d+$'):
     """
     variable like 'temperature_12' is variable 12 steps from past (13th)
     """
@@ -160,7 +159,7 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
     if temp_diff is not None:
         temp_diff = int(temp_diff)  # convert time-difference to int-number
     else:
-        temp_diff = envvariable_get_timedelta(name, re_pattern=re_pattern)
+        temp_diff = obs_get_timedelta(name, re_pattern=re_pattern)
 
     return temp_diff
 

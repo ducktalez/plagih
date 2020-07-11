@@ -40,6 +40,9 @@ class CoolCore:
     def finalize(self):
         self.finalize_set_depth()
         self.finalize_set_nodepath([0])
+        print('ddddddddddddddddddd')
+        print(self)
+        print(self.nodepath)
         # fill meta...
         # eval fitness
         # eval parsimony
@@ -53,7 +56,7 @@ class CoolCore:
         """
         self.nodepath = nodepath
         for ii, child in enumerate(self.childs):
-            nodepath_child = self.nodepath + [ii]
+            nodepath_child = nodepath + [ii]
             child.finalize_set_nodepath(nodepath_child)
 
     def get_nodes_at_depth(self, depth):
@@ -126,7 +129,8 @@ class CoolCore:
         inserting a branch into the place of a node
         """
         len_nodepath = len(nodepath)
-
+        print('asd nodepath', nodepath)
+        print('asd selfchil', self.childs[nodepath[0]])
         if len_nodepath == 1:  # [1] -> set child 1
             self.childs[nodepath[0]] = coolbranch
         elif len_nodepath > 1:

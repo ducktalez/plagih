@@ -3,6 +3,7 @@ Visualising Trees with latex.
 """
 from plagih.modules.plagih_tree import *
 import re
+from plagih.modules.plagih_data import obs_get_timedelta, obs_get_corelabel
 
 tree_sep = ''  # ''\\newpage'
 
@@ -50,42 +51,6 @@ def tree_viz_get_nel(tree):
     return node_list, edge_list, label_list
 
 
-def latex_tree_get_brackets(tree, node_id=root_id):
-    """
-    creates a tex file with a tikz figure of a tree.
-
-    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
-    """
-    extras = ''
-    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
-
-    # Get the best math-like representation for functions
-    if label in op:
-        label = op[label]['latex1']
-
-    # custom node design
-    if arity == 0:
-        extras += ',terminal'
-
-        if tree_node_is_variable(tree, node_id):
-            extras += ',variable'
-        else:
-            extras += ',constant'
-
-    if not tree_node_is_modifiable(tree, node_id):
-        extras += ',fixnode'
-
-    label += extras
-
-    child_ids = tree_node_get_childs(tree, node_id)
-    for child_id in child_ids:
-        label += (latex_tree_get_brackets(tree, child_id))
-    else:
-        bracket_string = f'[{label}]'
-
-    return bracket_string
-
-
 def visualize_tree_node_force_show(tree, node_id):
     """
     Check if a node must be displayed as full node
@@ -116,9 +81,9 @@ def visualize_tree_node_force_show(tree, node_id):
     return False
 
 
-def tree_node_is_numeric_constant(tree, node_id):
+def tree_node_is_numericobservation(tree, node_id):
     """
-    returns if the label is float/int constant (aka numeric value)
+    returns if the label is float/int observation (aka numeric value)
     """
     if tree_node_get_xtype(tree, node_id) == '2f':
         try:
@@ -128,6 +93,8 @@ def tree_node_is_numeric_constant(tree, node_id):
             pass
 
     return False
+
+
 
 def label_tex_replace_digits(label):
     # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
@@ -153,6 +120,100 @@ def get_tex_replace():
     return tex_replace
 
 
+def label_bracket_beautification(label):
+    """
+    For single labels, (+, *, 1.234000000, cartVel, Fatigue_4)
+    returns tex-version ($+$, $\cdot$, $1.234$, )
+    """
+    if label in op:
+        label = op[label]['latex1']  # note: this already includes latex-$!
+    elif label_is_variable(label):  # node is a terminal - either observation or variable
+        label = f"${label_tex_replace_digits(label)}$"
+    else:
+        obs_time = obs_get_timedelta(label, none_return=None)
+        if obs_time is None:
+            pass
+        else:
+            obs_family = obs_get_corelabel(label)
+            label = f"{obs_family}$_{obs_time}$"
+    return label
+
+
+def label_bracket_extras(label, arity, xtype, modifiable):
+    """
+    from an "OG" tree node, add some bracket-tree extras
+    """
+    extras = ''
+    # custom node design
+    if arity == 0:
+        extras += ',terminal'
+        if label_is_variable(label):
+            extras += ',variable'
+        else:
+            extras += ',observation'
+
+    if not modifiable:
+        extras += ',fixnode'
+    return extras
+
+
+def latex1_tree_get_brackets(tree, node_id=root_id):
+    """
+    creates a tex file with a tikz figure of a tree.
+
+    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
+    """
+    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
+    modifiable = tree_node_is_modifiable(tree, node_id)
+    extras = label_bracket_extras(label, arity, xtype, modifiable)
+    label_bra = label_bracket_beautification(label)
+    label_bra = f"{{{label_bra}}}{extras}"  # works better in latex-
+
+    # now, append the recursion
+    child_ids = tree_node_get_childs(tree, node_id)
+    for child_id in child_ids:
+        label_bra += (latex1_tree_get_brackets(tree, child_id))
+    else:
+        bracket_string = f'[{label_bra}]'
+
+    return bracket_string
+
+
+def latexTODO_tree_get_brackets(tree, node_id=root_id):
+    """
+    creates a tex file with a tikz figure of a tree.
+
+    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
+    """
+    extras = ''
+    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
+
+    # # Get the best math-like representation for functions
+    # if label in op:
+    #     label = op[label]['latex1']
+
+    # custom node design
+    if arity == 0:
+        extras += ',terminal'
+        if tree_node_is_variable(tree, node_id):
+            extras += ',variable'
+        else:
+            extras += ',observation'
+
+    if not tree_node_is_modifiable(tree, node_id):
+        extras += ',fixnode'
+
+    label += extras
+
+    child_ids = tree_node_get_childs(tree, node_id)
+    for child_id in child_ids:
+        label += (latexTODO_tree_get_brackets(tree, child_id))
+    else:
+        bracket_string = f'[{label}]'
+
+    return bracket_string
+
+
 def latex_tree_get_forest(tree, tight_viz=True):
     """
     whole procedure from tree to forest core
@@ -161,21 +222,19 @@ def latex_tree_get_forest(tree, tight_viz=True):
     tree = tree.copy()
 
     if tight_viz:
-        viztree = latex_tree_get_tighttree(tree)
+        return "TODO"
+        viztree = latex_tree_get_tighttree(tree)  # todo
     else:
         viztree = tree.copy()
-        for node_id in tree_iterate_range(viztree):
-            label = tree_node_get_label(viztree, node_id)
-            label = tex_label_beautify_end(label)
-            viztree = tree_node_set_label(viztree, node_id, label)
 
-    bracket_tree = latex_tree_get_brackets(viztree)
+        bracket_tree = latex1_tree_get_brackets(viztree)
+    # bracket_tree = latex1_tree_get_brackets(viztree)  # todo
 
     forest_complete = f'\n\\begin{{forest}}' \
                       f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
                       f'\n  terminal/.style={{rectangle,}},' \
                       f'\n  fixnode/.style={{fill=blue!60,}},' \
-                      f'\n  constant/.style={{rectangle,}},' \
+                      f'\n  observation/.style={{rectangle,}},' \
                       f'\n {bracket_tree}' \
                       f'\n\\end{{forest}}\n'
 
@@ -186,7 +245,7 @@ def tex_label_beautify_end(label):
 
     if label in op:
         label = op[label]['latex1']
-    label = label_tex_replace_digits(label)
+
     label = f'{{{label}}}'
     return label
 
@@ -286,9 +345,3 @@ def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity
             core[N_modify][i] = 1
     tree = tree_convert_pcore_to_karoo(core)
     return tree
-
-
-def latex_get_replace_tupels():
-    """
-    'Mini(a, 2.3)' -> min(a, 2.3)
-    """

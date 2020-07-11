@@ -340,7 +340,7 @@ class ExplainableGP(object):
             self.try_load_backup(path_backup=None)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
-        self.terminate_run()
+        self.terminate_run(make_a_backup=False)
 
     def update_old_runs(self):
         """
@@ -352,8 +352,8 @@ class ExplainableGP(object):
             for obs_name, x in self.env_vars['obs_name'].items():
                 col_label = x['label']
                 col = x['pos']
-                temp_diff = envvariable_get_timedelta(col_label)
-                core_label = envvariable_get_corelabel(col_label)
+                temp_diff = obs_get_timedelta(col_label)
+                core_label = obs_get_corelabel(col_label)
 
                 if x.get('minmax') is None:
                     if obs_name == 'cartVel':
@@ -428,7 +428,7 @@ class ExplainableGP(object):
         path_backup = self.file_make_dir_root('file_backup_pickle')
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.printpl('f', f'Saved: {path_backup}')
+        self.printpl('f', f'{path_backup}')
         return
 
     def plagih_gp_run(self):
@@ -746,12 +746,12 @@ class ExplainableGP(object):
         """
 
         self.file_pareto_txt()
-        self.file_population_base_karoo('last')
+        # self.file_population_base_karoo('last')
 
         self.pareto_sort()
-        self.file_pareto_histograms()
-        self.file_pareto_latex()
-        self.file_pareto_pycode()
+        # self.file_pareto_histograms()
+        # self.file_pareto_latex()  # todo TODOTODO 
+        # self.file_pareto_pycode()
 
         return
 
@@ -1086,7 +1086,7 @@ class ExplainableGP(object):
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
-        self.printpl('f', f'{path_trees_tex}')
+        self.printpl('ff', f'{path_trees_tex}')
 
         return
 
@@ -1351,13 +1351,13 @@ class ExplainableGP(object):
             for nodeobs_id in obs_nodes:
                 obs_label = tree_node_get_label(tree, nodeobs_id)
 
-                is_negative = obs_label == '-'
+                is_negative = obs_label[0] == '-'
                 if is_negative:
                     obs_label = obs_label[1:]
 
-                label_main = envvariable_get_corelabel(obs_label)
+                label_main = obs_get_corelabel(obs_label)
 
-                label_timedelta = envvariable_get_timedelta(obs_label)
+                label_timedelta = obs_get_timedelta(obs_label)
                 label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
 
                 var_list = self.env_vars['env_observation_family'].get(label_main)
@@ -1906,11 +1906,12 @@ class ExplainableGP(object):
         """
         return self.env_vars
 
-    def terminate_run(self):
+    def terminate_run(self, make_a_backup=True):
         """
         Program is done after writing all gp_files one last time.
         """
-        self.run_backup_save()
+        if make_a_backup:
+            self.run_backup_save()
         self.file_analysis_complex()
 
         self.file_analysis_plots(self.root_dir)

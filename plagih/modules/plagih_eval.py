@@ -171,7 +171,7 @@ class FitnessKernel:
 
         return result_str
 
-    def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num):
+    def tf_get_pairwise_fitness(self, solution, tf_result, unique_outputs_num, origin_pairwise_fitness=None):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -253,7 +253,12 @@ class FitnessKernel:
             # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
             rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
             pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - tf_result), atol + rtol * tf.abs(tf_result)), tf.int32)
-
+        elif self.kernel == 'relative_regression_fun' and origin_pairwise_fitness is not None:
+            regression_goal = tf.abs(solution - tf_result)  # double the penalty
+            # exploration_diff = (origin_pairwise_fitness - tf_result)  # ...but
+            # paretodiff = (solution - origin_pairwise_fitness)
+            # pairwise_fitness = tf.abs((2 * regression_goal) - (paretodiff - exploration_diff))
+            pairwise_fitness = tf.abs((2 * regression_goal) - (solution - (2 * origin_pairwise_fitness) + tf_result))  # shorter version
         else:
             raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
 
@@ -295,7 +300,7 @@ class FitnessKernel:
 #     #     return
 
 
-def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, eval_action=0):
+def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, eval_action=0, origin_pairwise_fitness=None):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -330,7 +335,7 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
             agent_result = ast_convert_from_expr(expr, tensors=tensors)
             kernel_result = kernel.tf_wrap_result(agent_result, action_min_max)
             act_solution = tensors[action_at_here['label']]
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, unique_outputs_num)
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=origin_pairwise_fitness)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if complete:

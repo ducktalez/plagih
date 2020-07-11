@@ -49,7 +49,7 @@ def envstate_normalize(env_state, to_normal=True):
     velocity, gain, shift (v, g, h)
     p, v, g, h, f, c
     'p', 'v', 'g', 'h', 'f', 'c'
-    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 Consumption_0
     """
 
     IB_norm_dict = {

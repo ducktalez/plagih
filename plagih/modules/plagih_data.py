@@ -54,6 +54,8 @@ def samples_header_line(row):
         if any(x in role for x in ['input', 'observation', 'obs']):
             temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
             core_label = obs_get_corelabel(col_label)
+            if 'RewardTotal' in core_label:  # todo damn yo
+                continue
             try:
                 env_observation_family[core_label].extend([col_label])  # todo insert in sorted list... also t = [1,2,5,10]?
             except (IndexError, KeyError):

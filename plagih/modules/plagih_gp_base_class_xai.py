@@ -356,7 +356,8 @@ class ExplainableGP(object):
                 col = x['pos']
                 temp_diff = obs_get_timedelta(col_label)
                 core_label = obs_get_corelabel(col_label)
-
+                if 'RewardTotal' in core_label:  # todo damn yo
+                    continue
                 if x.get('minmax') is None:
                     if obs_name == 'cartVel':
                         minmax = (-0.07, 0.07)
@@ -761,17 +762,17 @@ class ExplainableGP(object):
     #   Load and Archive Data                     +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def remove_old_variables(self):
-        """
-
-        """
-        max_past = self.config['obs_past:max']
-
-        for obs_name, obs_info in self.env_vars['obs_name'].items():
-            if obs_info['temp_diff'] > max_past:
-                xtype = obs_info['xtype']
-                self.env_vars[xtype].remove(obs_name)
-        return
+    # def remove_old_variables(self):
+    #     """
+    #
+    #     """
+    #     max_past = 10  # self.config['obs_past:max']  # todo just a workaround
+    #
+    #     for obs_name, obs_info in self.env_vars['obs_name'].items():
+    #         if obs_info['temp_diff'] > max_past:
+    #             xtype = obs_info['xtype']
+    #             self.env_vars[xtype].remove(obs_name)
+    #     return
 
     def get_path(self, file_key):
         """
@@ -816,7 +817,7 @@ class ExplainableGP(object):
 
         self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
         self.update_old_runs()
-        self.remove_old_variables()
+        # self.remove_old_variables()
 
         return
 
@@ -1358,10 +1359,12 @@ class ExplainableGP(object):
                     obs_label = obs_label[1:]
 
                 label_main = obs_get_corelabel(obs_label)
+                if 'RewardTotal' in label_main:  # todo damn yo
+                    raise
 
                 label_timedelta = obs_get_timedelta(obs_label)
                 label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
-                print('asdasdasd', label_timedelta)
+                
                 var_list = self.env_vars['env_observation_family'].get(label_main)
                 if var_list is not None:
                     indexx = var_list.index(obs_label)

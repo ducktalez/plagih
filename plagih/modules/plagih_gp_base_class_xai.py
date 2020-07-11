@@ -746,12 +746,12 @@ class ExplainableGP(object):
         """
 
         self.file_pareto_txt()
-        # self.file_population_base_karoo('last')
+        self.file_population_base_karoo('last')
 
         self.pareto_sort()
-        # self.file_pareto_histograms()
-        # self.file_pareto_latex()  # todo TODOTODO 
-        # self.file_pareto_pycode()
+        self.file_pareto_histograms()
+        self.file_pareto_latex()
+        self.file_pareto_pycode()
 
         return
 
@@ -1073,12 +1073,12 @@ class ExplainableGP(object):
             latex_element.append(forest_viz)
 
             latex_element.append('Tight layout:\n')
-            try:
-                tight_forest_viz = latex_tree_get_forest(tree)
-                latex_element.append(tight_forest_viz)
-            except Exception as tvex:
-                print_e(f'tight_forest_viz could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
-                latex_element.append(f'tight_forest_viz could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
+            # try:
+            forest_viz_tight = latex_tree_get_forest(tree)
+            latex_element.append(forest_viz_tight)
+            # except Exception as tvex:
+            #     print_e(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
+            #     latex_element.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
 
         latex_full_doc = latex_treeviz_full(latex_element)
 
@@ -1732,7 +1732,7 @@ class ExplainableGP(object):
 
         # self.parsimony_best_meta[0] = self.origin_meta
         self.pareto.append([0, fitness_train, origin_meta])  # aka [3, 423, meta{}]
-        self.print_g('gg', f'Loading, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        self.print_g('gg', f'Loading origin tree, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return
 

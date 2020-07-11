@@ -5,12 +5,6 @@ from plagih.modules.plagih_tree import *
 import re
 from plagih.modules.plagih_data import obs_get_timedelta, obs_get_corelabel
 
-tree_sep = ''  # ''\\newpage'
-
-
-def latex_get_forest_title(parsim, fitness, tikz_code, tree_sep):
-    return
-
 
 def latex_treeviz_full(tikz_forest_list, preamble=''):
     """
@@ -26,6 +20,7 @@ def latex_treeviz_full(tikz_forest_list, preamble=''):
 
     latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{standalone}' \
                        '\n\\usepackage{forest}' \
+                       '\n\\usepackage{amsmath}' \
                        '\n\\begin{document}' \
                        f'\n{forest_trees}' \
                        '\n\\end{document}'
@@ -95,7 +90,6 @@ def tree_node_is_numericobservation(tree, node_id):
     return False
 
 
-
 def label_tex_replace_digits(label):
     # 1.23456 + sdf -> 1.234 + sdf (remove +3 digits with regex)
     label = re.sub('0\.000[0]+[1-9]+', '0.001', label)  # displaying very small values as '0.001'
@@ -125,18 +119,17 @@ def label_bracket_beautification(label):
     For single labels, (+, *, 1.234000000, cartVel, Fatigue_4)
     returns tex-version ($+$, $\cdot$, $1.234$, )
     """
-    if label in op:
-        label = op[label]['latex1']  # note: this already includes latex-$!
-    elif label_is_variable(label):  # node is a terminal - either observation or variable
-        label = f"${label_tex_replace_digits(label)}$"
-    else:
+    if label in op:  #
+        label = f"${op[label]['latex1']}$"
+    elif label_is_observation(label):  # node is a terminal - either observation or variable
         obs_time = obs_get_timedelta(label, none_return=None)
-        if obs_time is None:
-            pass
-        else:
+        if obs_time is not None:
             obs_family = obs_get_corelabel(label)
-            label = f"{obs_family}$_{obs_time}$"
+            label = f"{obs_family}$_{{{obs_time}}}$"
+    else:
+        label = f"${label_tex_replace_digits(label)}$"
     return label
+
 
 
 def label_bracket_extras(label, arity, xtype, modifiable):
@@ -147,7 +140,7 @@ def label_bracket_extras(label, arity, xtype, modifiable):
     # custom node design
     if arity == 0:
         extras += ',terminal'
-        if label_is_variable(label):
+        if label_is_observation(label):
             extras += ',variable'
         else:
             extras += ',observation'
@@ -157,7 +150,7 @@ def label_bracket_extras(label, arity, xtype, modifiable):
     return extras
 
 
-def latex1_tree_get_brackets(tree, node_id=root_id):
+def latex_brackettree(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
 
@@ -167,19 +160,20 @@ def latex1_tree_get_brackets(tree, node_id=root_id):
     modifiable = tree_node_is_modifiable(tree, node_id)
     extras = label_bracket_extras(label, arity, xtype, modifiable)
     label_bra = label_bracket_beautification(label)
-    label_bra = f"{{{label_bra}}}{extras}"  # works better in latex-
+    label_bra = helper_format_brackets(label_bra)
+    label_bra = "{" + label_bra + "}" + extras  # works better in latex-
 
     # now, append the recursion
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
-        label_bra += (latex1_tree_get_brackets(tree, child_id))
+        label_bra += (latex_brackettree(tree, child_id))
     else:
         bracket_string = f'[{label_bra}]'
 
     return bracket_string
 
 
-def latexTODO_tree_get_brackets(tree, node_id=root_id):
+def latex_tighttree_get_brackets(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
 
@@ -188,26 +182,9 @@ def latexTODO_tree_get_brackets(tree, node_id=root_id):
     extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
-    # # Get the best math-like representation for functions
-    # if label in op:
-    #     label = op[label]['latex1']
-
-    # custom node design
-    if arity == 0:
-        extras += ',terminal'
-        if tree_node_is_variable(tree, node_id):
-            extras += ',variable'
-        else:
-            extras += ',observation'
-
-    if not tree_node_is_modifiable(tree, node_id):
-        extras += ',fixnode'
-
-    label += extras
-
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
-        label += (latexTODO_tree_get_brackets(tree, child_id))
+        label += (latex_tighttree_get_brackets(tree, child_id))
     else:
         bracket_string = f'[{label}]'
 
@@ -222,19 +199,17 @@ def latex_tree_get_forest(tree, tight_viz=True):
     tree = tree.copy()
 
     if tight_viz:
-        return "TODO"
-        viztree = latex_tree_get_tighttree(tree)  # todo
+        tree_tight = latex_get_tighttree(tree)  # todo
+        bracket_tree = latex_tighttree_get_brackets(tree_tight)
     else:
-        viztree = tree.copy()
-
-        bracket_tree = latex1_tree_get_brackets(viztree)
-    # bracket_tree = latex1_tree_get_brackets(viztree)  # todo
+        bracket_tree = latex_brackettree(tree)
 
     forest_complete = f'\n\\begin{{forest}}' \
                       f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
                       f'\n  terminal/.style={{rectangle,}},' \
                       f'\n  fixnode/.style={{fill=blue!60,}},' \
                       f'\n  observation/.style={{rectangle,}},' \
+                      f'\n  variable/.style={{rectangle,}},' \
                       f'\n {bracket_tree}' \
                       f'\n\\end{{forest}}\n'
 
@@ -250,7 +225,35 @@ def tex_label_beautify_end(label):
     return label
 
 
-def latex_tree_get_tighttree(tree):
+def tree_get_expr_latextight(tree, node_id=root_id):
+    """
+    todo
+    """
+    label = tree_node_get_label(tree, node_id)
+
+    if tree_node_get_arity(tree, node_id) > 0:
+        child_tex_list = [tree_get_expr_latextight(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
+        label = f"{op[label]['latexF'].format(*child_tex_list)}"
+    else:
+        if label_is_observation(label):  # node is a terminal - either observation or variable
+            obs_time = obs_get_timedelta(label, none_return=None)
+            if obs_time is not None:
+                obs_family = obs_get_corelabel(label)
+                label = f"ää\\textää{obs_family}öö_ää{obs_time}öööö"  # workaround
+        else:
+            label = f"ää{label_tex_replace_digits(label)}öö"
+        return label
+
+    return label
+
+
+def helper_format_brackets(label):
+    label = label.replace('ää', '{')
+    label = label.replace('öö', '}')
+    return label
+
+
+def latex_get_tighttree(tree):
     """
     reduce
 
@@ -262,8 +265,8 @@ def latex_tree_get_tighttree(tree):
     # All nodes, that have to be shown -> node_dict
     # All nodes, that can be sympified -> open_sym
     # node_dict -> {1: 1, 2: 1, ...}
-    open_sym = []  # the nodes where the expression can be sympified
-    open_fix = tree_ids[:]
+    open_sym = []  # nodes where the expression can be sympified
+    open_fix = tree_ids[:]  # nodes that have to be displayed completely
     while open_fix:
         node_id = open_fix[-1]
         if visualize_tree_node_force_show(tree, node_id):  # sfeh a < 5 can actually be shown. just the parent needs a split
@@ -296,13 +299,17 @@ def latex_tree_get_tighttree(tree):
 
     for node_id in tree_ids:
         if node_id in node_dict:
-            arity = 0
-            if node_dict[node_id] == 1:
+            if node_dict[node_id] == 1:  # single node
                 arity = tree_node_get_arity(tree, node_id)
                 label = tree_node_get_label(tree, node_id)
-            elif node_dict[node_id] > 1:
-                expr_raw = tree_get_expr_raw(tree, node_id)
-                label = expr_sympify(expr_raw)
+                label = label_bracket_beautification(label)
+            elif node_dict[node_id] > 1:  # complete expression node
+                # expr_raw = tree_get_expr_raw(tree, node_id)
+                # label = expr_sympify(expr_raw)
+                label = tree_get_expr_latextight(tree, node_id=node_id)
+                label = '{$' + helper_format_brackets(label) + '$}'
+                arity = 0
+                # label = re.sub('_', '{\\\\textunderscore}', label)   # sfeh workaround
             else:
                 raise
 
@@ -314,15 +321,14 @@ def latex_tree_get_tighttree(tree):
             vis_modify_list.append(tree_node_get_modify(tree, node_id))
         else:
             pass  # if a node is not in the dict, it must be part of a reducable tree
-
     longest_label = max(10, max([len(x) for x in vis_label_list]))
 
-    tight_tree = latex_vistree_from_labellist(vis_label_list, vis_xtype_list, modify_list=vis_modify_list, arity_list=vis_arity_list, force_np_size=longest_label)
+    tight_tree = latex_tight_from_labellist(vis_label_list, vis_xtype_list, modify_list=vis_modify_list, arity_list=vis_arity_list, force_np_size=longest_label)
 
     return tight_tree
 
 
-def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity_list=None, force_np_size=None):
+def latex_tight_from_labellist(vizlabel_list, xtype_list, modify_list=None, arity_list=None, force_np_size=None):
     """
     returns: tree, from label_list (newest version)
     """
@@ -333,15 +339,15 @@ def latex_vistree_from_labellist(label_list, xtype_list, modify_list=None, arity
         np_dtype_size = None
 
     if not arity_list:
-        arity_list = [label_get_arity(label) for label in label_list]  # ~- problem: fine. [-, 1, 2] vs [*, 1, -2]
+        arity_list = [label_get_arity(label) for label in vizlabel_list]
 
-    core = Core_From_Labels(label_list, arity_list, xtype_list, force_np_dtype=np_dtype_size).get_uninstanced_core()
+    core = Core_From_Labels(vizlabel_list, arity_list, xtype_list, force_np_dtype=np_dtype_size).get_uninstanced_core()
 
     if modify_list:
         for i, val in enumerate(modify_list):
             core[N_modify][i] = val
     else:  # all can be modified
-        for i, val in enumerate(label_list):
+        for i, val in enumerate(vizlabel_list):
             core[N_modify][i] = 1
     tree = tree_convert_pcore_to_karoo(core)
     return tree

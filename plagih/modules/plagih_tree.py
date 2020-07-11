@@ -555,26 +555,17 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
         return
 
 
-def label_is_variable(label):
+def label_is_observation(label):
     """
     sfeh if contains pi/e/... in future, change this
     """
     try:
         float(label)
+        return False
     except:
-        try:
-            bool(label)
-        except:
-            return True
-    return False
-
-
-def tree_node_is_variable(tree, node_id):
-    """
-    check if the node is not a float value
-    """
-    label = tree_node_get_label(tree, node_id)
-    return label_is_variable(label)
+        if label in ['True', 'False']:
+            return False
+    return True
 
 
 def tree_node_is_modifiable(tree, node_id):

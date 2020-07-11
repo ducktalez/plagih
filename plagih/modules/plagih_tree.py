@@ -1,4 +1,6 @@
 import os
+
+from plagih.modules.plagih_data import obs_get_timedelta
 from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
@@ -278,6 +280,14 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
         tree_works = False
     else:
         tree_works = True
+
+    if delete_this:
+        label_list = tree_get_labellist(tree)
+        for label in label_list:
+            if label_is_observation(label):
+                temp_diff = obs_get_timedelta(label)
+                if temp_diff > 10:
+                    raise('SDFGSDFSDFSDFSDF')  # todo
 
     if tree_node_get_arity(tree, root_id) == 0:
         print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)

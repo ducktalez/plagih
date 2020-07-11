@@ -1361,12 +1361,12 @@ class ExplainableGP(object):
 
                 label_timedelta = obs_get_timedelta(obs_label)
                 label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
-
+                print('asdasdasd', label_timedelta)
                 var_list = self.env_vars['env_observation_family'].get(label_main)
                 if var_list is not None:
                     indexx = var_list.index(obs_label)
                     indexx = indexx + label_timedelta
-                    indexx = max(min(len(var_list) - 1, indexx), 0)
+                    indexx = max(min(10 - 1, indexx), 0)  # todo len(var_list) 10
                     try:
                         new_obs = '-' + var_list[indexx] if is_negative else var_list[indexx]
                         tree = tree_node_set_label(tree, nodeobs_id, new_obs)
@@ -1659,7 +1659,7 @@ class ExplainableGP(object):
         else:
             parsimony = self.tree_eval_parsimony_easywrapper(tree)
             if parsimony > self.config['parsimony_max']:
-                print_warning('www', 'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
+                print_warning('www', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
                 return
 
             try:

@@ -2,7 +2,7 @@ from pathlib import Path
 
 run_sources = Path.cwd() / 'benchmarks/run_sources/'
 
-samples4ib = Path.cwd() / 'benchmarks/run_sources/IB/samples_ready_NEW.p'
+samples4ib = Path.cwd() / 'benchmarks/run_sources/IB/samples.csv'
 config4ib = Path.cwd() / 'benchmarks/run_sources/IB/config4ib.yaml'
 
 config4mtc = Path.cwd() / 'benchmarks/run_sources/MTC/config4mtc.yaml'

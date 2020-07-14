@@ -793,7 +793,11 @@ class ExplainableGP(object):
         """
 
         if opth_data:
-            data_prepared = pickle_load(opth_data)
+            if opth_data.suffix == '.p':
+                data_prepared = pickle_load(opth_data)
+            else:
+                self.env_vars, self.data_train, self.data_control = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
+
         elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier sfeh load file
             data_prepared = pickle_load(self.root_path('samples_ready_p'))
         elif Path.is_file(self.root_path('samples_csv')):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file

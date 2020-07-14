@@ -147,7 +147,6 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     """
 
     root_dir, config = load_config(config_path, out_dir=out_dir)
-    root_dir, config = load_config(config_path, out_dir=out_dir)
 
     config['force_new_run'] = force_new_run
     if eval_action is not None:

@@ -237,7 +237,7 @@ def data_from_csv(samples_file, test_size=0.0, delimiter=','):  # todo test_size
             print_warning('w', f'Tried to get the actual min/max from data, which is {minmax}.')
             env_vars['obs_name'][obs_name]['minmax'] = minmax
 
-    data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size)  # 80% train 20% test-validation
+    data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size, random_state=0)  # 80% train 20% test-validation
 
     # data_train_numpy = data_train_panda.to_numpy()
     # data_test_numpy = data_test_panda.to_numpy()

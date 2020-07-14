@@ -103,7 +103,7 @@ def header_entry_get_minmax(column_meta_values):
     """
     minmax = column_meta_values.get('minmax')
     if minmax is None:
-        print_warning('w', 'mimax value tuple not provided. Trying to use the min-max values from the samples later.')
+        print_warning('ww', 'mimax value tuple not provided. Trying to use the min-max values from the samples later.')
     else:
         minmax = [float(x) for x in minmax.split(',')]
     return minmax

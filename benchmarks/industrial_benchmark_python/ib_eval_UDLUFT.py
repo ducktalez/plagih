@@ -207,7 +207,46 @@ class Agent_Udluft(Ib_Agent):
         return at
 
 
-class Agent_Test(Ib_Agent):
+class Agent_Test_1(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        at[0] = action = (self.get_h('f', 0)-self.get_h('v', 3))
+        # at[0] = ((-self.get_h('v', 3))-1.333333333333)
+        # at[0] = ((-self.get_h('p', 9))-1.451234)
+        # at[0] = (((-24.346831)*self.get_h('p', 9))-29.564814)
+        # at[0] = ((self.get_h('c', 0)-(6.095432*self.get_h('p', 9)))-6.095432)
+
+        at[1] = self.get_h('f', 4)
+        # at[1] = 0.9999983369439
+        # at[1] = (1.439502-self.get_h('c', 9))
+        # at[1] = ((lambda x, y: x/y if y!=0 else 0)(self.get_h('p', 9), self.get_h('v', 0))+3.873059)
+        # at[1] = ((lambda x, y: x / y if y != 0 else 0)(((-1.572678) * self.get_h('p', 8)), ((self.get_h('g', 5) - 1.432822) ** 2)) + max((self.get_h('v', 8) * (6.163913 - (1.881441 * self.get_h('f', 5)))), (((self.get_h('g', 5) - 1.47683) ** 2) ** 2)))
+
+        at[2] = ((-6)*self.get_h('h', 4))
+        # at[2] = ((-6)*self.get_h('p', 7))
+        # at[2] = ((-47.562891)*self.get_h('p', 7))
+        # at[2] = (((-self.get_h('p', 1))-self.get_h('p', 7))+self.get_h('h', 4))
+
+        return at
+
+
+class Agent_Test_2(Ib_Agent):
     """
 
     'p', 'v', 'g', 'h', 'f', 'c'
@@ -227,16 +266,225 @@ class Agent_Test(Ib_Agent):
 
         at = np.array([0, 0, 0], dtype=np.float32)
         # at[0] = 12.31 * self.get_h('g', 8) - 11.079
-        at[0] = ((((-89.824254)*self.get_h('v', 9))*(max(self.get_h('h', 1), (self.get_h('g', 2)+self.get_h('v', 3)))**2))-33.157891)
-        at[1] = -2.6 / (self.get_h('c', 30) - self.get_h('f', 12) + self.get_h('f', 17))
-        # at[1] = np.sign(max(self.get_h('f', 9), self.get_h('g', 3)))
-        at[2] = 7.0442545165 * self.get_h('p', 30) - 9.3079051182 * self.get_h('h', 26) - 7.0442545165 * self.get_h('h', 27) + 3.0
-        # at[2] = ((((((6.393297 * self.get_h('c', 5)) - (6.393297 * self.get_h('c', 9))) - (6.393297 * self.get_h('g', 4))) + (6.393297 * self.get_h('g', 9))) + (6.393297 * self.get_h('h', 4))) - (6.393297 * self.get_h('h', 9)))
+        # at[0] = action = (self.get_h('f', 0)-self.get_h('v', 3))
+        at[0] = ((-self.get_h('v', 3))-1.333333333333)
+        # at[0] = ((-self.get_h('p', 9))-1.451234)
+        # at[0] = (((-24.346831)*self.get_h('p', 9))-29.564814)
+        # at[0] = ((self.get_h('c', 0)-(6.095432*self.get_h('p', 9)))-6.095432)
+
+        at[1] = self.get_h('f', 4)
+        # at[1] = 0.9999983369439
+        # at[1] = (1.439502-self.get_h('c', 9))
+        # at[1] = ((lambda x, y: x/y if y!=0 else 0)(self.get_h('p', 9), self.get_h('v', 0))+3.873059)
+        # at[1] = ((lambda x, y: x / y if y != 0 else 0)(((-1.572678) * self.get_h('p', 8)), ((self.get_h('g', 5) - 1.432822) ** 2)) + max((self.get_h('v', 8) * (6.163913 - (1.881441 * self.get_h('f', 5)))), (((self.get_h('g', 5) - 1.47683) ** 2) ** 2)))
+
+        at[2] = ((-6)*self.get_h('h', 4))
+        # at[2] = ((-6)*self.get_h('p', 7))
+        # at[2] = ((-47.562891)*self.get_h('p', 7))
+        # at[2] = (((-self.get_h('p', 1))-self.get_h('p', 7))+self.get_h('h', 4))
+
         return at
 
-# ('IB_udluft_0_0', IB_udluft_0_0(), 0, 7445.456), ('IB_udluft_0_1', IB_udluft_0_1(), 1.0, 6667.792), ('IB_udluft_0_2', IB_udluft_0_2(), 2.0, 6431.543), ('IB_udluft_0_3', IB_udluft_0_3(), 3.0, 6286.144), ('IB_udluft_0_4', IB_udluft_0_4(), 4.0, 6071.008), ('IB_udluft_0_6', IB_udluft_0_6(), 6.0, 5731.761), ('IB_udluft_0_7', IB_udluft_0_7(), 7.0, 5540.986), ('IB_udluft_0_10', IB_udluft_0_10(), 10.0, 5379.627), ('IB_udluft_0_13', IB_udluft_0_13(), 13.0, 5364.688), ('IB_udluft_0_14', IB_udluft_0_14(), 14.0, 5296.562)
-# ('IB_udluft_1_0', IB_udluft_1_0(), 0, 10199.376), ('IB_udluft_1_1', IB_udluft_1_1(), 1.0, 4790.752), ('IB_udluft_1_2', IB_udluft_1_2(), 2.0, 4518.592), ('IB_udluft_1_3', IB_udluft_1_3(), 3.0, 4509.147), ('IB_udluft_1_4', IB_udluft_1_4(), 4.0, 4181.852), ('IB_udluft_1_5', IB_udluft_1_5(), 5.0, 4125.886), ('IB_udluft_1_6', IB_udluft_1_6(), 6.0, 3807.634), ('IB_udluft_1_8', IB_udluft_1_8(), 8.0, 3642.444), ('IB_udluft_1_10', IB_udluft_1_10(), 10.0, 3500.061), ('IB_udluft_1_12', IB_udluft_1_12(), 12.0, 3424.337)
-# ('IB_udluft_2_0', IB_udluft_2_0(), 0, 9445.287), ('IB_udluft_2_1', IB_udluft_2_1(), 1.0, 5428.476), ('IB_udluft_2_2', IB_udluft_2_2(), 2.0, 5380.151), ('IB_udluft_2_4', IB_udluft_2_4(), 4.0, 4923.883), ('IB_udluft_2_5', IB_udluft_2_5(), 5.0, 4780.519), ('IB_udluft_2_6', IB_udluft_2_6(), 6.0, 4105.182), ('IB_udluft_2_7', IB_udluft_2_7(), 7.0, 3650.729), ('IB_udluft_2_10', IB_udluft_2_10(), 10.0, 3636.047), ('IB_udluft_2_11', IB_udluft_2_11(), 11.0, 3425.701), ('IB_udluft_2_12', IB_udluft_2_12(), 12.0, 3392.918), ('IB_udluft_2_15', IB_udluft_2_15(), 15.0, 3388.44)
+
+class Agent_Test_3(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        # at[0] = 12.31 * self.get_h('g', 8) - 11.079
+        # at[0] = action = (self.get_h('f', 0)-self.get_h('v', 3))
+        at[0] = ((-self.get_h('v', 3))-1.333333333333)
+        # at[0] = ((-self.get_h('p', 9))-1.451234)
+        # at[0] = (((-24.346831)*self.get_h('p', 9))-29.564814)
+        # at[0] = ((self.get_h('c', 0)-(6.095432*self.get_h('p', 9)))-6.095432)
+
+        # at[1] = self.get_h('f', 4)
+        # at[1] = 0.9999983369439
+        # at[1] = (1.439502-self.get_h('c', 9))
+        at[1] = ((lambda x, y: x/y if y!=0 else 0)(self.get_h('p', 9), self.get_h('v', 0))+3.873059)
+        # at[1] = ((lambda x, y: x / y if y != 0 else 0)(((-1.572678) * self.get_h('p', 8)), ((self.get_h('g', 5) - 1.432822) ** 2)) + max((self.get_h('v', 8) * (6.163913 - (1.881441 * self.get_h('f', 5)))), (((self.get_h('g', 5) - 1.47683) ** 2) ** 2)))
+
+        # at[2] = ((-6)*self.get_h('h', 4))
+        at[2] = ((-6)*self.get_h('p', 7))
+        # at[2] = ((-47.562891)*self.get_h('p', 7))
+        # at[2] = (((-self.get_h('p', 1))-self.get_h('p', 7))+self.get_h('h', 4))
+
+        return at
+
+
+class Agent_Test_4(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        # at[0] = 12.31 * self.get_h('g', 8) - 11.079
+        # at[0] = action = (self.get_h('f', 0)-self.get_h('v', 3))
+        at[0] = ((-self.get_h('v', 3))-1.333333333333)
+        # at[0] = ((-self.get_h('p', 9))-1.451234)
+        # at[0] = (((-24.346831)*self.get_h('p', 9))-29.564814)
+        # at[0] = ((self.get_h('c', 0)-(6.095432*self.get_h('p', 9)))-6.095432)
+
+        # at[1] = self.get_h('f', 4)
+        # at[1] = 0.9999983369439
+        # at[1] = (1.439502-self.get_h('c', 9))
+        # at[1] = ((lambda x, y: x/y if y!=0 else 0)(self.get_h('p', 9), self.get_h('v', 0))+3.873059)
+        at[1] = ((lambda x, y: x / y if y != 0 else 0)(((-1.572678) * self.get_h('p', 8)), ((self.get_h('g', 5) - 1.432822) ** 2)) + max((self.get_h('v', 8) * (6.163913 - (1.881441 * self.get_h('f', 5)))), (((self.get_h('g', 5) - 1.47683) ** 2) ** 2)))
+
+        # at[2] = ((-6)*self.get_h('h', 4))
+        at[2] = ((-6)*self.get_h('p', 7))
+        # at[2] = ((-47.562891)*self.get_h('p', 7))
+        # at[2] = (((-self.get_h('p', 1))-self.get_h('p', 7))+self.get_h('h', 4))
+
+        return at
+
+
+class Agent_Test_5(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        # at[0] = 12.31 * self.get_h('g', 8) - 11.079
+        # at[0] = action = (self.get_h('f', 0)-self.get_h('v', 3))
+        at[0] = ((-self.get_h('v', 3))-1.333333333333)
+        # at[0] = ((-self.get_h('p', 9))-1.451234)
+        # at[0] = (((-24.346831)*self.get_h('p', 9))-29.564814)
+        # at[0] = ((self.get_h('c', 0)-(6.095432*self.get_h('p', 9)))-6.095432)
+
+        # at[1] = self.get_h('f', 4)
+        # at[1] = 0.9999983369439
+        # at[1] = (1.439502-self.get_h('c', 9))
+        # at[1] = ((lambda x, y: x/y if y!=0 else 0)(self.get_h('p', 9), self.get_h('v', 0))+3.873059)
+        at[1] = ((lambda x, y: x / y if y != 0 else 0)(((-1.572678) * self.get_h('p', 8)), ((self.get_h('g', 5) - 1.432822) ** 2)) + max((self.get_h('v', 8) * (6.163913 - (1.881441 * self.get_h('f', 5)))), (((self.get_h('g', 5) - 1.47683) ** 2) ** 2)))
+
+        # at[2] = ((-6)*self.get_h('h', 4))
+        at[2] = ((-6)*self.get_h('p', 7))
+        # at[2] = ((-47.562891)*self.get_h('p', 7))
+        # at[2] = (((-self.get_h('p', 1))-self.get_h('p', 7))+self.get_h('h', 4))
+
+        return at
+
+
+class Agent_Test_6(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        # at[0] = 12.31 * self.get_h('g', 8) - 11.079
+        # at[0] = action = (self.get_h('f', 0)-self.get_h('v', 3))
+        at[0] = ((-self.get_h('v', 3))-1.333333333333)
+        # at[0] = ((-self.get_h('p', 9))-1.451234)
+        # at[0] = (((-24.346831)*self.get_h('p', 9))-29.564814)
+        # at[0] = ((self.get_h('c', 0)-(6.095432*self.get_h('p', 9)))-6.095432)
+
+        # at[1] = self.get_h('f', 4)
+        # at[1] = 0.9999983369439
+        # at[1] = (1.439502-self.get_h('c', 9))
+        # at[1] = ((lambda x, y: x/y if y!=0 else 0)(self.get_h('p', 9), self.get_h('v', 0))+3.873059)
+        at[1] = ((lambda x, y: x / y if y != 0 else 0)(((-1.572678) * self.get_h('p', 8)), ((self.get_h('g', 5) - 1.432822) ** 2)) + max((self.get_h('v', 8) * (6.163913 - (1.881441 * self.get_h('f', 5)))), (((self.get_h('g', 5) - 1.47683) ** 2) ** 2)))
+
+        # at[2] = ((-6)*self.get_h('h', 4))
+        # at[2] = ((-6)*self.get_h('p', 7))
+        at[2] = ((-47.562891)*self.get_h('p', 7))
+        # at[2] = (((-self.get_h('p', 1))-self.get_h('p', 7))+self.get_h('h', 4))
+
+        return at
+
+
+class Agent_Test_7(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        # at[0] = 12.31 * self.get_h('g', 8) - 11.079
+        # at[0] = action = (self.get_h('f', 0)-self.get_h('v', 3))
+        at[0] = ((-self.get_h('v', 3))-1.333333333333)
+        # at[0] = ((-self.get_h('p', 9))-1.451234)
+        # at[0] = (((-24.346831)*self.get_h('p', 9))-29.564814)
+        # at[0] = ((self.get_h('c', 0)-(6.095432*self.get_h('p', 9)))-6.095432)
+
+        # at[1] = self.get_h('f', 4)
+        # at[1] = 0.9999983369439
+        # at[1] = (1.439502-self.get_h('c', 9))
+        at[1] = ((lambda x, y: x/y if y!=0 else 0)(self.get_h('p', 9), self.get_h('v', 0))+3.873059)
+        # at[1] = ((lambda x, y: x / y if y != 0 else 0)(((-1.572678) * self.get_h('p', 8)), ((self.get_h('g', 5) - 1.432822) ** 2)) + max((self.get_h('v', 8) * (6.163913 - (1.881441 * self.get_h('f', 5)))), (((self.get_h('g', 5) - 1.47683) ** 2) ** 2)))
+
+        # at[2] = ((-6)*self.get_h('h', 4))
+        at[2] = ((-6)*self.get_h('p', 7))
+        # at[2] = ((-47.562891)*self.get_h('p', 7))
+        # at[2] = (((-self.get_h('p', 1))-self.get_h('p', 7))+self.get_h('h', 4))
+
+        return at
+
 
 
 def eval_agents():
@@ -251,7 +499,14 @@ def eval_agents():
 
         # Agent_Daniel_29_Best(),
         # Agent_Udluft(),
-        Agent_Test()
+        Agent_Test(),
+        Agent_Test_1,
+        Agent_Test_2,
+        Agent_Test_3,
+        Agent_Test_4,
+        Agent_Test_5,
+        Agent_Test_6,
+        Agent_Test_7,
     ]
     print("Discounted reward sum after 100.000 steps random -9788.323176708134\n"
           "Discounted reward sum after 100.000 steps Daniel_29 -5014.727641016865\n"

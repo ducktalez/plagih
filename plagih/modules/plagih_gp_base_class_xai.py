@@ -1190,12 +1190,13 @@ class ExplainableGP(object):
         pycode_agents = '\n\n'.join(all_agents)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
         all_more_info = ', '.join(all_more_info)
-        pycode_complete_agents = "import math\n\n" \
+        pycode_complete_agents = "import math\n" \
+                                 "import numpy as np\n\n" \
             f"{pycode_agents}\n\n" \
             f"all_agents_more = [{all_more_info}]\n" \
             f"agent_tuples = [{agent_tuples}]\n\n"  # -> ('Agent_34', Agent_34())
 
-        pth = file_make_dir(self.root_path('folder_pycode') / f"agent{self.config['eval_action']}.py")
+        pth = file_make_dir(self.root_path('folder_pycode') / f"agents{self.config['eval_action']}.py")
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
             self.printpl('ff', f'{pth.as_posix()}')

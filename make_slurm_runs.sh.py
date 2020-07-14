@@ -44,7 +44,7 @@ run_starts = {
     'MTC75_tree_simple': [config4mtc, samples4mtc75, 0, run_sources / 'MTC/tree_simple.csv'],
     'MTC75_tree_simple_fix': [config4mtc, samples4mtc75, 0, run_sources / 'MTC/tree_simple_fix.csv'],
 
-    'MTC200rel_tree_simplePlus_fix': [config4mtc, samples4mtc200, 0, run_sources / 'MTC/tree_simplePlus_fix.csv'],
+    'MTC200rel_tree_simplePlus_fix': [config4mtc_rel, samples4mtc200, 0, run_sources / 'MTC/tree_simplePlus_fix.csv'],
 }
 
 main_format = 'python3 ' + str(plagih_startpy) + ' -config {} -out_dir {} -samples_ready {} -action {}'

@@ -308,8 +308,11 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     # for obs_name, obs_info in env_vars['obs_name'].items():
 
     for obs_info in env_vars['obs_name'].values():
-        if 'RewardTotal' in obs_info['name']:
-            continue
+        try:
+            if 'RewardTotal' in obs_info['name']:
+                continue
+        except:
+            pass
         if obs_info['temp_diff'] > 10:  # todo
             continue
         col_label = obs_info['label']

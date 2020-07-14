@@ -796,15 +796,13 @@ class ExplainableGP(object):
             if opth_data.suffix == '.p':
                 data_prepared = pickle_load(opth_data)
             else:
-                self.env_vars, self.data_train, self.data_control = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
+                data_prepared = data_from_csv(opth_data, delimiter=delimiter)
 
         elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier sfeh load file
             data_prepared = pickle_load(self.root_path('samples_ready_p'))
         elif Path.is_file(self.root_path('samples_csv')):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file
-            self.env_vars, self.data_train, self.data_control = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
-
+            data_prepared = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
             print(f'Prepared the raw {self.file_loc("samples_csv")} behaviour. Saving for next run.')
-            data_prepared = (self.env_vars, self.data_train, self.data_control)  # sfeh version1 remove numpy version
             pickle_dump(self.root_path('samples_ready_p'), data_prepared)
         else:
             raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')

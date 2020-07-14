@@ -109,8 +109,7 @@ class ExplainableGP(object):
 
                 # /agents/
                 'trees_tex': 'agents/agents_trees.tex',
-                'file_pycode': 'agents/agents.py',
-                'file_pycode_eval': 'agents/eval_agents.py',
+                'folder_pycode': 'agents/',
 
                 # /info/
                 'file_pareto': 'info/paretofront.yaml',
@@ -355,7 +354,7 @@ class ExplainableGP(object):
                 col_label = x['label']
                 col = x['pos']
                 temp_diff = obs_get_timedelta(col_label)
-                core_label = obs_get_corelabel(col_label)
+                core_label = obs_get_family(col_label)
                 if 'RewardTotal' in core_label:  # todo damn yo
                     continue
                 if x.get('minmax') is None:
@@ -756,8 +755,9 @@ class ExplainableGP(object):
             self.file_pareto_latex()
             self.file_pareto_pycode()
         except Exception as ex:
+            raise
             print(f'asdasd exception {ex}')
-        
+
         return
 
     # +++++++++++++++++++++++++++++++++++++++++++++
@@ -910,6 +910,12 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
+
+        # for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
+        #     if 'RewardTotal' in obs_name:
+        #         continue
+        #     obs_min, obs_max = obs_info.get('minmax')
+        #     obs_x_info[ii] = {'bins': np.linspace(obs_min, obs_max, 10 + 1)}  # sfeh 32 bins?
         # def histograms_actions(self):
         #
         #     # >>> Histograms for every dimension
@@ -938,11 +944,6 @@ class ExplainableGP(object):
 
         max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
 
-        for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
-            obs_min, obs_max = obs_info.get('minmax')
-
-            obs_x_info[ii] = {'bins': np.linspace(obs_min, obs_max, 32 + 1)}  # sfeh 32 bins?
-
         for a_ii, (parsim, fitness, meta) in enumerate(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
             tree = karoo_tree_from_expr(expr_raw, self.env_vars)
@@ -960,16 +961,18 @@ class ExplainableGP(object):
             agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
             for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
+                if 'RewardTotal' in obs_name:
+                    continue
                 col = obs_info.get('pos')
                 if delete_this_pandas:
                     histogram_data = self.data_train[:, col]
                 else:
                     histogram_data = self.data_train[obs_name]
-                hist, _ = np.histogram(histogram_data, bins=obs_x_info[ii]['bins'], weights=pairwise_fitness)
+                hist, _ = np.histogram(histogram_data, bins=16 + 1, weights=pairwise_fitness)
                 max_fails_per_bin = max(max(hist), max_fails_per_bin)
-                agent_dimatrix[a_ii]['obs-specific'] = {}
-                agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
-                obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
+                # agent_dimatrix[a_ii]['obs-specific'] = {}
+                # agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
+                # obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
 
         for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
 
@@ -984,8 +987,6 @@ class ExplainableGP(object):
                 action_bins = np.linspace(-(breite+act_range), +(breite+act_range), num_bins+1)  # sfeh 10 bins?
 
             fig, ax = plt.subplots()
-            # ax.hist(action_hist_data[enum_aii], bins=action_bins)  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            # options: density = True, cumulative = True, np.clip(), np.diff(np.unique(data)).min() for
             ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
             ax.set_ylim(0, len(self.data_train))  # sfeh better size? max? # self.env_vars['action_at'][self.config['eval_action']]
             ax.set_ylabel('Frequency')
@@ -1138,29 +1139,40 @@ class ExplainableGP(object):
             py_return = f'return max({action_min}, min({action_max}, int(round(action))))\n'
         else:
             py_return = 'return action\n'
+        obs_time = None
+        for obs_name in self.env_vars['obs_name']:
+            if 'RewardTotal' in obs_name:
+                continue
+            assign_input = []
+            obs_family, obs_time = observation_get_family_and_time(obs_name, none_return=None)
+            if 'RewardTotal' in obs_name:
+                continue
+            if obs_time is None:
+                pass
+            else:
+                assign_input.append(obs_name)
+        else:
+            if obs_time is not None:
+                assign_input = f"{', '.join(assign_input)} = input\n"
 
-        ## cartPos, cartVel = input
-        ## {}
-        ## return max(0, min(2, int(round(action))))
-        indent_twice = textwrap.indent(f"{', '.join(self.env_vars['obs_name'])} = input\n"
-                                       "{}\n"
-                                       f"{py_return}", '\t')
+        function_body = textwrap.indent(f"{assign_input}"
+                                        "action = {}\n"
+                                        f"{py_return}", '\t')
 
-        indent_once = textwrap.indent(f"def decide(self, input):\n"
-                                      f"{indent_twice}\n", '\t')
+        complete_function = textwrap.indent(f"def decide(self, input):\n"
+                                            f"{function_body}\n", '\t')
 
         # Agents
         all_agents = []
         all_agent_names = []
         for (parsim, fitness, meta) in self.pareto:
-            py_agent_name = f'{self.name}{parsim:.0f}'
+            py_agent_name = f'{self.name}_{parsim:.0f}'
             tree = karoo_tree_from_expr(meta['expr_sym'], self.env_vars)
             all_agent_names.append(py_agent_name)
-            all_agents.append(f"class {py_agent_name}:\n\n"
-                              f"{indent_once}"
-                              f"action = {tree_get_pycode(tree)}")
+            all_agents.append(f"class {py_agent_name}:\n"
+                              f"{complete_function.format(tree_get_pycode(tree))}")
 
-        pycode_agents = '\n'.join(all_agents)
+        pycode_agents = '\n\n'.join(all_agents)
         pycode_names = ', '.join(all_agent_names)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
         pycode_complete_agents = "import math\n\n" \
@@ -1168,12 +1180,10 @@ class ExplainableGP(object):
             f"all_agents = [{pycode_names}]\n" \
             f"agent_tuples = [{agent_tuples}]\n\n"  # -> ('Agent_34', Agent_34())
 
-        pth = self.file_make_dir_root('file_pycode')
+        pth = file_make_dir(self.root_path('folder_pycode') / f"agent{self.config['eval_action']}.py")
         with Path.open(pth, 'w') as file:
             file.write(pycode_complete_agents)
             self.printpl('ff', f'{pth.as_posix()}')
-
-        # self.call_custom_mountaincar_file(pycode_complete_agents)  # sfeh root path is instance variabel
 
         return
 
@@ -1360,7 +1370,7 @@ class ExplainableGP(object):
                 if is_negative:
                     obs_label = obs_label[1:]
 
-                label_main = obs_get_corelabel(obs_label)
+                label_main = obs_get_family(obs_label)
                 if 'RewardTotal' in label_main:  # todo damn yo
                     raise
 

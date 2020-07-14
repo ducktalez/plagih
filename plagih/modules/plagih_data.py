@@ -53,7 +53,7 @@ def samples_header_line(row):
 
         if any(x in role for x in ['input', 'observation', 'obs']):
             temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
-            core_label = obs_get_corelabel(col_label)
+            core_label = obs_get_family(col_label)
             if 'RewardTotal' in core_label:  # todo damn yo
                 continue
             try:
@@ -125,6 +125,21 @@ def header_entry_get_roleguess(env_observation, name, ii, row):
     return role
 
 
+def observation_get_family_and_time(name, re_pattern='_\d+$', none_return=0):
+    """
+    """
+
+    core_label = re.split(re_pattern, name)[0]
+
+    try:
+        re_search = re.search(re_pattern, name)  # re_search => ['_12']
+        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
+        temp_diff = int(temp_diff)
+    except Exception:
+        temp_diff = none_return  # there is only the latest version
+    return core_label, temp_diff
+
+
 def obs_get_timedelta(name, re_pattern='_\d+$', none_return=0):
     """
     'cartVel_12' -> core_label = 'cartVel', temp_diff = 12
@@ -139,7 +154,7 @@ def obs_get_timedelta(name, re_pattern='_\d+$', none_return=0):
         return none_return  # there is only the latest version
 
 
-def obs_get_corelabel(name, re_pattern='_\d+$'):
+def obs_get_family(name, re_pattern='_\d+$'):
     """
     variable like 'temperature_12' is variable 12 steps from past (13th)
     """

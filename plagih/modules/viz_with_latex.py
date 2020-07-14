@@ -3,7 +3,7 @@ Visualising Trees with latex.
 """
 from plagih.modules.plagih_tree import *
 import re
-from plagih.modules.plagih_data import obs_get_timedelta, obs_get_corelabel
+from plagih.modules.plagih_data import obs_get_timedelta, obs_get_family
 
 
 def latex_treeviz_full(tikz_forest_list, preamble=''):
@@ -124,7 +124,7 @@ def label_bracket_beautification(label):
     elif label_is_observation(label):  # node is a terminal - either observation or variable
         obs_time = obs_get_timedelta(label, none_return=None)
         if obs_time is not None:
-            obs_family = obs_get_corelabel(label)
+            obs_family = obs_get_family(label)
             label = f"{obs_family}$_{{{obs_time}}}$"
     else:
         label = f"${label_tex_replace_digits(label)}$"
@@ -233,15 +233,15 @@ def tree_get_expr_latextight(tree, node_id=root_id):
 
     if tree_node_get_arity(tree, node_id) > 0:
         child_tex_list = [tree_get_expr_latextight(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
-        label = f"{op[label]['latexF'].format(*child_tex_list)}"
+        label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
     else:
         if label_is_observation(label):  # node is a terminal - either observation or variable
             obs_time = obs_get_timedelta(label, none_return=None)
             if obs_time is not None:
-                obs_family = obs_get_corelabel(label)
-                label = f"ää\\textää{obs_family}öö_ää{obs_time}öööö"  # workaround
+                obs_family = obs_get_family(label)
+                label = f"{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
         else:
-            label = f"ää{label_tex_replace_digits(label)}öö"
+            label = f"{{{label_tex_replace_digits(label)}}}"
         return label
 
     return label

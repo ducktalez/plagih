@@ -1,6 +1,6 @@
 import os
 
-from plagih.modules.plagih_data import obs_get_timedelta
+from plagih.modules.plagih_data import obs_get_timedelta, observation_get_family_and_time
 from plagih.modules.plagih_sympy_extras import plagih_sympify
 from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
@@ -1002,6 +1002,19 @@ def tree_get_pycode(tree, node_id=root_id):
     label = tree_node_get_label(tree, node_id)
 
     if arity == 0:
+        if label_is_observation(label):
+            ib_sfeh_dict = {'p': 'SetPoint',
+                            'v': 'Velocity',
+                            'g': 'Gain',
+                            'h': 'Shift',
+                            'f': 'Fatigue',
+                            'c': 'Consumption'}
+            ib_sfeh_rev = {v: k for k, v in ib_sfeh_dict.items()}
+            obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
+            if obs_time is not None:
+                geth_name = ib_sfeh_rev[obs_family]
+                return f"self.get_h({geth_name}, {obs_time})"
+
         return f'{label}'
     else:
         childs = tree_node_get_childs(tree, node_id)

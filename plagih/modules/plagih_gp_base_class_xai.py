@@ -42,7 +42,7 @@ class ExplainableGP(object):
 
     def __init__(self, plagih_root, root_dir, user_config, opth_preparedp=None, opth_operators=None):
 
-        self.name = root_dir.name  # sfeh probably there are better names
+        self.name = root_dir.resolve().name  # sfeh probably there are better names
         print(f'\n'
               f'\tInitializing Plagih. \n'
               f'\tName: {BColors.CYAN}{self.name}{BColors.RESET}. \n'
@@ -90,7 +90,7 @@ class ExplainableGP(object):
             'period': {'time_plots': None,  # in sec
                        'gen_plots': 1,  # in gen counts
                        'time_save': None,  # in sec
-                       'gen_save': 5,  # in gen counts
+                       'gen_save': 10,  # in gen counts
                        'time_analysis': None,  # in gen counts
                        'gen_analysis': 5},  # in gen counts
 
@@ -139,7 +139,6 @@ class ExplainableGP(object):
                 else:
                     d[k] = v
             return d
-
         self.config = update_dict_nested(self.config, user_config)  # overwrites the default config-values with user-loaded config
 
         self.conf = GpConfig(self.config)  # todo
@@ -746,17 +745,13 @@ class ExplainableGP(object):
         writes all important gp_files
 
         """
-        try:
-            self.file_pareto_txt()
-            self.file_population_base_karoo('last')
+        self.file_pareto_txt()
+        self.file_population_base_karoo('last')
 
-            self.pareto_sort()
-            self.file_pareto_histograms()
-            self.file_pareto_latex()
-            self.file_pareto_pycode()
-        except Exception as ex:
-            raise
-            print(f'asdasd exception {ex}')
+        self.pareto_sort()
+        self.file_pareto_histograms()
+        self.file_pareto_latex()
+        self.file_pareto_pycode()
 
         return
 
@@ -815,11 +810,24 @@ class ExplainableGP(object):
             pass  # sfeh: if you want to load information from extra file, check for this file here
         else:
             # sfeh env_vars, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
-            yaml_dump(self.root_path('env_vars_yaml'), data_prepared[0], print_type=self.print_type)
+            pass  # todo
+            # yaml_dump(self.root_path('env_vars_yaml'), data_prepared[0], print_type=self.print_type)
 
         self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
         self.update_old_runs()
         # self.remove_old_variables()
+
+        # if delete_this:
+        #     action = self.env_vars['action_at'][self.config['eval_action']]
+        #     action_col = action['pos']
+        #     observation = self.env_vars['obs_name']['Fatigue_4']
+        #     observation_col = observation['pos']
+        #
+        #     fat4 = self.data_train[:, action_col]
+        #     act1 = self.data_train[:, observation_col]
+        #
+        #     print('ASD', np.sum(fat4 - act1))
+        #     print('ASD', action['name'])
 
         return
 
@@ -859,6 +867,7 @@ class ExplainableGP(object):
                 print_warning('w', f'Operators are not complete')
             if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
                 print_warning('w', f'Operators do not allow closure')
+
         check_allow_closure(operators)
 
         self.choose_oparray2 = oparray_from_list(operators)
@@ -885,9 +894,11 @@ class ExplainableGP(object):
         if take_data_samples:
             obsnames = self.env_vars['obs_name'].keys()
             if delete_this_version1:
-                obs_samples = self.data_train.flatten()
-            else:  # this is now pandas
-                obs_samples = self.data_train[obsnames].to_numpy().flatten()
+                try:
+                    obs_samples = self.data_train.flatten()
+                except:
+                    obs_samples = self.data_train[obsnames].to_numpy().flatten()
+
             obs_samples = np.random.choice(obs_samples, size=take_data_samples)
             choose_distributions['2f'].extend([lambda: random.choice(obs_samples)]),  # take one
 
@@ -909,7 +920,6 @@ class ExplainableGP(object):
         # histogram_data = np.multiply.reduce(histogram_data, axis=1)
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
-
 
         # for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
         #     if 'RewardTotal' in obs_name:
@@ -942,7 +952,7 @@ class ExplainableGP(object):
         agent_dimatrix = {}
         obs_x_info = {}  # [None] * data_dims
 
-        max_fails_per_bin = 0  # this value will define the y-axis height for all the histograms to look the same
+        max_fails_per_bin = len(self.data_train)  # this value will define the y-axis height for all the histograms to look the same
 
         for a_ii, (parsim, fitness, meta) in enumerate(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
@@ -952,29 +962,30 @@ class ExplainableGP(object):
             tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True,
                                  eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results)
 
-            deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
-            pairwise_fitness = tf_results['pairwise_fitness']
-            agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
-            agent_dimatrix[a_ii]['tf_fitness'] = tf_results['fitness']
-            agent_dimatrix[a_ii]['pairwise_fitness'] = copy.deepcopy(pairwise_fitness)
-            agent_dimatrix[a_ii]['parsim'] = parsim
-            agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
-            for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
-                if 'RewardTotal' in obs_name:
-                    continue
-                col = obs_info.get('pos')
-                if delete_this_pandas:
-                    histogram_data = self.data_train[:, col]
-                else:
-                    histogram_data = self.data_train[obs_name]
-                hist, _ = np.histogram(histogram_data, bins=16 + 1, weights=pairwise_fitness)
-                max_fails_per_bin = max(max(hist), max_fails_per_bin)
-                # agent_dimatrix[a_ii]['obs-specific'] = {}
-                # agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
-                # obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
+            # pairwise_fitness = tf_results['pairwise_fitness']
+            # agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
+            # agent_dimatrix[a_ii]['tf_fitness'] = tf_results['fitness']
+            # agent_dimatrix[a_ii]['pairwise_fitness'] = copy.deepcopy(pairwise_fitness)
+            # agent_dimatrix[a_ii]['parsim'] = parsim
+            # agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
-        for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
+            # for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
+            #     if 'RewardTotal' in obs_name:
+            #         continue
+            #     col = obs_info.get('pos')
+            #     if delete_this_pandas:
+            #         histogram_data = self.data_train[:, col]
+            #     else:
+            #         histogram_data = self.data_train[obs_name]
+            #     # hist, _ = np.histogram(histogram_data, bins=16 + 1, weights=pairwise_fitness)
+            #     # max_fails_per_bin = max(max(hist), max_fails_per_bin)
+            #
+            #     # agent_dimatrix[a_ii]['obs-specific'] = {}
+            #     # agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
+            #     # obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
+
+        # for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
 
             act_min, act_max = self.env_vars['action_at'][self.config['eval_action']]['minmax']
             if 'discrete' in self.kernel.kernel:
@@ -983,11 +994,13 @@ class ExplainableGP(object):
             else:
                 act_range = act_max - act_min
                 num_bins = 16 + 1  # +1 is extra bin for 0
-                breite = 0.5 * (act_range*2)/num_bins
-                action_bins = np.linspace(-(breite+act_range), +(breite+act_range), num_bins+1)  # sfeh 10 bins?
+                breite = 0.5 * (act_range * 2) / num_bins
+                action_bins = np.linspace(-(breite + act_range), + (breite + act_range), num_bins + 1)  # sfeh 10 bins?
+
+            deviation_per_action = (tf_results['kernel_result'] - tf_results['solution_goal'])
 
             fig, ax = plt.subplots()
-            ax.hist(agent_info['result-solution'], bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
+            ax.hist(deviation_per_action, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
             ax.set_ylim(0, len(self.data_train))  # sfeh better size? max? # self.env_vars['action_at'][self.config['eval_action']]
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
@@ -1140,20 +1153,17 @@ class ExplainableGP(object):
         else:
             py_return = 'return action\n'
         obs_time = None
+        assign_input = []
         for obs_name in self.env_vars['obs_name']:
             if 'RewardTotal' in obs_name:
                 continue
-            assign_input = []
             obs_family, obs_time = observation_get_family_and_time(obs_name, none_return=None)
-            if 'RewardTotal' in obs_name:
-                continue
-            if obs_time is None:
-                pass
-            else:
-                assign_input.append(obs_name)
+            assign_input.append(obs_name)
         else:
-            if obs_time is not None:
+            if obs_time is None:
                 assign_input = f"{', '.join(assign_input)} = input\n"
+            else:
+                assign_input = ''
 
         function_body = textwrap.indent(f"{assign_input}"
                                         "action = {}\n"
@@ -1165,19 +1175,22 @@ class ExplainableGP(object):
         # Agents
         all_agents = []
         all_agent_names = []
+        all_more_info = []
+
         for (parsim, fitness, meta) in self.pareto:
-            py_agent_name = f'{self.name}_{parsim:.0f}'
+            agent_name = f'{self.name}_{parsim:.0f}'
             tree = karoo_tree_from_expr(meta['expr_sym'], self.env_vars)
-            all_agent_names.append(py_agent_name)
-            all_agents.append(f"class {py_agent_name}:\n"
+            all_agent_names.append(agent_name)
+            all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
+            all_agents.append(f"class {agent_name}:\n"
                               f"{complete_function.format(tree_get_pycode(tree))}")
 
         pycode_agents = '\n\n'.join(all_agents)
-        pycode_names = ', '.join(all_agent_names)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
+        all_more_info = ', '.join(all_more_info)
         pycode_complete_agents = "import math\n\n" \
             f"{pycode_agents}\n\n" \
-            f"all_agents = [{pycode_names}]\n" \
+            f"all_agents_more = [{all_more_info}]\n" \
             f"agent_tuples = [{agent_tuples}]\n\n"  # -> ('Agent_34', Agent_34())
 
         pth = file_make_dir(self.root_path('folder_pycode') / f"agent{self.config['eval_action']}.py")
@@ -1775,7 +1788,8 @@ class ExplainableGP(object):
         except Exception as evalex:
             raise Exception(f'eval:{evalex}')
 
-        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results)
+        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, eval_action=self.config['eval_action'],
+                                origin_pairwise_fitness=self.origin_results)
 
         if not check_value_is_real(fitness_train):
             raise Exception(f'Fitness is inf or nan: {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
@@ -1860,8 +1874,7 @@ class ExplainableGP(object):
                  marker='.',
                  step_where='post',
                  set_right=self.config['parsimony_max'],
-                 beyond_lines=True,
-                 save_tikz=True)
+                 beyond_lines=True)
 
         if self.config['plot_verbosity'].get('fitness_variance') == 'y':
             data_tuples = plotendify_me(self.monitoring_dict['fitness_variance'])
@@ -1871,14 +1884,13 @@ class ExplainableGP(object):
         data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
         data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
         plot_end(data_tuples, path_plots, title='tree complexity (avg and std. error)', x_label='Generation', y_label='variance',
-                 marker='', fill_variance=data_tuples_variance, save_tikz=True)
+                 marker='', fill_variance=data_tuples_variance)
 
         data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
         plot_end(data_tuples, path_plots, title='best candidate', x_label='Generation',
                  y_label='error',
                  linestyle='dashed',
-                 step_where='post',
-                 save_tikz=True)
+                 step_where='post')
 
         return
 

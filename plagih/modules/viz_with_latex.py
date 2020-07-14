@@ -160,7 +160,7 @@ def latex_brackettree(tree, node_id=root_id):
     modifiable = tree_node_is_modifiable(tree, node_id)
     extras = label_bracket_extras(label, arity, xtype, modifiable)
     label_bra = label_bracket_beautification(label)
-    label_bra = helper_format_brackets(label_bra)
+    # label_bra = helper_format_brackets(label_bra)
     label_bra = "{" + label_bra + "}" + extras  # works better in latex-
 
     # now, append the recursion
@@ -247,15 +247,15 @@ def tree_get_expr_latextight(tree, node_id=root_id):
     return label
 
 
-def helper_format_brackets(label):
-    label = label.replace('ää', '{')
-    label = label.replace('öö', '}')
-    return label
+# def helper_format_brackets(label):
+#     # label = label.replace('ää', '{')  # todo
+#     # label = label.replace('öö', '}')
+#     return label
 
 
 def latex_get_tighttree(tree):
     """
-    reduce
+    reduce expressions of large trees
 
     """
 
@@ -307,7 +307,8 @@ def latex_get_tighttree(tree):
                 # expr_raw = tree_get_expr_raw(tree, node_id)
                 # label = expr_sympify(expr_raw)
                 label = tree_get_expr_latextight(tree, node_id=node_id)
-                label = '{$' + helper_format_brackets(label) + '$}'
+                # label = helper_format_brackets(label)
+                label = '{$' + label + '$}'
                 arity = 0
                 # label = re.sub('_', '{\\\\textunderscore}', label)   # sfeh workaround
             else:

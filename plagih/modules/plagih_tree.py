@@ -1011,9 +1011,11 @@ def tree_get_pycode(tree, node_id=root_id):
                             'c': 'Consumption'}
             ib_sfeh_rev = {v: k for k, v in ib_sfeh_dict.items()}
             obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
-            if obs_time is not None:
+            if obs_time is None:
+                pass
+            else:
                 geth_name = ib_sfeh_rev[obs_family]
-                return f"self.get_h({geth_name}, {obs_time})"
+                return f"self.get_h('{geth_name}', {obs_time})"
 
         return f'{label}'
     else:

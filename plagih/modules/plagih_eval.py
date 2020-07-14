@@ -308,13 +308,18 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     # for obs_name, obs_info in env_vars['obs_name'].items():
 
     for obs_info in env_vars['obs_name'].values():
+        if 'RewardTotal' in obs_info['name']:
+            continue
+        if obs_info['temp_diff'] > 10:  # todo
+            continue
         col_label = obs_info['label']
-        pos = obs_info['pos']
         tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
-        if delete_this_version1 or isinstance(pd_data, np.ndarray):
+        if delete_this_version1 and isinstance(pd_data, np.ndarray):
+            pos = obs_info['pos']
             tensors[col_label] = tf.constant(pd_data[:, pos], dtype=tf_dtype)  # converts data_csv_path into vectors
         elif TEST_PHASE:
-            tensors[col_label] = tf.constant(pd_data[col_label], dtype=tf_dtype)
+            # delete = pd_data[col_label]
+            tensors[col_label] = tf.constant(pd_data[col_label])  #, dtype=tf_dtype  # todo?
         else:
             raise Exception('Tone of these two should happen. need to have tensors x~~D')
 
@@ -323,7 +328,10 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     action_label = env_vars['action_at'][eval_action]['label']
     column = env_vars['action_at'][eval_action]['pos']
     if '2f' in action_xtype:
-        tensors[action_label] = tf.constant(pd_data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
+        if delete_this_version1 and isinstance(pd_data, np.ndarray):
+            tensors[action_label] = tf.constant(pd_data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
+        else:
+            tensors[action_label] = tf.constant(pd_data[action_label])  # converts data_csv_path into vectors
     else:
         print_e('action {} has these infos: {}.'.format(action_label, env_vars['action_at'][0]))
     return tensors

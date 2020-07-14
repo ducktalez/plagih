@@ -181,7 +181,7 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
     return temp_diff
 
 
-def data_from_csv(samples_file, test_size=0.2, delimiter=','):
+def data_from_csv(samples_file, test_size=0.0, delimiter=','):  # todo test_size = 0.2
     """
     loads the data for the regression from a .csv-file.
 

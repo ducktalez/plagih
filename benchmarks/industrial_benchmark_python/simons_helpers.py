@@ -13,7 +13,3 @@ def make_labellist_tree_files():
                                  'label_list,*,-29.22,Shift_0']):
         with Path.open(Path('tree_labels-{}.csv'.format(ii)), 'w+') as file:
             file.write(labelz)
-
-
-def help_make_programs(pareto_line):
-    pass

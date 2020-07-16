@@ -11,7 +11,9 @@ import json
 import collections.abc
 import textwrap
 from plagih.modules.plagih_data import *
+from plagih.modules.Ptree2 import *
 import random
+
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 PLAGIH_VERSION = 0.963  # must only update if vital changes were made
@@ -958,9 +960,11 @@ class ExplainableGP(object):
 
         for a_ii, (parsim, fitness, meta) in enumerate(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            tree = karoo_tree_from_expr(expr_raw, self.env_vars)
-            expr_sym = tree_get_expr_sym(tree)
-
+            # tree = karoo_tree_from_expr(expr_raw, self.env_vars)
+            treeX = cooltree_from_expr(expr_raw, self.env_vars)  # todo pareto should hold the label_list or the tree
+            # expr_sym = tree_get_expr_sym(tree)
+            expr_raw = treeX.get_expr_raw()
+            expr_sym = expr_sympify(expr_raw)
             tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True,
                                  eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results)
 
@@ -1085,9 +1089,11 @@ class ExplainableGP(object):
 
         for (parsim, fitness, meta) in self.pareto:
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            tree = karoo_tree_from_expr(expr_raw, self.env_vars)
-            tree = self.tree_finish_nodes(tree, last_evolution='texify')
-
+            # tree = karoo_tree_from_expr(expr_raw, self.env_vars)
+            cooltree = cooltree_from_expr(expr_raw, self.env_vars)
+            # tree = self.tree_finish_nodes(tree, last_evolution='texify')
+            cooltree.finish_nodes('texify')
+            tree = tree_from_ptree2(cooltree)
             latex_element.append(f'Pareto entry at parsimony {parsim} with fitness {meta["fitness_train"]}.\n')
 
             forest_viz = latex_tree_get_forest(tree, tight_viz=False)
@@ -1117,10 +1123,12 @@ class ExplainableGP(object):
 
         latex_element = []
 
-        for ii, tree in enumerate(self.pop_base):
+        for ii, cooltree in enumerate(self.pop_base):
             # if ii % 10 == 0 and ii < 61:
-            if tree_check_deep(tree, print_type=self.print_type):
-                latex_element.append(f'Pop base tree {ii} with fitness {tree_get_fitness(tree)} from last-mod {tree_get_last_evolution(tree)}.\n')
+            if delete_this:  # tree_check_deep(tree, print_type=self.print_type):
+                latex_element.append(f'Pop base tree {ii} with fitness {cooltree.meta.fitness_train} from last-mod {cooltree.meta.last_evolution}.\n')
+
+                tree = tree_from_ptree2(cooltree)  # todo
 
                 forest_viz = latex_tree_get_forest(tree, tight_viz=False)
                 latex_element.append(forest_viz)
@@ -1181,11 +1189,12 @@ class ExplainableGP(object):
 
         for (parsim, fitness, meta) in self.pareto:
             agent_name = f'{self.name}_{parsim:.0f}'
-            tree = karoo_tree_from_expr(meta['expr_sym'], self.env_vars)
+            # tree = karoo_tree_from_expr(meta['expr_sym'], self.env_vars)
+            cooltree = cooltree_from_expr(meta['expr_sym'], self.env_vars)
             all_agent_names.append(agent_name)
             all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
             all_agents.append(f"class {agent_name}:\n"
-                              f"{complete_function.format(tree_get_pycode(tree))}")
+                              f"{complete_function.format(cooltree.get_pycode())}")
 
         pycode_agents = '\n\n'.join(all_agents)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
@@ -1245,22 +1254,25 @@ class ExplainableGP(object):
         Safely return an origin_meta tree
         """
         if self.origin_exists():
-            tree_origin = self.origin_tree.copy()
+            tree_origin = copy.deepcopy(self.origin_tree)
         else:
             tree_origin = None
         return tree_origin
 
-    def treelut_tree_add(self, tree, fitness_train=None, parsimony=None, expr_raw=None, expr_sym=None):
+    def treelut_tree_add(self, cooltree: PlaTree2, fitness_train=None, parsimony=None, expr_raw=None, expr_sym=None):
         """
         update selected values in self.tree_meta
         LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         """
         if not fitness_train:
-            fitness_train = tree_get_fitness(tree)
+            # fitness_train = tree_get_fitness(tree)
+            fitness_train = cooltree.meta.fitness_train
         if not parsimony:
-            parsimony = tree_get_parsimony(tree)
+            # parsimony = tree_get_parsimony(tree)
+            parsimony = cooltree.meta.complexity  # todo complexity vs parsimony?
         if not expr_raw:
-            expr_raw = tree_get_expr_raw(tree, node_id=root_id)
+            # expr_raw = tree_get_expr_raw(tree, node_id=root_id)
+            expr_raw = cooltree.core.get_expr_raw()
         if not expr_sym:
             expr_sym = expr_sympify(expr_raw)
 
@@ -1269,7 +1281,8 @@ class ExplainableGP(object):
                 'expr_raw': expr_raw,
                 'expr_sym': expr_sym}
 
-        tree_ident = tree_hash(tree)
+        # tree_ident = tree_hash(tree)
+        tree_ident = hash(cooltree)
 
         self.tree_lut[tree_ident] = meta
         return

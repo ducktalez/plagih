@@ -78,6 +78,7 @@ class CoolCore:
     def check_all(self):
         if self.arity != len(self.childs):
             raise
+
         return True
 
     def get_expr_raw(self):
@@ -138,6 +139,31 @@ class CoolCore:
 
         else:
             raise Exception(f'Branch could not be inserted, node was not found')
+
+    def get_pycode(self):
+
+        if self.arity == 0:
+            if label_is_observation(self.label):
+                ib_sfeh_dict = {'p': 'SetPoint',
+                                'v': 'Velocity',
+                                'g': 'Gain',
+                                'h': 'Shift',
+                                'f': 'Fatigue',
+                                'c': 'Consumption'}
+                ib_sfeh_rev = {v: k for k, v in ib_sfeh_dict.items()}
+                obs_family, obs_time = observation_get_family_and_time(self.label, none_return=None)
+                if obs_time is None:
+                    pass
+                else:
+                    geth_name = ib_sfeh_rev[obs_family]
+                    return f"self.get_h('{geth_name}', {obs_time})"
+
+            return f'{self.label}'
+        else:
+            results = []
+            for child in self.childs:
+                results.append(child.get_pycode)  # = tree_node_get_label(tree, int(child))
+            return op[self.label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
 
     def get_apted_notation(self):
         """
@@ -205,26 +231,66 @@ class CoolCore:
         node = self.node_from_path(nodepath)
         node.child_append(child)
 
+    def workaround_normalize_exponentiation(self, normalize_me=False):
+        """
+        a**b requires b to be discrete.
+        """
+        # 1. ** should have an int as second number
+
+        if normalize_me:
+            try:
+                self.label = float(round(float(self.label)))
+            except ValueError:
+                pass  # todo: implicit round operator in TF-grapf and evaluation?
+
+        if self.label == '**':
+            normalize_me = True
+        for ii, cc in enumerate(self.childs):
+            if ii == 1 and normalize_me:
+                cc.workaround_normalize_exponentiation(normalize_me=True)
+            else:
+                cc.workaround_normalize_exponentiation()
+        return
+
+    def set_fix_nodes(self, origin_coolcore: 'CoolCore'):
+        # todo not necessary?
+        if origin_coolcore.is_fix:
+            self.is_fix = True
+            for ii, cc in enumerate(self.childs):
+                cc.set_fix_nodes(origin_coolcore.childs[ii])
+
 
 class PlaTree2:
 
     class PtreeMeta:
-        def __init__(self, fitness=None):
+        def __init__(self, fitness_train=None):
             self.hash = None
-            self.fitness = fitness
+            self.fitness_train = fitness_train
             self.complexity = None
             self.node_len = None
             self.depth = None
             self.complete = None
+            self.last_evolution = None
 
         def __str__(self):
-            return f"hash: {self.hash}, fitness: {self.fitness}, complexity: {self.complexity}"
+            return f"hash: {self.hash}, fitness: {self.fitness_train}, complexity: {self.complexity}"
 
     def __init__(self, root_node: CoolCore, fitness=None):
         self.core = root_node
         self.meta = self.PtreeMeta(fitness)
         self.history = deque([], maxlen=10)  # sfeh arbitrary value of 10 historic metainfo of this tree
         self.finalize()
+
+    def __hash__(self):
+        # todo
+        return hash(self)
+
+    def finish_nodes(self, last_evolution, origin_tree: CoolCore = None):
+        # todo
+        if origin_tree is not None:
+            self.core.set_fix_nodes(origin_coolcore=origin_tree)
+        self.core.workaround_normalize_exponentiation()
+        self.meta.last_evolution = last_evolution  # sfeh: should this be done during the evolve process?
 
     def __len__(self):
         """
@@ -245,6 +311,9 @@ class PlaTree2:
     def finalize(self):
         self.core.finalize_set_depth(depth=self.core.depth)
         self.complete = True
+
+    def get_pycode(self):
+        return self.core.get_pycode()
 
     def evolve_start(self):
         """
@@ -318,13 +387,22 @@ def tree_from_ptree2(platree2: PlaTree2):
 
 def cooltree_from_labellist(label_list, modify_list=None):
     xtype_list = xtypes_from_labels(label_list)
-    tree = Ptree_karoo(label_list, xtype_list).get_uninstanced_tree()
+    tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
     cooltree = PlaTree2(pnode_from_oldtree(tree))
     return cooltree
 
 
-def test_insert_subtree():
+def cooltree_from_expr(expr, env_vars):
 
+    label_list = ast_convert_from_expr(expr, build=True)
+    xtype_list = xtypes_from_labels(label_list, env_vars)
+    p_tree = Ptree_karoo(label_list, xtype_list)
+    tree = p_tree.get_uninstanced_tree()
+    coolcore = pnode_from_oldtree(tree)
+    return coolcore
+
+
+def test_insert_subtree():
 
     label_list = ['sin', '+', 'cos', 'Ifte', 1, 2, 3, 4]
     cooltree = cooltree_from_labellist(label_list)

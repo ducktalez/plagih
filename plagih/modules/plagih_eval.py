@@ -425,7 +425,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
             if type(node.op) == ast.USub:
                 return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
                 # return ['-', ['0', ast_convert_from_expr_recursive(node.operand, build=True)]]
-            return [op[type(node.op)]['fun'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
+            return [op[type(node.op)]['fun_label'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
         else:
             return op[type(node.op)]['tf'](
                 ast_convert_from_expr_recursive(node.operand, tensors=tensors))
@@ -433,7 +433,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
         if build:
-            return [op[type(node.op)]['fun'],
+            return [op[type(node.op)]['fun_label'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
                      ast_convert_from_expr_recursive(node.right, build=True)]]
         else:
@@ -443,7 +443,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if build:
-            return ast_chain_bool(node.values, op[type(node.op)]['fun'], build=True)
+            return ast_chain_bool(node.values, op[type(node.op)]['fun_label'], build=True)
         else:
             return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
 
@@ -477,10 +477,10 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
         elif len(node.args) <= 2:
             if build:
                 if len(node.args) == 1:
-                    return [op[node.func.id]['fun'],
+                    return [op[node.func.id]['fun_label'],
                             [ast_convert_from_expr_recursive(node.args[0], build=True)]]
                 elif len(node.args) == 2:
-                    return [op[node.func.id]['fun'],
+                    return [op[node.func.id]['fun_label'],
                             [ast_convert_from_expr_recursive(node.args[0], build=True),
                              ast_convert_from_expr_recursive(node.args[1], build=True)]]
                 else:
@@ -532,6 +532,6 @@ def ast_chain_compare(comparators, ops, tensors=None, build=False):
         return tf.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if build:
-            return [op[type(ops[0])]['fun'], [x, y]]
+            return [op[type(ops[0])]['fun_label'], [x, y]]
         else:
             return op[type(ops[0])]['tf'](x, y)

@@ -19,35 +19,78 @@ class CoolCore:
 
         if xtype is None:
             xtype = xtype_get_from_label(label)
-        label_type = float if xtype[-2:] == '2f' else bool  # todo
         arity = label_get_arity(label) if arity is None else arity
+        type_inputs = float if xtype[-2:] == 'f2' else bool  # todo
 
         self.label = label
-        self.expr_raw = None
+
+        # directly related to the label
+        self.arity = arity
+        self.input_types = [bool, float, float] if label == 'Ifte' else [type_inputs] * arity
+        self.type_output = float if xtype[-2:] == '2f' else bool  # todo
+        self.xtype = xtype  # obsolete?
 
         self.is_fix = is_fix
 
         self.complete = complete  # if the node is correct/done/okay
-        self.childs = childs if childs is not None else []
+
+        self.childs = childs if childs is not None else []  # maybe must be updateds recursively
+
+        # changes after insertion
+        self.nodepath = nodepath if nodepath else []  # go to node x (sfeh: this was a deque?)
         self.depth = depth
         self.childs_depth_max = None
-        self.nodepath = nodepath if nodepath else []  # go to node x (sfeh: this was a deque?)
-        self.label_type = label_type
-        self.arity = arity
-        self.input_types = [bool, float, float] if label == 'Ifte' else [label_type] * arity
-        self.xtype_old = xtype  # obsolete?
+
+        self.label_type = type_inputs
 
     def finalize(self):
         self.finalize_set_depth()
         self.finalize_set_nodepath([0])
-        print('ddddddddddddddddddd')
-        print(self)
-        print(self.nodepath)
-        # fill meta...
-        # eval fitness
-        # eval parsimony
-        # check tree
-        self.complete = True
+        self.workaround_remove_tilde()
+
+    def workaround_remove_tilde(self):
+        if self.label == '~':
+
+            new_core = self.childs[0]
+            self.new_core(new_core)
+
+        for cc in self.childs:
+            cc.workaround_remove_tilde()
+
+    def new_node(self, new_label, new_arity, new_xtype, childs=None):
+        """
+
+        """
+        self.label = new_label
+        self.arity = new_arity
+        self.xtype = new_xtype
+        if childs is not None:
+            self.childs = childs
+
+    def new_core(self, new_core: 'CoolCore'):
+        self.label = new_core.label
+        self.arity = new_core.arity
+        self.xtype = new_core.xtype
+        self.childs = new_core.childs
+
+        type_inputs = float if new_core.xtype[-2:] == 'f2' else bool  # todo
+        self.arity = label_get_arity(new_core.label) if new_core.arity is None else new_core.arity
+        self.input_types = [bool, float, float] if new_core.label == 'Ifte' else [type_inputs] * self.arity
+        self.type_output = float if self.xtype[-2:] == '2f' else bool
+        self.xtype = new_core.xtype  # obsolete?
+        self.label_type = type_inputs
+
+        self.is_fix = new_core.is_fix
+
+        self.complete = new_core.complete  # if the node is correct/done/okay
+
+        self.childs = new_core.childs if new_core.childs else []  # maybe must be updateds recursively
+
+        # changes after insertion
+        # self.nodepath = new_core.nodepath if nodepath else []  # go to node x (sfeh: this was a deque?)  # sfeh not possible at the end!
+        # self.depth = depth  # sfeh not possible
+        # self.childs_depth_max = None  # sfeh not possible
+
 
     def finalize_set_nodepath(self, nodepath):
         """
@@ -59,14 +102,69 @@ class CoolCore:
             nodepath_child = nodepath + [ii]
             child.finalize_set_nodepath(nodepath_child)
 
-    def get_nodes_at_depth(self, depth):
-        if self.depth < depth:
-            return sum([child.get_nodes_at_depth(depth) for child in self.childs], [])
-        elif self.depth == depth:
-            return [self]
+    def labellist_from_coolcore(self):
+        label_list = []
+        max_depth = self.childs_depth_max
+        for depth in range(0, max_depth + 1):
+            labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
+            label_list.extend(labels_at_depth)
+        return label_list
+
+    def labellist_modifylist_from_coolcore(self):
+        label_list = []
+        xtype_list = []
+        modify_list = []
+        max_depth = self.childs_depth_max
+        for depth in range(0, max_depth + 1):
+            labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
+            xtypes_at_depth = [x.xtype for x in self.get_nodes_at_depth(depth)]
+            modify_at_depth = [0 if x.is_fix else 1 for x in self.get_nodes_at_depth(depth)]
+            label_list.extend(labels_at_depth)
+            xtype_list.extend(xtypes_at_depth)
+            modify_list.extend(modify_at_depth)
+        return label_list, xtype_list, modify_list
+
+    def get_nodes_at_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
+        """
+        sum_layers=False, get_closest=True, return_all_layers=False
+
+        """
+        if self.depth < goal_depth:
+            return sum([child.get_nodes_at_depth(goal_depth, only_mutable=only_mutable, get_closest_depth=get_closest_depth) for child in self.childs], [])
         else:
-            print_e('shhosfisufnbikudsrnfg')
-            return
+            if only_mutable and self.is_fix:
+                return []
+            if get_closest_depth and self.depth != goal_depth:
+                return []
+
+            return [self]
+
+    def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
+        """
+        sum_layers=False, get_closest=True, return_all_layers=False
+
+        """
+        child_results = []
+        if self.depth < goal_depth:
+            child_results = sum([child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for child in self.childs], [])
+
+        if only_mutable and self.is_fix or \
+                get_closest_depth and self.depth != goal_depth:
+            my_result = []
+
+        else:
+            my_result = [self]
+
+        return my_result + child_results
+
+    def reduce_me(self, env_vars):  # todo env_vars not required in new tree :P
+        expr_raw = self.get_expr_raw()
+        expr_sym = expr_sympify(expr_raw)
+        new_core = coolcore_from_expr(expr_sym, env_vars)
+        if len(new_core) < len(self):
+            self.new_core(new_core)
+        elif len(new_core) > len(self):
+            raise
 
     def get_mutatable_nodes(self):
         """
@@ -129,16 +227,15 @@ class CoolCore:
         """
         inserting a branch into the place of a node
         """
-        len_nodepath = len(nodepath)
         print('asd nodepath', nodepath)
-        print('asd selfchil', self.childs[nodepath[0]])
-        if len_nodepath == 1:  # [1] -> set child 1
-            self.childs[nodepath[0]] = coolbranch
-        elif len_nodepath > 1:
+        try:
+            print('asd selfchil', self.childs[nodepath[0]])
+        except:
+            print('asd selfchil', self.childs[nodepath[0]])
+        if len(nodepath) > 1:
             self.childs[nodepath[0]].insert_branch(nodepath[1:], coolbranch)
-
-        else:
-            raise Exception(f'Branch could not be inserted, node was not found')
+        else:  # [1] -> set child 1
+            self.childs[nodepath[0]] = coolbranch
 
     def get_pycode(self):
 
@@ -163,7 +260,7 @@ class CoolCore:
             results = []
             for child in self.childs:
                 results.append(child.get_pycode)  # = tree_node_get_label(tree, int(child))
-            return op[self.label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
+            return op[self.label]['pycode'].format(*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
 
     def get_apted_notation(self):
         """
@@ -260,37 +357,54 @@ class CoolCore:
                 cc.set_fix_nodes(origin_coolcore.childs[ii])
 
 
-class PlaTree2:
+class CoolTree:
 
     class PtreeMeta:
         def __init__(self, fitness_train=None):
             self.hash = None
             self.fitness_train = fitness_train
             self.complexity = None
-            self.node_len = None
+            self.expr_raw = None
+            self.expr_sym = None
+
             self.depth = None
             self.complete = None
             self.last_evolution = None
 
         def __str__(self):
-            return f"hash: {self.hash}, fitness: {self.fitness_train}, complexity: {self.complexity}"
+            return f"hash: {self.hash}, fitness: {self.fitness_train}, complexity: {self.complexity}, {self.depth}, {self.last_evolution}, {self.expr_raw}, {self.expr_sym}"
 
-    def __init__(self, root_node: CoolCore, fitness=None):
-        self.core = root_node
+    def __init__(self, coolcore: CoolCore, fitness=None):
+        self.core = coolcore
         self.meta = self.PtreeMeta(fitness)
         self.history = deque([], maxlen=10)  # sfeh arbitrary value of 10 historic metainfo of this tree
-        self.finalize()
+        self.finalize_structure()
 
     def __hash__(self):
-        # todo
-        return hash(self)
+        core = self.core.labellist_from_coolcore()
+        return hash(','.join([str(x) for x in core]))
 
-    def finish_nodes(self, last_evolution, origin_tree: CoolCore = None):
+    def finish_nodes(self, last_evolution, origin_tree: 'CoolTree' = None):
         # todo
         if origin_tree is not None:
-            self.core.set_fix_nodes(origin_coolcore=origin_tree)
+            self.core.set_fix_nodes(origin_coolcore=origin_tree.core)
         self.core.workaround_normalize_exponentiation()
         self.meta.last_evolution = last_evolution  # sfeh: should this be done during the evolve process?
+
+    def workaround_normalize_exponentiation(self):
+        self.core.workaround_normalize_exponentiation()
+
+    def finalize_structure(self):
+        self.core.finalize_set_depth(depth=self.core.depth)
+
+    def finalize_completely(self):
+        self.finalize_structure()
+        self.complete = True
+
+    def finalize_meta(self):
+        self.meta.expr_raw = self.get_expr_raw()
+        self.meta.expr_sym = self.get_expr_sym()
+        print('TODO')
 
     def __len__(self):
         """
@@ -298,19 +412,50 @@ class PlaTree2:
         """
         return len(self.core)
 
+    def get_apted_notation(self):
+        return self.core.get_apted_notation()
+
     def check_all(self):
         if not self.core.check_all():
             raise
         return True
 
+    def get_expr_raw(self):
+        return self.core.get_expr_raw()
+
+    def get_expr_sym(self):
+        expr_raw = self.core.get_expr_raw()
+        return expr_sympify(expr_raw)
+
+    def get_expr(self, sympified=False):
+        expr = self.core.get_expr_raw()
+        if sympified:
+            expr = expr_sympify(expr)  # todo try block??
+        return expr
+
     def insert_branch(self, nodepath, coolbranch):
         self.core.complete = False
-        self.core.insert_branch(nodepath, coolbranch)
-        self.core.finalize()
 
-    def finalize(self):
-        self.core.finalize_set_depth(depth=self.core.depth)
-        self.complete = True
+        if len(nodepath) == 1:  # [1] -> set child 1
+            self.core = coolbranch
+        else:
+            self.core = self.core.insert_branch(nodepath[1:], coolbranch)
+        self.finalize_structure()
+        # self.finalize_meta  # todo
+
+    def insert_branch_v2(self, nodepath, coolbranch):
+        self.meta.complete = False
+
+        if len(nodepath) == 1:  # [1] -> set child 1
+            self.core = coolbranch
+        else:
+            self.core = self.core.insert_branch(nodepath[1:], coolbranch)
+        self.finalize_structure()
+        # self.finalize_meta  # todo
+
+    # def __instancecheck__(self, instance):  # todo
+    def check_all(self):
+        return self.core.check_all()
 
     def get_pycode(self):
         return self.core.get_pycode()
@@ -349,18 +494,105 @@ class PlaTree2:
         """
         return f"Ptree2: {self.core}. Tree meta: {self.meta}"
 
+    def get_nodes_at_depth(self, lvl_goal, only_mutable=False, get_closest_depth=True):
+        """
+        Returns a list with mutatable ids which are *lvl_goal* layers away from non modifiable nodes
+        last_leaves: if you want so save all leave nodes aswell
+        """
 
-def pnode_from_oldtree(tree, node_id=root_id):
+        return self.core.get_nodes_at_depth(lvl_goal, only_mutable=only_mutable, get_closest_depth=get_closest_depth)
+
+    def evolve_reduce(self, env_vars, completely=True):
+        """
+            Reducing a tree to its most basic form with sympify.
+            (completely = False: reduce just one branch. if you wanted to have more complexity)
+            """
+        # def node_reduce():
+        #     nodepath = coolc.nodepath
+        #     coolc_reduced = coolc.reduce_me(env_vars)
+        #     if len(coolc_reduced) < len(coolc):
+        #         self.insert_branch(nodepath, coolc_reduced)
+        if completely:  # reduce the complete tree
+            coolcores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
+            for coolc in coolcores_lv0:
+                coolc.reduce_me(env_vars)
+        else:
+            cool_nodes = self.core.get_mutatable_nodes()
+            cool_functions = [x for x in cool_nodes if x.arity > 0]
+            if cool_functions:
+                chosen = random.choice(cool_functions)
+                # chosen_path = chosen.nodepath
+                chosen.reduce_me(env_vars)
+                # if len(reduced) < len(chosen):
+                #     self.insert_branch(chosen_path, reduced)
+
+        self.finalize_structure()
+
+
+    def get_mutatable_nodes(self):
+        return self.core.get_mutatable_nodes()
+
+    def evolve_mutate_point(self, float_decimals, choose_oparray2, env_vars, choose_distributions, obs_age_max):
+        """
+        Mutate a single mutatable point in any Tree.
+        """
+
+        # 1. choose a node
+        node_list = self.get_mutatable_nodes()
+        node = random.choice(node_list)
+        arity = node.arity
+        if arity > 0:
+            new_label, new_arity, new_xtype = choose_operator(node.xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
+        else:
+            new_label = choose_term(node.xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max)  # 3 -> '2f' -> 5
+
+        node.label = new_label
+        self.finalize_structure()
+        # All node info should stay the same. xtype, arity
+
+    def get_oldtree(self):
+        """
+        Helper to create old tree from cooltree
+        fitness, complexity, last_evolution, xtypes, modifys, labels
+        """
+        label_list, xtype_list, modify_list = self.core.labellist_modifylist_from_coolcore()
+        tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
+        tree = tree_set_fitness(tree, self.meta.fitness_train)
+        tree = tree_set_parsimony(tree, self.meta.complexity)
+        tree = tree_set_last_evolution(tree, self.meta.last_evolution)
+        return tree
+
+
+    def tree_get_oldmeta(self):
+        """
+        Get the meta information from a tree
+        ! This does not evaluate fitness or parsimony !
+        """
+        tree_meta = {}
+        complexity = self.meta.complexity
+        fitness_train = self.meta.fitness_train
+        expr_raw = self.get_expr_raw()
+        expr_sym = expr_sympify(expr_raw=expr_raw)  # sfeh store algo sym?
+
+        tree_meta['parsimony'] = complexity
+        tree_meta['fitness_train'] = fitness_train
+        tree_meta['expr_raw'] = expr_raw
+        tree_meta['expr_sym'] = expr_sym
+        return tree_meta  # todo
+
+
+def coolcore_from_oldtree(tree, node_id=root_id):
     """
     utility function
     karoo_tree to pnode version
     """
-    label = tree_node_get_label(tree, node_id)
-    pnode = CoolCore(label=label)
+    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
+    is_fix = False if tree_node_is_modifiable(tree, node_id) else True
+    pnode = CoolCore(label=label, arity=arity, xtype=xtype, is_fix=is_fix)
 
     childs = tree_node_get_childs(tree, node_id)  # [7, 8, 9]
     for child_id in childs:
-        pchild = pnode_from_oldtree(tree, node_id=child_id)
+        pchild = coolcore_from_oldtree(tree, node_id=child_id)
         pnode.child_append(pchild)
 
     if node_id == root_id:
@@ -369,27 +601,50 @@ def pnode_from_oldtree(tree, node_id=root_id):
     return pnode
 
 
-def pnode2_from_treenode(tree, node_id, is_fix=True):
+def cooltree_from_oldtree(tree, node_id=root_id):
+    """
+    fitness, complexity, last_evolution, xtypes, modifys, labels
+    """
+    try:
+        coolcore = coolcore_from_oldtree(tree, node_id=node_id)
+        parsimony = tree_get_parsimony(tree)
+        fitness = tree_get_fitness(tree)
+        last_evolution = tree_get_last_evolution(tree)
+        cooltree = CoolTree(coolcore)
+        cooltree.meta.fitness_train = fitness
+        cooltree.meta.complexity = parsimony
+        cooltree.meta.last_evolution = last_evolution
+    except Exception as ex:
+        print(f'cooltree_from_oldtree failed: {ex}')
+        cooltree = None
+    return cooltree
+
+
+def tree_from_cooltree(cooltree: CoolTree):
+    label_list = cooltree.get_oldtree()
+
+
+def coolcore_from_treenode(tree, node_id, is_fix=True):
     label = tree_node_get_label(tree, node_id)
     pnode = CoolCore(label, is_fix=is_fix)
     return pnode
 
 
-def tree_from_ptree2(platree2: PlaTree2):
-    label_list = []
-    max_depth = platree2.core.childs_depth_max
-    print('max depth', max_depth)
-    for depth in range(0, max_depth + 1):
-        labels_at_depth = [x.label for x in platree2.core.get_nodes_at_depth(depth)]
-        label_list.extend(labels_at_depth)
-    return label_list
-
-
 def cooltree_from_labellist(label_list, modify_list=None):
     xtype_list = xtypes_from_labels(label_list)
     tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
-    cooltree = PlaTree2(pnode_from_oldtree(tree))
+    cooltree = CoolTree(coolcore_from_oldtree(tree))
     return cooltree
+
+
+def coolcore_from_expr(expr, env_vars):
+
+    label_list = ast_convert_from_expr(expr, build=True)
+    xtype_list = xtypes_from_labels(label_list, env_vars)
+    p_tree = Ptree_karoo(label_list, xtype_list)
+    tree = p_tree.get_uninstanced_tree()
+    coolcore = coolcore_from_oldtree(tree)
+    return coolcore
 
 
 def cooltree_from_expr(expr, env_vars):
@@ -398,8 +653,9 @@ def cooltree_from_expr(expr, env_vars):
     xtype_list = xtypes_from_labels(label_list, env_vars)
     p_tree = Ptree_karoo(label_list, xtype_list)
     tree = p_tree.get_uninstanced_tree()
-    coolcore = pnode_from_oldtree(tree)
-    return coolcore
+    coolcore = coolcore_from_oldtree(tree)
+    cooltree = CoolTree(coolcore)
+    return cooltree
 
 
 def test_insert_subtree():
@@ -433,13 +689,17 @@ def test_sdf():
     label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
     modify_list = [0, 1, 0, 0, 1, 1]
     tree = cooltree_from_labellist(label_list, modify_list=modify_list)
-    cooltree = PlaTree2(pnode_from_oldtree(tree))
+    cooltree = CoolTree(coolcore_from_oldtree(tree))
     print(cooltree)
-    old_labels = tree_from_ptree2(cooltree)
+    old_labels = cooltree.labellist_from_cooltree()
     print(old_labels)
     # print([str(x) for x in platree2_from_oldversion(labels, modify_list=allowMods)])
 
 
+# test_insert_subtree()
 
-
-test_insert_subtree()
+label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
+modify_list = [0, 1, 0, 0, 1, 1]
+cooltree = cooltree_from_labellist(label_list, modify_list=modify_list)
+x = cooltree.get_apted_notation()
+print(x)

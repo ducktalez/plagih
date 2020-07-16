@@ -341,6 +341,7 @@ def tree_set_fitness(tree, fitness, precision=6):
     Store the fitness within the tree np-array
 
     """
+    fitness = '' if fitness is None else fitness
     if fitness != '':
         fitness = float(fitness)
         fitness = round(fitness, precision)
@@ -910,7 +911,8 @@ def tree_get_fitness(tree, karoo=True):
     if fitness != '':
         fitness = float(fitness)
     else:
-        raise Exception(f'This tree does not contain float fitness: {fitness}.')
+        # raise Exception(f'This tree does not contain float fitness: {fitness}.')
+        fitness = None
     return fitness
 
 
@@ -935,24 +937,6 @@ def tree_get_parsimony(tree):
     if parsimony != '':
         parsimony = float(parsimony)
     return parsimony
-
-
-def tree_get_meta(tree):
-    """
-    Get the meta information from a tree
-    ! This does not evaluate fitness or parsimony !
-    """
-    tree_meta = {}
-    parsimony = tree_get_parsimony(tree)
-    fitness_train = tree_get_fitness(tree)
-    expr_raw = tree_get_expr_raw(tree, node_id=root_id)  # sfeh store algo raw?
-    expr_sym = expr_sympify(expr_raw=expr_raw)  # sfeh store algo sym?
-
-    tree_meta['parsimony'] = parsimony
-    tree_meta['fitness_train'] = fitness_train
-    tree_meta['expr_raw'] = expr_raw
-    tree_meta['expr_sym'] = expr_sym
-    return tree_meta
 
 
 def tree_get_expr_raw(tree, node_id=root_id):
@@ -1723,7 +1707,7 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     """
     delete_ids = tree_node_get_branch(tree, node_id, karoo=karoo)
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
-    expr_sym = expr_sympify(expr_raw=expr_raw)
+    expr_sym = expr_sympify(expr_raw)
     core = core_from_expr(expr_sym, env_vars)
     tree_sym = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
     tree_sym_tildefree = tree_remove_tilde(tree_sym)
@@ -2083,7 +2067,7 @@ def tree_normalize_exponentiation(tree):
     return tree
 
 
-def tree_eval_parsimony(cooltree, parsimony_distance, origin_tree=None, weights=None):
+def tree_eval_parsimony(cooltree, parsimony_distance, origin_cooltree=None, weights=None):
     """
     parsimony_distance: compute the chosen distance by the user.
     #     'tree_node_count': tree_get_size,
@@ -2094,7 +2078,7 @@ def tree_eval_parsimony(cooltree, parsimony_distance, origin_tree=None, weights=
     if parsimony_distance == 'tree_node_count':  # number of nodes
         return len(cooltree)  # returns the number of nodes
     if parsimony_distance == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
-        distance, mapping = tree_parsimony_ted(cooltree, origin_tree)
+        distance, mapping = tree_parsimony_ted(cooltree, origin_cooltree)
         if weights is None:
             return distance
         else:

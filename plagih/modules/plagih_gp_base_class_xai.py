@@ -805,8 +805,10 @@ class ExplainableGP(object):
         if opth_data:
             if opth_data.suffix == '.p':
                 data_prepared = pickle_load(opth_data)
-            else:
+            elif opth_data.suffix == '.csv':
                 data_prepared = data_from_csv(opth_data, delimiter=delimiter)
+            else:
+                raise FileNotFoundError(f'File nust be a pickle (.p) or csv (.csv) file. Loaded file: {opth_data}')
 
         elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier sfeh load file
             data_prepared = pickle_load(self.root_path('samples_ready_p'))
@@ -1673,14 +1675,15 @@ class ExplainableGP(object):
                 if len(cooltree_sym) < len(cooltree):
                     sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
                     if sym_fitness != cooltree.meta.fitness_train and TEST_PHASE:
-                        print_e(f'Fitness of a sympified tree is different! sym: {sym_fitness}, before: {tree_get_fitness(cooltree_sym)}\n'
-                                f'tree: {tree_get_labellist(cooltree)}\n'
-                                f'symp: {cooltree_sym}\n'
-                                f'symp expr: {cooltree_sym.expr_raw()}')
+                        print_e(f'Fitness of a sympified tree is different! sym: {sym_fitness}, before: {cooltree.meta.fitness_train}\n'
+                                f'tree: {cooltree.core.labellist_from_coolcore()}\n'
+                                f'symp: {cooltree_sym.core.labellist_from_coolcore()}\n'
+                                f'tree raw: {cooltree.get_expr_raw()}\n'
+                                f'symp rawr: {cooltree_sym.get_expr_raw()}')
                         return
 
                     self.printpl('a', 'Successfully reduced pareto tree!')
-                    cooltree_sym.meta.fitnes_train = sym_fitness
+                    cooltree_sym.meta.fitness_train = sym_fitness
                     self.update_pareto(cooltree_sym)
                 else:
                     self.printpl('aaa', 'Pareto entry was already simplified')

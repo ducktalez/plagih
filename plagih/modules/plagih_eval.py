@@ -162,7 +162,7 @@ class FitnessKernel:
 
         return tf_result
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=None):
+    def tf_get_pairwise_fitness(self, solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=None, explorate=1):  # todo explorate?
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -198,10 +198,9 @@ class FitnessKernel:
 
             if 'relative_regression_fun' in self.kernel and origin_pairwise_fitness is not None:
                 # regression_goal = tf.abs(solution - tf_result)  # double the penalty
-                # exploration_diff = (origin_pairwise_fitness - tf_result)  # ...but
-                # paretodiff = (solution - origin_pairwise_fitness)
-                # pairwise_fitness = tf.abs((2 * regression_goal) - (paretodiff - exploration_diff))
-                pairwise_fitness = tf.abs((2 * pairwise_fitness) - (solution - (2 * origin_pairwise_fitness) + kernel_result))  # faster version
+                exploration_diff = (origin_pairwise_fitness - kernel_result)  # NO abs value
+                paretodiff = tf.abs(solution - origin_pairwise_fitness)
+                pairwise_fitness = tf.abs((2 * pairwise_fitness) - explorate*(paretodiff - exploration_diff))  # faster version
 
         elif self.kernel == 'match':  # MATCH kernel
             """
@@ -308,17 +307,12 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     # for obs_name, obs_info in env_vars['obs_name'].items():
 
     for obs_info in env_vars['obs_name'].values():
-        try:
-            if 'RewardTotal' in obs_info['name']:
-                continue
-        except:
-            pass
         if obs_info['temp_diff'] > 10:  # todo
             continue
         col_label = obs_info['label']
         tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
         if delete_this_version1 and isinstance(pd_data, np.ndarray):
-            pos = obs_info['pos']
+            pos = obs_info['colpos']
             tensors[col_label] = tf.constant(pd_data[:, pos], dtype=tf_dtype)  # converts data_csv_path into vectors
         elif TEST_PHASE:
             # delete = pd_data[col_label]
@@ -329,7 +323,7 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     # sfeh: if more than one action is provided...
     action_xtype = env_vars['action_at'][eval_action]['xtype']
     action_label = env_vars['action_at'][eval_action]['label']
-    column = env_vars['action_at'][eval_action]['pos']
+    column = env_vars['action_at'][eval_action]['colpos']
     if '2f' in action_xtype:
         if delete_this_version1 and isinstance(pd_data, np.ndarray):
             tensors[action_label] = tf.constant(pd_data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
@@ -425,7 +419,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
             if type(node.op) == ast.USub:
                 return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
                 # return ['-', ['0', ast_convert_from_expr_recursive(node.operand, build=True)]]
-            return [op[type(node.op)]['fun'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
+            return [op[type(node.op)]['fun_label'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
         else:
             return op[type(node.op)]['tf'](
                 ast_convert_from_expr_recursive(node.operand, tensors=tensors))
@@ -433,7 +427,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
         if build:
-            return [op[type(node.op)]['fun'],
+            return [op[type(node.op)]['fun_label'],
                     [ast_convert_from_expr_recursive(node.left, build=True),
                      ast_convert_from_expr_recursive(node.right, build=True)]]
         else:
@@ -443,7 +437,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if build:
-            return ast_chain_bool(node.values, op[type(node.op)]['fun'], build=True)
+            return ast_chain_bool(node.values, op[type(node.op)]['fun_label'], build=True)
         else:
             return ast_chain_bool(node.values, op[type(node.op)]['tf'], tensors=tensors)
 
@@ -477,10 +471,10 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
         elif len(node.args) <= 2:
             if build:
                 if len(node.args) == 1:
-                    return [op[node.func.id]['fun'],
+                    return [op[node.func.id]['fun_label'],
                             [ast_convert_from_expr_recursive(node.args[0], build=True)]]
                 elif len(node.args) == 2:
-                    return [op[node.func.id]['fun'],
+                    return [op[node.func.id]['fun_label'],
                             [ast_convert_from_expr_recursive(node.args[0], build=True),
                              ast_convert_from_expr_recursive(node.args[1], build=True)]]
                 else:
@@ -532,6 +526,6 @@ def ast_chain_compare(comparators, ops, tensors=None, build=False):
         return tf.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if build:
-            return [op[type(ops[0])]['fun'], [x, y]]
+            return [op[type(ops[0])]['fun_label'], [x, y]]
         else:
             return op[type(ops[0])]['tf'](x, y)

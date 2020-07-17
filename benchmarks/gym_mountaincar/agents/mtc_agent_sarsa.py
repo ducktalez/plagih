@@ -99,9 +99,9 @@ def train_sarsa_agent_pickle(seed=0):
     return
 
 
-def create_plagih_samples_csv(agent, seed=0):
+def create_plagih_samples_csv(agent, name):
     env = gym.make('MountainCar-v0')
-    env.seed(seed)
+    env.seed(0)
 
     plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=50)  # ((cartPos, cartVel), act)
     print('Amount of samples: {}, {} bytes'.format(len(plagih_behaviour_samples), sys.getsizeof(plagih_behaviour_samples)))
@@ -115,7 +115,7 @@ def create_plagih_samples_csv(agent, seed=0):
         row = list(sample_row[0]) + [sample_row[1]]
         samples_csv_ready.append(row[:])
 
-    with open(Path('../gp_files/samples200.csv'), 'w', newline='') as csvFile:
+    with open(Path(f'../gp_files/samples{name}.csv'), 'w', newline='') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(samples_csv_ready)
 
@@ -124,8 +124,8 @@ def create_plagih_samples_csv(agent, seed=0):
 
 if __name__ == "__main__":
     # create_behaviour_samples_file()
-    do_this = input('Please press: create (s)amples, run coming later: ')
-    if do_this == 's':
-        sarsa_agent_75, sarsa_agent_200, _, _ = load_sarsas()
-        create_plagih_samples_csv(sarsa_agent_200)
-    # train_sarsa_agent_pickle()
+    # do_this = input('Please press: create (s)amples, run coming later: ')
+    # if do_this == 's':
+    sarsa_agent_75, sarsa_agent_200, _, _ = load_sarsas()
+    create_plagih_samples_csv(sarsa_agent_75, '75')
+    create_plagih_samples_csv(sarsa_agent_200, '200')

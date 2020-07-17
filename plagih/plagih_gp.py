@@ -141,7 +141,7 @@ def load_config(config_path, out_dir=None):
     return root_dir, config
 
 
-def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, origin_tree, analyze=False):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, cooltree_origin, analyze=False):
     """
     
     """
@@ -154,12 +154,13 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
 
     gp = ExplainableGP(plagih_root, root_dir, config, opth_preparedp=data_prepared_path)
 
-    label_list, modify_list = load_label_list(root_dir, user_origin_csv=origin_tree)
+    label_list, modify_list = load_label_list(root_dir, user_origin_csv=cooltree_origin)
     if label_list is not None and modify_list is not None:
         env_vars = gp.get_env_vars()
         xtype_list = xtypes_from_labels(label_list, env_vars)
-        origin_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
-        gp.activate_origin_tree(origin_tree)
+        # cooltree_origin = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
+        cooltree_origin = cooltree_from_labellist(label_list, modify_list=modify_list)
+        gp.activate_origin_tree(cooltree_origin)
 
     gp.make_evolve_rates()
 

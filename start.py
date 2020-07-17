@@ -29,7 +29,7 @@ def main(argv):
     parser.add_argument('-load_backup', type=Path, help='Starting a run from a backup file (backup.p).')
     parser.add_argument('-out_dir', type=Path, help='A custom output folder (root_dir). Not stable yet.')  # sfeh
     parser.add_argument('-action', type=int, default=None, help='If there is more than one action, choose the right one.')
-    parser.add_argument('-data_prepared', '-samples_ready', type=Path)
+    parser.add_argument('-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-data_csv', type=Path)
     parser.add_argument('-force_new_run', action='store_true')

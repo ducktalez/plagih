@@ -1930,8 +1930,6 @@ def tree_check_types(tree, karoo=True):
                         f'tree (pretty print):\n{tree_pretty_print(tree, karoo=True)}\n'
                         f'xtype_list: {[tree_node_get_xtype(tree, x) for x in tree_iterate_range(tree)]}\n'
                         f'Last modification was: {tree_get_history(tree)}')
-                if debug_this_please:
-                    raise
                 return False
 
     return True

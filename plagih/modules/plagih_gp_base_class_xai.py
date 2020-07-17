@@ -98,7 +98,6 @@ class ExplainableGP(object):
 
             # todo make a difference between write/read?, make pretty solution
             'file_locs': {
-                'pycode_load': 'benchmarks/gym_mountaincar/agents/quick_eval.py',
                 'example_runs': 'run_examples/',
 
                 'folder_plots': 'plots/',
@@ -384,14 +383,7 @@ class ExplainableGP(object):
         with Path.open(path_backup, 'rb') as file_backup:
             run_data = pickle.load(file_backup)
 
-        try:
-            self.config['pl_version'], self.restart_count, self.gen_id, _, self.pareto, self.pop_base, self.monitoring_dict = run_data
-            # done
-        except:
-            if delete_this_version1:
-                self.restart_count, self.gen_id, _, self.pareto, self.pop_base, self.monitoring_dict = run_data
-                # self.restart_count, self.gen_id, self.parsimony_best_meta, self.pareto, self.population_base, self.monitoring_dict = run_data
-                self.version = 0.95
+        self.config['pl_version'], self.restart_count, self.gen_id, _, self.pareto, self.pop_base, self.monitoring_dict = run_data
 
         self.restart_count += 1
 
@@ -903,11 +895,7 @@ class ExplainableGP(object):
         take_data_samples = distributions_as_string.get('observed_floats')
         if take_data_samples:
             obsnames = self.env_vars['obs_name'].keys()
-            if delete_this_version1:
-                try:
-                    obs_samples = self.data_train.flatten()
-                except:
-                    obs_samples = self.data_train[obsnames].to_numpy().flatten()
+            obs_samples = self.data_train[obsnames].to_numpy().flatten()
 
             obs_samples = np.random.choice(obs_samples, size=take_data_samples)
             choose_distributions['2f'].extend([lambda: random.choice(obs_samples)]),  # take one
@@ -1127,7 +1115,7 @@ class ExplainableGP(object):
         latex_element = []
 
         for ii, cooltree in enumerate(self.pop_base):
-            # if ii % 10 == 0 and ii < 61:
+
             if delete_this:  # tree_check_deep(tree, print_type=self.print_type):
                 latex_element.append(f'Pop base tree {ii} with fitness {cooltree.meta.fitness_train} from last-mod {cooltree.meta.last_evolution}.\n')
 
@@ -1157,11 +1145,7 @@ class ExplainableGP(object):
 
         if 'discrete' in self.kernel.kernel:
             action_min, action_max = self.env_vars['action_at'][0]['minmax']
-            if isinstance(action_min, int) and isinstance(action_max, int) and TEST_PHASE:
-                pass
-            else:
-                print_e(f'not correct types (integer) {action_min}')
-                action_min, action_max = int(action_min), int(action_max)
+
             py_return = f'return max({action_min}, min({action_max}, int(round(action))))\n'
         else:
             py_return = 'return action\n'
@@ -1183,19 +1167,19 @@ class ExplainableGP(object):
         complete_function = textwrap.indent(f"def decide(self, input):\n"
                                             f"{function_body}\n", '\t')
 
-        # Agents
         all_agents = []
         all_agent_names = []
         all_more_info = []
 
         for (parsim, fitness, meta) in self.pareto:
             agent_name = f'{self.name}_{parsim:.0f}'
-            # tree = karoo_tree_from_expr(meta['expr_sym'], self.env_vars)
+
             cooltree = cooltree_from_expr(meta['expr_sym'], self.env_vars)
+            agent_as_python = cooltree.get_pycode()
             all_agent_names.append(agent_name)
             all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
             all_agents.append(f"class {agent_name}:\n"
-                              f"{complete_function.format(cooltree.get_pycode())}")
+                              f"{complete_function.format(agent_as_python)}")
 
         pycode_agents = '\n\n'.join(all_agents)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
@@ -1295,9 +1279,9 @@ class ExplainableGP(object):
         parsimony = tree_eval_parsimony(cooltree, self.config['complexity_measure'], origin_cooltree=self.origin_tree_get())
         return parsimony
 
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   What happens in a Generation              +
-    # +++++++++++++++++++++++++++++++++++++++++++++
+
+
+
 
     def gen_reset_parameters(self):
         """
@@ -1794,8 +1778,6 @@ class ExplainableGP(object):
                        'parsimony': 0,
                        'fitness_train': fitness_train}
 
-        # self.parsimony_best_meta[0] = self.origin_meta
-
         self.origin_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                       eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
 
@@ -1878,7 +1860,7 @@ class ExplainableGP(object):
             return npdata_dict
 
         def get_pareto_plot_values():
-            # sfeh i think there is a more beautiful solution?
+
             tuples = []
             for (parsim, fitness, pareto_meta) in self.pareto:
                 tuples.append([parsim, fitness])
@@ -1983,9 +1965,9 @@ class ExplainableGP(object):
         self.file_analysis_plots(self.root_dir)
         self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
 
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to print_type output information  +
-    # +++++++++++++++++++++++++++++++++++++++++++++
+
+
+
 
     def printpl(self, message_type, message_str):
         """

@@ -158,7 +158,7 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     if label_list is not None and modify_list is not None:
         env_vars = gp.get_env_vars()
         xtype_list = xtypes_from_labels(label_list, env_vars)
-        # cooltree_origin = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
+
         cooltree_origin = cooltree_from_labellist(label_list, modify_list=modify_list)
         gp.activate_origin_tree(cooltree_origin)
 

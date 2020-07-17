@@ -28,7 +28,7 @@ def samples_header_line(row):
 
     for ii, header in enumerate(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
-        col_label = header_split[0]
+        col_label = header_split[0]  # The first entry is always the column name
         column_meta_values = {col_label: {'type': 'float', 'role': None, 'colpos': ii}}
         try:
             for col_param in header_split[1:]:
@@ -39,11 +39,11 @@ def samples_header_line(row):
 
         col_type = header_entry_get_type(column_meta_values)
         xtype = '2b' if 'bool' in col_type else '2f'
-        minmax = header_entry_get_minmax(column_meta_values)
+        cmin, cmax = header_entry_get_minmax(column_meta_values, col_type)
         role = header_entry_get_roleguess(obs_name, col_label, ii, row)
 
         all_meta_dict = {'name': col_label, 'type': col_type, 'xtype': xtype, 'label': col_label, 'colpos': ii,
-                         'role': role, 'minmax': minmax}
+                         'role': role, 'min': [cmin, cmax]}
 
         if any(x in role for x in ['input', 'observation', 'obs']):
             temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
@@ -85,21 +85,32 @@ def header_entry_get_type(column_meta_values):
     if col_type is None:
         col_type = 'float'  # it probably is float anyways
     else:
-        col_type = col_type.replace('int', 'float')  # sfeh: int is currently not really used
+        # col_type = col_type.replace('int', 'float')  # sfeh: int is currently not really used
         col_type = col_type.replace('num', 'float')  # sfeh: num is currently not really used
     return col_type
 
 
-def header_entry_get_minmax(column_meta_values):
+def header_entry_get_minmax(column_meta_values, col_type):
     """
 
     """
-    minmax = column_meta_values.get('minmax')
-    if minmax is None:
-        print_warning('ww', 'mimax value tuple not provided. Trying to use the min-max values from the samples later.')
+    cmin = column_meta_values.get('min')
+    cmax = column_meta_values.get('max')
+    if cmin is None or cmax is None:
+        pass
+        # sfeh do not print anything when observations are regarded?
+        # print_warning('ww', 'minmax value tuple not provided. Trying to use the min-max values from the samples later.')
     else:
-        minmax = [float(x) for x in minmax.split(',')]
-    return minmax
+        if col_type == 'int':
+            convert_to = int
+        elif col_type == 'bool':
+            convert_to = bool
+        else:
+            convert_to = float
+
+        cmin = convert_to(cmin)
+        cmax = convert_to(cmax)
+    return cmin, cmax
 
 
 def header_entry_get_roleguess(env_observation, name, ii, row):
@@ -176,24 +187,26 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
 
 def data_from_csv(samples_file, test_size=0.2, delimiter=','):
     """
-    loads the data for the regression from a .csv-file.
+    Loads .csv data files.
+    Information that we need to extract:
+    (Header)
+    - observation or action (or unused)?
+        -> choosing leaf nodes
+    - observation - is there an index (past values, e.g. velocity_0, velocity_1)
+        -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
+    - which is the action for the regression?
+        -> more than one action might be required (IB has three action dimensions)
+    - observation min max (deprecated, for histograms)
+    - action min max
+        ->  for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
+                 todo solve this inside the kernel
 
-
-    Mountaincar .csv first lines (11.12.2019):
-    --------------------------------------------------------
-    cartPos:float,     cartVel:float, action:float
-    -0.5031261704876531,    0.0,                2
-    --------------------------------------------------------
-
-    sfeh: pandas seems prettier to read the data
-    for now, i just used what was given, which is read line and the header is specifically analysed
     """
 
     dtype_dict = {'float': np.float32,  # fix float, dtype float32 etc
                   'int': np.int32,
                   'bool': np.bool}
 
-    data_obs, data_results = [], []
     with Path.open(samples_file) as samples_csv_file:
         header_row = list(pd.read_csv(samples_csv_file, delimiter=delimiter, nrows=1))
 

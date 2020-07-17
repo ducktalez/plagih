@@ -167,7 +167,7 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core}')
+            raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core()}')
 
     def get_mutatable_nodes(self):
         """
@@ -258,7 +258,7 @@ class CoolCore:
         else:
             results = []
             for child in self.childs:
-                results.append(child.get_pycode)  # = tree_node_get_label(tree, int(child))
+                results.append(child.get_pycode())  # = tree_node_get_label(tree, int(child))
             return op[self.label]['pycode'].format(*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
 
     def get_apted_notation(self):
@@ -284,6 +284,10 @@ class CoolCore:
         else:
             childstr = ', '.join([str(x) for x in self.childs])
             return f"[{label_info}, {childstr}]"
+
+    def pretty_print(self):
+        layerlabellist = self.get_layer_labellist()
+        return '\n'.join([', '.join(layer) for layer in layerlabellist])
 
     def __len__(self):
         """
@@ -389,6 +393,24 @@ class CoolTree:
             self.core.set_fix_nodes(origin_coolcore=origin_tree.core)
         self.core.workaround_normalize_exponentiation()
         self.meta.last_evolution = last_evolution  # sfeh: should this be done during the evolve process?
+
+    def get_layer_nodelist(self):
+        max_depth = self.core.childs_depth_max
+        label_layer_list = []
+        for depth in range(0, max_depth + 1):
+            label_layer_list.append([node_on_lvl for node_on_lvl in self.core.get_nodes_at_depth(depth)])
+        return label_layer_list
+
+    def get_layer_labellist(self):
+        layerlist = self.get_layer_nodelist()
+        labellayerlist = []
+        for depth_list in layerlist:
+            labellayerlist.append([node_on_lvl.label for node_on_lvl in depth_list])
+        return labellayerlist
+
+    def pretty_format(self):
+        layerlabellist = self.get_layer_labellist()
+        return '\n'.join([', '.join(layer) for layer in layerlabellist])
 
     def workaround_normalize_exponentiation(self):
         self.core.workaround_normalize_exponentiation()
@@ -704,4 +726,3 @@ label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
 modify_list = [0, 1, 0, 0, 1, 1]
 cooltree = cooltree_from_labellist(label_list, modify_list=modify_list)
 x = cooltree.get_apted_notation()
-print(x)

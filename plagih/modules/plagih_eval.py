@@ -156,8 +156,8 @@ class FitnessKernel:
             tf_result = tf.math.round(tf_result)
 
         if 'bounded' in self.kernel:
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+            act_min = tf.constant(action_min_max[0])  # dtype=tf.float32
+            act_max = tf.constant(action_min_max[1])  # dtype=tf.float32
             tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
         return tf_result
@@ -277,6 +277,7 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
         with sess.graph.device(tf_device):  # device can be the gpu
 
             agent_result = ast_convert_from_expr(expr, tensors=tensors)
+
             kernel_result = kernel.tf_wrap_result(agent_result, action_min_max)
             act_solution = tensors[action_at_here['label']]
             pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=origin_pairwise_fitness)
@@ -307,30 +308,26 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     # for obs_name, obs_info in env_vars['obs_name'].items():
 
     for obs_info in env_vars['obs_name'].values():
-        if obs_info['temp_diff'] > 10:  # todo
-            continue
         col_label = obs_info['label']
-        tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
-        if delete_this_version1 and isinstance(pd_data, np.ndarray):
-            pos = obs_info['colpos']
-            tensors[col_label] = tf.constant(pd_data[:, pos], dtype=tf_dtype)  # converts data_csv_path into vectors
-        elif TEST_PHASE:
-            # delete = pd_data[col_label]
-            tensors[col_label] = tf.constant(pd_data[col_label])  #, dtype=tf_dtype  # todo?
-        else:
-            raise Exception('Tone of these two should happen. need to have tensors x~~D')
+        # tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
+        tensors[col_label] = tf.constant(pd_data[col_label], dtype=tf.float32)
+        # todo, sfeh, note/problem
+        #  pandas will automatically get the column type of a loaded .csv file (float64, int64, ...)
+        #  converting to tensor will automatically convert to the corresponding tf-type (tf.float32, tf.int32, ...)
+        #  BUT: (during calculating regression) if action's tf-type is not agent's result -> Error (tf.int32 - tf.float32)
+        #  Solution?
+        #  (1) use tf.float32 everywhere (set the dtype here)
+        #       might take (very little) longer (CURRENTLY USED)
+        #  (2) convert agent result to action's dtype
+        #       inside the kernel, problems might occur
 
     # sfeh: if more than one action is provided...
     action_xtype = env_vars['action_at'][eval_action]['xtype']
     action_label = env_vars['action_at'][eval_action]['label']
-    column = env_vars['action_at'][eval_action]['colpos']
     if '2f' in action_xtype:
-        if delete_this_version1 and isinstance(pd_data, np.ndarray):
-            tensors[action_label] = tf.constant(pd_data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors
-        else:
-            tensors[action_label] = tf.constant(pd_data[action_label])  # converts data_csv_path into vectors
+        tensors[action_label] = tf.constant(pd_data[action_label])  # converts data_csv_path into vectors
     else:
-        print_e('action {} has these infos: {}.'.format(action_label, env_vars['action_at'][0]))
+        print_e(f"action {action_label} has these infos: {env_vars['action_at'][0]}.")
     return tensors
 
 

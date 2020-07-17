@@ -162,7 +162,7 @@ class FitnessKernel:
 
         return tf_result
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=None):
+    def tf_get_pairwise_fitness(self, solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=None, explorate=1):  # todo explorate?
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -198,10 +198,9 @@ class FitnessKernel:
 
             if 'relative_regression_fun' in self.kernel and origin_pairwise_fitness is not None:
                 # regression_goal = tf.abs(solution - tf_result)  # double the penalty
-                # exploration_diff = (origin_pairwise_fitness - tf_result)  # ...but
-                # paretodiff = (solution - origin_pairwise_fitness)
-                # pairwise_fitness = tf.abs((2 * regression_goal) - (paretodiff - exploration_diff))
-                pairwise_fitness = tf.abs((2 * pairwise_fitness) - (solution - (2 * origin_pairwise_fitness) + kernel_result))  # faster version
+                exploration_diff = (origin_pairwise_fitness - kernel_result)  # NO abs value
+                paretodiff = tf.abs(solution - origin_pairwise_fitness)
+                pairwise_fitness = tf.abs((2 * pairwise_fitness) - explorate*(paretodiff - exploration_diff))  # faster version
 
         elif self.kernel == 'match':  # MATCH kernel
             """
@@ -308,17 +307,12 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     # for obs_name, obs_info in env_vars['obs_name'].items():
 
     for obs_info in env_vars['obs_name'].values():
-        try:
-            if 'RewardTotal' in obs_info['name']:
-                continue
-        except:
-            pass
         if obs_info['temp_diff'] > 10:  # todo
             continue
         col_label = obs_info['label']
         tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
         if delete_this_version1 and isinstance(pd_data, np.ndarray):
-            pos = obs_info['pos']
+            pos = obs_info['colpos']
             tensors[col_label] = tf.constant(pd_data[:, pos], dtype=tf_dtype)  # converts data_csv_path into vectors
         elif TEST_PHASE:
             # delete = pd_data[col_label]
@@ -329,7 +323,7 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
     # sfeh: if more than one action is provided...
     action_xtype = env_vars['action_at'][eval_action]['xtype']
     action_label = env_vars['action_at'][eval_action]['label']
-    column = env_vars['action_at'][eval_action]['pos']
+    column = env_vars['action_at'][eval_action]['colpos']
     if '2f' in action_xtype:
         if delete_this_version1 and isinstance(pd_data, np.ndarray):
             tensors[action_label] = tf.constant(pd_data[:, column], dtype=tf.float32)  # converts data_csv_path into vectors

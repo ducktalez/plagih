@@ -91,7 +91,6 @@ class CoolCore:
         # self.depth = depth  # sfeh not possible
         # self.childs_depth_max = None  # sfeh not possible
 
-
     def finalize_set_nodepath(self, nodepath):
         """
         aka nodepath?
@@ -159,7 +158,11 @@ class CoolCore:
 
     def reduce_me(self, env_vars):  # todo env_vars not required in new tree :P
         expr_raw = self.get_expr_raw()
-        expr_sym = expr_sympify(expr_raw)
+        try:
+            expr_sym = expr_sympify(expr_raw)
+        except:
+            print_e(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
+            return
         new_core = coolcore_from_expr(expr_sym, env_vars)
         if len(new_core) < len(self):
             self.new_core(new_core)
@@ -227,11 +230,7 @@ class CoolCore:
         """
         inserting a branch into the place of a node
         """
-        print('asd nodepath', nodepath)
-        try:
-            print('asd selfchil', self.childs[nodepath[0]])
-        except:
-            print('asd selfchil', self.childs[nodepath[0]])
+
         if len(nodepath) > 1:
             self.childs[nodepath[0]].insert_branch(nodepath[1:], coolbranch)
         else:  # [1] -> set child 1
@@ -493,6 +492,9 @@ class CoolTree:
 
         """
         return f"Ptree2: {self.core}. Tree meta: {self.meta}"
+
+    def get_pycode(self):
+        return self.core.get_pycode()
 
     def get_nodes_at_depth(self, lvl_goal, only_mutable=False, get_closest_depth=True):
         """

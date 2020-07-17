@@ -17,7 +17,7 @@ class TestHelpers:
                                         'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
                                         'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
                                         'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
-                                        'pos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
+                                        'colpos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
                                         'vel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
                                         'bool1': {'label': 'cartVel', 'type': 'bool', 'xtype': '2b'},
                                         'bool2': {'label': 'cartVel', 'type': 'bool', 'xtype': '2b'}

@@ -83,7 +83,7 @@ class ExplainableGP(object):
             'float_decimals': 6,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
 
-            'print_type': 'ggwsiivoaaf',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'ggwsiivoaaff',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
             'plot_verbosity': {'gen_fitness_average': 'y',
                                'sympify_errors': 'y',
@@ -347,35 +347,34 @@ class ExplainableGP(object):
         """
         If features were added between versions, you can try to update this from here
         """
-        if self.env_vars.get('env_observation_family') is None:
-            self.env_vars['env_observation_family'] = {}
-            # sfeh delete this sometimes
-            for obs_name, x in self.env_vars['obs_name'].items():
-                col_label = x['label']
-                col = x['pos']
-                temp_diff = obs_get_timedelta(col_label)
-                core_label = obs_get_family(col_label)
-                if 'RewardTotal' in core_label:  # todo damn yo
-                    continue
-                if x.get('minmax') is None:
-                    if obs_name == 'cartVel':
-                        minmax = (-0.07, 0.07)
-                    elif obs_name == 'cartPos':
-                        minmax = (-1.2, 0.6)
-                    else:
-                        coldata = self.data_train[:, col]
-                        minmax = (np.min(coldata), np.max(coldata))
-                    self.env_vars['obs_name'][obs_name]['minmax'] = minmax
-                try:
-                    self.env_vars['env_observation_family'][core_label].extend([col_label])
-                except (IndexError, KeyError):
-                    self.env_vars['env_observation_family'][core_label] = [col_label]
-
-                self.env_vars['obs_name'][col_label]['temp_diff'] = temp_diff
-                self.env_vars['obs_name'][col_label]['core_label'] = core_label
-            self.printpl('w', 'Attention, updated self.env_vars for an old run')
-
-        return
+        pass
+    #     if self.env_vars.get('env_observation_family') is None:
+    #         self.env_vars['env_observation_family'] = {}
+    #         # sfeh delete this sometimes
+    #         for obs_name, x in self.env_vars['obs_name'].items():
+    #             col_label = x['label']
+    #             col = x['colpos']
+    #             temp_diff = obs_get_timedelta(col_label)
+    #             core_label = obs_get_family(col_label)
+    #             if x.get('minmax') is None:
+    #                 if obs_name == 'cartVel':
+    #                     minmax = (-0.07, 0.07)
+    #                 elif obs_name == 'cartPos':
+    #                     minmax = (-1.2, 0.6)
+    #                 else:
+    #                     coldata = self.data_train[:, col]
+    #                     minmax = (np.min(coldata), np.max(coldata))
+    #                 self.env_vars['obs_name'][obs_name]['minmax'] = minmax
+    #             try:
+    #                 self.env_vars['env_observation_family'][core_label].extend([col_label])
+    #             except (IndexError, KeyError):
+    #                 self.env_vars['env_observation_family'][core_label] = [col_label]
+    #
+    #             self.env_vars['obs_name'][col_label]['temp_diff'] = temp_diff
+    #             self.env_vars['obs_name'][col_label]['core_label'] = core_label
+    #         self.printpl('w', 'Attention, updated self.env_vars for an old run')
+    #
+    #     return
 
     def load_backup_pickle(self, path_backup):
         """
@@ -833,15 +832,12 @@ class ExplainableGP(object):
 
         # if delete_this:
         #     action = self.env_vars['action_at'][self.config['eval_action']]
-        #     action_col = action['pos']
+        #     action_col = action['colpos']
         #     observation = self.env_vars['obs_name']['Fatigue_4']
-        #     observation_col = observation['pos']
+        #     observation_col = observation['colpos']
         #
         #     fat4 = self.data_train[:, action_col]
         #     act1 = self.data_train[:, observation_col]
-        #
-        #     print('ASD', np.sum(fat4 - act1))
-        #     print('ASD', action['name'])
 
         return
 
@@ -986,9 +982,7 @@ class ExplainableGP(object):
             # agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
 
             # for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
-            #     if 'RewardTotal' in obs_name:
-            #         continue
-            #     col = obs_info.get('pos')
+            #     col = obs_info.get('colpos')
             #     if delete_this_pandas:
             #         histogram_data = self.data_train[:, col]
             #     else:
@@ -1174,8 +1168,6 @@ class ExplainableGP(object):
         obs_time = None
         assign_input = []
         for obs_name in self.env_vars['obs_name']:
-            if 'RewardTotal' in obs_name:
-                continue
             obs_family, obs_time = observation_get_family_and_time(obs_name, none_return=None)
             assign_input.append(obs_name)
         else:
@@ -1408,8 +1400,6 @@ class ExplainableGP(object):
                     obs_label = obs_label[1:]
 
                 label_main = obs_get_family(obs_label)
-                if 'RewardTotal' in label_main:  # todo damn yo
-                    raise
 
                 label_timedelta = obs_get_timedelta(obs_label)
                 label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)

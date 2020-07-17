@@ -13,8 +13,8 @@ def samples_header_line(row):
     goal_action: (todo) only one action can be the result. vectors should be implemented someday
 
     env_vars = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}}  # sfeh name vs label??
-    env_vars['obs_name'] = {'type': 'float', 'role': None, 'pos': ii}
-    env_vars['action_at'}[0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'pos': ii, 'unique_outputs_num': None}
+    env_vars['obs_name'] = {'type': 'float', 'role': None, 'colpos': ii}
+    env_vars['action_at'}[0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'colpos': ii, 'unique_outputs_num': None}
 
     param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
     """
@@ -22,20 +22,14 @@ def samples_header_line(row):
                 'param_at': {}}  # to identify all observation types
     obs_name = {}
     env_xtype_list = {'2b': [], '2f': []}  # for choosing random variables
-    env_param_at = {}  #
     param_at = {}  #
     env_action_at = {}  #
     env_observation_family = {}  # {'temperature': ['temperature_0', ...]}
-    env_param_lookup = {}
-    column_data = {}
 
     for ii, header in enumerate(row):
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
         col_label = header_split[0]
-        column_meta_values = {}
-        column_meta_values[col_label] = {'type': 'float', 'role': None, 'pos': ii}
-        # if no type is specified -> float  # todo rename pos to col or anything
-        # param_at[ii] = {'name': name, 'type': 'float', 'role': None, 'pos': ii}
+        column_meta_values = {col_label: {'type': 'float', 'role': None, 'colpos': ii}}
         try:
             for col_param in header_split[1:]:
                 param, value = col_param.split('=')
@@ -48,14 +42,13 @@ def samples_header_line(row):
         minmax = header_entry_get_minmax(column_meta_values)
         role = header_entry_get_roleguess(obs_name, col_label, ii, row)
 
-        all_meta_dict = {'name': col_label, 'type': col_type, 'xtype': xtype, 'label': col_label, 'pos': ii,
+        all_meta_dict = {'name': col_label, 'type': col_type, 'xtype': xtype, 'label': col_label, 'colpos': ii,
                          'role': role, 'minmax': minmax}
 
         if any(x in role for x in ['input', 'observation', 'obs']):
             temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
             core_label = obs_get_family(col_label)
-            if 'RewardTotal' in core_label:  # todo damn yo
-                continue
+
             try:
                 env_observation_family[core_label].extend([col_label])  # todo insert in sorted list... also t = [1,2,5,10]?
             except (IndexError, KeyError):
@@ -212,19 +205,15 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
 
     # param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
     for ii, param_values in param_at.items():
-        param_name = param_values['name']
-        ptype = param_values['type']
-        dtype = dtype_dict[ptype]
-        colnames_from_header.append(param_name)
-        dtypes_from_header[param_name] = dtype
+        dtype = dtype_dict[param_values['type']]
+        colnames_from_header.append(param_values['name'])
+        dtypes_from_header[param_values['name']] = dtype
 
-    # todo better sol than read 2x? iterator?
     with Path.open(samples_file) as samples_csv_file:
         df = pd.read_csv(samples_csv_file, skiprows=1, names=colnames_from_header, dtype=dtypes_from_header)
 
     env_action_at = env_vars['action_at']
     for act_ii, action_info in env_action_at.items():
-        # action_name = action_info['name']
         df_col = df[action_info['name']]
         env_vars['action_at'][act_ii]['unique_outputs_num'] = len(df_col.unique())
         if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min/max (if not provided)
@@ -234,15 +223,12 @@ def data_from_csv(samples_file, test_size=0.2, delimiter=','):
     for ii, (obs_name, obs_info) in enumerate(obs_infoz.items()):
         if obs_info.get('minmax') is None:
             minmax = (df[obs_name].min(), df[obs_name].max())
-            print_warning('w', f'Tried to get the actual min/max from data, which is {minmax}.')
+            print_warning('w', f'Tried to get the observation min/max from data, which is {minmax}.')
             env_vars['obs_name'][obs_name]['minmax'] = minmax
 
-    data_train_panda, data_test_panda = skcv.train_test_split(df, test_size=test_size, random_state=0)  # 80% train 20% test-validation
+    data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)  # 80% train 20% test-validation
 
-    # data_train_numpy = data_train_panda.to_numpy()
-    # data_test_numpy = data_test_panda.to_numpy()
-
-    return env_vars, data_train_panda, data_test_panda  #, data_train_numpy, data_test_numpy
+    return env_vars, data_train, data_test
 
 
 if __name__ == '__main__':

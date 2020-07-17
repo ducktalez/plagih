@@ -7,29 +7,6 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 import tensorflow as tf
 
-
-class Plus:
-    """
-    +
-    '+': {'fun_class': '', 'fun_label': '+', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': '', 'tf': tf.add, 'latex1': '+', 'latexF': '{}', 'sym_str': '({} + {})', 'pycode': '({}+{})'},
-    """
-    fun_label = '+'
-    fun_arity = 2
-    xtype = 'f2f'
-
-    fun_tf = tf.add
-    fun_latex = '+'
-    fun_sym = '({})+({})'
-
-    def tf_code(self, *args):
-        codetf = tf.add(*args)
-        return codetf
-
-    def fun_pycode(self, *args):
-        codepy = '({}+{})'
-        return codepy
-
-
 """
 op: Dict to work as 'Database' for every expression-bit and its features
 - KEY: expression-bit: can occur in various forms, which group into following uses:
@@ -74,9 +51,9 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     'sqrt': {'fun_class': 'Sqrt', 'fun_label': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'sqrt', 'tf': tf.sqrt, 'opgroup': [], 'latex1': '\\sqrt{x}', 'latexF': '\\sqrt{}',
              'sym_str': 'sqrt({})', 'pycode': 'math.sqrt({})'},
 
-    'log': {'fun_class': 'Log', 'fun_label': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log', 'tf': tf.log, 'opgroup': ['logs'], 'latex1': '\\log()', 'latexF': '\\log{}',
+    'log': {'fun_class': 'Log', 'fun_label': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log', 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '\\log()', 'latexF': '\\log{}',
             'sym_str': 'log({})', 'pycode': 'math.log({})'},  # sfeh log/ln?
-    'log1p': {'fun_class': 'Log1p', 'fun_label': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log1p', 'tf': tf.log1p, 'opgroup': ['logs'], 'latex1': '\\log(1+x)', 'latexF': '\\log(1+{})',
+    'log1p': {'fun_class': 'Log1p', 'fun_label': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log1p', 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '\\log(1+x)', 'latexF': '\\log(1+{})',
               'sym_str': 'log1p({})', 'pycode': 'math.log1p({})'},
 
     'cos': {'fun_class': 'Cos', 'fun_label': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'cos', 'tf': tf.cos, 'opgroup': ['angle'], 'latex1':  '\\cos ', 'latexF': '\\cos({})',

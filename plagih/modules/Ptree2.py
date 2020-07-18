@@ -410,7 +410,7 @@ class CoolTree:
 
     def pretty_format(self):
         layerlabellist = self.get_layer_labellist()
-        return '\n'.join([', '.join(layer) for layer in layerlabellist])
+        return '\n'.join([', '.join([str(lbl) for lbl in layer]) for layer in layerlabellist])  # lbl-needed, sometines those are float values
 
     def workaround_normalize_exponentiation(self):
         self.core.workaround_normalize_exponentiation()

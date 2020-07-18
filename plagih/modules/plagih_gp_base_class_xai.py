@@ -701,6 +701,8 @@ class ExplainableGP(object):
                 target.writerows([''])  # empty row before each Tree
                 csv_formatted_tree = cooltree.pretty_format()
                 target.writerows(csv_formatted_tree)
+                stringtree = str(cooltree).replace(',', ' ')
+                target.writerows(stringtree)
 
         return
 

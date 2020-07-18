@@ -1323,10 +1323,9 @@ class ExplainableGP(object):
                 label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
 
                 var_list = self.env_vars['env_observation_family'].get(obs_get_family(obs_label))
+                obs = self.env_vars.obs_info[obs_label]
                 if var_list is not None:
-                    indexx = var_list.index(obs_label)
-                    indexx = indexx + label_timedelta
-                    indexx = max(min(min(len(var_list), 10) - 1, indexx), 0)  # todo  10
+                      # todo  10
                     try:
                         new_obs = '-' + var_list[indexx] if is_negative else var_list[indexx]
                         tree = tree_node_set_label(tree, nodeobs_id, new_obs)
@@ -1713,7 +1712,7 @@ class ExplainableGP(object):
                        'fitness_train': fitness_train}
 
         self.origin_results = eval_tf(expr_sym, self.data_train, self.kernel, self.eval_action, self.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
-                                      eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
+                                      origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
 
         self.pareto.append([0, fitness_train, pareto_meta])  # aka [3, 423, meta{}]
         self.print_g('gg', f'Loading origin tree, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')

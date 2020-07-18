@@ -20,6 +20,9 @@ class Obs:
         self.family = obs_family
         self.obs_index = obs_index  # is None when no index but 0 when
 
+        self.index_minmax = None
+        self.filter_index = lambda: self.obs_index  # as default, return own index
+
 
 def obs_family_choice(obs_list, max_hist=10):
     """
@@ -74,6 +77,9 @@ class EnvVars:
         self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
         self.obs_info = {}
         self.eval_action = None
+        self.family_info = None
+        self.choose_obs = {'f2': None,
+                           '2b': None}
 
 
 def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
@@ -145,19 +151,32 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     """
     choosing random observations made easy
     """
+    env_vars = EnvVars()
     obs_fams = [fam for fam in list(set(obs.family for obs in obs_list))]
     choose_obs_2f = []
     choose_obs_p = []
+    obs_info = {}
     for fam in obs_fams:
         family_meeting = sorted([x.name for x in obs_list if x.family == fam])
         p = obs_family_choice(family_meeting)
         choose_obs_2f.extend(list(family_meeting))
         choose_obs_p.extend(list(p))
+        index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
+        for obs_tmp in family_meeting:
+            env_vars.obs_info[obs_tmp].index_minmax = index_minmax
+            indexx = var_list.index(obs_label)
+            indexx = indexx + label_timedelta
+            obs_tmp.filter_index = lambda: max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0)
     obs_2f = lambda: random.choice(choose_obs_2f, p=choose_obs_p)
     random_obs = {'2f': obs_2f,
                   '2b': None}  # todo consider max age?
 
-    env_vars = EnvVars()
+
+    env_vars.choose_obs = random_obs
+    if eval_action:
+        env_vars.eval_action = eval_action
+    else:
+        raise
 
     data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)
 

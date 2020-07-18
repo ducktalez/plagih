@@ -162,7 +162,7 @@ class FitnessKernel:
 
         return tf_result
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, origin_pairwise_fitness=None, explorate=1):  # todo explorate?
+    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, origin_pairwise_fitness=None, explorate=1):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -300,9 +300,10 @@ def get_env_tensors(pd_data, eval_action, obs_infos):
     """
     tensors = {}  # todo dauerhafte tensoren?
 
-    for obs_info in obs_infos.values():
+    for obs_x in obs_infos.values():
         # tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
-        tensors[obs_infos.name] = tf.constant(pd_data[obs_info.name], dtype=tf.float32)
+        obs_name = obs_x.name
+        tensors[obs_name] = tf.constant(pd_data[obs_name])  # , dtype=tf.float32 todo: neverask.jpg
         # todo, sfeh, note/problem
         #  pandas will automatically get the column type of a loaded .csv file (float64, int64, ...)
         #  converting to tensor will automatically convert to the corresponding tf-type (tf.float32, tf.int32, ...)
@@ -322,6 +323,8 @@ def get_env_tensors(pd_data, eval_action, obs_infos):
 
 def ast_convert_from_expr(expr, tensors=None, build=None):
     """
+    Starts the recursive ast-analysis of the expression
+
     Extract expression tree from the string algo_sym.
     Please provide ONE of the following if you want to get...
     - tensorflow-graph: All variables (observation0, ...) as tensors.
@@ -332,11 +335,13 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
 
     ast_tree = ast.parse(expr, mode='eval').body
-    graph = ast_convert_from_expr_recursive(ast_tree, tensors=tensors, build=build)
+    try:
+        graph = ast_convert_from_expr_recursive(ast_tree, tensors=tensors, build=build)
+    except Exception as ex:
+        graph = ast_convert_from_expr_recursive(ast_tree, tensors=tensors, build=build)
 
     if build:
         graph = labels_from_nestedexpr(graph, [])
-        # graph = [str(x).replace('~', '-') for x in graph]  # ~- workaround?
 
     return graph
 

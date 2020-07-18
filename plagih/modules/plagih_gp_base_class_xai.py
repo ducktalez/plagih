@@ -42,7 +42,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, plagih_root, root_dir, user_config, opth_preparedp=None, opth_operators=None):
+    def __init__(self, plagih_root, root_dir, user_config, path_data=None, opth_operators=None, action_name=None):
 
         self.name = root_dir.resolve().name  # sfeh probably there are better names
         print(f'\n'
@@ -144,6 +144,8 @@ class ExplainableGP(object):
 
         self.conf = GpConfig(self.config)  # todo
 
+        self.activate_dataset(opth_data=path_data, action_name=action_name)
+
         self.kernel = FitnessKernel(self.config['kernel_name'])
         self.print_type = self.config['print_type']
         self.precision = self.config['fitness_accuracy']  # the number of floating points for the round function
@@ -153,8 +155,7 @@ class ExplainableGP(object):
         """
         load relevant stuff
         """
-        self.activate_dataset(opth_data=opth_preparedp, action_name=self.env_vars.eval_action.name)
-        self.gp_load_distributions(opth_distributions=None)
+        self.gp_load_distributions(path_distributions=None)
         self.gp_load_oparray(opth_operators=opth_operators)
 
         """
@@ -213,12 +214,9 @@ class ExplainableGP(object):
             """
 
             for ii, evolve_spec in enumerate(evolve_list):
-                try:
-                    tourn_size = evolve_spec['tourn_size']
-                except:
-                    tourn_size = self.config['tourn_size']
-
+                tourn_size = evolve_spec.get('tourn_size', self.config['tourn_size'])
                 evolve_list[ii]['tourn_size'] = tourn_size
+
                 evolve_rate = evolve_list[ii].get('evolve_rate')
                 evolve_list[ii]['evolve_num'] = int(evolve_rate * self.config['pop_max'])
                 if evolve_list[ii].get('custom_params') is None:
@@ -813,16 +811,16 @@ class ExplainableGP(object):
 
         return
 
-    def gp_load_distributions(self, opth_distributions=None):
+    def gp_load_distributions(self, path_distributions=None):
         """
 
         """
         # double check load
-        if not opth_distributions:
-            opth_distributions = self.root_path('distributions_file')
+        if not path_distributions:
+            path_distributions = self.root_path('distributions_file')
 
-        if Path.is_file(opth_distributions):
-            distributions_as_string = yaml_load(opth_distributions)
+        if Path.is_file(path_distributions):
+            distributions_as_string = yaml_load(path_distributions)
         else:
             print_warning('www', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
             distributions_as_string = self.config['distributions_as_string']
@@ -831,7 +829,7 @@ class ExplainableGP(object):
 
         take_data_samples = distributions_as_string.get('observed_floats')
         if take_data_samples:
-            obsnames = self.env_vars.obs_info.keys()
+            obsnames = self.env_vars.obs_infos.keys()
             obs_samples = self.data_train[obsnames].to_numpy().flatten()
 
             obs_samples = np.random.choice(obs_samples, size=take_data_samples)
@@ -1265,7 +1263,11 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        cooltree.evolve_mutate_point(self.float_decimals, self.choose_oparray2, self.env_vars.random_obs, self.choose_distributions, self.config['obs_age_max'])
+        cooltree.evolve_mutate_point(self.float_decimals,
+                                     self.choose_oparray2,
+                                     self.env_vars.choose_obs,
+                                     self.choose_distributions,
+                                     self.config['obs_age_max'])
 
         return cooltree
 
@@ -1320,7 +1322,7 @@ class ExplainableGP(object):
                 # label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
 
                 var_list = self.env_vars['env_observation_family'].get(obs_get_family(obs_label))
-                obs = self.env_vars.obs_info[obs_label]
+                obs = self.env_vars.obs_infos[obs_label]
                 indexx = obs.filter_index()
                 if var_list is not None:
                       # todo  10
@@ -1347,14 +1349,14 @@ class ExplainableGP(object):
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_decimals,
-                                                                         self.env_vars.random_obs, self.env_vars.obs_krazy, self.choose_oparray2,
+                                                                         self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
                                                                          self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_decimals,
-                                                                         self.env_vars.random_obs, self.env_vars.obs_krazy, self.choose_oparray2,
+                                                                         self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
                                                                          self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
         else:
@@ -1760,7 +1762,7 @@ class ExplainableGP(object):
         sfeh remove
 
         """
-        uniques_num = self.env_vars.eval_action.uniques()
+        uniques_num = self.env_vars.eval_action.uniques
         skew = (uniques_num / 2) - 1
         label_rules = {uniques_num - 1: (
             tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}
@@ -1891,10 +1893,6 @@ class ExplainableGP(object):
 
         self.file_analysis_plots(self.root_dir)
         self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
-
-
-
-
 
     def printpl(self, message_type, message_str):
         """

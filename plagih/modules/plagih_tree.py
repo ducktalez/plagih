@@ -791,7 +791,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, random_obs,
 
         for index in term_at:
             t_xtype = tbdo_xtypes[index]
-            label, arity = choose_term(t_xtype[-2:], random_obs, choose_distributions, float_decimals, obs_age_max), 0
+            label, arity = choose_term(t_xtype[-2:], random_obs, choose_distributions, float_decimals), 0
             label_xtype = xtype_get_from_label(label, obs_krazy)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity

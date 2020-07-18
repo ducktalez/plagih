@@ -89,7 +89,7 @@ def choose_term(xtype, random_obs, choose_distribution, float_decimals):
     """
 
     # insert a ?
-    if random.choice(['obs', 'distrib']) == 'obs' and len(random_obs[xtype]) > 0:
+    if random.choice(['obs', 'distrib']) == 'obs' and random_obs[xtype]:
         # obs_list = random.choice(list(env_vars['env_observation_family'].values()))
         term = random_obs[xtype]()
     else:

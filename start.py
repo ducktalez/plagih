@@ -2,6 +2,7 @@
 This starts the whole genetic programming.
 This extra file was added to have a file in the root directory that can be started.
 """
+
 from pathlib import Path
 from plagih import plagih_gp
 import sys

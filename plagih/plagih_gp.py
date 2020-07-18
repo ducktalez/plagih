@@ -92,7 +92,6 @@ def load_label_list(root_dir, user_origin_csv=None):
     """
 
     """
-
     tree_expr_txt_path = root_dir / 'run_files/tree_expr.txt'
     tree_labels_csv_path = root_dir / 'run_files/tree_labels.csv'
     tree_numpy_csv_path = root_dir / 'run_files/tree_numpy.csv'
@@ -141,7 +140,7 @@ def load_config(config_path, out_dir=None):
     return root_dir, config
 
 
-def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared_path, cooltree_origin, analyze=False):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, path_data, cooltree_origin, analyze=False):
     """
     
     """
@@ -152,12 +151,11 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     if eval_action is not None:
         config['eval_action'] = eval_action
 
-    gp = ExplainableGP(plagih_root, root_dir, config, opth_preparedp=data_prepared_path)
+    gp = ExplainableGP(plagih_root, root_dir, config, path_data=path_data)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=cooltree_origin)
     if label_list is not None and modify_list is not None:
-        env_vars = gp.get_env_vars()
-        xtype_list = xtypes_from_labels(label_list, env_vars)
+        # env_vars = gp.get_env_vars()
 
         cooltree_origin = cooltree_from_labellist(label_list, modify_list=modify_list)
         gp.activate_origin_tree(cooltree_origin)

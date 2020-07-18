@@ -7,6 +7,8 @@ import re
 from pydoc import locate
 import random
 
+import tensorflow as tf
+
 
 class Obs:
 
@@ -41,6 +43,7 @@ def obs_family_choice(obs_list, max_hist=10):
     p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
     p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
     return p
+
 
 class EnvObservations:
     """
@@ -79,7 +82,7 @@ class EnvVars:
     """
     def __init__(self):
         self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
-        self.obs_info = {}
+        self.obs_infos = {}
         self.eval_action = None
         self.family_info = None
         self.choose_obs = {'f2': None,
@@ -114,7 +117,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     - saving header info for later use
     """
     with Path.open(samples_file) as file:
-        df = pd.read_csv(file, delimiter=delimiter, nrows=1)
+        df = pd.read_csv(file, delimiter=delimiter)
 
     eval_action = None
     drop_actions = []
@@ -125,7 +128,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
 
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
         column_name = header_split[0]  # The first entry is always the column name
-        rename_columns[header_split] = column_name
+        rename_columns[header] = column_name
 
         col_infos = {}  # column_name: {'type': 'float', 'role': None, 'colpos': ii}}
         try:
@@ -137,12 +140,12 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
 
         ctype = locate(col_infos.get('type', 'float'))
 
-        if is_action(name, col_infos.get('role')):
-            if column_name == action_name:
+        if is_action(column_name, col_infos.get('role')):
+            if column_name == action_name or action_name is None:
                 cmin = col_infos.get('min', df[header].min())
                 cmax = col_infos.get('max', df[header].max())
                 uniques = df[header].unique()
-                eval_action = EvalAction(name, ctype, cmin, cmax, uniques)
+                eval_action = EvalAction(column_name, ctype, cmin, cmax, uniques)
             else:
                 drop_actions.append(column_name)  # drop from data
                 printez('i', f'Ignoring action {column_name} for this run')
@@ -150,7 +153,8 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
             obs_list.append(Obs(column_name, ctype))
 
     df.rename(columns=rename_columns, inplace=True)
-    df.drop(drop_actions)  # no need to keep other actions
+    df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
+    df = df.drop(drop_actions)  # no need to keep other actions
 
     """
     choosing random observations made easy
@@ -161,21 +165,29 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     choose_obs_p = []
     obs_info = {}
     for fam in obs_fams:
-        family_meeting = sorted([x.name for x in obs_list if x.family == fam])
-        p = obs_family_choice(family_meeting)
-        choose_obs_2f.extend(list(family_meeting))
-        choose_obs_p.extend(list(p))
-        index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
-        for obs_tmp in family_meeting:
-            env_vars.obs_info[obs_tmp].index_minmax = index_minmax
-            if obs_tmp.obs_index is not None:
-                obs_tmp.fun_filter_index = lambda: max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0)
-    obs_2f = lambda: random.choice(choose_obs_2f, p=choose_obs_p)
+        family_meeting = sorted([x for x in obs_list if x.family == fam], key= lambda lulz: lulz.obs_index)
+        if len(family_meeting) > 1:
+            p = obs_family_choice(family_meeting)
+            choose_obs_2f.extend([x.name for x in family_meeting])
+            choose_obs_p.extend(list(p))
+            index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
+            for obs_tmp in family_meeting:
+                env_vars.obs_infos[obs_tmp].index_minmax = index_minmax
+                if obs_tmp.obs_index is not None:
+                    obs_tmp.fun_filter_index = lambda: max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0)
+                obs_info[obs_tmp.name] = obs_tmp
+        else:
+            # LOL UMAD? only one family member (probably even more common)
+            obs_tmp = family_meeting[0]
+            obs_info[obs_tmp.name] = obs_tmp
+
+    obs_2f = lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0]
     random_obs = {'2f': obs_2f,
                   '2b': None}  # todo consider max age?
 
-
     env_vars.choose_obs = random_obs
+    env_vars.obs_infos = obs_info
+
     if eval_action:
         env_vars.eval_action = eval_action
     else:

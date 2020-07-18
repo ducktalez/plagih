@@ -3,8 +3,13 @@ import ast
 from plagih.modules.import_variables import *
 from plagih.modules.printing import *
 
-import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+# import os
+# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+
+
+# lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
+import tensorflow.python.util.deprecation as deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
 import tensorflow as tf
 
 """

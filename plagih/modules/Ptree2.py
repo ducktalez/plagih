@@ -156,14 +156,14 @@ class CoolCore:
 
         return my_result + child_results
 
-    def reduce_me(self, env_vars):  # todo env_vars not required in new tree :P
+    def reduce_me(self, obs_krazy):  # todo env_vars not required in new tree :P
         expr_raw = self.get_expr_raw()
         try:
             expr_sym = expr_sympify(expr_raw)
         except:
             print_e(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
             return
-        new_core = coolcore_from_expr(expr_sym, env_vars)
+        new_core = coolcore_from_expr(expr_sym, obs_krazy)
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
@@ -526,7 +526,7 @@ class CoolTree:
 
         return self.core.get_nodes_at_depth(lvl_goal, only_mutable=only_mutable, get_closest_depth=get_closest_depth)
 
-    def evolve_reduce(self, env_vars, completely=True):
+    def evolve_reduce(self, obs_krazy, completely=True):
         """
             Reducing a tree to its most basic form with sympify.
             (completely = False: reduce just one branch. if you wanted to have more complexity)
@@ -539,24 +539,23 @@ class CoolTree:
         if completely:  # reduce the complete tree
             coolcores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
             for coolc in coolcores_lv0:
-                coolc.reduce_me(env_vars)
+                coolc.reduce_me(obs_krazy)
         else:
             cool_nodes = self.core.get_mutatable_nodes()
             cool_functions = [x for x in cool_nodes if x.arity > 0]
             if cool_functions:
                 chosen = random.choice(cool_functions)
                 # chosen_path = chosen.nodepath
-                chosen.reduce_me(env_vars)
+                chosen.reduce_me(obs_krazy)
                 # if len(reduced) < len(chosen):
                 #     self.insert_branch(chosen_path, reduced)
 
         self.finalize_structure()
 
-
     def get_mutatable_nodes(self):
         return self.core.get_mutatable_nodes()
 
-    def evolve_mutate_point(self, float_decimals, choose_oparray2, env_vars, choose_distributions, obs_age_max):
+    def evolve_mutate_point(self, float_decimals, choose_oparray2, random_obs, choose_distributions, obs_age_max):
         """
         Mutate a single mutatable point in any Tree.
         """
@@ -568,7 +567,7 @@ class CoolTree:
         if arity > 0:
             new_label, new_arity, new_xtype = choose_operator(node.xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
         else:
-            new_label = choose_term(node.xtype[-2:], env_vars, choose_distributions, float_decimals, obs_age_max)  # 3 -> '2f' -> 5
+            new_label = choose_term(node.xtype[-2:], random_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
 
         node.label = new_label
         self.finalize_structure()
@@ -654,27 +653,27 @@ def coolcore_from_treenode(tree, node_id, is_fix=True):
     return pnode
 
 
-def cooltree_from_labellist(label_list, modify_list=None):
-    xtype_list = xtypes_from_labels(label_list)
+def cooltree_from_labellist(label_list, obs_krazy=None, modify_list=None):
+    xtype_list = xtypes_from_labels(label_list, obs_krazy=obs_krazy)
     tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
     cooltree = CoolTree(coolcore_from_oldtree(tree))
     return cooltree
 
 
-def coolcore_from_expr(expr, env_vars):
+def coolcore_from_expr(expr, obs_krazy):
 
     label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, env_vars)
+    xtype_list = xtypes_from_labels(label_list, obs_krazy)
     p_tree = Ptree_karoo(label_list, xtype_list)
     tree = p_tree.get_uninstanced_tree()
     coolcore = coolcore_from_oldtree(tree)
     return coolcore
 
 
-def cooltree_from_expr(expr, env_vars):
+def cooltree_from_expr(expr, obs_krazy):
 
     label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, env_vars)
+    xtype_list = xtypes_from_labels(label_list, obs_krazy)
     p_tree = Ptree_karoo(label_list, xtype_list)
     tree = p_tree.get_uninstanced_tree()
     coolcore = coolcore_from_oldtree(tree)

@@ -72,7 +72,7 @@ def random_choose_tempobs(obs_list, max_hist=10):
     return new_obs
 
 
-def choose_term(xtype, env_vars, choose_distribution, float_decimals, obs_age_max):
+def choose_term(xtype, random_obs, choose_distribution, float_decimals):
     """
     Returns a terminal of xtype.
 
@@ -89,9 +89,9 @@ def choose_term(xtype, env_vars, choose_distribution, float_decimals, obs_age_ma
     """
 
     # insert a ?
-    if random.choice(['obs', 'distrib']) == 'obs' and len(env_vars[xtype]) > 0:
-        obs_list = random.choice(list(env_vars['env_observation_family'].values()))
-        term = random_choose_tempobs(obs_list, max_hist=obs_age_max)  # sfeh option for completely randomness?
+    if random.choice(['obs', 'distrib']) == 'obs' and len(random_obs[xtype]) > 0:
+        # obs_list = random.choice(list(env_vars['env_observation_family'].values()))
+        term = random_obs[xtype]()
     else:
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()
@@ -119,12 +119,12 @@ def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None
     return func, arity, xtype
 
 
-def xtypes_from_labels(label_list, env_vars=None):
-    xtype_list = [xtype_get_from_label(label, env_vars) for label in label_list]
+def xtypes_from_labels(label_list, obs_krazy=None):
+    xtype_list = [xtype_get_from_label(label, obs_krazy) for label in label_list]
     return xtype_list
 
 
-def xtype_get_from_label(label, env_vars=None):
+def xtype_get_from_label(label, obs_krazy=None):
     """
     returns xtype for a label
     if you are not 100% sure that it is a function.
@@ -137,7 +137,7 @@ def xtype_get_from_label(label, env_vars=None):
     else:
         try:
             label = label[1:] if label[0] == '-' else label
-            xtype = env_vars['obs_name'][label]['xtype']
+            xtype = obs_krazy[label]
         except:
             xtype = '2f'
 

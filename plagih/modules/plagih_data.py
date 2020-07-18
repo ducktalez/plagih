@@ -4,38 +4,88 @@ from plagih.modules.printing import *
 import numpy as np
 import pandas as pd
 import re
+from pydoc import locate
+import random
 
+
+class Obs:
+
+    def __init__(self, name, ctype):
+        self.name = name
+        self.ctype = ctype
+        self.tf_type = tf.float32
+        self.xtype = '2f'
+
+        obs_family, obs_index = observation_get_family_and_time(name, none_return=None)
+        self.family = obs_family
+        self.obs_index = obs_index  # is None when no index but 0 when
+
+
+def obs_family_choice(obs_list, max_hist=10):
+    """
+    chooses variables but weighting how old they are.
+    obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4']
+    -> [0.28, 0.23, 0.19, 0.16, 0.13]
+    sfeh: what about larger steps?
+    0, 1, 2, 3 is good, but
+    0, 5, 10, 15 is worse
+    what if variables are not all of same diff?
+    todo create list at start of run
+    """
+    obs_list = np.delete(obs_list, np.s_[max_hist:])
+    x = len(obs_list)
+    fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data just a little...
+    p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  # reverse the geometric series
+    p = p / np.sum(p)  # the sum must be equal to 1  # not required with choices
+    return p
 
 class EnvObservations:
+    """
+    - take ~100 samples as constants
+    - get xtype for buildin tree from expr
+    - eval - get tensors with correct tf-type
+    """
 
-    def __init__(self, name):
+    def __init__(self):
+        self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
         self.obs_info = {}
-        self.obs_familys = {}
+        self.random_family = {}
         self.xtype_obs = {'2f': [], '2b': []}
 
 
 class EvalAction:
+    """
+    - minmax for histograms
+    - minmax for regression-bounded
+    """
+    def __init__(self, name, ctype, cmin, cmax, uniques):
+        self.name = name
 
-    def __init__(self, minmax=None):
-        self.obs_info = {}
+        self.name = name
+        self.ctype = ctype  # ! may be int!
+        self.tf_type = tf.float32  # sfeh especiall when the type is integer
+        self.xtype = '2f'
+
+        self.uniques = uniques
+
+        minmax = (ctype(cmin), ctype(cmax))
 
 
 class EnvVars:
 
     def __init__(self):
-        self.action_info = {}
+        self.eval_action = EvalAction()
+        self.obs = EnvObservations()
 
 
 def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     """
     Loads .csv data files.
     Information that we need to extract for each column:
-    1. observation or action? (-> choosing leaf nodes)
-        - observation
-            - is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
-            (- observation min max (deprecated, for histograms))
-        - action
-            - which is the action for the regression? -> more than one action might be required (IB has three action dimensions)
+    - choose_xtype choosing a random observation for leaf nodes
+    - filtering observation index
+        is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
+    - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
             - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
                  todo solve this inside the kernel (?)
 
@@ -43,25 +93,12 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
 
     def is_action(name, role):
         if 'role' is None:
-            if any(x in role for x in ['out', 'action', 'act', 'result']):
-                is_act = True
-            elif any(x in role for x in ['input', 'observation']):
-                is_act = False
-            else:
-                raise Exception(f'Role not known! {role}')
+            is_act = any(x in role for x in ['out', 'action', 'act', 'result'])
         else:
-            if 'a_' == name[:2]:
-                is_act = True
-            elif ii == len(df.columns) - 1:
-                is_act = True
-            elif any(x in name for x in ['out', 'action', 'act', 'result']):
-                is_act = True
-            else:
-                is_act = False
+            is_act = any(['a_' == name[:2],
+                          ii == len(df.columns) - 1,
+                          any(x in name for x in ['out', 'action', 'act', 'result'])])
         return is_act
-
-
-    env_vars = EnvVars()
 
     """
     - Reading the .csv-file (with pandas)
@@ -71,7 +108,11 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     with Path.open(samples_file) as file:
         df = pd.read_csv(file, delimiter=delimiter, nrows=1)
 
+    eval_action = None
+    drop_actions = []
+    obs_list = []
     rename_columns = {}
+
     for ii, header in enumerate(df):
 
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
@@ -86,104 +127,48 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
         except Exception as ex:
             print(f'Could not load samples csv correctly: {ex}')
 
+        ctype = locate(col_infos.get('type', 'float'))
+
         if is_action(name, col_infos.get('role')):
             if column_name == action_name:
-
-                cmin = col_infos.get('min')
-                cmax = col_infos.get('max')
-                if cmin is None or cmax is None:
-                    cmin = df[header].min()
-                    cmax = df[header].max()
-
-                ctype = float
-                cmin = float(cmin)
-                cmax = ctype(cmax)
-                env_vars.eval_Action = EvalAction(minmax=(cmin, cmax))
+                cmin = col_infos.get('min', df[header].min())
+                cmax = col_infos.get('max', df[header].max())
+                uniques = df[header].unique()
+                eval_action = EvalAction(name, ctype, cmin, cmax, uniques)
             else:
+                drop_actions.append(column_name)  # drop from data
                 printez('i', f'Ignoring action {column_name} for this run')
+        else:
+            obs_list.append(Obs(column_name, ctype))
+
     df.rename(columns=rename_columns, inplace=True)
+    df.drop(drop_actions)  # no need to keep other actions
 
     """
-    Splitting df into train and testdata
+    choosing random observations made easy
     """
-    data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)  # 80% train 20% test-validation
-    # if 'type' in column_meta_values:
-    #         #     ctype = column_meta_values['type']
-    #         #     ctype = ctype.replace('num', 'float')  # sfeh: num is currently not really used
-    #         # else:
-    #         #     dtype = df[header].dtype
-    #         #     if column_meta_values.get('type') == 'float' \
-    #         #             or dtype == np.dtype('float') \
-    #         #             or dtype == np.dtype('int'):  # sfeh yes, int aswell
-    #         #         xtype = '2f'
-    #         #         ctype = float
-    #         #         tf_dtype = tf.float32
-    #         #     elif dtype == np.dtype('bool'):
-    #         #         xtype = '2b'
-    #         #         ctype = float
-    #         #         tf_dtype = tf.float32
-    ctype = float
-    tf_type = tf.float32
-    xtype = '2f'
+    obs_fams = [fam for fam in list(set(obs.family for obs in obs_list))]
+    choose_obs_2f = []
+    choose_obs_p = []
+    for fam in obs_fams:
+        family_meeting = sorted([x.name for x in obs_list if x.family == fam])
+        p = obs_family_choice(family_meeting)
+        choose_obs_2f.extend(list(family_meeting))
+        choose_obs_p.extend(list(p))
 
+    obs_2f = lambda: random.choice(choose_obs_2f, p=choose_obs_p)
+    random_obs = {'2f': obs_2f,
+                  '2b': None}
+    # todo consider max age?
 
+    env_vars = EnvVars()
 
-
-    else:
-
-        obs_family, obs_index = observation_get_family_and_time(column_name)
-        try:
-            env_vars.obs_familys[obs_family].extend([column_name])  # todo insert in sorted list... also t = [1,2,5,10]?
-        except:
-            env_vars.obs_familys[obs_family] = [column_name]
-
-    if any(x in role for x in ['result', 'output', 'out', 'action']):
-        action_count = len(env_action_at)
-        env_action_at[action_count] = all_meta_dict
-    else:
-        raise
-
-    param_at[ii] = {'name': column_name, 'type': col_type, 'xtype': xtype, 'role': role}
-
-    # last-chance use of env_vars. sfeh: use many dicts instead! hmmm
-    env_vars['action_at'].update(env_action_at)
-    env_vars['obs_name'].update(obs_name)
-    env_vars.update(env_xtype_list)  # sfeh that is ugly code
-    env_vars['env_observation_family'] = env_observation_family
-
-    env_vars, param_at = samples_header_line(header_row)
-    #######
-    dtypes_from_header = {}
-    # colnames_from_header = []
-
-    # param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
-    # for ii, param_values in param_at.items():
-        # colnames_from_header.append(param_values['name'])
-        # dtypes_from_header[param_values['name']] = tf.float32 if param_values['type'] == 'float' else tf.bool
-
-    with Path.open(samples_file) as file:
-        df = pd.read_csv(file)  # skiprows=1, names=colnames_from_header, dtype=dtypes_from_header)
-
-    env_action_at = env_vars['action_at']
-    for act_ii, action_info in env_action_at.items():
-        df_col = df[action_info['name']]
-        env_vars['action_at'][act_ii]['unique_outputs_num'] = len(df_col.unique())
-        if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min/max (if not provided)
-            env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())
-
-    obs_infoz = env_vars['obs_name']
-    for ii, (obs_name, obs_info) in enumerate(obs_infoz.items()):
-        if obs_info.get('minmax') is None:
-            minmax = (df[obs_name].min(), df[obs_name].max())
-            print_warning('w', f'Tried to get the observation min/max from data, which is {minmax}.')
-            env_vars['obs_name'][obs_name]['minmax'] = minmax
-
-
+    data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)
 
     return env_vars, data_train, data_test
 
 
-def observation_get_family_and_time(name, re_pattern='_\d+$', none_return=0):
+def observation_get_family_and_time(name, re_pattern='_\d+$', none_return=None):
     """
     """
 

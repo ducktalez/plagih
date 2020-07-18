@@ -162,7 +162,7 @@ class FitnessKernel:
 
         return tf_result
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=None, explorate=1):  # todo explorate?
+    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, origin_pairwise_fitness=None, explorate=1):  # todo explorate?
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -172,14 +172,14 @@ class FitnessKernel:
             """
             """
 
-            skew = (unique_outputs_num / 2) - 1
+            skew = (uniques_num / 2) - 1
 
             rule1 = tf.logical_and(
                 tf.equal(solution, 0),
                 tf.less_equal(kernel_result, 0 - skew))
 
             rule2 = tf.logical_and(
-                tf.equal(solution, unique_outputs_num - 1),
+                tf.equal(solution, uniques_num - 1),
                 tf.greater(kernel_result, solution - 1 - skew))
 
             rule3 = tf.logical_and(
@@ -251,7 +251,7 @@ class FitnessKernel:
 #     #     return
 
 
-def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, eval_action=0, origin_pairwise_fitness=None):
+def eval_tf(expr, data, kernel, eval_action, obs_infos, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -264,14 +264,9 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
     'get_predicted_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
 
     """
-    action_at_here = env_vars['action_at'][eval_action]
-    unique_outputs_num = action_at_here['unique_outputs_num']
-    action_min_max = action_at_here['minmax']
-
-    # Initialize TensorFlow session
+    action_min_max = eval_action.minmax
     tf.compat.v1.reset_default_graph()
-
-    tensors = get_env_tensors(data, env_vars, eval_action=eval_action)  # sfeh: can this be done once, for all?
+    tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all?
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
         with sess.graph.device(tf_device):  # device can be the gpu
@@ -279,8 +274,8 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
             agent_result = ast_convert_from_expr(expr, tensors=tensors)
 
             kernel_result = kernel.tf_wrap_result(agent_result, action_min_max)
-            act_solution = tensors[action_at_here['label']]
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, unique_outputs_num, origin_pairwise_fitness=origin_pairwise_fitness)
+            act_solution = tensors[eval_action.name]
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, origin_pairwise_fitness=origin_pairwise_fitness)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if complete:
@@ -297,20 +292,17 @@ def eval_tf(expr, data, kernel, env_vars, tf_config, tf_device, tf_classify_labe
                 return float(fitness)
 
 
-def get_env_tensors(pd_data, env_vars, eval_action=0):
+def get_env_tensors(pd_data, eval_action, obs_infos):
     """
     return tensors-dictionary with all the terminals/leaf nodes
     - variables (observation0, ...)
     - distributions_file (True, False, 1.234, ...)
     """
-    tensors = {}
+    tensors = {}  # todo dauerhafte tensoren?
 
-    # for obs_name, obs_info in env_vars['obs_name'].items():
-
-    for obs_info in env_vars['obs_name'].values():
-        col_label = obs_info['label']
+    for obs_info in obs_infos.values():
         # tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
-        tensors[col_label] = tf.constant(pd_data[col_label], dtype=tf.float32)
+        tensors[obs_infos.name] = tf.constant(pd_data[obs_info.name], dtype=tf.float32)
         # todo, sfeh, note/problem
         #  pandas will automatically get the column type of a loaded .csv file (float64, int64, ...)
         #  converting to tensor will automatically convert to the corresponding tf-type (tf.float32, tf.int32, ...)
@@ -321,13 +313,10 @@ def get_env_tensors(pd_data, env_vars, eval_action=0):
         #  (2) convert agent result to action's dtype
         #       inside the kernel, problems might occur
 
-    # sfeh: if more than one action is provided...
-    action_xtype = env_vars['action_at'][eval_action]['xtype']
-    action_label = env_vars['action_at'][eval_action]['label']
-    if '2f' in action_xtype:
-        tensors[action_label] = tf.constant(pd_data[action_label])  # converts data_csv_path into vectors
+    if '2f' in eval_action.xtype:
+        tensors[eval_action.name] = tf.constant(pd_data[eval_action.name])  # converts data_csv_path into vectors
     else:
-        print_e(f"action {action_label} has these infos: {env_vars['action_at'][0]}.")
+        print_e(f"action {eval_action} has these infos: {eval_action}.")
     return tensors
 
 

@@ -342,39 +342,6 @@ class ExplainableGP(object):
             raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
         self.terminate_run(make_a_backup=False)
 
-    def update_old_runs(self):
-        """
-        If features were added between versions, you can try to update this from here
-        """
-        pass
-    #     if self.env_vars.get('env_observation_family') is None:
-    #         self.env_vars['env_observation_family'] = {}
-    #         # sfeh delete this sometimes
-    #         for obs_name, x in self.env_vars['obs_name'].items():
-    #             col_label = x['label']
-    #             col = x['colpos']
-    #             temp_diff = obs_get_timedelta(col_label)
-    #             core_label = obs_get_family(col_label)
-    #             if x.get('minmax') is None:
-    #                 if obs_name == 'cartVel':
-    #                     minmax = (-0.07, 0.07)
-    #                 elif obs_name == 'cartPos':
-    #                     minmax = (-1.2, 0.6)
-    #                 else:
-    #                     coldata = self.data_train[:, col]
-    #                     minmax = (np.min(coldata), np.max(coldata))
-    #                 self.env_vars['obs_name'][obs_name]['minmax'] = minmax
-    #             try:
-    #                 self.env_vars['env_observation_family'][core_label].extend([col_label])
-    #             except (IndexError, KeyError):
-    #                 self.env_vars['env_observation_family'][core_label] = [col_label]
-    #
-    #             self.env_vars['obs_name'][col_label]['temp_diff'] = temp_diff
-    #             self.env_vars['obs_name'][col_label]['core_label'] = core_label
-    #         self.printpl('w', 'Attention, updated self.env_vars for an old run')
-    #
-    #     return
-
     def load_backup_pickle(self, path_backup):
         """
         Loading the state of the run from the pickle file
@@ -387,12 +354,9 @@ class ExplainableGP(object):
 
         self.restart_count += 1
 
-        self.update_old_runs()
-
         # update monitoring dict (average vs variance)
         if self.config['pl_version'] <= 0.9:
             pass
-            # self.monitoring_dict['pop:trees:complexity:std_error'] = np.sqrt(self.monitoring_dict['complexity_variance'])
 
         # if isinstance(self.pareto, dict):  # version before 0.95
         #     self.pareto = [[p, meta['fitness_train'], meta] for p, meta in self.pareto.items()]
@@ -756,22 +720,6 @@ class ExplainableGP(object):
 
         return
 
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Load and Archive Data                     +
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
-    # def remove_old_variables(self):
-    #     """
-    #
-    #     """
-    #     max_past = 10  # self.config['obs_past:max']  # todo just a workaround
-    #
-    #     for obs_name, obs_info in self.env_vars['obs_name'].items():
-    #         if obs_info['temp_diff'] > max_past:
-    #             xtype = obs_info['xtype']
-    #             self.env_vars[xtype].remove(obs_name)
-    #     return
-
     def get_path(self, file_key):
         """
 
@@ -820,16 +768,7 @@ class ExplainableGP(object):
 
         self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
         self.update_old_runs()
-        # self.remove_old_variables()
 
-        # if delete_this:
-        #     action = self.env_vars['action_at'][self.config['eval_action']]
-        #     action_col = action['colpos']
-        #     observation = self.env_vars['obs_name']['Fatigue_4']
-        #     observation_col = observation['colpos']
-        #
-        #     fat4 = self.data_train[:, action_col]
-        #     act1 = self.data_train[:, observation_col]
 
         return
 
@@ -894,7 +833,7 @@ class ExplainableGP(object):
 
         take_data_samples = distributions_as_string.get('observed_floats')
         if take_data_samples:
-            obsnames = self.env_vars['obs_name'].keys()
+            obsnames = self.env_vars.obs_info.keys()
             obs_samples = self.data_train[obsnames].to_numpy().flatten()
 
             obs_samples = np.random.choice(obs_samples, size=take_data_samples)
@@ -946,20 +885,18 @@ class ExplainableGP(object):
         #         plt.clf()
 
         path_hist = folder_make_dir(self.root_dir / self.file_loc('folder_histograms'))
-
-        agent_dimatrix = {}
-        obs_x_info = {}  # [None] * data_dims
-
-        max_fails_per_bin = len(self.data_train)  # this value will define the y-axis height for all the histograms to look the same
+        #
+        # agent_dimatrix = {}
+        # obs_x_info = {}  # [None] * data_dims
+        #
+        # max_fails_per_bin = len(self.data_train)  # this value will define the y-axis height for all the histograms to look the same
 
         for a_ii, (parsim, fitness, meta) in enumerate(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            # tree = karoo_tree_from_expr(expr_raw, self.env_vars)
-            cooltree = cooltree_from_expr(expr_raw, self.env_vars)  # todo pareto should hold the label_list or the tree
-            # expr_sym = tree_get_expr_sym(tree)
+            cooltree = cooltree_from_expr(expr_raw, self.obs_krazy)  # todo pareto should hold the label_list or the tree
             expr_sym = cooltree.get_expr_sym()
-            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True,
-                                 eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results)
+            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.eval_action, self.obs_infos,
+                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, origin_pairwise_fitness=self.origin_results)
 
 
             # pairwise_fitness = tf_results['pairwise_fitness']
@@ -984,7 +921,7 @@ class ExplainableGP(object):
 
         # for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
 
-            act_min, act_max = self.env_vars['action_at'][self.config['eval_action']]['minmax']
+            act_min, act_max = self.eval_action.minmax
             if 'discrete' in self.kernel.kernel:
                 act_range = act_max - act_min  # [0, 1, 2] -> 2
                 action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
@@ -998,7 +935,7 @@ class ExplainableGP(object):
 
             fig, ax = plt.subplots()
             ax.hist(deviation_per_action, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')  # , weights=np.abs(np.sign(pairwise_fitness))  # bins='auto
-            ax.set_ylim(0, len(self.data_train))  # sfeh better size? max? # self.env_vars['action_at'][self.config['eval_action']]
+            ax.set_ylim(0, len(self.data_train))  # sfeh better size? max?
             ax.set_ylabel('Frequency')
             ax.set_xlabel('Deviation')
             fig.tight_layout()
@@ -1080,7 +1017,7 @@ class ExplainableGP(object):
 
         for (parsim, fitness, meta) in self.pareto:
             expr_raw = meta['expr_raw']
-            tree = karoo_tree_from_expr(expr_raw, self.env_vars)
+            tree = karoo_tree_from_expr(expr_raw, self.obs_krazy)
             tree = self.tree_finish_nodes(tree, last_evolution='texify')
             # cooltree = cooltree_from_expr(expr_raw, self.env_vars)
             # cooltree.finish_nodes('texify')
@@ -1144,21 +1081,20 @@ class ExplainableGP(object):
         """
 
         if 'discrete' in self.kernel.kernel:
-            action_min, action_max = self.env_vars['action_at'][0]['minmax']
+            action_min, action_max = self.eval_action.minmax
 
             py_return = f'return max({action_min}, min({action_max}, int(round(action))))\n'
         else:
             py_return = 'return action\n'
         obs_time = None
-        assign_input = []
-        for obs_name in self.env_vars['obs_name']:
-            obs_family, obs_time = observation_get_family_and_time(obs_name, none_return=None)
-            assign_input.append(obs_name)
-        else:
-            if obs_time is None:
-                assign_input = f"{', '.join(assign_input)} = input\n"
-            else:
-                assign_input = ''
+        assign_input = ''
+        # for obs_name in self.env_vars['obs_name']:
+        #     obs_family, obs_time = observation_get_family_and_time(obs_name, none_return=None)
+        #     assign_input.append(obs_name)
+        # # todo load this once at the start
+
+        if obs_time is None:
+            assign_input = f"cartPos, cartVel = input\n"  # todo use dictionary to pass values
 
         function_body = textwrap.indent(f"{assign_input}"
                                         "action = {}\n"
@@ -1174,7 +1110,7 @@ class ExplainableGP(object):
         for (parsim, fitness, meta) in self.pareto:
             agent_name = f'{self.name}_{parsim:.0f}'
 
-            cooltree = cooltree_from_expr(meta['expr_sym'], self.env_vars)
+            cooltree = cooltree_from_expr(meta['expr_sym'], self.obs_krazy)
             agent_as_python = cooltree.get_pycode()
             all_agent_names.append(agent_name)
             all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
@@ -1303,7 +1239,7 @@ class ExplainableGP(object):
         copy a tree from the last population without changing its outcome
         """
         if call_params.get('sympify_tree'):
-            cooltree.evolve_reduce(self.env_vars, completely=False)
+            cooltree.evolve_reduce(self.obs_krazy, completely=False)
 
         return cooltree
 
@@ -1317,7 +1253,7 @@ class ExplainableGP(object):
             fitness_train, parsim, meta = random.choice(self.pareto)
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
-            xtype_list = xtypes_from_labels(label_list, self.env_vars)
+            xtype_list = xtypes_from_labels(label_list, self.obs_krazy)
             tree = Ptree_karoo(label_list, xtype_list).get_uninstanced_tree()
             tree = tree_remove_tilde(tree)
             cooltree = cooltree_from_oldtree(tree)
@@ -1332,7 +1268,7 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        cooltree.evolve_mutate_point(self.float_decimals, self.choose_oparray2, self.env_vars, self.choose_distributions, self.config['obs_age_max'])
+        cooltree.evolve_mutate_point(self.float_decimals, self.choose_oparray2, self.random_obs, self.choose_distributions, self.config['obs_age_max'])
 
         return cooltree
 
@@ -1401,7 +1337,7 @@ class ExplainableGP(object):
                         return None
 
                 else:
-                    print_e(f'var_list in env_vars is empty? O_Ô \n{label_main}')
+                    print_e(f'var_list in env-vars is empty? O_Ô \n{label_main}')
 
         else:
             # print_warning('iii', 'Tree does not seem to have any nodes for filtering.')  # usually happens with point-filtering
@@ -1416,14 +1352,14 @@ class ExplainableGP(object):
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_decimals,
-                                                                         self.env_vars, self.choose_oparray2,
+                                                                         self.random_obs, self.obs_krazy, self.choose_oparray2,
                                                                          self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_decimals,
-                                                                         self.env_vars, self.choose_oparray2,
+                                                                         self.random_obs, self.obs_krazy, self.choose_oparray2,
                                                                          self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
         else:
@@ -1507,7 +1443,7 @@ class ExplainableGP(object):
         """
 
         build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
-        action_xtype = self.env_vars['action_at'][0]['xtype']
+        action_xtype = self.eval_action.xtype
         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
 
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow,
@@ -1644,7 +1580,7 @@ class ExplainableGP(object):
                 # simplify the tree ans save in pareto once again
                 self.printpl('aaa', 'Trying to simplify for pareto entry.')
                 cooltree_sym = copy.deepcopy(cooltree)
-                cooltree_sym.evolve_reduce(self.env_vars, completely=True)
+                cooltree_sym.evolve_reduce(self.obs_krazy, completely=True)
 
                 if len(cooltree_sym) < len(cooltree):
                     sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
@@ -1778,7 +1714,7 @@ class ExplainableGP(object):
                        'parsimony': 0,
                        'fitness_train': fitness_train}
 
-        self.origin_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map,
+        self.origin_results = eval_tf(expr_sym, self.data_train, self.kernel, self.eval_action, self.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                       eval_action=self.config['eval_action'], origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
 
         self.pareto.append([0, fitness_train, pareto_meta])  # aka [3, 423, meta{}]
@@ -1803,7 +1739,7 @@ class ExplainableGP(object):
         except Exception as evalex:
             raise Exception(f'eval:{evalex}')
 
-        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars, self.tf_config, self.tf_device, self.tf_classify_labels_map, eval_action=self.config['eval_action'],
+        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.eval_action, self.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map, eval_action=self.config['eval_action'],
                                 origin_pairwise_fitness=self.origin_results)
 
         if not check_value_is_real(fitness_train):
@@ -1825,20 +1761,20 @@ class ExplainableGP(object):
 
         For comparison, the original (pre-TensorFlow) cod follows:
 
-            skew = (self.unique_outputs_num / 2) - 1 # '-1' keeps a binary classification splitting over the
+            skew = (self.uniques_num / 2) - 1 # '-1' keeps a binary classification splitting over the
             if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
-            elif solution == self.unique_outputs_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
+            elif solution == self.uniques_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
             elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
             else: fitness = 0 # no class match
         sfeh remove
 
         """
-        unique_outputs_num = self.env_vars['action_at'][0]['unique_outputs_num']
-        skew = (unique_outputs_num / 2) - 1
-        label_rules = {unique_outputs_num - 1: (
-            tf.constant(unique_outputs_num - 1), tf.constant(f' > {unique_outputs_num - 2 - skew}'))}
+        uniques_num = self.eval_action.uniques()
+        skew = (uniques_num / 2) - 1
+        label_rules = {uniques_num - 1: (
+            tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}
 
-        for class_label in range(unique_outputs_num - 2, 0, -1):
+        for class_label in range(uniques_num - 2, 0, -1):
             cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
             label_rules[class_label] = tf.cond(cond, lambda: (
                 tf.constant(class_label), tf.constant(f' <= {class_label - skew}')), lambda: label_rules[class_label + 1])

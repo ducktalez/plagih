@@ -6,67 +6,144 @@ import pandas as pd
 import re
 
 
-def samples_header_line(row):
+class EnvObservations:
+
+    def __init__(self, name):
+        self.obs_info = {}
+        self.obs_familys = {}
+        self.xtype_obs = {'2f': [], '2b': []}
+
+
+class EvalAction:
+
+    def __init__(self, minmax=None):
+        self.obs_info = {}
+
+
+class EnvVars:
+
+    def __init__(self):
+        self.action_info = {}
+
+
+def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     """
-    samples.csv headerline:
-    cartVel|type=float|role=input|minmax=(-0.07, 0.07)
-    goal_action: (todo) only one action can be the result. vectors should be implemented someday
+    Loads .csv data files.
+    Information that we need to extract for each column:
+    1. observation or action? (-> choosing leaf nodes)
+        - observation
+            - is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
+            (- observation min max (deprecated, for histograms))
+        - action
+            - which is the action for the regression? -> more than one action might be required (IB has three action dimensions)
+            - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
+                 todo solve this inside the kernel (?)
 
-    env_vars = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {}}  # sfeh name vs label??
-    env_vars['obs_name'] = {'type': 'float', 'role': None, 'colpos': ii}
-    env_vars['action_at'}[0] = {'name': name, 'type': type, 'xtype': xtype, 'label': name, 'colpos': ii, 'unique_outputs_num': None}
-
-    param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
     """
-    env_vars = {'obs_name': {}, '2b': [], '2f': [], 'action_at': {},
-                'param_at': {}}  # to identify all observation types
-    obs_name = {}
-    env_xtype_list = {'2b': [], '2f': []}  # for choosing random variables
-    param_at = {}  #
-    env_action_at = {}  #
-    env_observation_family = {}  # {'temperature': ['temperature_0', ...]}
 
-    for ii, header in enumerate(row):
+    def is_action(name, role):
+        if 'role' is None:
+            if any(x in role for x in ['out', 'action', 'act', 'result']):
+                is_act = True
+            elif any(x in role for x in ['input', 'observation']):
+                is_act = False
+            else:
+                raise Exception(f'Role not known! {role}')
+        else:
+            if 'a_' == name[:2]:
+                is_act = True
+            elif ii == len(df.columns) - 1:
+                is_act = True
+            elif any(x in name for x in ['out', 'action', 'act', 'result']):
+                is_act = True
+            else:
+                is_act = False
+        return is_act
+
+
+    env_vars = EnvVars()
+
+    """
+    - Reading the .csv-file (with pandas)
+    - renaming column headers
+    - saving header info for later use
+    """
+    with Path.open(samples_file) as file:
+        df = pd.read_csv(file, delimiter=delimiter, nrows=1)
+
+    rename_columns = {}
+    for ii, header in enumerate(df):
+
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
-        col_label = header_split[0]  # The first entry is always the column name
-        column_meta_values = {col_label: {'type': 'float', 'role': None, 'colpos': ii}}
+        column_name = header_split[0]  # The first entry is always the column name
+        rename_columns[header_split] = column_name
+
+        col_infos = {}  # column_name: {'type': 'float', 'role': None, 'colpos': ii}}
         try:
             for col_param in header_split[1:]:
                 param, value = col_param.split('=')
-                column_meta_values[param] = value
+                col_infos[param] = value
         except Exception as ex:
-            print('Could not load samples csv correctly: {}'.format(ex))
+            print(f'Could not load samples csv correctly: {ex}')
 
-        col_type = header_entry_get_type(column_meta_values)
-        xtype = '2b' if 'bool' in col_type else '2f'
-        cmin, cmax = header_entry_get_minmax(column_meta_values, col_type)
-        role = header_entry_get_roleguess(obs_name, col_label, ii, row)
+        if is_action(name, col_infos.get('role')):
+            if column_name == action_name:
 
-        all_meta_dict = {'name': col_label, 'type': col_type, 'xtype': xtype, 'label': col_label, 'colpos': ii,
-                         'role': role, 'min': [cmin, cmax]}
+                cmin = col_infos.get('min')
+                cmax = col_infos.get('max')
+                if cmin is None or cmax is None:
+                    cmin = df[header].min()
+                    cmax = df[header].max()
 
-        if any(x in role for x in ['input', 'observation', 'obs']):
-            temp_diff = header_entry_get_tempdiff(col_label, column_meta_values)
-            core_label = obs_get_family(col_label)
+                ctype = float
+                cmin = float(cmin)
+                cmax = ctype(cmax)
+                env_vars.eval_Action = EvalAction(minmax=(cmin, cmax))
+            else:
+                printez('i', f'Ignoring action {column_name} for this run')
+    df.rename(columns=rename_columns, inplace=True)
 
-            try:
-                env_observation_family[core_label].extend([col_label])  # todo insert in sorted list... also t = [1,2,5,10]?
-            except (IndexError, KeyError):
-                env_observation_family[core_label] = [col_label]
+    """
+    Splitting df into train and testdata
+    """
+    data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)  # 80% train 20% test-validation
+    # if 'type' in column_meta_values:
+    #         #     ctype = column_meta_values['type']
+    #         #     ctype = ctype.replace('num', 'float')  # sfeh: num is currently not really used
+    #         # else:
+    #         #     dtype = df[header].dtype
+    #         #     if column_meta_values.get('type') == 'float' \
+    #         #             or dtype == np.dtype('float') \
+    #         #             or dtype == np.dtype('int'):  # sfeh yes, int aswell
+    #         #         xtype = '2f'
+    #         #         ctype = float
+    #         #         tf_dtype = tf.float32
+    #         #     elif dtype == np.dtype('bool'):
+    #         #         xtype = '2b'
+    #         #         ctype = float
+    #         #         tf_dtype = tf.float32
+    ctype = float
+    tf_type = tf.float32
+    xtype = '2f'
 
-            all_meta_dict['temp_diff'] = temp_diff
-            all_meta_dict['core_label'] = core_label
-            # todo test
-            obs_name[col_label] = all_meta_dict
-            env_xtype_list[xtype].append(col_label)
-        elif any(x in role for x in ['result', 'output', 'out', 'action']):
-            action_count = len(env_action_at)
-            all_meta_dict['unique_outputs_num'] = None  # sfeh add this so a later pycharm warning goes away?
-            env_action_at[action_count] = all_meta_dict
-        else:
-            raise
 
-        param_at[ii] = {'name': col_label, 'type': col_type, 'xtype': xtype, 'role': role}
+
+
+    else:
+
+        obs_family, obs_index = observation_get_family_and_time(column_name)
+        try:
+            env_vars.obs_familys[obs_family].extend([column_name])  # todo insert in sorted list... also t = [1,2,5,10]?
+        except:
+            env_vars.obs_familys[obs_family] = [column_name]
+
+    if any(x in role for x in ['result', 'output', 'out', 'action']):
+        action_count = len(env_action_at)
+        env_action_at[action_count] = all_meta_dict
+    else:
+        raise
+
+    param_at[ii] = {'name': column_name, 'type': col_type, 'xtype': xtype, 'role': role}
 
     # last-chance use of env_vars. sfeh: use many dicts instead! hmmm
     env_vars['action_at'].update(env_action_at)
@@ -74,59 +151,36 @@ def samples_header_line(row):
     env_vars.update(env_xtype_list)  # sfeh that is ugly code
     env_vars['env_observation_family'] = env_observation_family
 
-    return env_vars, param_at
+    env_vars, param_at = samples_header_line(header_row)
+    #######
+    dtypes_from_header = {}
+    # colnames_from_header = []
+
+    # param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
+    # for ii, param_values in param_at.items():
+        # colnames_from_header.append(param_values['name'])
+        # dtypes_from_header[param_values['name']] = tf.float32 if param_values['type'] == 'float' else tf.bool
+
+    with Path.open(samples_file) as file:
+        df = pd.read_csv(file)  # skiprows=1, names=colnames_from_header, dtype=dtypes_from_header)
+
+    env_action_at = env_vars['action_at']
+    for act_ii, action_info in env_action_at.items():
+        df_col = df[action_info['name']]
+        env_vars['action_at'][act_ii]['unique_outputs_num'] = len(df_col.unique())
+        if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min/max (if not provided)
+            env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())
+
+    obs_infoz = env_vars['obs_name']
+    for ii, (obs_name, obs_info) in enumerate(obs_infoz.items()):
+        if obs_info.get('minmax') is None:
+            minmax = (df[obs_name].min(), df[obs_name].max())
+            print_warning('w', f'Tried to get the observation min/max from data, which is {minmax}.')
+            env_vars['obs_name'][obs_name]['minmax'] = minmax
 
 
-def header_entry_get_type(column_meta_values):
-    """
 
-    """
-    col_type = column_meta_values.get('type')
-    if col_type is None:
-        col_type = 'float'  # it probably is float anyways
-    else:
-        # col_type = col_type.replace('int', 'float')  # sfeh: int is currently not really used
-        col_type = col_type.replace('num', 'float')  # sfeh: num is currently not really used
-    return col_type
-
-
-def header_entry_get_minmax(column_meta_values, col_type):
-    """
-
-    """
-    cmin = column_meta_values.get('min')
-    cmax = column_meta_values.get('max')
-    if cmin is None or cmax is None:
-        pass
-        # sfeh do not print anything when observations are regarded?
-        # print_warning('ww', 'minmax value tuple not provided. Trying to use the min-max values from the samples later.')
-    else:
-        if col_type == 'int':
-            convert_to = int
-        elif col_type == 'bool':
-            convert_to = bool
-        else:
-            convert_to = float
-
-        cmin = convert_to(cmin)
-        cmax = convert_to(cmax)
-    return cmin, cmax
-
-
-def header_entry_get_roleguess(env_observation, name, ii, row):
-    """
-
-    """
-    role = env_observation.get('role')
-    if role is None:
-        if 'a_' in name[:2]:
-            role = 'action'
-        elif ii < len(row) - 1:
-            role = 'input'
-        else:
-            role = 'action'
-        print_warning('w', f'role not given. Role is interpreted as: {role}')
-    return role
+    return env_vars, data_train, data_test
 
 
 def observation_get_family_and_time(name, re_pattern='_\d+$', none_return=0):
@@ -183,65 +237,6 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
         temp_diff = obs_get_timedelta(name, re_pattern=re_pattern)
 
     return temp_diff
-
-
-def data_from_csv(samples_file, test_size=0.2, delimiter=','):
-    """
-    Loads .csv data files.
-    Information that we need to extract:
-    (Header)
-    - observation or action (or unused)?
-        -> choosing leaf nodes
-    - observation - is there an index (past values, e.g. velocity_0, velocity_1)
-        -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
-    - which is the action for the regression?
-        -> more than one action might be required (IB has three action dimensions)
-    - observation min max (deprecated, for histograms)
-    - action min max
-        ->  for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
-                 todo solve this inside the kernel
-
-    """
-
-    dtype_dict = {'float': np.float32,  # fix float, dtype float32 etc
-                  'int': np.int32,
-                  'bool': np.bool}
-
-    with Path.open(samples_file) as samples_csv_file:
-        header_row = list(pd.read_csv(samples_csv_file, delimiter=delimiter, nrows=1))
-
-    #######
-    env_vars, param_at = samples_header_line(header_row)
-    #######
-    dtypes_from_header = {}
-    colnames_from_header = []
-
-    # param_at[ii] = {'name': name, 'type': col_type, 'xtype': xtype, 'role': role}
-    for ii, param_values in param_at.items():
-        dtype = dtype_dict[param_values['type']]
-        colnames_from_header.append(param_values['name'])
-        dtypes_from_header[param_values['name']] = dtype
-
-    with Path.open(samples_file) as samples_csv_file:
-        df = pd.read_csv(samples_csv_file, skiprows=1, names=colnames_from_header, dtype=dtypes_from_header)
-
-    env_action_at = env_vars['action_at']
-    for act_ii, action_info in env_action_at.items():
-        df_col = df[action_info['name']]
-        env_vars['action_at'][act_ii]['unique_outputs_num'] = len(df_col.unique())
-        if env_vars['action_at'][act_ii].get('minmax') is None:  # find out own min/max (if not provided)
-            env_vars['action_at'][act_ii]['minmax'] = (df_col.min(), df_col.max())
-
-    obs_infoz = env_vars['obs_name']
-    for ii, (obs_name, obs_info) in enumerate(obs_infoz.items()):
-        if obs_info.get('minmax') is None:
-            minmax = (df[obs_name].min(), df[obs_name].max())
-            print_warning('w', f'Tried to get the observation min/max from data, which is {minmax}.')
-            env_vars['obs_name'][obs_name]['minmax'] = minmax
-
-    data_train, data_test = skcv.train_test_split(df, test_size=test_size, random_state=0)  # 80% train 20% test-validation
-
-    return env_vars, data_train, data_test
 
 
 if __name__ == '__main__':

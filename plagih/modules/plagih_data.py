@@ -44,12 +44,10 @@ def obs_family_choice(obs_list, max_hist=10):
 
 class EnvObservations:
     """
-    - take ~100 samples as constants
-    - get xtype for buildin tree from expr
-    - eval - get tensors with correct tf-type
     """
 
     def __init__(self):
+        pass
 
 
 class EvalAction:
@@ -67,13 +65,19 @@ class EvalAction:
 
         self.uniques = uniques
 
-        minmax = (ctype(cmin), ctype(cmax))
+        self.minmax = (ctype(cmin), ctype(cmax))
 
 
 class EnvVars:
-
+    """
+    observation
+    - take ~100 samples as constants
+    - get xtype for buildin tree from expr
+    - eval - get tensors with correct tf-type
+    - filter index
+    eval_action
+    """
     def __init__(self):
-        self.krazy_obs = None
         self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
         self.obs_info = {}
         self.eval_action = None
@@ -164,9 +168,8 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
         index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
         for obs_tmp in family_meeting:
             env_vars.obs_info[obs_tmp].index_minmax = index_minmax
-            indexx = var_list.index(obs_label)
-            indexx = indexx + label_timedelta
-            obs_tmp.filter_index = lambda: max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0)
+            if obs_tmp.obs_index is not None:
+                obs_tmp.fun_filter_index = lambda: max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0)
     obs_2f = lambda: random.choice(choose_obs_2f, p=choose_obs_p)
     random_obs = {'2f': obs_2f,
                   '2b': None}  # todo consider max age?
@@ -241,7 +244,7 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
 
 if __name__ == '__main__':
     import tensorflow as tf
-    env_vars, data_train_panda, data_test_panda = data_from_csv(Path('../../benchmarks/run_sources/MTC/samples75.csv'))
+    env_vars, data_train_panda, data_test_panda = data_from_csv(Path('../../benchmarks/run_sources/MTC/samples75.csv'), action_name=None)
     obsnames = env_vars['obs_name'].keys()
     for (name, data) in data_train_panda.iteritems():
         tf_dtype = tf.float32 if data.dtype == np.float32 else tf.bool

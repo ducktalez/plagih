@@ -153,12 +153,12 @@ class ExplainableGP(object):
         """
         load relevant stuff
         """
-        self.activate_dataset(opth_data=opth_preparedp)
+        self.activate_dataset(opth_data=opth_preparedp, action_name=self.env_vars.eval_action.name)
         self.gp_load_distributions(opth_distributions=None)
         self.gp_load_oparray(opth_operators=opth_operators)
 
         """
-        set some variables
+        initialize some variables
         """
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
@@ -727,7 +727,7 @@ class ExplainableGP(object):
         real_path = self.root_path(file_key)
         return real_path
 
-    def activate_dataset(self, opth_data=None, delimiter=','):
+    def activate_dataset(self, opth_data=None, action_name=None, delimiter=','):
         """
         loading the data which the GP will be working on.
         The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -745,7 +745,7 @@ class ExplainableGP(object):
             if opth_data.suffix == '.p':
                 data_prepared = pickle_load(opth_data)
             elif opth_data.suffix == '.csv':
-                data_prepared = data_from_csv(opth_data, delimiter=delimiter)
+                data_prepared = data_from_csv(opth_data, action_name=action_name)
             else:
                 raise FileNotFoundError(f'File nust be a pickle (.p) or csv (.csv) file. Loaded file: {opth_data}')
 
@@ -758,17 +758,15 @@ class ExplainableGP(object):
         else:
             raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')
 
-        dataspec_file = self.root_dir / 'run_files/data_specification.yaml'  # todo sfeh load file is run_files?
-        if dataspec_file.is_file():
-            pass  # sfeh: if you want to load information from extra file, check for this file here
-        else:
-            # sfeh env_vars, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
-            pass  # todo
-            # yaml_dump(self.root_path('env_vars_yaml'), data_prepared[0], print_type=self.print_type)
+        # dataspec_file = self.root_dir / 'run_files/data_specification.yaml'  # todo sfeh load file is run_files?
+        # if dataspec_file.is_file():
+        #     pass  # sfeh: if you want to load information from extra file, check for this file here
+        # else:
+        #     # sfeh env_vars, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
+        #     pass  # todo
+        #     # yaml_dump(self.root_path('env_vars_yaml'), data_prepared[0], print_type=self.print_type)
 
         self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
-        self.update_old_runs()
-
 
         return
 
@@ -893,11 +891,10 @@ class ExplainableGP(object):
 
         for a_ii, (parsim, fitness, meta) in enumerate(self.pareto):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
-            cooltree = cooltree_from_expr(expr_raw, self.obs_krazy)  # todo pareto should hold the label_list or the tree
+            cooltree = cooltree_from_expr(expr_raw, self.env_vars.obs_krazy)  # todo pareto should hold the label_list or the tree
             expr_sym = cooltree.get_expr_sym()
-            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.eval_action, self.obs_infos,
+            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos,
                                  self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, origin_pairwise_fitness=self.origin_results)
-
 
             # pairwise_fitness = tf_results['pairwise_fitness']
             # agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
@@ -921,7 +918,7 @@ class ExplainableGP(object):
 
         # for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
 
-            act_min, act_max = self.eval_action.minmax
+            act_min, act_max = self.env_vars.eval_action.minmax
             if 'discrete' in self.kernel.kernel:
                 act_range = act_max - act_min  # [0, 1, 2] -> 2
                 action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
@@ -1017,7 +1014,7 @@ class ExplainableGP(object):
 
         for (parsim, fitness, meta) in self.pareto:
             expr_raw = meta['expr_raw']
-            tree = karoo_tree_from_expr(expr_raw, self.obs_krazy)
+            tree = karoo_tree_from_expr(expr_raw, self.env_vars.obs_krazy)
             tree = self.tree_finish_nodes(tree, last_evolution='texify')
             # cooltree = cooltree_from_expr(expr_raw, self.env_vars)
             # cooltree.finish_nodes('texify')
@@ -1081,7 +1078,7 @@ class ExplainableGP(object):
         """
 
         if 'discrete' in self.kernel.kernel:
-            action_min, action_max = self.eval_action.minmax
+            action_min, action_max = self.env_vars.eval_action.minmax
 
             py_return = f'return max({action_min}, min({action_max}, int(round(action))))\n'
         else:
@@ -1110,7 +1107,7 @@ class ExplainableGP(object):
         for (parsim, fitness, meta) in self.pareto:
             agent_name = f'{self.name}_{parsim:.0f}'
 
-            cooltree = cooltree_from_expr(meta['expr_sym'], self.obs_krazy)
+            cooltree = cooltree_from_expr(meta['expr_sym'], self.env_vars.obs_krazy)
             agent_as_python = cooltree.get_pycode()
             all_agent_names.append(agent_name)
             all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
@@ -1239,7 +1236,7 @@ class ExplainableGP(object):
         copy a tree from the last population without changing its outcome
         """
         if call_params.get('sympify_tree'):
-            cooltree.evolve_reduce(self.obs_krazy, completely=False)
+            cooltree.evolve_reduce(self.env_vars.obs_krazy, completely=False)
 
         return cooltree
 
@@ -1253,7 +1250,7 @@ class ExplainableGP(object):
             fitness_train, parsim, meta = random.choice(self.pareto)
             expr_raw = meta['expr_raw']
             label_list = ast_convert_from_expr(expr_raw, build=True)
-            xtype_list = xtypes_from_labels(label_list, self.obs_krazy)
+            xtype_list = xtypes_from_labels(label_list, self.env_vars.obs_krazy)
             tree = Ptree_karoo(label_list, xtype_list).get_uninstanced_tree()
             tree = tree_remove_tilde(tree)
             cooltree = cooltree_from_oldtree(tree)
@@ -1268,7 +1265,7 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        cooltree.evolve_mutate_point(self.float_decimals, self.choose_oparray2, self.random_obs, self.choose_distributions, self.config['obs_age_max'])
+        cooltree.evolve_mutate_point(self.float_decimals, self.choose_oparray2, self.env_vars.random_obs, self.choose_distributions, self.config['obs_age_max'])
 
         return cooltree
 
@@ -1320,10 +1317,11 @@ class ExplainableGP(object):
                     obs_label = obs_label[1:]
 
                 label_timedelta = obs_get_timedelta(obs_label)
-                label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
+                # label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
 
                 var_list = self.env_vars['env_observation_family'].get(obs_get_family(obs_label))
                 obs = self.env_vars.obs_info[obs_label]
+                indexx = obs.filter_index()
                 if var_list is not None:
                       # todo  10
                     try:
@@ -1334,7 +1332,7 @@ class ExplainableGP(object):
                         return None
 
                 else:
-                    print_e(f'var_list in env-vars is empty? O_Ô \n{label_main}')
+                    print_e(f'var_list in env-vars is empty? O_Ô \n{obs_label}')
 
         else:
             # print_warning('iii', 'Tree does not seem to have any nodes for filtering.')  # usually happens with point-filtering
@@ -1349,14 +1347,14 @@ class ExplainableGP(object):
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_decimals,
-                                                                         self.random_obs, self.obs_krazy, self.choose_oparray2,
+                                                                         self.env_vars.random_obs, self.env_vars.obs_krazy, self.choose_oparray2,
                                                                          self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_decimals,
-                                                                         self.random_obs, self.obs_krazy, self.choose_oparray2,
+                                                                         self.env_vars.random_obs, self.env_vars.obs_krazy, self.choose_oparray2,
                                                                          self.choose_distributions, self.config['obs_age_max'],
                                                                          full_or_grow=full_or_grow)
         else:
@@ -1440,7 +1438,7 @@ class ExplainableGP(object):
         """
 
         build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
-        action_xtype = self.eval_action.xtype
+        action_xtype = self.env_vars.eval_action.xtype
         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
 
         label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow,
@@ -1577,7 +1575,7 @@ class ExplainableGP(object):
                 # simplify the tree ans save in pareto once again
                 self.printpl('aaa', 'Trying to simplify for pareto entry.')
                 cooltree_sym = copy.deepcopy(cooltree)
-                cooltree_sym.evolve_reduce(self.obs_krazy, completely=True)
+                cooltree_sym.evolve_reduce(self.env_vars.obs_krazy, completely=True)
 
                 if len(cooltree_sym) < len(cooltree):
                     sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
@@ -1711,7 +1709,7 @@ class ExplainableGP(object):
                        'parsimony': 0,
                        'fitness_train': fitness_train}
 
-        self.origin_results = eval_tf(expr_sym, self.data_train, self.kernel, self.eval_action, self.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
+        self.origin_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                       origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
 
         self.pareto.append([0, fitness_train, pareto_meta])  # aka [3, 423, meta{}]
@@ -1736,7 +1734,7 @@ class ExplainableGP(object):
         except Exception as evalex:
             raise Exception(f'eval:{evalex}')
 
-        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.eval_action, self.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map, eval_action=self.config['eval_action'],
+        fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                 origin_pairwise_fitness=self.origin_results)
 
         if not check_value_is_real(fitness_train):
@@ -1744,10 +1742,6 @@ class ExplainableGP(object):
         fitness_train = round(fitness_train, self.config['fitness_accuracy'])
 
         return fitness_train
-
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Methods to use evaluate (tensorflow)      +
-    # +++++++++++++++++++++++++++++++++++++++++++++
 
     def tf_classify_labels_map(self, result):
 
@@ -1766,7 +1760,7 @@ class ExplainableGP(object):
         sfeh remove
 
         """
-        uniques_num = self.eval_action.uniques()
+        uniques_num = self.env_vars.eval_action.uniques()
         skew = (uniques_num / 2) - 1
         label_rules = {uniques_num - 1: (
             tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}

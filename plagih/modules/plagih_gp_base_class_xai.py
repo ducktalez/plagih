@@ -700,8 +700,8 @@ class ExplainableGP(object):
             for ii, cooltree in enumerate(self.pop_base):
                 target.writerows([''])  # empty row before each Tree
                 csv_formatted_tree = cooltree.pretty_format()
-                target.writerows(csv_formatted_tree)
-                stringtree = str(cooltree).replace(',', ' ')
+                target.writerows([csv_formatted_tree])
+                stringtree = [str(cooltree).replace(',', ' ')]
                 target.writerows(stringtree)
 
         return
@@ -1191,7 +1191,7 @@ class ExplainableGP(object):
             parsimony = cooltree.meta.complexity  # todo complexity vs parsimony?
         if not expr_raw:
             # expr_raw = tree_get_expr_raw(tree, node_id=root_id)
-            expr_raw = cooltree.core.get_expr_raw()
+            expr_raw = cooltree.get_expr_raw()
         if not expr_sym:
             expr_sym = expr_sympify(expr_raw)
 
@@ -1728,6 +1728,8 @@ class ExplainableGP(object):
 
         fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                 origin_pairwise_fitness=self.origin_results)
+
+        print('asd', fitness_train)
 
         if not check_value_is_real(fitness_train):
             raise Exception(f'Fitness is inf or nan: {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range

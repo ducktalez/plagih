@@ -159,6 +159,7 @@ class CoolCore:
     def reduce_me(self, obs_krazy):  # todo env_vars not required in new tree :P
         expr_raw = self.get_expr_raw()
         try:
+            # todo todotodo fix nodes ignored?
             expr_sym = expr_sympify(expr_raw)
         except:
             print_e(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')

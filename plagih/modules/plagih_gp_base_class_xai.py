@@ -695,11 +695,12 @@ class ExplainableGP(object):
             target = csv.writer(csv_file, delimiter=',')
             if self.gen_id != 0:
                 target.writerows([''])  # empty row before each generation
-            target.writerows([['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)]])
+            target.writerows(['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)])
 
             for ii, cooltree in enumerate(self.pop_base):
                 target.writerows([''])  # empty row before each Tree
-                target.writerows(str(cooltree))
+                csv_formatted_tree = cooltree.pretty_format()
+                target.writerows(csv_formatted_tree)
 
         return
 
@@ -725,7 +726,7 @@ class ExplainableGP(object):
         real_path = self.root_path(file_key)
         return real_path
 
-    def activate_dataset(self, opth_data=None, action_name=None, delimiter=','):
+    def activate_dataset(self, opth_data=None, action_name=None):
         """
         loading the data which the GP will be working on.
         The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -750,7 +751,7 @@ class ExplainableGP(object):
         elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier sfeh load file
             data_prepared = pickle_load(self.root_path('samples_ready_p'))
         elif Path.is_file(self.root_path('samples_csv')):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file
-            data_prepared = data_from_csv(self.root_path('samples_csv'), delimiter=delimiter)
+            data_prepared = data_from_csv(self.root_path('samples_csv'))
             print(f'Prepared the raw {self.file_loc("samples_csv")} behaviour. Saving for next run.')
             pickle_dump(self.root_path('samples_ready_p'), data_prepared)
         else:
@@ -1311,31 +1312,19 @@ class ExplainableGP(object):
                 tree = tree_node_set_label(tree, node_id, val)
 
         if obs_nodes and filter_observations:  # 'filtering' variables when they are from different times
-            for nodeobs_id in obs_nodes:
-                obs_label = tree_node_get_label(tree, nodeobs_id)
+            for nid in obs_nodes:
+                obs_label = tree_node_get_label(tree, nid)
 
-                is_negative = obs_label[0] == '-'
+                is_negative = obs_label[0] == '-'  # todo
                 if is_negative:
                     obs_label = obs_label[1:]
 
-                label_timedelta = obs_get_timedelta(obs_label)
-                # label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
+                hello_node = self.env_vars.obs_infos[obs_label]
+                hello_node.fun_filter_index()
+                obs_label = hello_node.name
 
-                var_list = self.env_vars['env_observation_family'].get(obs_get_family(obs_label))
-                obs = self.env_vars.obs_infos[obs_label]
-                indexx = obs.filter_index()
-                if var_list is not None:
-                      # todo  10
-                    try:
-                        new_obs = '-' + var_list[indexx] if is_negative else var_list[indexx]
-                        tree = tree_node_set_label(tree, nodeobs_id, new_obs)
-                    except Exception as whyyex:
-                        print_e(f'WTF min and max should easily keep this in the boarders. index: {indexx} {whyyex}')
-                        return None
-
-                else:
-                    print_e(f'var_list in env-vars is empty? O_Ô \n{obs_label}')
-
+                new_obs = '-' + obs_label if is_negative else obs_label
+                tree = tree_node_set_label(tree, nid, new_obs)  # todo cartvel etc is a waste of filter
         else:
             # print_warning('iii', 'Tree does not seem to have any nodes for filtering.')  # usually happens with point-filtering
             pass
@@ -1479,8 +1468,7 @@ class ExplainableGP(object):
 
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
-            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_vars, self.choose_distributions,
-                                    self.float_decimals, self.config['obs_age_max'])
+            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.float_decimals)  # self.config['obs_age_max']
         else:
             tree = None
 
@@ -1514,11 +1502,11 @@ class ExplainableGP(object):
         right_core = Core_From_Labels(right_labels, right_aritys, right_xtypes).get_uninstanced_core()
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars,
+        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars.obs_krazy,
                                           self.choose_distributions, self.float_decimals, self.config['obs_age_max'])
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_vars,
+        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_vars.obs_krazy,
                                            self.choose_distributions, self.float_decimals, self.config['obs_age_max'])
 
         left_offspring = cooltree_from_oldtree(left_offspring)

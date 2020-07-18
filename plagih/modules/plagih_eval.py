@@ -32,8 +32,8 @@ class RegressionDiscrete(DummyKernel):
 
     def tf_wrap_result(self, tf_result, action_min_max):
         # regression that fits the outputs to a discrete set of actions defined by min and max
-        act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-        act_max = tf.constant(action_min_max[1], dtype=tf.float32)
+        act_min = tf.constant(action_min_max[0], dtype=tf.float16)
+        act_max = tf.constant(action_min_max[1], dtype=tf.float16)
         customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
         return customised_result
 
@@ -156,8 +156,8 @@ class FitnessKernel:
             tf_result = tf.math.round(tf_result)
 
         if 'bounded' in self.kernel:
-            act_min = tf.constant(action_min_max[0])  # dtype=tf.float32
-            act_max = tf.constant(action_min_max[1])  # dtype=tf.float32
+            act_min = tf.constant(action_min_max[0])  # dtype=tf.float16
+            act_max = tf.constant(action_min_max[1])  # dtype=tf.float16
             tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
         return tf_result
@@ -301,15 +301,15 @@ def get_env_tensors(pd_data, eval_action, obs_infos):
     tensors = {}  # todo dauerhafte tensoren?
 
     for obs_x in obs_infos.values():
-        # tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
+        # tf_dtype = tf.float16 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
         obs_name = obs_x.name
-        tensors[obs_name] = tf.constant(pd_data[obs_name])  # , dtype=tf.float32 todo: neverask.jpg
+        tensors[obs_name] = tf.constant(pd_data[obs_name])  # , dtype=tf.float16 todo: neverask.jpg
         # todo, sfeh, note/problem
         #  pandas will automatically get the column type of a loaded .csv file (float64, int64, ...)
-        #  converting to tensor will automatically convert to the corresponding tf-type (tf.float32, tf.int32, ...)
-        #  BUT: (during calculating regression) if action's tf-type is not agent's result -> Error (tf.int32 - tf.float32)
+        #  converting to tensor will automatically convert to the corresponding tf-type (tf.float16, tf.int32, ...)
+        #  BUT: (during calculating regression) if action's tf-type is not agent's result -> Error (tf.int32 - tf.float16)
         #  Solution?
-        #  (1) use tf.float32 everywhere (set the dtype here)
+        #  (1) use tf.float16 everywhere (set the dtype here)
         #       might take (very little) longer (CURRENTLY USED)
         #  (2) convert agent result to action's dtype
         #       inside the kernel, problems might occur
@@ -395,7 +395,7 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
             return [node.n]
         else:
             shape = tensors[list(tensors.keys())[0]].get_shape()
-            return tf.constant(node.n, shape=shape, dtype=tf.float32)
+            return tf.constant(node.n, shape=shape, dtype=tf.float16)
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
         if build:

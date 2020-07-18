@@ -816,7 +816,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, random_obs,
     else:
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
-            label, arity = choose_term(t_xtype[-2:], random_obs, choose_distributions, float_decimals, obs_age_max), 0
+            label, arity = choose_term(t_xtype[-2:], random_obs, choose_distributions, float_decimals), 0
             label_xtype = xtype_get_from_label(label, obs_krazy)
             result_label_list.append(label)
             result_arity_list.append(arity)
@@ -1968,7 +1968,7 @@ def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter'
     return constant
 
 
-def tree_prune_depth(tree, max_depth, env_vars, choose_distributions, float_decimals, obs_age_max):
+def tree_prune_depth(tree, max_depth, obs_krazy, random_obs, choose_distributions, float_decimals):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
@@ -1985,7 +1985,7 @@ def tree_prune_depth(tree, max_depth, env_vars, choose_distributions, float_deci
             label = tree_node_get_label(tree, node_id)
             xtype = xtype_get_from_label(label, obs_krazy)
             tree = tree_node_set_arity(tree, node_id, 0)
-            new_term = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals, obs_age_max)  # replace label
+            new_term = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)
 
         elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth

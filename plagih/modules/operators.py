@@ -207,7 +207,7 @@ op_test = {
     # Not tested: Converters: Dummy operators that convert between float and bool
     'Ftob': {'fun_class': '', 'fun_label': 'Ftob', 'arity': 1, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': '', 'tf': tf.bool, 'latex1': None, 'latexF': '{}',
              'sym_str': 'bool', 'pycode': 'bool({})'},  # not tested, same as bool
-    'Btof': {'fun_class': '', 'fun_label': 'Btof', 'arity': 1, 'xtype': 'b2f', 'c-weight': 1, 'tf_name': '', 'tf': tf.float32, 'latex1': None, 'latexF': '{}',
+    'Btof': {'fun_class': '', 'fun_label': 'Btof', 'arity': 1, 'xtype': 'b2f', 'c-weight': 1, 'tf_name': '', 'tf': tf.float16, 'latex1': None, 'latexF': '{}',
              'sym_str': 'float', 'pycode': 'float({})'},  # not tested
 
     # Never used yet, trying to get rid of the ** function

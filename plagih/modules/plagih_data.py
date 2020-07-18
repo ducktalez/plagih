@@ -15,7 +15,7 @@ class Obs:
     def __init__(self, name, ctype):
         self.name = name
         self.ctype = ctype
-        self.tf_type = tf.float32
+        self.tf_type = tf.float16
         self.xtype = '2f'
 
         obs_family, obs_index = observation_get_family_and_time(name, none_return=None)
@@ -58,12 +58,13 @@ class EvalAction:
     - minmax for histograms
     - minmax for regression-bounded
     """
+
     def __init__(self, name, ctype, cmin, cmax, uniques):
         self.name = name
 
         self.name = name
         self.ctype = ctype  # ! may be int!
-        self.tf_type = tf.float32  # sfeh especiall when the type is integer
+        self.tf_type = tf.float16  # sfeh especiall when the type is integer
         self.xtype = '2f'
 
         self.uniques = uniques
@@ -80,6 +81,7 @@ class EnvVars:
     - filter index
     eval_action
     """
+
     def __init__(self):
         self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
         self.obs_infos = {}
@@ -153,7 +155,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
             obs_list.append(Obs(column_name, ctype))
 
     df.rename(columns=rename_columns, inplace=True)
-    df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
+    df = df.astype('float16')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
     df = df.drop(drop_actions)  # no need to keep other actions
 
     """
@@ -165,7 +167,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     choose_obs_p = []
     obs_info = {}
     for fam in obs_fams:
-        family_meeting = sorted([x for x in obs_list if x.family == fam], key= lambda lulz: lulz.obs_index)
+        family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
         if len(family_meeting) > 1:
             p = obs_family_choice(family_meeting)
             choose_obs_2f.extend([x.name for x in family_meeting])
@@ -179,7 +181,10 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
         else:
             # LOL UMAD? only one family member (probably even more common)
             obs_tmp = family_meeting[0]
+            obs_tmp.fun_filter_index = lambda: obs_tmp.name
             obs_info[obs_tmp.name] = obs_tmp
+            choose_obs_2f.append(obs_tmp)
+            choose_obs_p.append(1)
 
     obs_2f = lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0]
     random_obs = {'2f': obs_2f,
@@ -254,11 +259,12 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
     return temp_diff
 
 
-if __name__ == '__main__':
-    import tensorflow as tf
-    env_vars, data_train_panda, data_test_panda = data_from_csv(Path('../../benchmarks/run_sources/MTC/samples75.csv'), action_name=None)
-    obsnames = env_vars['obs_name'].keys()
-    for (name, data) in data_train_panda.iteritems():
-        tf_dtype = tf.float32 if data.dtype == np.float32 else tf.bool
-        x = tf.constant(data.to_numpy(), dtype=tf.float32)
-    print(x)
+# if __name__ == '__main__':
+#     import tensorflow as tf
+#
+#     env_vars, data_train_panda, data_test_panda = data_from_csv(Path('../../benchmarks/run_sources/MTC/samples75.csv'), action_name=None)
+#     obsnames = env_vars['obs_name'].keys()
+#     for (name, data) in data_train_panda.iteritems():
+#         tf_dtype = tf.float16 if data.dtype == np.float16 else tf.bool
+#         x = tf.constant(data.to_numpy(), dtype=tf.float16)
+#     print(x)

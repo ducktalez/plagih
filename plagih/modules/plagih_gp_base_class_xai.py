@@ -1319,12 +1319,10 @@ class ExplainableGP(object):
                 if is_negative:
                     obs_label = obs_label[1:]
 
-                label_main = obs_get_family(obs_label)
-
                 label_timedelta = obs_get_timedelta(obs_label)
                 label_timedelta = gp_mutate_constants(label_timedelta, term_type=int, filter_type=None)
 
-                var_list = self.env_vars['env_observation_family'].get(label_main)
+                var_list = self.env_vars['env_observation_family'].get(obs_get_family(obs_label))
                 if var_list is not None:
                     indexx = var_list.index(obs_label)
                     indexx = indexx + label_timedelta

@@ -47,10 +47,6 @@ class EnvObservations:
     """
 
     def __init__(self):
-        self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
-        self.obs_info = {}
-        self.random_family = {}
-        self.xtype_obs = {'2f': [], '2b': []}
 
 
 class EvalAction:
@@ -74,8 +70,10 @@ class EvalAction:
 class EnvVars:
 
     def __init__(self):
-        self.eval_action = EvalAction()
-        self.obs = EnvObservations()
+        self.krazy_obs = None
+        self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
+        self.obs_info = {}
+        self.eval_action = None
 
 
 def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
@@ -155,11 +153,9 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
         p = obs_family_choice(family_meeting)
         choose_obs_2f.extend(list(family_meeting))
         choose_obs_p.extend(list(p))
-
     obs_2f = lambda: random.choice(choose_obs_2f, p=choose_obs_p)
     random_obs = {'2f': obs_2f,
-                  '2b': None}
-    # todo consider max age?
+                  '2b': None}  # todo consider max age?
 
     env_vars = EnvVars()
 

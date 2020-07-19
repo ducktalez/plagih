@@ -1729,8 +1729,6 @@ class ExplainableGP(object):
         fitness_train = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                 origin_pairwise_fitness=self.origin_results)
 
-        print('asd', fitness_train)
-
         if not check_value_is_real(fitness_train):
             raise Exception(f'Fitness is inf or nan: {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
         fitness_train = round(fitness_train, self.config['fitness_accuracy'])

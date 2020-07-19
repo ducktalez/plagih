@@ -45,14 +45,6 @@ def obs_family_choice(obs_list, max_hist=10):
     return p
 
 
-class EnvObservations:
-    """
-    """
-
-    def __init__(self):
-        pass
-
-
 class EvalAction:
     """
     - minmax for histograms
@@ -176,7 +168,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
             for obs_tmp in family_meeting:
                 env_vars.obs_infos[obs_tmp].index_minmax = index_minmax
                 if obs_tmp.obs_index is not None:
-                    obs_tmp.fun_filter_index = lambda: max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0)
+                    obs_tmp.fun_filter_index = lambda: int(max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
                 obs_info[obs_tmp.name] = obs_tmp
         else:
             # LOL UMAD? only one family member (probably even more common)

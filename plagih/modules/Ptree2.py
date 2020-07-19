@@ -168,7 +168,7 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core()}')
+            raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core}')
 
     def get_mutatable_nodes(self):
         """

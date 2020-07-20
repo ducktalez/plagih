@@ -67,9 +67,9 @@ def build_summaries():
     """
 
     # performance per episode
-    ph_reward = tf.compat.v1.placeholder(tf.float16)
+    ph_reward = tf.compat.v1.placeholder(tf.float32)
     tf.compat.v1.summary.scalar("Reward_ep", ph_reward)
-    ph_Qmax = tf.compat.v1.placeholder(tf.float16)
+    ph_Qmax = tf.compat.v1.placeholder(tf.float32)
     tf.compat.v1.summary.scalar("Qmax_ep", ph_Qmax)
 
     # merge all summary op (must be done at the last step)
@@ -119,11 +119,11 @@ class DeepQNetwork:
         self.replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
         self.minibatch_size = int(args['minibatch_size'])
 
-        self.s = tf.compat.v1.placeholder(tf.float16, [None, self.s_dim], name='state')  # input State
-        self.s_ = tf.compat.v1.placeholder(tf.float16, [None, self.s_dim], name='state_next')  # input Next State
-        self.r = tf.compat.v1.placeholder(tf.float16, [None, ], name='reward')  # input Reward
+        self.s = tf.compat.v1.placeholder(tf.float32, [None, self.s_dim], name='state')  # input State
+        self.s_ = tf.compat.v1.placeholder(tf.float32, [None, self.s_dim], name='state_next')  # input Next State
+        self.r = tf.compat.v1.placeholder(tf.float32, [None, ], name='reward')  # input Reward
         self.a = tf.compat.v1.placeholder(tf.int32, [None, ], name='action')  # input Action
-        self.done = tf.compat.v1.placeholder(tf.float16, [None, ], name='done')
+        self.done = tf.compat.v1.placeholder(tf.float32, [None, ], name='done')
 
         # initialize NN, self.q shape (batch_size, a_dim)
         self.q, self.nn_params = build_net("DQN", self.s, a_dim, args, trainable=True)

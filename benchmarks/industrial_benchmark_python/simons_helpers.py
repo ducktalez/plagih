@@ -23,7 +23,7 @@ def samples_preprocessing_csv():
     samples_prepared = Path('../run_sources/IB/samples_prepared.csv')
     df = pd.read_csv(samples_all)
 
-    drop_cols = [column for column in df.columns if (column[-2] != '_' and column[0] != 'a') or 'Reward' in column or ('SetPoint' in column and column != 'SetPoint')]
+    drop_cols = [column for column in df.columns if (column[-2] != '_' and column[0] != 'a') or 'Reward' in column or ('SetPoint' in column and column != 'SetPoint_0')]
     df = df.drop(drop_cols, axis=1)
     df = df.rename(columns={'SetPoint_0': 'SetPoint'})
     df.to_csv(samples_prepared, index=False)

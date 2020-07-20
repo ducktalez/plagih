@@ -662,7 +662,7 @@ def raise_if_empty(name, val):
         raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, float_decimals, random_obs, obs_krazy, choose_oparray2, choose_distributions, obs_age_max, min_depth=0, full_or_grow=None):
+def invent_label_list_depth(xtype_root, depth_goal, float_decimals, choose_obs, obs_krazy, choose_oparray2, choose_distributions, min_depth=0, full_or_grow=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -691,7 +691,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, random_obs, 
 
             for ii, xtype in enumerate(tbdo_xtypes):
                 if functerm_list[ii] == 'term':
-                    label = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals, obs_age_max)
+                    label = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals)
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
@@ -715,7 +715,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, random_obs, 
         else:  # now, we are on the lowest dim_y.
 
             for xtype in tbdo_xtypes:  # Build terminals now.
-                label, arity = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals, obs_age_max), 0
+                label, arity = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
 
                 # Add the label to the result list
                 result_label_list.append(label)
@@ -728,7 +728,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, random_obs, 
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, random_obs, obs_krazy, choose_oparray2, choose_distributions, obs_age_max, full_or_grow='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, choose_obs, obs_krazy, choose_oparray2, choose_distributions, full_or_grow='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -791,7 +791,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, random_obs,
 
         for index in term_at:
             t_xtype = tbdo_xtypes[index]
-            label, arity = choose_term(t_xtype[-2:], random_obs, choose_distributions, float_decimals), 0
+            label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
             label_xtype = xtype_get_from_label(label, obs_krazy)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
@@ -816,7 +816,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, random_obs,
     else:
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
-            label, arity = choose_term(t_xtype[-2:], random_obs, choose_distributions, float_decimals), 0
+            label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
             label_xtype = xtype_get_from_label(label, obs_krazy)
             result_label_list.append(label)
             result_arity_list.append(arity)
@@ -1692,26 +1692,26 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     return tree_sym_tildefree
 
 
-def tree_evolve_mutate_point(tree, float_decimals, choose_oparray2, env_vars, choose_distributions, obs_age_max):
-    """
-    Mutate a single mutatable point in any Tree.
-    """
-
-    # 1. choose a node
-    node_ids = tree_get_mutatable_nodes(tree)
-    node_id = random.choice(node_ids)
-    label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
-
-    if arity > 0:
-        new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
-        tree = tree_node_set_label(tree, node_id, new_label)
-    else:
-        new_label = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals, obs_age_max)  # 3 -> '2f' -> 5
-        tree = tree_node_set_label(tree, node_id, new_label)
-
-    # All node info should stay the same. xtype, arity
-
-    return tree  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
+# def tree_evolve_mutate_point(tree, float_decimals, choose_oparray2, random_obs, choose_distributions):
+#     """
+#     Mutate a single mutatable point in any Tree.
+#     """
+#
+#     # 1. choose a node
+#     node_ids = tree_get_mutatable_nodes(tree)
+#     node_id = random.choice(node_ids)
+#     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
+#
+#     if arity > 0:
+#         new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
+#         tree = tree_node_set_label(tree, node_id, new_label)
+#     else:
+#         new_label = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+#         tree = tree_node_set_label(tree, node_id, new_label)
+#
+#     # All node info should stay the same. xtype, arity
+#
+#     return tree  # 'node' is returned only to be assigned to the 'tourn_trees' record keeping
 
 
 def tree_remove_tilde(tree):
@@ -1968,7 +1968,7 @@ def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter'
     return constant
 
 
-def tree_prune_depth(tree, max_depth, obs_krazy, random_obs, choose_distributions, float_decimals):
+def tree_prune_depth(tree, max_depth, obs_krazy, choose_obs, choose_distributions, float_decimals):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
@@ -1985,7 +1985,7 @@ def tree_prune_depth(tree, max_depth, obs_krazy, random_obs, choose_distribution
             label = tree_node_get_label(tree, node_id)
             xtype = xtype_get_from_label(label, obs_krazy)
             tree = tree_node_set_arity(tree, node_id, 0)
-            new_term = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals)  # replace label
+            new_term = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)
 
         elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth

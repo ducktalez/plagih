@@ -15,7 +15,7 @@ class Obs:
     def __init__(self, name, ctype):
         self.name = name
         self.ctype = ctype
-        self.tf_type = tf.float16
+        self.tf_type = tf.float32
         self.xtype = '2f'
 
         obs_family, obs_index = observation_get_family_and_time(name, none_return=None)
@@ -23,10 +23,10 @@ class Obs:
         self.obs_index = obs_index  # is None when no index but 0 when
 
         self.index_minmax = None
-        self.filter_index = lambda: self.obs_index  # as default, return own index
+        self.filter_index = lambda: None  # as default, return own index
 
 
-def obs_family_choice(obs_list, max_hist=10):
+def choice_weights(obs_list, max_hist=10):
     """
     chooses variables but weighting how old they are.
     obs_list = ['gain_0', 'gain_1', 'gain_2', 'gain_3', 'gain_4']
@@ -56,7 +56,7 @@ class EvalAction:
 
         self.name = name
         self.ctype = ctype  # ! may be int!
-        self.tf_type = tf.float16  # sfeh especiall when the type is integer
+        self.tf_type = tf.float32  # sfeh especiall when the type is integer
         self.xtype = '2f'
 
         self.uniques = uniques
@@ -147,7 +147,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
             obs_list.append(Obs(column_name, ctype))
 
     df.rename(columns=rename_columns, inplace=True)
-    df = df.astype('float16')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
+    df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
     df = df.drop(drop_actions)  # no need to keep other actions
 
     """
@@ -161,28 +161,28 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     for fam in obs_fams:
         family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
         if len(family_meeting) > 1:
-            p = obs_family_choice(family_meeting)
             choose_obs_2f.extend([x.name for x in family_meeting])
-            choose_obs_p.extend(list(p))
+            choose_obs_p.extend(list(choice_weights(family_meeting)))
+
             index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
             for obs_tmp in family_meeting:
-                env_vars.obs_infos[obs_tmp].index_minmax = index_minmax
-                if obs_tmp.obs_index is not None:
-                    obs_tmp.fun_filter_index = lambda: int(max(min(round(np.random.normal(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
+                obs_tmp.index_minmax = index_minmax
+                env_vars.obs_infos[obs_tmp.name] = obs_tmp
+                obs_tmp.fun_filter_index = lambda: int(max(min(round(random.gauss(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
                 obs_info[obs_tmp.name] = obs_tmp
         else:
             # LOL UMAD? only one family member (probably even more common)
             obs_tmp = family_meeting[0]
-            obs_tmp.fun_filter_index = lambda: obs_tmp.name
+            obs_tmp.fun_filter_index = lambda: None
             obs_info[obs_tmp.name] = obs_tmp
             choose_obs_2f.append(obs_tmp)
             choose_obs_p.append(1)
 
     obs_2f = lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0]
-    random_obs = {'2f': obs_2f,
+    choose_obs = {'2f': obs_2f,
                   '2b': None}  # todo consider max age?
 
-    env_vars.choose_obs = random_obs
+    env_vars.choose_obs = choose_obs
     env_vars.obs_infos = obs_info
 
     if eval_action:
@@ -257,6 +257,6 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
 #     env_vars, data_train_panda, data_test_panda = data_from_csv(Path('../../benchmarks/run_sources/MTC/samples75.csv'), action_name=None)
 #     obsnames = env_vars['obs_name'].keys()
 #     for (name, data) in data_train_panda.iteritems():
-#         tf_dtype = tf.float16 if data.dtype == np.float16 else tf.bool
-#         x = tf.constant(data.to_numpy(), dtype=tf.float16)
+#         tf_dtype = tf.float32 if data.dtype == np.float32 else tf.bool
+#         x = tf.constant(data.to_numpy(), dtype=tf.float32)
 #     print(x)

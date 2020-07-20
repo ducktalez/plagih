@@ -14,7 +14,29 @@ Main features:
 - visualisation with latex
 
 
-## How to
+## Python 3.7 packages
+
+Anaconda 3.7 (2020.2) with conda packages. Some packages are only available in pip though.
+
+Conda packages:
+pathlib
+sympy
+apted
+tensorflow
+sklearn
+pandas
+sympy
+tikzplotlib (optional)
+gym (optional)
+
+non-conda packages:
+apted
+
+update of the yaml module might be necessary:
+conda install -U PyYaml
+or
+pip install -U PyYaml
+
 
 ### Example run
 Run `start.py`

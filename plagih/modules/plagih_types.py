@@ -72,7 +72,7 @@ def random_choose_tempobs(obs_list, max_hist=10):
     return new_obs
 
 
-def choose_term(xtype, random_obs, choose_distribution, float_decimals):
+def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
     """
     Returns a terminal of xtype.
 
@@ -89,14 +89,22 @@ def choose_term(xtype, random_obs, choose_distribution, float_decimals):
     """
 
     # insert a ?
-    if random.choice(['obs', 'distrib']) == 'obs' and random_obs[xtype]:
+    if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype]:
         # obs_list = random.choice(list(env_vars['env_observation_family'].values()))
-        term = random_obs[xtype]()
+        try:
+            # todo
+            term = choose_obs[xtype]()
+        except:
+            print(choose_obs['2f'][1]())
+            print(choose_obs['2f'][0]())
+            term = random.choice(choose_obs[xtype])()
+            raise Exception('DELETE THIS IF NOT OCCURING FOR 0.344 days')
     else:
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()
         if '2f' in xtype:  # sfeh int aswell?
-            term = round(term * float_decimals) / float_decimals
+            todo = round(term, float_decimals)
+            term = todo
 
     return str(term)  # sfeh str necessary?
 

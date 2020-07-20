@@ -62,7 +62,7 @@ class ExplainableGP(object):
             'gen_max': 1001,  # Maximum amount of generations
 
             'pop_max': 1000,  # amount is never tested
-            'obs_age_max': 10,
+            'obs_age_max': 10,  # todo?
             'tree_depth_max': 10,  # maximum Tree depth for entire run
             'tree_depth_min': 2,
             'tourn_size': 3,  # [7 per 100] number of trees selected for tournament
@@ -125,7 +125,7 @@ class ExplainableGP(object):
                 'samples_csv': 'run_files/samples.csv',
                 'distributions_file': 'run_files/distributions_file.yaml',
             },
-            'distributions_as_string':
+            'lambdadist_as_string':
                 {'2f': ['lambda: random.normalvariate(1,2)',
                         'lambda: random.normalvariate(1,1)',
                         'lambda: random.randint(0, 10)'],
@@ -155,7 +155,7 @@ class ExplainableGP(object):
         """
         load relevant stuff
         """
-        self.gp_load_distributions(path_distributions=None)
+        self.activate_distributions(path_distrib=None)
         self.gp_load_oparray(opth_operators=opth_operators)
 
         """
@@ -541,8 +541,8 @@ class ExplainableGP(object):
 
                 for nn in range(int(evolve_num / 2)):  # two childs
                     parent_a = self.pop_selection_tournament(tourn_size)
-                    parent_a = parent_a.get_oldtree()
                     parent_b = self.pop_selection_tournament(tourn_size)
+                    parent_a = parent_a.get_oldtree()
                     parent_b = parent_b.get_oldtree()
                     child_a, child_b = self.pop_crossover_branch(parent_a, parent_b)
                     self.pop_append(child_a, last_evolution=tag)
@@ -753,7 +753,7 @@ class ExplainableGP(object):
         elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier sfeh load file
             data_prepared = pickle_load(self.root_path('samples_ready_p'))
         elif Path.is_file(self.root_path('samples_csv')):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file
-            data_prepared = data_from_csv(self.root_path('samples_csv'))
+            data_prepared = data_from_csv(self.root_path('samples_csv'), action_name=action_name)
             print(f'Prepared the raw {self.file_loc("samples_csv")} behaviour. Saving for next run.')
             pickle_dump(self.root_path('samples_ready_p'), data_prepared)
         else:
@@ -814,32 +814,31 @@ class ExplainableGP(object):
 
         return
 
-    def gp_load_distributions(self, path_distributions=None):
+    def activate_distributions(self, path_distrib=None):
         """
 
         """
         # double check load
-        if not path_distributions:
-            path_distributions = self.root_path('distributions_file')
+        path_distrib = path_distrib if path_distrib is not None else self.root_path('distributions_file')
 
-        if Path.is_file(path_distributions):
-            distributions_as_string = yaml_load(path_distributions)
+        if Path.is_file(path_distrib):
+            lambdadist_as_string = yaml_load(path_distrib)
         else:
             print_warning('www', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
-            distributions_as_string = self.config['distributions_as_string']
+            lambdadist_as_string = self.config['lambdadist_as_string']
 
         choose_distributions = {'2f': [], '2b': []}
 
-        take_data_samples = distributions_as_string.get('observed_floats')
-        if take_data_samples:
+        sample_amount = lambdadist_as_string.get('observed_floats')
+        if sample_amount:
             obsnames = self.env_vars.obs_infos.keys()
             obs_samples = self.data_train[obsnames].to_numpy().flatten()
 
-            obs_samples = np.random.choice(obs_samples, size=take_data_samples)
+            obs_samples = np.random.choice(obs_samples, size=sample_amount)
             choose_distributions['2f'].extend([lambda: random.choice(obs_samples)]),  # take one
 
-        choose_distributions['2f'].extend([eval(x) for x in distributions_as_string['2f']]),
-        choose_distributions['2b'].extend([eval(x) for x in distributions_as_string['2b']])
+        choose_distributions['2f'].extend([eval(x) for x in lambdadist_as_string['2f']]),
+        choose_distributions['2b'].extend([eval(x) for x in lambdadist_as_string['2b']])
 
         self.choose_distributions = choose_distributions
 
@@ -1184,13 +1183,10 @@ class ExplainableGP(object):
         LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         """
         if not fitness_train:
-            # fitness_train = tree_get_fitness(tree)
             fitness_train = cooltree.meta.fitness_train
         if not parsimony:
-            # parsimony = tree_get_parsimony(tree)
             parsimony = cooltree.meta.complexity  # todo complexity vs parsimony?
         if not expr_raw:
-            # expr_raw = tree_get_expr_raw(tree, node_id=root_id)
             expr_raw = cooltree.get_expr_raw()
         if not expr_sym:
             expr_sym = expr_sympify(expr_raw)
@@ -1230,14 +1226,14 @@ class ExplainableGP(object):
 
         return
 
-    def pop_reproduce(self, call_params, cooltree):
+    def pop_reproduce(self, call_params, cooltree: CoolTree):
 
         """
 
         copy a tree from the last population without changing its outcome
         """
         if call_params.get('sympify_tree'):
-            cooltree.evolve_reduce(self.env_vars.obs_krazy, completely=False)
+            cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
 
         return cooltree
 
@@ -1269,8 +1265,7 @@ class ExplainableGP(object):
         cooltree.evolve_mutate_point(self.float_decimals,
                                      self.choose_oparray2,
                                      self.env_vars.choose_obs,
-                                     self.choose_distributions,
-                                     self.config['obs_age_max'])
+                                     self.choose_distributions)
 
         return cooltree
 
@@ -1341,15 +1336,13 @@ class ExplainableGP(object):
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size, float_decimals,
                                                                          self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
-                                                                         self.choose_distributions, self.config['obs_age_max'],
-                                                                         full_or_grow=full_or_grow)
+                                                                         self.choose_distributions, full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size, float_decimals,
                                                                          self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
-                                                                         self.choose_distributions, self.config['obs_age_max'],
-                                                                         full_or_grow=full_or_grow)
+                                                                         self.choose_distributions, full_or_grow=full_or_grow)
         else:
             raise Exception('Known full_or_grow was not found for building random trees.')
         return label_list, arity_list, xtype_list
@@ -1470,7 +1463,7 @@ class ExplainableGP(object):
 
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
-            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.float_decimals)  # self.config['obs_age_max']
+            tree = tree_prune_depth(tree, self.config['tree_depth_max'], self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.float_decimals)
         else:
             tree = None
 
@@ -1504,12 +1497,10 @@ class ExplainableGP(object):
         right_core = Core_From_Labels(right_labels, right_aritys, right_xtypes).get_uninstanced_core()
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars.obs_krazy,
-                                          self.choose_distributions, self.float_decimals, self.config['obs_age_max'])
+        left_offspring = tree_prune_depth(left_offspring, self.config['tree_depth_max'], self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.float_decimals)
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_vars.obs_krazy,
-                                           self.choose_distributions, self.float_decimals, self.config['obs_age_max'])
+        right_offspring = tree_prune_depth(right_offspring, self.config['tree_depth_max'], self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.float_decimals)
 
         left_offspring = cooltree_from_oldtree(left_offspring)
         right_offspring = cooltree_from_oldtree(right_offspring)
@@ -1567,11 +1558,12 @@ class ExplainableGP(object):
                 # simplify the tree ans save in pareto once again
                 self.printpl('aaa', 'Trying to simplify for pareto entry.')
                 cooltree_sym = copy.deepcopy(cooltree)
-                cooltree_sym.evolve_reduce(self.env_vars.obs_krazy, completely=True)
+                cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
 
                 if len(cooltree_sym) < len(cooltree):
                     sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
                     if sym_fitness != cooltree.meta.fitness_train and TEST_PHASE:
+                        raise Exception('TODO FUCK')
                         print_e(f'Fitness of a sympified tree is different! sym: {sym_fitness}, before: {cooltree.meta.fitness_train}\n'
                                 f'tree: {cooltree.core.labellist_from_coolcore()}\n'
                                 f'symp: {cooltree_sym.core.labellist_from_coolcore()}\n'

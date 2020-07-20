@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 try:
-    import tikzplotlib
+    import tikzplotlib  # actually, those look like shit?
 except Exception as ex:
     print_e(f'Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{ex}')
 

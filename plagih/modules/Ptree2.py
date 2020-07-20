@@ -164,11 +164,11 @@ class CoolCore:
         except:
             print_e(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
             return
-        new_core = coolcore_from_expr(expr_sym, obs_krazy)
-        if len(new_core) < len(self):
+        new_core = coolcore_from_expr(expr_sym, obs_krazy)  # todo idea sympy aligns variables alphabetically?!
+        if len(new_core) < len(self):  # todo idea sympify: if > is found, switch the childs and make it a <=
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core}')
+            raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core}\n{self.get_expr_raw()}')
 
     def get_mutatable_nodes(self):
         """
@@ -286,10 +286,6 @@ class CoolCore:
             childstr = ', '.join([str(x) for x in self.childs])
             return f"[{label_info}, {childstr}]"
 
-    def pretty_print(self):
-        layerlabellist = self.get_layer_labellist()
-        return '\n'.join([', '.join(layer) for layer in layerlabellist])
-
     def __len__(self):
         """
         """
@@ -343,6 +339,9 @@ class CoolCore:
                 self.label = float(round(float(self.label)))
             except ValueError:
                 pass  # todo: implicit round operator in TF-grapf and evaluation?
+            except OverflowError:
+                print('How often overflow error? idk man')
+                return
 
         if self.label == '**':
             normalize_me = True
@@ -519,7 +518,7 @@ class CoolTree:
     def get_pycode(self):
         return self.core.get_pycode()
 
-    def get_nodes_at_depth(self, lvl_goal, only_mutable=False, get_closest_depth=True):
+    def get_nodes_at_depth(self, lvl_goal, only_mutable=False, get_closest_depth=False):
         """
         Returns a list with mutatable ids which are *lvl_goal* layers away from non modifiable nodes
         last_leaves: if you want so save all leave nodes aswell
@@ -527,7 +526,7 @@ class CoolTree:
 
         return self.core.get_nodes_at_depth(lvl_goal, only_mutable=only_mutable, get_closest_depth=get_closest_depth)
 
-    def evolve_reduce(self, obs_krazy, completely=True):
+    def evolve_reduce(self, obs_krazy=None, completely=True):
         """
             Reducing a tree to its most basic form with sympify.
             (completely = False: reduce just one branch. if you wanted to have more complexity)
@@ -556,7 +555,7 @@ class CoolTree:
     def get_mutatable_nodes(self):
         return self.core.get_mutatable_nodes()
 
-    def evolve_mutate_point(self, float_decimals, choose_oparray2, random_obs, choose_distributions, obs_age_max):
+    def evolve_mutate_point(self, float_decimals, choose_oparray2, choose_obs, choose_distributions):
         """
         Mutate a single mutatable point in any Tree.
         """
@@ -568,7 +567,7 @@ class CoolTree:
         if arity > 0:
             new_label, new_arity, new_xtype = choose_operator(node.xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
         else:
-            new_label = choose_term(node.xtype[-2:], random_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+            new_label = choose_term(node.xtype[-2:], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
 
         node.label = new_label
         self.finalize_structure()
@@ -585,7 +584,6 @@ class CoolTree:
         tree = tree_set_parsimony(tree, self.meta.complexity)
         tree = tree_set_last_evolution(tree, self.meta.last_evolution)
         return tree
-
 
     def tree_get_oldmeta(self):
         """
@@ -720,9 +718,17 @@ def test_sdf():
     # print([str(x) for x in platree2_from_oldversion(labels, modify_list=allowMods)])
 
 
+def todo_test_cooltree_from_coollist(coollist):
+
+    coollist = '[*, cartPos, [**, [+, cartPos, 1.077166], 2.0]]'
+
+
 # test_insert_subtree()
 
 label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
-modify_list = [0, 1, 0, 0, 1, 1]
-cooltree = cooltree_from_labellist(label_list, modify_list=modify_list)
-x = cooltree.get_apted_notation()
+cooltree = cooltree_from_labellist(label_list, modify_list=[0, 1, 0, 0, 1, 1])
+label_list = ['usub', 'asd']
+cooltree = cooltree_from_labellist(label_list)
+print(cooltree)
+cooltree.evolve_reduce()
+print(cooltree)

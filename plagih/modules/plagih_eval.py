@@ -32,8 +32,8 @@ class RegressionDiscrete(DummyKernel):
 
     def tf_wrap_result(self, tf_result, action_min_max):
         # regression that fits the outputs to a discrete set of actions defined by min and max
-        act_min = tf.constant(action_min_max[0], dtype=tf.float16)
-        act_max = tf.constant(action_min_max[1], dtype=tf.float16)
+        act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+        act_max = tf.constant(action_min_max[1], dtype=tf.float32)
         customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
         return customised_result
 
@@ -156,8 +156,8 @@ class FitnessKernel:
             tf_result = tf.math.round(tf_result)
 
         if 'bounded' in self.kernel:
-            act_min = tf.constant(action_min_max[0])  # dtype=tf.float16
-            act_max = tf.constant(action_min_max[1])  # dtype=tf.float16
+            act_min = tf.constant(action_min_max[0])  # dtype=tf.float32
+            act_max = tf.constant(action_min_max[1])  # dtype=tf.float32
             tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
         return tf_result
@@ -301,15 +301,15 @@ def get_env_tensors(pd_data, eval_action, obs_infos):
     tensors = {}  # todo dauerhafte tensoren?
 
     for obs_x in obs_infos.values():
-        # tf_dtype = tf.float16 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
+        # tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
         obs_name = obs_x.name
-        tensors[obs_name] = tf.constant(pd_data[obs_name])  # , dtype=tf.float16 todo: neverask.jpg
+        tensors[obs_name] = tf.constant(pd_data[obs_name])  # , dtype=tf.float32 todo: neverask.jpg
         # todo, sfeh, note/problem
         #  pandas will automatically get the column type of a loaded .csv file (float64, int64, ...)
-        #  converting to tensor will automatically convert to the corresponding tf-type (tf.float16, tf.int32, ...)
-        #  BUT: (during calculating regression) if action's tf-type is not agent's result -> Error (tf.int32 - tf.float16)
+        #  converting to tensor will automatically convert to the corresponding tf-type (tf.float32, tf.int32, ...)
+        #  BUT: (during calculating regression) if action's tf-type is not agent's result -> Error (tf.int32 - tf.float32)
         #  Solution?
-        #  (1) use tf.float16 everywhere (set the dtype here)
+        #  (1) use tf.float32 everywhere (set the dtype here)
         #       might take (very little) longer (CURRENTLY USED)
         #  (2) convert agent result to action's dtype
         #       inside the kernel, problems might occur
@@ -329,16 +329,13 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     Please provide ONE of the following if you want to get...
     - tensorflow-graph: All variables (observation0, ...) as tensors.
     - build: True
-    More information in ast_convert_from_expr_recursive()
+    More information in ast_expr_to()
 
     """
     # print('Current expr:', expr)  # importantprint for debugging failed expressions
 
     ast_tree = ast.parse(expr, mode='eval').body
-    try:
-        graph = ast_convert_from_expr_recursive(ast_tree, tensors=tensors, build=build)
-    except Exception as ex:
-        graph = ast_convert_from_expr_recursive(ast_tree, tensors=tensors, build=build)
+    graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
 
     if build:
         graph = labels_from_nestedexpr(graph, [])
@@ -348,7 +345,7 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
 
 def labels_from_nestedexpr(labels_nested_list, result_accum):
     """
-    Returns a label list from the nested list which ast_convert_from_expr_recursive() created
+    Returns a label list from the nested list which ast_expr_to() created
     [+, [a], [/, [b, c]]]]  -> [+, a, /, b, c]
     """
 
@@ -367,7 +364,7 @@ def labels_from_nestedexpr(labels_nested_list, result_accum):
     return result_accum
 
 
-def ast_convert_from_expr_recursive(node, tensors=None, build=None):
+def ast_expr_to(node, tensors=None, build=None):
     """
     Returns (recursively) a (tensorflow) graph from a (raw or sympified) math expression.
     please use by calling labels_from_graphlist()
@@ -384,18 +381,15 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     if isinstance(node, ast.Name):  # <tensor_name>
         if build:
             return [node.id]
-            # sfeh, what is better?
-            # return node.id
         else:
             return tensors[node.id]
 
     elif isinstance(node, ast.Num):  # <number>
         if build:
-            # return node.n
             return [node.n]
         else:
             shape = tensors[list(tensors.keys())[0]].get_shape()
-            return tf.constant(node.n, shape=shape, dtype=tf.float16)
+            return tf.constant(node.n, shape=shape, dtype=tf.float32)
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
         if build:
@@ -408,23 +402,26 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
         if build:
             if type(node.op) == ast.USub:
-                return ['~', [ast_convert_from_expr_recursive(node.operand, build=True)]]
-                # return ['-', ['0', ast_convert_from_expr_recursive(node.operand, build=True)]]
-            return [op[type(node.op)]['fun_label'], [ast_convert_from_expr_recursive(node.operand, build=True)]]
+                if isinstance(node.operand, ast.Name) or isinstance(node.operand, ast.Num) or isinstance(node.operand, ast.NameConstant):
+                    # return ['~', [ast_expr_to(node.operand, build=True)]]  # todo wait what. sympify uses ~. also,
+                    return [f'-{ast_expr_to(node.operand, build=True)[0]}']
+                else:
+                    return ['usub', ['0', ast_expr_to(node.operand, build=True)]]
+            return [op[type(node.op)]['fun_label'], [ast_expr_to(node.operand, build=True)]]
         else:
             return op[type(node.op)]['tf'](
-                ast_convert_from_expr_recursive(node.operand, tensors=tensors))
+                ast_expr_to(node.operand, tensors=tensors))
 
     # Arity 2
     elif isinstance(node, ast.BinOp) or isinstance(node, ast.BitAnd):  # <left> <operator> <right>, e.g., (x + y), (a & True)
         if build:
             return [op[type(node.op)]['fun_label'],
-                    [ast_convert_from_expr_recursive(node.left, build=True),
-                     ast_convert_from_expr_recursive(node.right, build=True)]]
+                    [ast_expr_to(node.left, build=True),
+                     ast_expr_to(node.right, build=True)]]
         else:
             return op[type(node.op)]['tf'](
-                ast_convert_from_expr_recursive(node.left, tensors=tensors),
-                ast_convert_from_expr_recursive(node.right, tensors=tensors))
+                ast_expr_to(node.left, tensors=tensors),
+                ast_expr_to(node.right, tensors=tensors))
 
     elif isinstance(node, ast.BoolOp):  # <left> <bool_operator> <right> e.g. x or y
         if build:
@@ -444,34 +441,34 @@ def ast_convert_from_expr_recursive(node, tensors=None, build=None):
         if node.func.id == 'Ifte':
             if build:
                 return ['Ifte',
-                        [ast_convert_from_expr_recursive(node.args[0], build=True),
-                         ast_convert_from_expr_recursive(node.args[1], build=True),
-                         ast_convert_from_expr_recursive(node.args[2], build=True)]]
+                        [ast_expr_to(node.args[0], build=True),
+                         ast_expr_to(node.args[1], build=True),
+                         ast_expr_to(node.args[2], build=True)]]
             else:
                 return op[node.func.id]['tf'](tf.dtypes.cast(
-                    ast_convert_from_expr_recursive(node.args[0], tensors=tensors), tf.bool),
-                    ast_convert_from_expr_recursive(node.args[1], tensors=tensors),
-                    ast_convert_from_expr_recursive(node.args[2], tensors=tensors))
+                    ast_expr_to(node.args[0], tensors=tensors), tf.bool),
+                    ast_expr_to(node.args[1], tensors=tensors),
+                    ast_expr_to(node.args[2], tensors=tensors))
 
         elif node.func.id == 'Ftob' or node.func.id == 'Btof':
             if build:
-                return [node.func.id, [ast_convert_from_expr_recursive(node.args[0], build=True)]]
+                return [node.func.id, [ast_expr_to(node.args[0], build=True)]]
             else:
-                return tf.dtypes.cast(*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args], dtype=op[node.func.id]['tf'])
+                return tf.dtypes.cast(*[ast_expr_to(arg, tensors=tensors) for arg in node.args], dtype=op[node.func.id]['tf'])
 
         elif len(node.args) <= 2:
             if build:
                 if len(node.args) == 1:
                     return [op[node.func.id]['fun_label'],
-                            [ast_convert_from_expr_recursive(node.args[0], build=True)]]
+                            [ast_expr_to(node.args[0], build=True)]]
                 elif len(node.args) == 2:
                     return [op[node.func.id]['fun_label'],
-                            [ast_convert_from_expr_recursive(node.args[0], build=True),
-                             ast_convert_from_expr_recursive(node.args[1], build=True)]]
+                            [ast_expr_to(node.args[0], build=True),
+                             ast_expr_to(node.args[1], build=True)]]
                 else:
                     raise Exception('This arity is not supported')
             else:
-                return op[node.func.id]['tf'](*[ast_convert_from_expr_recursive(arg, tensors=tensors) for arg in node.args])
+                return op[node.func.id]['tf'](*[ast_expr_to(arg, tensors=tensors) for arg in node.args])
 
             # If nothing matched
         else:
@@ -488,7 +485,7 @@ def ast_chain_bool(values, operation, tensors=None, build=False):
     --> values[0] operation values[1]
     """
     if build:
-        x = ast_convert_from_expr_recursive(values[0], build=True)
+        x = ast_expr_to(values[0], build=True)
         if len(values) == 2:
             return [operation, [values[0], values[1]]]
         elif len(values) == 1:
@@ -496,7 +493,7 @@ def ast_chain_bool(values, operation, tensors=None, build=False):
         else:
             raise
     elif tensors:
-        x = tf.dtypes.cast(ast_convert_from_expr_recursive(values[0], tensors=tensors), tf.bool)
+        x = tf.dtypes.cast(ast_expr_to(values[0], tensors=tensors), tf.bool)
         if len(values) > 1:
             return operation(x, ast_chain_bool(values[1:], operation, tensors=tensors))
         else:
@@ -509,8 +506,8 @@ def ast_chain_compare(comparators, ops, tensors=None, build=False):
 
     """
 
-    x = ast_convert_from_expr_recursive(comparators[0], tensors=tensors, build=build)
-    y = ast_convert_from_expr_recursive(comparators[1], tensors=tensors, build=build)
+    x = ast_expr_to(comparators[0], tensors=tensors, build=build)
+    y = ast_expr_to(comparators[1], tensors=tensors, build=build)
 
     if len(comparators) > 2:
         print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')

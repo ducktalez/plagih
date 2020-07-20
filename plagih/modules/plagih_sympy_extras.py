@@ -202,6 +202,19 @@ class Usub(Function):
         return eval(self, a)
 
 
+class Intround(Function):
+    """
+    """
+    nargs = 1
+
+    @classmethod
+    def eval(cls, a):
+        return round(a)  # see
+
+    def _sympy_(self, a):
+        return eval(self, a)
+
+
 # class Ftob(Function):
 #     """
 #     Dummy function to convert Float to boolean
@@ -243,7 +256,8 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Orb': Orb,
                     'Notb': Notb,
                     'Square': Square,
-                    'usub': Usub}
+                    'usub': Usub,
+                    'round': Intround}
 
 
 def plagih_sympify(function_string):

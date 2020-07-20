@@ -15,7 +15,7 @@ class CoolCore:
     x = Pnode('+', childs=[Pnode('1'), Pnode('2')])
     """
 
-    def __init__(self, label=None, is_fix=False, complete=False, arity=None, xtype=None, childs=None, depth=0, nodepath=None):
+    def __init__(self, label=None, is_fix=False, complete=False, arity=None, xtype=None, childs=None, depth=None, nodepath=None):
 
         if xtype is None:
             xtype = xtype_get_from_label(label)
@@ -164,8 +164,15 @@ class CoolCore:
         except:
             print_e(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
             return
-        new_core = coolcore_from_expr(expr_sym, obs_krazy)  # todo idea sympy aligns variables alphabetically?!
-        if len(new_core) < len(self):  # todo idea sympify: if > is found, switch the childs and make it a <=
+
+        try:
+            new_core = coolcore_from_expr(expr_sym, obs_krazy)
+        except:
+            # todo
+            new_core = coolcore_from_expr(expr_sym, obs_krazy)
+        # todo idea sympy aligns variables alphabetically?!
+        # todo idea sympify: if > is found, switch the childs and make it a <=
+        if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
             raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core}\n{self.get_expr_raw()}')
@@ -338,7 +345,12 @@ class CoolCore:
             try:
                 self.label = float(round(float(self.label)))
             except ValueError:
-                pass  # todo: implicit round operator in TF-grapf and evaluation?
+                # todo - insert a int7ROUND-NODE? round
+                insert_this = CoolCore(self.label, arity=1, xtype='f2f', childs=self.childs)
+                self.childs = [insert_this]
+                self.label = 'round'
+                # todo
+                raise
             except OverflowError:
                 print('How often overflow error? idk man')
                 return
@@ -391,7 +403,7 @@ class CoolTree:
         # todo
         if origin_tree is not None:
             self.core.set_fix_nodes(origin_coolcore=origin_tree.core)
-        self.core.workaround_normalize_exponentiation()
+        self.workaround_normalize_exponentiation()
         self.meta.last_evolution = last_evolution  # sfeh: should this be done during the evolve process?
 
     def get_layer_nodelist(self):
@@ -414,6 +426,8 @@ class CoolTree:
 
     def workaround_normalize_exponentiation(self):
         self.core.workaround_normalize_exponentiation()
+        # self.finish_nodes()  # todo better names?
+        self.finalize_completely()  # todo
 
     def finalize_structure(self):
         self.core.finalize_set_depth(depth=self.core.depth)
@@ -704,7 +718,6 @@ def test_insert_subtree():
     cooltree.insert_branch(chosen_node_path, subtree)
     print(cooltree)
     # 4. tree must be correct at all times!
-    cooltree.check_all()
 
 
 def test_sdf():

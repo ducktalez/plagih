@@ -151,7 +151,7 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     if eval_action is not None:
         config['eval_action'] = eval_action
 
-    gp = ExplainableGP(plagih_root, root_dir, config, path_data=path_data)
+    gp = ExplainableGP(plagih_root, root_dir, config, eval_action, path_data=path_data)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=cooltree_origin)
     if label_list is not None and modify_list is not None:

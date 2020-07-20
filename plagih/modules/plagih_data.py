@@ -12,6 +12,14 @@ import tensorflow as tf
 
 class Obs:
 
+    def filter_new_index(self):
+        if self.index_minmax is None:
+            return
+        else:
+            new_index = int(max(min(round(random.gauss(self.obs_index, 1)), self.index_minmax[1]), 0))
+            self.obs_index = new_index
+            self.name = f'{self.family}_{new_index}'
+
     def __init__(self, name, ctype):
         self.name = name
         self.ctype = ctype
@@ -23,7 +31,7 @@ class Obs:
         self.obs_index = obs_index  # is None when no index but 0 when
 
         self.index_minmax = None
-        self.filter_index = lambda: None  # as default, return own index
+        self.fun_filter_index = lambda: None  # as default, return own index
 
 
 def choice_weights(obs_list, max_hist=10):
@@ -148,7 +156,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
 
     df.rename(columns=rename_columns, inplace=True)
     df = df.astype('float32')  # sfeh sheesh, that will NOT work with bool or int data :P Following design pattern #YOLO
-    df = df.drop(drop_actions)  # no need to keep other actions
+    df = df.drop(drop_actions, axis=1)  # no need to keep other actions
 
     """
     choosing random observations made easy
@@ -161,19 +169,19 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     for fam in obs_fams:
         family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
         if len(family_meeting) > 1:
-            choose_obs_2f.extend([x.name for x in family_meeting])
+            choose_obs_2f.extend([x for x in family_meeting])
             choose_obs_p.extend(list(choice_weights(family_meeting)))
 
             index_minmax = (family_meeting[0].obs_index, family_meeting[-1].obs_index)
             for obs_tmp in family_meeting:
                 obs_tmp.index_minmax = index_minmax
                 env_vars.obs_infos[obs_tmp.name] = obs_tmp
-                obs_tmp.fun_filter_index = lambda: int(max(min(round(random.gauss(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
+                # obs_tmp.fun_filter_index = lambda: obs_tmp.filter_new_index()  # int(max(min(round(random.gauss(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
                 obs_info[obs_tmp.name] = obs_tmp
         else:
             # LOL UMAD? only one family member (probably even more common)
             obs_tmp = family_meeting[0]
-            obs_tmp.fun_filter_index = lambda: None
+            # obs_tmp.fun_filter_index = lambda: None
             obs_info[obs_tmp.name] = obs_tmp
             choose_obs_2f.append(obs_tmp)
             choose_obs_p.append(1)

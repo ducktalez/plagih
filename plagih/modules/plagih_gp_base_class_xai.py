@@ -42,7 +42,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, plagih_root, root_dir, user_config, path_data=None, opth_operators=None, action_name=None):
+    def __init__(self, plagih_root, root_dir, user_config, action_name, path_data=None, opth_operators=None):
 
         self.name = root_dir.resolve().name  # sfeh probably there are better names
         print(f'\n'
@@ -728,7 +728,7 @@ class ExplainableGP(object):
         real_path = self.root_path(file_key)
         return real_path
 
-    def activate_dataset(self, opth_data=None, action_name=None):
+    def activate_dataset(self, opth_data, action_name):
         """
         loading the data which the GP will be working on.
         The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -781,11 +781,11 @@ class ExplainableGP(object):
 
         except:
             print_warning('www', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operators.')
-            operators = np.array([['+', 3],
+            operators = np.array([['+', 2],
                                   ['-', 1], ['usub', 1],
                                   ['*', 2], ['/', 1],
                                   ['Square', 0.75], ['**', 0.25],
-                                  ['abs', 0.4], ['sign', 0.1],
+                                  ['abs', 0.4], ['sign', 0.1], ['round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
                                   ['sqrt', 0.2],
                                   # ['log', 0.1], ['log1p', 0.1],
                                   ['sin', 0.1],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
@@ -1317,7 +1317,8 @@ class ExplainableGP(object):
                     obs_label = obs_label[1:]
 
                 hello_node = self.env_vars.obs_infos[obs_label]
-                hello_node.fun_filter_index()
+                hello_node.filter_new_index()
+                # todotodo todo
                 obs_label = hello_node.name
 
                 new_obs = '-' + obs_label if is_negative else obs_label
@@ -1427,8 +1428,7 @@ class ExplainableGP(object):
         action_xtype = self.env_vars.eval_action.xtype
         build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
 
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow,
-                                                                    self.float_decimals)
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow, self.float_decimals)
 
         p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
         tree = p_tree.get_uninstanced_tree()
@@ -1452,8 +1452,7 @@ class ExplainableGP(object):
         old_xtype = tree_node_get_xtype(tree, old_node)
         build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)
 
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow,
-                                                                    self.float_decimals)
+        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow, self.float_decimals)
 
         if label_list:
             # core_insert = core_from_labels(label_list, arity_list, xtype_list)
@@ -1595,12 +1594,19 @@ class ExplainableGP(object):
         # todo check tree?
         try:
             cooltree.check_all()
-        except:
-            print_warning('w', f'tree failed the quick check. last-mod: {last_evolution}')
+        except Exception as ex:
+            print_warning('w', f'tree failed the quick check. last-mod: {last_evolution}. Reason:\n{ex}')
             return
 
+        try:
+            cooltree.workaround_normalize_exponentiation()
+        except:
+            # todo
+            return
+
+        # todo idea: check in sample names if observation is in operatos dictionary/sympy strings?
+
         # sfeh idea plot: x=complexity, y=fitness for all trees of a population
-        cooltree.workaround_normalize_exponentiation()
         # tree = self.tree_finish_nodes(tree, last_evolution=last_evolution)
 
         tree_ident = hash(cooltree)
@@ -1630,8 +1636,10 @@ class ExplainableGP(object):
         cooltree.meta.last_evolution = last_evolution
         cooltree.meta.expr_raw = expr_raw
         cooltree.meta.expr_sym = expr_sym
-
-        cooltree.finish_nodes(last_evolution, origin_tree=self.origin_tree_get())
+        try:
+            cooltree.finish_nodes(last_evolution, origin_tree=self.origin_tree_get())
+        except Exception as ex:
+            print(f'Damn yo, failed tree finish: {ex}\n{cooltree}')
 
         self.treelut_tree_add(cooltree, fitness_train=fitness_train, parsimony=parsimony)
         self.population_tmp.append(cooltree)
@@ -1855,7 +1863,7 @@ class ExplainableGP(object):
 
         gen_time = time.perf_counter() - self.time_genstart
         self.monitoring_dict['gen_time'][gen_id] = gen_time
-        self.print_g('gg', f'Created {len(popul)}/{self.config["pop_max"]} unique trees in generation {gen_id}. Gen took {gen_time:4.2f}s')
+        self.print_g('gg', f'Created {len(popul)}/{self.config["pop_max"]} trees in generation {gen_id}. Gen took {gen_time:4.2f}s')
         return
 
     def get_env_vars(self):

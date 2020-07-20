@@ -406,7 +406,7 @@ def ast_expr_to(node, tensors=None, build=None):
                     # return ['~', [ast_expr_to(node.operand, build=True)]]  # todo wait what. sympify uses ~. also,
                     return [f'-{ast_expr_to(node.operand, build=True)[0]}']
                 else:
-                    return ['usub', ['0', ast_expr_to(node.operand, build=True)]]
+                    return ['usub', [ast_expr_to(node.operand, build=True)]]
             return [op[type(node.op)]['fun_label'], [ast_expr_to(node.operand, build=True)]]
         else:
             return op[type(node.op)]['tf'](

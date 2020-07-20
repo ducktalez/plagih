@@ -91,14 +91,9 @@ def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
     # insert a ?
     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype]:
         # obs_list = random.choice(list(env_vars['env_observation_family'].values()))
-        try:
-            # todo
-            term = choose_obs[xtype]()
-        except:
-            print(choose_obs['2f'][1]())
-            print(choose_obs['2f'][0]())
-            term = random.choice(choose_obs[xtype])()
-            raise Exception('DELETE THIS IF NOT OCCURING FOR 0.344 days')
+        term = choose_obs[xtype]()
+        # todo
+        term = term.name
     else:
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()

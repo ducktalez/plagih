@@ -86,12 +86,8 @@ def test_sympify_many():
         ('Andb(True, a & b)', None),
         ('Notb(Orb(True, Orb(False, (0.895)<(vel))))', None),
         ('Ifte((Andb((((vel)+(0.9))+(Mini(6.0, pos)))==(abs(abs(-2.3))), Notb(((vel)*(vel))<(Mini(2.0, pos)))), (0), (2))', None),
-        ('Ifte((Notb((Maxi(0.4, cartVel))<=(9.0))), (0), (2))', None),
-        ('', None),
-        ('', None),
-        ('', None),
-        ('', None),
-        ('', None)]
+        ('Ifte((Notb((Maxi(0.4, cartVel))<=(9.0))), (0), (2))', None)
+    ]
 
     for expr in sympify_test_strings:
         print(plagih_sympify(expr[0]))
@@ -99,5 +95,5 @@ def test_sympify_many():
 
 # test_sympify_many()
 
-expr = ''
+expr = 'Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))'
 print(plagih_sympify(expr))

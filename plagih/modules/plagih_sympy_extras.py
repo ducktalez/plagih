@@ -68,8 +68,8 @@ class Ifte(Function):
         else:
             return
 
-    def _sympy_(self, a, b, c):
-        return eval(self, a, b, c)  # don't know why c is unexpected. works though.
+    def _sympy_(self, *args):
+        return eval(self, *args)  # a, b, c don't know why c is unexpected. works though.
 
 
 class Mini(Function):
@@ -202,14 +202,17 @@ class Usub(Function):
         return eval(self, a)
 
 
-class Intround(Function):
+class Round(Function):
     """
     """
     nargs = 1
 
     @classmethod
     def eval(cls, a):
-        return round(a)  # see
+        if sympify(a).is_Atom:
+            return round(a)  # see
+        else:
+            return
 
     def _sympy_(self, a):
         return eval(self, a)
@@ -257,7 +260,7 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Notb': Notb,
                     'Square': Square,
                     'usub': Usub,
-                    'round': Intround}
+                    'Round': Round}
 
 
 def plagih_sympify(function_string):

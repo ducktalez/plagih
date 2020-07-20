@@ -83,7 +83,7 @@ class ExplainableGP(object):
             'float_decimals': 6,  # None or 1-30 decimals
             'swim': 'p',  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
 
-            'print_type': 'ggwsiivoaaff',  # To show absolutely all: wwwwggggsiiiivvvtoppptttff
+            'print_type': 'ggwsiivoaff',  # To show absolutely all: wwwaaaggggsiiiivvvtoppptttff
             'overwrite periodic gp_files': True,  # If True, the file gets overwritten. If False, in every generation a new file is created.
             'plot_verbosity': {'gen_fitness_average': 'y',
                                'sympify_errors': 'y',
@@ -126,9 +126,10 @@ class ExplainableGP(object):
                 'distributions_file': 'run_files/distributions_file.yaml',
             },
             'lambdadist_as_string':
-                {'2f': ['lambda: random.normalvariate(1,2)',
+                {'2f': ['lambda: random.normalvariate(0,1)',
                         'lambda: random.normalvariate(1,1)',
-                        'lambda: random.randint(0, 10)'],
+                        # 'lambda: random.randint(0, 10)',  # not required
+                        ],
                  '2b': ['lambda: random.choice([True, False])'],
                  'observed_floats': 100}
         }
@@ -785,7 +786,7 @@ class ExplainableGP(object):
                                   ['-', 1], ['usub', 1],
                                   ['*', 2], ['/', 1],
                                   ['Square', 0.75], ['**', 0.25],
-                                  ['abs', 0.4], ['sign', 0.1], ['round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
+                                  ['abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
                                   ['sqrt', 0.2],
                                   # ['log', 0.1], ['log1p', 0.1],
                                   ['sin', 0.1],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
@@ -893,8 +894,7 @@ class ExplainableGP(object):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
             cooltree = cooltree_from_expr(expr_raw, self.env_vars.obs_krazy)  # todo pareto should hold the label_list or the tree
             expr_sym = cooltree.get_expr_sym()
-            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos,
-                                 self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, origin_pairwise_fitness=self.origin_results)
+            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, origin_pairwise_fitness=self.origin_results)
 
             # pairwise_fitness = tf_results['pairwise_fitness']
             # agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
@@ -1517,7 +1517,10 @@ class ExplainableGP(object):
         ! The tree must exist, it is not checked whether the tree is None
         """
         origin_cooltree = self.origin_tree_get()
-        origin_tree = origin_cooltree.get_oldtree()
+        try:
+            origin_tree = origin_cooltree.get_oldtree()
+        except:
+            origin_tree = None
         tree = tree_set_modifyable_nodes(tree, origin_tree=origin_tree)
         tree = tree_normalize_exponentiation(tree)  # sfeh: somewhere else?
         tree = tree_set_last_evolution(tree, last_evolution)  # sfeh: should this be done during the evolve process?
@@ -1562,15 +1565,15 @@ class ExplainableGP(object):
                 if len(cooltree_sym) < len(cooltree):
                     sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
                     if sym_fitness != cooltree.meta.fitness_train and TEST_PHASE:
-                        raise Exception('TODO FUCK')
                         print_e(f'Fitness of a sympified tree is different! sym: {sym_fitness}, before: {cooltree.meta.fitness_train}\n'
                                 f'tree: {cooltree.core.labellist_from_coolcore()}\n'
                                 f'symp: {cooltree_sym.core.labellist_from_coolcore()}\n'
                                 f'tree raw: {cooltree.get_expr_raw()}\n'
                                 f'symp rawr: {cooltree_sym.get_expr_raw()}')
+                        raise Exception('TODO FUCK')
                         return
 
-                    self.printpl('a', 'Successfully reduced pareto tree!')
+                    self.printpl('aa', 'Successfully reduced pareto tree!')
                     cooltree_sym.meta.fitness_train = sym_fitness
                     self.update_pareto(cooltree_sym)
                 else:

@@ -266,7 +266,7 @@ def eval_tf(expr, data, kernel, eval_action, obs_infos, tf_config, tf_device, tf
     """
     action_min_max = eval_action.minmax
     tf.compat.v1.reset_default_graph()
-    tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all?
+    tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all? todo get size of tensors :P
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
         with sess.graph.device(tf_device):  # device can be the gpu

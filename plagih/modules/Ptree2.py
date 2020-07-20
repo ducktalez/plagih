@@ -175,7 +175,10 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'ZOMFG WHY SHIT FUCK SHIT \n{self}\n{new_core}\n{self.get_expr_raw()}')
+            print_warning('w', f'Reduced core is even more complex than the first tree. May happen with sympification.\n'
+                               f'Example: Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))\n'
+                               f'This time, it was \n{self}\n{new_core}\n{expr_raw}')
+        return
 
     def get_mutatable_nodes(self):
         """
@@ -255,12 +258,14 @@ class CoolCore:
                                 'f': 'Fatigue',
                                 'c': 'Consumption'}
                 ib_sfeh_rev = {v: k for k, v in ib_sfeh_dict.items()}
-                obs_family, obs_time = observation_get_family_and_time(self.label, none_return=None)
+                is_negative = self.label[0] == '-'
+                use_label = self.label[1:] if is_negative else self.label
+                obs_family, obs_time = observation_get_family_and_time(use_label, none_return=None)
                 if obs_time is None:
                     pass
                 else:
                     geth_name = ib_sfeh_rev[obs_family]
-                    return f"self.get_h('{geth_name}', {obs_time})"
+                    return f"{'-' if is_negative else ''}self.get_h('{geth_name}', {obs_time})"
 
             return f'{self.label}'
         else:

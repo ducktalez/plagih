@@ -51,8 +51,8 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     'sign': {'fun_class': 'Sign', 'fun_label': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': '', 'tf': tf.sign, 'opgroup': [], 'latex1': 'sign', 'latexF': 'sign({})',
              'sym_str': 'sign({})', 'pycode': 'np.sign({})'},  # todo \\text when its not a variable?
     # todo round is new... and very special
-    'round': {'fun_class': 'Round', 'fun_label': 'round', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'round', 'tf': tf.round, 'opgroup': [], 'latex1': 'round', 'latexF': 'round({})',
-             'sym_str': 'round({})', 'pycode': 'round({})'},
+    'Round': {'fun_class': 'Round', 'fun_label': 'Round', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'round', 'tf': tf.round, 'opgroup': [], 'latex1': 'round', 'latexF': 'round({})',
+             'sym_str': 'Round({})', 'pycode': 'round({})'},
 
     'Square': {'fun_class': 'Square', 'fun_label': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'square', 'tf': tf.square, 'opgroup': [], 'latex1': 'x^2', 'latexF': '{}^2',
                'sym_str': 'Square({})', 'pycode': '({}**2)'},
@@ -129,7 +129,7 @@ op = {
     '~': op_what['usub'],
     'usub': op_what['usub'],
     ast.USub: op_what['usub'],
-    'round': op_what['round'],
+    'Round': op_what['Round'],
     '*': op_what['*'],
     ast.Mult: op_what['*'],
     '/': op_what['/'],

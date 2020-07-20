@@ -37,6 +37,8 @@ def main(argv):
     parser.add_argument('-force_new_run', action='store_true')
     parser.add_argument('-analyse', '-analyze', '-files', '-results', action='store_true', default=None)
 
+    parser.add_argument('-tf_device_log', default=False)
+
     parser.add_argument('-config_lookup', type=str, help='The config file is used by sfeh and can be found in a table in start.py')
     parser.add_argument('-samples_lookup', type=str, help='The samples file is used by sfeh and can be found in a table in start.py')
 
@@ -67,12 +69,13 @@ def main(argv):
         samples_paths = {'ib': 'benchmarks/run_sources/IB/samples_prepared.csv',
                          'mtc75': 'benchmarks/run_sources/MTC/samples75.csv',
                          'mtc200': 'benchmarks/run_sources/MTC/samples200.csv'}
-        data_prepared = Path(__file__).parent.absolute() / samples_paths[config_lookup]
-
+        data_prepared = Path(__file__).parent.absolute() / samples_paths[samples_lookup]
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
-    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, analyze=analyze)
+    tf_device_log = args.tf_device_log
+
+    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, analyze=analyze, tf_device_log=tf_device_log)
 
 
 if __name__ == "__main__":

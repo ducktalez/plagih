@@ -42,7 +42,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, plagih_root, root_dir, user_config, action_name, path_data=None, opth_operators=None):
+    def __init__(self, plagih_root, root_dir, user_config, action_name, path_data=None, opth_operators=None, tf_device_log=False):
 
         self.name = root_dir.resolve().name  # sfeh probably there are better names
         print(f'\n'
@@ -177,7 +177,7 @@ class ExplainableGP(object):
         self.time_last_backup = self.time_start
         # special variables
         self.tf_device = "/gpu:0"  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
-        self.tf_device_log = False  # TF device usage logging (for debugging)
+        self.tf_device_log = tf_device_log  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.tf_device_log, allow_soft_placement=True)
         self.tf_config.gpu_options.allow_growth = True
         self.monitoring_dict = {'population_tmp_done-size': {},
@@ -712,16 +712,13 @@ class ExplainableGP(object):
         writes all important gp_files
 
         """
-        try:
-            self.file_pareto_txt()
-            self.file_population_base_karoo('last')
+        self.file_pareto_txt()
+        self.file_population_base_karoo('last')
 
-            self.pareto_sort()
-            self.file_pareto_histograms()
-            self.file_pareto_latex()
-            self.file_pareto_pycode()
-        except:
-            print_warning('w', 'TODO solve analysis issues')
+        self.pareto_sort()
+        self.file_pareto_histograms()
+        self.file_pareto_latex()
+        self.file_pareto_pycode()
 
         return
 

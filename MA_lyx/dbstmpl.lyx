@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -31,10 +31,6 @@
 \global\fach{Computer Science}
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -55,6 +51,8 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -84,6 +82,7 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -92,7 +91,10 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -115,7 +117,7 @@ status open
 \backslash
 global
 \backslash
-titel{Learning optimization of interpretable and familiar rules}
+titel{Interpretable Policies with familiarity based genetic programming}
 \end_layout
 
 \end_inset
@@ -218,7 +220,8 @@ Intro
 \begin_layout Standard
 Erklärbarkeit ist ein schwer zu erreichendes Gut im Bereich Reinforcement
  Learning (RL).
- Als Teilgebiet des Machine Learning (ML) 
+ Als Teilgebiet des Machine Learning (ML) werden dafür meist sehr komplexe
+ Datenstrukturen verwendet, 
 \end_layout
 
 \begin_layout Standard
@@ -351,6 +354,7 @@ Despite this danger, ML solutions are already being used in many areas,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hawking_AI_warning"
+literal "true"
 
 \end_inset
 
@@ -374,6 +378,7 @@ s made fatal mistakes.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
@@ -616,6 +621,7 @@ status open
 LatexCommand href
 name "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
+literal "false"
 
 \end_inset
 
@@ -623,6 +629,7 @@ target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -672,6 +679,7 @@ reference "TODO"
 \begin_inset CommandInset href
 LatexCommand href
 target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
+literal "false"
 
 \end_inset
 
@@ -679,6 +687,7 @@ target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -846,6 +855,7 @@ There is one thing that is decisive for the explainability: no matter at
 \begin_inset CommandInset href
 LatexCommand href
 target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c"
+literal "false"
 
 \end_inset
 
@@ -879,6 +889,7 @@ oll ich ein paar erwähnen?]
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -1345,6 +1356,7 @@ se in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -2215,6 +2227,7 @@ The human brain is very good at recognizing patterns.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "humanPatternRecognition"
+literal "true"
 
 \end_inset
 
@@ -2556,6 +2569,7 @@ T'
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -2582,6 +2596,7 @@ reference "fig:TED_explain_operators"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3718,6 +3733,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Metric_(mathematics)"
+literal "false"
 
 \end_inset
 
@@ -3810,6 +3826,7 @@ The most complex part of the improvement process is to compute the fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -3927,6 +3944,7 @@ As Daniel Hein has found out in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -5681,6 +5699,7 @@ The problem was first introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -6305,6 +6324,7 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -6319,6 +6339,7 @@ target "https://github.com/openai/gym/wiki/Leaderboard"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -7459,6 +7480,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -8012,6 +8034,7 @@ The Industrial benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -8622,6 +8645,7 @@ modifiable nodes erweitern.
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Genetic_improvement_(computer_science)"
+literal "false"
 
 \end_inset
 

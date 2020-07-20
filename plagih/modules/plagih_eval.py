@@ -160,6 +160,10 @@ class FitnessKernel:
             act_max = tf.constant(action_min_max[1])  # dtype=tf.float32
             tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
+            # if 'bounded_tanh' in self.kernel:
+            #     use_result =
+            # todo todotodo
+
         return tf_result
 
     def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, origin_pairwise_fitness=None, explorate=1):

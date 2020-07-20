@@ -176,8 +176,7 @@ class CoolCore:
             self.new_core(new_core)
         elif len(new_core) > len(self):
             print_warning('w', f'Reduced core is even more complex than the first tree. May happen with sympification.\n'
-                               f'Example: Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))\n'
-                               f'This time, it was \n{self}\n{new_core}\n{expr_raw}')
+                               f'This time, it was \n{self}\n{new_core}\n{expr_raw}')  # todo Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))
         return
 
     def get_mutatable_nodes(self):

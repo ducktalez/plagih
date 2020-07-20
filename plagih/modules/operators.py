@@ -8,8 +8,8 @@ from plagih.modules.printing import *
 
 
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
-import tensorflow.python.util.deprecation as deprecation
-deprecation._PRINT_DEPRECATION_WARNINGS = False
+# import tensorflow.python.util.deprecation as deprecation  # not possible on python 3.6
+# deprecation._PRINT_DEPRECATION_WARNINGS = False
 import tensorflow as tf
 
 """

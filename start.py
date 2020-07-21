@@ -41,7 +41,7 @@ def main(argv):
 
     parser.add_argument('-tf_device_log', default=False)
 
-    parser.add_argument('-prepared_run', '-config_lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
+    parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
 
     args = parser.parse_args()
     # print(args)
@@ -61,8 +61,8 @@ def main(argv):
     if prepared_run:
         pth = lambda x: Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / x
         if 'IB' in prepared_run:
-            data_prepared = pth('/IB/samples_prepared.csv')
-            config_name = 'config4ib'
+            data_prepared = pth('IB/samples_prepared.csv')
+            config_name = 'IB/config4ib'
             ori_trs = {'50_0': 'IB/ib_tree_50s_0.csv',
                        '50_1': 'IB/ib_tree_50s_1.csv',
                        '50_2': 'IB/ib_tree_50s_2.csv',
@@ -83,10 +83,10 @@ def main(argv):
             for k, v in act_dct.items():
                 if k in prepared_run:
                     print(f'Using action: {v}')
-                    eval_action = pth(v)
+                    eval_action = v
 
         elif 'MTC' in prepared_run:
-            config_name = 'config4mtc'
+            config_name = 'MTC/config4mtc'
             if 'MTC200' in prepared_run:
                 data_prepared = pth('/MTC/samples200.csv')
             elif 'MTC75' in prepared_run:

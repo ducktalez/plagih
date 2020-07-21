@@ -1,0 +1,6 @@
+
+pop_max: 2000
+parsimony_max: 30
+kernel_name: regression bounded tanhpenalize
+complexity_measure: tree_edit_distance
+gen_max: 1000

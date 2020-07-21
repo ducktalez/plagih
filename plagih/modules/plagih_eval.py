@@ -155,18 +155,17 @@ class FitnessKernel:
             # regression that fits the outputs to a discrete set of actions defined by min and max
             tf_result = tf.math.round(tf_result)
 
-        if 'bounded' in self.kernel:
-            act_min = tf.constant(action_min_max[0])  # dtype=tf.float32
-            act_max = tf.constant(action_min_max[1])  # dtype=tf.float32
-            tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
+        # if 'bounded_tanh' in self.kernel:
+        #     tf_result = todo
 
-            # if 'bounded_tanh' in self.kernel:
-            #     use_result =
-            # todo todotodo
+        elif 'bounded' in self.kernel:
+            act_min = tf.constant(action_min_max[0])
+            act_max = tf.constant(action_min_max[1])
+            tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
         return tf_result
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, origin_pairwise_fitness=None, explorate=1):
+    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, agent_result, origin_pairwise_fitness=None, explorate=1):  #sfeh explorate
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -205,6 +204,11 @@ class FitnessKernel:
                 exploration_diff = (origin_pairwise_fitness - kernel_result)  # NO abs value
                 paretodiff = tf.abs(solution - origin_pairwise_fitness)
                 pairwise_fitness = tf.abs((2 * pairwise_fitness) - explorate*(paretodiff - exploration_diff))  # faster version
+
+            if 'bounded' in self.kernel and 'tanhpenalize' in self.kernel:
+                tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_result)*0.1)
+                # tanhpenalize = 0.05*tf.tanh((agent_result-kernel_result)*0.2)  # optional: not the squared difference. factor should be a little different
+                pairwise_fitness = pairwise_fitness + tanhpenalize  # should work not with tensorflow
 
         elif self.kernel == 'match':  # MATCH kernel
             """
@@ -268,18 +272,17 @@ def eval_tf(expr, data, kernel, eval_action, obs_infos, tf_config, tf_device, tf
     'get_predicted_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
 
     """
-    action_min_max = eval_action.minmax
+
     tf.compat.v1.reset_default_graph()
     tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all? todo get size of tensors :P
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
         with sess.graph.device(tf_device):  # device can be the gpu
 
-            agent_result = ast_convert_from_expr(expr, tensors=tensors)
-
-            kernel_result = kernel.tf_wrap_result(agent_result, action_min_max)
+            agent_result = ast_convert_from_expr(expr, tensors=tensors)  # the actual result from the expression in the agent
+            kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
             act_solution = tensors[eval_action.name]
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, origin_pairwise_fitness=origin_pairwise_fitness)
+            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, agent_result, origin_pairwise_fitness=origin_pairwise_fitness)
             fitness = tf.reduce_sum(pairwise_fitness)
 
             if complete:

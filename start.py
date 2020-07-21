@@ -11,6 +11,8 @@ import argparse
 
 sys.path.append('plagih/')
 sys.path.append('plagih/modules')
+
+
 # sys.path.append('mountaincar/')
 
 
@@ -39,8 +41,7 @@ def main(argv):
 
     parser.add_argument('-tf_device_log', default=False)
 
-    parser.add_argument('-config_lookup', type=str, help='The config file is used by sfeh and can be found in a table in start.py')
-    parser.add_argument('-samples_lookup', type=str, help='The samples file is used by sfeh and can be found in a table in start.py')
+    parser.add_argument('-prepared_run', '-config_lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
 
     args = parser.parse_args()
     # print(args)
@@ -53,27 +54,78 @@ def main(argv):
     data_prepared = args.data_prepared
     origin_tree = args.origin_tree
     analyze = args.analyse
+    tf_device_log = args.tf_device_log
 
-    config_lookup = args.config_lookup
+    prepared_run = args.prepared_run
 
-    if config_lookup:
-        print('using config that is known by sfeh')
-        conf_paths = {'ib': 'benchmarks/run_sources/IB/config4ib.yaml',
-                      'mtc': 'benchmarks/run_sources/MTC/config4mtc.yaml',
-                      'mtc_rel': 'benchmarks/run_sources/MTC/config4mtc_relative.yaml'}
-        config_path = Path(__file__).parent.absolute() / conf_paths[config_lookup]
+    if prepared_run:
+        pth = lambda x: Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / x
+        if 'IB' in prepared_run:
+            data_prepared = pth('/IB/samples_prepared.csv')
+            config_name = 'config4ib'
+            ori_trs = {'50_0': 'IB/ib_tree_50s_0.csv',
+                       '50_1': 'IB/ib_tree_50s_1.csv',
+                       '50_2': 'IB/ib_tree_50s_2.csv',
+                       'udluft_0': 'IB/ib_tree_udluft_0.csv',
+                       'udluft_1': 'IB/ib_tree_udluft_1.csv',
+                       'udluft_2': 'IB/ib_tree_udluft_2.csv',
+                       'mean_0': 'IB/ib_tree_mean_0.csv',
+                       'mean_1': 'IB/ib_tree_mean_1.csv',
+                       'mean_2': 'IB/ib_tree_mean_2.csv'}
+            for k, v in ori_trs.items():
+                if k in prepared_run:
+                    print(f'Using origin: {v}')
+                    origin_tree = pth(v)
 
-    samples_lookup = args.samples_lookup
-    if samples_lookup:
-        print('using config that is known by sfeh')
-        samples_paths = {'ib': 'benchmarks/run_sources/IB/samples_prepared.csv',
-                         'mtc75': 'benchmarks/run_sources/MTC/samples75.csv',
-                         'mtc200': 'benchmarks/run_sources/MTC/samples200.csv'}
-        data_prepared = Path(__file__).parent.absolute() / samples_paths[samples_lookup]
+            act_dct = {'_0': 'a_velocity',
+                       '_1': 'a_gain',
+                       '_2': 'a_shift'}
+            for k, v in act_dct.items():
+                if k in prepared_run:
+                    print(f'Using action: {v}')
+                    eval_action = pth(v)
+
+        elif 'MTC' in prepared_run:
+            config_name = 'config4mtc'
+            if 'MTC200' in prepared_run:
+                data_prepared = pth('/MTC/samples200.csv')
+            elif 'MTC75' in prepared_run:
+                data_prepared = pth('/MTC/samples75.csv')
+
+            ori_trs = {'gpFfriendly': 'MTC/tree_gpFriendly_fix.csv',
+                       'preset': 'MTC/tree_preset_fix.csv',
+                       'simple': 'MTC/tree_simple.csv',
+                       'simple_fix': 'MTC/tree_simple_fix.csv',
+                       'simplePlus_fix': 'MTC/tree_simplePlus_fix.csv',
+                       'simplePlus': 'MTC/tree_simplePlus.csv'}
+            for k, v in ori_trs.items():
+                if k in prepared_run:
+                    print(f'Using origin: {v}')
+                    origin_tree = pth(v)
+        else:
+            raise
+
+        if 'rel' in prepared_run:
+            config_name += '_rel'
+        if 'tanh' in prepared_run:
+            config_name += '_tanh'
+        config_path = pth(f'{config_name}.yaml')
+
+        out_dir = pth(prepared_run)
+
+        # else: scratch, aka run
+
+        # 'ibtanh': ['IB/config4ib_tanh.yaml', 'IB/samples_prepared.csv'],
+        # 'ibrel': ['IB/config4ib_rel.yaml', 'IB/samples_prepared.csv'],
+        # 'mtc75': ['MTC/config4mtc.yaml', 'MTC/samples75.csv'],
+        # 'mtc200': ['MTC/config4mtc.yaml', 'MTC/samples200.csv'],
+        # 'mtc200rel': ['MTC/config4mtc_relative.yaml', 'MTC/samples200.csv'],
+        # 'mtc200tanh': ['MTC/config4mtc_tanh.yaml', 'MTC/samples200.csv'],
+        # 'mtc200tanhrel': ['MTC/config4mtc_tanhrel.yaml', 'MTC/samples200.csv'],}
+
+        # data_prepared = Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / lookup_files[prepared_run]
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
-
-    tf_device_log = args.tf_device_log
 
     plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, analyze=analyze, tf_device_log=tf_device_log)
 

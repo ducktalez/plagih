@@ -696,7 +696,7 @@ class ExplainableGP(object):
             target = csv.writer(csv_file, delimiter=',')
             if self.gen_id != 0:
                 target.writerows([''])  # empty row before each generation
-            target.writerows(['Plagih GP by Simon Fehrer, inspired by Karoo (Kai Staats)', 'Generation:', str(self.gen_id)])
+            target.writerows(['Plagih GP by Simon Fehrer, inspired by Kai Staats Karoo-gp', 'Generation:', str(self.gen_id)])
 
             for ii, cooltree in enumerate(self.pop_base):
                 target.writerows([''])  # empty row before each Tree
@@ -1318,7 +1318,6 @@ class ExplainableGP(object):
 
                 hello_node = self.env_vars.obs_infos[obs_label]
                 hello_node.filter_new_index()
-                # todotodo todo
                 obs_label = hello_node.name
 
                 new_obs = '-' + obs_label if is_negative else obs_label

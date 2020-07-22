@@ -71,7 +71,7 @@ complete_params = []
 
 for name, param in run_starts.items():
     out_path = str(SLURM_RUNS / name)
-    final_line = f'python3 -config_lookup {name}'
+    final_line = f'python3 {plagih_startpy} -config_lookup {name}'
 
     # if len(str(param[2])) > 0:
     #     origin_param = f' -origin_tree {param[2]}'

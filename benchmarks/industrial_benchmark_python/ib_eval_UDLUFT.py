@@ -486,10 +486,8 @@ class Agent_Test_7(Ib_Agent):
         return at
 
 
-
 def eval_agents():
     T = 100000
-
     # agents = [Agent_Daniel_Best()]
     agents = [
         # Agent_random(),
@@ -515,27 +513,30 @@ def eval_agents():
           "Starting new ones")
     data = np.zeros((len(agents), T))
     data_cost = np.zeros((len(agents), T))
+    time_horizon = 100
+    factor = 0.97
 
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        env = IDS()  # p=100 in examples!
-        # state_debug = []
-        for t in range(T):
-            env_state = envstate_normalize(env.state)
-            at = agent.decide(env_state)
-            # v, g, h = at  # todo
-            # v = max(0, min(100, ))
-            markovStates = env.step(at)
-            data[k, t] = env.visibleState()[-1]
-
-        factor = 0.97
         sum = 0
-        time_horizon = 100
-        for x in range(time_horizon):
-            entry = data[k][-1 - x]
-            sum += factor ** x * entry
+        for p in np.arange(10, 101, 10):
+            env = IDS(p=p)
 
-        print('Discounted reward sum after 100.000 steps', agent.name, sum)
+            # state_debug = []
+            sum_t = 0
+            for t in range(time_horizon):
+                env_state = envstate_normalize(env.state)
+                at = agent.decide(env_state)
+                # v, g, h = at  # todo
+                # v = max(0, min(100, ))
+                markovStates = env.step(at)
+                data[k, t] = env.visibleState()[-1]
+
+                entry = data[k][-1 - t]
+                sum_t += factor ** t * entry
+            sum += sum
+
+        print('Discounted reward sum (p=10,20,..,100; 1000 steps)', agent.name, sum)
 
     # plt.plot(data.T)
     # plt.xlabel('T')
@@ -543,31 +544,32 @@ def eval_agents():
     # plt.show()
 
 
-def agent_create_samples_csv(T=10000):
+def agent_create_samples_csv(T=100):
     history_t = 5
-    csv_data = np.zeros((T, 6 * history_t + 3))
-
+    csv_data = np.zeros((T, 10 * history_t + 3))
+    # todo use fuggning many setpoints
     data = np.zeros(T)
 
     agent = Agent_Daniel_29_Best()
-    env = IDS()  # p=100 in examples!
 
-    for t in range(T):
-        env_state = envstate_normalize(env.state)
+    for p in np.arange(10, 101, 10):
+        env = IDS(p=p)
+        for t in range(T):
+            env_state = envstate_normalize(env.state)
 
-        for ii in range(history_t):
-            for enum_x, state_x in enumerate(env_state.values()):
-                if t + ii < T:
-                    csv_data[t + ii][enum_x * history_t + ii] = state_x
+            for ii in range(history_t):
+                for enum_x, state_x in enumerate(env_state.values()):
+                    if t + ii < T:
+                        csv_data[t + ii][enum_x * history_t + ii] = state_x
 
-        # state_debug.append(list(env_state.values()))
-        at = agent.decide(env_state)
-        # at = at * np.array([1, 10, 5.75])
-        # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
-        # at = 2 * np.random.rand(3) - 1
+            # state_debug.append(list(env_state.values()))
+            at = agent.decide(env_state)
+            # at = at * np.array([1, 10, 5.75])
+            # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
+            # at = 2 * np.random.rand(3) - 1
 
-        for ii, action in enumerate(at):
-            csv_data[t][6 * history_t + ii] = action
+            for ii, action in enumerate(at):
+                csv_data[t][6 * history_t + ii] = action
 
         markovStates = env.step(at)
         data[t] = env.visibleState()[-1]

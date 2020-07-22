@@ -38,6 +38,10 @@ run_starts = {
     'IB_tanh_udluft_1': ['ibtanh', 'a_gain', 'IB/ib_tree_udluft_1.csv'],
     'IB_tanh_udluft_2': ['ibtanh', 'a_shift', 'IB/ib_tree_udluft_2.csv'],
 
+    'IB_sim1_0': ['', '', ''],
+    'IB_sim1_1': ['', '', ''],
+    'IB_sim1_2': ['', '', ''],
+
     'IB_rel_50_0': ['ibrel', 'a_velocity', 'IB/ib_tree_50s_0.csv'],
     'IB_rel_50_1': ['ibrel', 'a_gain', 'IB/ib_tree_50s_1.csv'],
     'IB_rel_50_2': ['ibrel', 'a_shift', 'IB/ib_tree_50s_2.csv'],

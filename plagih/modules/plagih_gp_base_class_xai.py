@@ -90,9 +90,9 @@ class ExplainableGP(object):
                                'population_tmp_done-size': 'y',
                                'fitness_variance': 'n'},
             'period': {'time_plots': None,  # in sec
-                       'gen_plots': 1,  # in gen counts
+                       'gen_plots': 5,  # in gen counts
                        'time_save': None,  # in sec
-                       'gen_save': 10,  # in gen counts
+                       'gen_save': 5,  # in gen counts
                        'time_analysis': None,  # in gen counts
                        'gen_analysis': 5},  # in gen counts
 
@@ -243,9 +243,9 @@ class ExplainableGP(object):
                 # {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
                 #  'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'full_or_grow': 'grow'}}},
                 {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 1, 20, 5), 'full_or_grow': 'full'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (8, 1, 12, 4), 'full_or_grow': 'full'}}},
                 {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 1, 20, 5), 'full_or_grow': 'grow'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (8, 1, 12, 4), 'full_or_grow': 'grow'}}},
                 {'tag': 'BranchShrink', 'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
                  'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
 
@@ -267,9 +267,9 @@ class ExplainableGP(object):
                 # {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
                 #  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
                 {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, None, 6), 'full_or_grow': 'grow'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 5, None, 6), 'full_or_grow': 'grow'}}},
                 {'tag': 'Rand4', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 12, None, 6), 'full_or_grow': 'full'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 5, None, 6), 'full_or_grow': 'full'}}},
             ]
         self.evolve_loop = evolve_safety_update(evolve_loop)
 
@@ -712,17 +712,14 @@ class ExplainableGP(object):
         writes all important gp_files
 
         """
-        try:
-            pass
-            self.file_pareto_txt()
-            self.file_population_base_karoo('last')
 
-            self.pareto_sort()
-            self.file_pareto_histograms()
-            self.file_pareto_latex()
-            self.file_pareto_pycode()
-        except:
-            pass
+        self.file_pareto_txt()
+        self.file_population_base_karoo('last')
+
+        self.pareto_sort()
+        # self.file_pareto_histograms()  # todo
+        self.file_pareto_latex()
+        self.file_pareto_pycode()
 
         return
 
@@ -898,7 +895,8 @@ class ExplainableGP(object):
             expr_raw = meta['expr_raw']  # sfeh: tree should already be sympified as much as possible
             cooltree = cooltree_from_expr(expr_raw, self.env_vars.obs_krazy)  # todo pareto should hold the label_list or the tree
             expr_sym = cooltree.get_expr_sym()
-            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map, complete=True, origin_pairwise_fitness=self.origin_results)
+            tf_results = eval_tf(expr_sym, self.data_train, self.kernel, self.env_vars.eval_action, self.env_vars.obs_infos, self.tf_config, self.tf_device, self.tf_classify_labels_map,
+                                 complete=True, origin_pairwise_fitness=self.origin_results)
 
             # pairwise_fitness = tf_results['pairwise_fitness']
             # agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim

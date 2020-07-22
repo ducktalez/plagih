@@ -231,6 +231,32 @@ class Agent_Udluft(Ib_Agent):
         return at
 
 
+class Agent_sim1(Ib_Agent):
+    """
+
+    'p', 'v', 'g', 'h', 'f', 'c'
+    SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    """
+    def __init__(self):
+        self.state_history = collections.deque()
+        self.name = 'Agent Test'
+        super().__init__()
+
+    def decide(self, state):
+        self.state_history.appendleft(state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        SetPoint = self.get_h('p', 0)
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        at[0] = np.sign(min(self.get_h('g', 7), ((self.get_h('f', 0)*max(SetPoint, self.get_h('h', 2)))+self.get_h('h', 3))))
+        at[1] = np.sign(((((self.get_h('f', 9)+self.get_h('g', 4))-self.get_h('g', 9))-SetPoint)+1.387298))
+        at[2] = -2 / self.get_h('h', 7)
+        return at
+
+
 class Agent_Test(Ib_Agent):
     """
 
@@ -248,16 +274,18 @@ class Agent_Test(Ib_Agent):
         if len(self.state_history) > 10:
             self.state_history.pop()
 
+        SetPoint = self.get_h('p', 0)
+
         at = np.array([0, 0, 0], dtype=np.float32)
-        at[0] = 12.31*self.get_h('g', 8) - 11.079
-        at[1] = -2.6/(self.get_h('c', 30) - self.get_h('f', 12) + self.get_h('f', 17))
-        at[2] = 7.0442545165*self.get_h('p', 30) - 9.3079051182*self.get_h('h', 26) - 7.0442545165*self.get_h('h', 27) + 3.0
+        at[0] = min(self.get_h('g', 7), ((self.get_h('f', 0)*max(SetPoint, self.get_h('h', 2)))+self.get_h('h', 3)))
+        at[1] = np.sign(((((self.get_h('f', 9)+self.get_h('g', 4))-self.get_h('g', 9))-SetPoint)+1.387298))
+        at[2] = -2 / self.get_h('h', 7)
         return at
 
 
 def eval_agents():
 
-    T = 100000
+    T = 100*1000
 
     # agents = [Agent_Daniel_Best()]
     agents = [
@@ -265,39 +293,38 @@ def eval_agents():
         # Agent_nothing(),
         # Agent_daniel_21(),
         # Agent_daniel_27(),
-        Agent_Daniel_29_Best(),
-        Agent_Udluft(),
+        # Agent_Daniel_29_Best(),
+        # Agent_Udluft(),
+        Agent_sim1(),
         Agent_Test()
     ]
 
     data = np.zeros((len(agents), T))
     data_cost = np.zeros((len(agents), T))
+    time_horizon = 100
+    factor = 0.97
 
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        env = IDS()  # p=100 in examples!
-        # state_debug = []
-        for t in range(T):
-            env_state = envstate_normalize(env.state)
-            at = agent.decide(env_state)
-            # v, g, h = at  # todo
-            # v = max(0, min(100, ))
-            markovStates = env.step(at)
-            data[k, t] = env.visibleState()[-1]
-
-        factor = 0.97
         sum = 0
-        time_horizon = 100
-        for x in range(time_horizon):
-            entry = data[k][-1-x]
-            sum += factor**x * entry
+        for p in np.arange(10, 101, 10):
+            env = IDS(p=p)
 
-        print('Discounted reward sum after 100.000 steps', agent.name, sum)
+            # state_debug = []
+            sum_t = 0
+            for t in range(time_horizon):
+                env_state = envstate_normalize(env.state)
+                at = agent.decide(env_state)
+                markovStates = env.step(at)
 
-    # plt.plot(data.T)
-    # plt.xlabel('T')
-    # plt.ylabel('Reward')
-    # plt.show()
+                entry = env.visibleState()[-1]
+                data[k, t] = entry
+
+                # entry = data[k][-1 - t]
+                sum_t += factor ** (time_horizon-t) * entry
+            sum += sum_t / 10
+
+        print('Discounted reward sum (p=10,20,..,100; 1000 steps)', agent.name, sum)
 
 
 def agent_create_samples_csv(T=10000):

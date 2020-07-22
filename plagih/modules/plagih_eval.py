@@ -275,6 +275,11 @@ def eval_tf(expr, data, kernel, eval_action, obs_infos, tf_config, tf_device, tf
 
     tf.compat.v1.reset_default_graph()
     tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all? todo get size of tensors :P
+    # if len(tensors) < 52:  # todotodo todo
+    #     print('These tensors are less than 52')
+    #     tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all? todo get size of tensors :P
+
+    # todo tensors: tree get tensors by observations in tree?
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
         with sess.graph.device(tf_device):  # device can be the gpu
@@ -308,7 +313,6 @@ def get_env_tensors(pd_data, eval_action, obs_infos):
     tensors = {}  # todo dauerhafte tensoren?
 
     for obs_x in obs_infos.values():
-        # tf_dtype = tf.float32 if obs_info['xtype'] == '2f' else tf.bool  # sfeh tf_dtype in obs dict?
         obs_name = obs_x.name
         tensors[obs_name] = tf.constant(pd_data[obs_name])  # , dtype=tf.float32 todo: neverask.jpg
         # todo, sfeh, note/problem
@@ -389,7 +393,10 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             return [node.id]
         else:
-            return tensors[node.id]
+            try:
+                return tensors[node.id]
+            except:
+                raise  # TODO
 
     elif isinstance(node, ast.Num):  # <number>
         if build:

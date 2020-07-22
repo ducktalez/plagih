@@ -281,14 +281,6 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
     else:
         tree_works = True
 
-    if delete_this:
-        label_list = tree_get_labellist(tree)
-        for label in label_list:
-            if label_is_observation(label):
-                temp_diff = obs_get_timedelta(label)
-                if temp_diff > 10:
-                    raise('SDFGSDFSDFSDFSDF')  # todo
-
     if tree_node_get_arity(tree, root_id) == 0:
         print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)
         tree_works = allow_root_only
@@ -566,7 +558,7 @@ def tree_permanent_nodes_get(origin_node, chosen_tree, chosen_node, origin_tree)
         return
 
 
-def label_is_observation(label):
+def terminal_label_is_observation(label):
     """
     sfeh if contains pi/e/... in future, change this
     """
@@ -963,7 +955,7 @@ def tree_get_pycode(tree, node_id=root_id):
     label = tree_node_get_label(tree, node_id)
 
     if arity == 0:
-        if label_is_observation(label):
+        if terminal_label_is_observation(label):
             ib_sfeh_dict = {'p': 'SetPoint',
                             'v': 'Velocity',
                             'g': 'Gain',
@@ -1272,9 +1264,6 @@ def expr_sympify(expr_raw):
             raise Exception(f'sympify_2: {fail_reason}')
 
     return expr_sym
-
-
-# todo zusätzlich zur parsimony noch komplexität gegen overfitting?
 
 
 def tree_branch_get_label_list(tree, node_ids, karoo=False):
@@ -1592,7 +1581,7 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
 
     ztree = evolve_node_renum(ztree)  # --all: ids
     # ztree = tree_fix_arity(ztree)
-    ztree = tree_fix_link_child(ztree, karoo=False)
+    ztree = tree_fix_link_child(ztree)
 
     # 2. insert all following nodes
     insert_count = 1  # set node count to +1 as the new root has already replaced 'branch_top' (above)
@@ -1607,13 +1596,13 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
                 ztree[N_xtype][j] = insert_core[N_xtype][insert_count]
 
                 if int(ztree[N_arity][j]) == 0:
-                    ztree = tree_fix_link_child(ztree, karoo=False)  # fix all child links
+                    ztree = tree_fix_link_child(ztree)  # fix all child links
                     ztree = evolve_node_renum(ztree)  # renumber all 'NODE_ID's
 
                 elif int(ztree[N_arity][j]) > 0:
                     c_buffer = evolve_c_buffer(ztree, j)  # generate 'c_buffer' for point of mutation ('branch_top')
                     ztree = tree_unsafe_insert_node_child_dummies(ztree, j, c_buffer)  # insert new nodes
-                    ztree = tree_fix_link_child(ztree, karoo=False)  # fix all child links
+                    ztree = tree_fix_link_child(ztree)  # fix all child links
                     ztree = evolve_node_renum(ztree)  # renumber all 'NODE_ID's
 
                 insert_count = insert_count + 1  # exit loop when 'node_count' reaches the number of columns in the array
@@ -1624,7 +1613,7 @@ def tree_insert_subtree(ztree, insert_core, delete_ids, karoo=False):
     return ztree
 
 
-def tree_fix_link_child(tree, karoo=False):
+def tree_fix_link_child(tree):
     """
     In a given Tree, fix 'node_c1', 'node_c2', 'node_c3' for all nodes.
 
@@ -2027,21 +2016,21 @@ def tree_iterate_range(tree, karoo=True):
     return np_list
 
 
-def tree_normalize_exponentiation(tree):
-    """
-    a**b requires b to be discrete.
-    """
-    # 1. ** should have an int as second number
-    for node_id in tree_nodes_get_ids(tree, karoo=True):
-        if tree_node_get_label(tree, node_id) == '**':
-            child_id = tree_node_get_child(tree, node_id, 1)  # get second argument
-            old_power = tree_node_get_label(tree, child_id)
-            try:
-                new_power = float(int(float(old_power)))
-                tree = tree_node_set_label(tree, child_id, new_power)
-            except ValueError:
-                pass  # todo: implicit round operator in TF-grapf and evaluation?
-    return tree
+# def tree_normalize_exponentiation(tree):
+#     """
+#     a**b requires b to be discrete.
+#     """
+#     # 1. ** should have an int as second number
+#     for node_id in tree_nodes_get_ids(tree, karoo=True):
+#         if tree_node_get_label(tree, node_id) == '**':
+#             child_id = tree_node_get_child(tree, node_id, 1)  # get second argument
+#             old_power = tree_node_get_label(tree, child_id)
+#             try:
+#                 new_power = float(int(float(old_power)))
+#                 tree = tree_node_set_label(tree, child_id, new_power)
+#             except ValueError:
+#                 pass
+#     return tree
 
 
 def tree_eval_parsimony(cooltree, parsimony_distance, origin_cooltree=None, weights=None):

@@ -44,7 +44,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
           'sym_str': '({} / {})',
           'pycode': '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'},
     '**': {'fun_class': 'Power', 'fun_label': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'pow', 'tf': tf.pow, 'opgroup': [], 'latex1': '{{x}}^{{y}}', 'latexF': '{}^{}',  # sfeh latexf requires some testing...
-           'sym_str': '({} ** {})', 'pycode': '({}*{})'},
+           'sym_str': '({} ** Round({}))', 'pycode': '({}**round({}))'},
 
     'abs': {'fun_class': 'Abs', 'fun_label': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': 'abs', 'latexF': '|{}|',
             'sym_str': 'abs({})', 'pycode': 'abs({})'},
@@ -55,7 +55,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
              'sym_str': 'Round({})', 'pycode': 'round({})'},
 
     'Square': {'fun_class': 'Square', 'fun_label': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'square', 'tf': tf.square, 'opgroup': [], 'latex1': 'x^2', 'latexF': '{}^2',
-               'sym_str': 'Square({})', 'pycode': '({}**2)'},
+               'sym_str': 'Square({})', 'pycode': '({})**2'},
     'sqrt': {'fun_class': 'Sqrt', 'fun_label': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'sqrt', 'tf': tf.sqrt, 'opgroup': [], 'latex1': '\\sqrt{x}', 'latexF': '\\sqrt{}',
              'sym_str': 'sqrt({})', 'pycode': 'math.sqrt({})'},
 

@@ -140,7 +140,7 @@ def load_config(config_path, out_dir=None):
     return root_dir, config
 
 
-def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, path_data, cooltree_origin, analyze=False, tf_device_log=False):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, path_data, cooltree_origin, kernel_name, analyze=False, tf_device_log=False):
     """
     
     """
@@ -151,7 +151,7 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     if eval_action is not None:
         config['eval_action'] = eval_action
 
-    gp = ExplainableGP(plagih_root, root_dir, config, eval_action, path_data=path_data, tf_device_log=tf_device_log)
+    gp = ExplainableGP(plagih_root, root_dir, config, eval_action, kernel_name=kernel_name, path_data=path_data, tf_device_log=tf_device_log)
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=cooltree_origin)
     if label_list is not None and modify_list is not None:

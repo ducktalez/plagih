@@ -2,6 +2,7 @@ from plagih.modules.printing import *
 from plagih.modules.operators import *
 import numpy as np
 import sklearn.metrics as skm
+from sys import getsizeof
 
 
 class DummyKernel:
@@ -25,7 +26,7 @@ class DummyKernel:
         pass
 
 
-class RegressionDiscrete(DummyKernel):
+class RegressionKernel(DummyKernel):
 
     def __init__(self, bounded=False, discrete=False):
         pass
@@ -54,9 +55,30 @@ class RegressionDiscrete(DummyKernel):
 class FitnessKernel:
 
     def __init__(self, kernel_name):
-        self.kernel = kernel_name
+        self.kname = kernel_name
 
-    def fitness_compare(self, fitness1, fitness2, mode='better'):
+        self.regression, self.classification, self.match = False, False, False
+
+        if 'regression' in kernel_name:
+            self.regression = True
+            self.bounded = 'bounded' in kernel_name
+            self.discrete = 'discrete' in kernel_name
+            self.tanhpenalize = 'tanhpenalize' in kernel_name
+            self.squared_error = 'L2_squared' in kernel_name  # 'L1_absolute' not required
+
+            self.relative_regression_fun = 'relative_regression_fun' in kernel_name
+            self.origin_pairwise_fitness = None  # TODO
+            sfeh_help = {'pen_explorate(1)': 1.0,
+                         'pen_explorate(0.5)': 0.5}
+
+            self.pen_explorate = None
+            for k, v in sfeh_help.items():
+                if k in kernel_name:
+                    self.pen_explorate = v
+        else:
+            self.regression = False
+
+    def fitness_compare(self, fitness1, fitness2, only_better=True):
         """
         Compares the fitness of two candidates according to the kernel
 
@@ -66,13 +88,13 @@ class FitnessKernel:
         """
         if fitness2 is None:
             return True
-        elif 'regression' in self.kernel and fitness1 < fitness2:
+        elif self.regression and fitness1 < fitness2:
             return True
-        elif self.kernel == 'classification' and fitness1 > fitness2:
+        elif self.classification and fitness1 > fitness2:
             return True
-        elif self.kernel == 'match' and fitness1 > fitness2:
+        elif self.match and fitness1 > fitness2:
             return True
-        elif mode == 'better_or_equal':
+        elif not only_better:
             return fitness1 == fitness2
         else:
             return False
@@ -80,10 +102,10 @@ class FitnessKernel:
     def np_best_fitness(self, fitness_list):
         """
         """
-        if 'regression' in self.kernel:
+        if self.regression:
             return np.min(fitness_list)
 
-        elif any([x in self.kernel for x in ['classification', 'match']]):
+        elif any([self.classification, self.match]):
             return np.max(fitness_list)
         else:
             raise
@@ -91,9 +113,9 @@ class FitnessKernel:
     def best_fitness(self, fit1, fit2):
         """
         """
-        if 'regression' in self.kernel:
+        if self.regression:
             return min(fit1, fit2)
-        elif any([x in self.kernel for x in ['classification', 'match']]):
+        elif any([self.classification, self.match]):
             return max(fit1, fit2)
         else:
             raise
@@ -102,9 +124,9 @@ class FitnessKernel:
         """
         Returning either min or max
         """
-        if 'regression' in self.kernel:
+        if self.regression:
             return min
-        elif any([x in self.kernel for x in ['classification', 'match']]):
+        elif any([self.classification, self.match]):
             return max
         else:
             raise
@@ -113,9 +135,9 @@ class FitnessKernel:
         """
         Returning either min or max
         """
-        if 'regression' in self.kernel:
+        if self.regression:
             return lambda y, x: x < y
-        elif any([x in self.kernel for x in ['classification', 'match']]):
+        elif any([self.classification, self.match]):
             return lambda y, x: x > y
         else:
             raise
@@ -151,27 +173,41 @@ class FitnessKernel:
 
     def tf_wrap_result(self, tf_result, action_min_max):
 
-        if 'discrete' in self.kernel:
+        if 'discrete' in self.kname:
             # regression that fits the outputs to a discrete set of actions defined by min and max
             tf_result = tf.math.round(tf_result)
 
         # if 'bounded_tanh' in self.kernel:
         #     tf_result = todo
 
-        elif 'bounded' in self.kernel:
+        if 'bounded' in self.kname:
             act_min = tf.constant(action_min_max[0])
             act_max = tf.constant(action_min_max[1])
             tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
         return tf_result
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, agent_result, origin_pairwise_fitness=None, explorate=1):  #sfeh explorate
+    def pycode_wrap_result(self, action_min_max):
+        wrap = '{}'
+        if 'discrete' in self.kname:
+            # regression that fits the outputs to a discrete set of actions defined by min and max
+            wrap = f'math.round({wrap})'
+
+        # if 'bounded_tanh' in self.kernel:
+        #     tf_result = todo
+
+        elif 'bounded' in self.kname:
+            wrap = f'min(max({action_min_max[0]}, {wrap}), {action_min_max[1]})'
+
+        return wrap
+
+    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, agent_result, origin_pairwise_fitness=None):  #sfeh explorate
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
         """
 
-        if self.kernel == 'classification':  # CLASSIFY kernel
+        if self.classification:  # CLASSIFY kernel
             """
             """
 
@@ -191,26 +227,27 @@ class FitnessKernel:
 
             pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
 
-        elif 'regression' in self.kernel:
+        elif self.regression:
             """
             """
-            if 'L2_squared' in self.kernel:
-                pairwise_fitness = tf.math.squared_difference(solution, kernel_result)
-            else:
-                pairwise_fitness = tf.abs(solution - kernel_result)
 
-            if 'relative_regression_fun' in self.kernel and origin_pairwise_fitness is not None:
+            pairwise_diff = solution - kernel_result
+
+            tf_error = tf.square if self.squared_error else tf.abs
+            pairwise_fitness = tf_error(pairwise_diff)
+
+            if self.relative_regression_fun and origin_pairwise_fitness is not None:
+                tf_error = tf.abs  # todo this is required (??)
                 # regression_goal = tf.abs(solution - tf_result)  # double the penalty
                 exploration_diff = (origin_pairwise_fitness - kernel_result)  # NO abs value
-                paretodiff = tf.abs(solution - origin_pairwise_fitness)
-                pairwise_fitness = tf.abs((2 * pairwise_fitness) - explorate*(paretodiff - exploration_diff))  # faster version
+                paretodiff = tf_error(solution - origin_pairwise_fitness)
+                pairwise_fitness = tf_error((2 * pairwise_fitness) - self.pen_explorate*(paretodiff - exploration_diff))  # faster version
 
-            if 'bounded' in self.kernel and 'tanhpenalize' in self.kernel:
-                tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_result)*0.1)
-                # tanhpenalize = 0.05*tf.tanh((agent_result-kernel_result)*0.2)  # optional: not the squared difference. factor should be a little different
-                pairwise_fitness = pairwise_fitness + tanhpenalize  # should work not with tensorflow
+            if self.tanhpenalize:
+                tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_result)*0.1)  # todo amplitude, stretch, squared
+                pairwise_fitness = pairwise_fitness + tanhpenalize
 
-        elif self.kernel == 'match':  # MATCH kernel
+        elif self.match:  # MATCH kernel
             """
             This is used for demonstration purposes only.
             """
@@ -219,47 +256,14 @@ class FitnessKernel:
             pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
 
         else:
-            raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kernel))
+            raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kname))
 
         return pairwise_fitness
 
-
-# class RegressionKernel(FitnessKernel):
-#     """
-#     first try to make separate classes
-#     """
-#
-#     def __init__(self, kernel_name):
-#         # super('regression')
-#         self.name = 'regression'
-#         super().__init__(kernel_name)
-#
-#     # def fitness_compare(self, fitness1, fitness2, mode='better'):
-#     #     """
-#     #     Compares the fitness of two candidates according to the kernel
-#     #
-#     #     Example:
-#     #         >
-#     #         fitness_compare
-#     #     """
-#     #
-#     #     if fitness2 is None:
-#     #         return True
-#     #     elif fitness1 < fitness2:
-#     #         return True
-#     #     elif fitness1 == fitness2 and mode == 'better_or_equal':
-#     #         return True
-#     #     else super(RegressionKernel, self).fitness_compare()
-#     #
-#     # def tf_get_pairwise_fitness(self, solution, tf_result):
-#     #     pairwise_fitness = tf.abs(solution - tf_result)
-#     #     return pairwise_fitness
-#     #
-#     # def conclusion_text(self):
-#     #     return
+    # todo garbage collector?
 
 
-def eval_tf(expr, data, kernel, eval_action, obs_infos, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
+def eval_tf(expr, used_observations, pd_data, kernel, eval_action, obs_infos, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -274,15 +278,15 @@ def eval_tf(expr, data, kernel, eval_action, obs_infos, tf_config, tf_device, tf
     """
 
     tf.compat.v1.reset_default_graph()
-    tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all? todo get size of tensors :P
-    # if len(tensors) < 52:  # todotodo todo
-    #     print('These tensors are less than 52')
-    #     tensors = get_env_tensors(data, eval_action, obs_infos)  # sfeh: can this be done once, for all? todo get size of tensors :P
+    tensors = {eval_action.name: tf.constant(pd_data[eval_action.name])}  # converts data_csv_path into vectors
 
-    # todo tensors: tree get tensors by observations in tree?
+    for obs_x_name in used_observations:
+        tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 todo: neverask.jpg
+
+    # print('size of tensors', getsizeof(tensors), getsizeof(pd_data))
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
-        with sess.graph.device(tf_device):  # device can be the gpu
+        with sess.graph.device(tf_device):  # device can be the gpu  # todo check if gpu is used
 
             agent_result = ast_convert_from_expr(expr, tensors=tensors)  # the actual result from the expression in the agent
             kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
@@ -312,23 +316,6 @@ def get_env_tensors(pd_data, eval_action, obs_infos):
     """
     tensors = {}  # todo dauerhafte tensoren?
 
-    for obs_x in obs_infos.values():
-        obs_name = obs_x.name
-        tensors[obs_name] = tf.constant(pd_data[obs_name])  # , dtype=tf.float32 todo: neverask.jpg
-        # todo, sfeh, note/problem
-        #  pandas will automatically get the column type of a loaded .csv file (float64, int64, ...)
-        #  converting to tensor will automatically convert to the corresponding tf-type (tf.float32, tf.int32, ...)
-        #  BUT: (during calculating regression) if action's tf-type is not agent's result -> Error (tf.int32 - tf.float32)
-        #  Solution?
-        #  (1) use tf.float32 everywhere (set the dtype here)
-        #       might take (very little) longer (CURRENTLY USED)
-        #  (2) convert agent result to action's dtype
-        #       inside the kernel, problems might occur
-
-    if '2f' in eval_action.xtype:
-        tensors[eval_action.name] = tf.constant(pd_data[eval_action.name])  # converts data_csv_path into vectors
-    else:
-        print_e(f"action {eval_action} has these infos: {eval_action}.")
     return tensors
 
 

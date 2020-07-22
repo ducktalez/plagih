@@ -37,9 +37,10 @@ def main(argv):
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-data_csv', type=Path)
     parser.add_argument('-force_new_run', action='store_true')
-    parser.add_argument('-analyse', '-analyze', '-files', '-results', action='store_true', default=None)
+    parser.add_argument('-analyse', '-analyze', action='store_true', default=None)
+    parser.add_argument('-kernel_name', default=None)
 
-    parser.add_argument('-tf_device_log', default=False)
+    parser.add_argument('-tf_device_log', '-tf_log', action='store_true', default=False, help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
 
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
 
@@ -55,13 +56,14 @@ def main(argv):
     origin_tree = args.origin_tree
     analyze = args.analyse
     tf_device_log = args.tf_device_log
+    kernel_name = args.kernel_name
 
     prepared_run = args.prepared_run
 
     if prepared_run:
-        pth = lambda x: Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / x
+        pathy = lambda x: Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / x
         if 'IB' in prepared_run:
-            data_prepared = pth('IB/samples_prepared.csv')
+            data_prepared = pathy('IB/samples_prepared.csv')
             config_name = 'IB/config4ib'
             ori_trs = {'50_0': 'IB/ib_tree_50s_0.csv',
                        '50_1': 'IB/ib_tree_50s_1.csv',
@@ -78,7 +80,7 @@ def main(argv):
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')
-                    origin_tree = pth(v)
+                    origin_tree = pathy(v)
 
             act_dct = {'_0': 'a_velocity',
                        '_1': 'a_gain',
@@ -91,9 +93,9 @@ def main(argv):
         elif 'MTC' in prepared_run:
             config_name = 'MTC/config4mtc'
             if 'MTC200' in prepared_run:
-                data_prepared = pth('/MTC/samples200.csv')
+                data_prepared = pathy('/MTC/samples200.csv')
             elif 'MTC75' in prepared_run:
-                data_prepared = pth('/MTC/samples75.csv')
+                data_prepared = pathy('/MTC/samples75.csv')
 
             ori_trs = {'gpFfriendly': 'MTC/tree_gpFriendly_fix.csv',
                        'preset': 'MTC/tree_preset_fix.csv',
@@ -104,17 +106,16 @@ def main(argv):
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')
-                    origin_tree = pth(v)
+                    origin_tree = pathy(v)
         else:
             raise
 
-        if 'rel' in prepared_run:
-            config_name += '_rel'
-        if 'tanh' in prepared_run:
-            config_name += '_tanh'
-        config_path = pth(f'{config_name}.yaml')
+        config_name += '_rel' if 'rel' in prepared_run else ''
+        config_name += '_tanh' if 'tanh' in prepared_run else ''
 
-        out_dir = pth(prepared_run)
+        config_path = pathy(f'{config_name}.yaml')
+
+        out_dir = pathy(prepared_run)
 
         # else: scratch, aka run
 
@@ -130,7 +131,7 @@ def main(argv):
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
-    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, analyze=analyze, tf_device_log=tf_device_log)
+    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, kernel_name, analyze=analyze, tf_device_log=tf_device_log)
 
 
 if __name__ == "__main__":

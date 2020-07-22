@@ -110,10 +110,9 @@ def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None
     choose_oparray must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
     """
-    if delete_this_version1 and choose_oparray2 is not None:
-        func_list, probability_list = choose_oparray2[xtype][arity]
-    else:
-        func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
+    func_list, probability_list = choose_oparray2[xtype][arity]
+    # else:
+    #     func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
     if not func_list:
         print_e(f'No function found with xtype={xtype}, arity={arity}.\nfunc_arr_dummy:\n{choose_oparray}')
     func = random.choices(func_list, weights=probability_list)[0]  # returns a list, so we choose the first element

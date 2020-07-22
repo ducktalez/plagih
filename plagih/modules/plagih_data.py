@@ -1,6 +1,7 @@
 from pathlib import Path
 import sklearn.model_selection as skcv
 from plagih.modules.printing import *
+from plagih.modules.operators import op
 import numpy as np
 import pandas as pd
 import re
@@ -85,8 +86,7 @@ class EnvVars:
     def __init__(self):
         self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
         self.obs_infos = {}
-        self.eval_action = None
-        self.family_info = None
+        self.eval_action: EvalAction = None
         self.choose_obs = {'f2': None,
                            '2b': None}
 
@@ -130,6 +130,8 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
 
         header_split = header.split('|')  # split 1: cartVel|type=float|role=input --> {cartVel, type=float, role=input]
         column_name = header_split[0]  # The first entry is always the column name
+        if column_name in op:
+            raise Exception(f'Your samples hold a column that matches the potential tree operator {column_name}. That might end up in confusion, please rename the column.')
         rename_columns[header] = column_name
 
         col_infos = {}  # column_name: {'type': 'float', 'role': None, 'colpos': ii}}

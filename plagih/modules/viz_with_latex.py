@@ -121,7 +121,7 @@ def label_bracket_beautification(label):
     """
     if label in op:  #
         label = f"${op[label]['latex1']}$"
-    elif label_is_observation(label):  # node is a terminal - either observation or variable
+    elif terminal_label_is_observation(label):  # node is a terminal - either observation or variable
         obs_time = obs_get_timedelta(label, none_return=None)
         if obs_time is not None:
             obs_family = obs_get_family(label)
@@ -140,7 +140,7 @@ def label_bracket_extras(label, arity, xtype, modifiable):
     # custom node design
     if arity == 0:
         extras += ',terminal'
-        if label_is_observation(label):
+        if terminal_label_is_observation(label):
             extras += ',variable'
         else:
             extras += ',observation'
@@ -235,7 +235,7 @@ def tree_get_expr_latextight(tree, node_id=root_id):
         child_tex_list = [tree_get_expr_latextight(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
         label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
     else:
-        if label_is_observation(label):  # node is a terminal - either observation or variable
+        if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
             obs_time = obs_get_timedelta(label, none_return=None)
             if obs_time is not None:
                 obs_family = obs_get_family(label)

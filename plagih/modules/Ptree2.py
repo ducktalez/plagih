@@ -4,8 +4,18 @@ from plagih.modules.plagih_tree import *
 
 
 class Plabel:
-    def __init__(self, label):
+    def __init__(self, label, xtype=None):
         self.label = label
+
+        xtype = xtype if xtype else xtype_get_from_label(label)
+        arity = label_get_arity(label)
+        type_inputs = float if xtype[-2:] == 'f2' else bool  # todo
+
+        # directly related to the label
+        self.arity = arity
+        self.input_types = [bool, float, float] if label == 'Ifte' else [type_inputs] * arity
+        self.type_output = float if xtype[-2:] == '2f' else bool  # todo
+        self.xtype = xtype  # obsolete?
 
 
 class CoolCore:
@@ -17,8 +27,7 @@ class CoolCore:
 
     def __init__(self, label=None, is_fix=False, complete=False, arity=None, xtype=None, childs=None, depth=None, nodepath=None):
 
-        if xtype is None:
-            xtype = xtype_get_from_label(label)
+        xtype = xtype if xtype else xtype_get_from_label(label)
         arity = label_get_arity(label) if arity is None else arity
         type_inputs = float if xtype[-2:] == 'f2' else bool  # todo
 
@@ -50,7 +59,6 @@ class CoolCore:
 
     def workaround_remove_tilde(self):
         if self.label == '~':
-
             new_core = self.childs[0]
             self.new_core(new_core)
 
@@ -101,7 +109,7 @@ class CoolCore:
             nodepath_child = nodepath + [ii]
             child.finalize_set_nodepath(nodepath_child)
 
-    def labellist_from_coolcore(self):
+    def get_labellist(self):
         label_list = []
         max_depth = self.childs_depth_max
         for depth in range(0, max_depth + 1):
@@ -176,7 +184,7 @@ class CoolCore:
             self.new_core(new_core)
         elif len(new_core) > len(self):
             print_warning('w', f'Reduced core is even more complex than the first tree. May happen with sympification.\n'
-                               f'This time, it was \n{self}\n{new_core}\n{expr_raw}')  # todo Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))
+            f'This time, it was \n{self}\n{new_core}\n{expr_raw}')  # todo Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))
         return
 
     def get_mutatable_nodes(self):
@@ -195,7 +203,7 @@ class CoolCore:
     def get_expr_raw(self):
         # if self.expr_raw is None:  # sfeh?
         if self.arity == 0:
-            return self.label
+            return f'{self.label}'
         else:
             my_expr = op[self.label]['sym_str']
             f_my_expr = lambda *args: my_expr.format(*args)
@@ -249,7 +257,7 @@ class CoolCore:
     def get_pycode(self):
 
         if self.arity == 0:
-            if label_is_observation(self.label):
+            if terminal_label_is_observation(self.label):
                 ib_sfeh_dict = {'p': 'SetPoint',
                                 'v': 'Velocity',
                                 'g': 'Gain',
@@ -339,34 +347,44 @@ class CoolCore:
         node = self.node_from_path(nodepath)
         node.child_append(child)
 
-    def workaround_normalize_exponentiation(self, normalize_me=False):
-        """
-        a**b requires b to be discrete.
-        """
-        # 1. ** should have an int as second number
+    # def workaround_normalize_exponentiation(self, normalize_me=False):
+    #     """
+    #     a**b requires b to be discrete - always. THerefore, we will add a round operator if required.
+    #     """
+    #     # 1. ** should have an int as second number
+    #
+    #     if normalize_me:
+    #         try:
+    #             self.label = float(round(float(self.label)))
+    #         except ValueError:
+    #             insert_this = CoolCore(self.label, arity=1, xtype='f2f', childs=self.childs)
+    #             self.childs = [insert_this]
+    #             self.label = 'round'
+    #             # todo
+    #             # raise
+    #         except OverflowError:
+    #             print('How often overflow error? idk man')
+    #             return
+    #
+    #     if self.label == '**':
+    #         normalize_me = True
+    #     for ii, cc in enumerate(self.childs):
+    #         if ii == 1 and normalize_me:
+    #             cc.workaround_normalize_exponentiation(normalize_me=True)
+    #         else:
+    #             cc.workaround_normalize_exponentiation()
+    #     return
 
-        if normalize_me:
-            try:
-                self.label = float(round(float(self.label)))
-            except ValueError:
-                # todo - insert a int7ROUND-NODE? round
-                insert_this = CoolCore(self.label, arity=1, xtype='f2f', childs=self.childs)
-                self.childs = [insert_this]
-                self.label = 'round'
-                # todo
-                raise
-            except OverflowError:
-                print('How often overflow error? idk man')
-                return
+    def get_observation_list(self):
+        my_return = []
+        if self.arity == 0:
+            if terminal_label_is_observation(self.label):
+                my_return = [self.label]
 
-        if self.label == '**':
-            normalize_me = True
-        for ii, cc in enumerate(self.childs):
-            if ii == 1 and normalize_me:
-                cc.workaround_normalize_exponentiation(normalize_me=True)
-            else:
-                cc.workaround_normalize_exponentiation()
-        return
+        for cc in self.childs:
+            my_return.extend(cc.get_observation_list())
+
+        return my_return
 
     def set_fix_nodes(self, origin_coolcore: 'CoolCore'):
         # todo not necessary?
@@ -377,7 +395,6 @@ class CoolCore:
 
 
 class CoolTree:
-
     class PtreeMeta:
         def __init__(self, fitness_train=None):
             self.hash = None
@@ -400,14 +417,18 @@ class CoolTree:
         self.finalize_structure()
 
     def __hash__(self):
-        core = self.core.labellist_from_coolcore()
+        """
+        Hashing the label-list as string should be sufficient.
+        Is there a chance for same hash values within oioulations? That would be very bad.
+        """
+        core = self.core.get_labellist()
         return hash(','.join([str(x) for x in core]))
 
     def finish_nodes(self, last_evolution, origin_tree: 'CoolTree' = None):
         # todo
         if origin_tree is not None:
             self.core.set_fix_nodes(origin_coolcore=origin_tree.core)
-        self.workaround_normalize_exponentiation()
+        # self.workaround_normalize_exponentiation()
         self.meta.last_evolution = last_evolution  # sfeh: should this be done during the evolve process?
 
     def get_layer_nodelist(self):
@@ -428,10 +449,10 @@ class CoolTree:
         layerlabellist = self.get_layer_labellist()
         return '\n'.join([', '.join([str(lbl) for lbl in layer]) for layer in layerlabellist])  # lbl-needed, sometines those are float values
 
-    def workaround_normalize_exponentiation(self):
-        self.core.workaround_normalize_exponentiation()
-        # self.finish_nodes()  # todo better names?
-        self.finalize_completely()  # todo
+    # def workaround_normalize_exponentiation(self):
+    #     self.core.workaround_normalize_exponentiation()
+    #     # self.finish_nodes()  #
+    #     self.finalize_completely()  #
 
     def finalize_structure(self):
         self.core.finalize_set_depth(depth=self.core.depth)
@@ -510,7 +531,7 @@ class CoolTree:
         self.history.append(self.meta)
         self.meta = self.PtreeMeta()
         self.complete = False
-        
+
     def meta_set(self, meta):
         self.history.append(self.meta)
 
@@ -526,12 +547,12 @@ class CoolTree:
                 break
 
             self.core.node_insert_width(node)
-    
+
     def __str__(self):
         """
 
         """
-        return f"Ptree2: {self.core}. Tree meta: {self.meta}"
+        return f"{self.core}"  # only printing the nodes
 
     def get_pycode(self):
         return self.core.get_pycode()
@@ -618,7 +639,13 @@ class CoolTree:
         tree_meta['fitness_train'] = fitness_train
         tree_meta['expr_raw'] = expr_raw
         tree_meta['expr_sym'] = expr_sym
-        return tree_meta  # todo
+        return tree_meta  # sfeh delete_this
+
+    def get_observation_list(self):
+        """
+        Returns a list with the used observations
+        """
+        return self.core.get_observation_list()
 
 
 def coolcore_from_oldtree(tree, node_id=root_id):
@@ -678,7 +705,6 @@ def cooltree_from_labellist(label_list, obs_krazy=None, modify_list=None):
 
 
 def coolcore_from_expr(expr, obs_krazy):
-
     label_list = ast_convert_from_expr(expr, build=True)
     xtype_list = xtypes_from_labels(label_list, obs_krazy)
     p_tree = Ptree_karoo(label_list, xtype_list)
@@ -688,7 +714,6 @@ def coolcore_from_expr(expr, obs_krazy):
 
 
 def cooltree_from_expr(expr, obs_krazy):
-
     label_list = ast_convert_from_expr(expr, build=True)
     xtype_list = xtypes_from_labels(label_list, obs_krazy)
     p_tree = Ptree_karoo(label_list, xtype_list)
@@ -699,7 +724,6 @@ def cooltree_from_expr(expr, obs_krazy):
 
 
 def test_insert_subtree():
-
     label_list = ['sin', '+', 'cos', 'Ifte', 1, 2, 3, 4]
     cooltree = cooltree_from_labellist(label_list)
     print(cooltree)
@@ -730,22 +754,30 @@ def test_sdf():
     tree = cooltree_from_labellist(label_list, modify_list=modify_list)
     cooltree = CoolTree(coolcore_from_oldtree(tree))
     print(cooltree)
-    old_labels = cooltree.labellist_from_cooltree()
+    old_labels = cooltree.core.get_labellist()
     print(old_labels)
     # print([str(x) for x in platree2_from_oldversion(labels, modify_list=allowMods)])
 
 
-def todo_test_cooltree_from_coollist(coollist):
-
+def some_quick_test():
     coollist = '[*, cartPos, [**, [+, cartPos, 1.077166], 2.0]]'
+    # test_insert_subtree()
+
+    label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
+    cooltree = cooltree_from_labellist(label_list, modify_list=[0, 1, 0, 0, 1, 1])
+    label_list = ['usub', 'asd']
+    cooltree = cooltree_from_labellist(label_list)
+    print(cooltree)
+    cooltree.evolve_reduce()
+    print(cooltree)
+    print(cooltree.get_observation_list())
 
 
-# test_insert_subtree()
+class ObservationNode(CoolCore):
 
-label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
-cooltree = cooltree_from_labellist(label_list, modify_list=[0, 1, 0, 0, 1, 1])
-label_list = ['usub', 'asd']
-cooltree = cooltree_from_labellist(label_list)
-print(cooltree)
-cooltree.evolve_reduce()
-print(cooltree)
+    def __init__(self, name):
+        super().__init__(name)
+        self.name = name
+
+
+some_quick_test()

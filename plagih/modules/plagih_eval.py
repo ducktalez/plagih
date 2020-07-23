@@ -28,7 +28,7 @@ class DummyKernel:
 
 class RegressionKernel(DummyKernel):
 
-    def __init__(self, bounded=False, discrete=False):
+    def __init__(self):
         pass
 
     def tf_wrap_result(self, tf_result, action_min_max):
@@ -64,10 +64,10 @@ class FitnessKernel:
             self.bounded = 'bounded' in kernel_name
             self.discrete = 'discrete' in kernel_name
             self.tanhpenalize = 'tanhpenalize' in kernel_name
-            self.squared_error = 'L2_squared' in kernel_name  # 'L1_absolute' not required
+            self.squared_error = 'MSE' in kernel_name  # 'L1_absolute' not required
 
             self.relative_regression_fun = 'relative_regression_fun' in kernel_name
-            self.origin_pairwise_fitness = None  # TODO
+            self.origin_pairwise_fitness = None
             sfeh_help = {'pen_explorate(1)': 1.0,
                          'pen_explorate(0.5)': 0.5}
 
@@ -177,9 +177,6 @@ class FitnessKernel:
             # regression that fits the outputs to a discrete set of actions defined by min and max
             tf_result = tf.math.round(tf_result)
 
-        # if 'bounded_tanh' in self.kernel:
-        #     tf_result = todo
-
         if 'bounded' in self.kname:
             act_min = tf.constant(action_min_max[0])
             act_max = tf.constant(action_min_max[1])
@@ -192,9 +189,6 @@ class FitnessKernel:
         if 'discrete' in self.kname:
             # regression that fits the outputs to a discrete set of actions defined by min and max
             wrap = f'math.round({wrap})'
-
-        # if 'bounded_tanh' in self.kernel:
-        #     tf_result = todo
 
         elif 'bounded' in self.kname:
             wrap = f'min(max({action_min_max[0]}, {wrap}), {action_min_max[1]})'
@@ -237,7 +231,7 @@ class FitnessKernel:
             pairwise_fitness = tf_error(pairwise_diff)
 
             if self.relative_regression_fun and origin_pairwise_fitness is not None:
-                tf_error = tf.abs  # todo this is required (??)
+                tf_error = tf.abs  # sfeh this is required (??)
                 # regression_goal = tf.abs(solution - tf_result)  # double the penalty
                 exploration_diff = (origin_pairwise_fitness - kernel_result)  # NO abs value
                 paretodiff = tf_error(solution - origin_pairwise_fitness)
@@ -273,20 +267,19 @@ def eval_tf(expr_sym, used_observations, pd_data, kernel, eval_action, tf_config
         'self.tf_device' - controls which device will be used for computations (CPU or GPU).
         'self.tf_device_log' - controls device placement logging (debug only).
 
-    'get_predicted_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
-    todo make this a kernel option
+    'get_predicted_labels' - (Classify Kernel) return the
     """
 
     tf.compat.v1.reset_default_graph()
-    tensors = {eval_action.name: tf.constant(pd_data[eval_action.name])}  # converts data_csv_path into vectors
+    tensors = {eval_action.name: tf.constant(pd_data[eval_action.name], dtype=tf.float32)}  # converts data_csv_path into vectors
 
     for obs_x_name in used_observations:
-        tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 todo: neverask.jpg
+        tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 sfeh: neverask.jpg
 
     # print('size of tensors', getsizeof(tensors), getsizeof(pd_data))
 
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
-        with sess.graph.device(tf_device):  # device can be the gpu  # todo check if gpu is used
+        with sess.graph.device(tf_device):
 
             agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
             kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here

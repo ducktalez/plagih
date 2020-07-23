@@ -14,15 +14,11 @@ from plagih.modules.plagih_data import *
 from plagih.modules.Ptree2 import *
 import random
 
-
-# todo automatische Auswertung für IB
-
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 PLAGIH_VERSION = 0.963  # must only update if vital changes were made
 
 
 class GpConfig():
-    # todo use new dict, self.remove_superfluous_config_entries = False  # sfeh you should do that
     # def __init__(self, conf=None):
     #
     #     self.pl_version = PLAGIH_VERSION  # version important when loading old run
@@ -40,7 +36,7 @@ class GpConfig():
 
     def __init__(self, conf):
         self.pl_version = PLAGIH_VERSION  # version important when loading old run
-        self.print_type = conf.get('print_type', 'wwwggaiiff')  # all: wwwaaaggggsiiiivvvff  (a)lert, (w)arning, (g)en, (i)nfo
+        self.print_type = conf.get('print_type', 'wwggaiiff')  # all: wwwwaaaggggsiiiivvvff  (a)lert, (w)arning, (g)en, (i)nfo
         self.force_new_run = conf.get('force_new_run', False)  # : False,  # especially for testing, ignores backup files when true
         self.time_max = conf.get('time_max', None)  # : None,  # int(60 * 60 * 12),  # 60 = 1 min
         self.gen_max = conf.get('gen_max', 1000)  # : 1001,  # Maximum amount of generations
@@ -97,7 +93,6 @@ class ExplainableGP(object):
                        'time_analysis': None,  # in gen counts
                        'gen_analysis': 5},  # in gen counts
 
-            # todo make a difference between write/read?, make pretty solution
             'file_locs': {
                 'example_runs': 'run_examples/',
 
@@ -146,7 +141,7 @@ class ExplainableGP(object):
 
         self.file_locs = self.config['file_locs']
         
-        self.conf = GpConfig(self.config)  # todo
+        self.conf = GpConfig(self.config)
 
         self.conf.pop_max = pop_max if pop_max is not None else self.conf.pop_max
 
@@ -200,7 +195,6 @@ class ExplainableGP(object):
                                 'complexity_variance': {},  # variance can be deleted, only std-error is needed delete v1
                                 'pop:trees:complexity:std_error': {},
                                 'gen_time': {}}
-        # todo save this as pandas?
 
         self.origin_results = None
 
@@ -236,7 +230,7 @@ class ExplainableGP(object):
         try:
 
             evolve_loop = self.conf.evolve_list
-            self.printpl('i', 'Using evolve rates from config')  # todo load here?
+            self.printpl('i', 'Using evolve rates from config')
         except:
             evolve_loop = [
                 # Reproduction (10%)
@@ -540,19 +534,14 @@ class ExplainableGP(object):
                     self.pop_append(new_cooltree, last_evolution=tag)
 
             elif evolve_name == 'crossover branch':
-
                 for nn in range(int(evolve_num / 2)):  # two childs
                     parent_a = self.pop_selection_tournament(tourn_size)
                     parent_b = self.pop_selection_tournament(tourn_size)
                     parent_a = parent_a.get_oldtree()
                     parent_b = parent_b.get_oldtree()
                     child_a, child_b = self.pop_crossover_branch(parent_a, parent_b)
-                    try:
-                        self.pop_append(child_a, last_evolution=tag)
-                        self.pop_append(child_b, last_evolution=tag)
-                    except:
-                        self.pop_append(child_a, last_evolution=tag)
-                        self.pop_append(child_b, last_evolution=tag)
+                    self.pop_append(child_a, last_evolution=tag)
+                    self.pop_append(child_b, last_evolution=tag)
 
             elif evolve_name == 'filter optimize':
 
@@ -716,7 +705,7 @@ class ExplainableGP(object):
         self.file_pareto_txt()
         self.file_population_base_karoo('last')
 
-        self.file_pareto_histograms()  # todo
+        self.file_pareto_histograms()
         self.file_pareto_latex()
         self.file_pareto_pycode()
 
@@ -788,7 +777,7 @@ class ExplainableGP(object):
                                   ['Square', 0.75], ['**', 0.25],
                                   ['abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
                                   ['sqrt', 0.1],
-                                  # ['log', 0.1], ['log1p', 0.1],
+                                  ['log', 0.1], ['log1p', 0.1],
                                   ['sin', 0.1],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
                                   ['tanh', 0.2],
                                   ['Andb', 1], ['Orb', 1], ['Notb', 0.5],  # ['Xor', 1],
@@ -999,7 +988,6 @@ class ExplainableGP(object):
         - fill tree meta-data, just in case we want to visualise anything of it
         - create latex-forest representation
         """
-        # todo pareto should hold the label_list or the tree
         latex_element = []
 
         for (parsim, fitness, cooltree) in self.pareto:
@@ -1067,24 +1055,20 @@ class ExplainableGP(object):
 
     def file_pareto_pycode(self):
         """
-
+        this auto-generation of real (executable) python files
+        is strongly customized for my experiments with Mountaincar and industrial benchmark
         """
 
         py_return = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
 
-        # for obs_name in self.env_vars['obs_name']:
-        #     obs_family, obs_time = observation_get_family_and_time(obs_name, none_return=None)
-        #     assign_input.append(obs_name)
-        # # todo load this once at the start
-
-        assign_input = f"cartPos, cartVel = input\n"  # todo use dictionary to pass values
+        assign_input = f"cartPos, cartVel = input\n"
 
         function_body = textwrap.indent(f"{assign_input}"
                                         "action = {}\n"
-                                        f"{py_return}", '\t')
+                                        f"{py_return}", '    ')  # aka tab (\t)
 
         complete_function = textwrap.indent(f"def decide(self, input):\n"
-                                            f"{function_body}\n", '\t')
+                                            f"{function_body}\n", '    ')  # aka tab (\t)
 
         all_agents = []
         all_agent_names = []
@@ -1102,15 +1086,14 @@ class ExplainableGP(object):
         pycode_agents = '\n\n'.join(all_agents)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
         all_more_info = ', '.join(all_more_info)
-        pycode_complete_agents = "import math\n" \
-                                 "import numpy as np\n\n" \
+        pyc_complete = f"import math; import numpy as np\n\n" \
             f"{pycode_agents}\n\n" \
             f"all_agents_more = [{all_more_info}]\n" \
-            f"agent_tuples = [{agent_tuples}]\n\n"  # -> ('Agent_34', Agent_34())
+            f"agent_tuples = [{agent_tuples}]\n"
 
         pth = file_make_dir(self.root_path('folder_pycode') / f"agents_{self.env_vars.eval_action.name}.py")
         with Path.open(pth, 'w') as file:
-            file.write(pycode_complete_agents)
+            file.write(pyc_complete)
             self.printpl('ff', f'{pth.as_posix()}')
 
         return
@@ -1238,7 +1221,7 @@ class ExplainableGP(object):
             for nid in obs_nodes:
                 obs_label = tree_node_get_label(tree, nid)
 
-                is_negative = obs_label[0] == '-'  # todo
+                is_negative = obs_label[0] == '-'  # workaround for negative labels
                 if is_negative:
                     obs_label = obs_label[1:]
 
@@ -1247,9 +1230,9 @@ class ExplainableGP(object):
                 obs_label = hello_node.name
 
                 new_obs = '-' + obs_label if is_negative else obs_label
-                tree = tree_node_set_label(tree, nid, new_obs)  # todo cartvel etc is a waste of filter
+                tree = tree_node_set_label(tree, nid, new_obs)
         else:
-            # print_warning('iii', 'Tree does not seem to have any nodes for filtering.')  # usually happens with point-filtering
+            print_warning('wwww', 'Tree does not seem to have any nodes for filtering.')  # usually happens with point-filtering
             pass
 
         return tree
@@ -1434,29 +1417,26 @@ class ExplainableGP(object):
         inserts a tree into the pareto front
         """
 
-        parsimony = cooltree.meta.complexity
+        parsimony = cooltree.meta.parsimony
         expr_raw = cooltree.meta.expr_raw
-        # pareto_meta = {'expr_raw': cooltree.meta.expr_raw, 'coolTree': cooltree}  # todo save the tree?
+
         fitness_train = cooltree.meta.fitness_train
         tree_entry = [parsimony, fitness_train, cooltree]
 
         if len(self.pareto) == 0:  # no pareto entries found yet
-            self.printpl('a', f"Paretofront inserted first candidate at {parsimony, fitness_train, expr_raw}")  # todo print sym instead?
+            self.printpl('a', f"Paretofront inserted first candidate at {parsimony, fitness_train, expr_raw}")
             self.pareto.append(tree_entry)  # e.g. [3, 423, cooltree]
         else:
             try:
-                p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # less complex candidates
+                p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # all pareto entries that are less complex
                 best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
             except:  # catches, when p_simpler is empty
-                best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
+                best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry - maybe the new entry is very complex, but the best
 
             if tree_entry[1] < best[1]:  # if true, at least one insertion
                 self.printpl('a', f"Paretofront new entry was inserted: {parsimony, fitness_train, expr_raw}")
                 self.pareto.append(tree_entry)  #
-                try:
-                    self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
-                except Exception as ex:  # todo
-                    self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
+                self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
                 self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
                 # simplify the tree ans save in pareto once again
@@ -1472,8 +1452,8 @@ class ExplainableGP(object):
                                 f'symp: {cooltree_sym.core.get_labellist()}\n'
                                 f'tree raw: {cooltree.get_expr_raw()}\n'
                                 f'symp rawr: {cooltree_sym.get_expr_raw()}')
-                        raise Exception('TODO FUCK')
-                        # return
+                        # raise Exception('FUCK')
+                        return
 
                     self.printpl('aa', 'Successfully reduced pareto tree!')
                     cooltree_sym.meta.fitness_train = sym_fitness
@@ -1513,13 +1493,13 @@ class ExplainableGP(object):
         else:
             parsimony = self.tree_eval_parsimony_easywrapper(cooltree)
             if parsimony > self.conf.parsimony_max:
-                print_warning('www', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
+                print_warning('wwww', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
                 return
 
             try:
                 fitness_train = self.tree_eval_fitness_train(cooltree)
             except Exception as evalex:
-                print_warning('ww', f'Exception while evaluating: {evalex}', print_type=self.print_type)
+                print_warning('www', f'Exception while evaluating: {evalex}', print_type=self.print_type)
                 # eval_fails.append(str(ex))
                 # continue
                 return
@@ -1540,21 +1520,7 @@ class ExplainableGP(object):
         self.treelut_tree_add(cooltree)
         self.population_tmp.append(cooltree)
 
-        try:  # todo
-            self.update_pareto(cooltree)
-        except:
-            print('asd', cooltree.meta)
-            cooltree.meta.fitness_train = fitness_train
-            cooltree.meta.parsimony = parsimony
-            cooltree.meta.last_evolution = last_evolution
-            cooltree.meta.expr_raw = expr_raw
-            cooltree.meta.expr_sym = expr_sym
-            self.update_pareto(cooltree)
-        return
-
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Perform the 3 genetic prog. operations    +
-    # +++++++++++++++++++++++++++++++++++++++++++++
+        self.update_pareto(cooltree)
 
     def pop_selection_tournament(self, tourn_size):
 
@@ -1575,8 +1541,6 @@ class ExplainableGP(object):
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
 
-        expr_raw = cooltree.get_expr_raw()
-
         try:
             expr_sym = cooltree.get_expr_sym()
         except Exception as sympex:
@@ -1590,15 +1554,9 @@ class ExplainableGP(object):
         fitness_train = self.tree_eval_fitness_train(cooltree)
 
         cooltree.meta.fitness_train = fitness_train
-        cooltree.meta.complexity = 0
+        cooltree.meta.parsimony = 0
 
         self.origin_cooltree = copy.deepcopy(cooltree)
-
-        pareto_meta = {'cooltree': cooltree,
-                       'expr_raw': expr_raw,
-                       'expr_sym': expr_sym,
-                       'parsimony': 0,
-                       'fitness_train': fitness_train}
 
         used_observations = cooltree.get_observation_list()
         self.origin_results = eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
@@ -1631,7 +1589,7 @@ class ExplainableGP(object):
                                 origin_pairwise_fitness=self.origin_results)
 
         if not check_value_is_real(fitness_train):
-            raise Exception(f'Fitness is inf or nan: {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
+            raise Exception(f'Error is {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
         fitness_train = round(fitness_train, self.conf.fitness_decimals)
 
         return fitness_train
@@ -1745,7 +1703,7 @@ class ExplainableGP(object):
         popul = self.population_tmp
 
         pop_fitness = [cooltree.meta.fitness_train for cooltree in popul]
-        pop_parsim = [cooltree.meta.complexity for cooltree in popul]
+        pop_parsim = [cooltree.meta.parsimony for cooltree in popul]
         pop_treelen = [len(cooltree) for cooltree in popul]
         pop_last_evolve = [cooltree.meta.last_evolution for cooltree in popul]
 

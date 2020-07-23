@@ -99,9 +99,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     - filtering observation index
         is there an index (past values, e.g. velocity_0, velocity_1) -> performing filter-evolve on the variables index (velocity_2 -> velocity_3)
     - evalaction data_train, data_test, is the action for the regression? -> more than one action might be required (IB has three action dimensions)
-            - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
-                 todo solve this inside the kernel (?)
-
+        - action min max -> for kernel regression bounded. occuring min and max values might not be the theoretical min/max values
     """
 
     def is_action(name, role):
@@ -190,7 +188,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
 
     obs_2f = lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0]
     choose_obs = {'2f': obs_2f,
-                  '2b': None}  # todo consider max age?
+                  '2b': None}
 
     env_vars.choose_obs = choose_obs
     env_vars.obs_infos = obs_info
@@ -260,13 +258,3 @@ def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
 
     return temp_diff
 
-
-# if __name__ == '__main__':
-#     import tensorflow as tf
-#
-#     env_vars, data_train_panda, data_test_panda = data_from_csv(Path('../../benchmarks/run_sources/MTC/samples75.csv'), action_name=None)
-#     obsnames = env_vars['obs_name'].keys()
-#     for (name, data) in data_train_panda.iteritems():
-#         tf_dtype = tf.float32 if data.dtype == np.float32 else tf.bool
-#         x = tf.constant(data.to_numpy(), dtype=tf.float32)
-#     print(x)

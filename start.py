@@ -44,7 +44,7 @@ def main(argv):
 
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', default=False, help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
 
-    parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
+    parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
 
     args = parser.parse_args()
     # print(args)
@@ -96,9 +96,9 @@ def main(argv):
         elif 'MTC' in prepared_run:
             config_name = 'MTC/config4mtc'
             if 'MTC200' in prepared_run:
-                data_prepared = pathy('/MTC/samples200.csv')
+                data_prepared = pathy('MTC/samples200.csv')
             elif 'MTC75' in prepared_run:
-                data_prepared = pathy('/MTC/samples75.csv')
+                data_prepared = pathy('MTC/samples75.csv')
 
             ori_trs = {'gpFfriendly': 'MTC/tree_gpFriendly_fix.csv',
                        'preset': 'MTC/tree_preset_fix.csv',

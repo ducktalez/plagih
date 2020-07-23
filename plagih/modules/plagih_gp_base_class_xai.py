@@ -331,8 +331,7 @@ class ExplainableGP(object):
         """
         If a backup-file is found...
         """
-        if path_backup is None:
-            path_backup = self.root_path('file_backup_pickle')  # sfeh file-load
+        path_backup = path_backup if path_backup else self.root_path('file_backup_pickle')  # sfeh file-load
 
         if Path.is_file(path_backup):
             self.print_g('g', 'Loading data from backup-file...')
@@ -358,16 +357,8 @@ class ExplainableGP(object):
         with Path.open(path_backup, 'rb') as file_backup:
             run_data = pickle.load(file_backup)
 
-        self.conf.pl_version, self.restart_count, self.gen_id, _, self.pareto, self.pop_base, self.monitoring_dict = run_data
-
+        self.conf.pl_version, self.restart_count, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
         self.restart_count += 1
-
-        # update monitoring dict (average vs variance)
-        if self.conf.pl_version <= 0.9:
-            pass
-
-        # if isinstance(self.pareto, dict):  # version before 0.95
-        #     self.pareto = [[p, meta['fitness_train'], meta] for p, meta in self.pareto.items()]
 
         printez('g', f'Starting at generation: {self.gen_id}', self.print_type)
 
@@ -388,12 +379,12 @@ class ExplainableGP(object):
         """
 
         # sfeh save complete config?
-        run_backup_data = self.conf.pl_version, self.restart_count, self.gen_id, None, self.pareto, self.pop_base, self.monitoring_dict
+        run_backup_data = self.conf.pl_version, self.restart_count, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict
 
         path_backup = self.file_make_dir_root('file_backup_pickle')
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.printpl('f', f'{path_backup}')
+        self.printpl('f', f'{path_backup.as_posix()}')
         return
 
     def plagih_gp_run(self):
@@ -1039,7 +1030,7 @@ class ExplainableGP(object):
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
-        self.printpl('ff', f'{path_trees_tex}')
+        self.printpl('ff', f'{path_trees_tex.as_posix()}')
 
         return
 

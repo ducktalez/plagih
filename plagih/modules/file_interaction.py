@@ -92,7 +92,7 @@ def pickle_dump(path, data, print_type=None):
     path = file_make_dir(path)
     with Path.open(path, 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        printez('f', f'{path}', print_type=print_type)
+        printez('f', f'{path.as_posix()}', print_type=print_type)
     return
 
 

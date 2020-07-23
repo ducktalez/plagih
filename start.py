@@ -64,9 +64,11 @@ def main(argv):
     prepared_run = args.prepared_run
 
     if prepared_run:
-        pathy = lambda x: Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / x
+        def pathify(x):
+            return Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / x
+
         if 'IB' in prepared_run:
-            data_prepared = pathy('IB/samples_prepared.csv')
+            data_prepared = pathify('IB/samples_prepared.csv')
             config_name = 'IB/config4ib'
             ori_trs = {'50_0': 'IB/ib_tree_50s_0.csv',
                        '50_1': 'IB/ib_tree_50s_1.csv',
@@ -83,7 +85,7 @@ def main(argv):
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')
-                    origin_tree = pathy(v)
+                    origin_tree = pathify(v)
 
             act_dct = {'_0': 'a_velocity',
                        '_1': 'a_gain',
@@ -96,9 +98,9 @@ def main(argv):
         elif 'MTC' in prepared_run:
             config_name = 'MTC/config4mtc'
             if 'MTC200' in prepared_run:
-                data_prepared = pathy('MTC/samples200.csv')
+                data_prepared = pathify('MTC/samples200.csv')
             elif 'MTC75' in prepared_run:
-                data_prepared = pathy('MTC/samples75.csv')
+                data_prepared = pathify('MTC/samples75.csv')
 
             ori_trs = {'gpFfriendly': 'MTC/tree_gpFriendly_fix.csv',
                        'preset': 'MTC/tree_preset_fix.csv',
@@ -109,14 +111,14 @@ def main(argv):
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')
-                    origin_tree = pathy(v)
+                    origin_tree = pathify(v)
         else:
             raise
 
         config_name += '_rel' if 'rel' in prepared_run else ''
         config_name += '_tanh' if 'tanh' in prepared_run else ''
-        config_path = pathy(f'{config_name}.yaml')
-        out_dir = pathy(prepared_run)
+        config_path = pathify(f'{config_name}.yaml')
+        out_dir = pathify(prepared_run)
         # else: scratch, aka run
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))

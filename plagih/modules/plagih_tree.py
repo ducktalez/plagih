@@ -47,8 +47,7 @@ class Core_From_Labels():
         """
 
         if len(label_list) == 0:
-            print_warning('w', 'label list is empty')
-            raise
+            raise Exception('label list is empty')
 
         # if arity_list is None:
         #     arity_list = [label_get_arity(label) for label in label_list]
@@ -412,8 +411,7 @@ def tree_node_get_arity(tree, node_id, empty_is_zero=False):
         if empty_is_zero:
             return empty_is_zero
         else:
-            print_warning('ww', 'Arity was not set!')
-            raise
+            raise Exception('Arity was not set!')
     else:
         arity = int(arity)
 
@@ -1325,7 +1323,7 @@ def tree_core_init_depth(tree, parent_list=None):
     if len(tree) > 0:
         tree[N_depth][0] = 0  # the root is always here
     else:
-        print_warning('w', 'Tree is completely empty')
+        raise Exception('Tree is completely empty')
 
     for my_id, _ in enumerate(parent_list):
 

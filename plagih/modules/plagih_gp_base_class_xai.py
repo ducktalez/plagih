@@ -50,17 +50,17 @@ class GpConfig():
         self.gen_num_max_parsimony = conf.get('gen_num_max_parsimony', 50)  #: 50,  # Increase tmp_parsim to this generation
         self.fitness_decimals = int(conf.get('fitness_decimals', 6))  # rounding the fitness
         self.float_decimals = int(conf.get('float_decimals', 6))  # None or 1-30 decimals
-        
+
         self.kernel_name = conf.get('kernel_name', 'regression')
-        
+
         self.plot_verbosity = conf['plot_verbosity']
         self.period = conf['period']
-        
+
         # sfeh not here?
         self.evolve_list_random = conf.get('evolve_list_random')
         self.lambdadist_as_string = conf.get('lambdadist_as_string')
         self.complexity_measure = conf.get('complexity_measure')
-        
+
 
 class ExplainableGP(object):
     """
@@ -137,10 +137,11 @@ class ExplainableGP(object):
                 else:
                     d[k] = v
             return d
+
         self.config = update_dict_nested(self.config, user_config)  # overwrites the default config-values with user-loaded config
 
         self.file_locs = self.config['file_locs']
-        
+
         self.conf = GpConfig(self.config)
 
         self.conf.pop_max = pop_max if pop_max is not None else self.conf.pop_max
@@ -391,7 +392,7 @@ class ExplainableGP(object):
             try:
                 self.try_load_backup()
             except FileNotFoundError as fnfex:
-                print_warning('w', f'No backup file found. {fnfex}')
+                print_warning('w', f'No backup file found. {fnfex}', print_type=self.print_type)
             except Exception:
                 raise
             # sfeh: delete old files?
@@ -454,20 +455,7 @@ class ExplainableGP(object):
         Add an amount of random trees to the population
         """
 
-        total_rate = sum([x['evolve_rate'] for x in self.evolve_random])
 
-        for ii, evolve_specs in enumerate(self.evolve_random):
-            evolve_num = int(amount * (evolve_specs['evolve_rate'] / total_rate))
-            call_params = evolve_specs.get('custom_params')
-            tag = evolve_specs['tag']
-
-            for nn in range(evolve_num):
-                if self.origin_is_fix():
-                    new_tree = self.pop_random_from_origin_fix(call_params, self.origin_cooltree)
-                else:
-                    new_tree = self.pop_random(call_params)
-                new_cooltree = cooltree_from_oldtree(new_tree)
-                self.pop_append(new_cooltree, last_evolution=tag)
 
     def gen_create_initial(self):
         """
@@ -479,10 +467,24 @@ class ExplainableGP(object):
         """
 
         if self.origin_exists():
-            # sfeh why not :P
-            self.pop_append(self.origin_cooltree, last_evolution='initial')
+
+            self.pop_append(self.origin_cooltree, last_evolution='initial')  # sfeh why not :P
+
         else:
-            self.gen_create_random(self.conf.pop_max)
+            total_rate = sum([x['evolve_rate'] for x in self.evolve_random])
+
+            for ii, evolve_specs in enumerate(self.evolve_random):
+                evolve_num = int(self.conf.pop_max * (evolve_specs['evolve_rate'] / total_rate))
+                call_params = evolve_specs.get('custom_params')
+                tag = evolve_specs['tag']
+
+                for nn in range(evolve_num):
+                    if self.origin_is_fix():
+                        new_tree = self.pop_random_from_origin_fix(call_params, self.origin_cooltree)
+                    else:
+                        new_tree = self.pop_random(call_params)
+                    new_cooltree = cooltree_from_oldtree(new_tree)
+                    self.pop_append(new_cooltree, last_evolution=tag)
 
         self.pop_analyse()
         self.pop_base = self.population_tmp[:]
@@ -514,15 +516,24 @@ class ExplainableGP(object):
                 # sfeh one parameter
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    new_cooltree = self.pop_reproduce(call_params, cooltree)
-                    self.pop_append(new_cooltree, last_evolution=tag)
+
+                    if call_params.get('sympify_tree'):
+                        try:
+                            cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
+                        except Exception as ex:
+                            print_warning('w', f'not today, pal. {ex}')
+
+                    self.pop_append(cooltree, last_evolution=tag)
 
             elif evolve_name == 'mutate point':
 
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    new_cooltree = self.pop_mutate_point(cooltree)
-                    self.pop_append(new_cooltree, last_evolution=tag)
+                    cooltree.evolve_mutate_point(self.conf.float_decimals,
+                                                 self.choose_oparray2,
+                                                 self.env_vars.choose_obs,
+                                                 self.choose_distributions)
+                    self.pop_append(cooltree, last_evolution=tag)
 
             elif evolve_name == 'mutate branch':
 
@@ -770,21 +781,21 @@ class ExplainableGP(object):
             operators = yaml_load(Path(opth_operators))
 
         except:
-            print_warning('www', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operators.')
+            print_warning('www', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operators.', print_type=self.print_type)
             operators = [['+', 2],
-                                  ['-', 1], ['usub', 1],
-                                  ['*', 2], ['/', 1],
-                                  ['Square', 0.75], ['**', 0.25],
-                                  ['abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
-                                  ['sqrt', 0.1],
-                                  ['log', 0.1], ['log1p', 0.1],
-                                  ['sin', 0.1],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
-                                  ['tanh', 0.2],
-                                  ['Andb', 1], ['Orb', 1], ['Notb', 0.5],  # ['Xor', 1],
-                                  ['==', 1], ['!=', 0.5],
-                                  ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
-                                  ['Ifte', 2],
-                                  ['Mini', 1], ['Maxi', 1]]
+                         ['-', 1], ['usub', 1],
+                         ['*', 2], ['/', 1],
+                         ['Square', 0.75], ['**', 0.25],
+                         ['abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
+                         ['sqrt', 0.1],
+                         # ['log', 0.1], ['log1p', 0.1],  # sfeh
+                         ['sin', 0.1],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
+                         ['tanh', 0.2],
+                         ['Andb', 1], ['Orb', 1], ['Notb', 0.5],  # ['Xor', 1],
+                         ['==', 1], ['!=', 0.5],
+                         ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
+                         ['Ifte', 2],
+                         ['Mini', 1], ['Maxi', 1]]
 
         def check_allow_closure(operators):
             # sfeh dunno if that works... 2f not in x
@@ -794,9 +805,9 @@ class ExplainableGP(object):
             has_f2b = any(['f2b' in x for x in opxtypes])
             has_b2f = any(['b2f' in x for x in opxtypes])
             if not all([has_2f, has_2b, has_f2b, has_b2f]):
-                print_warning('w', f'Operators are not complete')
+                print_warning('w', f'Operators are not complete', print_type=self.print_type)
             if all([has_2f, has_2b]) and not all([has_f2b or has_b2f]):
-                print_warning('w', f'Operators do not allow closure')
+                raise Exception(f'Operators do not allow closure')
 
         check_allow_closure(operators)
 
@@ -813,7 +824,7 @@ class ExplainableGP(object):
         if Path.is_file(path_distrib):
             lambdadist_as_string = yaml_load(path_distrib)
         else:
-            print_warning('www', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
+            print_warning('www', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.', print_type=self.print_type)
             lambdadist_as_string = self.conf.lambdadist_as_string
 
         choose_distributions = {'2f': [], '2b': []}
@@ -904,7 +915,7 @@ class ExplainableGP(object):
             #     # agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
             #     # obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
 
-        # for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
+            # for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
 
             act_min, act_max = self.env_vars.eval_action.minmax
             if 'discrete' in self.kernel.kname:
@@ -1144,17 +1155,6 @@ class ExplainableGP(object):
 
         return
 
-    def pop_reproduce(self, call_params, cooltree: CoolTree):
-
-        """
-
-        copy a tree from the last population without changing its outcome
-        """
-        if call_params.get('sympify_tree'):
-            cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
-
-        return cooltree
-
     def pop_reproduce_pareto(self):
 
         """
@@ -1171,10 +1171,7 @@ class ExplainableGP(object):
         Point mutation, One point (terminal or function) gets mutated.
         SFEH: Currently only mutating with functions/terminals of the exactly same type.
         """
-        cooltree.evolve_mutate_point(self.conf.float_decimals,
-                                     self.choose_oparray2,
-                                     self.env_vars.choose_obs,
-                                     self.choose_distributions)
+
 
         return cooltree
 
@@ -1232,7 +1229,7 @@ class ExplainableGP(object):
                 new_obs = '-' + obs_label if is_negative else obs_label
                 tree = tree_node_set_label(tree, nid, new_obs)
         else:
-            print_warning('wwww', 'Tree does not seem to have any nodes for filtering.')  # usually happens with point-filtering
+            print_warning('wwww', 'Tree does not seem to have any nodes for filtering.', print_type=self.print_type)  # usually happens with point-filtering
             pass
 
         return tree
@@ -1396,7 +1393,7 @@ class ExplainableGP(object):
         right_ids, right_labels, right_aritys, right_xtypes = tree_get_branch_ilax(right_tree, right_id)
 
         if not success:
-            print_warning('ww', f'Crossover conversion between trees not possible: \n{left_tree}\n{right_tree}')
+            print_warning('ww', f'Crossover conversion between trees not possible: \n{left_tree}\n{right_tree}', print_type=self.print_type)
             return None, None
 
         left_core = Core_From_Labels(left_labels, left_aritys, left_xtypes).get_uninstanced_core()
@@ -1442,7 +1439,10 @@ class ExplainableGP(object):
                 # simplify the tree ans save in pareto once again
                 self.printpl('aaa', 'Trying to simplify for pareto entry.')
                 cooltree_sym = copy.deepcopy(cooltree)
-                cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
+                try:
+                    cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
+                except Exception as ex:
+                    print_warning('ww', 'Tree sympification did not work.', print_type=self.print_type)
 
                 if len(cooltree_sym) < len(cooltree):
                     sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
@@ -1480,7 +1480,7 @@ class ExplainableGP(object):
         try:
             cooltree.check_all()
         except Exception as ex:
-            print_warning('w', f'tree failed the quick check. last-mod: {last_evolution}. Reason:\n{ex}')
+            print_warning('w', f'tree failed the quick check. last-mod: {last_evolution}. Reason:\n{ex}', print_type=self.print_type)
             return
 
         # tree = self.tree_finish_nodes(tree, last_evolution=last_evolution)
@@ -1652,17 +1652,17 @@ class ExplainableGP(object):
 
         if self.conf.plot_verbosity['gen_fitness_average'] == 'y':
             data_tuples = plotendify_me(self.monitoring_dict['fitness_average'])
-            plot_end(data_tuples, path_plots, title='average error', x_label='Generation', y_label='regression error', set_left=data_tuples[0][0])
+            plot_end(data_tuples, path_plots, title='average error', x_label='Generation', y_label='regression error', set_left=data_tuples[0][0], print_type=self.print_type)
 
         if self.conf.plot_verbosity['population_tmp_done-size'] == 'y':
             data_tuples = plotendify_me(self.monitoring_dict['population_tmp_done-size'])
             plot_end(data_tuples, path_plots, title='genepool size', x_label='Generation', y_label='amount', linestyle='None',
-                     marker='.', set_left=data_tuples[0][0])
+                     marker='.', set_left=data_tuples[0][0], print_type=self.print_type)
 
         data_tuples = plotendify_me(self.monitoring_dict['gen_time'])
         plot_end(data_tuples, path_plots, title='Generation time', x_label='Generation', y_label='time (sec)', linestyle='None',
                  marker='.',
-                 set_left=data_tuples[0][0])
+                 set_left=data_tuples[0][0], print_type=self.print_type)
 
         data_tuples = get_pareto_plot_values()
         plot_end(data_tuples, root_path, title='pareto dominant candidates', x_label='parsimony',
@@ -1671,23 +1671,21 @@ class ExplainableGP(object):
                  marker='.',
                  step_where='post',
                  set_right=self.conf.parsimony_max,
-                 beyond_lines=True)
+                 beyond_lines=True, print_type=self.print_type)
 
         if self.conf.plot_verbosity.get('fitness_variance') == 'y':
             data_tuples = plotendify_me(self.monitoring_dict['fitness_variance'])
             plot_end(data_tuples, path_plots, title='variance in error', x_label='Generation', y_label='variance',
-                     marker='')
+                     marker='', print_type=self.print_type)
 
         data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
         data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
         plot_end(data_tuples, path_plots, title='tree complexity (avg and std. error)', x_label='Generation', y_label='variance',
-                 marker='', fill_variance=data_tuples_variance)
+                 marker='', fill_variance=data_tuples_variance, print_type=self.print_type)
 
         data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
         plot_end(data_tuples, path_plots, title='best candidate', x_label='Generation',
-                 y_label='error',
-                 linestyle='dashed',
-                 step_where='post')
+                 y_label='error', linestyle='dashed', step_where='post', print_type=self.print_type)
 
         return
 
@@ -1701,6 +1699,9 @@ class ExplainableGP(object):
         """
         gen_id = self.gen_id
         popul = self.population_tmp
+
+        if len(popul) == 0:
+            raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
 
         pop_fitness = [cooltree.meta.fitness_train for cooltree in popul]
         pop_parsim = [cooltree.meta.parsimony for cooltree in popul]
@@ -1727,7 +1728,7 @@ class ExplainableGP(object):
 
         gen_time = time.perf_counter() - self.time_genstart
         self.monitoring_dict['gen_time'][gen_id] = gen_time
-        self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} trees in generation {gen_id}. Gen took {gen_time:4.2f}s')
+        self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} trees in generation {gen_id}. Gen took {gen_time:4.2f}s')  # todo also show unique trees?
         return
 
     def get_env_vars(self):

@@ -167,11 +167,10 @@ class CoolCore:
     def reduce_me(self, obs_krazy):  # todo env_vars not required in new tree :P
         expr_raw = self.get_expr_raw(reduceable=True)
         try:
-            # todo todotodo fix nodes ignored?
+            # todo fix nodes ignored?
             expr_sym = expr_sympify(expr_raw)
         except:
-            print_e(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
-            return
+            raise Exception(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
 
         try:
             new_core = coolcore_from_expr(expr_sym, obs_krazy)
@@ -183,8 +182,7 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            print_warning('w', f'Reduced core is even more complex than the first tree. May happen with sympification.\n'
-            f'This time, it was \n{self}\n{new_core}\n{expr_raw}')  # todo Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))
+            raise Exception(f'Reduced core is even more complex than the first tree. May happen with sympification. \n{self} new_core: \n{new_core} expr_raw: \n{expr_raw}')  # todo Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))
         return
 
     def get_mutatable_nodes(self):

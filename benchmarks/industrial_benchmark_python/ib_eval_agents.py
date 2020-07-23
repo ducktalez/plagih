@@ -277,8 +277,8 @@ class Agent_Test(Ib_Agent):
         SetPoint = self.get_h('p', 0)
 
         at = np.array([0, 0, 0], dtype=np.float32)
-        at[0] = min(self.get_h('g', 7), ((self.get_h('f', 0)*max(SetPoint, self.get_h('h', 2)))+self.get_h('h', 3)))
-        at[1] = np.sign(((((self.get_h('f', 9)+self.get_h('g', 4))-self.get_h('g', 9))-SetPoint)+1.387298))
+        at[0] = np.sign(min(min(self.get_h('g', 7), (-self.get_h('v', 9)-0.659044)), self.get_h('h', 3)))
+        at[1] = np.sign((((self.get_h('g', 4)-self.get_h('g', 9))-SetPoint)+1.149521))
         at[2] = -2 / self.get_h('h', 7)
         return at
 

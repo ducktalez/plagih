@@ -412,9 +412,9 @@ class CoolTree:
         def __str__(self):
             return f"hash: {self.hash}, fitness: {self.fitness_train}, complexity: {self.complexity}, {self.depth}, {self.last_evolution}, {self.expr_raw}, {self.expr_sym}"
 
-    def __init__(self, coolcore: CoolCore, fitness=None):
+    def __init__(self, coolcore: CoolCore):
         self.core = coolcore
-        self.meta = self.PtreeMeta(fitness)
+        self.meta = self.PtreeMeta()
         self.history = deque([], maxlen=10)  # sfeh arbitrary value of 10 historic metainfo of this tree
         self.finalize_structure()
 

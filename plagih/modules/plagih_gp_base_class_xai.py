@@ -71,7 +71,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, plagih_root, root_dir, user_config, action_name, kernel_name=None, path_data=None, opth_operators=None, tf_device_log=False, pop_size=None):
+    def __init__(self, plagih_root, root_dir, user_config, action_name, kernel_name=None, path_data=None, opth_operators=None, tf_device_log=False, pop_max=None):
 
         self.name = root_dir.resolve().name  # sfeh probably there are better names
         print(f'\n'
@@ -148,7 +148,7 @@ class ExplainableGP(object):
         
         self.conf = GpConfig(self.config)  # todo
 
-        self.conf.pop_max = pop_size
+        self.conf.pop_max = pop_max if pop_max is not None else self.conf.pop_max
 
         self.env_vars = EnvVars()
         self.data_train = None
@@ -280,6 +280,7 @@ class ExplainableGP(object):
                 {'tag': 'Rand4', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 5, None, 6), 'full_or_grow': 'full'}}},
             ]
+
         self.evolve_loop = evolve_safety_update(evolve_loop)
 
         if self.origin_is_fix():
@@ -710,10 +711,11 @@ class ExplainableGP(object):
 
         """
 
+        self.pareto_sort()
+
         self.file_pareto_txt()
         self.file_population_base_karoo('last')
 
-        self.pareto_sort()
         self.file_pareto_histograms()  # todo
         self.file_pareto_latex()
         self.file_pareto_pycode()
@@ -887,7 +889,7 @@ class ExplainableGP(object):
         #
         # max_fails_per_bin = len(self.data_train)  # this value will define the y-axis height for all the histograms to look the same
 
-        for a_ii, (parsim, fitness, cooltree) in enumerate(self.pareto):
+        for (parsim, fitness, cooltree) in self.pareto:
             expr_sym = cooltree.get_expr_sym()
             used_observations = cooltree.get_observation_list()
             tf_results = eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
@@ -1440,7 +1442,7 @@ class ExplainableGP(object):
 
         if len(self.pareto) == 0:  # no pareto entries found yet
             self.printpl('a', f"Paretofront inserted first candidate at {parsimony, fitness_train, expr_raw}")  # todo print sym instead?
-            self.pareto.append(tree_entry)  # e.g. [3, 423, meta{}]
+            self.pareto.append(tree_entry)  # e.g. [3, 423, cooltree]
         else:
             try:
                 p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # less complex candidates
@@ -1448,12 +1450,12 @@ class ExplainableGP(object):
             except:  # catches, when p_simpler is empty
                 best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry
 
-            if tree_entry[1] < best[1]:
+            if tree_entry[1] < best[1]:  # if true, at least one insertion
                 self.printpl('a', f"Paretofront new entry was inserted: {parsimony, fitness_train, expr_raw}")
                 self.pareto.append(tree_entry)  #
                 try:
                     self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
-                except:  # todo
+                except Exception as ex:  # todo
                     self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
                 self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
@@ -1685,7 +1687,7 @@ class ExplainableGP(object):
 
             """
             tuples = []
-            for (parsim, fitness, _) in self.pareto:
+            for (parsim, fitness, cooltree) in self.pareto:
                 tuples.append([parsim, fitness])
             npdata_dict = np.array(tuples).T
             return npdata_dict

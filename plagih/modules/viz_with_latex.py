@@ -247,12 +247,6 @@ def tree_get_expr_latextight(tree, node_id=root_id):
     return label
 
 
-# def helper_format_brackets(label):
-#     # label = label.replace('ää', '{')  # todo
-#     # label = label.replace('öö', '}')
-#     return label
-
-
 def latex_get_tighttree(tree):
     """
     reduce expressions of large trees

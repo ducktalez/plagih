@@ -7,23 +7,11 @@ from plagih.tree_distances.tree_edit_distance import *
 class TestHelpers:
 
     def __init__(self):
-        self.func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
-                               [[], [], ['<', '>', '==', '!='], []],
-                               [[], ['Notb', 'Notb'], ['Andb'], []],
-                               [[], [], [], []],
-                               [[], [], [], ['Ifte']]]
-
-        self.env_bundle = {'obs_name': {'a': {'label': 'a', 'type': 'float', 'xtype': '2f'},
-                                        'b': {'label': 'b', 'type': 'float', 'xtype': '2f'},
-                                        'c': {'label': 'c', 'type': 'float', 'xtype': '2f'},
-                                        'd': {'label': 'd', 'type': 'float', 'xtype': '2f'},
-                                        'colpos': {'label': 'cartPos', 'type': 'float', 'xtype': '2f'},
-                                        'vel': {'label': 'cartVel', 'type': 'float', 'xtype': '2f'},
-                                        'bool1': {'label': 'cartVel', 'type': 'bool', 'xtype': '2b'},
-                                        'bool2': {'label': 'cartVel', 'type': 'bool', 'xtype': '2b'}
-                                        },
-                           '2f': ['a', 'b', 'c', 'd'],
-                           '2b': ['bool1', 'bool2']}
+        # self.func_arr_dummy = [[[], ['sin', 'cos', '~'], ['+', '+', '+', '-', '*', '/'], []],
+        #                        [[], [], ['<', '>', '==', '!='], []],
+        #                        [[], ['Notb', 'Notb'], ['Andb'], []],
+        #                        [[], [], [], []],
+        #                        [[], [], [], ['Ifte']]]
 
         self.tree_MTC_simon_labels = ['Ifte',
                                       'Orb', '2', 'Ifte',
@@ -42,41 +30,21 @@ class TestHelpers:
                               'cartPos', '0.25', 'cartPos', '0.874488804']
 
         self.tree_MTC_simon_expr = 'Ifte(Orb(pos < -1,  Andb(pos < 0.1, vel < -0.05)), 2, Ifte(Andb(Andb(pos > -0.45, pos < -0.05), vel < 0.02), 0,  Ifte(vel < 0, 0, 2)))'
-        self.tree1 = TEST_karoo_tree_from_labellist(['+', '+', '*', '-', '1', '2', '3', '4', '5'], self.env_bundle)
-        self.tree2 = TEST_karoo_tree_from_labellist(['+', '-', '*', '1', '2', '3', '4'], self.env_bundle)
 
-    def test_ted_weighting(self):
-        distance, mapping = tree_parsimony_ted(self.tree1, self.tree2)
-        print('Mapping:\n' + '\n'.join([str(x) for x in mapping]))
-        # weighted_distance = weight_ted_mapping(mapping)
-        # print('\nDistance:', distance, 'Mapping_distance:', weighted_distance)
-        print(tree_nodeid_ted_mapping(mapping))
-        print(tree_pretty_print(self.tree1))
+    # def test_ted_weighting(self):
+    #     distance, mapping = tree_parsimony_ted(self.tree1, self.tree2)
+    #     print('Mapping:\n' + '\n'.join([str(x) for x in mapping]))
+    #     # weighted_distance = weight_ted_mapping(mapping)
+    #     # print('\nDistance:', distance, 'Mapping_distance:', weighted_distance)
+    #     print(tree_nodeid_ted_mapping(mapping))
+    #     print(tree_pretty_print(self.tree1))
 
-    def karoo_tree_from_only_labellist(self, label_list, modify_list=None):
-        xtype_list = xtypes_from_labels(label_list, self.env_bundle)
-        p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list)
-        tree = p_tree.get_uninstanced_tree()
-        return tree
-
-    def make_all_known_trees(self):
-        tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
-        expr_raw = tree_get_expr_raw(tree, root_id)
-        expr_sym = expr_sympify(expr_raw)
-        print(expr_sym)
-        # tree_sym = karoo_tree_from_expr(expr_sym, self.env_bundle)
-        # print('sym\t', ','.join(tree_get_labellist(tree_sym)))
-        sym_tree2 = tree_evolve_reduce(tree, self.env_bundle)
-        print(tree_check_deep(sym_tree2))
-
-        label_list = ast_convert_from_expr(self.tree_MTC_simon_expr, build=True)
-
-    def reduce_any_tree(self):
-        tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
-        tree_sym = tree_evolve_reduce(tree, self.env_bundle)
-        print(tree_get_labellist(tree))
-        print(tree_get_labellist(tree_sym))
-        return
+    # def reduce_any_tree(self):
+    #     tree = self.karoo_tree_from_only_labellist(self.tree_MTC_simon_labels)
+    #     tree_sym = tree_evolve_reduce(tree, self.env_bundle)
+    #     print(tree_get_labellist(tree))
+    #     print(tree_get_labellist(tree_sym))
+    #     return
 
     def test_visualisation(self):
         tree_labels = ['Ifte',
@@ -97,11 +65,11 @@ class TestHelpers:
         #                'cartPos', '~', '2.0', '<=', 'Andb',
         #                '0.1', '22.5', '~', '<', 'False',
         #                'cartVel', 'cartVel', '~', '0.0374348335']
-        tree = self.karoo_tree_from_only_labellist(tree_labels)
-        forest_viz = latex_tree_get_forest(tree, tight_viz=False)
-        print(forest_viz)
-        tight_viz = latex_tree_get_forest(tree)
-        print(tight_viz)
+        # tree = self.karoo_tree_from_only_labellist(tree_labels)
+        # forest_viz = latex_tree_get_forest(tree, tight_viz=False)
+        # print(forest_viz)
+        # tight_viz = latex_tree_get_forest(tree)
+        # print(tight_viz)
 
     def ptree_vs_karoo(self):
         pass

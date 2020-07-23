@@ -14,7 +14,7 @@ class Plabel:
         # directly related to the label
         self.arity = arity
         self.input_types = [bool, float, float] if label == 'Ifte' else [type_inputs] * arity
-        self.type_output = float if xtype[-2:] == '2f' else bool  # todo
+        self.type_output = float if xtype[-2:] == '2f' else bool if '2b' == xtype[-2:] else None
         self.xtype = xtype  # obsolete?
 
 
@@ -165,7 +165,7 @@ class CoolCore:
         return my_result + child_results
 
     def reduce_me(self, obs_krazy):  # todo env_vars not required in new tree :P
-        expr_raw = self.get_expr_raw()
+        expr_raw = self.get_expr_raw(reduceable=True)
         try:
             # todo todotodo fix nodes ignored?
             expr_sym = expr_sympify(expr_raw)
@@ -200,15 +200,17 @@ class CoolCore:
 
         return True
 
-    def get_expr_raw(self):
+    def get_expr_raw(self, reduceable=None):
         # if self.expr_raw is None:  # sfeh?
         if self.arity == 0:
             return f'{self.label}'
         else:
             my_expr = op[self.label]['sym_str']
-            f_my_expr = lambda *args: my_expr.format(*args)
-            child_expr_list = [child.get_expr_raw() for child in self.childs]
-            return f_my_expr(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
+            child_expr_list = [child.get_expr_raw(reduceable=reduceable) for child in self.childs]
+            if reduceable:
+                my_expr_new = op[self.label]['sym_reduce']
+                my_expr = my_expr_new if my_expr_new is not None else my_expr
+            return my_expr.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
 
     def get_nodes_list_modifiable(self):
         """
@@ -424,12 +426,15 @@ class CoolTree:
         core = self.core.get_labellist()
         return hash(','.join([str(x) for x in core]))
 
-    def finish_nodes(self, last_evolution, origin_tree: 'CoolTree' = None):
-        # todo
+    def set_fix_nodes(self, origin_tree: 'CoolTree'):
+        """
+        Resetting the fix nodes from the cooltree.
+        sfeh: this is not required after complete cooltree use
+        """
         if origin_tree is not None:
-            self.core.set_fix_nodes(origin_coolcore=origin_tree.core)
-        # self.workaround_normalize_exponentiation()
-        self.meta.last_evolution = last_evolution  # sfeh: should this be done during the evolve process?
+            self.core.set_fix_nodes(origin_tree.core)
+        else:
+            return None
 
     def get_layer_nodelist(self):
         max_depth = self.core.childs_depth_max
@@ -461,10 +466,10 @@ class CoolTree:
         self.finalize_structure()
         self.complete = True
 
-    def finalize_meta(self):
-        self.meta.expr_raw = self.get_expr_raw()
-        self.meta.expr_sym = self.get_expr_sym()
-        print('TODO')
+    # def finalize_meta(self):
+    #     self.meta.expr_raw = self.get_expr_raw()
+    #     self.meta.expr_sym = self.get_expr_sym()
+    #     print('TODO')
 
     def __len__(self):
         """
@@ -480,15 +485,15 @@ class CoolTree:
             raise
         return True
 
-    def get_expr_raw(self):
-        return self.core.get_expr_raw()
+    def get_expr_raw(self, symred=None):
+        return self.core.get_expr_raw(reduceable=symred)
 
     def get_expr_sym(self):
         expr_raw = self.core.get_expr_raw()
         return expr_sympify(expr_raw)
 
-    def get_expr(self, sympified=False):
-        expr = self.core.get_expr_raw()
+    def get_expr(self, sympified=False, symred=None):
+        expr = self.core.get_expr_raw(reduceable=symred)
         if sympified:
             expr = expr_sympify(expr)  # todo try block??
         return expr
@@ -514,10 +519,11 @@ class CoolTree:
         # self.finalize_meta  # todo
 
     # def __instancecheck__(self, instance):  # todo
-    def check_all(self):
-        return self.core.check_all()
 
     def get_pycode(self):
+        """
+        For generating actual programming code
+        """
         return self.core.get_pycode()
 
     def evolve_start(self):
@@ -550,12 +556,10 @@ class CoolTree:
 
     def __str__(self):
         """
-
+        Printing the nodes as nested array structure.
+        # only printing the nodes, no meta
         """
-        return f"{self.core}"  # only printing the nodes
-
-    def get_pycode(self):
-        return self.core.get_pycode()
+        return f"{self.core}"
 
     def get_nodes_at_depth(self, lvl_goal, only_mutable=False, get_closest_depth=False):
         """
@@ -570,11 +574,7 @@ class CoolTree:
             Reducing a tree to its most basic form with sympify.
             (completely = False: reduce just one branch. if you wanted to have more complexity)
             """
-        # def node_reduce():
-        #     nodepath = coolc.nodepath
-        #     coolc_reduced = coolc.reduce_me(env_vars)
-        #     if len(coolc_reduced) < len(coolc):
-        #         self.insert_branch(nodepath, coolc_reduced)
+
         if completely:  # reduce the complete tree
             coolcores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
             for coolc in coolcores_lv0:
@@ -584,10 +584,7 @@ class CoolTree:
             cool_functions = [x for x in cool_nodes if x.arity > 0]
             if cool_functions:
                 chosen = random.choice(cool_functions)
-                # chosen_path = chosen.nodepath
                 chosen.reduce_me(obs_krazy)
-                # if len(reduced) < len(chosen):
-                #     self.insert_branch(chosen_path, reduced)
 
         self.finalize_structure()
 
@@ -604,7 +601,7 @@ class CoolTree:
         node = random.choice(node_list)
         arity = node.arity
         if arity > 0:
-            new_label, new_arity, new_xtype = choose_operator(node.xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
+            new_label = choose_operator(node.xtype, choose_oparray2, arity=arity)  # Function is same type, same arity
         else:
             new_label = choose_term(node.xtype[-2:], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
 
@@ -645,7 +642,8 @@ class CoolTree:
         """
         Returns a list with the used observations
         """
-        return self.core.get_observation_list()
+        observation_list = self.core.get_observation_list()
+        return [x if x[0] != '-' else x[1:] for x in observation_list]
 
 
 def coolcore_from_oldtree(tree, node_id=root_id):
@@ -685,10 +683,6 @@ def cooltree_from_oldtree(tree, node_id=root_id):
         print(f'cooltree_from_oldtree failed: {ex}')
         cooltree = None
     return cooltree
-
-
-def tree_from_cooltree(cooltree: CoolTree):
-    label_list = cooltree.get_oldtree()
 
 
 def coolcore_from_treenode(tree, node_id, is_fix=True):

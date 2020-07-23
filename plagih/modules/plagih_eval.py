@@ -263,7 +263,7 @@ class FitnessKernel:
     # todo garbage collector?
 
 
-def eval_tf(expr, used_observations, pd_data, kernel, eval_action, obs_infos, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
+def eval_tf(expr_sym, used_observations, pd_data, kernel, eval_action, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
     """
     Evaluates an expression using TensorFlow (TF)
     The is usually extracted from a tree and is sympified
@@ -274,7 +274,7 @@ def eval_tf(expr, used_observations, pd_data, kernel, eval_action, obs_infos, tf
         'self.tf_device_log' - controls device placement logging (debug only).
 
     'get_predicted_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
-
+    todo make this a kernel option
     """
 
     tf.compat.v1.reset_default_graph()
@@ -288,7 +288,7 @@ def eval_tf(expr, used_observations, pd_data, kernel, eval_action, obs_infos, tf
     with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
         with sess.graph.device(tf_device):  # device can be the gpu  # todo check if gpu is used
 
-            agent_result = ast_convert_from_expr(expr, tensors=tensors)  # the actual result from the expression in the agent
+            agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
             kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
             act_solution = tensors[eval_action.name]
             pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, agent_result, origin_pairwise_fitness=origin_pairwise_fitness)
@@ -350,7 +350,6 @@ def labels_from_nestedexpr(labels_nested_list, result_accum):
     for x in labels_nested_list:  # all elements, that are not lists themselves
         if type(x) is not list:
             x = str(x)  # labels must be string!
-            # x = str(x).replace('~', '-')  # ~-workaround for usub/sub problem
             result_accum.append(x)
 
     only_lists = [x for x in labels_nested_list if (type(x) == list)]

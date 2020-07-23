@@ -40,6 +40,8 @@ def main(argv):
     parser.add_argument('-analyse', '-analyze', action='store_true', default=None)
     parser.add_argument('-kernel_name', default=None)
 
+    parser.add_argument('-pop_max', '-pop_size', default=None)
+
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', default=False, help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
 
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
@@ -57,6 +59,7 @@ def main(argv):
     analyze = args.analyse
     tf_device_log = args.tf_device_log
     kernel_name = args.kernel_name
+    pop_max = args.pop_max
 
     prepared_run = args.prepared_run
 
@@ -112,26 +115,13 @@ def main(argv):
 
         config_name += '_rel' if 'rel' in prepared_run else ''
         config_name += '_tanh' if 'tanh' in prepared_run else ''
-
         config_path = pathy(f'{config_name}.yaml')
-
         out_dir = pathy(prepared_run)
-
         # else: scratch, aka run
-
-        # 'ibtanh': ['IB/config4ib_tanh.yaml', 'IB/samples_prepared.csv'],
-        # 'ibrel': ['IB/config4ib_rel.yaml', 'IB/samples_prepared.csv'],
-        # 'mtc75': ['MTC/config4mtc.yaml', 'MTC/samples75.csv'],
-        # 'mtc200': ['MTC/config4mtc.yaml', 'MTC/samples200.csv'],
-        # 'mtc200rel': ['MTC/config4mtc_relative.yaml', 'MTC/samples200.csv'],
-        # 'mtc200tanh': ['MTC/config4mtc_tanh.yaml', 'MTC/samples200.csv'],
-        # 'mtc200tanhrel': ['MTC/config4mtc_tanhrel.yaml', 'MTC/samples200.csv'],}
-
-        # data_prepared = Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / lookup_files[prepared_run]
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
-    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, kernel_name, analyze=analyze, tf_device_log=tf_device_log)
+    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, kernel_name, analyze, tf_device_log, pop_max)
 
 
 if __name__ == "__main__":

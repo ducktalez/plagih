@@ -313,21 +313,6 @@ def tree_check_xtypes(tree):
     return True
 
 
-def tree_set_xtypes(tree, obs_krazy):
-    """
-    Set xtype for all nodes in the tree.
-    Faster than 'looking up' the xtype every time with xtype_get_from_label which needs extra dicts
-    :param tree:
-    :param env_vars:
-    :return:
-    """
-    for node_id in tree_nodes_get_ids(tree):
-        label = tree_node_get_label(tree, node_id)
-        xtype = xtype_get_from_label(label, obs_krazy)
-        tree = tree_node_set_xtype(tree, node_id, xtype)
-    return tree
-
-
 def tree_set_fitness(tree, fitness, precision=6):
     """
     Store the fitness within the tree np-array
@@ -687,7 +672,9 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, choose_obs, 
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':
-                    label, arity, xtype = choose_operator(xtype[-2:], choose_oparray2=choose_oparray2, arity=None)
+                    label = choose_operator(xtype[-2:], choose_oparray2, arity=None)
+                    arity = label_get_arity(label)
+                    xtype = op[label]['xtype']
                 else:
                     raise
 
@@ -768,7 +755,9 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, choose_obs,
         for enum, index in enumerate(func_at):  #
             t_xtype = tbdo_xtypes[index]
 
-            label, arity, label_xtype = choose_operator(t_xtype, choose_oparray2=choose_oparray2)
+            label = choose_operator(t_xtype, choose_oparray2, arity=None)
+            arity = label_get_arity(label)
+            label_xtype = op[label]['xtype']
             # ('GG', result_label_list, tmp_label_list, '(', len(result_label_list), num_inserts, '>', arity, ')', (len(result_label_list) + num_inserts + arity), goal_max_nodes)
             if goal_max_nodes > (len(result_label_list) + num_inserts) + arity + 1:  # +1 = the start node which we must not forget
 
@@ -935,15 +924,6 @@ def tree_get_expr_raw(tree, node_id=root_id):
 
     elif arity == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
         return 'Ifte(({}), ({}), ({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))
-
-
-def tree_get_expr_sym(tree, node_id=root_id):
-    """
-
-    """
-    expr_raw = tree_get_expr_raw(tree, node_id=node_id)
-    expr_sym = expr_sympify(expr_raw)
-    return expr_sym
 
 
 def tree_get_pycode(tree, node_id=root_id):
@@ -1261,7 +1241,7 @@ def expr_sympify(expr_raw):
 
     for fail_reason in ['zoo', 'inf', '*I', 'nan']:
         if fail_reason in expr_sym:
-            raise Exception(f'sympify_2: {fail_reason}')
+            raise Exception(f'sympifail: {fail_reason}')
 
     return expr_sym
 
@@ -1709,6 +1689,7 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
 def tree_remove_tilde(tree):
     """
     ~- workaround
+    todo still needed?
     """
     while True:
         for node_id in tree_iterate_range(tree, karoo=True):
@@ -1929,7 +1910,7 @@ def tree_evolve_node_insert(tree, env_vars):
     return tree
 
 
-def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter', float_decimals=6):
+def label_constant_mutate(constant, term_type=float, filter_type='gaussian_filter', float_decimals=6):
     """
     When this happens, distributions_file get a a small variance
     """
@@ -1937,8 +1918,7 @@ def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter'
     if term_type == float:
         if filter_type == 'gaussian_filter':
             if random.choice(['v1', 'v2']) == 'v1' or constant == 0:
-                filter = np.random.normal(0, 0.1)  # sfeh better adjustments?
-                constant += filter
+                constant += np.random.normal(0, 0.1)  # sfeh better adjustments?
             else:
                 constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
         else:
@@ -1947,8 +1927,8 @@ def gp_mutate_constants(constant, term_type=float, filter_type='gaussian_filter'
 
     elif term_type == int:
         if random.choice(['v1', 'v2']) == 'v1' or constant == 0:
-            filter = np.random.normal(0, 1)  # sfeh better adjustments?
-            constant += filter
+            term_filter = np.random.normal(0, 1)  # sfeh better adjustments?
+            constant += term_filter
         else:
             constant = np.random.normal(constant, 1)  # sfeh
         constant = int(round(constant))
@@ -2014,23 +1994,6 @@ def tree_iterate_range(tree, karoo=True):
         start = 0
     np_list = range(start, len(tree[N_label]))
     return np_list
-
-
-# def tree_normalize_exponentiation(tree):
-#     """
-#     a**b requires b to be discrete.
-#     """
-#     # 1. ** should have an int as second number
-#     for node_id in tree_nodes_get_ids(tree, karoo=True):
-#         if tree_node_get_label(tree, node_id) == '**':
-#             child_id = tree_node_get_child(tree, node_id, 1)  # get second argument
-#             old_power = tree_node_get_label(tree, child_id)
-#             try:
-#                 new_power = float(int(float(old_power)))
-#                 tree = tree_node_set_label(tree, child_id, new_power)
-#             except ValueError:
-#                 pass
-#     return tree
 
 
 def tree_eval_parsimony(cooltree, parsimony_distance, origin_cooltree=None, weights=None):

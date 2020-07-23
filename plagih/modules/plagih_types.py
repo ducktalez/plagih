@@ -104,21 +104,18 @@ def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
     return str(term)  # sfeh str necessary?
 
 
-def choose_operator(xtype, choose_oparray=None, choose_oparray2=None, arity=None):
+def choose_operator(xtype, choose_oparray2, arity=None):
     """
     Randomly choosing an operator for a given xtype.
     choose_oparray must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
     """
     func_list, probability_list = choose_oparray2[xtype][arity]
-    # else:
-    #     func_list, probability_list = xtype_get_func_list(choose_oparray, xtype=xtype, arity=arity)
-    if not func_list:
-        print_e(f'No function found with xtype={xtype}, arity={arity}.\nfunc_arr_dummy:\n{choose_oparray}')
-    func = random.choices(func_list, weights=probability_list)[0]  # returns a list, so we choose the first element
-    arity = label_get_arity(func)
-    xtype = op[func]['xtype']
-    return func, arity, xtype
+    # except:
+    #     raise Exception('sfeh DELETE IF NOT REQUIRED, 22.07.')
+
+    ops = random.choices(func_list, weights=probability_list)[0]  # [0] as this function can only return lists...
+    return ops
 
 
 def xtypes_from_labels(label_list, obs_krazy=None):

@@ -65,26 +65,26 @@ def main(argv):
 
     if prepared_run:
         def pathify(x):
-            return Path(__file__).parent.absolute() / 'benchmarks/run_sources/' / x
+            return Path(__file__).parent.absolute() / 'benchmarks/' / x
 
         if 'IB' in prepared_run:
-            data_prepared = pathify('IB/samples_prepared.csv')
-            config_name = 'IB/config4ib'
-            ori_trs = {'50_0': 'IB/ib_tree_50s_0.csv',
-                       '50_1': 'IB/ib_tree_50s_1.csv',
-                       '50_2': 'IB/ib_tree_50s_2.csv',
-                       'udluft_0': 'IB/ib_tree_udluft_0.csv',
-                       'udluft_1': 'IB/ib_tree_udluft_1.csv',
-                       'udluft_2': 'IB/ib_tree_udluft_2.csv',
-                       'mean_0': 'IB/ib_tree_mean_0.csv',
-                       'mean_1': 'IB/ib_tree_mean_1.csv',
-                       'mean_2': 'IB/ib_tree_mean_2.csv',
-                       'sim1_0': 'IB/ib_sim1_0.csv',
-                       'sim1_1': 'IB/ib_sim1_1.csv',
-                       'sim1_2': 'IB/ib_sim1_2.csv',
-                       'sim2_0': 'IB/ib_sim2_0.csv',
-                       'sim2_1': 'IB/ib_sim2_1.csv',
-                       'sim2_2': 'IB/ib_sim2_2.csv'}
+            data_prepared = pathify('ib/gp_files/samples_prepared.csv')
+            config_name = 'ib/gp_files/config4ib'
+            ori_trs = {'50_0': 'ib/gp_files//ib_tree_50s_0.csv',
+                       '50_1': 'ib/gp_files/ib_tree_50s_1.csv',
+                       '50_2': 'ib/gp_files/ib_tree_50s_2.csv',
+                       'udluft_0': 'ib/gp_files/ib_tree_udluft_0.csv',
+                       'udluft_1': 'ib/gp_files/ib_tree_udluft_1.csv',
+                       'udluft_2': 'ib/gp_files/ib_tree_udluft_2.csv',
+                       'mean_0': 'ib/gp_files/ib_tree_mean_0.csv',
+                       'mean_1': 'ib/gp_files/ib_tree_mean_1.csv',
+                       'mean_2': 'ib/gp_files/ib_tree_mean_2.csv',
+                       'sim1_0': 'ib/gp_files/ib_sim1_0.csv',
+                       'sim1_1': 'ib/gp_files/ib_sim1_1.csv',
+                       'sim1_2': 'ib/gp_files/ib_sim1_2.csv',
+                       'sim2_0': 'ib/gp_files/ib_sim2_0.csv',
+                       'sim2_1': 'ib/gp_files/ib_sim2_1.csv',
+                       'sim2_2': 'ib/gp_files/ib_sim2_2.csv'}
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')
@@ -99,18 +99,18 @@ def main(argv):
                     eval_action = v
 
         elif 'MTC' in prepared_run:
-            config_name = 'MTC/config4mtc'
+            config_name = 'mc/gp_files/config4mtc'
             if 'MTC200' in prepared_run:
-                data_prepared = pathify('MTC/samples200.csv')
+                data_prepared = pathify('mc/gp_files/samples200.csv')
             elif 'MTC75' in prepared_run:
-                data_prepared = pathify('MTC/samples75.csv')
+                data_prepared = pathify('mc/gp_files/samples75.csv')
 
-            ori_trs = {'gpFfriendly': 'MTC/tree_gpFriendly_fix.csv',
-                       'preset': 'MTC/tree_preset_fix.csv',
-                       'simple': 'MTC/tree_simple.csv',
-                       'simple_fix': 'MTC/tree_simple_fix.csv',
-                       'simplePlus_fix': 'MTC/tree_simplePlus_fix.csv',
-                       'simplePlus': 'MTC/tree_simplePlus.csv'}
+            ori_trs = {'gpFfriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
+                       'preset': 'mc/gp_files/tree_preset_fix.csv',
+                       'simple': 'mc/gp_files/tree_simple.csv',
+                       'simple_fix': 'mc/gp_files/tree_simple_fix.csv',
+                       'simplePlus_fix': 'mc/gp_files/tree_simplePlus_fix.csv',
+                       'simplePlus': 'mc/gp_files/tree_simplePlus.csv'}
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')

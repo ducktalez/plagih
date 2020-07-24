@@ -9,7 +9,7 @@ config4mtc_rel = Path.cwd() / 'benchmarks/run_sources/MTC/config4mtc_relative.ya
 
 plagih_startpy = Path.cwd() / 'start.py'
 
-SLURM_RUNS = Path.cwd() / 'run_examples/slurm_runs/'
+SLURM_RUNS = Path.cwd() / 'benchmarks/slurm_runs/'
 if not SLURM_RUNS.is_dir():
     Path.mkdir(SLURM_RUNS)  # just to be sure
 
@@ -51,28 +51,28 @@ run_starts = ['IB_MSE_50_0', 'IB_MSE_50_1', 'IB_MSE_50_2',
 
 complete_params = []
 
-for name in run_starts:
-    out_path = str(SLURM_RUNS / name)
-    final_line = f'{plagih_startpy} -config_lookup {name}'
+# for name in run_starts:
+#     out_path = str(SLURM_RUNS / name)
+#     final_line = f'{plagih_startpy} -config_lookup {name}'
+#
+#     # if len(str(param[2])) > 0:
+#     #     origin_param = f' -origin_tree {param[2]}'
+#     #     final_line += origin_param
+#
+#     single_sh = '#!/usr/bin/env bash\n' \
+#                 '#-*- coding:utf-8 -*-\n' \
+#         f'echo Starting run in {out_path}\n' \
+#         f'{final_line}'
+#     with Path.open(SLURM_RUNS / f'{name}.sh', 'w') as sh_file:
+#         sh_file.write(single_sh)
+#
+#     complete_params.append(final_line)
+#
+# print('\n'.join(complete_params))
+# print('\n')
 
-    # if len(str(param[2])) > 0:
-    #     origin_param = f' -origin_tree {param[2]}'
-    #     final_line += origin_param
+sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join([f'sbatch --partition=All benchmarks/linux_start_slurm_run.sh {x}' for x in run_starts])
 
-    single_sh = '#!/usr/bin/env bash\n' \
-                '#-*- coding:utf-8 -*-\n' \
-        f'echo Starting run in {out_path}\n' \
-        f'{final_line}'
-    with Path.open(SLURM_RUNS / f'{name}.sh', 'w') as sh_file:
-        sh_file.write(single_sh)
-
-    complete_params.append(final_line)
-
-print('\n'.join(complete_params))
-print('\n')
-
-all_sbatchs = '\n'.join(['sbatch --partition=All python3 {}'.format(SLURM_RUNS / f'{x}.sh') for x in run_starts])
-sbatch_sh = '#!/usr/bin/env bash\n' + all_sbatchs
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)
 print(sbatch_sh)

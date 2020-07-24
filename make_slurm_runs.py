@@ -9,7 +9,7 @@ config4mtc_rel = Path.cwd() / 'benchmarks/run_sources/MTC/config4mtc_relative.ya
 
 plagih_startpy = Path.cwd() / 'start.py'
 
-SLURM_RUNS = Path.cwd() / 'benchmarks/slurm_runs/'
+SLURM_RUNS = Path.cwd() / 'benchmarks/slurm_runs/'  # sfeh lel? not needed?
 if not SLURM_RUNS.is_dir():
     Path.mkdir(SLURM_RUNS)  # just to be sure
 
@@ -27,6 +27,7 @@ run_starts = ['IB_MSE_50_0', 'IB_MSE_50_1', 'IB_MSE_50_2',
               # 'IB_MSE_tanh_udluft_0', 'IB_MSE_tanh_udluft_1', 'IB_MSE_tanh_udluft_2',
 
               'IB_MSE_sim1_0', 'IB_MSE_sim1_1', 'IB_MSE_sim1_2',
+              'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
 
               # 'MTC200_scratch',
               # 'MTC200_gpFfriendly',

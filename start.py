@@ -13,9 +13,6 @@ sys.path.append('plagih/')
 sys.path.append('plagih/modules')
 
 
-# sys.path.append('mountaincar/')
-
-
 def main(argv):
     """
    -h, -help
@@ -31,8 +28,8 @@ def main(argv):
     parser.add_argument('-config', type=Path, metavar='CONFIG_YAML', help='The config file in the run directory.')
     parser.add_argument('-load_backup', type=Path, help='Starting a run from a backup file (backup.p).')
     parser.add_argument('-out_dir', type=Path, help='A custom output folder (root_dir). Not stable yet.')  # sfeh
-    parser.add_argument('-action', type=str, default=None, help='If there is more than one action, choose the right one. (action name)')  # sfeh type=int,
-    parser.add_argument('-action_num', type=int, default=None, help='If there is more than one todo, choose the right one. (action number)')  # sfeh type=int,
+    parser.add_argument('-action', type=str, default=None, help='If there is more than one action, choose the right one. (action name)')
+    parser.add_argument('-action_num', type=int, default=None, help='NOT WORKING! If there is more than one todo, choose the right one. (action number)')  # sfeh type=int,
     parser.add_argument('-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-data_csv', type=Path)
@@ -47,7 +44,6 @@ def main(argv):
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
 
     args = parser.parse_args()
-    # print(args)
 
     config_path = args.config
     load_backup = args.load_backup
@@ -121,8 +117,7 @@ def main(argv):
         config_name += '_rel' if 'rel' in prepared_run else ''
         config_name += '_tanh' if 'tanh' in prepared_run else ''
         config_path = pathify(f'{config_name}.yaml')
-        out_dir = pathify(prepared_run)
-        # else: scratch, aka run
+        out_dir = pathify(f'benchmarks/slurm_runs/{prepared_run}')
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 

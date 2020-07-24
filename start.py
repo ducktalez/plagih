@@ -81,7 +81,10 @@ def main(argv):
                        'mean_2': 'IB/ib_tree_mean_2.csv',
                        'sim1_0': 'IB/ib_sim1_0.csv',
                        'sim1_1': 'IB/ib_sim1_1.csv',
-                       'sim1_2': 'IB/ib_sim1_2.csv'}
+                       'sim1_2': 'IB/ib_sim1_2.csv',
+                       'sim2_0': 'IB/ib_sim2_0.csv',
+                       'sim2_1': 'IB/ib_sim2_1.csv',
+                       'sim2_2': 'IB/ib_sim2_2.csv'}
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')

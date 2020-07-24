@@ -526,7 +526,9 @@ class ExplainableGP(object):
                     self.pop_append(cooltree, last_evolution=tag)
 
             elif evolve_name == 'mutate point':
-
+                """
+                Point mutation, One point (terminal or function) gets mutated.
+                """
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
                     cooltree.evolve_mutate_point(self.conf.float_decimals,
@@ -1165,16 +1167,6 @@ class ExplainableGP(object):
 
         return cooltree
 
-    def pop_mutate_point(self, cooltree):
-
-        """
-        Point mutation, One point (terminal or function) gets mutated.
-        SFEH: Currently only mutating with functions/terminals of the exactly same type.
-        """
-
-
-        return cooltree
-
     def pop_mutate_filter(self, call_params, tree):
         """
         Mutates a number of float terminal of a tree
@@ -1540,7 +1532,6 @@ class ExplainableGP(object):
         """
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
-
         try:
             expr_sym = cooltree.get_expr_sym()
         except Exception as sympex:
@@ -1576,7 +1567,6 @@ class ExplainableGP(object):
         - sympify the expression
         - (if sympify fails, evaluating does not make sense! Check sympify errors)
         - (sfeh: if sympify fails because of inf or zoo, tf could maybe still work due to save-tf-division)
-
         """
 
         try:

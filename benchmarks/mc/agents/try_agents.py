@@ -1,5 +1,5 @@
-from benchmarks.gym_mountaincar.agents.quick_eval import *
-from benchmarks.gym_mountaincar.agents.mtc_agent_sarsa import *
+from benchmarks.mc.agents.quick_eval import *
+from benchmarks.mc.agents.mtc_agent_sarsa import *
 
 
 def compare_plot_styles():

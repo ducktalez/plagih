@@ -1,5 +1,5 @@
 # coding=utf-8
-from benchmarks.industrial_benchmark_python.IDS import IDS
+from benchmarks.ib.IDS import IDS
 import numpy as np
 import matplotlib.pyplot as plt
 import collections

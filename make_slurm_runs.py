@@ -28,7 +28,6 @@ run_starts = ['IB_MSE_50_0', 'IB_MSE_50_1', 'IB_MSE_50_2',
 
               'IB_MSE_sim1_0', 'IB_MSE_sim1_1', 'IB_MSE_sim1_2',
 
-
               # 'MTC200_scratch',
               # 'MTC200_gpFfriendly',
               # 'MTC200_preset',
@@ -54,7 +53,7 @@ complete_params = []
 
 for name in run_starts:
     out_path = str(SLURM_RUNS / name)
-    final_line = f'python3 {plagih_startpy} -config_lookup {name}'
+    final_line = f'{plagih_startpy} -config_lookup {name}'
 
     # if len(str(param[2])) > 0:
     #     origin_param = f' -origin_tree {param[2]}'
@@ -72,7 +71,7 @@ for name in run_starts:
 print('\n'.join(complete_params))
 print('\n')
 
-all_sbatchs = '\n'.join(['sbatch --partition=All {}'.format(SLURM_RUNS / f'{x}.sh') for x in run_starts])
+all_sbatchs = '\n'.join(['sbatch --partition=All python3 {}'.format(SLURM_RUNS / f'{x}.sh') for x in run_starts])
 sbatch_sh = '#!/usr/bin/env bash\n' + all_sbatchs
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

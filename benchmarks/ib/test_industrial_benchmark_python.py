@@ -1,5 +1,5 @@
 import unittest
-from benchmarks.industrial_benchmark_python.IDS import IDS
+from benchmarks.ib.IDS import IDS
 import numpy as np
 
 

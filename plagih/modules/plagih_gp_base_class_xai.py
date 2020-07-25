@@ -476,8 +476,6 @@ class ExplainableGP(object):
         Add an amount of random trees to the population
         """
 
-
-
     def gen_create_initial(self):
         """
         Everything that needs to be custom_done for the first generation

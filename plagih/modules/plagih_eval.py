@@ -196,10 +196,6 @@ class RegressionKernel:
                 self.pen_explorate = v
         return
 
-    def tf_wrap_result(self, tf_result):
-
-        return tf_result
-
     def pycode_wrap_result(self, action_min_max):
         wrap = '{}'
         if 'discrete' in self.kname:

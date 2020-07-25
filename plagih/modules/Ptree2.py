@@ -176,7 +176,7 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'Reduced core is even more complex than before. May happen with sympification and usub. \n{self} new_core: \n{new_core} expr_raw: \n{expr_raw}')
+            raise Exception(f'Reduced core is even more complex than before. expr_raw: {expr_raw}\nold_core:{self}\nnew_core: {new_core}')  # May happen with sympification and usub.
         return
 
     def get_mutatable_nodes(self):
@@ -203,20 +203,6 @@ class CoolCore:
                 my_expr_new = op[self.label]['sym_reduce']
                 my_expr = my_expr_new if my_expr_new is not None else my_expr
             return my_expr.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
-
-    def get_nodes_list_modifiable(self):
-        """
-        not required with new trees?
-        """
-        pass
-        # if self.is_fix:
-        #     coords = self.co
-        #     return sum([child.get_nodes_list_modifiable() for child in self.childs], [])
-        # elif self.depth == depth:
-        #     return [self]
-        # else:
-        #     print_e('fdgdfg')
-        #     return
 
     def node_insert_width(self, node, depth=0):
         """
@@ -341,34 +327,6 @@ class CoolCore:
         node = self.node_from_path(nodepath)
         node.child_append(child)
 
-    # def workaround_normalize_exponentiation(self, normalize_me=False):
-    #     """
-    #     a**b requires b to be discrete - always. THerefore, we will add a round operator if required.
-    #     """
-    #     # 1. ** should have an int as second number
-    #
-    #     if normalize_me:
-    #         try:
-    #             self.label = float(round(float(self.label)))
-    #         except ValueError:
-    #             insert_this = CoolCore(self.label, arity=1, xtype='f2f', childs=self.childs)
-    #             self.childs = [insert_this]
-    #             self.label = 'round'
-    #             # todo
-    #             # raise
-    #         except OverflowError:
-    #             print('How often overflow error? idk man')
-    #             return
-    #
-    #     if self.label == '**':
-    #         normalize_me = True
-    #     for ii, cc in enumerate(self.childs):
-    #         if ii == 1 and normalize_me:
-    #             cc.workaround_normalize_exponentiation(normalize_me=True)
-    #         else:
-    #             cc.workaround_normalize_exponentiation()
-    #     return
-
     def get_observation_list(self):
         my_return = []
         if self.arity == 0:
@@ -381,7 +339,7 @@ class CoolCore:
         return my_return
 
     def set_fix_nodes(self, origin_coolcore: 'CoolCore'):
-        # todo not necessary?
+        # sfeh not necessary in the future
         if origin_coolcore.is_fix:
             self.is_fix = True
             for ii, cc in enumerate(self.childs):
@@ -487,7 +445,7 @@ class CoolTree:
     def get_expr(self, sympified=False, symred=None):
         expr = self.core.get_expr_raw(reduceable=symred)
         if sympified:
-            expr = expr_sympify(expr)  # todo try block??
+            expr = expr_sympify(expr)  # may cause exception
         return expr
 
     def insert_branch(self, nodepath, coolbranch):
@@ -499,18 +457,6 @@ class CoolTree:
             self.core = self.core.insert_branch(nodepath[1:], coolbranch)
         self.finalize_structure()
         # self.finalize_meta  # todo
-
-    def insert_branch_v2(self, nodepath, coolbranch):
-        self.meta.parsimony = False
-
-        if len(nodepath) == 1:  # [1] -> set child 1
-            self.core = coolbranch
-        else:
-            self.core = self.core.insert_branch(nodepath[1:], coolbranch)
-        self.finalize_structure()
-        # self.finalize_meta  # todo
-
-    # def __instancecheck__(self, instance):  # todo
 
     def get_pycode(self):
         """

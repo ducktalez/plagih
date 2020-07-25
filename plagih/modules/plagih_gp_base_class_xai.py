@@ -166,6 +166,10 @@ class ExplainableGP(object):
             self.load_origin_tree(path_origin_csv)
         else:
             self.origin_cooltree: CoolTree = None
+
+            if self.conf.complexity_measure in ['tree_edit_distance']:  # all origin-based distances
+                self.conf.complexity_measure = 'tree_node_count'
+                print_warning('w', 'Complexity measurement \'tree_edit_distance\' is not possible without origin! Using \'tree_node_count\' instead.', print_type=self.print_type)
             self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
 
         """
@@ -416,11 +420,6 @@ class ExplainableGP(object):
             except Exception:
                 raise
             # sfeh: delete old files?
-
-        if not self.origin_exists():
-            if self.conf.complexity_measure in ['tree_edit_distance']:  # sfeh get all origin-based distances
-                self.conf.complexity_measure = 'tree_node_count'
-                print_warning('w', 'Complexity measurement \'tree_edit_distance\' is not possible without origin! Using \'tree_node_count\' instead.', print_type=self.print_type)
 
         self.write_config_yaml()  # just to see what config is running and what the user can set
 

@@ -569,7 +569,7 @@ class CoolTree:
         self.finalize_structure()
 
     def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
-        parsimony = self.core.eval_parsimony(parsimony_distance, origin_cooltree=None, weights=None)
+        parsimony = self.core.eval_parsimony(parsimony_distance, origin_cooltree=origin_cooltree, weights=weights)
         self.meta.parsimony = parsimony
         return parsimony
 

@@ -38,7 +38,7 @@ def main(argv):
     parser.add_argument('-kernel_name', default=None)
 
     parser.add_argument('-pop_max', '-pop_size', type=int, default=None)
-    parser.add_argument('-gen_additionally', type=int, default=None)
+    parser.add_argument('-gen_additionally', type=int, default=0)
 
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', default=False, help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
 

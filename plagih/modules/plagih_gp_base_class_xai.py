@@ -34,6 +34,9 @@ class GpConfig():
     #     self.parsimony_max = 50  #: 50,
     #     self.gen_num_max_parsimony = 50  #: 50,  # Increase tmp_parsim to this generation
 
+    # todo make the following
+    # use default -> config -> user input?
+
     def __init__(self, conf):
         self.pl_version = PLAGIH_VERSION  # version important when loading old run
         self.print_type = conf.get('print_type', 'wwggaiiff')  # all: wwwwaaaggggsiiiivvvff  (a)lert, (w)arning, (g)en, (i)nfo
@@ -60,6 +63,34 @@ class GpConfig():
         self.evolve_list_random = conf.get('evolve_list_random')
         self.lambdadist_as_string = conf.get('lambdadist_as_string')
         self.complexity_measure = conf.get('complexity_measure')
+
+
+class FileLocations:
+    example_runs = 'run_examples/'
+    folder_plots = 'plots/'
+    folder_steps = 'steps/'
+    folder_pop_analysis = 'pop_dist/'
+    folder_histograms = 'agents/'
+
+    file_backup_pickle = 'backup/backup.p'
+    file_conclusion = 'conclusion.txt'
+
+    # /agents/
+    trees_tex = 'agents/agents_trees.tex'
+    folder_pycode = 'agents/'
+
+    # /info/
+    file_pareto = 'info/paretofront.yaml'
+    info_config_yaml = 'info/config.yaml'
+    file_info_config_json = 'info/config.json'
+    file_info_evolve_dict_yaml = 'info/evolve_list.yaml'
+    info_distributions_yaml = 'info/distributions_file.yaml'
+    env_vars_yaml = 'info/env_vars.yaml',
+
+    # /run_files/
+    samples_ready_p = 'run_files/samples_ready.p'
+    samples_csv = 'run_files/samples.csv'
+    distributions_file = 'run_files/distributions_file.yaml'
 
 
 class ExplainableGP(object):
@@ -93,34 +124,6 @@ class ExplainableGP(object):
                        'time_analysis': None,  # in gen counts
                        'gen_analysis': None},  # in gen counts
 
-            'file_locs': {
-                'example_runs': 'run_examples/',
-
-                'folder_plots': 'plots/',
-                'folder_steps': 'steps/',
-                'folder_pop_analysis': 'pop_dist/',
-                'folder_histograms': 'agents/',
-
-                'file_backup_pickle': 'backup/backup.p',  # backup-version is set here
-                'file_conclusion': 'conclusion.txt',
-
-                # /agents/
-                'trees_tex': 'agents/agents_trees.tex',
-                'folder_pycode': 'agents/',
-
-                # /info/
-                'file_pareto': 'info/paretofront.yaml',
-                'info_config_yaml': 'info/config.yaml',
-                'file_info_config_json': 'info/config.json',
-                'file_info_evolve_dict_yaml': 'info/evolve_list.yaml',
-                'info_distributions_yaml': 'info/distributions_file.yaml',
-                'env_vars_yaml': 'info/env_vars.yaml',
-
-                # /run_files/
-                'samples_ready_p': 'run_files/samples_ready.p',
-                'samples_csv': 'run_files/samples.csv',
-                'distributions_file': 'run_files/distributions_file.yaml',
-            },
             'lambdadist_as_string':
                 {'2f': ['lambda: random.normalvariate(0,1)',
                         'lambda: random.normalvariate(1,1)',
@@ -140,7 +143,7 @@ class ExplainableGP(object):
 
         self.config = update_dict_nested(self.config, user_config)  # overwrites the default config-values with user-loaded config
 
-        self.file_locs = self.config['file_locs']
+        self.file_locs = FileLocations()
 
         self.conf = GpConfig(self.config)
         self.conf.gen_max += gen_additionally
@@ -222,7 +225,7 @@ class ExplainableGP(object):
                                 'pop:trees:complexity:std_error': {},
                                 'gen_time': {}}
 
-        self.print_g('ggg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        self.print_g('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return
 
@@ -325,33 +328,19 @@ class ExplainableGP(object):
 
         return
 
-    def file_loc(self, file_key):
-        file_loc = self.file_locs.get(file_key)
-        if file_loc is None:
-            raise KeyError(f'Did not find for file_key {file_key}')
-        else:
-            return file_loc
-
-    def file_make_dir_root(self, file_key):
+    def file_make_dir_root(self, file):
         """
         Creates the folder only knowing the filekey
         """
-        p = self.root_path(file_key)
+        p = self.root_dir / file
         p = file_make_dir(p)
         return p
-
-    def root_path(self, file_key):
-        file_loc = self.file_locs.get(file_key)
-        if file_loc is None:
-            raise KeyError(f'Did not find for file_key {file_key}')
-        else:
-            return Path(self.root_dir / file_loc)
 
     def try_load_backup(self, path_backup=None):
         """
         If a backup-file is found...
         """
-        path_backup = path_backup if path_backup else self.root_path('file_backup_pickle')  # sfeh file-load
+        path_backup = path_backup if path_backup else self.root_dir / self.file_locs.file_backup_pickle  # sfeh file-load
 
         if Path.is_file(path_backup):
             self.print_g('g', 'Loading data from backup-file...')
@@ -401,7 +390,7 @@ class ExplainableGP(object):
         # sfeh save complete config?
         run_backup_data = self.conf.pl_version, self.restart_count, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict
 
-        path_backup = self.file_make_dir_root('file_backup_pickle')
+        path_backup = self.file_make_dir_root(self.file_locs.file_backup_pickle)
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.printpl('f', f'Backup: {path_backup.as_posix()}')
@@ -445,7 +434,7 @@ class ExplainableGP(object):
         write the parameters to a .csv file which can also be loaded
         """
         # filename = self.root_dir / info_config_yaml
-        filename = self.file_make_dir_root('info_config_yaml')
+        filename = self.file_make_dir_root(self.file_locs.info_config_yaml)
         yaml_dump(filename, self.config, print_type=self.print_type)
 
         return
@@ -455,7 +444,7 @@ class ExplainableGP(object):
         write the parameters to a .csv file which can also be loaded
         """
 
-        path = self.file_make_dir_root('file_info_config_json')
+        path = self.file_make_dir_root(self.file_locs.file_info_config_json)
 
         with Path.open(path, 'w') as file:
             json.dump(self.config, file, indent=4)
@@ -483,7 +472,7 @@ class ExplainableGP(object):
         - Monitoring initialisation and monitoring
         """
 
-        if self.origin_exists():
+        if self.origin_cooltree is not None:
 
             self.pop_append(self.origin_cooltree, last_evolution='initial')  # sfeh why not :P
 
@@ -603,7 +592,7 @@ class ExplainableGP(object):
             else:
                 print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
 
-            self.print_g('ggg', f'->Evolving \'{tag}\' {evolve_num} times took: {time.perf_counter() - time_evolve:4.2f}s.')
+            self.print_g('ggg', f'->Evolving \'{tag}\' {evolve_num}x took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
 
         # sfeh automatically fill with random trees
         # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
@@ -624,16 +613,6 @@ class ExplainableGP(object):
             return False
         else:
             return True
-
-    def origin_exists(self):
-        """
-        A dummy method to check if the origin exists.
-        This method is rather here to see how often this check is necessary...
-        """
-        if self.origin_cooltree is not None:
-            return True
-        else:
-            return False
 
     def periodical_procedures(self, check_plots=None, check_backup=None, check_analysis=None):
         """
@@ -695,7 +674,7 @@ class ExplainableGP(object):
         sfeh save as yaml?
         """
 
-        path_pareto = self.file_make_dir_root('file_pareto')
+        path_pareto = self.file_make_dir_root(self.file_locs.file_pareto)
 
         with Path.open(path_pareto, 'w') as file:
             for (parsim, fitness, cooltree) in self.pareto:
@@ -741,13 +720,6 @@ class ExplainableGP(object):
 
         return
 
-    def get_path(self, file_key):
-        """
-
-        """
-        real_path = self.root_path(file_key)
-        return real_path
-
     def activate_dataset(self, path_data, action_name):
         """
         loading the data which the GP will be working on.
@@ -769,23 +741,14 @@ class ExplainableGP(object):
                 data_prepared = data_from_csv(path_data, action_name=action_name)
             else:
                 raise FileNotFoundError(f'File nust be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
-
-        elif Path.is_file(self.root_path('samples_ready_p')):  # maybe the data was already prepared earlier sfeh load file
-            data_prepared = pickle_load(self.root_path('samples_ready_p'))
-        elif Path.is_file(self.root_path('samples_csv')):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file
-            data_prepared = data_from_csv(self.root_path('samples_csv'), action_name=action_name)
-            print(f'Prepared the raw {self.file_loc("samples_csv")} behaviour. Saving for next run.')
-            pickle_dump(self.root_path('samples_ready_p'), data_prepared)
+        elif Path.is_file(self.root_dir / self.file_locs.samples_ready_p):  # maybe the data was already prepared earlier sfeh load file
+            data_prepared = pickle_load(self.root_dir / self.file_locs.samples_ready_p)
+        elif Path.is_file(self.root_dir / self.file_locs.samples_csv):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file
+            data_prepared = data_from_csv(self.file_locs.samples_csv, action_name=action_name)
+            print(f'Prepared the raw {self.file_locs.samples_csv} behaviour. Saving for next run.')
+            pickle_dump(self.root_dir / self.file_locs.samples_ready_p, data_prepared)
         else:
             raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')
-
-        # dataspec_file = self.root_path / 'run_files/data_specification.yaml'  # sfeh load file is run_files?
-        # if dataspec_file.is_file():
-        #     pass  # sfeh: if you want to load information from extra file, check for this file here
-        # else:
-        #     # sfeh env_vars, _, _ = data_prepared. anyways, currently loading info via brackets in .csv-file
-        #     pass
-        #     # yaml_dump(self.root_path('env_vars_yaml'), data_prepared[0], print_type=self.print_type)
 
         self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
 
@@ -838,7 +801,7 @@ class ExplainableGP(object):
         """
 
         """
-        path_distrib = path_distrib if path_distrib is not None else self.root_path('distributions_file')
+        path_distrib = path_distrib if path_distrib is not None else self.root_dir / self.file_locs.distributions_file
 
         if Path.is_file(path_distrib):
             lambdadist_as_string = yaml_load(path_distrib)
@@ -901,7 +864,7 @@ class ExplainableGP(object):
         #         plt.savefig(path_hist / f'obs_hist_{parsim}.png')
         #         plt.clf()
 
-        path_hist = folder_make_dir(self.root_dir / self.file_loc('folder_histograms'))
+        path_hist = folder_make_dir(self.root_dir / self.file_locs.folder_histograms)
         #
         # agent_dimatrix = {}
         # obs_x_info = {}  # [None] * data_dims
@@ -990,40 +953,11 @@ class ExplainableGP(object):
 
         latex_full_doc = latex_treeviz_full(latex_element)
 
-        path_trees_tex = self.file_make_dir_root('trees_tex')
+        path_trees_tex = self.file_make_dir_root(self.file_locs.trees_tex)
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
         self.printpl('ff', f'Latex-trees: {path_trees_tex.as_posix()}')
-
-        return
-
-    def file_population_base_latex(self):
-        """
-        """
-
-        latex_element = []
-
-        for ii, cooltree in enumerate(self.pop_base):
-
-            latex_element.append(f'Pop base tree {ii} with Mean Regression Error {cooltree.meta.fitness_train} from last-mod {cooltree.meta.last_evolution}.\n')
-
-            tree = cooltree.get_oldtree()
-
-            forest_viz = latex_tree_get_forest(tree, tight_viz=False)
-            latex_element.append(forest_viz)
-            latex_element.append('Tight layout:\n')
-            try:
-                tight_forest_viz = latex_tree_get_forest(tree)
-                latex_element.append(tight_forest_viz)
-            except:
-                print_e(f'tightviz at tree did not work. {ii} labels: {tree_get_labellist(tree)}')
-
-        pop_viz = latex_treeviz_full(latex_element)
-        path_tex = self.file_make_dir_root('info/test_pop_latex.tex')
-        with Path.open(path_tex, 'w') as file:
-            file.write(pop_viz)
-        self.printpl('f', f'{path_tex}')
 
         return
 
@@ -1064,7 +998,7 @@ class ExplainableGP(object):
             f"all_agents_more = [{all_more_info}]\n" \
             f"agent_tuples = [{agent_tuples}]\n"
 
-        pth = file_make_dir(self.root_path('folder_pycode') / f"agents_{self.env_vars.eval_action.name}.py")
+        pth = file_make_dir(self.root_dir / self.file_locs.folder_pycode / f"agents_{self.env_vars.eval_action.name}.py")
         with Path.open(pth, 'w') as file:
             file.write(pyc_complete)
             self.printpl('ff', f'Pycode: {pth.as_posix()}')
@@ -1075,7 +1009,7 @@ class ExplainableGP(object):
         """
         Safely return an origin_meta tree
         """
-        if self.origin_exists():
+        if self.origin_cooltree is not None:
             origin_cooltree = copy.deepcopy(self.origin_cooltree)
         else:
             origin_cooltree = None
@@ -1583,12 +1517,12 @@ class ExplainableGP(object):
 
         return pred_label
 
-    def file_analysis_plots(self, root_path, subfolder=''):
+    def file_analysis_plots(self, root_dir, subfolder=''):
         """
         Make all plots
         """
 
-        path_plots = folder_make_dir(root_path / self.file_loc('folder_plots') / subfolder)
+        path_plots = folder_make_dir(root_dir /self.file_locs.folder_plots / subfolder)
 
         def plotendify_me(data_dict):
             """
@@ -1623,7 +1557,7 @@ class ExplainableGP(object):
                  set_left=data_tuples[0][0], print_type=self.print_type)
 
         data_tuples = get_pareto_plot_values()
-        plot_end(data_tuples, root_path, title='pareto dominant candidates', x_label='parsimony',
+        plot_end(data_tuples, root_dir, title='pareto dominant candidates', x_label='parsimony',
                  y_label='regression error',
                  linestyle='dashed',
                  marker='.',

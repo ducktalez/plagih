@@ -67,7 +67,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, plagih_root, root_dir, user_config, action_name, kernel_name=None, path_data=None, opth_operators=None, tf_device_log=False, pop_max=None, path_origin_csv=None):
+    def __init__(self, plagih_root, root_dir, user_config, action_name, kernel_name=None, path_data=None, opth_operators=None, tf_device_log=False, pop_max=None, path_origin_csv=None, gen_additionally=0):
 
         self.name = root_dir.resolve().name  # sfeh probably there are better names
         print(f'\n'
@@ -143,7 +143,7 @@ class ExplainableGP(object):
         self.file_locs = self.config['file_locs']
 
         self.conf = GpConfig(self.config)
-
+        self.conf.gen_max += gen_additionally
         self.conf.pop_max = pop_max if pop_max is not None else self.conf.pop_max
 
         self.env_vars = EnvVars()
@@ -707,7 +707,8 @@ class ExplainableGP(object):
     def file_population_base_karoo(self, pop_name):
         """
         Save population_* to disk.
-
+        # todo this does obvsly not work... (every letter is a column)
+            also save pareto/pop as labellists for easy loading?
         """
         file_path = file_make_dir(self.root_dir / f'info/population_{pop_name}.csv')
         with Path.open(file_path, 'w', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
@@ -735,7 +736,6 @@ class ExplainableGP(object):
 
         self.file_pareto_txt()
         self.file_population_base_karoo('last')
-
         self.file_pareto_histograms()
         self.file_pareto_latex()
         self.file_pareto_pycode()
@@ -1346,7 +1346,7 @@ class ExplainableGP(object):
         return left_offspring, right_offspring
 
     def pareto_append(self, cooltree, tree_entry, message):
-        self.printpl('a', f"Paretofront new entry ({message}): {tree_entry}")
+        self.printpl('a', f"Paretofront new entry ({message}): {tree_entry[0]}, {tree_entry[1]}: {tree_entry[2].meta.expr_raw}")
         self.pareto.append(tree_entry)
 
         self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
@@ -1690,6 +1690,7 @@ class ExplainableGP(object):
 
         unique_tree_count = len([hash(x) for x in popul])  # sfeh analyze this?
         self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {gen_id}. Gen took {gen_time:4.2f}s')
+        # sfeh check if there are really unique... doubt it.
         return
 
     def terminate_run(self, make_a_backup=True):

@@ -38,6 +38,7 @@ def main(argv):
     parser.add_argument('-kernel_name', default=None)
 
     parser.add_argument('-pop_max', '-pop_size', type=int, default=None)
+    parser.add_argument('-gen_additionally', type=int, default=None)
 
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', default=False, help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
 
@@ -56,6 +57,7 @@ def main(argv):
     tf_device_log = args.tf_device_log
     kernel_name = args.kernel_name
     pop_max = args.pop_max
+    gen_additionally = args.gen_additionally
 
     prepared_run = args.prepared_run
 
@@ -121,7 +123,7 @@ def main(argv):
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
-    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, kernel_name, analyze, tf_device_log, pop_max)
+    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, kernel_name, analyze, tf_device_log, pop_max, gen_additionally)
 
 
 if __name__ == "__main__":

@@ -166,9 +166,9 @@ class CoolCore:
         return my_result + child_results
 
     def reduce_me(self, obs_krazy):
+        # todo reduce me is obviously bullshit crapshit. lets have a new idea.
         expr_raw = self.get_expr_raw(reduceable=True)
         try:
-            # todo fix nodes ignored?
             expr_sym = expr_sympify(expr_raw)
         except:
             raise Exception(f'Sympify failed. \n{expr_raw}')
@@ -177,7 +177,7 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'Reduced core is even more complex than before. expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and usub.
+            raise Exception(f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and usub.
             # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
             # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
             # new_core: [sign, [Mini, [-, [usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
@@ -453,10 +453,15 @@ class CoolTree:
         self.finalize_structure()
         self.complete = True
 
-    # def finalize_meta(self):
-    #     self.meta.expr_raw = self.get_expr_raw()
-    #     self.meta.expr_sym = self.get_expr_sym()
-    #     print('TODO')
+    def set_meta(self, meta):
+        self.history.append(self.meta)
+
+    def finalize_meta(self):
+        # todo set_meta
+        self.meta.expr_raw = self.get_expr_raw()
+        self.meta.expr_sym = self.get_expr_sym()
+        self.meta.parsimony = None  # save origin apted in root?
+        self.meta.fitness = None
 
     def __len__(self):
         """
@@ -473,7 +478,8 @@ class CoolTree:
         return True
 
     def get_expr_raw(self, symred=None):
-        return self.core.get_expr_raw(reduceable=symred)
+        expr_raw = self.core.get_expr_raw(reduceable=symred)
+        return expr_raw
 
     def get_expr_sym(self):
         expr_raw = self.core.get_expr_raw()
@@ -512,9 +518,6 @@ class CoolTree:
         self.history.append(self.meta)
         self.meta = self.PtreeMeta()
         self.complete = False
-
-    def meta_set(self, meta):
-        self.history.append(self.meta)
 
     def childs_insert_list_width(self, node_list):
         """

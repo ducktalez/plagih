@@ -41,7 +41,7 @@ def load_config(config_path, out_dir=None):
     return root_dir, config
 
 
-def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, path_data, path_origin_csv, kernel_name, analyze, tf_device_log, pop_max):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, path_data, path_origin_csv, kernel_name, analyze, tf_device_log, pop_max, gen_additionally):
     """
     
     """
@@ -52,7 +52,7 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     if eval_action is not None:
         config['eval_action'] = eval_action
 
-    gp = ExplainableGP(plagih_root, root_dir, config, eval_action, kernel_name=kernel_name, path_data=path_data, tf_device_log=tf_device_log, pop_max=pop_max, path_origin_csv=path_origin_csv)
+    gp = ExplainableGP(plagih_root, root_dir, config, eval_action, kernel_name=kernel_name, path_data=path_data, tf_device_log=tf_device_log, pop_max=pop_max, path_origin_csv=path_origin_csv, gen_additionally=gen_additionally)
 
     gp.make_evolve_rates()
 

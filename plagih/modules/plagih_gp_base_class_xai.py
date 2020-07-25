@@ -1452,11 +1452,8 @@ class ExplainableGP(object):
 
             if tree_entry[1] < best[1]:  # if true, at least one insertion
                 self.printpl('a', f"Paretofront new entry was inserted: {parsimony, fitness_train, expr_raw}")
-                self.pareto.append(tree_entry)  #
-                try:
-                    self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
-                except Exception as ex:  # todo
-                    self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
+                self.pareto.append(tree_entry)
+                self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
                 self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
                 # simplify the tree ans save in pareto once again
@@ -1468,12 +1465,9 @@ class ExplainableGP(object):
                     sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
                     if sym_fitness != cooltree.meta.fitness_train and TEST_PHASE:
                         print_e(f'Fitness of a sympified tree is different! sym: {sym_fitness}, before: {cooltree.meta.fitness_train}\n'
-                                f'tree: {cooltree.core.get_labellist()}\n'
-                                f'symp: {cooltree_sym.core.get_labellist()}\n'
-                                f'tree raw: {cooltree.get_expr_raw()}\n'
-                                f'symp rawr: {cooltree_sym.get_expr_raw()}')
+                                f'tree: {cooltree.core.get_labellist()}\nsymp: {cooltree_sym.core.get_labellist()}\n'
+                                f'tree raw: {cooltree.get_expr_raw()}\nsymp rawr: {cooltree_sym.get_expr_raw()}')
                         raise Exception('TODO FUCK')
-                        # return
 
                     self.printpl('aa', 'Successfully reduced pareto tree!')
                     cooltree_sym.meta.fitness_train = sym_fitness

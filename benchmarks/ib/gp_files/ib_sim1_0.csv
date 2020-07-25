@@ -1,5 +1,1 @@
 label_list,sign, Mini, Gain_7, +, *, Shift_3,Maxi,Fatigue_0,SetPoint,Shift_2
-        # todo todotodo
-        # Sign, Mini, Mini, Shift_3, Gain_7, -, -0.659, Velocity_9
-        # +, -, -, Gain_3, SetPoint, 1.233, -Gain_9
-        # +, -, Shift_5, +, *, -Gain_4, Gain_9, 1.915, Shift_9

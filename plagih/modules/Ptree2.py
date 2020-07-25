@@ -766,4 +766,4 @@ class ObservationNode(CoolCore):
         self.name = name
 
 
-some_quick_test()
+# some_quick_test()

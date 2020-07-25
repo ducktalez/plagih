@@ -20,24 +20,14 @@ class DummyKernel:
         elif self.match and fitness1 > fitness2:
             return True
 
-    def np_best_fitness(self, fitness_list):
-        """
-        """
-        return np.min(fitness_list)
-        # elif any([self.classification, self.match]):
-        # return np.max(fitness_list)
-
-
     def best_fitness(self, fit1, fit2):
         """
+
         """
-        if self.regression:
-            return min(fit1, fit2)
-        elif any([self.classification, self.match]):
+        if any([self.classification, self.match]):
             return max(fit1, fit2)
         else:
             raise
-
 
     def tf_wrap_result(self, *args):
         pass
@@ -81,6 +71,59 @@ class DummyKernel:
         # else:
         #     raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kname))
 
+        # def file_conclusion(self):
+        #
+        #     # if self.origin_exists():
+        #     #     origin_fitness = self.kernel.eval_tf(self.origin_meta['expr_sym'], self.data_control, self.tf_parameters, get_predicted_labels=True)['fitness']
+        #     #     # fitness_control_best = origin_result['fitness']
+        #     #
+        #     #     fittest_algo = self.origin_meta['expr_sym']
+        #     #     fittest_parsimony = 0
+        #     #
+        #     #     file.write('\n\t Origin fitness score: {}'.lorigin_fitness))
+        #     #
+        #     # elif self.pareto:
+        #     #     file.write('\n No origin_meta was provided')
+        #     #     meta = next(iter(self.pareto.items()))[1]
+        #     #     fittest_parsimony = int(meta['parsimony'])
+        #     #     fittest_algo = meta['expr_sym']
+        #     #     return  # sfeh fittest_parsimony must be set, do not return
+        #     # else:
+        #     #     file.write('\n There are no candidates to be mentioned at all. Maybe change your config?')
+        #     #     return
+        #     #
+        #     # for parsimony, fitness in self.pareto.items():
+        #     #     algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
+        #     #     result = self.kernel.eval_tf(algo_sym, self.data_control, self.tf_parameters, get_predicted_labels=True)
+        #     #     fit_control = result['fitness']
+        #     #
+        #     #     if self.kernel.fitness_compare(fit_control, fitness_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
+        #     #         fitness_control_best = fit_control
+        #     #         fittest_algo = algo_sym
+        #     #         fittest_parsimony = parsimony
+        #     #
+        #     #     no_fault = True
+        #     #     for enum, entry in enumerate(result['agent_result']):
+        #     #         if not self.check_value_is_real(entry):
+        #     #             no_fault = False
+        #     #             # sfeh this is a bad workaround
+        #     #             result['agent_result'][enum] = 1
+        #     #
+        #     #     if no_fault:
+        #     #         kernel_result = self.kernel.conclusion_text(result, fitness_control_best)
+        #     #         file.write(kernel_result)
+        #     #     else:
+        #     #         file.write('\n\n Error in this tree')
+        #     #
+        #     # else:
+        #     #     # Info about the best Tree
+        #     #     file.write('\n\n The best candidate has parsimony: {}'.forlmat(str(fittest_parsimony)))
+        #     #     file.write('\n With fitness: {}'.forlmat(fitness_control_best))
+        #     #     file.write('\n\n With the following sympify-algorithm:\n {}'.forlmat(fittest_algo))
+        #     #     file.write('\n\n')
+        #
+        #     return
+
     def eval_tf(self):
         pass
         # if self.get_predicted_labels:
@@ -88,7 +131,6 @@ class DummyKernel:
         # else:
         #     predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
         #  # , 'predicted_labels': predicted_labels    # predicted_labels
-
 
     # def conclusion_text(self, result, fitness_control_best):
     #     """
@@ -122,7 +164,7 @@ class DummyKernel:
 
 class RegressionKernel:
 
-    def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action, origin_pairwise_fitness):
+    def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
 
         self.best_fitness_function = min  # todo check
         self.np_best_fitness = np.min
@@ -139,11 +181,12 @@ class RegressionKernel:
         self.regression = True
         self.bounded = 'bounded' in kernel_name
         self.discrete = 'discrete' in kernel_name
-        self.tanhpenalize = 'tanhpenalize' in kernel_name
-        self.squared_error = 'MSE' in kernel_name  # 'L1_absolute' not required
+        self.tanhpenalize = 'tanhpenalize' in kernel_name  # sfeh only makes sense when bounded
+        self.MSE = 'MSE' in kernel_name
+        self.RMSE = 'RMSE' in kernel_name
 
-        self.relative_regression_fun = 'relative_regression_fun' in kernel_name
-        self.origin_results = origin_pairwise_fitness
+        self.exploration_risk = 'relative_regression_fun' in kernel_name
+        self.origin_results = None  # can only be set after the evaluation of the origin...
         sfeh_help = {'pen_explorate(1)': 1.0,
                      'pen_explorate(0.5)': 0.5}
 
@@ -152,29 +195,6 @@ class RegressionKernel:
             if k in kernel_name:
                 self.pen_explorate = v
         return
-
-    def fitness_compare(self, fitness1, fitness2, only_better=True):
-        """
-        Compares the fitness of two candidates according to the kernel
-        """
-        if fitness2 is None:
-            return True
-        elif fitness1 < fitness2:
-            return True
-        elif not only_better:
-            return fitness1 == fitness2
-        else:
-            return False
-
-    # def np_best_fitness(self, fitness_list):
-    #     """
-    #     """
-    #     return np.min(fitness_list)
-
-    # def best_fitness(self, *args):
-    #     """
-    #     """
-    #     return min(*args)
 
     def tf_wrap_result(self, tf_result):
 
@@ -191,84 +211,89 @@ class RegressionKernel:
 
         return wrap
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, agent_result):
-        """
-
-        """
-
-        return pairwise_fitness
-
-    def eval_tf(self, expr_sym, used_observations, complete=False):
+    def eval_tf(self, expr_sym, used_observations, only_fitness=False):
         """
         Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
         - uses "ast" to generate a, kind of, python-intern-executable-tree
         - creating a tensorflow graph that is evaluated in an isolated TF session
         """
-
         tf.compat.v1.reset_default_graph()
-        # tensors = {self.eval_action.name: }  # converts data_csv_path into vectors , dtype=tf.float32
         solution = tf.constant(self.data_train[self.eval_action.name])  # tensors[self.eval_action.name]
-        tensors = {tf.constant(self.data_train[obs]) for obs in used_observations}  # do not assign dtype here, do this in the pandas df aka data
+        tensors = {obs_name: tf.constant(self.data_train[obs_name]) for obs_name in used_observations}  # do not assign dtype here, do this in the pandas df aka data
 
-        agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
+        results_agent = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
 
-        kernel_results = agent_result.copy()
+        # fit the agents to the possible outcome
+        results_kernel = results_agent  # todo test
 
         if self.discrete:
-            kernel_results = tf.math.round(kernel_results)
-
+            results_kernel = tf.math.round(results_kernel)
         if self.bounded:
             act_min = tf.constant(self.eval_action.minmax[0], dtype=tf.float32)
             act_max = tf.constant(self.eval_action.minmax[1], dtype=tf.float32)
-            kernel_results = tf.math.minimum(tf.math.maximum(kernel_results, act_min), act_max)
+            results_kernel = tf.math.minimum(tf.math.maximum(results_kernel, act_min), act_max)
 
-        # pairwise_fitness = self.tf_get_pairwise_fitness(solution, kernel_result, agent_result)
-        pairwise_diff = solution - kernel_results
+        # pairwise_fitness = self.tf_get_pairwise_fitness(solution, kernel_result, results_agent)
+        pairwise_diff = solution - results_kernel
 
-
-        pairwise_error = tf_error(pairwise_diff)
-
-
-
-        if self.relative_regression_fun and self.origin_results is not None:
-            # tf_error = tf.abs  # sfeh this is required (??)
-            # (1 * tf.abs(pairwise_diff)) - # 1 * abs, as the other one is within the error. usually 2*
-            improvement_range = tf.abs(solution - self.origin_results)
-            exploration = (self.origin_results - kernel_results)
-
-            add_penalty = (improvement_range - exploration)
-            smaller_penalty = self.pen_explorate*add_penalty
-            pairwise_fitness = tf_error(add_penalty)  # faster version
-
-        if self.tanhpenalize:
-            tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_results)*0.1)  # sfeh amplitude, stretch, squared
-            pairwise_fitness = pairwise_fitness + tanhpenalize
-
-        if self.squared_error:
+        if self.MSE:  # todo huber loss! mse, mae, rmse, huber, (log)
             tf_error = tf.square
-            regression_error = tf.keras.losses.mean_squared_error(solution, kernel_results)
-
         else:
             tf_error = tf.abs
-            regression_error = tf.keras.losses.mean_absolute_error(solution, kernel_results)
-            # todo huber loss! mse, mae, huber, (log)
 
+        regression_errors = tf_error(pairwise_diff)
+        # improved_errors = regression_errors  # sfeh not yet required... only one error
 
+        if self.exploration_risk and self.origin_results is not None:
+            # tf_error = tf.abs  # sfeh this is required (??)
+            # (1 * tf.abs(pairwise_diff)) - # 1 * abs, as the other one is within the error. usually 2*  # sfeh not sure
+            exploration = (self.origin_results - results_kernel)  # the difference to the origin - which we want to "penalize" here
+            required_improvement = tf.abs(solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
+            explore_penalize = tf.maximum(required_improvement-exploration, 0)  # removes the above mentioned expected exploration from the penalize process
+            penalize_exploration_weighted = self.pen_explorate*(tf_error(explore_penalize))  # this should not be weighted as much as the regular expression (0 to 1).
+            # Although, even more extreme penalisations are possible. Also, ideas about dummy pen (for no exploration, but no easy improvement) or values >1 for sticking to the origin policy
+            # use factor before or after squaring the distance?
+            regression_errors += penalize_exploration_weighted
 
+            """
+            sfeh idea: process is markov chain, but logic seems to correct until the first wrong decision.
+            This point could be of large interest, as ir marks the moment where the good policy is lost.
+            'correct' is not known, though. (MTC - yes, but IB may be very close)
+            """
+        else:
+            penalize_exploration_weighted = tf.no_op()
 
-        fitness = tf.reduce_sum(pairwise_fitness)
+        mean_error = tf.reduce_mean(regression_errors)
+        if self.RMSE:
+            mean_error = tf.sqrt(mean_error)
+
+        if self.tanhpenalize:
+            """
+            for the bounded kernel.
+            Values, that are far too high, which get assigned to the action range, should be slightly punished.
+            This should hopefully make improvements towards smaller numbers possible without affecting the parsimony.
+            (e.g. results_agent = 33.6, but actionminmax[-1, 1] --> kernel_result = +1)
+
+            tanh: closer to 0 is better, but rising steadyly without exceeding max value of 1 (outliers like single points inf become irrelevant)
+            factor 1 (0.02) the amplitude. should be small enough to not significantly influence the gp process
+            factor 2 (0.1) stretches the tanh function. the largest improvement should be at the points we want to get rid of
+            squared distance? -> smooth transition from the area that is considered okay
+            """
+            penalized_bounds = 0.02 * tf.tanh(tf.square(results_agent - results_kernel) * 0.1)  # sfeh amplitude, stretch, squared
+            mean_boundpen = tf.reduce_mean(penalized_bounds)  # sfeh could easily be a reduce_sum
+            mean_error += mean_boundpen
+        else:
+            penalized_bounds = tf.no_op()
 
         with tf.compat.v1.Session(config=self.tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
+                tf_results = sess.run({'pairwise_diff': pairwise_diff, 'results_kernel': results_kernel, 'regression_errors': regression_errors, 'mean_error': mean_error})
 
-                if complete:
-                    agent_result, kernel_results, solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_results, solution, fitness, pairwise_fitness])
-                    return {'agent_result': agent_result, 'kernel_result': kernel_results,
-                            'solution_goal': solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
-                else:  # reduced evaluation, only fitness is evaluated
-                    fitness = sess.run(fitness)
-                    return float(fitness)
+        if only_fitness:  # reduced evaluation, only mean_error is returned... (may save memory as only one value gets returned)
+            return float(tf_results['mean_error'])
+        else:
+            return tf_results
 
 
 def ast_convert_from_expr(expr, tensors=None, build=None):
@@ -336,8 +361,8 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             return [node.n]
         else:
-            shape = tensors[list(tensors.keys())[0]].get_shape()
-            return tf.constant(node.n, shape=shape, dtype=tf.float32)
+            # shape = tensors[list(tensors.keys())[0]].get_shape()  # todo
+            return tf.constant(node.n, dtype=tf.float32)  # , shape=shape
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
         if build:

@@ -117,7 +117,7 @@ status open
 \backslash
 global
 \backslash
-titel{Interpretable Policies with familiarity based genetic programming}
+titel{Creating familiar RL-Policies with Genetic Programming}
 \end_layout
 
 \end_inset

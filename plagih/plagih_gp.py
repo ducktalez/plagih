@@ -18,59 +18,6 @@ env_vars_yaml = 'info/env_vars.yaml'
 
 # /run_files/
 
-def labellists_from_csv(csv_path):
-    """
-    from the labellist-csv, loading the label list
-    """
-    modify_list = []
-    with Path.open(csv_path, newline='') as csvFile:
-        reader = csv.reader(csvFile, delimiter=',')
-        for row in reader:
-            if len(row) > 0:
-                if row[0] == 'label_list' or row[0] == 'node_label':
-                    label_list = [x.replace(' ', '') for x in row[1:]]
-                elif row[0] == 'modify_list' or row[0] == 'node_modify':
-                    modify_list = [int(x.replace(' ', '')) for x in row[1:]]
-                elif row[0] == '':
-                    pass
-                else:
-                    print_warning('ww', f'Unexpected row start: {row[0]}')
-
-    if label_list is None:
-        raise Exception('Labels could not be created from file.')
-
-    return label_list, modify_list
-
-
-def load_label_list(root_dir, user_origin_csv=None):
-    """
-
-    """
-    tree_expr_txt_path = root_dir / 'run_files/tree_expr.txt'
-    tree_labels_csv_path = root_dir / 'run_files/tree_labels.csv'
-    tree_numpy_csv_path = root_dir / 'run_files/tree_numpy.csv'
-    label_list = None
-    modify_list = None
-    if user_origin_csv:
-        label_list, modify_list = labellists_from_csv(user_origin_csv)
-    elif Path.is_file(tree_labels_csv_path):
-        label_list, modify_list = labellists_from_csv(tree_labels_csv_path)  # sfeh lol it does just the same?
-    elif Path.is_file(tree_numpy_csv_path):  # Load origin tree
-        print('SFEH I dont think anyone will want to use this. Create a tree from label_list, ffs.')
-        raise
-    elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
-        print('SFEH needs to create an option to make trees from expression')
-        with Path.open(tree_expr_txt_path) as txt_file:
-            expr = txt_file.read()  # sfeh requires separate handling?
-            print('Assuming all variables are floats, sfeh')
-            tree = karoo_tree_from_expr(expr, 'sfeh')
-            tree_pretty_print(tree)
-            tree_save_csv(tree, tree_labels_csv_path)
-            raise  # sfeh
-    else:
-        print_warning('ii', 'No origin-tree file was provided. Continuing.')
-    return label_list, modify_list
-
 
 def load_config(config_path, out_dir=None):
     """
@@ -94,7 +41,7 @@ def load_config(config_path, out_dir=None):
     return root_dir, config
 
 
-def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, path_data, cooltree_origin, kernel_name, analyze, tf_device_log, pop_max):
+def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, path_data, path_origin_csv, kernel_name, analyze, tf_device_log, pop_max):
     """
     
     """
@@ -105,12 +52,7 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
     if eval_action is not None:
         config['eval_action'] = eval_action
 
-    gp = ExplainableGP(plagih_root, root_dir, config, eval_action, kernel_name=kernel_name, path_data=path_data, tf_device_log=tf_device_log, pop_max=pop_max)
-
-    label_list, modify_list = load_label_list(root_dir, user_origin_csv=cooltree_origin)
-    if label_list is not None and modify_list is not None:
-        cooltree_origin = cooltree_from_labellist(label_list, modify_list=modify_list)
-        gp.activate_origin_tree(cooltree_origin)
+    gp = ExplainableGP(plagih_root, root_dir, config, eval_action, kernel_name=kernel_name, path_data=path_data, tf_device_log=tf_device_log, pop_max=pop_max, path_origin_csv=path_origin_csv)
 
     gp.make_evolve_rates()
 

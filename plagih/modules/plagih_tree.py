@@ -1347,7 +1347,6 @@ def tree_core_build_childs(tree, parent_list=None):
     c_iter = 0
     last_parent = -1
 
-    # parent_list [-1, 0, 0, 0, 1, 1]
     for i, parent_id in enumerate(parent_list):
         if parent_id >= 0:
 

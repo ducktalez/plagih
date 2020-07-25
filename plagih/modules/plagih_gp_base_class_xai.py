@@ -1378,7 +1378,7 @@ class ExplainableGP(object):
 
         p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # all pareto entries that are less complex
 
-        if len(p_simpler) == 0 and self.pareto:  # all other pareto entries are more complex
+        if len(p_simpler) == 0:  # all other pareto entries are more complex
             self.pareto_append(cooltree, tree_entry, f'new simplest entry')
         else:
             best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones

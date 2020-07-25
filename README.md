@@ -19,6 +19,7 @@ Main features:
 ## Python 3.7 packages
 
 Anaconda 3.7 (2020.2) with conda packages. Some packages are only available in pip though.
+todo: save this as requirements
 
 Conda packages:
 pathlib

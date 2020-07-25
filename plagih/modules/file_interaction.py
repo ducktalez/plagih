@@ -1,6 +1,6 @@
 import pickle
 from plagih.modules.printing import *
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # matplotlib.use('Agg')
 import yaml
 from pathlib import Path
 import numpy as np
@@ -32,45 +32,6 @@ def file_make_dir(file_path):
     if not p.parent.is_dir():
         p.parent.mkdir(parents=True)
     return p
-
-def experiment_data(experiment_yaml):
-    if Path.is_file(experiment_yaml):  # Load config.yaml
-        with Path.open(experiment_yaml, 'r') as file:
-            experiment_infos = yaml_load(file)
-
-    wer = {
-        'env': {
-            'observations': {
-                'cartPos': {
-                    'use as': 'constant',
-                    'type': 'float',
-                    'custom label': 'cartPos',
-                    'insert min': None,
-                    'insert max': None,
-                    'value box/shape': None,
-                    'time delta': None,
-                    'time delta 0 name': None,
-                    'description': None
-                },
-                'cartVel': {
-                    'type': 'float',
-                },
-                'poleAngle': {
-                    'type': 'float',
-                },
-                'poleVel': {'type':
-                                'float',
-                            },
-            },
-            'action0': {
-                'use': 'result',
-                'type': 'float',
-            },
-
-            'number of observations': None,
-            'number of actions': 1,
-        }
-    }
 
 
 def pickle_load(path):

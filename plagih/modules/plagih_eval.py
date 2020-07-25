@@ -52,7 +52,7 @@ class RegressionKernel(DummyKernel):
 
 class FitnessKernel:
 
-    def __init__(self, kernel_name):
+    def __init__(self, kernel_name, tf_config, tf_device):
         self.kname = kernel_name
 
         self.regression, self.classification, self.match = False, False, False
@@ -240,49 +240,42 @@ class FitnessKernel:
 
         return pairwise_fitness
 
+    def eval_tf(self, expr_sym, used_observations, pd_data, kernel, eval_action, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
+        """
+        Evaluates an expression using TensorFlow (TF)
+        - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
+        - uses "ast" to generate a, kind of, python-intern-executable-tree
+        - creating a tensorflow graph that is evaluated in an isolated TF session
+        """
 
-def eval_tf(expr_sym, used_observations, pd_data, kernel, eval_action, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
-    """
-    Evaluates an expression using TensorFlow (TF)
-    - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
-    - uses "ast" to generate a, kind of, python-intern-executable-tree
-    - creating a tensorflow graph that is evaluated in an isolated TF session
-    """
+        tf.compat.v1.reset_default_graph()
+        tensors = {eval_action.name: tf.constant(pd_data[eval_action.name])}  # converts data_csv_path into vectors , dtype=tf.float32
 
-    tf.compat.v1.reset_default_graph()
-    tensors = {eval_action.name: tf.constant(pd_data[eval_action.name])}  # converts data_csv_path into vectors , dtype=tf.float32
+        for obs_x_name in used_observations:
+            tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 sfeh: neverask.jpg
 
-    for obs_x_name in used_observations:
-        tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 sfeh: neverask.jpg
-
-    try:
-        agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
-        kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
-        act_solution = tensors[eval_action.name]
-        pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, agent_result, origin_pairwise_fitness=origin_pairwise_fitness)
-    except:
         agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
         kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
         act_solution = tensors[eval_action.name]
         pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, agent_result, origin_pairwise_fitness=origin_pairwise_fitness)
 
-    fitness = tf.reduce_sum(pairwise_fitness)
+        fitness = tf.reduce_sum(pairwise_fitness)
 
-    with tf.compat.v1.Session(config=tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
-        with sess.graph.device(tf_device):  # GPU evaluation in tensorflow
+        with tf.compat.v1.Session(config=tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
+            with sess.graph.device(tf_device):  # GPU evaluation in tensorflow
 
-            if complete:
-                if get_predicted_labels:
-                    predicted_labels = tf.map_fn(tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
-                else:
-                    predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
+                if complete:
+                    if get_predicted_labels:
+                        predicted_labels = tf.map_fn(tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
+                    else:
+                        predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-                agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness])
-                return {'agent_result': agent_result, 'kernel_result': kernel_result, 'predicted_labels': predicted_labels,
-                        'solution_goal': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
-            else:  # reduced evaluation, only fitness is evaluated
-                fitness = sess.run(fitness)
-                return float(fitness)
+                    agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness])
+                    return {'agent_result': agent_result, 'kernel_result': kernel_result, 'predicted_labels': predicted_labels,
+                            'solution_goal': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
+                else:  # reduced evaluation, only fitness is evaluated
+                    fitness = sess.run(fitness)
+                    return float(fitness)
 
 
 def ast_convert_from_expr(expr, tensors=None, build=None):

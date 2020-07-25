@@ -152,7 +152,8 @@ class ExplainableGP(object):
 
         self.activate_dataset(path_data=path_data, action_name=action_name)
 
-        self.kernel = FitnessKernel(kernel_name if kernel_name else self.conf.kernel_name)
+        expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_classify_labels_map, origin_pairwise_fitness = self.origin_results, complete = True
+        self.kernel = FitnessKernel(kernel_name if kernel_name else self.conf.kernel_name, self.tf_config, self.tf_device)
         self.print_type = self.conf.print_type
         # self.fitness_decimals = self.conf.fitness_decimals  # the number of floating points for the round function
         # self.parsimony_max = self.conf.parsimony_max
@@ -184,6 +185,23 @@ class ExplainableGP(object):
         self.tf_device_log = tf_device_log  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.tf_device_log, allow_soft_placement=True)
         self.tf_config.gpu_options.allow_growth = True
+
+        # class MonitoringGenerations:
+        #     # todo this might be better. maybe pandas?
+        #     def __init__(self):
+        #         self.population_tmp_done_size = {}
+        #         self.pop_parsim = {}
+        #         self.pop_last_evolves = {}
+        #         self.fitness_average = {}
+        #         self.fitness_variance = {}
+        #         self.best_candidate = {}
+        #         # 'complexity_list = {},  # not used, just uses memory
+        #         self.complexity_average = {}
+        #         self.complexity_mean = {}
+        #         self.complexity_variance = {}  # variance can be deleted, only std-error is needed delete v1
+        #         self.pop_trees_complexity_std_error = {}
+        #         self.gen_time = {}
+
         self.monitoring_dict = {'population_tmp_done-size': {},
                                 'pop_parsim': {},
                                 'pop_last_evolves': {},
@@ -233,6 +251,7 @@ class ExplainableGP(object):
             evolve_loop = self.conf.evolve_list
             self.printpl('i', 'Using evolve rates from config')
         except:
+
             evolve_loop = [
                 # Reproduction (10%)
                 {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06, 'custom_params': {}},
@@ -894,7 +913,7 @@ class ExplainableGP(object):
         for (parsim, fitness, cooltree) in self.pareto:
             expr_sym = cooltree.get_expr_sym()
             used_observations = cooltree.get_observation_list()
-            tf_results = eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
+            tf_results = self.kernel.eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                  complete=True, origin_pairwise_fitness=self.origin_results)
 
             # pairwise_fitness = tf_results['pairwise_fitness']
@@ -944,7 +963,7 @@ class ExplainableGP(object):
     # def file_conclusion(self):
     #
     #     # if self.origin_exists():
-    #     #     origin_fitness = eval_tf(self.origin_meta['expr_sym'], self.data_control, self.tf_parameters, get_predicted_labels=True)['fitness']
+    #     #     origin_fitness = self.kernel.eval_tf(self.origin_meta['expr_sym'], self.data_control, self.tf_parameters, get_predicted_labels=True)['fitness']
     #     #     # fitness_control_best = origin_result['fitness']
     #     #
     #     #     fittest_algo = self.origin_meta['expr_sym']
@@ -964,7 +983,7 @@ class ExplainableGP(object):
     #     #
     #     # for parsimony, fitness in self.pareto.items():
     #     #     algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
-    #     #     result = eval_tf(algo_sym, self.data_control, self.tf_parameters, get_predicted_labels=True)
+    #     #     result = self.kernel.eval_tf(algo_sym, self.data_control, self.tf_parameters, get_predicted_labels=True)
     #     #     fit_control = result['fitness']
     #     #
     #     #     if self.kernel.fitness_compare(fit_control, fitness_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
@@ -1136,13 +1155,6 @@ class ExplainableGP(object):
 
         self.tree_lut[tree_ident] = meta
         return
-
-    def tree_eval_parsimony_easywrapper(self, cooltree):
-        """
-        loading the two extra parameters every time is just boring
-        """
-        parsimony = tree_eval_parsimony(cooltree, self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
-        return parsimony
 
     def gen_reset_parameters(self):
         """
@@ -1483,7 +1495,7 @@ class ExplainableGP(object):
             parsimony = tree_meta['parsimony']
             fitness_train = tree_meta['fitness_train']
         else:
-            parsimony = self.tree_eval_parsimony_easywrapper(cooltree)
+            parsimony = tree_eval_parsimony(cooltree, self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony > self.conf.parsimony_max:
                 print_warning('wwww', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
                 return
@@ -1550,7 +1562,7 @@ class ExplainableGP(object):
         self.origin_cooltree = copy.deepcopy(cooltree)
 
         used_observations = cooltree.get_observation_list()
-        self.origin_results = eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
+        self.origin_results = self.kernel.eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                       origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
 
         self.pareto.append([0, fitness_train, cooltree])  # aka [3, 423, meta{}]
@@ -1575,7 +1587,7 @@ class ExplainableGP(object):
             raise Exception(f'eval:{evalex}')
 
         used_observations = cooltree.get_observation_list()
-        fitness_train = eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
+        fitness_train = self.kernel.eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
                                 origin_pairwise_fitness=self.origin_results)
 
         if not check_value_is_real(fitness_train):
@@ -1670,7 +1682,7 @@ class ExplainableGP(object):
 
         data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
         data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
-        plot_end(data_tuples, path_plots, title='tree complexity (avg and std. error)', x_label='Generation', y_label='variance',
+        plot_end(data_tuples, path_plots, title='tree parsimony (avg and std. error)', x_label='Generation', y_label='variance',
                  marker='', fill_variance=data_tuples_variance, print_type=self.print_type)
 
         data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
@@ -1685,7 +1697,7 @@ class ExplainableGP(object):
         - amount of trees
         - fittest tree
         - average fitness
-        - average tree complexity
+        - average tree parsimony
         """
         gen_id = self.gen_id
         popul = self.population_tmp
@@ -1718,15 +1730,10 @@ class ExplainableGP(object):
 
         gen_time = time.perf_counter() - self.time_genstart
         self.monitoring_dict['gen_time'][gen_id] = gen_time
-        self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} trees in generation {gen_id}. Gen took {gen_time:4.2f}s')  # todo also show unique trees?
-        return
 
-    def get_env_vars(self):
-        """
-        xtypes_list is required to build trees
-        this helps creating it
-        """
-        return self.env_vars
+        unique_tree_count = len([hash(x) for x in popul])  # sfeh analyze this?
+        self.print_g('gg', f'Created {unique_tree_count} unique treen in {len(popul)}/{self.conf.pop_max} trees in generation {gen_id}. Gen took {gen_time:4.2f}s')
+        return
 
     def terminate_run(self, make_a_backup=True):
         """

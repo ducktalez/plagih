@@ -61,7 +61,6 @@ def random_choose_tempobs(obs_list, max_hist=10):
     0, 1, 2, 3 is good, but
     0, 5, 10, 15 is worse
     what if variables are not all of same diff?
-    todo create list at start of run
     """
     obs_list = np.delete(obs_list, np.s_[max_hist:])
     x = len(obs_list)
@@ -92,14 +91,12 @@ def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
     if random.choice(['obs', 'distrib']) == 'obs' and choose_obs[xtype]:
         # obs_list = random.choice(list(env_vars['env_observation_family'].values()))
         term = choose_obs[xtype]()
-        # todo
         term = term.name
     else:
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()
         if '2f' in xtype:  # sfeh int aswell?
-            todo = round(term, float_decimals)
-            term = todo
+            term = round(term, float_decimals)
 
     return str(term)  # sfeh str necessary?
 

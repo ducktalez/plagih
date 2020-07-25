@@ -6,7 +6,7 @@ import re
 from plagih.modules.plagih_data import obs_get_timedelta
 
 
-def latex_treeviz_full(tikz_forest_list, preamble=''):
+def latex_treeviz_full(tikz_forest_list):
     """
     Latex standalone document of forest trees.
     Possible \documentclass options:

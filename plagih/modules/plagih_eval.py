@@ -3,6 +3,7 @@ from plagih.modules.operators import *
 import numpy as np
 import sklearn.metrics as skm
 from sys import getsizeof
+import copy
 
 
 class DummyKernel:
@@ -10,102 +11,22 @@ class DummyKernel:
     def __init__(self, *args):
         pass
 
-    def fitness_compare(self, fit1, fit2):
-        if fit2 is None:
-            return True
-
-    def conclusion_text(self):
-        pass
-
-    def tf_wrap_result(self, *args):
-        pass
-
-    def tf_get_pairwise_fitness(self):
-        pass
-
-
-class RegressionKernel(DummyKernel):
-
-    def __init__(self):
-        pass
-
-    def tf_wrap_result(self, tf_result, action_min_max):
-        # regression that fits the outputs to a discrete set of actions defined by min and max
-        act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-        act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-        customised_result = tf.math.minimum(tf.math.maximum(tf.math.round(tf_result), act_min), act_max)
-        return customised_result
-
     def fitness_compare(self, fitness1, fitness2):
-
-        if fitness2 is None:  # try block?
-            return True
-
-        return fitness1 < fitness2
-
-    def conclusion_text(self):
-        pass
-
-    def tf_get_pairwise_fitness(self):
-        pass
-
-
-class FitnessKernel:
-
-    def __init__(self, kernel_name, tf_config, tf_device):
-        self.kname = kernel_name
-
-        self.regression, self.classification, self.match = False, False, False
-
-        if 'regression' in kernel_name:
-            self.regression = True
-            self.bounded = 'bounded' in kernel_name
-            self.discrete = 'discrete' in kernel_name
-            self.tanhpenalize = 'tanhpenalize' in kernel_name
-            self.squared_error = 'MSE' in kernel_name  # 'L1_absolute' not required
-
-            self.relative_regression_fun = 'relative_regression_fun' in kernel_name
-            self.origin_pairwise_fitness = None
-            sfeh_help = {'pen_explorate(1)': 1.0,
-                         'pen_explorate(0.5)': 0.5}
-
-            self.pen_explorate = 0.5  # todo
-            for k, v in sfeh_help.items():
-                if k in kernel_name:
-                    self.pen_explorate = v
-        else:
-            self.regression = False
-
-    def fitness_compare(self, fitness1, fitness2, only_better=True):
-        """
-        Compares the fitness of two candidates according to the kernel
-
-        Example:
-            >
-            fitness_compare
-        """
         if fitness2 is None:
-            return True
-        elif self.regression and fitness1 < fitness2:
             return True
         elif self.classification and fitness1 > fitness2:
             return True
+
         elif self.match and fitness1 > fitness2:
             return True
-        elif not only_better:
-            return fitness1 == fitness2
-        else:
-            return False
 
     def np_best_fitness(self, fitness_list):
         """
         """
-        if self.regression:
-            return np.min(fitness_list)
-        elif any([self.classification, self.match]):
-            return np.max(fitness_list)
-        else:
-            raise
+        return np.min(fitness_list)
+        # elif any([self.classification, self.match]):
+        # return np.max(fitness_list)
+
 
     def best_fitness(self, fit1, fit2):
         """
@@ -117,32 +38,73 @@ class FitnessKernel:
         else:
             raise
 
-    def best_fitness_function(self):
+
+    def tf_wrap_result(self, *args):
+        pass
+
+    def tf_get_pairwise_fitness(self):
         """
-        Returning either min or max
+        Calculates the kernel-specific fitness for the solution.
+        - classification: dummy
         """
-        if self.regression:
-            return min
-        elif any([self.classification, self.match]):
-            return max
-        else:
-            raise
+        pass
+
+        # if self.classification:  # CLASSIFY kernel
+        #     """
+        #     """
+        #
+        #     skew = (self.eval_action.uniques / 2) - 1
+        #
+        #     rule1 = tf.logical_and(
+        #         tf.equal(solution, 0),
+        #         tf.less_equal(kernel_result, 0 - skew))
+        #
+        #     rule2 = tf.logical_and(
+        #         tf.equal(solution, self.eval_action.uniques - 1),
+        #         tf.greater(kernel_result, solution - 1 - skew))
+        #
+        #     rule3 = tf.logical_and(
+        #         tf.less(solution - 1 - skew, kernel_result),
+        #         tf.less_equal(kernel_result, solution - skew))
+        #
+        #     pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
+        #
+        # elif self.match:  # MATCH kernel
+        #     """
+        #     This is used for demonstration purposes only.
+        #     """
+        #     # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+        #     rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
+        #     pairwise_fitness = tf.dtypes.cast(
+        #         tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
+        #
+        # else:
+        #     raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kname))
+
+    def eval_tf(self):
+        pass
+        # if self.get_predicted_labels:
+        #     predicted_labels = tf.map_fn(self.tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
+        # else:
+        #     predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
+        #  # , 'predicted_labels': predicted_labels    # predicted_labels
+
 
     # def conclusion_text(self, result, fitness_control_best):
     #     """
     #
     #     """
+    #     elif self.kernel == 'regression':
+    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
+    #         result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
+    #         result_str += ('\n Mean Squared Error: {}'.format(mse))
+    #
     #     result_str = ''
     #
     #     if self.kernel == 'classification':
     #         result_str += f'\n\n Classification fitness score: {fitness_control_best}'
     #         result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
     #         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
-    #
-    #     elif self.kernel == 'regression':
-    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-    #         result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
-    #         result_str += ('\n Mean Squared Error: {}'.format(mse))
     #
     #     elif self.kernel == 'regression bounded':
     #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
@@ -157,16 +119,64 @@ class FitnessKernel:
     #
     #     return result_str
 
-    def tf_wrap_result(self, tf_result, action_min_max):
 
-        if self.discrete:
-            # regression that fits the outputs to a discrete set of actions defined by min and max
-            tf_result = tf.math.round(tf_result)
+class RegressionKernel:
 
-        if self.bounded:
-            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
-            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
-            tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
+    def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action, origin_pairwise_fitness):
+
+        self.best_fitness_function = min  # todo check
+        self.np_best_fitness = np.min
+        # , self.tf_classify_labels_map  # todo
+        self.kname = kernel_name
+        self.tf_config = tf_config
+        self.tf_device = tf_device
+        self.eval_action = eval_action
+        self.origin_results = None
+        self.data_train = data_train  # todo where is the best?
+
+        self.regression, self.classification, self.match = False, False, False
+
+        self.regression = True
+        self.bounded = 'bounded' in kernel_name
+        self.discrete = 'discrete' in kernel_name
+        self.tanhpenalize = 'tanhpenalize' in kernel_name
+        self.squared_error = 'MSE' in kernel_name  # 'L1_absolute' not required
+
+        self.relative_regression_fun = 'relative_regression_fun' in kernel_name
+        self.origin_results = origin_pairwise_fitness
+        sfeh_help = {'pen_explorate(1)': 1.0,
+                     'pen_explorate(0.5)': 0.5}
+
+        self.pen_explorate = 0.5  # todo
+        for k, v in sfeh_help.items():
+            if k in kernel_name:
+                self.pen_explorate = v
+        return
+
+    def fitness_compare(self, fitness1, fitness2, only_better=True):
+        """
+        Compares the fitness of two candidates according to the kernel
+        """
+        if fitness2 is None:
+            return True
+        elif fitness1 < fitness2:
+            return True
+        elif not only_better:
+            return fitness1 == fitness2
+        else:
+            return False
+
+    # def np_best_fitness(self, fitness_list):
+    #     """
+    #     """
+    #     return np.min(fitness_list)
+
+    # def best_fitness(self, *args):
+    #     """
+    #     """
+    #     return min(*args)
+
+    def tf_wrap_result(self, tf_result):
 
         return tf_result
 
@@ -181,66 +191,14 @@ class FitnessKernel:
 
         return wrap
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, agent_result, origin_pairwise_fitness=None):
-        """
-        Calculates the kernel-specific fitness for the solution.
-        - classification: dummy
+    def tf_get_pairwise_fitness(self, solution, kernel_result, agent_result):
         """
 
-        if self.classification:  # CLASSIFY kernel
-            """
-            """
-
-            skew = (uniques_num / 2) - 1
-
-            rule1 = tf.logical_and(
-                tf.equal(solution, 0),
-                tf.less_equal(kernel_result, 0 - skew))
-
-            rule2 = tf.logical_and(
-                tf.equal(solution, uniques_num - 1),
-                tf.greater(kernel_result, solution - 1 - skew))
-
-            rule3 = tf.logical_and(
-                tf.less(solution - 1 - skew, kernel_result),
-                tf.less_equal(kernel_result, solution - skew))
-
-            pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
-
-        elif self.regression:
-            """
-            """
-
-            pairwise_diff = solution - kernel_result
-
-            tf_error = tf.square if self.squared_error else tf.abs
-            pairwise_fitness = tf_error(pairwise_diff)
-
-            if self.relative_regression_fun and origin_pairwise_fitness is not None:
-                tf_error = tf.abs  # sfeh this is required (??)
-                # regression_goal = tf.abs(solution - tf_result)  # double the penalty
-                exploration_diff = (origin_pairwise_fitness - kernel_result)  # NO abs value
-                paretodiff = tf_error(solution - origin_pairwise_fitness)
-                pairwise_fitness = tf_error((2 * pairwise_fitness) - self.pen_explorate*(paretodiff - exploration_diff))  # faster version
-
-            if self.tanhpenalize:
-                tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_result)*0.1)  # sfeh amplitude, stretch, squared
-                pairwise_fitness = pairwise_fitness + tanhpenalize
-
-        elif self.match:  # MATCH kernel
-            """
-            This is used for demonstration purposes only.
-            """
-            # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-            rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-            pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
-
-        else:
-            raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kname))
+        """
 
         return pairwise_fitness
 
-    def eval_tf(self, expr_sym, used_observations, pd_data, kernel, eval_action, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
+    def eval_tf(self, expr_sym, used_observations, complete=False):
         """
         Evaluates an expression using TensorFlow (TF)
         - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
@@ -249,30 +207,65 @@ class FitnessKernel:
         """
 
         tf.compat.v1.reset_default_graph()
-        tensors = {eval_action.name: tf.constant(pd_data[eval_action.name])}  # converts data_csv_path into vectors , dtype=tf.float32
-
-        for obs_x_name in used_observations:
-            tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 sfeh: neverask.jpg
+        # tensors = {self.eval_action.name: }  # converts data_csv_path into vectors , dtype=tf.float32
+        solution = tf.constant(self.data_train[self.eval_action.name])  # tensors[self.eval_action.name]
+        tensors = {tf.constant(self.data_train[obs]) for obs in used_observations}  # do not assign dtype here, do this in the pandas df aka data
 
         agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
-        kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
-        act_solution = tensors[eval_action.name]
-        pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, agent_result, origin_pairwise_fitness=origin_pairwise_fitness)
+
+        kernel_results = agent_result.copy()
+
+        if self.discrete:
+            kernel_results = tf.math.round(kernel_results)
+
+        if self.bounded:
+            act_min = tf.constant(self.eval_action.minmax[0], dtype=tf.float32)
+            act_max = tf.constant(self.eval_action.minmax[1], dtype=tf.float32)
+            kernel_results = tf.math.minimum(tf.math.maximum(kernel_results, act_min), act_max)
+
+        # pairwise_fitness = self.tf_get_pairwise_fitness(solution, kernel_result, agent_result)
+        pairwise_diff = solution - kernel_results
+
+
+        pairwise_error = tf_error(pairwise_diff)
+
+
+
+        if self.relative_regression_fun and self.origin_results is not None:
+            # tf_error = tf.abs  # sfeh this is required (??)
+            # (1 * tf.abs(pairwise_diff)) - # 1 * abs, as the other one is within the error. usually 2*
+            improvement_range = tf.abs(solution - self.origin_results)
+            exploration = (self.origin_results - kernel_results)
+
+            add_penalty = (improvement_range - exploration)
+            smaller_penalty = self.pen_explorate*add_penalty
+            pairwise_fitness = tf_error(add_penalty)  # faster version
+
+        if self.tanhpenalize:
+            tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_results)*0.1)  # sfeh amplitude, stretch, squared
+            pairwise_fitness = pairwise_fitness + tanhpenalize
+
+        if self.squared_error:
+            tf_error = tf.square
+            regression_error = tf.keras.losses.mean_squared_error(solution, kernel_results)
+
+        else:
+            tf_error = tf.abs
+            regression_error = tf.keras.losses.mean_absolute_error(solution, kernel_results)
+            # todo huber loss! mse, mae, huber, (log)
+
+
+
 
         fitness = tf.reduce_sum(pairwise_fitness)
 
-        with tf.compat.v1.Session(config=tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
-            with sess.graph.device(tf_device):  # GPU evaluation in tensorflow
+        with tf.compat.v1.Session(config=self.tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
+            with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
 
                 if complete:
-                    if get_predicted_labels:
-                        predicted_labels = tf.map_fn(tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
-                    else:
-                        predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
-
-                    agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness])
-                    return {'agent_result': agent_result, 'kernel_result': kernel_result, 'predicted_labels': predicted_labels,
-                            'solution_goal': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
+                    agent_result, kernel_results, solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_results, solution, fitness, pairwise_fitness])
+                    return {'agent_result': agent_result, 'kernel_result': kernel_results,
+                            'solution_goal': solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
                 else:  # reduced evaluation, only fitness is evaluated
                     fitness = sess.run(fitness)
                     return float(fitness)

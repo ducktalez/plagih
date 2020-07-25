@@ -152,8 +152,7 @@ class ExplainableGP(object):
 
         self.activate_dataset(path_data=path_data, action_name=action_name)
 
-        expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_classify_labels_map, origin_pairwise_fitness = self.origin_results, complete = True
-        self.kernel = FitnessKernel(kernel_name if kernel_name else self.conf.kernel_name, self.tf_config, self.tf_device)
+        self.kernel = RegressionKernel(kernel_name if kernel_name else self.conf.kernel_name, self.data_train, self.tf_config, self.tf_device, self.env_vars.eval_action, self.origin_results)
         self.print_type = self.conf.print_type
         # self.fitness_decimals = self.conf.fitness_decimals  # the number of floating points for the round function
         # self.parsimony_max = self.conf.parsimony_max
@@ -913,8 +912,7 @@ class ExplainableGP(object):
         for (parsim, fitness, cooltree) in self.pareto:
             expr_sym = cooltree.get_expr_sym()
             used_observations = cooltree.get_observation_list()
-            tf_results = self.kernel.eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
-                                 complete=True, origin_pairwise_fitness=self.origin_results)
+            tf_results = self.kernel.eval_tf(expr_sym, used_observations, complete=True)
 
             # pairwise_fitness = tf_results['pairwise_fitness']
             # agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
@@ -1532,7 +1530,7 @@ class ExplainableGP(object):
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
         """
         tournament_list = [random.choice(self.pop_base) for _ in range(tourn_size)]
-        tourn_winner = self.kernel.best_fitness_function()(tournament_list, key=lambda cooltree: cooltree.meta.fitness_train)
+        tourn_winner = self.kernel.best_fitness_function(tournament_list, key=lambda cooltree: cooltree.meta.fitness_train)
 
         return copy.deepcopy(tourn_winner)
 
@@ -1562,8 +1560,7 @@ class ExplainableGP(object):
         self.origin_cooltree = copy.deepcopy(cooltree)
 
         used_observations = cooltree.get_observation_list()
-        self.origin_results = self.kernel.eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
-                                      origin_pairwise_fitness=self.origin_results, complete=True)['kernel_result']
+        self.origin_results = self.kernel.eval_tf(expr_sym, used_observations, complete=True)['kernel_result']
 
         self.pareto.append([0, fitness_train, cooltree])  # aka [3, 423, meta{}]
         self.print_g('gg', f'Loading origin tree, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
@@ -1587,8 +1584,7 @@ class ExplainableGP(object):
             raise Exception(f'eval:{evalex}')
 
         used_observations = cooltree.get_observation_list()
-        fitness_train = self.kernel.eval_tf(expr_sym, used_observations, self.data_train, self.kernel, self.env_vars.eval_action, self.tf_config, self.tf_device, self.tf_classify_labels_map,
-                                origin_pairwise_fitness=self.origin_results)
+        fitness_train = self.kernel.eval_tf(expr_sym, used_observations)
 
         if not check_value_is_real(fitness_train):
             raise Exception(f'Error is {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
@@ -1712,7 +1708,7 @@ class ExplainableGP(object):
 
         pop_fitness_best = self.kernel.np_best_fitness(pop_fitness)
         try:
-            self.best_fitness = self.kernel.best_fitness(pop_fitness_best, self.best_fitness)
+            self.best_fitness = self.kernel.best_fitness_function(pop_fitness_best, self.best_fitness)
         except:
             self.best_fitness = pop_fitness_best
 

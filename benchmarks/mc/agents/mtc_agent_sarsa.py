@@ -1,5 +1,5 @@
 import csv
-from benchmarks.gym_mountaincar.agents.agent_groups import *
+from benchmarks.mc.agents.agent_groups import *
 
 np.random.seed(0)
 import gym

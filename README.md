@@ -4,7 +4,8 @@ TODO. This read-me is outdated.
 
 ...is a genetic programming framework.
 
-Its main goal is to improve a human written program without making too many changes.
+compared to other gp frameworks, this one provides the opportunity to use human written code as basis for the gp-process.
+
 
 *Please note that a lot of stuff is about to change in the future (last update 18.03.2020)*
 
@@ -12,11 +13,13 @@ Main features:
 - Tree-based genetic programming
 - tensorflow-based evaluation
 - visualisation with latex
+- (example available)
 
 
 ## Python 3.7 packages
 
 Anaconda 3.7 (2020.2) with conda packages. Some packages are only available in pip though.
+todo: save this as requirements
 
 Conda packages:
 pathlib

@@ -3,10 +3,10 @@ Visualising Trees with latex.
 """
 from plagih.modules.plagih_tree import *
 import re
-from plagih.modules.plagih_data import obs_get_timedelta, obs_get_family
+from plagih.modules.plagih_data import obs_get_timedelta
 
 
-def latex_treeviz_full(tikz_forest_list, preamble=''):
+def latex_treeviz_full(tikz_forest_list):
     """
     Latex standalone document of forest trees.
     Possible \documentclass options:
@@ -122,17 +122,15 @@ def label_bracket_beautification(label):
     if label in op:  #
         label = f"${op[label]['latex1']}$"
     elif terminal_label_is_observation(label):  # node is a terminal - either observation or variable
-        obs_time = obs_get_timedelta(label, none_return=None)
+        obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
         if obs_time is not None:
-            obs_family = obs_get_family(label)
             label = f"{obs_family}$_{{{obs_time}}}$"
     else:
         label = f"${label_tex_replace_digits(label)}$"
     return label
 
 
-
-def label_bracket_extras(label, arity, xtype, modifiable):
+def label_bracket_extras(label, arity, modifiable):
     """
     from an "OG" tree node, add some bracket-tree extras
     """
@@ -158,7 +156,7 @@ def latex_brackettree(tree, node_id=root_id):
     """
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
     modifiable = tree_node_is_modifiable(tree, node_id)
-    extras = label_bracket_extras(label, arity, xtype, modifiable)
+    extras = label_bracket_extras(label, arity, modifiable)
     label_bra = label_bracket_beautification(label)
     # label_bra = helper_format_brackets(label_bra)
     label_bra = "{" + label_bra + "}" + extras  # works better in latex-
@@ -177,7 +175,7 @@ def latex_tighttree_get_brackets(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
 
-    Labeling edges: , edge label = {node[midway, font =\scriptsize]{If...}}
+    Labeling edges: , edge label = {node[midway, font =\\scriptsize]{If...}}
     """
     extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
@@ -199,7 +197,7 @@ def latex_tree_get_forest(tree, tight_viz=True):
     tree = tree.copy()
 
     if tight_viz:
-        tree_tight = latex_get_tighttree(tree)  # todo
+        tree_tight = latex_get_tighttree(tree)
         bracket_tree = latex_tighttree_get_brackets(tree_tight)
     else:
         bracket_tree = latex_brackettree(tree)
@@ -227,7 +225,7 @@ def tex_label_beautify_end(label):
 
 def tree_get_expr_latextight(tree, node_id=root_id):
     """
-    todo
+
     """
     label = tree_node_get_label(tree, node_id)
 
@@ -236,10 +234,11 @@ def tree_get_expr_latextight(tree, node_id=root_id):
         label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
     else:
         if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
-            obs_time = obs_get_timedelta(label, none_return=None)
+            obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
             if obs_time is not None:
-                obs_family = obs_get_family(label)
                 label = f"{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
+            else:
+                label = f"{{\\text{{{obs_family}}}}}"  # workaround
         else:
             label = f"{{{label_tex_replace_digits(label)}}}"
         return label
@@ -279,7 +278,7 @@ def latex_get_tighttree(tree):
         node_id = open_sym[0]
         branch_ids = tree_node_get_branch(tree, node_id)
         node_dict[node_id] = len(branch_ids)
-        for todoii, x in enumerate(branch_ids):
+        for x in branch_ids:
             try:
                 open_sym.remove(x)
             except:

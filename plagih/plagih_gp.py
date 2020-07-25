@@ -18,25 +18,6 @@ env_vars_yaml = 'info/env_vars.yaml'
 
 # /run_files/
 
-
-def plagih_config_update_from_yaml(config_yaml=Path('config.yaml')):
-    """
-    The config gets updated
-    """
-    with Path.open(config_yaml, 'r') as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
-    return config
-
-
-def plagih_config_update_from_json(config_json=Path('config.json')):
-    """
-    The config gets updated
-    """
-    with Path.open(config_json, 'r') as file:
-        config = json.load(file)
-    return config
-
-
 def labellists_from_csv(csv_path):
     """
     from the labellist-csv, loading the label list
@@ -59,33 +40,6 @@ def labellists_from_csv(csv_path):
         raise Exception('Labels could not be created from file.')
 
     return label_list, modify_list
-
-
-def show_default_config(output_file):
-    """
-    - config.yaml
-    """
-    if not Path.is_dir(output_file.parent):
-        raise Exception(f'Will not make the path with Path.mkdir(output_file.parent): {output_file}')
-    raise Exception('Coming soon! sfeh.')
-
-
-def show_default_operators(output_file=None):
-    """
-    - operators.csv
-    """
-
-    if not Path.is_dir(output_file.parent):
-        raise Exception(f'Will not make the path with Path.mkdir(output_file.parent): {output_file}')
-    raise Exception('Coming soon! sfeh.')
-
-
-def runfolder_exists(root_dir):
-    """
-    If there is no folder, bad times
-    """
-    if not Path.is_dir(root_dir):
-        raise FileNotFoundError(f'Folder does not exist: {root_dir}.')
 
 
 def load_label_list(root_dir, user_origin_csv=None):
@@ -155,8 +109,6 @@ def gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_a
 
     label_list, modify_list = load_label_list(root_dir, user_origin_csv=cooltree_origin)
     if label_list is not None and modify_list is not None:
-        # env_vars = gp.get_env_vars()
-
         cooltree_origin = cooltree_from_labellist(label_list, modify_list=modify_list)
         gp.activate_origin_tree(cooltree_origin)
 

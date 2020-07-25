@@ -164,27 +164,19 @@ class CoolCore:
 
         return my_result + child_results
 
-    def reduce_me(self, obs_krazy):  # todo env_vars not required in new tree :P
+    def reduce_me(self, obs_krazy):
         expr_raw = self.get_expr_raw(reduceable=True)
         try:
-            # todo todotodo fix nodes ignored?
+            # todo fix nodes ignored?
             expr_sym = expr_sympify(expr_raw)
         except:
-            print_e(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
-            return
+            raise Exception(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
 
-        try:
-            new_core = coolcore_from_expr(expr_sym, obs_krazy)
-        except:
-            # todo
-            new_core = coolcore_from_expr(expr_sym, obs_krazy)
-        # todo idea sympy aligns variables alphabetically?!
-        # todo idea sympify: if > is found, switch the childs and make it a <=
+        new_core = coolcore_from_expr(expr_sym, obs_krazy)
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            print_warning('w', f'Reduced core is even more complex than the first tree. May happen with sympification.\n'
-            f'This time, it was \n{self}\n{new_core}\n{expr_raw}')  # todo Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))
+            raise Exception(f'Reduced core is even more complex than before. May happen with sympification and usub. \n{self} new_core: \n{new_core} expr_raw: \n{expr_raw}')
         return
 
     def get_mutatable_nodes(self):
@@ -401,7 +393,7 @@ class CoolTree:
         def __init__(self, fitness_train=None):
             self.hash = None
             self.fitness_train = fitness_train
-            self.complexity = None
+            self.parsimony = None
             self.expr_raw = None
             self.expr_sym = None
 
@@ -410,7 +402,7 @@ class CoolTree:
             self.last_evolution = None
 
         def __str__(self):
-            return f"hash: {self.hash}, fitness: {self.fitness_train}, complexity: {self.complexity}, {self.depth}, {self.last_evolution}, {self.expr_raw}, {self.expr_sym}"
+            return f"hash: {self.hash}, fitness: {self.fitness_train}, parsimony: {self.parsimony}, {self.depth}, {self.last_evolution}, {self.expr_raw}, {self.expr_sym}"
 
     def __init__(self, coolcore: CoolCore):
         self.core = coolcore
@@ -509,7 +501,7 @@ class CoolTree:
         # self.finalize_meta  # todo
 
     def insert_branch_v2(self, nodepath, coolbranch):
-        self.meta.complete = False
+        self.meta.parsimony = False
 
         if len(nodepath) == 1:  # [1] -> set child 1
             self.core = coolbranch
@@ -617,7 +609,7 @@ class CoolTree:
         label_list, xtype_list, modify_list = self.core.labellist_modifylist_from_coolcore()
         tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
         tree = tree_set_fitness(tree, self.meta.fitness_train)
-        tree = tree_set_parsimony(tree, self.meta.complexity)
+        tree = tree_set_parsimony(tree, self.meta.parsimony)
         tree = tree_set_last_evolution(tree, self.meta.last_evolution)
         return tree
 
@@ -627,12 +619,12 @@ class CoolTree:
         ! This does not evaluate fitness or parsimony !
         """
         tree_meta = {}
-        complexity = self.meta.complexity
+        parsimony = self.meta.parsimony
         fitness_train = self.meta.fitness_train
         expr_raw = self.get_expr_raw()
         expr_sym = expr_sympify(expr_raw=expr_raw)  # sfeh store algo sym?
 
-        tree_meta['parsimony'] = complexity
+        tree_meta['parsimony'] = parsimony
         tree_meta['fitness_train'] = fitness_train
         tree_meta['expr_raw'] = expr_raw
         tree_meta['expr_sym'] = expr_sym
@@ -677,7 +669,7 @@ def cooltree_from_oldtree(tree, node_id=root_id):
         last_evolution = tree_get_last_evolution(tree)
         cooltree = CoolTree(coolcore)
         cooltree.meta.fitness_train = fitness
-        cooltree.meta.complexity = parsimony
+        cooltree.meta.parsimony = parsimony
         cooltree.meta.last_evolution = last_evolution
     except Exception as ex:
         print(f'cooltree_from_oldtree failed: {ex}')

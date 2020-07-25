@@ -1,8 +1,8 @@
 # coding=utf-8
 from __future__ import division
 import numpy as np
-from benchmarks.industrial_benchmark_python.goldstone.environment import environment as GoldstoneEnvironment
-from benchmarks.industrial_benchmark_python.EffectiveAction import EffectiveAction
+from benchmarks.ib.goldstone.environment import environment as GoldstoneEnvironment
+from benchmarks.ib.EffectiveAction import EffectiveAction
 from collections import OrderedDict
 
 '''

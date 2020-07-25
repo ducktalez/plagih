@@ -1,6 +1,6 @@
 
 pop_max: 1000
 parsimony_max: 60
-kernel_name: relative_regression_fun discrete bounded tanhpenalize
+kernel_name: regression relative_regression_fun discrete bounded tanhpenalize
 complexity_measure: tree_edit_distance
 gen_max: 1000

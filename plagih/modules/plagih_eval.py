@@ -7,10 +7,8 @@ from sys import getsizeof
 
 class DummyKernel:
 
-    def __init__(self, name, bounded=False, discrete=False):
-        self.type = name
-        self.bounded = bounded
-        self.discrete = discrete
+    def __init__(self, *args):
+        pass
 
     def fitness_compare(self, fit1, fit2):
         if fit2 is None:
@@ -28,7 +26,7 @@ class DummyKernel:
 
 class RegressionKernel(DummyKernel):
 
-    def __init__(self, bounded=False, discrete=False):
+    def __init__(self):
         pass
 
     def tf_wrap_result(self, tf_result, action_min_max):
@@ -54,7 +52,7 @@ class RegressionKernel(DummyKernel):
 
 class FitnessKernel:
 
-    def __init__(self, kernel_name):
+    def __init__(self, kernel_name, tf_config, tf_device):
         self.kname = kernel_name
 
         self.regression, self.classification, self.match = False, False, False
@@ -64,14 +62,14 @@ class FitnessKernel:
             self.bounded = 'bounded' in kernel_name
             self.discrete = 'discrete' in kernel_name
             self.tanhpenalize = 'tanhpenalize' in kernel_name
-            self.squared_error = 'L2_squared' in kernel_name  # 'L1_absolute' not required
+            self.squared_error = 'MSE' in kernel_name  # 'L1_absolute' not required
 
             self.relative_regression_fun = 'relative_regression_fun' in kernel_name
-            self.origin_pairwise_fitness = None  # TODO
+            self.origin_pairwise_fitness = None
             sfeh_help = {'pen_explorate(1)': 1.0,
                          'pen_explorate(0.5)': 0.5}
 
-            self.pen_explorate = None
+            self.pen_explorate = 0.5  # todo
             for k, v in sfeh_help.items():
                 if k in kernel_name:
                     self.pen_explorate = v
@@ -104,7 +102,6 @@ class FitnessKernel:
         """
         if self.regression:
             return np.min(fitness_list)
-
         elif any([self.classification, self.match]):
             return np.max(fitness_list)
         else:
@@ -128,17 +125,6 @@ class FitnessKernel:
             return min
         elif any([self.classification, self.match]):
             return max
-        else:
-            raise
-
-    def best_fitness_function_TRUTH(self):
-        """
-        Returning either min or max
-        """
-        if self.regression:
-            return lambda y, x: x < y
-        elif any([self.classification, self.match]):
-            return lambda y, x: x > y
         else:
             raise
 
@@ -173,16 +159,13 @@ class FitnessKernel:
 
     def tf_wrap_result(self, tf_result, action_min_max):
 
-        if 'discrete' in self.kname:
+        if self.discrete:
             # regression that fits the outputs to a discrete set of actions defined by min and max
             tf_result = tf.math.round(tf_result)
 
-        # if 'bounded_tanh' in self.kernel:
-        #     tf_result = todo
-
-        if 'bounded' in self.kname:
-            act_min = tf.constant(action_min_max[0])
-            act_max = tf.constant(action_min_max[1])
+        if self.bounded:
+            act_min = tf.constant(action_min_max[0], dtype=tf.float32)
+            act_max = tf.constant(action_min_max[1], dtype=tf.float32)
             tf_result = tf.math.minimum(tf.math.maximum(tf_result, act_min), act_max)
 
         return tf_result
@@ -193,15 +176,12 @@ class FitnessKernel:
             # regression that fits the outputs to a discrete set of actions defined by min and max
             wrap = f'math.round({wrap})'
 
-        # if 'bounded_tanh' in self.kernel:
-        #     tf_result = todo
-
         elif 'bounded' in self.kname:
             wrap = f'min(max({action_min_max[0]}, {wrap}), {action_min_max[1]})'
 
         return wrap
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, agent_result, origin_pairwise_fitness=None):  #sfeh explorate
+    def tf_get_pairwise_fitness(self, solution, kernel_result, uniques_num, agent_result, origin_pairwise_fitness=None):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -237,14 +217,14 @@ class FitnessKernel:
             pairwise_fitness = tf_error(pairwise_diff)
 
             if self.relative_regression_fun and origin_pairwise_fitness is not None:
-                tf_error = tf.abs  # todo this is required (??)
+                tf_error = tf.abs  # sfeh this is required (??)
                 # regression_goal = tf.abs(solution - tf_result)  # double the penalty
                 exploration_diff = (origin_pairwise_fitness - kernel_result)  # NO abs value
                 paretodiff = tf_error(solution - origin_pairwise_fitness)
                 pairwise_fitness = tf_error((2 * pairwise_fitness) - self.pen_explorate*(paretodiff - exploration_diff))  # faster version
 
             if self.tanhpenalize:
-                tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_result)*0.1)  # todo amplitude, stretch, squared
+                tanhpenalize = 0.02*tf.tanh(tf.square(agent_result-kernel_result)*0.1)  # sfeh amplitude, stretch, squared
                 pairwise_fitness = pairwise_fitness + tanhpenalize
 
         elif self.match:  # MATCH kernel
@@ -260,63 +240,42 @@ class FitnessKernel:
 
         return pairwise_fitness
 
-    # todo garbage collector?
+    def eval_tf(self, expr_sym, used_observations, pd_data, kernel, eval_action, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
+        """
+        Evaluates an expression using TensorFlow (TF)
+        - receives a (string) expression in numpy-style that was reduced with pythons "sympy" (for simplification)
+        - uses "ast" to generate a, kind of, python-intern-executable-tree
+        - creating a tensorflow graph that is evaluated in an isolated TF session
+        """
 
+        tf.compat.v1.reset_default_graph()
+        tensors = {eval_action.name: tf.constant(pd_data[eval_action.name])}  # converts data_csv_path into vectors , dtype=tf.float32
 
-def eval_tf(expr_sym, used_observations, pd_data, kernel, eval_action, tf_config, tf_device, tf_classify_labels_map, get_predicted_labels=False, complete=False, origin_pairwise_fitness=None):
-    """
-    Evaluates an expression using TensorFlow (TF)
-    The is usually extracted from a tree and is sympified
-    - parsing input string 'expression' and converting it into a TF operation graph
-    - processing tf graph in an isolated TF session (results and corresponding fitness)
+        for obs_x_name in used_observations:
+            tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 sfeh: neverask.jpg
 
-        'self.tf_device' - controls which device will be used for computations (CPU or GPU).
-        'self.tf_device_log' - controls device placement logging (debug only).
+        agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
+        kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
+        act_solution = tensors[eval_action.name]
+        pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, agent_result, origin_pairwise_fitness=origin_pairwise_fitness)
 
-    'get_predicted_labels' - (Classify Kernel) a boolean flag which controls whether the predicted labels should be extracted from the evolved results.
-    todo make this a kernel option
-    """
+        fitness = tf.reduce_sum(pairwise_fitness)
 
-    tf.compat.v1.reset_default_graph()
-    tensors = {eval_action.name: tf.constant(pd_data[eval_action.name])}  # converts data_csv_path into vectors
+        with tf.compat.v1.Session(config=tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
+            with sess.graph.device(tf_device):  # GPU evaluation in tensorflow
 
-    for obs_x_name in used_observations:
-        tensors[obs_x_name] = tf.constant(pd_data[obs_x_name])  # , dtype=tf.float32 todo: neverask.jpg
+                if complete:
+                    if get_predicted_labels:
+                        predicted_labels = tf.map_fn(tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
+                    else:
+                        predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
 
-    # print('size of tensors', getsizeof(tensors), getsizeof(pd_data))
-
-    with tf.compat.v1.Session(config=tf_config) as sess:  # starting a tf-session
-        with sess.graph.device(tf_device):  # device can be the gpu  # todo check if gpu is used
-
-            agent_result = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
-            kernel_result = kernel.tf_wrap_result(agent_result, eval_action.minmax)  # if the result should be discrete or has a min/max, this is done here
-            act_solution = tensors[eval_action.name]
-            pairwise_fitness = kernel.tf_get_pairwise_fitness(act_solution, kernel_result, eval_action.uniques, agent_result, origin_pairwise_fitness=origin_pairwise_fitness)
-            fitness = tf.reduce_sum(pairwise_fitness)
-
-            if complete:
-                if get_predicted_labels:
-                    predicted_labels = tf.map_fn(tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
-                else:
-                    predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
-
-                agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness])
-                return {'agent_result': agent_result, 'kernel_result': kernel_result, 'predicted_labels': predicted_labels,
-                        'solution_goal': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
-            else:  # reduced evaluation, only fitness is evaluated
-                fitness = sess.run(fitness)
-                return float(fitness)
-
-
-def get_env_tensors(pd_data, eval_action, obs_infos):
-    """
-    return tensors-dictionary with all the terminals/leaf nodes
-    - variables (observation0, ...)
-    - distributions_file (True, False, 1.234, ...)
-    """
-    tensors = {}  # todo dauerhafte tensoren?
-
-    return tensors
+                    agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness = sess.run([agent_result, kernel_result, predicted_labels, act_solution, fitness, pairwise_fitness])
+                    return {'agent_result': agent_result, 'kernel_result': kernel_result, 'predicted_labels': predicted_labels,
+                            'solution_goal': act_solution, 'fitness': float(fitness), 'pairwise_fitness': pairwise_fitness}
+                else:  # reduced evaluation, only fitness is evaluated
+                    fitness = sess.run(fitness)
+                    return float(fitness)
 
 
 def ast_convert_from_expr(expr, tensors=None, build=None):
@@ -330,7 +289,6 @@ def ast_convert_from_expr(expr, tensors=None, build=None):
     More information in ast_expr_to()
 
     """
-    # print('Current expr:', expr)  # importantprint for debugging failed expressions
 
     ast_tree = ast.parse(expr, mode='eval').body
     graph = ast_expr_to(ast_tree, tensors=tensors, build=build)
@@ -379,10 +337,7 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             return [node.id]
         else:
-            try:
-                return tensors[node.id]
-            except:
-                raise  # TODO
+            return tensors[node.id]
 
     elif isinstance(node, ast.Num):  # <number>
         if build:
@@ -401,9 +356,8 @@ def ast_expr_to(node, tensors=None, build=None):
     # Arity 1
     elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., sin(1), -1
         if build:
-            if type(node.op) == ast.USub:
+            if type(node.op) == ast.USub:   # workaround for ~-problem
                 if isinstance(node.operand, ast.Name) or isinstance(node.operand, ast.Num) or isinstance(node.operand, ast.NameConstant):
-                    # return ['~', [ast_expr_to(node.operand, build=True)]]  # todo wait what. sympify uses ~. also,
                     return [f'-{ast_expr_to(node.operand, build=True)[0]}']
                 else:
                     return ['usub', [ast_expr_to(node.operand, build=True)]]
@@ -450,12 +404,6 @@ def ast_expr_to(node, tensors=None, build=None):
                     ast_expr_to(node.args[1], tensors=tensors),
                     ast_expr_to(node.args[2], tensors=tensors))
 
-        elif node.func.id == 'Ftob' or node.func.id == 'Btof':
-            if build:
-                return [node.func.id, [ast_expr_to(node.args[0], build=True)]]
-            else:
-                return tf.dtypes.cast(*[ast_expr_to(arg, tensors=tensors) for arg in node.args], dtype=op[node.func.id]['tf'])
-
         elif len(node.args) <= 2:
             if build:
                 if len(node.args) == 1:
@@ -470,7 +418,6 @@ def ast_expr_to(node, tensors=None, build=None):
             else:
                 return op[node.func.id]['tf'](*[ast_expr_to(arg, tensors=tensors) for arg in node.args])
 
-            # If nothing matched
         else:
             raise Exception('Failed to identify the function. {}'.format(type(node)))
 
@@ -510,7 +457,7 @@ def ast_chain_compare(comparators, ops, tensors=None, build=False):
     y = ast_expr_to(comparators[1], tensors=tensors, build=build)
 
     if len(comparators) > 2:
-        print_warning('e', 'This is usually not used, and-concatenation of multiple chain compares')
+        print_e('This is usually not used, and-concatenation of multiple chain compares')
         return tf.logical_and(op[type(ops[0])]['tf'](x, y), ast_chain_compare(comparators[1:], ops[1:], tensors=tensors))
     else:
         if build:

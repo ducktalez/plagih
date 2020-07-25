@@ -91,7 +91,7 @@ def build_net(model_name, state, a_dim, args, trainable):
     with tf.compat.v1.variable_scope(model_name):
         net = my_dense(h1, name="l1-dense-{}".format(h1))(state)
         net = layers.Activation('relu', name="relu1")(net)
-        net = my_dense(h2, name="l2-dense-{}".format(h2))(net)
+        net = my_dense(h2, name="MSE-dense-{}".format(h2))(net)
         net = layers.Activation('relu', name="relu2")(net)
         net = my_dense(a_dim, name="l3-dense-{}".format(a_dim))(net)
     Qhat = layers.Activation('linear', name="Qhat")(net)

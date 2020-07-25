@@ -1,6 +1,6 @@
 import pickle
 from plagih.modules.printing import *
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # matplotlib.use('Agg')
 import yaml
 from pathlib import Path
 import numpy as np
@@ -32,45 +32,6 @@ def file_make_dir(file_path):
     if not p.parent.is_dir():
         p.parent.mkdir(parents=True)
     return p
-
-def experiment_data(experiment_yaml):
-    if Path.is_file(experiment_yaml):  # Load config.yaml
-        with Path.open(experiment_yaml, 'r') as file:
-            experiment_infos = yaml_load(file)
-
-    wer = {
-        'env': {
-            'observations': {
-                'cartPos': {
-                    'use as': 'constant',
-                    'type': 'float',
-                    'custom label': 'cartPos',
-                    'insert min': None,
-                    'insert max': None,
-                    'value box/shape': None,
-                    'time delta': None,
-                    'time delta 0 name': None,
-                    'description': None
-                },
-                'cartVel': {
-                    'type': 'float',
-                },
-                'poleAngle': {
-                    'type': 'float',
-                },
-                'poleVel': {'type':
-                                'float',
-                            },
-            },
-            'action0': {
-                'use': 'result',
-                'type': 'float',
-            },
-
-            'number of observations': None,
-            'number of actions': 1,
-        }
-    }
 
 
 def pickle_load(path):
@@ -147,7 +108,8 @@ def plot_end(data_2d, path_plot,
              beyond_lines=False,
              save_tikz=False,  # for the final runs...
              subfolder=None,
-             fill_variance=None):
+             fill_variance=None,
+             print_type=None):
     """
     Make all plots in the same style - and also saving space.
     - Makes pyplots
@@ -226,7 +188,7 @@ def plot_end(data_2d, path_plot,
     try:
         plt.savefig(path_plot / f'{title}.png')
     except PermissionError as permerr:
-        print_warning('w', f'Could not save plot: {permerr}')
+        print_warning('w', f'Could not save plot: {permerr}', print_type=print_type)
 
     plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
     return

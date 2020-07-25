@@ -418,7 +418,7 @@ class ExplainableGP(object):
             self.gen_create_initial()
 
         while self.run_continues():  # max generation, max time, done...
-            self.printpl('gggg', f'Evolving Generation {self.gen_id}')
+            # self.printpl('gggg', f'Evolving Generation {self.gen_id}')
             self.gen_create_loop()
             self.periodical_procedures()
             self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')

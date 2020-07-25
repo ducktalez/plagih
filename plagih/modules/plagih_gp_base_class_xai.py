@@ -517,12 +517,13 @@ class ExplainableGP(object):
             tag = evolve_specs['tag']
 
             self.print_g('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
-
+            len_pop_before = len(self.population_tmp)
             if evolve_name == 'reproduce':
-                # sfeh one parameter
+                """
+                
+                """
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-
                     if call_params.get('sympify_tree'):
                         try:
                             cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
@@ -591,8 +592,8 @@ class ExplainableGP(object):
                         self.pop_append(cooltree, last_evolution=tag)
             else:
                 print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
-
-            self.print_g('ggg', f'->Evolving \'{tag}\' {evolve_num}x took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
+            created_trees = (len(self.population_tmp) - len_pop_before)
+            self.print_g('ggg', f'->Evolving \'{tag}\' (success {created_trees}/{evolve_num}) took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
 
         # sfeh automatically fill with random trees
         # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])

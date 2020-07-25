@@ -119,7 +119,7 @@ def main(argv):
         config_name += '_rel' if 'rel' in prepared_run else ''
         config_name += '_tanh' if 'tanh' in prepared_run else ''
         config_path = pathify(f'{config_name}.yaml')
-        out_dir = pathify(f'benchmarks/slurm_runs/{prepared_run}')
+        out_dir = pathify(f'slurm_runs/{prepared_run}')
 
     plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 

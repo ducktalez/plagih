@@ -1,6 +1,7 @@
 from collections import deque
 from plagih.modules.plagih_types import *
 from plagih.modules.plagih_tree import *
+from plagih.tree_distances.tree_edit_distance import apted_distance
 
 
 class Plabel:
@@ -170,13 +171,16 @@ class CoolCore:
             # todo fix nodes ignored?
             expr_sym = expr_sympify(expr_raw)
         except:
-            raise Exception(f'WHY DOES THIS NOT WORK? THIS TREE IS REPRODUCED AND WAS EVALUATED?? \n{expr_raw}')
+            raise Exception(f'Sympify failed. \n{expr_raw}')
 
         new_core = coolcore_from_expr(expr_sym, obs_krazy)
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'Reduced core is even more complex than before. expr_raw: {expr_raw}\nold_core:{self}\nnew_core: {new_core}')  # May happen with sympification and usub.
+            raise Exception(f'Reduced core is even more complex than before. expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and usub.
+            # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
+            # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
+            # new_core: [sign, [Mini, [-, [usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
         return
 
     def get_mutatable_nodes(self):
@@ -185,6 +189,28 @@ class CoolCore:
         """
         add_me = [] if self.is_fix else [self]
         return add_me + sum([cc.get_mutatable_nodes() for cc in self.childs], [])
+
+    def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
+        """
+        parsimony_distance: compute the chosen distance by the user.
+        #     'tree_node_count': tree_get_size,
+        #     'tree_depth': tree_get_depth,
+        #     'tree_edit_distance': tree_parsimony_ted,
+        """
+
+        if parsimony_distance == 'tree_node_count':  # number of nodes
+            return len(self)  # returns the number of nodes  # sfeh weights
+        elif parsimony_distance == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
+
+            apted1 = self.get_apted_notation()
+            apted2 = origin_cooltree.get_apted_notation()
+            distance, mapping = apted_distance(apted1, apted2)  # sfeh the mapping could be handy somewhere
+            if weights is None:
+                return distance
+            else:
+                raise
+        else:
+            raise Exception(f'Complexity measurement not available: {parsimony_distance}')
 
     def check_all(self):
         if self.arity != len(self.childs):
@@ -359,6 +385,17 @@ class CoolTree:
             self.complete = None
             self.last_evolution = None
 
+        def clear(self):  # todo init/new or so?
+            self.hash = None
+            self.fitness_train = None
+            self.parsimony = None
+            self.expr_raw = None
+            self.expr_sym = None
+
+            self.depth = None
+            self.complete = None
+            self.last_evolution = None
+
         def __str__(self):
             return f"hash: {self.hash}, fitness: {self.fitness_train}, parsimony: {self.parsimony}, {self.depth}, {self.last_evolution}, {self.expr_raw}, {self.expr_sym}"
 
@@ -512,7 +549,7 @@ class CoolTree:
             Reducing a tree to its most basic form with sympify.
             (completely = False: reduce just one branch. if you wanted to have more complexity)
             """
-
+        length_before = len(self)
         if completely:  # reduce the complete tree
             coolcores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
             for coolc in coolcores_lv0:
@@ -523,8 +560,15 @@ class CoolTree:
             if cool_functions:
                 chosen = random.choice(cool_functions)
                 chosen.reduce_me(obs_krazy)
-
+        if length_before < len(self):
+            print_e(f'FFS Trees just become larger? {self.get_expr_raw()}')
+        # self.meta.clear()  # todo parsimony meta, fitness, ...
         self.finalize_structure()
+
+    def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
+        parsimony = self.core.eval_parsimony(parsimony_distance, origin_cooltree=None, weights=None)
+        self.meta.parsimony = parsimony
+        return parsimony
 
     def get_mutatable_nodes(self):
         return self.core.get_mutatable_nodes()

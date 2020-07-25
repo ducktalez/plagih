@@ -2,7 +2,6 @@ import os
 
 from plagih.modules.plagih_data import obs_get_timedelta, observation_get_family_and_time
 from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.tree_distances.tree_edit_distance import apted_distance
 from plagih.modules.plagih_types import *
 from plagih.modules.plagih_eval import *
 import csv
@@ -1201,20 +1200,6 @@ def tree_get_depth_ids(tree):
     return depth_id_list
 
 
-def tree_parsimony_ted(cooltree1, cooltree2):
-    """
-    The Tree Edit distance (TED) ('coolest' distance)
-    - the amount of changes that have to be applied to the origin_meta to equality are counted
-    """
-    # apted_tree1 = tree_raw_depth_prefix(tree1, root_id)
-    # apted_tree2 = tree_raw_depth_prefix(tree2, root_id)
-    apted_tree1 = cooltree1.get_apted_notation()
-    apted_tree2 = cooltree2.get_apted_notation()
-    distance, mapping = apted_distance(apted_tree1, apted_tree2)  # sfeh the mapping could be handy somewhere
-
-    return distance, mapping
-
-
 def expr_sympify(expr_raw):
     """
     Returns a simplified expression using sympify.
@@ -1992,27 +1977,6 @@ def tree_iterate_range(tree, karoo=True):
         start = 0
     np_list = range(start, len(tree[N_label]))
     return np_list
-
-
-def tree_eval_parsimony(cooltree, parsimony_distance, origin_cooltree=None, weights=None):
-    """
-    parsimony_distance: compute the chosen distance by the user.
-    #     'tree_node_count': tree_get_size,
-    #     'tree_depth': tree_get_depth,
-    #     'tree_edit_distance': tree_parsimony_ted,
-    """
-
-    if parsimony_distance == 'tree_node_count':  # number of nodes
-        return len(cooltree)  # returns the number of nodes
-    if parsimony_distance == 'tree_edit_distance':  # tree_edit_distance, tree-edit-distance
-        distance, mapping = tree_parsimony_ted(cooltree, origin_cooltree)
-        if weights is None:
-            return distance
-        else:
-            raise
-    else:
-        print_e(f'Complexity measurement not available: {parsimony_distance}')
-        raise
 
 
 def tree_check_is_sympified(tree):

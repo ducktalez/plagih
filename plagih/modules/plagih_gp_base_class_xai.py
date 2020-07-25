@@ -43,7 +43,7 @@ class GpConfig():
 
         self.pop_max = conf.get('pop_max', 1000)  #: 1000,  # amount is never tested
         self.tree_depth_max = conf.get('tree_depth_max', 10)  #: 10,  # maximum Tree depth for entire run
-        self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,
+        # self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,
         self.tourn_size = conf.get('tourn_size', 3)  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size
         self.parsimony_max = conf.get('parsimony_max', 50)  #: 50,
@@ -91,7 +91,7 @@ class ExplainableGP(object):
                        'time_save': None,  # in sec
                        'gen_save': 5,  # in gen counts
                        'time_analysis': None,  # in gen counts
-                       'gen_analysis': 5},  # in gen counts
+                       'gen_analysis': None},  # in gen counts
 
             'file_locs': {
                 'example_runs': 'run_examples/',
@@ -166,7 +166,7 @@ class ExplainableGP(object):
             self.load_origin_tree(path_origin_csv)
         else:
             self.origin_cooltree: CoolTree = None
-            self.pareto = None
+            self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
 
         """
         load relevant stuff
@@ -180,7 +180,6 @@ class ExplainableGP(object):
         # init values with dummies (just to have all self values here for overview)
         self.tree_lut = {}  # LUT with infos {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
         # self.parsimony_best_meta = None  # tree_meta = {'parsimony', 'fitness_train', 'expr_sym', 'expr_raw'}
-        self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
         self.population_tmp = []
         self.pop_base = []  # population that is taken to the next generation
         self.best_fitness = None  # keeps track of the current best fitness
@@ -292,9 +291,9 @@ class ExplainableGP(object):
                 # {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
                 #  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
                 {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 5, None, 6), 'full_or_grow': 'grow'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 1, None, 6), 'full_or_grow': 'grow'}}},
                 {'tag': 'Rand4', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (20, 5, None, 6), 'full_or_grow': 'full'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 1, None, 6), 'full_or_grow': 'full'}}},
             ]
 
         self.evolve_loop = evolve_safety_update(evolve_loop)
@@ -401,7 +400,7 @@ class ExplainableGP(object):
         path_backup = self.file_make_dir_root('file_backup_pickle')
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.printpl('f', f'{path_backup.as_posix()}')
+        self.printpl('f', f'Backup: {path_backup.as_posix()}')
         return
 
     def plagih_gp_run(self):
@@ -955,7 +954,7 @@ class ExplainableGP(object):
             fig.tight_layout()
             plt.savefig(path_hist / f'acthist_{parsim}.png')
             plt.close()
-        self.printpl('ff', f'{path_hist.as_posix()}')
+        self.printpl('ff', f'Histograms: {path_hist.as_posix()}')
 
     def file_pareto_latex(self):
         """
@@ -996,7 +995,7 @@ class ExplainableGP(object):
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
-        self.printpl('ff', f'{path_trees_tex.as_posix()}')
+        self.printpl('ff', f'Latex-trees: {path_trees_tex.as_posix()}')
 
         return
 
@@ -1054,14 +1053,14 @@ class ExplainableGP(object):
             agent_name = f'{self.name}_{parsim:.0f}'
 
             agent_as_python = cooltree.get_pycode()
-            all_agents.append(f"\nclass {agent_name}:\n{complete_function.format(agent_as_python)}\n")
+            all_agents.append(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
             all_agent_names.append(agent_name)
             all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
 
-        # all_agents = '\n\n'.join(all_agents)
+        all_agents = '\n\n'.join(all_agents)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
         all_more_info = ', '.join(all_more_info)
-        pyc_complete = f"import math; import numpy as np\n" \
+        pyc_complete = f"import math; import numpy as np\n\n" \
             f"{all_agents}\n" \
             f"all_agents_more = [{all_more_info}]\n" \
             f"agent_tuples = [{agent_tuples}]\n"
@@ -1069,7 +1068,7 @@ class ExplainableGP(object):
         pth = file_make_dir(self.root_path('folder_pycode') / f"agents_{self.env_vars.eval_action.name}.py")
         with Path.open(pth, 'w') as file:
             file.write(pyc_complete)
-            self.printpl('ff', f'{pth.as_posix()}')
+            self.printpl('ff', f'Pycode: {pth.as_posix()}')
 
         return
 
@@ -1346,59 +1345,47 @@ class ExplainableGP(object):
         right_offspring = cooltree_from_oldtree(right_offspring)
         return left_offspring, right_offspring
 
+    def pareto_append(self, cooltree, tree_entry, message):
+        self.printpl('a', f"Paretofront new entry ({message}): {tree_entry}")
+        self.pareto.append(tree_entry)
+
+        self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
+        self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or (x[0] == tree_entry[0] and x[1] == tree_entry[1])]
+        self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
+
+        cooltree_sym = copy.deepcopy(cooltree)
+        try:
+            cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
+            parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
+            if parsimony < cooltree.meta.parsimony:  # todo use parsimony u moron
+                sym_fitness = self.tree_eval_fitness_train(cooltree_sym)  # todo actually not required
+                self.printpl('aa', 'Successfully reduced pareto tree!')
+                cooltree_sym.meta.fitness_train = sym_fitness  # todo update parsimony here aswell?
+                self.update_pareto(cooltree_sym)
+        except Exception as ex:
+            print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.print_type)
+
+        else:
+            self.printpl('aaa', 'Pareto entry was already simplified')
+
     def update_pareto(self, cooltree: CoolTree):
         """
         inserts a tree into the pareto front
         """
 
         parsimony = cooltree.meta.parsimony
-        expr_raw = cooltree.meta.expr_raw
-
         fitness_train = cooltree.meta.fitness_train
         tree_entry = [parsimony, fitness_train, cooltree]
 
-        if len(self.pareto) == 0:  # no pareto entries found yet
-            self.printpl('a', f"Paretofront inserted first candidate at {parsimony, fitness_train, expr_raw}")
-            self.pareto.append(tree_entry)  # e.g. [3, 423, cooltree]
+        p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # all pareto entries that are less complex
+
+        if len(p_simpler) == 0 and self.pareto:  # all other pareto entries are more complex
+            self.pareto_append(cooltree, tree_entry, f'new simplest entry')
         else:
-            try:
-                p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # all pareto entries that are less complex
-                best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
-            except:  # catches, when p_simpler is empty
-                best = min(self.pareto, key=lambda p: p[1])  # fittest pareto entry - maybe the new entry is very complex, but the best
+            best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
+            if tree_entry[1] < best[1]:  # if true, at least one insertion  # todo get self.kernel involved here
+                self.pareto_append(cooltree, tree_entry, f'old fitness: {best[1]}')
 
-            if tree_entry[1] < best[1]:  # if true, at least one insertion
-                self.printpl('a', f"Paretofront new entry was inserted: {parsimony, fitness_train, expr_raw}")
-                self.pareto.append(tree_entry)  #
-                self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or x is tree_entry]
-                self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
-
-                # simplify the tree ans save in pareto once again
-                self.printpl('aaa', 'Trying to simplify for pareto entry.')
-                cooltree_sym = copy.deepcopy(cooltree)
-                try:
-                    cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
-                except Exception as ex:
-                    print_warning('ww', f'Tree sympification did not work: {ex}', print_type=self.print_type)
-
-                if len(cooltree_sym) < len(cooltree):
-                    sym_fitness = self.tree_eval_fitness_train(cooltree_sym)
-                    if sym_fitness != cooltree.meta.fitness_train and TEST_PHASE:
-                        print_e(f'Fitness of a sympified tree is different! sym: {sym_fitness}, before: {cooltree.meta.fitness_train}\n'
-                                f'tree: {cooltree.core.get_labellist()}\n'
-                                f'symp: {cooltree_sym.core.get_labellist()}\n'
-                                f'tree raw: {cooltree.get_expr_raw()}\n'
-                                f'symp rawr: {cooltree_sym.get_expr_raw()}')
-                        # raise Exception('FUCK')
-                        return
-
-                    self.printpl('aa', 'Successfully reduced pareto tree!')
-                    cooltree_sym.meta.fitness_train = sym_fitness
-                    self.update_pareto(cooltree_sym)
-                else:
-                    self.printpl('aaa', 'Pareto entry was already simplified')
-            else:
-                return
         self.pareto_sort()
         return
 
@@ -1428,7 +1415,7 @@ class ExplainableGP(object):
             parsimony = tree_meta['parsimony']
             fitness_train = tree_meta['fitness_train']
         else:
-            parsimony = tree_eval_parsimony(cooltree, self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
+            parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony > self.conf.parsimony_max:
                 print_warning('wwww', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
                 return

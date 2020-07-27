@@ -58,7 +58,7 @@ class ExplainableGP(object):
         self.data_train = None
         self.data_control = None
 
-        self.activate_dataset(path_data_csv, self.conf.action_name)
+        self.env_vars, self.data_train, self.data_control = self.activate_dataset(path_data_csv, self.conf.action_name)
 
         # Evaluating kernel (that uses tensorflow)
         self.tf_device = "/gpu:0"  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
@@ -214,7 +214,6 @@ class ExplainableGP(object):
             except:
                 evolve_random = [{'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
                                   'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (14, 10, 45, 6), 'full_or_grow': 'full'}}}]
-                self.evolve_list_random = evolve_random
         else:
             try:
                 evolve_random = self.evolve_list_random['from_scratch']
@@ -226,7 +225,6 @@ class ExplainableGP(object):
                                  {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.40,
                                   'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 10, None, 6), 'full_or_grow': 'full'}}}
                                  ]
-                self.evolve_list_random = evolve_random
         evolve_random = evolve_safety_update(evolve_random)
 
         return evolve_loop, evolve_random
@@ -251,7 +249,6 @@ class ExplainableGP(object):
                 """
                 Loading the state of the run from the pickle file
                 """
-
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
 
@@ -608,9 +605,9 @@ class ExplainableGP(object):
         else:
             raise FileNotFoundError(f'No data provided? Please provide data in your config-file(or in your command line call). {path_data_csv}')
 
-        self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
+        env_vars, data_train, data_control = data_prepared  # data_control is data_test
 
-        return
+        return env_vars, data_train, data_control
 
     def gp_load_oparray(self, path_operators=None):
         """

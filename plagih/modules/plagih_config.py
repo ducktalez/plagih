@@ -41,10 +41,7 @@ class GpConfig:
         except:
             conf = {}
             config_dir = None
-
-        self.root_dir = Path(args.root_dir or config_dir or Path.cwd() / 'run_examples/testrun')
-        if self.root_dir.is_dir():
-            self.root_dir.mkdir(parents=True)  # todo not here, not run relevant. but maybe save info where rnuu was started when.
+        self.root_dir = Path(args.root_dir or config_dir or Path.cwd())
         self.name = args.name or self.root_dir.resolve().name  # sfeh probably there are better names
 
         self.print_type = conf.get('print_type', 'wwggaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written

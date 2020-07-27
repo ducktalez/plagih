@@ -52,6 +52,8 @@ def main():  # argv sys.argv[1:]
 
     prepared_run = args.prepared_run
 
+    print('fuck debug')
+
     if prepared_run:
         action_name = None
         kernel_name = ''

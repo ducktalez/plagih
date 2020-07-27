@@ -41,9 +41,9 @@ run_starts = [
     'MTC200_MAE_explun_preset_fix',
     'MTC200_MAE_explun_simple_fix',
 
-    'MTC200_MAE_tan_simple_fix',
-    'MTC200_MAE_explun_tan_simple_fix',
-    'MTC200_RMSE_explun_tan_simple_fix',
+    'MTC200_MAE_tanh_simple_fix',
+    'MTC200_MAE_explun_tanh_simple_fix',
+    'MTC200_RMSE_explun_tanh_simple_fix',
 ]
 
 complete_params = []

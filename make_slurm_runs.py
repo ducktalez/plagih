@@ -52,8 +52,8 @@ complete_params = []
 #     Set the working directory of the batch script to directory before it is executed. The path can be specified as full path or relative path to the directory where the command is executed.
 # sfeh run more beautiful?
 
-for run_name in run_starts:
-    Path.mkdir(Path.cwd() / f'benchmarks/slurm_runs/{run_name}')  # todo hate this done here
+# for run_name in run_starts:
+#     Path.mkdir(Path.cwd() / f'benchmarks/slurm_runs/{run_name}')  # todo hate this done here
 
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
     [f'sbatch --partition=All --output=./benchmarks/slurm_runs/{run_name}/slurm-%j.out ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts])

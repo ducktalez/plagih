@@ -41,13 +41,13 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, conf: GpConfig, path_data_csv, path_origin_tree):  # load_backup
+    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree):  # load_backup
         self.conf = conf
-        self.root_dir = self.conf.root_dir
+        self.root_dir = Path(root_dir)  # todo
 
         print(f'\n'
               f'\tInitializing Plagih. \n'
-              f'\tName: {BColors.CYAN}{self.conf.name}{BColors.RESET}. \n'
+              f'\tName: {BColors.CYAN}{self.root_dir.name}{BColors.RESET}. \n'
               f'\tLocated in: \n'
               f'\t{self.conf.root_dir}\n')
         self.time_start = time.perf_counter()
@@ -244,15 +244,17 @@ class ExplainableGP(object):
         path_backup = path_load_backup or self.root_dir / self.file_locs.file_backup_pickle  # sfeh file-load
 
         if Path.is_file(path_backup):
-            self.print_g('g', 'Loading data from backup-file...')
-            try:
+            self.print_g('g', f'Loading data from backup-file {path_backup}')
+            try:  # todotodo todo
                 """
                 Loading the state of the run from the pickle file
                 """
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
 
-                self.conf, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                # self.run_backup_save()
+                # raise Exception('SFEH TODO DONE JUST SAVING THIS SHEEEIT')
                 # self.conf.restart_count += 1
 
                 printez('g', f'Starting at generation: {self.gen_id}', self.print_type)
@@ -565,13 +567,14 @@ class ExplainableGP(object):
         #     if self.gen_id % int(self.conf.period['gen_analysis']) == 0:
         #         self.file_conslusions()
 
-        self.pareto_sort()  # is pareto not sorted?
+        # self.pareto_sort()  # is pareto not sorted?  todo working? check if sorted.
 
         self.file_pareto_txt()
         self.file_population_base_karoo('last')
         self.file_pareto_histograms()
         self.file_pareto_latex()
-        self.file_pareto_pycode()
+        # self.file_pareto_pycode()  # todo list
+        self.file_pareto_listcode()
 
         return
 
@@ -802,7 +805,7 @@ class ExplainableGP(object):
             fig, ax = plt.subplots()
             ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
             ax.set_ylim(0, len(self.data_train))  # sfeh better size? max?
-            ax.set_ylabel('Frequency')
+            ax.set_ylabel('Frequency')  # divide by the amount of training samples
             ax.set_xlabel('Deviation')
             fig.tight_layout()
             plt.savefig(path_hist / f'acthist_{parsim}.png')
@@ -860,11 +863,11 @@ class ExplainableGP(object):
 
         py_return = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
 
-        assign_input = f"cartPos, cartVel = input\n"
+        assign_input = ''  # f"cartPos, cartVel = input\n"  # todo
 
         function_body = textwrap.indent(f"{assign_input}"
                                         "action = {}\n"
-                                        f"{py_return}", '    ')  # aka tab (\t)
+                                        f"return {py_return}", '    ')  # aka tab (\t)
 
         complete_function = textwrap.indent(f"def decide(self, input):\n"
                                             f"{function_body}\n", '    ')  # aka tab (\t)
@@ -893,6 +896,28 @@ class ExplainableGP(object):
         with Path.open(pth, 'w') as file:
             file.write(pyc_complete)
             self.printpl('ff', f'Pycode: {pth.as_posix()}')
+
+        return
+
+    def file_pareto_listcode(self):
+        """
+
+        """
+
+        # pycode_agent = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
+
+        pygents_list = []
+
+        for (parsim, fitness, cooltree) in self.pareto:
+            # agent_name = f'{self.conf.name}_{parsim:.0f}'
+            agent_name = f'{self.conf.name}_{self.env_vars.eval_action.name}_{parsim:.0f}'
+            agent_as_python = cooltree.get_pycode()
+            pygents_list.append([parsim, float(fitness), agent_name, agent_as_python])  # todo fitness of origin is float32??
+
+        path = file_make_dir(self.root_dir / 'pycode_list.yaml')
+        with Path.open(path, 'w') as file:
+            _ = yaml.dump(pygents_list, file)  # , default_flow_style=False, sort_keys=False)
+            printez('ff', f'{path}')
 
         return
 

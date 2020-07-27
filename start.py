@@ -52,6 +52,16 @@ def main():  # argv sys.argv[1:]
 
     prepared_run = args.prepared_run
 
+    try:
+        config_dir = args.load_config.parent
+    except:
+        config_dir = None
+    root_dir = args.root_dir or config_dir or Path.cwd()
+    # todo
+    # self.name = args.name or self.root_dir.resolve().name  # sfeh probably there are better names
+    # self.load_backup_path_loaded_dummy = args.load_backup
+    # self.data_csv_path_loaded_dummy = args.data_csv
+
     print('fuck debug')
 
     if prepared_run:
@@ -133,6 +143,7 @@ def main():  # argv sys.argv[1:]
         conf.root_dir = root_dir
         print(f'AUTOLOAD: root_dir {root_dir}')
         conf.action_name = action_name
+        conf.name = prepared_run
     else:
         path_data_csv = args.data_csv
         path_origin_tree = args.origin_tree
@@ -147,7 +158,10 @@ def main():  # argv sys.argv[1:]
     gen_additionally = args.gen_additionally
     force_new_run = args.force_new_run  # force_new_run should not be in the config... does not define the run
 
-    plagih_gp.gp_run(conf, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally)
+    # sfeh just for the conclusion...
+    # self.origin_tree_path_loaded_dummy = args.origin_tree
+
+    plagih_gp.gp_run(conf, root_dir, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally)
 
 
 if __name__ == "__main__":

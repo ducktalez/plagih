@@ -31,18 +31,17 @@ class GpConfig:
     #     return d
 
     def __init__(self, args):
-
+        """
+        SFEH NEVER try to save paths here. switching between systems is imp
+        """
         self.pl_version = 0.97  # must only update if vital changes were made, version important when loading old run
+        self.name = args.prepared_run or 'PlagihGP_Run'  # todo
 
         try:
             with Path.open(args.load_config, 'r') as file:
                 conf = yaml.load(file, Loader=yaml.FullLoader)
-                config_dir = args.load_config.parent
         except:
             conf = {}
-            config_dir = None
-        self.root_dir = Path(args.root_dir or config_dir or Path.cwd())
-        self.name = args.name or self.root_dir.resolve().name  # sfeh probably there are better names
 
         self.print_type = conf.get('print_type', 'wwggaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
         if args.print_all:
@@ -72,11 +71,6 @@ class GpConfig:
                                                                              'lambda: random.normalvariate(1,1)'],  # 'lambda: random.randint(0, 10)',  # not required
                                                                       '2b': ['lambda: random.choice([True, False])'],
                                                                       'observed_floats': 100})
-
-        # sfeh just for the conclusion...
-        self.load_backup_path_loaded_dummy = args.load_backup
-        self.data_csv_path_loaded_dummy = args.data_csv
-        self.origin_tree_path_loaded_dummy = args.origin_tree
 
         """
         Not used?

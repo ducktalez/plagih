@@ -44,7 +44,7 @@ class Agent_random():
         return at
 
 
-class Ib_Agent():
+class Ib_Agent:
 
     def __init__(self):
         self.state_history = collections.deque()
@@ -52,15 +52,31 @@ class Ib_Agent():
     def get_h(self, name, steps):
 
         def get_max_history(index, history_list):
-            """
-            Returns
-            """
             if index > len(history_list) - 1:
                 # print('Not enough history for index {}, len list: {}'.format(index, len(history_list)))
                 return history_list[-1]
             else:
                 return history_list[index]
         return get_max_history(steps, self.state_history)[name]
+
+
+# class Ib_Agent_Single:
+#
+#     def __init__(self):
+#         self.state_history = collections.deque()
+#
+#     def get_h(self, name, steps):
+#
+#         def get_max_history(index, history_list):
+#             if index > len(history_list) - 1:
+#                 # print('Not enough history for index {}, len list: {}'.format(index, len(history_list)))
+#                 try:
+#                     return history_list[-1]
+#                 except:
+#                     return history_list[-1]
+#             else:
+#                 return history_list[index]
+#         return get_max_history(steps, self.state_history)[name]
 
 
 class Agent_daniel_21(Ib_Agent):

@@ -63,7 +63,6 @@ def envstate_normalize(env_state, to_normal=True):
 
 def eval_agents():
 
-    T = 100*1000
 
     # agents = [Agent_Daniel_Best()]
     agents = [
@@ -77,32 +76,56 @@ def eval_agents():
         Agent_Test()
     ]
 
-    data = np.zeros((len(agents), T))
-    data_cost = np.zeros((len(agents), T))
-    time_horizon = 100
-    factor = 0.97
-
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        sum = 0
-        for p in np.arange(10, 101, 10):
-            env = IDS(p=p)
+        agent_name, sum = eval_agent(agent)
 
-            # state_debug = []
-            sum_t = 0
-            for t in range(time_horizon):
-                env_state = envstate_normalize(env.state)
-                at = agent.decide(env_state)
-                markovStates = env.step(at)
 
-                entry = env.visibleState()[-1]
-                data[k, t] = entry
+def eval_combined_agents(agentlist):
+    T = 100*1000
+    factor = 0.97
+    time_horizon = 100
+    sum = 0
 
-                # entry = data[k][-1 - t]
-                sum_t += factor ** (time_horizon-t) * entry
-            sum += sum_t / 10
+    a0, a1, a2 = agentlist
 
-        print('Discounted reward sum (p=10,20,..,100; 1000 steps)', agent.name, sum)
+    for p in np.arange(10, 101, 10):
+        env = IDS(p=p)
+
+        sum_t = 0
+        for t in range(time_horizon):
+            env_state = envstate_normalize(env.state)
+            at = [[], [], []]
+            at[0] = a0.decide(env_state)
+            at[1] = a1.decide(env_state)
+            at[2] = a2.decide(env_state)
+            markovStates = env.step(at)
+
+            entry = env.visibleState()[-1]
+            sum_t += factor ** (time_horizon-t) * entry
+        sum += sum_t / 10
+
+
+def eval_agent(agent):
+    T = 100*1000
+    factor = 0.97
+    time_horizon = 100
+    sum = 0
+    for p in np.arange(10, 101, 10):
+        env = IDS(p=p)
+
+        sum_t = 0
+        for t in range(time_horizon):
+            env_state = envstate_normalize(env.state)
+            at = agent.decide(env_state)
+            markovStates = env.step(at)
+
+            entry = env.visibleState()[-1]
+            sum_t += factor ** (time_horizon-t) * entry
+        sum += sum_t / 10
+
+        print('Discounted reward sum (p=10,20,..,100; 1000 steps)', sum)
+    return agent.name, sum
 
 
 def agent_create_samples_csv(T=10000):

@@ -8,19 +8,21 @@ print('Make sure that this file is executed on top level')
 
 # a_velocity,a_gain,a_shift
 run_starts = [
-    'IB_MSE_50_0', 'IB_MSE_50_1', 'IB_MSE_50_2',
-    'IB_MSE_explun_50_0', 'IB_MSE_explun_50_1', 'IB_MSE_explun_50_2',
-    'IB_MSE_tanh_50_0', 'IB_MSE_tanh_50_1', 'IB_MSE_tanh_50_2',
+    # 'IB_RMSE_50_0', 'IB_RMSE_50_1', 'IB_RMSE_50_2',
+    # 'IB_RMSE_explun_50_0', 'IB_RMSE_explun_50_1', 'IB_RMSE_explun_50_2',
+    # 'IB_RMSE_tanh_50_0', 'IB_RMSE_tanh_50_1', 'IB_RMSE_tanh_50_2',
 
-    'IB_MSE_mean_0', 'IB_MSE_mean_1', 'IB_MSE_mean_2',
-    # 'IB_MSE_udluft_0', 'IB_MSE_udluft_1', 'IB_MSE_udluft_2'
-    # 'IB_MSE_scratch_0', 'IB_MSE_scratch_1', 'IB_MSE_scratch_2',
+    # 'IB_RMSE_mean_0', 'IB_RMSE_mean_1', 'IB_RMSE_mean_2',
+    # 'IB_RMSE_udluft_0', 'IB_RMSE_udluft_1', 'IB_RMSE_udluft_2'
+    # 'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
 
-    'IB_MSE_tanh_udluft_0', 'IB_MSE_tanh_udluft_1', 'IB_MSE_tanh_udluft_2',
+    # 'IB_RMSE_tanh_udluft_0', 'IB_RMSE_tanh_udluft_1', 'IB_RMSE_tanh_udluft_2',
 
-    # 'IB_MSE_sim1_0', 'IB_MSE_sim1_1', 'IB_MSE_sim1_2',
+    # 'IB_RMSE_sim1_0', 'IB_RMSE_sim1_1', 'IB_RMSE_sim1_2',
     'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
+    'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
     'IB_RMSE_explun_tanh_sim2_0', 'IB_RMSE_explun_tanh_sim2_1', 'IB_RMSE_explun_tanh_sim2_2',
+    'IB_MSE_tanh_sim2_0', 'IB_MSE_tanh_sim2_1', 'IB_MSE_tanh_sim2_2',
 
     # 'MTC200_MAE_scratch',
     # 'MTC200_MAE_gpFfriendly',
@@ -41,6 +43,7 @@ run_starts = [
 
     'MTC200_MAE_tan_simple_fix',
     'MTC200_MAE_explun_tan_simple_fix',
+    'MTC200_RMSE_explun_tan_simple_fix',
 ]
 
 complete_params = []

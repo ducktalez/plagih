@@ -42,11 +42,8 @@ class GpConfig:
             conf = {}
             config_dir = None
 
-        self.root_dir = args.root_dir or config_dir or Path.cwd()
+        self.root_dir = args.root_dir or config_dir or Path.cwd() / 'run_examples'
         self.name = args.name or self.root_dir.resolve().name  # sfeh probably there are better names
-
-        # Generally, force_new_run should not be part of the config
-        # self.force_new_run = conf.get('force_new_run', False)  # : False,  # especially for testing, ignores backup files when true
 
         self.print_type = conf.get('print_type', 'wwggaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
         if args.print_all:
@@ -85,6 +82,7 @@ class GpConfig:
         """
         Not used?
         """
+        # self.restart_count
         # self.fitness_decimals = int(conf.get('fitness_decimals', 6))  # rounding the fitness
         # self.float_decimals = int(conf.get('float_decimals', 6))  # None or 1-30 decimals
         # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size

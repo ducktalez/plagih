@@ -11,18 +11,15 @@ import yaml
 # warnings.filterwarnings('error')
 
 
-def gp_run(conf, path_load_backup, path_data_csv, path_origin_tree, analyse, gen_additionally, force_new_run):
+def gp_run(conf, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally):
     """
     todo YESS this is now gone
     """
-    gp = ExplainableGP(conf, path_load_backup, path_data_csv, path_origin_tree, analyse, gen_additionally, force_new_run)
-
-    gp.make_evolve_rates()
+    gp = ExplainableGP(conf, path_data_csv, path_origin_tree)
 
     if analyse:
-        gp.gp_analyse()
+        gp.gp_analyse(path_load_backup)
     else:
-        gp.make_evolve_rates()
-        gp.plagih_gp_run()
+        gp.plagih_gp_run(path_load_backup, force_new_run=force_new_run, gen_additionally=gen_additionally)
 
     sys.exit()

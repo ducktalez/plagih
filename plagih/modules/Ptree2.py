@@ -413,6 +413,18 @@ class CoolTree:
         core = self.core.get_labellist()
         return hash(','.join([str(x) for x in core]))
 
+    # def set_meta(self, meta):
+    #     self.history.append(self.meta)
+    #
+    # def set_meta(self, fitness_train, parsimony, last_evolution, expr_raw, expr_sym):
+    #     self.meta.fitness_train = fitness_train
+    #     self.meta.parsimony = parsimony
+    #     self.meta.last_evolution = last_evolution
+    #     self.meta.expr_raw = expr_raw
+    #     self.meta.expr_sym = expr_sym
+    #     # todo check other metas
+    #     # set flags if done?
+
     def set_fix_nodes(self, origin_tree: 'CoolTree'):
         """
         Resetting the fix nodes from the cooltree.
@@ -452,9 +464,6 @@ class CoolTree:
     def finalize_completely(self):
         self.finalize_structure()
         self.complete = True
-
-    def set_meta(self, meta):
-        self.history.append(self.meta)
 
     def finalize_meta(self):
         # todo set_meta
@@ -576,7 +585,7 @@ class CoolTree:
     def get_mutatable_nodes(self):
         return self.core.get_mutatable_nodes()
 
-    def evolve_mutate_point(self, float_decimals, choose_oparray2, choose_obs, choose_distributions):
+    def evolve_mutate_point(self, choose_oparray2, choose_obs, choose_distributions):
         """
         Mutate a single mutatable point in any Tree.
         """
@@ -588,7 +597,7 @@ class CoolTree:
         if arity > 0:
             new_label = choose_operator(node.xtype, choose_oparray2, arity=arity)  # Function is same type, same arity
         else:
-            new_label = choose_term(node.xtype[-2:], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+            new_label = choose_term(node.xtype[-2:], choose_obs, choose_distributions)  # 3 -> '2f' -> 5
 
         node.label = new_label
         self.finalize_structure()

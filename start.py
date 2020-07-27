@@ -54,7 +54,7 @@ def main():  # argv sys.argv[1:]
 
     if prepared_run:
         action_name = None
-        kernel_name = None
+        kernel_name = ''
         path_data_csv = None
         path_origin_tree = None
 
@@ -63,7 +63,7 @@ def main():  # argv sys.argv[1:]
 
         if 'IB' in prepared_run:
             path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
-            kernel_name = 'regression bounded'
+            kernel_name += 'regression bounded'
             ori_trs = {'50_0': 'ib/gp_files//ib_tree_50s_0.csv',
                        '50_1': 'ib/gp_files/ib_tree_50s_1.csv',
                        '50_2': 'ib/gp_files/ib_tree_50s_2.csv',
@@ -81,7 +81,7 @@ def main():  # argv sys.argv[1:]
                        'sim2_2': 'ib/gp_files/ib_sim2_2.csv'}
             for k, v in ori_trs.items():
                 if k in prepared_run:
-                    print(f'Using origin: {v}')
+                    print(f'AUTOLOAD: Using origin: {v}')
                     path_origin_tree = pathify(v)
 
             act_dct = {'_0': 'a_velocity',
@@ -89,11 +89,11 @@ def main():  # argv sys.argv[1:]
                        '_2': 'a_shift'}
             for k, v in act_dct.items():
                 if k in prepared_run:
-                    print(f'Using action: {v}')
+                    print(f'AUTOLOAD: Using action: {v}')
                     action_name = v
 
         elif 'MTC' in prepared_run:
-            kernel_name = 'regression bounded discrete'
+            kernel_name += 'regression bounded discrete'
             if 'MTC200' in prepared_run:
                 path_data_csv = pathify('mc/gp_files/samples200.csv')
             elif 'MTC75' in prepared_run:
@@ -107,7 +107,7 @@ def main():  # argv sys.argv[1:]
                        'simplePlus': 'mc/gp_files/tree_simplePlus.csv'}
             for k, v in ori_trs.items():
                 if k in prepared_run:
-                    print(f'Using origin: {v}')
+                    print(f'AUTOLOAD: Using origin: {v}')
                     path_origin_tree = pathify(v)
         else:
             raise
@@ -122,7 +122,14 @@ def main():  # argv sys.argv[1:]
         kernel_name += ' relative_regression_fun' if 'explun' in prepared_run else ''
 
         root_dir = pathify(f'slurm_runs/{prepared_run}')
+
+        path_data_csv = path_data_csv
+        path_origin_tree = path_origin_tree
+        print(f'AUTOLOAD: path_origin_tree {path_origin_tree}')
+        conf.kernel_name = kernel_name
+        print(f'AUTOLOAD: kernel_name {kernel_name}')
         conf.root_dir = root_dir
+        print(f'AUTOLOAD: root_dir {root_dir}')
         conf.action_name = action_name
     else:
         path_data_csv = args.data_csv
@@ -138,7 +145,7 @@ def main():  # argv sys.argv[1:]
     gen_additionally = args.gen_additionally
     force_new_run = args.force_new_run  # force_new_run should not be in the config... does not define the run
 
-    plagih_gp.gp_run(conf, path_load_backup, path_data_csv, path_origin_tree, analyse, gen_additionally, force_new_run)
+    plagih_gp.gp_run(conf, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally)
 
 
 if __name__ == "__main__":

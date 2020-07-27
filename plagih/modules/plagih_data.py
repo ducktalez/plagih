@@ -91,7 +91,7 @@ class EnvVars:
                            '2b': None}
 
 
-def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
+def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
     """
     Loads .csv data files.
     Information that we need to extract for each column:
@@ -116,7 +116,7 @@ def data_from_csv(samples_file, action_name, test_size=0.2, delimiter=','):
     - renaming column headers
     - saving header info for later use
     """
-    with Path.open(samples_file) as file:
+    with Path.open(path_data_csv) as file:
         df = pd.read_csv(file, delimiter=delimiter)
 
     eval_action = None

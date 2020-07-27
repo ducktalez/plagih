@@ -22,7 +22,7 @@ class FileLocations:
     folder_plots = 'plots/'
     folder_histograms = 'agents/'
 
-    file_backup_pickle = 'backup/backup.p'
+    file_backup_pickle = 'backup/backup.p'  # todo
 
     trees_tex = 'agents/agents_trees.tex'
     folder_pycode = 'agents/'
@@ -41,7 +41,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, conf, data_csv, path_origin_tree, gen_additionally, force_new_run):
+    def __init__(self, conf: GpConfig, path_data_csv, path_origin_tree):  # load_backup
         self.conf = conf
         self.root_dir = self.conf.root_dir
 
@@ -54,13 +54,11 @@ class ExplainableGP(object):
 
         self.file_locs = FileLocations()
 
-        self.conf.gen_max += gen_additionally
-
         self.env_vars = EnvVars()
         self.data_train = None
         self.data_control = None
 
-        self.activate_dataset(path_data=data_csv, action_name=self.conf.action_name)
+        self.activate_dataset(path_data_csv, self.conf.action_name)
 
         # Evaluating kernel (that uses tensorflow)
         self.tf_device = "/gpu:0"  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
@@ -72,22 +70,23 @@ class ExplainableGP(object):
         self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, self.tf_device, self.env_vars.eval_action)
         self.print_type = self.conf.print_type
 
-        if path_origin_csv:
-
-            self.origin_cooltree = self.load_origin_tree(path_origin_csv)
+        self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
+        if path_origin_tree:
+            self.origin_cooltree = self.load_origin_tree(path_origin_tree)
+            self.origin_is_fix = self.origin_cooltree.core.is_fix
         else:
-            self.origin_cooltree: CoolTree = None
+            self.origin_cooltree = None
+            self.origin_is_fix = False
 
             if self.conf.complexity_measure in ['tree_edit_distance']:  # all origin-based distances
                 self.conf.complexity_measure = 'tree_node_count'
                 print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin! Using 'tree_node_count' instead.", print_type=self.print_type)
-            self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
 
         """
         load relevant stuff
         """
         self.choose_distributions = self.activate_distributions(path_distrib=None)  # sfeh path_distrib not None
-        self.choose_oparray2 = self.gp_load_oparray(opth_operators=opth_operators)  # sfeh this file from config
+        self.choose_oparray2 = self.gp_load_oparray()  # path_operators sfeh this file from config version1
 
         """
         initialize some variables
@@ -127,6 +126,8 @@ class ExplainableGP(object):
                                 'complexity_variance': {},  # variance can be deleted, only std-error is needed delete v1
                                 'pop:trees:complexity:std_error': {},
                                 'gen_time': {}}
+
+        self.evolve_loop, self.evolve_random = self.make_evolve_rates()
 
         self.print_g('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -205,18 +206,18 @@ class ExplainableGP(object):
                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 1, None, 6), 'full_or_grow': 'full'}}},  # param 'max' can be None
             ]
 
-        self.evolve_loop = evolve_safety_update(evolve_loop)
+        evolve_loop = evolve_safety_update(evolve_loop)
 
-        if self.origin_is_fix():
+        if self.origin_is_fix:
             try:
-                evolve_random = self.conf.evolve_list_random['from_origin']
+                evolve_random = self.evolve_list_random['from_origin']
             except:
                 evolve_random = [{'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
                                   'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (14, 10, 45, 6), 'full_or_grow': 'full'}}}]
-                self.conf.evolve_list_random = evolve_random
+                self.evolve_list_random = evolve_random
         else:
             try:
-                evolve_random = self.conf.evolve_list_random['from_scratch']
+                evolve_random = self.evolve_list_random['from_scratch']
             except:
                 evolve_random = [{'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
                                   'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 4, 5, 1), 'full_or_grow': 'full'}}},
@@ -225,10 +226,10 @@ class ExplainableGP(object):
                                  {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.40,
                                   'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 10, None, 6), 'full_or_grow': 'full'}}}
                                  ]
-                self.conf.evolve_list_random = evolve_random
-        self.evolve_random = evolve_safety_update(evolve_random)
+                self.evolve_list_random = evolve_random
+        evolve_random = evolve_safety_update(evolve_random)
 
-        return
+        return evolve_loop, evolve_random
 
     def file_make_dir_root(self, file):
         """
@@ -238,11 +239,11 @@ class ExplainableGP(object):
         p = file_make_dir(p)
         return p
 
-    def try_load_backup(self, path_backup=None):
+    def try_load_backup(self, path_load_backup=None):
         """
         If a backup-file is found...
         """
-        path_backup = path_backup if path_backup else self.root_dir / self.file_locs.file_backup_pickle  # sfeh file-load
+        path_backup = path_load_backup or self.root_dir / self.file_locs.file_backup_pickle  # sfeh file-load
 
         if Path.is_file(path_backup):
             self.print_g('g', 'Loading data from backup-file...')
@@ -253,22 +254,20 @@ class ExplainableGP(object):
 
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
-                try:
-                    self.conf, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
-                    self.conf.restart_count += 1
-                except:
-                    self.conf.pl_version, restart_count, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
-                    self.conf.restart_count = restart_count + 1  # sfeh guess not relevant.
+
+                self.conf, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                # self.conf.restart_count += 1
 
                 printez('g', f'Starting at generation: {self.gen_id}', self.print_type)
             except Exception as excep:
                 raise Exception(f'Even though a backup exists for this run, it could not be loaded because of\n{excep}')
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}.')
+        return
 
-    def gp_analyze(self, path_backup):
+    def gp_analyse(self, path_load_backup):
         try:
-            self.try_load_backup(path_backup=path_backup)
+            self.try_load_backup(path_load_backup)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
         self.terminate_run()
@@ -296,18 +295,21 @@ class ExplainableGP(object):
         self.printpl('f', f'Backup: {path_backup.as_posix()}')
         return
 
-    def plagih_gp_run(self):
+    def plagih_gp_run(self, path_load_backup, force_new_run=False, gen_additionally=None):
         """
         regular plagih run
         """
 
-        if not self.conf.force_new_run:
+        if not force_new_run:
             try:
-                self.try_load_backup()
+                self.try_load_backup(path_load_backup)
             except FileNotFoundError as fnfex:
-                print_warning('w', f'No backup file found at {fnfex}. Starting a new run.', print_type=self.print_type)
+                print_warning('i', f'No backup file found at {fnfex}. Starting a new run.', print_type=self.print_type)
             except Exception:
                 raise
+        if gen_additionally is not None:
+            self.printpl('i', f'Adding new generations, was {self.conf.gen_max}, current gen {self.gen_id + gen_additionally} by {gen_additionally}')
+            self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
 
         self.write_config_yaml()  # just to see what config is running and what the user can set
 
@@ -339,24 +341,17 @@ class ExplainableGP(object):
 
         return
 
-    def write_config_json(self):
-        """
-        write the parameters to a .csv file which can also be loaded
-        """
-
-        path = self.file_make_dir_root(self.file_locs.file_info_config_json)
-
-        with Path.open(path, 'w') as file:
-            json.dump(self.conf, file, indent=4)
-
-        return
-
-    def origin_is_fix(self):
-
-        try:
-            return self.origin_cooltree.core.is_fix
-        except:
-            return False
+    # def write_config_json(self):
+    #     """
+    #     write the parameters to a .csv file which can also be loaded
+    #     """
+    #
+    #     path = self.file_make_dir_root(self.file_locs.file_info_config_json)
+    #
+    #     with Path.open(path, 'w') as file:
+    #         json.dump(self.conf, file, indent=4)
+    #
+    #     return
 
     def gen_create_random(self, amount):
         """
@@ -385,7 +380,7 @@ class ExplainableGP(object):
                 tag = evolve_specs['tag']
 
                 for nn in range(evolve_num):
-                    if self.origin_is_fix():
+                    if self.origin_is_fix:
                         new_tree = self.pop_random_from_origin_fix(call_params, self.origin_cooltree)
                     else:
                         new_tree = self.pop_random(call_params)
@@ -479,7 +474,7 @@ class ExplainableGP(object):
 
             elif evolve_name == 'random trees':
 
-                if self.origin_is_fix():
+                if self.origin_is_fix:
                     for nn in range(evolve_num):
                         new_tree = self.pop_random_from_origin_fix(call_params, self.origin_cooltree)
                         cooltree = cooltree_from_oldtree(new_tree)
@@ -583,7 +578,7 @@ class ExplainableGP(object):
 
         return
 
-    def activate_dataset(self, path_data, action_name):
+    def activate_dataset(self, path_data_csv, action_name):
         """
         loading the data which the GP will be working on.
         The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -597,13 +592,13 @@ class ExplainableGP(object):
             # self.data_train_panda, self.data_control_panda
         """
 
-        if path_data:
-            if path_data.suffix == '.p':
-                data_prepared = pickle_load(path_data)
-            elif path_data.suffix == '.csv':
-                data_prepared = data_from_csv(path_data, action_name=action_name)
+        if path_data_csv:
+            if path_data_csv.suffix == '.p':
+                data_prepared = pickle_load(path_data_csv)
+            elif path_data_csv.suffix == '.csv':
+                data_prepared = data_from_csv(path_data_csv, action_name=action_name)
             else:
-                raise FileNotFoundError(f'File nust be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
+                raise FileNotFoundError(f'File nust be a pickle (.p) or csv (.csv) file. Loaded file: {path_data_csv}')
         elif Path.is_file(self.root_dir / self.file_locs.samples_ready_p):  # maybe the data was already prepared earlier sfeh load file
             data_prepared = pickle_load(self.root_dir / self.file_locs.samples_ready_p)
         elif Path.is_file(self.root_dir / self.file_locs.samples_csv):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file
@@ -611,20 +606,20 @@ class ExplainableGP(object):
             print(f'Prepared the raw {self.file_locs.samples_csv} behaviour. Saving for next run.')
             pickle_dump(self.root_dir / self.file_locs.samples_ready_p, data_prepared)
         else:
-            raise FileNotFoundError('No data provided? Please provide data in your config-file(or in your command line call).')
+            raise FileNotFoundError(f'No data provided? Please provide data in your config-file(or in your command line call). {path_data_csv}')
 
         self.env_vars, self.data_train, self.data_control = data_prepared  # data_control is data_test
 
         return
 
-    def gp_load_oparray(self, opth_operators=None):
+    def gp_load_oparray(self, path_operators=None):
         """
 
         """
 
         try:
-            operator_tuples = yaml_load(Path(opth_operators))
-
+            operator_tuples = yaml_load(Path(path_operators))
+            # sfeh lel, 100% excepts as never loaded this
         except:
             print_warning('www', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_tuples.', print_type=self.print_type)
             operator_tuples = [['+', 2],
@@ -1265,13 +1260,14 @@ class ExplainableGP(object):
         try:
             cooltree.set_fix_nodes(self.origin_cooltree)
         except Exception as ex:
-            print(f'Damn yo, failed tree finish: {ex}\n{cooltree}')
+            print(f'NOOOOOOPE, failed tree finish: {ex}\n{cooltree}')
 
         cooltree.meta.fitness_train = fitness_train
         cooltree.meta.parsimony = parsimony
         cooltree.meta.last_evolution = last_evolution
         cooltree.meta.expr_raw = expr_raw
         cooltree.meta.expr_sym = expr_sym
+        # cooltree.set_meta(fitness_train, parsimony, last_evolution, expr_raw, expr_sym)
 
         self.treelut_tree_add(cooltree)
         self.population_tmp.append(cooltree)
@@ -1292,7 +1288,7 @@ class ExplainableGP(object):
     #   Work with trees                           +
     # +++++++++++++++++++++++++++++++++++++++++++++
 
-    def load_origin_tree(self, user_origin_csv, label_list=None, modify_list=None):
+    def load_origin_tree(self, path_origin_tree, label_list=None, modify_list=None):
         """
         The origin tree (which was already loaded) gets activated for its use in the GP-process
         """
@@ -1304,7 +1300,7 @@ class ExplainableGP(object):
         from the labellist-csv, loading the label list
         """
 
-        with Path.open(user_origin_csv, newline='') as csvFile:
+        with Path.open(path_origin_tree, newline='') as csvFile:
             reader = csv.reader(csvFile, delimiter=',')
             for row in reader:
                 if len(row) > 0:

@@ -311,7 +311,7 @@ def tree_check_xtypes(tree):
     return True
 
 
-def tree_set_fitness(tree, fitness, precision=6):
+def tree_set_fitness(tree, fitness):
     """
     Store the fitness within the tree np-array
 
@@ -319,7 +319,6 @@ def tree_set_fitness(tree, fitness, precision=6):
     fitness = '' if fitness is None else fitness
     if fitness != '':
         fitness = float(fitness)
-        fitness = round(fitness, precision)
 
     tree[T_fitness][1] = fitness  # store the fitness with each tree
 
@@ -636,7 +635,7 @@ def raise_if_empty(name, val):
         raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, float_decimals, choose_obs, obs_krazy, choose_oparray2, choose_distributions, min_depth=0, full_or_grow=None):
+def invent_label_list_depth(xtype_root, depth_goal, choose_obs, obs_krazy, choose_oparray2, choose_distributions, min_depth=0, full_or_grow=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -691,7 +690,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, choose_obs, 
         else:  # now, we are on the lowest dim_y.
 
             for xtype in tbdo_xtypes:  # Build terminals now.
-                label, arity = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
+                label, arity = choose_term(xtype[-2:], choose_obs, choose_distributions), 0
 
                 # Add the label to the result list
                 result_label_list.append(label)
@@ -704,7 +703,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, choose_obs, 
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, choose_obs, obs_krazy, choose_oparray2, choose_distributions, full_or_grow='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, obs_krazy, choose_oparray2, choose_distributions, full_or_grow='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -769,7 +768,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, choose_obs,
 
         for index in term_at:
             t_xtype = tbdo_xtypes[index]
-            label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
+            label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions), 0
             label_xtype = xtype_get_from_label(label, obs_krazy)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
@@ -794,7 +793,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, choose_obs,
     else:
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
-            label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
+            label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions), 0
             label_xtype = xtype_get_from_label(label, obs_krazy)
             result_label_list.append(label)
             result_arity_list.append(arity)
@@ -803,26 +802,26 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, float_decimals, choose_obs,
     return result_label_list, result_arity_list, result_xtype_list
 
 
-def round_constant(constant, float_decimals):
-    """
-    Rounding float distributions_file
-    """
-
-    try:
-        constant = float(constant)
-    except Exception:
-        return constant
-
-    if constant == 0:
-        return constant
-
-    new_const = round(constant, float_decimals)
-    if new_const == 0:
-        if constant > 0:
-            new_const = 1 / 10**float_decimals
-        else:
-            new_const = -1 / 10**float_decimals
-    return new_const
+# def round_constant(constant):
+#     """
+#     Rounding float distributions_file
+#     """
+#
+#     try:
+#         constant = float(constant)
+#     except Exception:
+#         return constant
+#
+#     if constant == 0:
+#         return constant
+#
+#     # new_const = round(constant)
+#     if new_const == 0:
+#         if constant > 0:
+#             new_const = 1 / 10**float_decimals
+#         else:
+#             new_const = -1 / 10**float_decimals
+#     return new_const
 
 
 def tree_single_from_csv(origin_tree_file_path):
@@ -1646,7 +1645,7 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     return tree_sym_tildefree
 
 
-# def tree_evolve_mutate_point(tree, float_decimals, choose_oparray2, random_obs, choose_distributions):
+# def tree_evolve_mutate_point(tree, choose_oparray2, random_obs, choose_distributions):
 #     """
 #     Mutate a single mutatable point in any Tree.
 #     """
@@ -1660,7 +1659,7 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
 #         new_label, new_arity, new_xtype = choose_operator(xtype, choose_oparray2=choose_oparray2, arity=arity)  # Function is same type, same arity
 #         tree = tree_node_set_label(tree, node_id, new_label)
 #     else:
-#         new_label = choose_term(xtype[-2:], random_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
+#         new_label = choose_term(xtype[-2:], random_obs, choose_distributions)  # 3 -> '2f' -> 5
 #         tree = tree_node_set_label(tree, node_id, new_label)
 #
 #     # All node info should stay the same. xtype, arity
@@ -1892,7 +1891,7 @@ def tree_evolve_node_insert(tree, env_vars):
     return tree
 
 
-def label_constant_mutate(constant, term_type=float, filter_type='gaussian_filter', float_decimals=6):
+def label_constant_mutate(constant, term_type=float, filter_type='gaussian_filter'):
     """
     When this happens, distributions_file get a a small variance
     """
@@ -1905,9 +1904,8 @@ def label_constant_mutate(constant, term_type=float, filter_type='gaussian_filte
                 constant = np.random.normal(constant, 0.1)  # sfeh better adjustments?
         else:
             raise Exception('w', 'Warning: Filter  not specified. Please specify a filter_type.')
-        constant = round_constant(constant, float_decimals)
 
-    elif term_type == int:
+    elif term_type == int:  # sfeh carefully, all tensor types are float32, pandas df is float in general
         if random.choice(['v1', 'v2']) == 'v1' or constant == 0:
             term_filter = np.random.normal(0, 1)  # sfeh better adjustments?
             constant += term_filter
@@ -1922,7 +1920,7 @@ def label_constant_mutate(constant, term_type=float, filter_type='gaussian_filte
     return constant
 
 
-def tree_prune_depth(tree, max_depth, obs_krazy, choose_obs, choose_distributions, float_decimals):
+def tree_prune_depth(tree, max_depth, obs_krazy, choose_obs, choose_distributions):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
@@ -1939,7 +1937,7 @@ def tree_prune_depth(tree, max_depth, obs_krazy, choose_obs, choose_distribution
             label = tree_node_get_label(tree, node_id)
             xtype = xtype_get_from_label(label, obs_krazy)
             tree = tree_node_set_arity(tree, node_id, 0)
-            new_term = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals)  # replace label
+            new_term = choose_term(xtype[-2:], choose_obs, choose_distributions)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)
 
         elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth

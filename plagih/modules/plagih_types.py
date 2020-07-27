@@ -71,7 +71,7 @@ def random_choose_tempobs(obs_list, max_hist=10):
     return new_obs
 
 
-def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
+def choose_term(xtype, choose_obs, choose_distribution):
     """
     Returns a terminal of xtype.
 
@@ -95,8 +95,8 @@ def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
     else:
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()
-        if '2f' in xtype:  # sfeh int aswell?
-            term = round(term, float_decimals)
+        # if '2f' in xtype:  # sfeh int aswell?
+        #     term = round(term, float_decimals)
 
     return str(term)  # sfeh str necessary?
 

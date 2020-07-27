@@ -665,7 +665,7 @@ def invent_label_list_depth(xtype_root, depth_goal, float_decimals, choose_obs, 
 
             for ii, xtype in enumerate(tbdo_xtypes):
                 if functerm_list[ii] == 'term':
-                    label = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals)
+                    label = choose_term(xtype[-2:], choose_obs, choose_distributions)
                     # xtype stays the same 'arity-2' version
                     arity = 0
                 elif functerm_list[ii] == 'func':

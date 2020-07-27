@@ -8,12 +8,13 @@ from plagih import plagih_gp
 import sys
 import os
 import argparse
+from plagih.modules.plagih_config import *
 
-sys.path.append('plagih/')
-sys.path.append('plagih/modules')
+# sys.path.append('plagih/')
+# sys.path.append('plagih/modules')
 
 
-def main(argv):
+def main():  # argv sys.argv[1:]
     """
    -h, -help
    -run_folder
@@ -25,49 +26,44 @@ def main(argv):
     # parser.add_argument('--sum', dest='accumulate', action='store_const', const=sum, default=max, help='sum the integers (default: find the max)')
     # parser.add_argument("--data_dir", type=Path, default=Path(__file__).absolute().parent / "data", help="Path to the data directory",)
 
-    parser.add_argument('-config', type=Path, metavar='CONFIG_YAML', help='The config file in the run directory.')
-    parser.add_argument('-load_backup', type=Path, help='Starting a run from a backup file (backup.p).')
-    parser.add_argument('-out_dir', type=Path, help='A custom output folder (root_dir). Not stable yet.')  # sfeh
-    parser.add_argument('-action', type=str, default=None, help='If there is more than one action, choose the right one. (action name)')
-    parser.add_argument('-action_num', type=int, default=None, help='NOT WORKING! If there is more than one todo, choose the right one. (action number)')  # sfeh type=int,
-    parser.add_argument('-data_prepared', '-samples_ready', '-samples', type=Path)
+    parser.add_argument('-load_config', '-config', type=Path, metavar='CONFIG_YAML', help='The config file in the run directory.', default=None)
+    parser.add_argument('-name', type=str, help='If the run has a name')
+    parser.add_argument('-load_backup', '-backup', type=Path, help='Starting a run from a backup file (backup.p).')
+    parser.add_argument('-root_dir', '-out_dir', type=Path, help='A custom output folder (root_dir). Not stable yet.')  # sfeh
+    parser.add_argument('-action_name', '-eval_action', '-action', type=str, help='If there is more than one action, choose the right one. (action name)')
+    parser.add_argument('-data_csv', '-samples_csv', '-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
-    parser.add_argument('-data_csv', type=Path)
-    parser.add_argument('-force_new_run', action='store_true')
-    parser.add_argument('-analyse', '-analyze', action='store_true', default=None)
-    parser.add_argument('-kernel_name', default=None)
-
-    parser.add_argument('-pop_max', '-pop_size', type=int, default=None)
+    parser.add_argument('-analyse', '-analyze', action='store_true')
+    parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
+    parser.add_argument('-pop_max', '-pop_size', type=int)
+    parser.add_argument('-gen_max', '-gen_size', type=int)
     parser.add_argument('-gen_additionally', type=int, default=0)
-
-    parser.add_argument('-tf_device_log', '-tf_log', action='store_true', default=False, help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
-
+    parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
+    parser.add_argument('-force_new_run', action='store_true')
+    parser.add_argument('-print_all', '-debug', type=Path)
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
 
     args = parser.parse_args()
 
-    config_path = args.config
-    load_backup = args.load_backup
-    out_dir = args.out_dir
-    force_new_run = args.force_new_run
-    eval_action = args.action
-    data_prepared = args.data_prepared
-    origin_tree = args.origin_tree
-    analyze = args.analyse
-    tf_device_log = args.tf_device_log
-    kernel_name = args.kernel_name
-    pop_max = args.pop_max
-    gen_additionally = args.gen_additionally
+    """
+    Update the config
+    """
+    conf = GpConfig(args)
 
     prepared_run = args.prepared_run
 
     if prepared_run:
+        action_name = None
+        kernel_name = None
+        path_data_csv = None
+        path_origin_tree = None
+
         def pathify(x):
             return Path(__file__).parent.absolute() / 'benchmarks/' / x
 
         if 'IB' in prepared_run:
-            data_prepared = pathify('ib/gp_files/samples_prepared.csv')
-            config_name = 'ib/gp_files/config4ib'
+            path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
+            kernel_name = 'regression bounded'
             ori_trs = {'50_0': 'ib/gp_files//ib_tree_50s_0.csv',
                        '50_1': 'ib/gp_files/ib_tree_50s_1.csv',
                        '50_2': 'ib/gp_files/ib_tree_50s_2.csv',
@@ -86,7 +82,7 @@ def main(argv):
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')
-                    origin_tree = pathify(v)
+                    path_origin_tree = pathify(v)
 
             act_dct = {'_0': 'a_velocity',
                        '_1': 'a_gain',
@@ -94,14 +90,14 @@ def main(argv):
             for k, v in act_dct.items():
                 if k in prepared_run:
                     print(f'Using action: {v}')
-                    eval_action = v
+                    action_name = v
 
         elif 'MTC' in prepared_run:
-            config_name = 'mc/gp_files/config4mtc'
+            kernel_name = 'regression bounded discrete'
             if 'MTC200' in prepared_run:
-                data_prepared = pathify('mc/gp_files/samples200.csv')
+                path_data_csv = pathify('mc/gp_files/samples200.csv')
             elif 'MTC75' in prepared_run:
-                data_prepared = pathify('mc/gp_files/samples75.csv')
+                path_data_csv = pathify('mc/gp_files/samples75.csv')
 
             ori_trs = {'gpFfriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
                        'preset': 'mc/gp_files/tree_preset_fix.csv',
@@ -112,20 +108,39 @@ def main(argv):
             for k, v in ori_trs.items():
                 if k in prepared_run:
                     print(f'Using origin: {v}')
-                    origin_tree = pathify(v)
+                    path_origin_tree = pathify(v)
         else:
             raise
 
-        config_name += '_rel' if 'rel' in prepared_run else ''
-        config_name += '_tanh' if 'tanh' in prepared_run else ''
-        config_path = pathify(f'{config_name}.yaml')
-        out_dir = pathify(f'slurm_runs/{prepared_run}')
+        if 'RMSE' in prepared_run:
+            kernel_name += ' RMSE'
+        elif 'MSE' in prepared_run:
+            kernel_name += ' MSE'
+        else:
+            kernel_name += ' MAE'
+        kernel_name += ' tanhpenalize' if 'tanh' in prepared_run else ''
+        kernel_name += ' relative_regression_fun' if 'explun' in prepared_run else ''
 
-    plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
+        root_dir = pathify(f'slurm_runs/{prepared_run}')
+        conf.root_dir = root_dir
+        conf.action_name = action_name
+    else:
+        path_data_csv = args.data_csv
+        path_origin_tree = args.origin_tree
 
-    plagih_gp.gp_run(plagih_root, load_backup, config_path, out_dir, force_new_run, eval_action, data_prepared, origin_tree, kernel_name, analyze, tf_device_log, pop_max, gen_additionally)
+    # plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
+
+    # loaded file-paths are not a good information
+    path_load_backup = args.load_backup
+
+    # Not run-specific
+    analyse = args.analyse
+    gen_additionally = args.gen_additionally
+    force_new_run = args.force_new_run  # force_new_run should not be in the config... does not define the run
+
+    plagih_gp.gp_run(conf, path_load_backup, path_data_csv, path_origin_tree, analyse, gen_additionally, force_new_run)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
     # todo rename start.py to cool name

@@ -108,8 +108,7 @@ def plot_end(data_2d, path_plot,
              beyond_lines=False,
              save_tikz=False,  # for the final runs...
              subfolder=None,
-             fill_variance=None,
-             print_type=None):
+             fill_variance=None):
     """
     Make all plots in the same style - and also saving space.
     - Makes pyplots
@@ -188,7 +187,7 @@ def plot_end(data_2d, path_plot,
     try:
         plt.savefig(path_plot / f'{title}.png')
     except PermissionError as permerr:
-        print_warning('w', f'Could not save plot: {permerr}', print_type=print_type)
+        print_e(f'Could not save plot: {permerr}')
 
     plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
     return

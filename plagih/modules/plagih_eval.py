@@ -164,9 +164,10 @@ class DummyKernel:
 
 class RegressionKernel:
 
-    def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
+    def best_fitness_function(self, *arg, **args):
+        return min( *arg, **args)
 
-        self.best_fitness_function = min  # todo check
+    def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
         self.np_best_fitness = np.min
         # , self.tf_classify_labels_map  # todo
         self.kname = kernel_name

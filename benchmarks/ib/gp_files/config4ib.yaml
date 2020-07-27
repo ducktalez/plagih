@@ -1,6 +1,0 @@
-
-pop_max: 1000
-parsimony_max: 25
-kernel_name: regression L1_absolute bounded
-complexity_measure: tree_edit_distance
-gen_max: 1000

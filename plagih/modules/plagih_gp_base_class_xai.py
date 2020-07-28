@@ -99,7 +99,7 @@ class ExplainableGP(object):
         self.gen_id = 0
 
         # class MonitoringGenerations:
-        #     # todo this might be better. maybe pandas?
+        #     # sfeh this might be better. maybe pandas?
         #     def __init__(self):
         #         self.population_tmp_done_size = {}
         #         self.pop_parsim = {}
@@ -306,8 +306,9 @@ class ExplainableGP(object):
             except Exception:
                 raise
         if gen_additionally is not None:
-            self.printpl('i', f'Adding new generations, was {self.conf.gen_max}, current gen {self.gen_id + gen_additionally} by {gen_additionally}')
+            max_gen_printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
+            self.printpl('i', f'Adding new generations, gen_max was {max_gen_printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}.\nNew max gen: {self.conf.gen_max}')
 
         self.write_config_yaml()  # just to see what config is running and what the user can set
 
@@ -535,7 +536,7 @@ class ExplainableGP(object):
     def file_population_base_karoo(self, pop_name):
         """
         Save population_* to disk.
-        # todo also save pareto/pop as labellists for easy loading?
+        # sfeh also save pareto/pop as labellists for easy loading?
         """
         file_path = file_make_dir(self.root_dir / f'info/population_{pop_name}.txt')
         with Path.open(file_path, 'w', newline='') as txt_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
@@ -1530,7 +1531,7 @@ class ExplainableGP(object):
         gen_time = time.perf_counter() - self.time_genstart
         self.monitoring_dict['gen_time'][gen_id] = gen_time
 
-        unique_tree_count = len([hash(x) for x in popul])  # sfeh analyze this?
+        unique_tree_count = len(set([hash(x) for x in popul]))  # sfeh analyze this?
         self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {gen_id}. Gen took {gen_time:4.2f}s')
         # sfeh check if there are really unique... doubt it.
         return

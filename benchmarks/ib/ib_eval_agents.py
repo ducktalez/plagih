@@ -81,13 +81,48 @@ def eval_agents():
         agent_name, sum = eval_agent(agent)
 
 
-def eval_combined_agents(agentlist):
+class AgentMerger(Ib_Agent):
+    """
+    Daniel Hein's best agent for complexity 21
+    """
+
+    def __init__(self, name, a0, a1, a2):
+        self.name = f'merged_{name}'
+        super().__init__()
+        self.a0 = (a0)
+        self.a1 = (a1)
+        self.a2 = (a2)
+
+    def decide(self, env_state):
+        self.state_history.appendleft(env_state)
+
+        if len(self.state_history) > 10:
+            self.state_history.pop()
+
+        at = np.array([0, 0, 0], dtype=np.float32)
+        SetPoint = self.get_h('p', 0)
+
+        exec('at[0] = min(max(-1, ' + self.a0 + '), 1)')
+        exec('at[1] = min(max(-1, ' + self.a1 + '), 1)')
+        exec('at[2] = min(max(-1, ' + self.a2 + '), 1)')
+
+        return at
+
+
+def eval_combined_agents(parsim_sum, parsims, codes, complete=True):
     T = 100*1000
     factor = 0.97
     time_horizon = 100
     sum = 0
 
-    a0, a1, a2 = agentlist
+    if complete:
+        a0, a1, a2 = codes
+    else:
+        a0, a1, a2 = codes
+        a2 = '0'
+
+    name = f'{parsim_sum}_{parsims[0]}_{parsims[1]}_{parsims[2]}'
+    dummy_agent = AgentMerger(name, a0, a1, a2)
 
     for p in np.arange(10, 101, 10):
         env = IDS(p=p)
@@ -95,15 +130,17 @@ def eval_combined_agents(agentlist):
         sum_t = 0
         for t in range(time_horizon):
             env_state = envstate_normalize(env.state)
-            at = [[], [], []]
-            at[0] = a0.decide(env_state)
-            at[1] = a1.decide(env_state)
-            at[2] = a2.decide(env_state)
+            at = dummy_agent.decide(env_state)
+            # at = [[], [], []]
+            # at[0] = exec(a0)(env_state)
+            # at[1] = exec(a1)(env_state)
+            # at[2] = exec(a2)(env_state)
             markovStates = env.step(at)
 
             entry = env.visibleState()[-1]
             sum_t += factor ** (time_horizon-t) * entry
         sum += sum_t / 10
+    return sum
 
 
 def eval_agent(agent):

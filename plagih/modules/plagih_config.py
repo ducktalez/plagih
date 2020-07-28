@@ -12,7 +12,7 @@ class GpConfig:
     #     self.pl_version = PLAGIH_VERSION  # version important when loading old run
     #     self.force_new_run = False  # : False,  # especially for testing, ignores backup files when true
     #     self.time_max = None  # : None,  # int(60 * 60 * 12),  # 60 = 1 min
-    #     self.gen_max = 1000  # : 1001,  # Maximum amount of generations
+    #     self.gen_max = 1000  # : 1000,  # Maximum amount of generations
     #
     #     self.pop_max = 1000  # conf['pop_max']  #: 1000,  # amount is never tested
     #     self.tree_depth_max = 10  #: 10,  # maximum Tree depth for entire run
@@ -47,7 +47,7 @@ class GpConfig:
 
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
-        self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1001,  # Maximum amount of generations
+        self.gen_max = args.gen_max or int(conf.get('gen_max', 1000))  # : 1000,  # Maximum amount of generations
         self.action_name = args.action_name or conf.get('action_name', None)
         self.kernel_name = args.kernel_name or conf.get('kernel_name', 'regression')
 

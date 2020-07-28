@@ -6,7 +6,13 @@ from sys import getsizeof
 import copy
 
 
-class DummyKernel:
+class GPKernel:
+
+    def __init__(self, *args):
+        pass
+
+
+class ClassificationKernel:
 
     def __init__(self, *args):
         pass
@@ -15,6 +21,7 @@ class DummyKernel:
         if fitness2 is None:
             return True
         elif self.classification and fitness1 > fitness2:
+        # , self.tf_classify_labels_map  # todo
             return True
 
         elif self.match and fitness1 > fitness2:
@@ -169,7 +176,6 @@ class RegressionKernel:
 
     def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
         self.np_best_fitness = np.min
-        # , self.tf_classify_labels_map  # todo
         self.kname = kernel_name
         self.tf_config = tf_config
         self.tf_device = tf_device
@@ -177,14 +183,13 @@ class RegressionKernel:
         self.origin_results = None
         self.data_train = data_train  # todo where is the best?
 
-        self.regression, self.classification, self.match = False, False, False
-
-        self.regression = True
         self.bounded = 'bounded' in kernel_name
         self.discrete = 'discrete' in kernel_name
         self.tanhpenalize = 'tanhpenalize' in kernel_name  # sfeh only makes sense when bounded
+
         self.MSE = 'MSE' in kernel_name
         self.RMSE = 'RMSE' in kernel_name
+        self.MAE = 'MAE' in kernel_name
 
         self.exploration_risk = 'relative_regression_fun' in kernel_name
         self.origin_results = None  # can only be set after the evaluation of the origin...
@@ -234,7 +239,7 @@ class RegressionKernel:
         # pairwise_fitness = self.tf_get_pairwise_fitness(solution, kernel_result, results_agent)
         pairwise_diff = solution - results_kernel
 
-        if self.MSE:  # todo huber loss! mse, mae, rmse, huber, (log)
+        if self.MSE or self.RMSE:  # todo huber loss! mse, mae, rmse, huber, (log)
             tf_error = tf.square
         else:
             tf_error = tf.abs

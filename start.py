@@ -37,11 +37,13 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-pop_max', '-pop_size', type=int)
     parser.add_argument('-gen_max', '-gen_size', type=int)
-    parser.add_argument('-gen_additionally', '-gen_add', type=int, default=0)
+    parser.add_argument('-gen_additionally', '-gen_add', type=int)
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
     parser.add_argument('-force_new_run', action='store_true')
-    parser.add_argument('-print_all', '-debug', type=Path)
+    parser.add_argument('-print_all', '-debug', action='store_true')
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
+
+    parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated is certain code should be executed. Now used to fix Linux/Windows bug related to paths.')
 
     args = parser.parse_args()
 
@@ -140,8 +142,6 @@ def main():  # argv sys.argv[1:]
         print(f'AUTOLOAD: path_origin_tree {path_origin_tree}')
         conf.kernel_name = kernel_name
         print(f'AUTOLOAD: kernel_name {kernel_name}')
-        conf.root_dir = root_dir
-        print(f'AUTOLOAD: root_dir {root_dir}')
         conf.action_name = action_name
         conf.name = prepared_run
     else:
@@ -161,7 +161,7 @@ def main():  # argv sys.argv[1:]
     # sfeh just for the conclusion...
     # self.origin_tree_path_loaded_dummy = args.origin_tree
 
-    plagih_gp.gp_run(conf, root_dir, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally)
+    plagih_gp.gp_run(conf, root_dir, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally, developer_fix=args.developer_fix)
 
 
 if __name__ == "__main__":

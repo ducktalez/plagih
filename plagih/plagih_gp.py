@@ -11,12 +11,14 @@ import yaml
 # warnings.filterwarnings('error')
 
 
-def gp_run(conf, root_dir, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally):
+def gp_run(conf, root_dir, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally, developer_fix=None):
     """
     todo YESS this is now gone
     """
     gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree)
 
+    if developer_fix:
+        gp.try_load_backup(developer_fix=developer_fix)
     if analyse:
         gp.gp_analyse(path_load_backup)
     else:

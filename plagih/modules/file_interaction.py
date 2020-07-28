@@ -100,7 +100,7 @@ def plot_sexyfy(x, y, set_left=None, set_right=None, set_top=None, right_padding
 
 def plot_end(data_2d, path_plot,
              title='', plt_curve_label='', x_label='', y_label='', yscale='linear',
-             step_where='', plt_xparam='',
+             step_where='',  # plt_xparam='',
              linestyle='-',
              marker='',
              set_left=None, set_right=None, set_top=None,
@@ -163,9 +163,9 @@ def plot_end(data_2d, path_plot,
     ax.set_title(title)
 
     if step_where:
-        ax.step(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)
+        ax.step(x, y, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)  # , plt_xparam
     else:
-        ax.plot(x, y, plt_xparam, linestyle=linestyle, marker=marker, label=plt_curve_label)
+        ax.plot(x, y, linestyle=linestyle, marker=marker, label=plt_curve_label)  # , plt_xparam
         if fill_variance is not None:
             x_std, y_var = fill_variance
             y_std = np.sqrt(y_var)

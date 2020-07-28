@@ -7,6 +7,8 @@ import importlib.util
 import itertools
 from benchmarks.ib.test_agents import *
 import yaml
+import pickle
+import yaml
 
 
 # def combined_analyze(run_name):
@@ -47,6 +49,11 @@ def combined_lists(run_name):
     lsactions = ['_0/pycode_list.yaml', '_1/pycode_list.yaml', '_2/pycode_list.yaml']
     agents = []
 
+    combipath = Path.cwd() / f'../slurm_runs/{run_name}'
+    if not Path.is_dir(combipath):
+        Path.mkdir(combipath)
+    lut_file = combipath / 'lutfile.yaml'
+
     for lsaction in lsactions:
         lsfile = Path.cwd() / f'../slurm_runs/{run_name}{lsaction}'
         print(f'Looging at file: {lsfile}')
@@ -58,18 +65,11 @@ def combined_lists(run_name):
     combined_all = []
 
     for row in merged:
-        parsim_sum = sum([x[0] for x in row])
-        fitness_sum = sum([x[1] for x in row])
+        parsim_sum = float(sum([x[0] for x in row]))
+        fitness_sum = float(sum([x[1] for x in row]))
+        parsims = [float(row[0][0]), float(row[1][0]), float(row[2][0])]
         codes = [x[3] for x in row]
-        codes2 = [x[3].replace('\\', '') for x in row]
-        # for x in codes:
-        #     print(x)
-        #     x = x.replace('\\', '')
-        #     print(x)
-        parsims = [row[0][0], row[1][0], row[2][0]]
         combined_all.append([parsim_sum, fitness_sum, parsims, codes])
-
-    # smaller = smaller[:50]  # todo todotodo
 
     combined_best_dict = {}
     for parsim_sum, fitness_sum, parsims, codes in combined_all:
@@ -82,29 +82,72 @@ def combined_lists(run_name):
 
     combined_best = [[parsim_sum, fitness_sum, parsims, codes] for parsim_sum, (fitness_sum, parsims, codes) in combined_best_dict.items()]
 
-    print(combined_best)
-
     # smaller.sort(key=lambda x: x[1])
     # smaller.sort(key=lambda x: x[0], reverse=True)
     #
     #
     # result = {s[0]: [s[1], s[2], s[3]] for s in smaller}
 
-    eval_analysis = []
+    analyse_results = []
 
-    for parsim_sum, fitness_sum, parsims, codes in combined_best:
+    try:
+        # with Path.open(lut_file, 'rb') as file:
+        with Path.open(lut_file, 'r') as file:
+            lut = yaml.load(file, Loader=yaml.FullLoader)
+    except:
+        lut = {}
+    eval_count = 0; not_evaled = 0
+    for parsim_sum, fitness_sum, parsims, codes in combined_all:  # todo todotodo combined_all or combined_best?
 
-        experiment = eval_combined_agents(parsim_sum, parsims, codes)
-        experiment_save = eval_combined_agents(parsim_sum, parsims, codes, complete=False)
+        lut_hash = f'{parsim_sum}_{parsims}_{fitness_sum}'
 
-        print(f'Combined parsimony {parsim_sum:3.0f} regr. error: {fitness_sum:.4f} {parsims}\n'
-              f'complete: {experiment}\n'
-              f'save    : {experiment_save}\n')
+        if parsim_sum < 30:
+            if lut_hash in lut:
+                experiment, experiment_save = lut[lut_hash]
+            else:
+                experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
+                experiment_save = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
+                lut[lut_hash] = [experiment, experiment_save]
+                eval_count += 1
+                if eval_count % 20 == 0:
+                    print(f'Saving lut after evaluating 20')
+                    with Path.open(lut_file, 'w') as file:
+                        _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
 
-        eval_analysis.append([parsim_sum, experiment, experiment_save])
+            print(f'Combined parsimony {parsim_sum:3.0f} regr. error: {fitness_sum:.4f} {parsims}\n'
+                  f'complete: {experiment}\n'
+                  f'save    : {experiment_save}\n')
 
-    nar = np.array(list(zip(*eval_analysis))).T
-    plt.plot(nar[0], nar[1])
+            analyse_results.append([parsim_sum, experiment, experiment_save])
+        else:
+            not_evaled += 1
+
+    print(f'Did not evaluate {not_evaled} combinations as they are too complex...')
+
+    with Path.open(lut_file, 'w') as file:
+        _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
+
+    analyse_results.sort(key=lambda x: x[0])
+    nar = np.array(list(zip(*analyse_results)))
+
+    fig, ax = plt.subplots()
+    # ax.set_yscale(yscale)
+    # ax.set_ylim(min(bottom, 0), new_top)
+    # ax.set_xlim(min(left, 0), new_right)
+    fig.tight_layout()
+    ax.set_xlabel('Complexity')
+    ax.set_ylabel('reward')
+    ax.set_title('IB evaluation of GP-agents')
+    # # only if one entry per parsimony
+    # ax.plot(nar[0], nar[1], label='all actions')
+    # ax.plot(nar[0], nar[2], label='low risk')
+    # plt.show()
+    # plt.cla()
+    # only if one entry per parsimony
+    # ax.scatter(nar[0], nar[1], color='r', label='all actions')
+    ax.scatter(nar[0], nar[2], color='b', label='low risk')
     plt.show()
+    plt.cla()
 
-combined_lists('IB_MSE_sim2')
+
+combined_lists('IB_MSE_sim2')  # todo save the evaluation process as data file

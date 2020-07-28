@@ -280,7 +280,7 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
         tree_works = True
 
     if tree_node_get_arity(tree, root_id) == 0:
-        print_warning('wwww', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)
+        print_warning('www', 'Tree is only a root node. Might occur after a simplification.', print_type=print_type)
         tree_works = allow_root_only
 
     return tree_works
@@ -329,10 +329,6 @@ def tree_set_parsimony(tree, parsimony):
     """
     Store the parsimony within the tree np-array
     """
-    if parsimony == '':
-        pass  # This is actually done when 'wiping' the tree's data
-    elif parsimony < 0:
-        print_warning('w', f'Warning: Parsimony is: {parsimony}')
 
     tree[T_parsimony][1] = parsimony
     return tree

@@ -43,7 +43,7 @@ class GpConfig:
         except:
             conf = {}
 
-        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwggaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
+        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwwggaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
 
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested

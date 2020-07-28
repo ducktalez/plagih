@@ -237,7 +237,7 @@ class ExplainableGP(object):
         p = file_make_dir(p)
         return p
 
-    def try_load_backup(self, path_load_backup=None):
+    def try_load_backup(self, path_load_backup=None, developer_fix=None):
         """
         If a backup-file is found...
         """
@@ -252,11 +252,19 @@ class ExplainableGP(object):
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
 
-                _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
-                # self.run_backup_save()
-                # self.conf.restart_count += 1
+                if developer_fix:
+                    _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                    self.run_backup_save()  # todo todotodo remove thies
+                    raise Exception('SFEH hopefully fixed a bug. You may delete this code.')
+
+                try:
+                    self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
+                except:
+                    _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                    # self.conf.restart_count += 1
 
                 printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
+
             except Exception as excep:
                 raise Exception(f'Even though a backup exists for this run, it could not be loaded because of\n{excep}')
         else:
@@ -284,8 +292,8 @@ class ExplainableGP(object):
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
-        # sfeh save complete config?
-        run_backup_data = self.conf, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict
+        a_helping_dict = {'old_config': None}  # sfeh save complete config?    # sfeh i dont think we need the config
+        run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitoring_dict  # sfeh use this later, a_helping_dict
 
         path_backup = self.file_make_dir_root(self.file_locs.file_backup_pickle)
         with Path.open(path_backup, 'wb') as file:
@@ -1012,7 +1020,7 @@ class ExplainableGP(object):
                 new_obs = '-' + obs_label if is_negative else obs_label
                 tree = tree_node_set_label(tree, nid, new_obs)
         else:
-            print_warning('wwww', 'Tree does not seem to have any nodes for filtering.', print_type=self.print_type)  # usually happens with point-filtering
+            print_warning('www', 'Tree does not seem to have any nodes for filtering.', print_type=self.print_type)  # usually happens with point-filtering
             pass
 
         return tree
@@ -1264,7 +1272,7 @@ class ExplainableGP(object):
         else:
             parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony > self.conf.parsimony_max:
-                print_warning('wwww', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
+                print_warning('www', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
                 return
 
             try:
@@ -1331,7 +1339,7 @@ class ExplainableGP(object):
                     elif row[0] == '':
                         pass
                     else:
-                        print_warning('ww', f'Unexpected row start: {row[0]}')
+                        print_warning('w', f'Unexpected row start: {row[0]}')
         # sfeh if file is a .txt file with an expression
         # elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
         #     raise Exception('SFEH needs to create an option to make trees from expression')

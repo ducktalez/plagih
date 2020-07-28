@@ -253,8 +253,8 @@ class ExplainableGP(object):
                     run_data = pickle.load(file)
 
                 _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
-                # self.run_backup_save()
-                # raise Exception('SFEH TODO DONE JUST SAVING THIS SHEEEIT')
+                self.run_backup_save()
+                raise Exception('SFEH TODO DONE JUST SAVING THIS SHEEEIT')
                 # self.conf.restart_count += 1
 
                 printez('g', f'Starting at generation: {self.gen_id}', self.print_type)

@@ -37,7 +37,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-pop_max', '-pop_size', type=int)
     parser.add_argument('-gen_max', '-gen_size', type=int)
-    parser.add_argument('-gen_additionally', type=int, default=0)
+    parser.add_argument('-gen_additionally', '-gen_add', type=int, default=0)
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
     parser.add_argument('-force_new_run', action='store_true')
     parser.add_argument('-print_all', '-debug', type=Path)
@@ -53,10 +53,10 @@ def main():  # argv sys.argv[1:]
     prepared_run = args.prepared_run
 
     try:
-        config_dir = args.load_config.parent
+        config_parent_folder = args.load_config.parent
     except:
-        config_dir = None
-    root_dir = args.root_dir or config_dir or Path.cwd()
+        config_parent_folder = None
+    root_dir = args.root_dir or config_parent_folder or Path.cwd()
     # todo
     # self.name = args.name or self.root_dir.resolve().name  # sfeh probably there are better names
     # self.load_backup_path_loaded_dummy = args.load_backup

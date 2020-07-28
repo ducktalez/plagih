@@ -22,7 +22,7 @@ class FileLocations:
     folder_plots = 'plots/'
     folder_histograms = 'agents/'
 
-    file_backup_pickle = 'backup/backup.p'  # todo
+    file_backup_pickle = 'backup/backup.p'
 
     trees_tex = 'agents/agents_trees.tex'
     folder_pycode = 'agents/'
@@ -43,13 +43,13 @@ class ExplainableGP(object):
 
     def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree):  # load_backup
         self.conf = conf
-        self.root_dir = Path(root_dir)  # todo
+        self.root_dir = Path(root_dir)
 
         print(f'\n'
               f'\tInitializing Plagih. \n'
               f'\tName: {BColors.CYAN}{self.root_dir.name}{BColors.RESET}. \n'
               f'\tLocated in: \n'
-              f'\t{self.conf.root_dir}\n')
+              f'\t{self.root_dir}\n')
         self.time_start = time.perf_counter()
 
         self.file_locs = FileLocations()
@@ -245,7 +245,7 @@ class ExplainableGP(object):
 
         if Path.is_file(path_backup):
             self.print_g('g', f'Loading data from backup-file {path_backup}')
-            try:  # todotodo todo
+            try:  # todo
                 """
                 Loading the state of the run from the pickle file
                 """
@@ -253,11 +253,10 @@ class ExplainableGP(object):
                     run_data = pickle.load(file)
 
                 _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
-                self.run_backup_save()
-                raise Exception('SFEH TODO DONE JUST SAVING THIS SHEEEIT')
+                # self.run_backup_save()
                 # self.conf.restart_count += 1
 
-                printez('g', f'Starting at generation: {self.gen_id}', self.print_type)
+                printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
             except Exception as excep:
                 raise Exception(f'Even though a backup exists for this run, it could not be loaded because of\n{excep}')
         else:
@@ -422,7 +421,7 @@ class ExplainableGP(object):
                         try:
                             cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
                         except Exception as ex:
-                            print_warning('w', f'not today, pal. {ex}')
+                            print_warning('www', f'Evolve reproduce failed: {ex}')
 
                     self.pop_append(cooltree, last_evolution=tag)
 
@@ -536,22 +535,20 @@ class ExplainableGP(object):
     def file_population_base_karoo(self, pop_name):
         """
         Save population_* to disk.
-        # todo this does obvsly not work... (every letter is a column)
-            also save pareto/pop as labellists for easy loading?
+        # todo also save pareto/pop as labellists for easy loading?
         """
-        file_path = file_make_dir(self.root_dir / f'info/population_{pop_name}.csv')
-        with Path.open(file_path, 'w', newline='') as csv_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-            target = csv.writer(csv_file, delimiter=',')
-            if self.gen_id != 0:
-                target.writerows([''])  # empty row before each generation
-            target.writerows(['Plagih GP by Simon Fehrer, inspired by Kai Staats Karoo-gp', 'Generation:', str(self.gen_id)])
+        file_path = file_make_dir(self.root_dir / f'info/population_{pop_name}.txt')
+        with Path.open(file_path, 'w', newline='') as txt_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+            # target = csv.writer(csv_file, delimiter=',')
+            # if self.gen_id != 0:
+            #     target.writerows([''])  # empty row before each generation
+            txt_file.write(f'Plagih GP by Simon Fehrer, inspired by Kai Staats Karoo-gp. Generation: {self.gen_id}\n')
 
             for ii, cooltree in enumerate(self.pop_base):
-                target.writerows([''])  # empty row before each Tree
+                txt_file.write(f'\nTree meta: {cooltree.meta}')
+                txt_file.write(f'\nas string: {cooltree}')
                 csv_formatted_tree = cooltree.pretty_format()
-                target.writerows([csv_formatted_tree])
-                stringtree = [str(cooltree).replace(',', ' ')]
-                target.writerows(stringtree)
+                txt_file.write(f'\nFormatted in layers:\n{csv_formatted_tree}\n')  # writerows only for csv
 
         return
 
@@ -567,7 +564,7 @@ class ExplainableGP(object):
         #     if self.gen_id % int(self.conf.period['gen_analysis']) == 0:
         #         self.file_conslusions()
 
-        # self.pareto_sort()  # is pareto not sorted?  todo working? check if sorted.
+        # self.pareto_sort()  # is pareto not sorted?  sfeh working? check if sorted.
 
         self.file_pareto_txt()
         self.file_population_base_karoo('last')
@@ -912,7 +909,7 @@ class ExplainableGP(object):
             # agent_name = f'{self.conf.name}_{parsim:.0f}'
             agent_name = f'{self.conf.name}_{self.env_vars.eval_action.name}_{parsim:.0f}'
             agent_as_python = cooltree.get_pycode()
-            pygents_list.append([parsim, float(fitness), agent_name, agent_as_python])  # todo fitness of origin is float32??
+            pygents_list.append([parsim, float(fitness), agent_name, agent_as_python])
 
         path = file_make_dir(self.root_dir / 'pycode_list.yaml')
         with Path.open(path, 'w') as file:
@@ -1206,7 +1203,7 @@ class ExplainableGP(object):
         try:
             cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
             parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
-            if parsimony < cooltree.meta.parsimony:  # todo use parsimony u moron
+            if parsimony < cooltree.meta.parsimony:
                 sym_fitness = self.tree_eval_fitness_train(cooltree_sym)  # todo actually not required
                 self.printpl('aa', 'Successfully reduced pareto tree!')
                 cooltree_sym.meta.fitness_train = sym_fitness  # todo update parsimony here aswell?
@@ -1364,14 +1361,14 @@ class ExplainableGP(object):
 
         used_observations = origin_cooltree.get_observation_list()
         tf_origin_results = self.kernel.eval_tf(expr_sym, used_observations)
-        fitness_train = tf_origin_results['mean_error']  # fitness currently IS the mean error
+        fitness_train = float(tf_origin_results['mean_error'])  # fitness currently IS the mean error
         if self.kernel.exploration_risk:
-            self.kernel.origin_results = tf_origin_results['results_kernel']  # now, these informations can be updated
+            self.kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
 
         origin_cooltree.meta.fitness_train = fitness_train
         origin_cooltree.meta.parsimony = 0
 
-        self.pareto.append([0, fitness_train, origin_cooltree])  # aka [3, 423, meta{}]
+        self.pareto.append([0, fitness_train, origin_cooltree])  # the origin tree is the only candidate for now -> it is in the paretofront
         self.print_g('gg', f'Loading origin tree, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return origin_cooltree  # self.origin_cooltree = copy.deepcopy(origin_cooltree)
@@ -1393,7 +1390,7 @@ class ExplainableGP(object):
             raise Exception(f'eval:{evalex}')
 
         used_observations = cooltree.get_observation_list()
-        fitness_train = self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True)
+        fitness_train = float(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True))
 
         if not check_value_is_real(fitness_train):
             raise Exception(f'Error is {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range

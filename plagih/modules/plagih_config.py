@@ -4,7 +4,7 @@ from pathlib import Path
 
 class GpConfig:
     """
-
+    (just to find this with quick search) self.conf self.config
     """
 
     # def __init__(self, conf=None):
@@ -32,7 +32,7 @@ class GpConfig:
 
     def __init__(self, args):
         """
-        SFEH NEVER try to save paths here. switching between systems is imp
+        SFEH NEVER try to save paths here. switching between systems is worse than HitlerAIDS
         """
         self.pl_version = 0.97  # must only update if vital changes were made, version important when loading old run
         self.name = args.prepared_run or 'PlagihGP_Run'  # todo
@@ -43,9 +43,7 @@ class GpConfig:
         except:
             conf = {}
 
-        self.print_type = conf.get('print_type', 'wwggaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
-        if args.print_all:
-            conf.print_type = 'wwwwaaaggggiiiff'
+        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwggaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
 
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
@@ -60,11 +58,10 @@ class GpConfig:
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_max = conf.get('parsimony_max', 50)  #: 50,
-
         self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})
 
         # sfeh not here?
-        self.evolve_list_random = conf.get('evolve_list_random')  # sfeh
+        self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
         self.complexity_measure = conf.get('complexity_measure', 'tree_edit_distance')  # sfeh check used origin here? backup loaded origin?
 
         self.lambdadist_as_string = conf.get('lambdadist_as_string', {'2f': ['lambda: random.normalvariate(0,1)',

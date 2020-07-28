@@ -44,7 +44,6 @@ def choice_weights(obs_list, max_hist=10):
     0, 1, 2, 3 is good, but
     0, 5, 10, 15 is worse
     what if variables are not all of same diff?
-    todo create list at start of run
     """
     obs_list = np.delete(obs_list, np.s_[max_hist:])
     x = len(obs_list)

@@ -84,8 +84,8 @@ class Power(Plabel):
     tf = tf.pow
     latex1 = '{{x}}^{{y}}'
     latexF = '{}^{}'
-    sym_str = '({} ** {})'
-    pycode = '({}*{})'
+    sym_str = '({}**Round({}))'
+    pycode = '({}**round({}))'
 
 
 class Abs(Plabel):
@@ -93,7 +93,7 @@ class Abs(Plabel):
     fun_label = 'abs'
     arity = 1
     xtype = 'f2f'
-    c_weight = 0.5
+    c_weight = 1
     tf = tf.abs
     latex1 = 'abs'
     latexF = '|{}|'
@@ -106,12 +106,25 @@ class Sign(Plabel):
     fun_label = 'sign'
     arity = 1
     xtype = 'f2f'
-    c_weight = 0.5
+    c_weight = 1
     tf = tf.sign
     latex1 = 'sign'
     latexF = 'sign({})'
     sym_str = 'sign({})'
     pycode = 'np.sign({})'
+
+
+class Round(Plabel):
+
+    fun_label = 'Round'
+    arity = 1
+    xtype = 'f2f'
+    c_weight = 1
+    tf = tf.round
+    latex1 = 'round'
+    latexF = 'round({})'
+    sym_str = 'Round({})'
+    pycode = 'round({})'
 
 
 class Square(Plabel):
@@ -124,7 +137,7 @@ class Square(Plabel):
     latex1 = 'x^2'
     latexF = '{}^2'
     sym_str = 'Square({})'
-    pycode = '({}**2)'
+    pycode = '({})**2'
 
 
 class Sqrt(Plabel):
@@ -146,7 +159,7 @@ class Log(Plabel):
     arity = 1
     xtype = 'f2f'
     c_weight = 3
-    tf = tf.log
+    tf = tf.math.log
     latex1 = '\\log()'
     latexF = '\\log{}'
     sym_str = 'log({})'
@@ -159,7 +172,7 @@ class Log1p(Plabel):
     arity = 1
     xtype = 'f2f'
     c_weight = 3
-    tf = tf.log1p
+    tf = tf.math.log1p
     latex1 = '\\log(1+x)'
     latexF = '\\log(1+{})'
     sym_str = 'log1p({})'
@@ -309,6 +322,7 @@ class Not(Plabel):
     pycode = 'not({})'
 
 
+
 class Eq(Plabel):
 
     fun_label = '=='
@@ -424,6 +438,8 @@ class Max(Plabel):
     latexF = '\\max({}, {})'
     sym_str = 'Maxi({}, {})'
     pycode = 'max({}, {})'
+
+
 
 
 class Observation(Plabel):

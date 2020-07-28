@@ -223,7 +223,7 @@ def obs_get_timedelta(name, re_pattern='_\d+$', none_return=0):
     can be used to enrich old runs 'manually', otherwise only used in header_entry_get_tempdiff
     """
     re_search = re.search(re_pattern, name)  # re_search => ['_12']
-    # todo what is the best solution? '\_\d+$' is the correct regex using search.
+    # sfeh what is the best solution? '\_\d+$' is the correct regex using search.
     if re_search:
         temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
         return int(temp_diff)

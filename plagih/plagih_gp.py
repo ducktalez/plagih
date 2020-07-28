@@ -13,7 +13,7 @@ import yaml
 
 def gp_run(conf, root_dir, path_data_csv, path_origin_tree, path_load_backup, analyse, force_new_run, gen_additionally, developer_fix=None):
     """
-    todo YESS this is now gone
+    sfeh YESS this is now gone
     """
     gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree)
 

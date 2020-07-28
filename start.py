@@ -166,4 +166,4 @@ def main():  # argv sys.argv[1:]
 
 if __name__ == "__main__":
     main()
-    # todo rename start.py to cool name
+    # sfeh rename start.py to cool name

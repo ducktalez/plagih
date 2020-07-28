@@ -122,7 +122,7 @@ class Andb(Function):
         if a.is_Boolean and b.is_Boolean:
             return a and b
         else:
-            return
+            return None
 
     def _sympy_(self, a, b):
         return eval(self, a, b)
@@ -146,7 +146,7 @@ class Orb(Function):
         if a.is_Boolean and b.is_Boolean:
             return a and b
         else:
-            return
+            return None
 
     def _sympy_(self, a, b):
         return eval(self, a, b)
@@ -166,7 +166,7 @@ class Notb(Function):
         if sympify(a).is_Boolean:  # sfeh sympify.is_xxx here seems dumb
             return not a
         else:
-            return
+            return None
 
     def _sympy_(self, a):
         return eval(self, a)
@@ -183,7 +183,7 @@ class Square(Function):
             return a**2  # see
         else:
             # print('sympy debug, Square(a). a is {} and of type {}'.forjmat(a, type(a)))
-            return
+            return None
 
     def _sympy_(self, a):
         return eval(self, a)
@@ -209,47 +209,13 @@ class Round(Function):
 
     @classmethod
     def eval(cls, a):
-        if sympify(a).is_Atom:
+        if a.is_number:  # sympify(a) evaluates first... but i guess it is evaluated already
             return round(a)  # see
         else:
-            return
+            return  # f'Round({a})'
 
     def _sympy_(self, a):
         return eval(self, a)
-
-
-# class Ftob(Function):
-#     """
-#     Dummy function to convert Float to boolean
-#     """
-#     nargs = 1
-#
-#     @classmethod
-#     def eval(cls, a):
-#         if (a > 0) == True or (a > 0) == False:
-#             return True if a > 0 else False
-#         else:
-#             return
-#
-#     def _sympy_(self, a):
-#         return eval(self, a)
-#
-#
-# class Btof(Function):
-#     """
-#     Dummy function to convert Boolean to Float
-#     """
-#     nargs = 1
-#
-#     @classmethod
-#     def eval(cls, a):
-#         if a == True or a == False:
-#             return 1 if a else 0
-#         else:
-#             return
-#
-#     def _sympy_(self, a):
-#         return eval(self, a)
 
 
 local_sympy_dict = {'Ifte': Ifte,
@@ -270,7 +236,7 @@ def plagih_sympify(function_string):
     Or this issue: https://github.com/sympy/sympy/issues/17785
 
     Sympy bug #2:
-    >>> print(plagih_sympify('a<zoo'))
+    print(plagih_sympify('a<zoo'))
     throws an exception.
     -> Try-except block for this case
     """
@@ -278,3 +244,13 @@ def plagih_sympify(function_string):
         return sympify(sympify(function_string, locals=local_sympy_dict))
     except:
         return 'nan'  # 'nan' always evaluates to nan
+
+
+if __name__ == "__main__":
+    print('Running sympify example')
+    expr = 'Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))'
+    expr = 'Round(-123.333334234) + Round(Shift_2)'
+    expr = 'Round(-123.333334234) + Round(Round(Shift_2))'
+    print(plagih_sympify(expr))
+
+

@@ -286,7 +286,7 @@ def tree_check_quick(tree, karoo=True, print_type=None, allow_root_only=True):
     return tree_works
 
 
-def tree_check_deep(tree, print_type=None):
+def tree_check_deep(tree):
     """
     Performs all checks that we currently have
     # sfeh do not use this if trees are safely generated
@@ -301,14 +301,6 @@ def tree_check_deep(tree, print_type=None):
         tree_works = True
 
     return tree_works
-
-
-def tree_check_xtypes(tree):
-    for node in tree_iterate_range(tree):
-        if tree[N_xtype][node] == '':  # are xtypes set?
-            # print_warning('ww', 'xtypes in tree were not set correctly.\n{}'.forsmat(tree))
-            return False
-    return True
 
 
 def tree_set_fitness(tree, fitness):

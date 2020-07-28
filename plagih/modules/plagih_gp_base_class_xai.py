@@ -1278,8 +1278,8 @@ class ExplainableGP(object):
             try:
                 fitness_train = self.tree_eval_fitness_train(cooltree)
             except Exception as evalex:
-                print_warning('www', f'Exception while evaluating: {evalex}', print_type=self.print_type)
-                # eval_fails.append(str(ex))
+                print_warning('wwww', f'Exception while evaluating: {evalex}', print_type=self.print_type)
+                # eval_fails.append(str(ex))  # sfeh
                 # continue
                 return
 

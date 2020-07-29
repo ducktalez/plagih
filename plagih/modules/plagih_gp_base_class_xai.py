@@ -643,7 +643,7 @@ class ExplainableGP(object):
             operator_tuples = yaml_load(Path(path_operators))
             # sfeh lel, 100% excepts as never loaded this
         except:
-            print_warning('www', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_tuples.', print_type=self.print_type)
+            self.printpl('i', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_tuples.')
             operator_tuples = [['+', 2],
                                ['-', 1], ['Usub', 1],
                                ['*', 2], ['/', 1],
@@ -724,7 +724,7 @@ class ExplainableGP(object):
         if Path.is_file(path_distrib):
             lambdadist_as_string = yaml_load(path_distrib)
         else:
-            print_warning('www', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.', print_type=self.print_type)
+            self.printpl('i', 'Opt-in not specified: Distributions-file (for random leaf-node constants) does not exist. Using default set.')
             lambdadist_as_string = self.conf.lambdadist_as_string
 
         choose_distributions = {'2f': [], '2b': []}
@@ -1276,7 +1276,7 @@ class ExplainableGP(object):
         else:
             parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony > self.conf.parsimony_max:
-                print_warning('www', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
+                print_warning('wwww', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
                 return
             try:
                 fitness_train = self.tree_eval_fitness_train(cooltree)

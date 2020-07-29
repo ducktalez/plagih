@@ -132,7 +132,7 @@ def main():  # argv sys.argv[1:]
         else:
             kernel_name += ' MAE'
         kernel_name += ' tanhpenalize' if 'tanh' in prepared_run else ''
-        kernel_name += ' relative_regression_fun' if 'explun' in prepared_run else ''
+        kernel_name += ' relative_regression_fun' if 'explun' in prepared_run else ''  # explun: explore-punishment
 
         # root_dir = pathify(f'slurm_runs/{prepared_run}')
         root_dir = pathify(f'slurm_runs/{prepared_run[:-2]}/{prepared_run}')

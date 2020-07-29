@@ -16,7 +16,7 @@ def latex_treeviz_full(tikz_forest_list):
     sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
-    forest_trees = '\n'.join(tikz_forest_list)
+    forest_trees = ' '.join(tikz_forest_list)  # sfeh todo there was a \n does this work now?
 
     latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{standalone}' \
                        '\n\\usepackage{forest}' \

@@ -50,14 +50,14 @@ run_starts = [
     
     # 'MTC200_MAE_scratch',
     # 'MTC200_MAE_gpFfriendly',
-    # 'MTC200_MAE_preset',
-    # 'MTC200_MAE_simple',
-    # 'MTC200_MAE_simple_fix',
-    # 'MTC200_MAE_simplePlus_fix',
-    # 'MTC200_MAE_simplePlus',
+    'MTC200_MAE_preset',
+    'MTC200_MAE_simple',
+    'MTC200_MAE_simple_fix',
+    'MTC200_MAE_simplePlus_fix',
+    'MTC200_MAE_simplePlus',
     #
-    # 'MTC200_MAE_explun_simple',
-    # 'MTC200_MAE_explun_gpfriendly_fix',
+    'MTC200_MAE_explun_simple',
+    'MTC200_MAE_explun_gpfriendly_fix',
     'MTC200_MAE_explun_preset_fix',
     #
     # """

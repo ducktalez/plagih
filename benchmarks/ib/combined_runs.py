@@ -33,7 +33,7 @@ def get_combined_runs(agents):
         parsims = [float(row[0][0]), float(row[1][0]), float(row[2][0])]
         codes = [x[3] for x in row]
         combined_all.append(
-            {'parsim_sum': parsim_sum, 'experiment': None, 'experiment_save': None, 'parsims': parsims, 'codes': codes,
+            {'parsim_sum': parsim_sum, 'experiment': None, 'experiment_safe': None, 'parsims': parsims, 'codes': codes,
              'fitness_sum': fitness_sum, 'f_squared': f_squared, 'f_norm': f_norm, 'f_normsub': f_normsub, 'f_0div': f_0div, 'f_0sub': f_0sub})
     return combined_all
 
@@ -63,21 +63,21 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim):
     # 
     #         if parsim_sum < max_parsim:
     #             if lut_hash in lut:
-    #                 experiment, experiment_save = lut[lut_hash]  # todo more evaluations? average?
+    #                 experiment, experiment_safe = lut[lut_hash]  # todo more evaluations? average?
     #             else:
     #                 codes = arow['codes']
     #                 experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
-    #                 experiment_save = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
-    #                 print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_save}')
-    #                 lut[lut_hash] = [experiment, experiment_save]
+    #                 experiment_safe = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
+    #                 print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_safe}')
+    #                 lut[lut_hash] = [experiment, experiment_safe]
     #                 eval_count += 1
     #                 if eval_count % 20 == 0:
     #                     print(f'Saving lut after evaluating 20')
     #                     with Path.open(lut_file, 'w') as file:
     #                         _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
     #             combined_best2[measr]['experiment'] = experiment
-    #             combined_best2[measr]['experiment_save'] = experiment_save
-    #             analyse_best[measr].append([parsim_sum, experiment, experiment_save])
+    #             combined_best2[measr]['experiment_safe'] = experiment_safe
+    #             analyse_best[measr].append([parsim_sum, experiment, experiment_safe])
     #         else:
     #             not_evaled += 1
 
@@ -89,13 +89,13 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim):
 
         if parsim_sum < max_parsim:
             if lut_hash in lut:
-                experiment, experiment_save = lut[lut_hash]  # todo more evaluations? average?
+                experiment, experiment_safe = lut[lut_hash]  # todo more evaluations? average?
             else:
                 codes = arow['codes']
                 experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
-                experiment_save = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
-                print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_save}')
-                lut[lut_hash] = [experiment, experiment_save]
+                experiment_safe = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
+                print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_safe}')
+                lut[lut_hash] = [experiment, experiment_safe]
                 eval_count += 1
                 if eval_count % 20 == 0:
                     print(f'Saving lut after evaluating 20')
@@ -103,7 +103,7 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim):
                         _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
 
             combined_all[ii]['experiment'] = experiment
-            combined_all[ii]['experiment_save'] = experiment_save
+            combined_all[ii]['experiment_safe'] = experiment_safe
         else:
             not_evaled += 1
 
@@ -133,93 +133,100 @@ def combined_lists(run_name, max_parsim):
     combined_all.sort(key=lambda x: x['parsim_sum'])
     
     combined_all = eval_and_lut(root_dir_eval, combined_all, max_parsim)
-    
-    plotibeval(combined_all)
-    
-    """
-    Creating the candidates to be analysed here
-    """
-    # # # combined_best = {}
-    # combined_best2 = {'fitness_sum': {}, 'f_norm': {}, 'f_normsub': {}, 'f_0div': {}, 'f_0sub': {}}
-    # # analyse_best = {'fitness_sum': [], 'f_norm': [], 'f_normsub': [], 'f_0div': [], 'f_0sub': []}
-    # # analyse_all = {'fitness_sum': [], 'f_norm': [], 'f_normsub': [], 'f_0div': [], 'f_0sub': []}
-    # 
-    # for measr in ['fitness_sum', 'f_squared', 'f_norm', 'f_normsub', 'f_0div', 'f_0sub']:
-    #     for row in combined_all:
-    #         parsim_sum = row['parsim_sum']
-    #         if parsim_sum in combined_best2[measr]:
-    #             if row[measr] < combined_best2[measr][parsim_sum][measr]:
-    #                 combined_best2[measr][parsim_sum] = row
-    #         else:
-    #             combined_best2[measr][parsim_sum] = row
-    #     
-    #     # todo simon msed?
-    #     # msed = math.sqrt(parsims[0] ** 2 + parsims[1] ** 2 + parsims[2] ** 2)
-    #     # if msed in combined_best_msed_dict:
-    #     #     if fitness_sum < combined_best_msed_dict[msed][0]:
-    #     #         combined_best_msed_dict[msed] = [parsim_sum, fitness_sum, parsims, codes]
-    #     # else:
-    #     #     combined_best_msed_dict[msed] = [parsim_sum, fitness_sum, parsims, codes]
-    # 
-    # # combined_best = [[parsim_sum, fitness_sum, parsims, codes] for parsim_sum, (fitness_sum, parsims, codes) in combined_best.items()]
-    # # combined_mse_best = [[parsim_sum, fitness_sum, parsims, codes] for msed, (parsim_sum, fitness_sum, parsims, codes) in combined_best2.items()]
+
+    combined_all_p = {}
+    combined_all_a = [{}, {}, {}]
+    for row in combined_all:
+        psum = row['parsim_sum']
+        try:
+            combined_all_p[psum].append(row)
+        except:
+            combined_all_p[psum] = [row]
+        for a in range(3):
+            px = row['parsims'][a]
+            try:
+                combined_all_a[a][px].append(row)
+            except:
+                combined_all_a[a][px] = [row]
+
+    plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval)
     
     
-def plotibeval(combined_all):
-    parsims = list(set([x['parsim_sum'] for x in combined_all])).sort()
-    
-    def get_best_lists(combined_all, measr):
-        combined_all
+def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval):
+    parsims = list(set([x['parsim_sum'] for x in combined_all]))
+    parsims.sort()
         
-    for measr in ['fitness_sum', 'f_norm', 'f_normsub', 'f_0div', 'f_0sub']:
+    for measr in ['fitness_sum', 'f_norm', 'f_squared', 'f_normsub', 'f_0div', 'f_0sub']:
 
         """
         plot best (plot)
         """
-        plot_best = analyse_best[measr]
-        plot_best.sort(key=lambda x: x[0])
-        x = [x[0] for x in plot_best]
-        y_all = [y[1] for y in plot_best]
-        y_safe = [y[2] for y in plot_best]
+        res = [min([row for row in combined_all_p[p]], key=lambda x: x[measr]) for p in parsims]
+        # res = max([x for x in res1], key=lambda l: l[measr])
+        res.sort(key=lambda x: x['parsim_sum'])
+        xx = [x['parsim_sum'] for x in res]
+        y_all = [y['experiment'] for y in res]
+        y_safe = [y['experiment_safe'] for y in res]
 
         plt.tight_layout()
         fig, ax = plt.subplots()
         ax.set_xlabel('complexity')
         ax.set_ylabel('reward')
-        ax.set_title(f'IB eval {run_name} ({measr})')
+        ax.set_ylim(-10000, -5000)
+        ax.set_title(f'{run_name} ({measr})')
         # # only if one entry per parsimony
-        ax.plot(x, y_all, label='all actions', marker='.', color='r', )
-        ax.plot(x, y_safe, label='low risk', marker='.', color='b')
-        plt.savefig(root_dir_eval / f'{measr}-plot.png')
+        ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
+        ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
+        plt.savefig(root_dir_eval / f'plot-{measr}.png')
         plt.close()
 
-        """
-        plot all (scatter)
-        """
-        plot_all = analyse_all[measr]
-        plot_all.sort(key=lambda x: x[0])
-        x = [x[0] for x in plot_all]
-        y_all = [y[1] for y in plot_all]
-        y_safe = [y[2] for y in plot_all]
+        for a in range(3):
+            tmp_comb = combined_all_a[a]
+            res = [max(row, key=lambda x: x[measr]) for p, row in tmp_comb.items()]
+            # res = max([x for x in res1], key=lambda l: l[measr])
+            res.sort(key=lambda x: x['parsim_sum'])
+            xx = [x['parsim_sum'] for x in res]
+            y_all = [y['experiment'] for y in res]
+            y_safe = [y['experiment_safe'] for y in res]
 
-        plt.tight_layout()
-        fig, ax = plt.subplots()
-        ax.set_title(f'IB eval {run_name} ({measr})')
-        ax.set_xlabel('complexity')
-        ax.set_ylabel('reward')
-        # only if one entry per parsimony
-        ax.scatter(x, y_all, label='all actions', marker='.', color='r')
-        ax.scatter(x, y_safe, label='low risk', marker='.', color='b')
-        plt.savefig(root_dir_eval / f'{measr}-scatter.png')
-        plt.close()
+            plt.tight_layout()
+            fig, ax = plt.subplots()
+            ax.set_xlabel('complexity')
+            ax.set_ylabel('reward')
+            # ax.set_ylim(-10000, -5000)  # todo
+            ax.set_title(f'{run_name} ({measr})')
+            # # only if one entry per parsimony
+            ax.scatter(xx, y_all, label='all actions', marker='.', color='r', )
+            ax.scatter(xx, y_safe, label='low risk', marker='.', color='b')
+            plt.savefig(root_dir_eval / f'act-{a}-scatter-{measr}.png')
+            plt.close()
 
-        for dim in range(3):
-            plot_all = analyse_all[measr]
-            plot_all.sort(key=lambda x: x[0])
-            x = [x[0] for x in plot_all]
-            y_all = [y[1] for y in plot_all]
-            y_safe = [y[2] for y in plot_all]
-
+        # """
+        # plot all (scatter)
+        # """
+        # plot_all = analyse_all[measr]
+        # plot_all.sort(key=lambda x: x[0])
+        # x = [x[0] for x in plot_all]
+        # y_all = [y[1] for y in plot_all]
+        # y_safe = [y[2] for y in plot_all]
+        #
+        # plt.tight_layout()
+        # fig, ax = plt.subplots()
+        # ax.set_title(f'IB eval {run_name} ({measr})')
+        # ax.set_xlabel('complexity')
+        # ax.set_ylabel('reward')
+        # # only if one entry per parsimony
+        # ax.scatter(x, y_all, label='all actions', marker='.', color='r')
+        # ax.scatter(x, y_safe, label='low risk', marker='.', color='b')
+        # plt.savefig(root_dir_eval / f'{measr}-scatter.png')
+        # plt.close()
+        #
+        # for dim in range(3):
+        #     plot_all = analyse_all[measr]
+        #     plot_all.sort(key=lambda x: x[0])
+        #     x = [x[0] for x in plot_all]
+        #     y_all = [y[1] for y in plot_all]
+        #     y_safe = [y[2] for y in plot_all]
 
 
 def main():
@@ -253,3 +260,4 @@ if __name__ == '__main__':
     main()
 
 # todo ein graph pro dimension
+# todo print 20 best results in general?

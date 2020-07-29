@@ -100,21 +100,35 @@ class ExplainableGP(object):
         self.best_fitness = None  # keeps track of the current best fitness
         self.gen_id = 0
 
-        # class MonitoringGenerations:
-        #     # sfeh this might be better. maybe pandas?
-        #     def __init__(self):
-        #         self.population_tmp_done_size = {}
-        #         self.pop_parsim = {}
-        #         self.pop_last_evolves = {}
-        #         self.fitness_average = {}
-        #         self.fitness_variance = {}
-        #         self.best_candidate = {}
-        #         # 'complexity_list = {},  # not used, just uses memory
-        #         self.complexity_average = {}
-        #         self.complexity_mean = {}
-        #         self.complexity_variance = {}  # variance can be deleted, only std-error is needed delete v1
-        #         self.pop_trees_complexity_std_error = {}
-        #         self.gen_time = {}
+        class MonitoringGenerations:
+            # sfeh this might be better. maybe pandas?
+            def __init__(self):
+                self.population_tmp_done_size = {}
+                self.pop_parsim = {}
+                self.pop_last_evolves = {}
+                self.fitness_average = {}
+                self.fitness_variance = {}
+                self.best_candidate = {}
+                # 'complexity_list = {},  # not used, just uses memory
+                self.complexity_average = {}
+                self.complexity_mean = {}
+                self.complexity_variance = {}  # variance can be deleted, only std-error is needed delete v1
+                self.pop_trees_complexity_std_error = {}
+                self.gen_time = {}
+
+            def load_old_monitoring_dict(self, monitoring_dict):
+                self.population_tmp_done_size = monitoring_dict.get('population_tmp_done-size', {})
+                self.pop_parsim = monitoring_dict.get('pop_parsim', {})
+                self.pop_last_evolves = monitoring_dict.get('pop_last_evolves', {})
+                self.fitness_average = monitoring_dict.get('fitness_average', {})
+                self.fitness_variance = monitoring_dict.get('fitness_variance', {})
+                self.best_candidate = monitoring_dict.get('best_candidate', {})
+                # 'complexity_list = monitoring_dict.get('complexity_list', {}),  # not used, just uses memory
+                self.complexity_average = monitoring_dict.get('complexity_average', {})
+                self.complexity_mean = monitoring_dict.get('complexity_mean', {})
+                self.complexity_variance = monitoring_dict.get('complexity_variance', {})  # variance can be deleted, only std-error is needed delete v1
+                self.pop_trees_complexity_std_error = monitoring_dict.get('pop:trees:complexity:std_error', {})
+                self.gen_time = monitoring_dict.get('gen_time', {})
 
         self.monitoring_dict = {'population_tmp_done-size': {},
                                 'pop_parsim': {},
@@ -161,7 +175,7 @@ class ExplainableGP(object):
             return evolve_list
 
         try:
-            evolve_loop = self.conf.evolve_list
+            evolve_loop = self.evolve_list
             self.printpl('i', 'Using evolve rates from config')
         except:
 
@@ -239,6 +253,23 @@ class ExplainableGP(object):
         p = file_make_dir(p)
         return p
 
+    def run_backup_save(self):
+        """
+        automatically saves everything important after a certain amount of time
+        - save the pareto front (custom_done)
+        - save the last generation (custom_done)
+        - Save valuable meta-data_csv_path: current generation (custom_done)
+        """
+
+        a_helping_dict = {'old_config': None}  # sfeh save complete config?    # sfeh i dont think we need the config
+        run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitoring_dict  # sfeh use this later, a_helping_dict
+
+        path_backup = self.file_make_dir_root(self.file_locs.file_backup_pickle)
+        with Path.open(path_backup, 'wb') as file:
+            pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
+        self.printpl('f', f'Backup: {path_backup.as_posix()}')
+        return
+
     def try_load_backup(self, path_load_backup=None):
         """
         If a backup-file is found...
@@ -291,23 +322,6 @@ class ExplainableGP(object):
         """
         self.pareto.sort(key=lambda x: x[0])
 
-    def run_backup_save(self):
-        """
-        automatically saves everything important after a certain amount of time
-        - save the pareto front (custom_done)
-        - save the last generation (custom_done)
-        - Save valuable meta-data_csv_path: current generation (custom_done)
-        """
-
-        a_helping_dict = {'old_config': None}  # sfeh save complete config?    # sfeh i dont think we need the config
-        run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitoring_dict  # sfeh use this later, a_helping_dict
-
-        path_backup = self.file_make_dir_root(self.file_locs.file_backup_pickle)
-        with Path.open(path_backup, 'wb') as file:
-            pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.printpl('f', f'Backup: {path_backup.as_posix()}')
-        return
-
     def plagih_gp_run(self, path_load_backup, force_new_run=False, gen_additionally=None):
         """
         regular plagih run
@@ -321,9 +335,9 @@ class ExplainableGP(object):
             except Exception:
                 raise
         if gen_additionally is not None:
-            max_gen_printdummy = copy.deepcopy(self.conf.gen_max)
+            printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
-            self.printpl('i', f'Adding new generations, gen_max was {max_gen_printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}.\nNew max gen: {self.conf.gen_max}')
+            self.printpl('i', f'Adding new generations, gen_max was {printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}.\nNew max gen: {self.conf.gen_max}')
 
         self.write_config_yaml()  # just to see what config is running and what the user can set
 
@@ -407,7 +421,7 @@ class ExplainableGP(object):
 
                 for nn in range(evolve_num):
                     if self.origin_is_fix:
-                        new_tree = self.pop_random_from_origin_fix(call_params, self.origin_cooltree)
+                        new_tree = self.pop_random_from_origin_fix(call_params)
                     else:
                         new_tree = self.pop_random(call_params)
                     new_cooltree = cooltree_from_oldtree(new_tree)
@@ -496,7 +510,7 @@ class ExplainableGP(object):
 
                 if self.origin_is_fix:
                     for nn in range(evolve_num):
-                        new_tree = self.pop_random_from_origin_fix(call_params, self.origin_cooltree)
+                        new_tree = self.pop_random_from_origin_fix(call_params)
                         cooltree = cooltree_from_oldtree(new_tree)
                         self.pop_append(cooltree, last_evolution=tag)
                 else:
@@ -694,7 +708,7 @@ class ExplainableGP(object):
 
         for ops_tupel in operator_tuples:
             label = ops_tupel[0]
-            ops_tupel[1] = float(ops_tupel[1])
+            ops_tupel = (ops_tupel[0], float(ops_tupel[1]))
 
             op_info = op[label]
             xtype = op_info['xtype']
@@ -841,7 +855,7 @@ class ExplainableGP(object):
         - fill tree meta-data, just in case we want to visualise anything of it
         - create latex-forest representation
         """
-        latex_element = []
+        latex_elements = []
 
         for (parsim, fitness, cooltree) in self.pareto:
 
@@ -854,20 +868,20 @@ class ExplainableGP(object):
 
             cooltree.meta.last_evolution = 'texify'
             tree = cooltree.get_oldtree()
-            latex_element.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n\n')
+            latex_elements.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n\n')
 
             forest_viz = latex_tree_get_forest(tree, tight_viz=False)
-            latex_element.append(forest_viz)
+            latex_elements.append(forest_viz)
 
-            latex_element.append('Tight layout:\n')
+            latex_elements.append('Tight layout:')
             # try:
             forest_viz_tight = latex_tree_get_forest(tree)
-            latex_element.append(forest_viz_tight)
+            latex_elements.append(forest_viz_tight)
             # except Exception as tvex:
             #     print_e(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
-            #     latex_element.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
+            #     latex_elements.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
 
-        latex_full_doc = latex_treeviz_full(latex_element)
+        latex_full_doc = latex_treeviz_full(latex_elements)
 
         path_trees_tex = self.file_make_dir_root(self.file_locs.trees_tex)
         with Path.open(path_trees_tex, 'w') as file:
@@ -1073,7 +1087,7 @@ class ExplainableGP(object):
 
         return build_spec, size_mode, mean_min_max_var, full_or_grow
 
-    def pop_random_from_origin_fix(self, call_params, origin_cooltree):
+    def pop_random_from_origin_fix(self, call_params):
         """
         insert a (random) number of branches at the first possible "layer"
         (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
@@ -1086,7 +1100,7 @@ class ExplainableGP(object):
 
         # tree_base = tree.copy()
         # ('We are about to create new branches randomly at nodes {}.'.formjat(layer0_ids))
-        origin_tree = origin_cooltree.get_oldtree()
+        origin_tree = self.origin_cooltree.get_oldtree()
         layer0_ids = tree_get_mutatable_layer(origin_tree, 0)
 
         build_split = []
@@ -1525,6 +1539,14 @@ class ExplainableGP(object):
             self.best_fitness = self.kernel.best_fitness_function(pop_fitness_best, self.best_fitness)
         except:
             self.best_fitness = pop_fitness_best
+
+        # todo safe...
+        #  evolotion-fitness
+        #  evolution-parsimony
+        #
+        #
+        #
+        #  .
 
         self.monitoring_dict['population_tmp_done-size'][gen_id] = len(popul)
         self.monitoring_dict['pop_parsim'][gen_id] = pop_parsim

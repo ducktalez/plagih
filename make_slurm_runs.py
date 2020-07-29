@@ -18,11 +18,14 @@ run_starts = [
 
     # 'IB_RMSE_tanh_udluft_0', 'IB_RMSE_tanh_udluft_1', 'IB_RMSE_tanh_udluft_2',
 
-    # 'IB_RMSE_sim1_0', 'IB_RMSE_sim1_1', 'IB_RMSE_sim1_2',
-    'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
-    'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
+
+    # 'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
+    # 'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
     'IB_RMSE_explun_tanh_sim2_0', 'IB_RMSE_explun_tanh_sim2_1', 'IB_RMSE_explun_tanh_sim2_2',
     'IB_MSE_tanh_sim2_0', 'IB_MSE_tanh_sim2_1', 'IB_MSE_tanh_sim2_2',
+    'IB_MAE_tanh_sim2_0', 'IB_MAE_tanh_sim2_1', 'IB_MAE_tanh_sim2_2',
+    'IB_MAE_explun_tanh_sim2_0', 'IB_MAE_explun_tanh_sim2_1', 'IB_MAE_explun_tanh_sim2_2',
+    'IB_MAE_sim2_0', 'IB_MAE_sim2_1', 'IB_MAE_sim2_2',
 
     # 'MTC200_MAE_scratch',
     # 'MTC200_MAE_gpFfriendly',
@@ -32,18 +35,22 @@ run_starts = [
     # 'MTC200_MAE_simplePlus_fix',
     # 'MTC200_MAE_simplePlus',
     #
-    # 'MTC75_MAE_scratch',
-    # 'MTC75_MAE_simple',
-    # 'MTC75_MAE_simple_fix',
+    'MTC75_MAE_scratch',
+    'MTC75_MAE_simple',
+    'MTC75_MAE_simple_fix',
 
-    # 'MTC200_MAE_explun_simple',
-    # 'MTC200_MAE_explun_gpfriendly_fix',
-    'MTC200_MAE_explun_preset_fix',
-    'MTC200_MAE_explun_simple_fix',
+    'MTC200_MAE_explun_simple',
+    'MTC200_MAE_explun_gpfriendly_fix',
+    # 'MTC200_MAE_explun_preset_fix',
+    # 'MTC200_MAE_explun_simple_fix',
+    #
+    # 'MTC200_MAE_tanh_simple_fix',
+    # 'MTC200_MAE_explun_tanh_simple_fix',
+    # 'MTC200_RMSE_explun_tanh_simple_fix',
 
-    'MTC200_MAE_tanh_simple_fix',
-    'MTC200_MAE_explun_tanh_simple_fix',
-    'MTC200_RMSE_explun_tanh_simple_fix',
+    ### NOPE ###
+
+    # 'IB_RMSE_sim1_0', 'IB_RMSE_sim1_1', 'IB_RMSE_sim1_2',
 ]
 
 complete_params = []
@@ -55,7 +62,7 @@ complete_params = []
 # for run_name in run_starts:
 #     Path.mkdir(Path.cwd() / f'benchmarks/slurm_runs/{run_name}')  # todo hate this done here
 
-# todo --output=./benchmarks/slurm_runs/{run_name}/slurm-%j.out # not used anymore cause its shit
+# sfeh --output=./benchmarks/slurm_runs/{run_name}/slurm-%j.out # not used anymore cause its shit
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
     [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts])
 

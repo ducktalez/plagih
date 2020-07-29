@@ -262,7 +262,7 @@ class ExplainableGP(object):
                 try:
                     self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
                 except:
-                    _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                    self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
                     # self.conf.restart_count += 1
 
                 printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
@@ -324,13 +324,25 @@ class ExplainableGP(object):
 
         if self.gen_id == 0:
             self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
-            self.gen_reset_parameters()
+
+            self.time_genstart = time.perf_counter()
+            self.population_tmp = []
             self.gen_create_initial()
+
+            self.pop_analyse()
+            self.pop_base = self.population_tmp[:]
+            self.file_population_base_karoo('first')  # first gen only
 
         while self.run_continues():  # max generation, max time, done...
             # self.printpl('gggg', f'Evolving Generation {self.gen_id}')
-            self.gen_create_loop()
+            self.gen_id += 1
+            self.time_genstart = time.perf_counter()
+            self.population_tmp = []
+            self.gen_next_population()
             self.periodical_procedures()
+
+            self.pop_analyse()
+            self.pop_base = self.population_tmp[:]
             self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')
         else:
             printez('g', f'Done after Generation {self.gen_id}.', print_type=self.print_type)
@@ -395,21 +407,15 @@ class ExplainableGP(object):
                         new_tree = self.pop_random(call_params)
                     new_cooltree = cooltree_from_oldtree(new_tree)
                     self.pop_append(new_cooltree, last_evolution=tag)
+        return
 
-        self.pop_analyse()
-        self.pop_base = self.population_tmp[:]
-        self.file_population_base_karoo('first')  # first gen only
-
-    def gen_create_loop(self):
+    def gen_next_population(self):
         """
         Creates all new Generations.
         - adjust parameters for this generation (parsimony threshold)
         - Create a gene pool (kick out too complex candidates)
         """
         # All gp creators: name, function, num of trees from tournament selection
-
-        self.gen_id += 1
-        self.gen_reset_parameters()
 
         for ii, evolve_specs in enumerate(self.evolve_loop):  # all selected gp mutations
 
@@ -503,8 +509,7 @@ class ExplainableGP(object):
         # if total_rate < 0:
         #     self.gen_create_random(int(self.conf.pop_max'] * (1 - total_rate)))
 
-        self.pop_analyse()
-        self.pop_base = self.population_tmp[:]
+        return
 
     def run_continues(self):
         """
@@ -959,19 +964,6 @@ class ExplainableGP(object):
         self.tree_lut[tree_ident] = meta
         return
 
-    def gen_reset_parameters(self):
-        """
-        Sets the parameters for the generation
-        - reset population_tmp_done
-        - Linearly increase threshold for parsimony
-        """
-
-        self.time_genstart = time.perf_counter()
-        self.population_tmp = []
-        # self.parsimony_tmp = max(1 / min(self.gen_id, self.conf.gen_num_max_parsimony']) * self.parsimony_max, self.parsimony_max)
-
-        return
-
     def pop_mutate_filter(self, call_params, tree):
         """
         Mutates a number of float terminal of a tree
@@ -1248,7 +1240,7 @@ class ExplainableGP(object):
             if tree_entry[1] < best[1]:  # if true, at least one insertion  # todo get self.kernel involved here
                 self.pareto_append(cooltree, tree_entry, f'old fitness: {best[1]}')
 
-        self.pareto_sort()
+        self.pareto_sort()  # sfeh check if required
         return
 
     def pop_append(self, cooltree: CoolTree, last_evolution=''):
@@ -1281,7 +1273,6 @@ class ExplainableGP(object):
             if parsimony > self.conf.parsimony_max:
                 print_warning('www', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)
                 return
-
             try:
                 fitness_train = self.tree_eval_fitness_train(cooltree)
             except Exception as evalex:
@@ -1310,7 +1301,6 @@ class ExplainableGP(object):
         self.update_pareto(cooltree)
 
     def pop_selection_tournament(self, tourn_size):
-
         """
         config-selection. takes a number of trees (we use 3) and returns the best one (winner)
         """

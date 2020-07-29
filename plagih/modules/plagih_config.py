@@ -35,7 +35,7 @@ class GpConfig:
         SFEH NEVER try to save paths here. switching between systems is worse than HitlerAIDS
         """
         self.pl_version = 0.97  # must only update if vital changes were made, version important when loading old run
-        self.name = args.prepared_run or 'PlagihGP_Run'  # todo
+        self.name = args.prepared_run or None  # sfeh
 
         try:
             with Path.open(args.load_config, 'r') as file:

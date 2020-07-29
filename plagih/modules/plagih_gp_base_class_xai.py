@@ -179,9 +179,9 @@ class ExplainableGP(object):
                 # {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
                 #  'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'full_or_grow': 'grow'}}},
                 {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (8, 1, 12, 4), 'full_or_grow': 'full'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (6, 1, 12, 3), 'full_or_grow': 'full'}}},
                 {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (8, 1, 12, 4), 'full_or_grow': 'grow'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (6, 1, 12, 3), 'full_or_grow': 'grow'}}},
                 {'tag': 'BranchShrink', 'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
                  'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
 
@@ -203,9 +203,9 @@ class ExplainableGP(object):
                 # {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
                 #  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
                 {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 1, None, 6), 'full_or_grow': 'grow'}}},
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'grow'}}},
                 {'tag': 'Rand4', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 1, None, 6), 'full_or_grow': 'full'}}},  # param 'max' can be None
+                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'full'}}},  # param 'max' can be None
             ]
 
         evolve_loop = evolve_safety_update(evolve_loop)
@@ -215,17 +215,17 @@ class ExplainableGP(object):
                 evolve_random = self.evolve_list_random['from_origin']
             except:
                 evolve_random = [{'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
-                                  'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (14, 10, 45, 6), 'full_or_grow': 'full'}}}]
+                                  'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}]
         else:
             try:
                 evolve_random = self.evolve_list_random['from_scratch']
             except:
                 evolve_random = [{'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 4, 5, 1), 'full_or_grow': 'full'}}},
+                                  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'full_or_grow': 'full'}}},
                                  {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 6, 1), 'full_or_grow': 'grow'}}},
+                                  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'full_or_grow': 'grow'}}},
                                  {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.40,
-                                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (14, 10, None, 6), 'full_or_grow': 'full'}}}
+                                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}
                                  ]
         evolve_random = evolve_safety_update(evolve_random)
 

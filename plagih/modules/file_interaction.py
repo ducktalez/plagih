@@ -126,7 +126,7 @@ def plot_end(data_2d, path_plot,
     :param y_label: label the y-axis
     :param yscale: only 'linear'.
     :param step_where: makes 'step' plots- can be 'post', 'pre' or [pls google]
-    :param plt_xparam: not in use, the same adjustment can be done with optional parameters
+    # :param plt_xparam: not in use, the same adjustment can be done with optional parameters
     :param linestyle: E. g. 'None', 'dashed', '-', ''
     :param set_left: Smallest left value
     :param set_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40

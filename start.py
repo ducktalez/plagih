@@ -10,9 +10,6 @@ import os
 import argparse
 from plagih.modules.plagih_config import *
 
-# sys.path.append('plagih/')
-# sys.path.append('plagih/modules')
-
 
 def main():  # argv sys.argv[1:]
     """
@@ -43,7 +40,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-print_all', '-debug', action='store_true')
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
 
-    parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated is certain code should be executed. Now used to fix Linux/Windows bug related to paths.')
+    parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated is certain code should be executed. Now used to fix Linux/Windows paths-bug.')
 
     args = parser.parse_args()
 
@@ -67,17 +64,15 @@ def main():  # argv sys.argv[1:]
     print('fuck debug')
 
     if prepared_run:
-        action_name = None
-        kernel_name = ''
-        path_data_csv = None
         path_origin_tree = None
+        action_name = None
 
         def pathify(x):
             return Path(__file__).parent.absolute() / 'benchmarks/' / x
 
         if 'IB' in prepared_run:
             path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
-            kernel_name += 'regression bounded'
+            kernel_name = 'regression bounded'
             ori_trs = {'50_0': 'ib/gp_files//ib_tree_50s_0.csv',
                        '50_1': 'ib/gp_files/ib_tree_50s_1.csv',
                        '50_2': 'ib/gp_files/ib_tree_50s_2.csv',
@@ -107,11 +102,13 @@ def main():  # argv sys.argv[1:]
                     action_name = v
 
         elif 'MTC' in prepared_run:
-            kernel_name += 'regression bounded discrete'
+            kernel_name = 'regression bounded discrete'
             if 'MTC200' in prepared_run:
                 path_data_csv = pathify('mc/gp_files/samples200.csv')
             elif 'MTC75' in prepared_run:
                 path_data_csv = pathify('mc/gp_files/samples75.csv')
+            else:
+                raise
 
             ori_trs = {'gpFfriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
                        'preset': 'mc/gp_files/tree_preset_fix.csv',
@@ -137,8 +134,6 @@ def main():  # argv sys.argv[1:]
 
         root_dir = pathify(f'slurm_runs/{prepared_run}')
 
-        path_data_csv = path_data_csv
-        path_origin_tree = path_origin_tree
         print(f'AUTOLOAD: path_origin_tree {path_origin_tree}')
         conf.kernel_name = kernel_name
         print(f'AUTOLOAD: kernel_name {kernel_name}')

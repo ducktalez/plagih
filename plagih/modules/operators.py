@@ -1,4 +1,3 @@
-
 import ast
 from plagih.modules.import_variables import *
 from plagih.modules.printing import *
@@ -35,24 +34,26 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
           'sym_reduce': None, 'sym_str': '({} + {})', 'pycode': '({}+{})'},
     '-': {'fun_class': 'Subtract', 'fun_label': '-', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'subtract', 'tf': tf.subtract, 'opgroup': ['aritygroup'], 'latex1': '-', 'latexF': '{}-{}',
           'sym_reduce': None, 'sym_str': '({} - {})', 'pycode': '({}-{})'},
-    'usub': {'fun_class': 'Usub', 'fun_label': 'usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf_name': 'negative', 'tf': tf.negative, 'opgroup': [], 'latex1': '-', 'latexF': '-{}',
+    'Usub': {'fun_class': 'Usub', 'fun_label': 'Usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf_name': 'negative', 'tf': tf.negative, 'opgroup': [], 'latex1': '-', 'latexF': '-{}',
              'sym_reduce': None, 'sym_str': '(-{})', 'pycode': '(-{})'},
-    '*': {'fun_class': 'Multiply', 'fun_label': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'multiply', 'tf': tf.multiply, 'opgroup': ['aritygroup'], 'latex1': '\\cdot ', 'latexF': '{}\\cdot {}',
+    '*': {'fun_class': 'Multiply', 'fun_label': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'multiply', 'tf': tf.multiply, 'opgroup': ['aritygroup'], 'latex1': '\\cdot ',
+          'latexF': '{}\\cdot {}',
           'sym_reduce': None, 'sym_str': '({} * {})', 'pycode': '({}*{})'},
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
-    '/': {'fun_class': 'Divide_no_nan', 'fun_label': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'math.divide_no_nan', 'tf': tf.math.divide_no_nan, 'opgroup': [], 'latex1': '\\div ', 'latexF': '\\frac{}{}',
+    '/': {'fun_class': 'Divide_no_nan', 'fun_label': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'math.divide_no_nan', 'tf': tf.math.divide_no_nan, 'opgroup': [], 'latex1': '\\div ',
+          'latexF': '\\frac{}{}',
           'sym_reduce': None, 'sym_str': '({} / {})',
           'pycode': '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'},
-    '**': {'fun_class': 'Power', 'fun_label': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'pow', 'tf': tf.pow, 'opgroup': [], 'latex1': '{{x}}^{{y}}', 'latexF': '{}^{}',  # sfeh latexf requires some testing...
+    '**': {'fun_class': 'Power', 'fun_label': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'pow', 'tf': tf.pow, 'opgroup': [], 'latex1': '{{x}}^{{y}}', 'latexF': '{}^{}',
+           # sfeh latexf requires some testing...
            'sym_reduce': '({}**{})', 'sym_str': '({}**Round({}))', 'pycode': '({}**round({}))'},
 
     'abs': {'fun_class': 'Abs', 'fun_label': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': 'abs', 'latexF': '|{}|',
             'sym_reduce': None, 'sym_str': 'abs({})', 'pycode': 'abs({})'},
     'sign': {'fun_class': 'Sign', 'fun_label': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'sign', 'tf': tf.sign, 'opgroup': [], 'latex1': 'sign', 'latexF': 'sign({})',
-             'sym_reduce': None, 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},  # todo \\text when its not a variable?
-    # todo round is new... and very special
+             'sym_reduce': None, 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},
     'Round': {'fun_class': 'Round', 'fun_label': 'Round', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'round', 'tf': tf.round, 'opgroup': [], 'latex1': 'round', 'latexF': 'round({})',
-             'sym_reduce': None, 'sym_str': 'Round({})', 'pycode': 'round({})'},
+              'sym_reduce': None, 'sym_str': 'Round({})', 'pycode': 'round({})'},
 
     'Square': {'fun_class': 'Square', 'fun_label': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'square', 'tf': tf.square, 'opgroup': [], 'latex1': 'x^2', 'latexF': '{}^2',
                'sym_reduce': None, 'sym_str': 'Square({})', 'pycode': '({})**2'},
@@ -61,10 +62,10 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
 
     'log': {'fun_class': 'Log', 'fun_label': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log', 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '\\log()', 'latexF': '\\log{}',
             'sym_reduce': None, 'sym_str': 'log({})', 'pycode': 'math.log({})'},  # sfeh log/ln?
-    'log1p': {'fun_class': 'Log1p', 'fun_label': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log1p', 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '\\log(1+x)', 'latexF': '\\log(1+{})',
+    'log1p': {'fun_class': 'Log1p', 'fun_label': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log1p', 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '\\log(1+x)',
+              'latexF': '\\log(1+{})',
               'sym_reduce': None, 'sym_str': 'log1p({})', 'pycode': 'math.log1p({})'},
-    # todo sqrt log only secure evaluation
-    'cos': {'fun_class': 'Cos', 'fun_label': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'cos', 'tf': tf.cos, 'opgroup': ['angle'], 'latex1':  '\\cos ', 'latexF': '\\cos({})',
+    'cos': {'fun_class': 'Cos', 'fun_label': 'cos', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'cos', 'tf': tf.cos, 'opgroup': ['angle'], 'latex1': '\\cos ', 'latexF': '\\cos({})',
             'sym_reduce': None, 'sym_str': 'cos({})', 'pycode': 'math.cos({})'},
     'sin': {'fun_class': 'Sin', 'fun_label': 'sin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'sin', 'tf': tf.sin, 'opgroup': ['angle'], 'latex1': '\\sin ', 'latexF': '\\sin({})',
             'sym_reduce': None, 'sym_str': 'sin({})', 'pycode': 'math.sin({})'},
@@ -74,7 +75,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
              'sym_reduce': None, 'sym_str': 'acos({})', 'pycode': 'math.acos({})'},
     'asin': {'fun_class': 'Asin', 'fun_label': 'asin', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'asin', 'tf': tf.asin, 'opgroup': ['angle'], 'latex1': '\\asin ', 'latexF': '\\asin({})',
              'sym_reduce': None, 'sym_str': 'asin({})', 'pycode': 'math.asin({})'},
-    'atan': {'fun_class': 'Atan', 'fun_label': 'atan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'atan', 'tf': tf.atan, 'opgroup': ['angle'], 'latex1':  '\\atan ', 'latexF': '\\atan({})',
+    'atan': {'fun_class': 'Atan', 'fun_label': 'atan', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'atan', 'tf': tf.atan, 'opgroup': ['angle'], 'latex1': '\\atan ', 'latexF': '\\atan({})',
              'sym_reduce': None, 'sym_str': 'atan({})', 'pycode': 'math.atan({})'},
     'tanh': {'fun_class': 'Tanh', 'fun_label': 'tanh', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'tanh', 'tf': tf.tanh, 'opgroup': ['angle'], 'latex1': '\\tanh ', 'latexF': '\\tanh({})',
              'sym_reduce': None, 'sym_str': 'tanh({})', 'pycode': 'math.tanh({})'},
@@ -102,15 +103,16 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
            'sym_reduce': None, 'sym_str': '({} != {})', 'pycode': '({}!={})'},
     '<': {'fun_class': 'Lt', 'fun_label': '<', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'less', 'tf': tf.less, 'latex1': '<', 'latexF': '{}<{}',
           'sym_reduce': None, 'sym_str': '({} < {})', 'pycode': '({}<{})'},  # a < b
-    '<=': {'fun_class': 'Le', 'fun_label': '<=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'less_equal', 'tf': tf.less_equal, 'latex1': '\\leq', 'latexF': '{}\leq{}',
+    '<=': {'fun_class': 'Le', 'fun_label': '<=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'less_equal', 'tf': tf.less_equal, 'latex1': '\\leq', 'latexF': '{}\\leq{}',
            'sym_reduce': None, 'sym_str': '({} <= {})', 'pycode': '({}<={})'},  # a <= b
     '>': {'fun_class': 'Gt', 'fun_label': '>', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'greater', 'tf': tf.greater, 'latex1': '>', 'latexF': '{}>{}',
           'sym_reduce': None, 'sym_str': '({} > {})', 'pycode': '({}>{})'},  # a > b
-    '>=': {'fun_class': 'Ge', 'fun_label': '>=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'greater_equal', 'tf': tf.greater_equal, 'latex1': '\\geq', 'latexF': '{}\geq{}',
+    '>=': {'fun_class': 'Ge', 'fun_label': '>=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'greater_equal', 'tf': tf.greater_equal, 'latex1': '\\geq', 'latexF': '{}\\geq{}',
            'sym_reduce': None, 'sym_str': '({} >= {})', 'pycode': '({}>={})'},  # a >= 1
 
     # Functions which need separate handling in sympify
-    'Ifte': {'fun_class': 'Ifte', 'fun_label': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf_name': 'where', 'tf': tf.compat.v2.where, 'latex1': '\\text{if-then-else}', 'latexF': 'if({} then {} else {})',
+    'Ifte': {'fun_class': 'Ifte', 'fun_label': 'Ifte', 'arity': 3, 'xtype': 'b2f2f', 'c-weight': 0.1, 'tf_name': 'where', 'tf': tf.compat.v2.where, 'latex1': '\\text{if-then-else}',
+             'latexF': 'if({} then {} else {})',
              'sym_reduce': None, 'sym_str': 'Ifte({}, {}, {})', 'pycode': '({} if {} else {})'},
     # long version of Ifte-'pycode': 'if {0}:\n{1}\nelse:\n{2}'.format(a, textwrap.indent(str(b), '\t'), textwrap.indent(str(c), '\t'))
     'Mini': {'fun_class': 'Min', 'fun_label': 'Mini', 'arity': 2, 'xtype': 'f2f', 'c-weight': 0.5, 'tf_name': 'minimum', 'tf': tf.minimum, 'latex1': '\\min', 'latexF': '\\min({}, {})',
@@ -126,9 +128,10 @@ op = {
     ast.Add: op_what['+'],
     '-': op_what['-'],
     ast.Sub: op_what['-'],
-    '~': op_what['usub'],
-    'usub': op_what['usub'],
-    ast.USub: op_what['usub'],
+    '~': op_what['Usub'],
+    'Usub': op_what['Usub'],
+    'usub': op_what['Usub'],  # delete this sfeh
+    ast.USub: op_what['Usub'],
     'Round': op_what['Round'],
     '*': op_what['*'],
     ast.Mult: op_what['*'],
@@ -208,7 +211,6 @@ op_test = {
     'bool': {'fun_class': '', 'fun_label': 'bool', 'arity': 1, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': '', 'tf': 'ä', 'latex1': None, 'latexF': '{}',
              'sym_reduce': None, 'sym_str': '', 'pycode': 'bool({})'},  # not tested
 
-
     # sfeh sqrt, is only 2nd root, also 3rd-root?
 
     # Loops. Never used yet, not working (sfeh). Loops that make GP very unsafe in terms of evaluation time.
@@ -221,7 +223,6 @@ op_test = {
 
     # sfeh: not working # repeat n time, specify n (int) by user?
 }
-
 
 # sfeh https://docs.sympy.org/latest/tutorial/manipulation.html
 

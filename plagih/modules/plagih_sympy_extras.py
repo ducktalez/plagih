@@ -218,6 +218,7 @@ class Round(Function):
         return eval(self, a)
 
 
+# attention: exactly same capitals/letters! (gets replaced)
 local_sympy_dict = {'Ifte': Ifte,
                     'Mini': Mini,
                     'Maxi': Maxi,
@@ -225,7 +226,8 @@ local_sympy_dict = {'Ifte': Ifte,
                     'Orb': Orb,
                     'Notb': Notb,
                     'Square': Square,
-                    'usub': Usub,
+                    'Usub': Usub,
+                    'usub': Usub,  # sfeh delete this
                     'Round': Round}
 
 
@@ -252,5 +254,3 @@ if __name__ == "__main__":
     expr = 'Round(-123.333334234) + Round(Shift_2)'
     expr = 'Round(-123.333334234) + Round(Round(Shift_2))'
     print(plagih_sympify(expr))
-
-

@@ -38,7 +38,7 @@ class Subtract(Plabel):
 
 class Usub(Plabel):
 
-    fun_label = 'usub'
+    fun_label = 'Usub'
     arity = 1
     xtype = 'f2f'
     c_weight = 0.5

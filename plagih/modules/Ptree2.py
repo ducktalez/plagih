@@ -10,7 +10,7 @@ class Plabel:
 
         xtype = xtype if xtype else xtype_get_from_label(label)
         arity = label_get_arity(label)
-        type_inputs = float if xtype[-2:] == 'f2' else bool  # todo
+        type_inputs = float if xtype[-2:] == 'f2' else bool  # sfeh
 
         # directly related to the label
         self.arity = arity
@@ -30,14 +30,14 @@ class CoolCore:
 
         xtype = xtype if xtype else xtype_get_from_label(label)
         arity = label_get_arity(label) if arity is None else arity
-        type_inputs = float if xtype[-2:] == 'f2' else bool  # todo
+        type_inputs = float if xtype[-2:] == 'f2' else bool  # sfeh
 
         self.label = label
 
         # directly related to the label
         self.arity = arity
         self.input_types = [bool, float, float] if label == 'Ifte' else [type_inputs] * arity
-        self.type_output = float if xtype[-2:] == '2f' else bool  # todo
+        self.type_output = float if xtype[-2:] == '2f' else bool  # sfeh
         self.xtype = xtype  # obsolete?
 
         self.is_fix = is_fix
@@ -82,7 +82,7 @@ class CoolCore:
         self.xtype = new_core.xtype
         self.childs = new_core.childs
 
-        type_inputs = float if new_core.xtype[-2:] == 'f2' else bool  # todo
+        type_inputs = float if new_core.xtype[-2:] == 'f2' else bool  # sfeh
         self.arity = label_get_arity(new_core.label) if new_core.arity is None else new_core.arity
         self.input_types = [bool, float, float] if new_core.label == 'Ifte' else [type_inputs] * self.arity
         self.type_output = float if self.xtype[-2:] == '2f' else bool
@@ -177,10 +177,10 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and usub.
+            raise Exception(f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and Usub.
             # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
             # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
-            # new_core: [sign, [Mini, [-, [usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
+            # new_core: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
         return
 
     def get_mutatable_nodes(self):
@@ -385,7 +385,9 @@ class CoolTree:
             self.complete = None
             self.last_evolution = None
 
-        def clear(self):  # todo init/new or so?
+        def clear(self):
+            # sfeh init/new or so?
+            # sfeh parsimony meta, fitness, ...
             self.hash = None
             self.fitness_train = None
             self.parsimony = None
@@ -422,7 +424,6 @@ class CoolTree:
     #     self.meta.last_evolution = last_evolution
     #     self.meta.expr_raw = expr_raw
     #     self.meta.expr_sym = expr_sym
-    #     # todo check other metas
     #     # set flags if done?
 
     def set_fix_nodes(self, origin_tree: 'CoolTree'):
@@ -508,7 +509,6 @@ class CoolTree:
         else:
             self.core = self.core.insert_branch(nodepath[1:], coolbranch)
         self.finalize_structure()
-        # self.finalize_meta  # todo
 
     def get_pycode(self):
         """
@@ -574,7 +574,7 @@ class CoolTree:
                 chosen.reduce_me(obs_krazy)
         if length_before < len(self):
             print_e(f'FFS Trees just become larger? {self.get_expr_raw()}')
-        # self.meta.clear()  # todo parsimony meta, fitness, ...
+        # self.meta.clear()
         self.finalize_structure()
 
     def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
@@ -753,7 +753,7 @@ def some_quick_test():
 
     label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
     cooltree = cooltree_from_labellist(label_list, modify_list=[0, 1, 0, 0, 1, 1])
-    label_list = ['usub', 'asd']
+    label_list = ['Usub', 'asd']
     cooltree = cooltree_from_labellist(label_list)
     print(cooltree)
     cooltree.evolve_reduce()

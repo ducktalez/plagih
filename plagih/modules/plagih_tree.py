@@ -1789,7 +1789,7 @@ def tree_check_rebuild(tree):
     """
     Check if a valid tree can be rebuilt from its expression
     sfeh: the expression must currently not be equal.
-    The expression can include separate '~' (usub) nodes, which makes expressions not completely equal
+    The expression can include separate '~' (Usub) nodes, which makes expressions not completely equal
     """
 
     label_list = [tree_node_get_label(tree, ii) for ii in tree_iterate_range(tree)]

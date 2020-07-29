@@ -52,7 +52,7 @@ class TestHelpers:
                        '<', 'Orb',
                        'cartVel', '0', 'True', 'Andb',
                        'Andb', '!=',
-                       'False', 'Orb', 'log1p', 'usub',
+                       'False', 'Orb', 'log1p', 'Usub',
                        'Andb', 'True', 'Mini', '2.4', '<', 'Orb', '1.0', '0.8', 'cartVel', '0', '>', 'Andb', '0.9', '-', 'False', 'Andb', 'cartPos', '2.0', 'True', 'True']
         # tree_labels = ['Ifte',
         #                'Andb', '0', '2',
@@ -61,7 +61,7 @@ class TestHelpers:
         #                '6.0', 'cartVel', '*', '-', '<', 'Orb',
         #                'cartPos', 'cartVel', '~', '1.0372722469', 'tanh', 'cartVel', '>', 'Orb',
         #                'cartPos', '2.1365828912', 'Maxi', '*', '!=', 'Andb',
-        #                'cartPos', '*', 'usub', 'cartPos', 'cartPos', 'cartVel', 'True', 'Andb',
+        #                'cartPos', '*', 'Usub', 'cartPos', 'cartPos', 'cartVel', 'True', 'Andb',
         #                'cartPos', '~', '2.0', '<=', 'Andb',
         #                '0.1', '22.5', '~', '<', 'False',
         #                'cartVel', 'cartVel', '~', '0.0374348335']
@@ -90,8 +90,7 @@ class MountainCarExamples:
                     '*', '0.03', '*', '0.008', '-0.07', '**',
                     '-0.09', '**', '0.3', '**', '+', '2', '+', '2', '+', '4', 'pos', '0.38', 'pos', '0.25',
                     'pos', '0.9']
-    tree_v3_modify = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                      1, 1, 1]
+    tree_v3_modify = [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
     tree_v3_new = ['Ifte', 'Andb', 2, 0, '<=', '<=', 'Mini', 'vel', 'vel', '+', '+', '-', '*', 0.7, '*',
                    0.03, '*', 0.008, '-', '**', '-', '**', 0.3, '**', 0.07, '+', 2, 0.09, '+', 2, '+', 4,

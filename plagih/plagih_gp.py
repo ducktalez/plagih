@@ -15,10 +15,10 @@ def gp_run(conf, root_dir, path_data_csv, path_origin_tree, path_load_backup, an
     """
     sfeh YESS this is now gone
     """
-    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree)
+    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, developer_fix=developer_fix)
 
     if developer_fix:
-        gp.try_load_backup(developer_fix=developer_fix)
+        gp.try_load_backup()
     if analyse:
         gp.gp_analyse(path_load_backup)
     else:

@@ -12,124 +12,77 @@ class GPKernel:
         pass
 
 
-class ClassificationKernel:
+class ClassificationKernel(GPKernel):
 
     def __init__(self, *args):
-        pass
+        super().__init__(*args)
 
     def fitness_compare(self, fitness1, fitness2):
         if fitness2 is None:
             return True
-        elif self.classification and fitness1 > fitness2:
-        # , self.tf_classify_labels_map  # todo
-            return True
-
-        elif self.match and fitness1 > fitness2:
-            return True
-
-    def best_fitness(self, fit1, fit2):
-        """
-
-        """
-        if any([self.classification, self.match]):
-            return max(fit1, fit2)
         else:
-            raise
+            return fitness1 > fitness2
+
+    def best_fitness_function(self, *arg, **args):
+        return max(*arg, **args)
 
     def tf_wrap_result(self, *args):
         pass
 
-    def tf_get_pairwise_fitness(self):
+    def tf_get_pairwise_fitness(self, solution, kernel_result, eval_action):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
         """
+
+        skew = (self.eval_action.uniques / 2) - 1
+
+        rule1 = tf.logical_and(
+            tf.equal(solution, 0),
+            tf.less_equal(kernel_result, 0 - skew))
+
+        rule2 = tf.logical_and(
+            tf.equal(solution, self.eval_action.uniques - 1),
+            tf.greater(kernel_result, solution - 1 - skew))
+
+        rule3 = tf.logical_and(
+            tf.less(solution - 1 - skew, kernel_result),
+            tf.less_equal(kernel_result, solution - skew))
+
+        pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
+        return pairwise_fitness
+
+
+class MatchKernel(GPKernel):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def fitness_compare(self, fitness1, fitness2):
+        if fitness2 is None:
+            return True
+        else:
+            return fitness1 > fitness2
+
+    def best_fitness_function(self, *arg, **args):
+        return max(*arg, **args)
+
+    def tf_wrap_result(self, *args):
         pass
 
-        # if self.classification:  # CLASSIFY kernel
-        #     """
-        #     """
-        #
-        #     skew = (self.eval_action.uniques / 2) - 1
-        #
-        #     rule1 = tf.logical_and(
-        #         tf.equal(solution, 0),
-        #         tf.less_equal(kernel_result, 0 - skew))
-        #
-        #     rule2 = tf.logical_and(
-        #         tf.equal(solution, self.eval_action.uniques - 1),
-        #         tf.greater(kernel_result, solution - 1 - skew))
-        #
-        #     rule3 = tf.logical_and(
-        #         tf.less(solution - 1 - skew, kernel_result),
-        #         tf.less_equal(kernel_result, solution - skew))
-        #
-        #     pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
-        #
-        # elif self.match:  # MATCH kernel
-        #     """
-        #     This is used for demonstration purposes only.
-        #     """
-        #     # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-        #     rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-        #     pairwise_fitness = tf.dtypes.cast(
-        #         tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
-        #
-        # else:
-        #     raise Exception('Kernel type is wrong or missing. You entered {}'.format(self.kname))
+    def tf_get_pairwise_fitness(self, solution, kernel_result, results_agent):
+        """
+        Calculates the kernel-specific fitness for the solution.
+        - classification: dummy
+        """
+        """
+        This is used for demonstration purposes only.
+        """
+        # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+        rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
+        pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
 
-        # def file_conclusion(self):
-        #
-        #     # if self.origin_exists():
-        #     #     origin_fitness = self.kernel.eval_tf(self.origin_meta['expr_sym'], self.data_control, self.tf_parameters, get_predicted_labels=True)['fitness']
-        #     #     # fitness_control_best = origin_result['fitness']
-        #     #
-        #     #     fittest_algo = self.origin_meta['expr_sym']
-        #     #     fittest_parsimony = 0
-        #     #
-        #     #     file.write('\n\t Origin fitness score: {}'.lorigin_fitness))
-        #     #
-        #     # elif self.pareto:
-        #     #     file.write('\n No origin_meta was provided')
-        #     #     meta = next(iter(self.pareto.items()))[1]
-        #     #     fittest_parsimony = int(meta['parsimony'])
-        #     #     fittest_algo = meta['expr_sym']
-        #     #     return  # sfeh fittest_parsimony must be set, do not return
-        #     # else:
-        #     #     file.write('\n There are no candidates to be mentioned at all. Maybe change your config?')
-        #     #     return
-        #     #
-        #     # for parsimony, fitness in self.pareto.items():
-        #     #     algo_sym = self.parsimony_best_meta[parsimony]['expr_sym']
-        #     #     result = self.kernel.eval_tf(algo_sym, self.data_control, self.tf_parameters, get_predicted_labels=True)
-        #     #     fit_control = result['fitness']
-        #     #
-        #     #     if self.kernel.fitness_compare(fit_control, fitness_control_best, mode='better_or_equal'):  # find the Tree with a perfect match for all data_csv_path rows
-        #     #         fitness_control_best = fit_control
-        #     #         fittest_algo = algo_sym
-        #     #         fittest_parsimony = parsimony
-        #     #
-        #     #     no_fault = True
-        #     #     for enum, entry in enumerate(result['agent_result']):
-        #     #         if not self.check_value_is_real(entry):
-        #     #             no_fault = False
-        #     #             # sfeh this is a bad workaround
-        #     #             result['agent_result'][enum] = 1
-        #     #
-        #     #     if no_fault:
-        #     #         kernel_result = self.kernel.conclusion_text(result, fitness_control_best)
-        #     #         file.write(kernel_result)
-        #     #     else:
-        #     #         file.write('\n\n Error in this tree')
-        #     #
-        #     # else:
-        #     #     # Info about the best Tree
-        #     #     file.write('\n\n The best candidate has parsimony: {}'.forlmat(str(fittest_parsimony)))
-        #     #     file.write('\n With fitness: {}'.forlmat(fitness_control_best))
-        #     #     file.write('\n\n With the following sympify-algorithm:\n {}'.forlmat(fittest_algo))
-        #     #     file.write('\n\n')
-        #
-        #     return
+        return pairwise_fitness
 
     def eval_tf(self):
         pass
@@ -156,9 +109,6 @@ class ClassificationKernel:
     #         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
     #
     #     elif self.kernel == 'regression bounded':
-    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-    #         result_str += f"\n\n Regression bounded fitness score: {result['fitness']}"
-    #         result_str += f'\n Mean Squared Error: {mse}'
     #
     #     elif self.kernel == 'match':
     #         result_str += f"\n\n Matching fitness score: {result['fitness']}"
@@ -172,7 +122,7 @@ class ClassificationKernel:
 class RegressionKernel:
 
     def best_fitness_function(self, *arg, **args):
-        return min( *arg, **args)
+        return min(*arg, **args)
 
     def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
         self.np_best_fitness = np.min
@@ -181,7 +131,7 @@ class RegressionKernel:
         self.tf_device = tf_device
         self.eval_action = eval_action
         self.origin_results = None
-        self.data_train = data_train  # todo where is the best?
+        self.data_train = data_train  # sfeh where is the best?
 
         self.bounded = 'bounded' in kernel_name
         self.discrete = 'discrete' in kernel_name
@@ -204,12 +154,13 @@ class RegressionKernel:
 
     def pycode_wrap_result(self, action_min_max):
         wrap = '{}'
-        if 'discrete' in self.kname:
-            # regression that fits the outputs to a discrete set of actions defined by min and max
-            wrap = f'math.round({wrap})'
 
-        elif 'bounded' in self.kname:
+        if self.bounded:
             wrap = f'min(max({action_min_max[0]}, {wrap}), {action_min_max[1]})'
+
+        if self.discrete:
+            # regression that fits the outputs to a discrete set of actions defined by min and max
+            wrap = f'int(math.round({wrap}))'
 
         return wrap
 
@@ -227,7 +178,7 @@ class RegressionKernel:
         results_agent = ast_convert_from_expr(expr_sym, tensors=tensors)  # the actual result from the expression in the agent
 
         # fit the agents to the possible outcome
-        results_kernel = results_agent  # todo test
+        results_kernel = results_agent
 
         if self.discrete:
             results_kernel = tf.math.round(results_kernel)
@@ -239,7 +190,7 @@ class RegressionKernel:
         # pairwise_fitness = self.tf_get_pairwise_fitness(solution, kernel_result, results_agent)
         pairwise_diff = solution - results_kernel
 
-        if self.MSE or self.RMSE:  # todo huber loss! mse, mae, rmse, huber, (log)
+        if self.MSE or self.RMSE:  # sfeh huber loss! mse, mae, rmse, huber, (log)
             tf_error = tf.square
         else:
             tf_error = tf.abs
@@ -296,6 +247,13 @@ class RegressionKernel:
             return tf_results['mean_error']
         else:
             return tf_results
+
+    def conclusion(self, result):
+        """
+        sfeh this is baad
+        """
+        mse = skm.mean_squared_error(result['agent_result'], result['solution'])
+        return f"\n\n Regression bounded fitness score: {result['fitness']}\n Mean Squared Error: {mse}"
 
 
 def ast_convert_from_expr(expr, tensors=None, build=None):
@@ -380,7 +338,7 @@ def ast_expr_to(node, tensors=None, build=None):
                 if isinstance(node.operand, ast.Name) or isinstance(node.operand, ast.Num) or isinstance(node.operand, ast.NameConstant):
                     return [f'-{ast_expr_to(node.operand, build=True)[0]}']
                 else:
-                    return ['usub', [ast_expr_to(node.operand, build=True)]]
+                    return ['Usub', [ast_expr_to(node.operand, build=True)]]
             return [op[type(node.op)]['fun_label'], [ast_expr_to(node.operand, build=True)]]
         else:
             return op[type(node.op)]['tf'](

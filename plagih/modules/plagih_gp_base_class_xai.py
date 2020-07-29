@@ -41,9 +41,11 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree):  # load_backup
+    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree, developer_fix=None):  # load_backup
         self.conf = conf
         self.root_dir = Path(root_dir)
+
+        self.developer_fix = developer_fix  # sfeh
 
         print(f'\n'
               f'\tInitializing Plagih. \n'
@@ -237,7 +239,7 @@ class ExplainableGP(object):
         p = file_make_dir(p)
         return p
 
-    def try_load_backup(self, path_load_backup=None, developer_fix=None):
+    def try_load_backup(self, path_load_backup=None):
         """
         If a backup-file is found...
         """
@@ -245,16 +247,16 @@ class ExplainableGP(object):
 
         if Path.is_file(path_backup):
             self.print_g('g', f'Loading data from backup-file {path_backup}')
-            try:  # todo
+            try:
                 """
                 Loading the state of the run from the pickle file
                 """
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
 
-                if developer_fix:
+                if self.developer_fix:
                     _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
-                    self.run_backup_save()  # todo todotodo remove thies
+                    self.run_backup_save()  # sfeh remove this
                     raise Exception('SFEH hopefully fixed a bug. You may delete this code.')
 
                 try:
@@ -579,8 +581,12 @@ class ExplainableGP(object):
         self.file_population_base_karoo('last')
         self.file_pareto_histograms()
         self.file_pareto_latex()
-        # self.file_pareto_pycode()  # todo list
-        self.file_pareto_listcode()
+        if 'MTC' in self.conf.name:
+            self.file_pareto_pycode()
+        elif 'IB' in self.conf.name:
+            self.file_pareto_listcode()
+        else:
+            print_warning('w', f'This should actually never happen right now. name: {self.conf.name}')
 
         return
 
@@ -629,7 +635,7 @@ class ExplainableGP(object):
         except:
             print_warning('www', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_tuples.', print_type=self.print_type)
             operator_tuples = [['+', 2],
-                               ['-', 1], ['usub', 1],
+                               ['-', 1], ['Usub', 1],
                                ['*', 2], ['/', 1],
                                ['Square', 0.75], ['**', 0.25],
                                ['abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
@@ -865,18 +871,18 @@ class ExplainableGP(object):
         """
         this auto-generation of real (executable) python files
         is strongly customized for my experiments with Mountaincar and industrial benchmark
+
+        very useful: textwrap.indent
+        example: complete_function = textwrap.indent(f"def decide(self, input):\n"
+                                            f"{function_body}\n", '    ')  # aka tab (\t)
         """
 
         py_return = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
 
-        assign_input = ''  # f"cartPos, cartVel = input\n"  # todo
-
-        function_body = textwrap.indent(f"{assign_input}"
-                                        "action = {}\n"
-                                        f"return {py_return}", '    ')  # aka tab (\t)
-
-        complete_function = textwrap.indent(f"def decide(self, input):\n"
-                                            f"{function_body}\n", '    ')  # aka tab (\t)
+        complete_function = f"    def decide(self, input):\n"\
+                            f"        cartPos, cartVel = input\n" \
+                            f"        action = {{}}\n" \
+                            f"        return {py_return}\n"
 
         all_agents = []
         all_agent_names = []
@@ -989,7 +995,7 @@ class ExplainableGP(object):
                 except ValueError:
                     obs_nodes.append(node_id)
 
-        if mode == 'point':  # if poinemutation, return one nodeid as list
+        if mode == 'point':  # if pointmutation, return one nodeid as list
             if filter_observations:
                 filter_id = [random.choice(float_nodes + obs_nodes)]
                 if filter_id in float_nodes:
@@ -1019,9 +1025,9 @@ class ExplainableGP(object):
 
                 new_obs = '-' + obs_label if is_negative else obs_label
                 tree = tree_node_set_label(tree, nid, new_obs)
-        else:
-            print_warning('www', 'Tree does not seem to have any nodes for filtering.', print_type=self.print_type)  # usually happens with point-filtering
-            pass
+
+        # print_warning('www', 'Tree does not seem to have any nodes for filtering.', print_type=self.print_type)  # usually happens with point-filtering
+        # pass
 
         return tree
 
@@ -1204,18 +1210,19 @@ class ExplainableGP(object):
         self.printpl('a', f"Paretofront new entry ({message}): {tree_entry[0]}, {tree_entry[1]}: {tree_entry[2].meta.expr_raw}")
         self.pareto.append(tree_entry)
 
-        self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
         self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or (x[0] == tree_entry[0] and x[1] == tree_entry[1])]
         self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
         cooltree_sym = copy.deepcopy(cooltree)
         try:
+            self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
             cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
             parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony < cooltree.meta.parsimony:
-                sym_fitness = self.tree_eval_fitness_train(cooltree_sym)  # todo actually not required
                 self.printpl('aa', 'Successfully reduced pareto tree!')
-                cooltree_sym.meta.fitness_train = sym_fitness  # todo update parsimony here aswell?
+                sym_fitness = self.tree_eval_fitness_train(cooltree_sym)  # sfeh actually not required, delete this
+                cooltree_sym.meta.fitness_train = sym_fitness
+                cooltree_sym.meta.parsimony = parsimony
                 self.update_pareto(cooltree_sym)
         except Exception as ex:
             print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.print_type)

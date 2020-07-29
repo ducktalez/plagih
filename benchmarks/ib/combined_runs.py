@@ -1,4 +1,7 @@
 # coding=utf-8
+import argparse
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 from benchmarks.ib.ib_eval_agents import *
@@ -24,6 +27,7 @@ def combined_lists(run_name):
         with Path.open(lsfile, 'r') as file:
             yamload = yaml.load(file, Loader=yaml.FullLoader)
             agents.append(yamload)
+        # todo normalize here aswell
 
     merged = list(itertools.product(agents[0], agents[1], agents[2]))
     combined_all = []
@@ -36,15 +40,23 @@ def combined_lists(run_name):
         combined_all.append([parsim_sum, fitness_sum, parsims, codes])
 
     combined_best_dict = {}
+    combined_best_msed_dict = {}
     for parsim_sum, fitness_sum, parsims, codes in combined_all:
         if parsim_sum in combined_best_dict:
             if fitness_sum < combined_best_dict[parsim_sum][0]:
-                # print(f'fitness_sum {fitness_sum} < {combined_best_dict[parsim_sum][0]} result[parsim_sum][0]')
                 combined_best_dict[parsim_sum] = [fitness_sum, parsims, codes]
         else:
             combined_best_dict[parsim_sum] = [fitness_sum, parsims, codes]
 
+        msed = math.sqrt(parsims[0] ** 2 + parsims[1] ** 2 + parsims[2] ** 2)
+        if msed in combined_best_msed_dict:
+            if fitness_sum < combined_best_msed_dict[msed][0]:
+                combined_best_msed_dict[msed] = [fitness_sum, parsims, codes]
+        else:
+            combined_best_msed_dict[msed] = [fitness_sum, parsims, codes]
+
     combined_best = [[parsim_sum, fitness_sum, parsims, codes] for parsim_sum, (fitness_sum, parsims, codes) in combined_best_dict.items()]
+    combined_mse_best = [[parsim_sum, fitness_sum, parsims, codes] for parsim_sum, (fitness_sum, parsims, codes) in combined_best_msed_dict.items()]
 
     analyse_results = []
 
@@ -109,4 +121,21 @@ def combined_lists(run_name):
     plt.cla()
 
 
-combined_lists('IB_MSE_sim2')  # todo save the evaluation process as data file
+def main():
+
+    parser = argparse.ArgumentParser(description='Plagih IB-Runs!)')
+    # parser.add_argument('integers', metavar='N', type=int, nargs='+', help='an integer for the accumulator')
+    # parser.add_argument('--sum', dest='accumulate', action='store_const', const=sum, default=max, help='sum the integers (default: find the max)')
+    # parser.add_argument("--data_dir", type=Path, default=Path(__file__).absolute().parent / "data", help="Path to the data directory",)
+
+    parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
+
+    args = parser.parse_args()
+
+    name = args.name
+
+    combined_lists(name)
+
+
+if __name__ == '__main__':
+    main()

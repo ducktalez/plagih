@@ -13,11 +13,10 @@ run_starts = [
     # 'IB_RMSE_tanh_50_0', 'IB_RMSE_tanh_50_1', 'IB_RMSE_tanh_50_2',
 
     # 'IB_RMSE_mean_0', 'IB_RMSE_mean_1', 'IB_RMSE_mean_2',
-    # 'IB_RMSE_udluft_0', 'IB_RMSE_udluft_1', 'IB_RMSE_udluft_2'
     # 'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
 
+    # 'IB_RMSE_udluft_0', 'IB_RMSE_udluft_1', 'IB_RMSE_udluft_2'
     # 'IB_RMSE_tanh_udluft_0', 'IB_RMSE_tanh_udluft_1', 'IB_RMSE_tanh_udluft_2',
-
 
     # 'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
     # 'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
@@ -27,8 +26,8 @@ run_starts = [
     'IB_MAE_explun_tanh_sim2_0', 'IB_MAE_explun_tanh_sim2_1', 'IB_MAE_explun_tanh_sim2_2',
     'IB_MAE_sim2_0', 'IB_MAE_sim2_1', 'IB_MAE_sim2_2',
 
-    # 'MTC200_MAE_scratch',
-    # 'MTC200_MAE_gpFfriendly',
+    'MTC200_MAE_scratch',
+    'MTC200_MAE_gpFfriendly',
     'MTC200_MAE_preset',
     'MTC200_MAE_simple',
     'MTC200_MAE_simple_fix',

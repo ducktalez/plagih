@@ -262,7 +262,7 @@ class ExplainableGP(object):
                 try:
                     self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
                 except:
-                    self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                    _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
                     # self.conf.restart_count += 1
 
                 printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)

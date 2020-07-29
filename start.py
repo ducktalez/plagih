@@ -101,6 +101,8 @@ def main():  # argv sys.argv[1:]
                     print(f'AUTOLOAD: Using action: {v}')
                     action_name = v
 
+            conf.gen_max = 2000
+
         elif 'MTC' in prepared_run:
             kernel_name = 'regression bounded discrete'
             if 'MTC200' in prepared_run:
@@ -132,7 +134,8 @@ def main():  # argv sys.argv[1:]
         kernel_name += ' tanhpenalize' if 'tanh' in prepared_run else ''
         kernel_name += ' relative_regression_fun' if 'explun' in prepared_run else ''
 
-        root_dir = pathify(f'slurm_runs/{prepared_run}')
+        # root_dir = pathify(f'slurm_runs/{prepared_run}')
+        root_dir = pathify(f'slurm_runs/{prepared_run[:-2]}/{prepared_run}')
 
         print(f'AUTOLOAD: path_origin_tree {path_origin_tree}')
         conf.kernel_name = kernel_name

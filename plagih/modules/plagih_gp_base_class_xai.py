@@ -251,8 +251,13 @@ class ExplainableGP(object):
                 """
                 Loading the state of the run from the pickle file
                 """
-                with Path.open(path_backup, 'rb') as file:
-                    run_data = pickle.load(file)
+                try:
+                    with Path.open(path_backup, 'rb') as file:
+                        run_data = pickle.load(file)
+                except NotImplementedError as nimp:
+                    raise Exception(f'NotImplementedError: {nimp}')
+                except EOFError as eoferr:
+                    raise Exception(f'EOFError: \n{eoferr}')
 
                 if self.developer_fix:
                     _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
@@ -267,8 +272,8 @@ class ExplainableGP(object):
 
                 printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
 
-            except Exception as excep:
-                raise Exception(f'Even though a backup exists for this run, it could not be loaded because of\n{excep}')
+            except Exception as ex:
+                raise Exception(f'Even though a backup exists for this run, it could not be loaded, because of\n{ex}')
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}.')
         return

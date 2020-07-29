@@ -22,6 +22,8 @@ run_starts = [
     # 'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
     'IB_RMSE_explun_tanh_sim2_0', 'IB_RMSE_explun_tanh_sim2_1', 'IB_RMSE_explun_tanh_sim2_2',
     'IB_MSE_tanh_sim2_0', 'IB_MSE_tanh_sim2_1', 'IB_MSE_tanh_sim2_2',
+    'IB_MSE_explun_tanh_sim2_0', 'IB_MSE_explun_tanh_sim2_1', 'IB_MSE_explun_tanh_sim2_2',
+
     'IB_MAE_tanh_sim2_0', 'IB_MAE_tanh_sim2_1', 'IB_MAE_tanh_sim2_2',
     'IB_MAE_explun_tanh_sim2_0', 'IB_MAE_explun_tanh_sim2_1', 'IB_MAE_explun_tanh_sim2_2',
     'IB_MAE_sim2_0', 'IB_MAE_sim2_1', 'IB_MAE_sim2_2',

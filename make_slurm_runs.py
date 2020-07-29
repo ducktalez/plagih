@@ -18,9 +18,9 @@ run_starts = [
     # 'IB_RMSE_udluft_0', 'IB_RMSE_udluft_1', 'IB_RMSE_udluft_2'
     # 'IB_RMSE_tanh_udluft_0', 'IB_RMSE_tanh_udluft_1', 'IB_RMSE_tanh_udluft_2',
 
-    """
-    sim2
-    """
+    # """
+    # sim2
+    # """
     # MAE (mean average error)
     'IB_MAE_sim2_0', 'IB_MAE_sim2_1', 'IB_MAE_sim2_2',
     'IB_MAE_explun_sim2_0', 'IB_MAE_explun_sim2_1', 'IB_MAE_explun_sim2_2',
@@ -39,9 +39,9 @@ run_starts = [
     # 'IB_RMSE_tanh_sim2_0', 'IB_RMSE_tanh_sim2_1', 'IB_RMSE_tanh_sim2_2',
     # 'IB_RMSE_explun_tanh_sim2_0', 'IB_RMSE_explun_tanh_sim2_1', 'IB_RMSE_explun_tanh_sim2_2',
 
-    """
-    MC200 (SARSA-Agent after 200 training steps)
-    """
+    # """
+    # MC200 (SARSA-Agent after 200 training steps)
+    # """
     
     # 'MTC200_MAE_explun_simple_fix',
     # 'MTC200_MAE_tanh_simple_fix',
@@ -60,9 +60,9 @@ run_starts = [
     # 'MTC200_MAE_explun_gpfriendly_fix',
     'MTC200_MAE_explun_preset_fix',
     #
-    """
-    MC75 (SARSA-Agent after 75 training steps)
-    """
+    # """
+    # MC75 (SARSA-Agent after 75 training steps)
+    # """
     # 'MTC75_MAE_scratch',
     # 'MTC75_MAE_simple',
     # 'MTC75_MAE_simple_fix',

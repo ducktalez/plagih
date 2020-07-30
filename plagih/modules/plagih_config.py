@@ -60,6 +60,8 @@ class GpConfig:
         self.parsimony_max = conf.get('parsimony_max', 35)
         self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})
 
+        self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
+
         # sfeh not here?
         self.evolve_list_random = conf.get('evolve_list_random', None)  # sfeh
         self.complexity_measure = conf.get('complexity_measure', 'tree_edit_distance')  # sfeh check used origin here? backup loaded origin?

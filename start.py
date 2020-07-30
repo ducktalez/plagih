@@ -103,7 +103,8 @@ def main():  # argv sys.argv[1:]
                     print(f'AUTOLOAD: Using action: {v}')
                     action_name = v
 
-            conf.gen_max = 2000
+            # conf.gen_max = 2000
+            conf.gen_max = 2500
 
         elif 'MTC' in prepared_run:
             kernel_name = 'regression bounded discrete'
@@ -144,6 +145,7 @@ def main():  # argv sys.argv[1:]
         print(f'AUTOLOAD: kernel_name {kernel_name}')
         conf.action_name = action_name
         conf.name = prepared_run
+        conf.gen_max = 1500
     else:
         path_data_csv = args.data_csv
         path_origin_tree = args.origin_tree

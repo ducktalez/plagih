@@ -28,8 +28,7 @@ def print_e(text):
     """
     Printing errors
     """
-    message_pretxt = f'{BColors.FAIL}ERROR: {BColors.WARNING}'
-    print(f'{message_pretxt}{BColors.MAGENTA}{text}{BColors.RESET}')
+    print(f'{BColors.FAIL}ERROR: {BColors.WARNING}{text}{BColors.RESET}')
 
 
 def print_warning(message_type, text, print_type=None, time_total=0.0):
@@ -40,7 +39,7 @@ def print_warning(message_type, text, print_type=None, time_total=0.0):
 
 
 def print_blue(*args):
-    print('{}{}{}'.format(BColors.CYAN, ''.join(args), BColors.RESET))
+    print(f"{BColors.CYAN}{''.join(args)}{BColors.RESET}))")
     return
 
 
@@ -62,13 +61,12 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         message_pretxt = 'ERROR: '
     elif 'w' in message_type:
         message_style = BColors.WARNING
+        message_style = BColors.WARNING
         message_pretxt = ''
     elif 'g' in message_type:
-        message_style = BColors.BLUE
+        message_style = ''  # was BColors.BLUE
         message_pretxt = f'{time_total:3.0f}s. '  # sfeh current time instead and local time at the end?
-    elif 'v' in message_type:
-        message_style = BColors.WHITE
-        message_pretxt = 'Verbose: '
+        # message_style = BColors.WHITE
     elif 'f' in message_type:
         message_style = BColors.MAGENTA
         message_pretxt = 'Writing File: '

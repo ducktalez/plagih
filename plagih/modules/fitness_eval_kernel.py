@@ -2,13 +2,20 @@ from plagih.modules.printing import *
 from plagih.modules.operators import *
 import numpy as np
 import sklearn.metrics as skm
-from sys import getsizeof
+# from sys import getsizeof
 import copy
 
 
 class GPKernel:
 
     def __init__(self, *args):
+        self.eval_action = None
+        pass
+
+    def fitness_compare(self, fitness1, fitness2):
+        pass
+
+    def best_fitness_function(self, *arg, **args):
         pass
 
 
@@ -29,7 +36,7 @@ class ClassificationKernel(GPKernel):
     def tf_wrap_result(self, *args):
         pass
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, eval_action):
+    def tf_get_pairwise_fitness(self, solution, kernel_result):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -143,10 +150,10 @@ class RegressionKernel:
 
         self.exploration_risk = 'explun' in kernel_name
         self.origin_results = None  # can only be set after the evaluation of the origin...
-        sfeh_help = {'pen_explorate(1)': 1.0,
-                     'pen_explorate(0.5)': 0.5}
+        sfeh_help = {'explorate01': 0.1,
+                     'explorate05': 0.5}
 
-        self.pen_explorate = 0.1  # todo
+        self.pen_explorate = 0.1
         for k, v in sfeh_help.items():
             if k in kernel_name:
                 self.pen_explorate = v
@@ -204,10 +211,10 @@ class RegressionKernel:
             exploration = (self.origin_results - results_kernel)  # the difference to the origin - which we want to "penalize" here
             required_improvement = tf.abs(solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
             explore_penalize = tf.maximum(required_improvement-exploration, 0)  # removes the above mentioned expected exploration from the penalize process
-            penalize_exploration_weighted = self.pen_explorate*(tf_error(explore_penalize))  # this should not be weighted as much as the regular expression (0 to 1).
+            penalize_exploration = self.pen_explorate*(tf_error(explore_penalize))  # this should not be weighted as much as the regular expression (0 to 1).
             # Although, even more extreme penalisations are possible. Also, ideas about dummy pen (for no exploration, but no easy improvement) or values >1 for sticking to the origin policy
             # use factor before or after squaring the distance?
-            regression_errors += penalize_exploration_weighted
+            regression_errors += penalize_exploration
 
             """
             sfeh idea: process is markov chain, but logic seems to correct until the first wrong decision.
@@ -215,7 +222,7 @@ class RegressionKernel:
             'correct' is not known, though. (MTC - yes, but IB may be very close)
             """
         else:
-            penalize_exploration_weighted = tf.no_op()
+            penalize_exploration = tf.no_op()
 
         mean_error = tf.reduce_mean(regression_errors)
         if self.RMSE:
@@ -241,7 +248,7 @@ class RegressionKernel:
 
         with tf.compat.v1.Session(config=self.tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
-                tf_results = sess.run({'pairwise_diff': pairwise_diff, 'results_kernel': results_kernel, 'regression_errors': regression_errors, 'mean_error': mean_error})
+                tf_results = sess.run({'pairwise_diff': pairwise_diff, 'results_kernel': results_kernel, 'regression_errors': regression_errors, 'mean_error': mean_error, 'penalize_exploration': penalize_exploration})
                 # sfeh attention: the dict above returns np-type results, not real floats
         if only_fitness:  # reduced evaluation, only mean_error is returned... (may save memory as only one value gets returned)
             return tf_results['mean_error']

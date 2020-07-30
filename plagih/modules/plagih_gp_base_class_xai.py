@@ -40,7 +40,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree, developer_fix=None):  # load_backup
+    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree, developer_fix=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
 
@@ -62,13 +62,11 @@ class ExplainableGP(object):
         self.env_vars, self.data_train, self.data_control = self.activate_dataset(path_data_csv, self.conf.action_name)
 
         # Evaluating kernel (that uses tensorflow)
-        self.tf_device = "/gpu:0"  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
-        self.tf_device_log = self.conf.tf_device_log  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
-        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log, allow_soft_placement=True)
+        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log, allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
         self.tf_config.gpu_options.allow_growth = True
         # sfeh for now, only regression kernel
         self.origin_results = None
-        self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, self.tf_device, self.env_vars.eval_action)
+        self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, "/gpu:0", self.env_vars.eval_action)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
         self.print_type = self.conf.print_type
 
         self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
@@ -128,6 +126,7 @@ class ExplainableGP(object):
                 self.complexity_variance = monitoring_dict.get('complexity_variance', {})  # variance can be deleted, only std-error is needed delete v1
                 self.pop_trees_complexity_std_error = monitoring_dict.get('pop:trees:complexity:std_error', {})
                 self.gen_time = monitoring_dict.get('gen_time', {})
+                self.evol_performance = monitoring_dict.get('evol_performance', {})
 
         self.monitoring_dict = {'population_tmp_done-size': {},
                                 'pop_parsim': {},
@@ -140,7 +139,8 @@ class ExplainableGP(object):
                                 'complexity_mean': {},
                                 'complexity_variance': {},  # variance can be deleted, only std-error is needed delete v1
                                 'pop:trees:complexity:std_error': {},
-                                'gen_time': {}}
+                                'gen_time': {},
+                                'evol_performance': {}}
 
         self.evolve_loop, self.evolve_random = self.make_evolve_rates()
 
@@ -271,6 +271,7 @@ class ExplainableGP(object):
 
     def try_load_backup(self, path_load_backup=None):
         """
+        backup_load
         If a backup-file is found...
         """
         path_backup = path_load_backup or self.root_dir / self.file_locs.file_backup_pickle  # sfeh file-load
@@ -290,15 +291,19 @@ class ExplainableGP(object):
                     raise Exception(f'EOFError: \n{eoferr}')
 
                 if self.developer_fix:
-                    _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                    _, self.gen_id, self.pareto, self.pop_base, backup_monitoring_dict = run_data
                     self.run_backup_save()  # sfeh remove this
                     raise Exception('SFEH hopefully fixed a bug. You may delete this code.')
 
                 try:
-                    self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
+                    self.gen_id, self.pareto, self.pop_base, backup_monitoring_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
                 except:
-                    _, self.gen_id, self.pareto, self.pop_base, self.monitoring_dict = run_data
+                    _, self.gen_id, self.pareto, self.pop_base, backup_monitoring_dict = run_data
                     # self.conf.restart_count += 1
+
+                self.monitoring_dict.update(backup_monitoring_dict)
+
+                self.check_update_old_run()
 
                 printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
 
@@ -307,6 +312,35 @@ class ExplainableGP(object):
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}.')
         return
+
+    def check_update_old_run(self):
+        """
+        Update paretofront
+        update population (fitness, parsimony, etc)
+        also, raise if fitness problem
+        todo force a new population at the start as option?
+        """
+
+        self.printpl('i', f'Updating paretofront from old run. length: {len(self.pareto)}')
+        pareto_list = self.pareto[:]
+        self.pareto = []
+        for (parsimony, fitness_train, cooltree) in pareto_list:
+            fitness_train = round(fitness_train, self.conf.float_decimals)
+            cooltree.meta.fitness_train = round(fitness_train, self.conf.float_decimals)
+            entry = [parsimony, fitness_train, cooltree]
+            self.pareto_append(entry)
+        self.printpl('i', f'New pareto length: {len(self.pareto)}')
+
+        # sfeh recompute parsimony and fitness for every tree (optional?)
+        # also rebuild trees?
+
+        self.printpl('i', f'Updating population from old run. length: {len(self.pop_base)}')
+        pop_base_copy = self.pop_base[:]
+        self.pop_base = []
+        for cooltree in pop_base_copy:
+            cooltree.meta.fitness_train = round(cooltree.meta.fitness_train, self.conf.float_decimals)
+            self.pop_base.append(cooltree)
+        self.printpl('i', f'New population length. length: {len(self.pop_base)}')
 
     def gp_analyse(self, path_load_backup):
         try:
@@ -456,7 +490,7 @@ class ExplainableGP(object):
                         try:
                             cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
                         except Exception as ex:
-                            print_warning('www', f'Evolve reproduce failed: {ex}')
+                            print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.print_type)
 
                     self.pop_append(cooltree, last_evolution=tag)
 
@@ -468,7 +502,7 @@ class ExplainableGP(object):
                     cooltree = self.pop_selection_tournament(tourn_size)
                     cooltree.evolve_mutate_point(self.choose_oparray2,
                                                  self.env_vars.choose_obs,
-                                                 self.choose_distributions)
+                                                 self.choose_distributions, self.conf.float_decimals)
                     self.pop_append(cooltree, last_evolution=tag)
 
             elif evolve_name == 'mutate branch':
@@ -952,7 +986,7 @@ class ExplainableGP(object):
         path = file_make_dir(self.root_dir / 'pycode_list.yaml')
         with Path.open(path, 'w') as file:
             _ = yaml.dump(pygents_list, file)  # , default_flow_style=False, sort_keys=False)
-            printez('ff', f'{path}')
+            printez('ff', f'IB pycode-list: {path.as_posix()}')  # sfeh always the same print structure... just pass the path?
 
         return
 
@@ -1018,7 +1052,7 @@ class ExplainableGP(object):
         if float_nodes:
             for node_id in float_nodes:
                 val = float(tree_node_get_label(tree, node_id))
-                val = label_constant_mutate(val, term_type=float, filter_type=mutate_filter)
+                val = label_constant_mutate(val, term_type=float, float_decimals=self.conf.float_decimals, filter_type=mutate_filter)
                 tree = tree_node_set_label(tree, node_id, val)
 
         if obs_nodes and filter_observations:  # 'filtering' variables when they are from different times
@@ -1049,13 +1083,13 @@ class ExplainableGP(object):
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
                                                                          self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
-                                                                         self.choose_distributions, full_or_grow=full_or_grow)
+                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
                                                                          self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
-                                                                         self.choose_distributions, full_or_grow=full_or_grow)
+                                                                         self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
         else:
             raise Exception('Known full_or_grow was not found for building random trees.')
         return label_list, arity_list, xtype_list
@@ -1173,7 +1207,7 @@ class ExplainableGP(object):
 
             branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
             tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
-            tree = tree_prune_depth(tree, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions)
+            tree = tree_prune_depth(tree, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
         else:
             tree = None
 
@@ -1207,22 +1241,24 @@ class ExplainableGP(object):
         right_core = Core_From_Labels(right_labels, right_aritys, right_xtypes).get_uninstanced_core()
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions)
+        left_offspring = tree_prune_depth(left_offspring, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-        right_offspring = tree_prune_depth(right_offspring, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions)
+        right_offspring = tree_prune_depth(right_offspring, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
 
         left_offspring = cooltree_from_oldtree(left_offspring)
         right_offspring = cooltree_from_oldtree(right_offspring)
         return left_offspring, right_offspring
 
-    def pareto_append(self, cooltree, tree_entry, message):
-        self.printpl('a', f"Paretofront new entry ({message}): {tree_entry[0]}, {tree_entry[1]}: {tree_entry[2].meta.expr_raw}")
+    def pareto_append(self, tree_entry, msg=None):
+        if msg:
+            self.printpl('a', f"Paretofront new entry ({msg}): {tree_entry[0]}, {tree_entry[1]}: {tree_entry[2].meta.expr_raw}")
         self.pareto.append(tree_entry)
 
         self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or (x[0] == tree_entry[0] and x[1] == tree_entry[1])]
         self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
 
+        cooltree = tree_entry[2]
         cooltree_sym = copy.deepcopy(cooltree)
         try:
             self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
@@ -1252,12 +1288,12 @@ class ExplainableGP(object):
         p_simpler = [p for p in self.pareto if p[0] <= tree_entry[0]]  # all pareto entries that are less complex
 
         if len(p_simpler) == 0:  # all other pareto entries are more complex
-            self.pareto_append(cooltree, tree_entry, f'new simplest entry')
+            self.pareto_append(tree_entry, msg=f'new simplest entry')
         else:
             best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
             if tree_entry[1] < best[1]:
                 self.kernel.better_fitness_relation(tree_entry[1], best[1])  # if true, at least one insertion
-                self.pareto_append(cooltree, tree_entry, f'old fitness: {best[1]}')
+                self.pareto_append(tree_entry, msg=f'old fitness: {best[1]}')
 
         self.pareto_sort()  # sfeh check if required
         return
@@ -1286,7 +1322,7 @@ class ExplainableGP(object):
         if tree_ident in self.tree_lut:
             tree_meta = self.tree_lut[tree_ident]
             parsimony = tree_meta['parsimony']
-            fitness_train = tree_meta['fitness_train']
+            fitness_train = round(tree_meta['fitness_train'], self.conf.float_decimals)  # sfeh just for now
         else:
             parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony > self.conf.parsimony_max:
@@ -1355,7 +1391,7 @@ class ExplainableGP(object):
                     elif row[0] == '':
                         pass
                     else:
-                        print_warning('w', f'Unexpected row start: {row[0]}')
+                        print_e(f'Unexpected row start: {row[0]}')
         # sfeh if file is a .txt file with an expression
         # elif Path.is_file(tree_expr_txt_path):  # karoo_tree_from_expr(expr)
         #     raise Exception('SFEH needs to create an option to make trees from expression')
@@ -1386,7 +1422,7 @@ class ExplainableGP(object):
 
         used_observations = origin_cooltree.get_observation_list()
         tf_origin_results = self.kernel.eval_tf(expr_sym, used_observations)
-        fitness_train = float(tf_origin_results['mean_error'])  # fitness currently IS the mean error
+        fitness_train = round(float(tf_origin_results['mean_error']), self.conf.float_decimals)  # fitness currently IS the mean error
         if self.kernel.exploration_risk:
             self.kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
 
@@ -1415,7 +1451,7 @@ class ExplainableGP(object):
             raise Exception(f'eval:{evalex}')
 
         used_observations = cooltree.get_observation_list()
-        fitness_train = float(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True))
+        fitness_train = round(float(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True)), self.conf.float_decimals)
 
         if not check_value_is_real(fitness_train):
             raise Exception(f'Error is {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
@@ -1513,6 +1549,9 @@ class ExplainableGP(object):
         plot_end(data_tuples, path_plots, title='best candidate', x_label='Generation',
                  y_label='error', linestyle='dashed', step_where='post')
 
+        # # todo
+        # (self.monitoring_dict['evol_performance'])
+
         return
 
     def pop_analyse(self):
@@ -1530,6 +1569,21 @@ class ExplainableGP(object):
             raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
 
         pop_fitness = [cooltree.meta.fitness_train for cooltree in popul]
+        tmp_evol_performance = {}
+        for cooltree in popul:
+            tmp_evol_performance[cooltree.meta.last_evolution] = {'fitness': cooltree.meta.fitness_train,
+                                                                  'parsimony': cooltree.meta.parsimony,
+                                                                  'size': len(cooltree)}
+            # sfeh fitness - last fitness?
+        evol_performance = {}
+        for last_evol in tmp_evol_performance:
+            try:
+                evol_performance[last_evol] = {'fitness-avg': np.average(tmp_evol_performance[last_evol]['fitness']),
+                                               'parsimony-avg': np.average(tmp_evol_performance[last_evol]['parsimony']),
+                                               'size-avg': np.average(tmp_evol_performance[last_evol]['size'])}
+            except Exception as ex:
+                print_e(f'Could not save evol_performance analysis. {ex}')
+
         pop_parsim = [cooltree.meta.parsimony for cooltree in popul]
         pop_treelen = [len(cooltree) for cooltree in popul]
         pop_last_evolve = [cooltree.meta.last_evolution for cooltree in popul]
@@ -1541,12 +1595,10 @@ class ExplainableGP(object):
             self.best_fitness = pop_fitness_best
 
         # todo safe...
-        #  evolotion-fitness
-        #  evolution-parsimony
+        #  tree age?
         #
+        # # todo add complexity to tree?
         #
-        #
-        #  .
 
         self.monitoring_dict['population_tmp_done-size'][gen_id] = len(popul)
         self.monitoring_dict['pop_parsim'][gen_id] = pop_parsim
@@ -1559,6 +1611,7 @@ class ExplainableGP(object):
         self.monitoring_dict['complexity_mean'][gen_id] = np.mean(pop_treelen)
         self.monitoring_dict['pop:trees:complexity:std_error'][gen_id] = np.std(pop_treelen)
         self.monitoring_dict['complexity_variance'][gen_id] = np.var(pop_treelen)  # sfeh version1 delete this shit
+        self.monitoring_dict['evol_performance'][gen_id] = evol_performance
 
         gen_time = time.perf_counter() - self.time_genstart
         self.monitoring_dict['gen_time'][gen_id] = gen_time

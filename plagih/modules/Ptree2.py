@@ -373,6 +373,9 @@ class CoolCore:
 
 
 class CoolTree:
+    """
+    sfeh tree age is the length of the hist list. crossover: use maximum
+    """
     class PtreeMeta:
         def __init__(self, fitness_train=None):
             self.hash = None
@@ -585,7 +588,7 @@ class CoolTree:
     def get_mutatable_nodes(self):
         return self.core.get_mutatable_nodes()
 
-    def evolve_mutate_point(self, choose_oparray2, choose_obs, choose_distributions):
+    def evolve_mutate_point(self, choose_oparray2, choose_obs, choose_distributions, float_decimals):
         """
         Mutate a single mutatable point in any Tree.
         """
@@ -597,7 +600,7 @@ class CoolTree:
         if arity > 0:
             new_label = choose_operator(node.xtype, choose_oparray2, arity=arity)  # Function is same type, same arity
         else:
-            new_label = choose_term(node.xtype[-2:], choose_obs, choose_distributions)  # 3 -> '2f' -> 5
+            new_label = choose_term(node.xtype[-2:], choose_obs, choose_distributions, float_decimals)  # 3 -> '2f' -> 5
 
         node.label = new_label
         self.finalize_structure()

@@ -57,7 +57,7 @@ class GpConfig:
         # only from config (as noone ever changed it :~P)
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
-        self.parsimony_max = conf.get('parsimony_max', 50)  #: 50,
+        self.parsimony_max = conf.get('parsimony_max', 35)
         self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})
 
         # sfeh not here?

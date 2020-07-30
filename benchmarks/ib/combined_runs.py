@@ -1,7 +1,8 @@
 # coding=utf-8
 import argparse
 import os
-
+import sys
+# sys.path.append('modules/')
 from benchmarks.ib.ib_eval_agents import *
 from pathlib import Path
 import itertools
@@ -85,17 +86,22 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim):
         parsims = arow['parsims']
         fitness_sum = arow['fitness_sum']
         parsim_sum = arow['parsim_sum']
-        lut_hash = f"{parsim_sum}_{parsims}_{fitness_sum}"
+        codes = arow['codes']
+        lut_hash = f"{codes}"
 
         if parsim_sum < max_parsim:
             if lut_hash in lut:
                 experiment, experiment_safe = lut[lut_hash]  # todo more evaluations? average?
             else:
-                codes = arow['codes']
-                experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
-                experiment_safe = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
-                print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_safe}')
-                lut[lut_hash] = [experiment, experiment_safe]
+                try:
+                    experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
+                    experiment_safe = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
+                    print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_safe}')
+                    lut[lut_hash] = [experiment, experiment_safe]
+                except Exception as ex:
+                    print(f'WARNING: Something failed in the evaluation process: {ex}')
+                    experiment = None  # todo dummy or None?
+                    experiment_safe = None
                 eval_count += 1
                 if eval_count % 20 == 0:
                     print(f'Saving lut after evaluating 20')
@@ -112,44 +118,6 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim):
     print(f'Did not evaluate {not_evaled} combinations as they are too complex...')
     
     return combined_all
-
-
-def combined_lists(run_name, max_parsim):
-    lsactions = ['_0/pycode_list.yaml', '_1/pycode_list.yaml', '_2/pycode_list.yaml']
-
-    agents = []
-    for act in lsactions:
-        lfile = dir_slurm / run_name /f'{run_name}{act}'
-        print(f'Looking at file: {lfile}')
-        with Path.open(lfile, 'r') as file:
-            yamload = yaml.load(file, Loader=yaml.FullLoader)
-        agents.append(yamload)
-
-    root_dir_eval = dir_slurm / f'{run_name}'
-    if not Path.is_dir(root_dir_eval):
-        Path.mkdir(root_dir_eval)
-
-    combined_all = get_combined_runs(agents)
-    combined_all.sort(key=lambda x: x['parsim_sum'])
-    
-    combined_all = eval_and_lut(root_dir_eval, combined_all, max_parsim)
-
-    combined_all_p = {}
-    combined_all_a = [{}, {}, {}]
-    for row in combined_all:
-        psum = row['parsim_sum']
-        try:
-            combined_all_p[psum].append(row)
-        except:
-            combined_all_p[psum] = [row]
-        for a in range(3):
-            px = row['parsims'][a]
-            try:
-                combined_all_a[a][px].append(row)
-            except:
-                combined_all_a[a][px] = [row]
-
-    plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval)
     
     
 def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval):
@@ -172,7 +140,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         fig, ax = plt.subplots()
         ax.set_xlabel('complexity')
         ax.set_ylabel('reward')
-        ax.set_ylim(-10000, -5000)
+        ax.set_ylim(-10000, -4000)
         ax.set_title(f'{run_name} ({measr})')
         # # only if one entry per parsimony
         ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
@@ -180,53 +148,115 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         plt.savefig(root_dir_eval / f'plot-{measr}.png')
         plt.close()
 
-        for a in range(3):
-            tmp_comb = combined_all_a[a]
-            res = [max(row, key=lambda x: x[measr]) for p, row in tmp_comb.items()]
-            # res = max([x for x in res1], key=lambda l: l[measr])
-            res.sort(key=lambda x: x['parsim_sum'])
-            xx = [x['parsim_sum'] for x in res]
-            y_all = [y['experiment'] for y in res]
-            y_safe = [y['experiment_safe'] for y in res]
+    for a in range(3):
+        tmp_comb = combined_all_a[a]
+        res = [min(row, key=lambda x: x['f_squared']) for p, row in tmp_comb.items()]
+        # res = max([x for x in res1], key=lambda l: l[measr])
+        res.sort(key=lambda x: x['parsim_sum'])
+        xx = [x['parsim_sum'] for x in res]
+        y_all = [y['experiment'] for y in res]
+        y_safe = [y['experiment_safe'] for y in res]
 
-            plt.tight_layout()
-            fig, ax = plt.subplots()
-            ax.set_xlabel('complexity')
-            ax.set_ylabel('reward')
-            # ax.set_ylim(-10000, -5000)  # todo
-            ax.set_title(f'{run_name} ({measr})')
-            # # only if one entry per parsimony
-            ax.scatter(xx, y_all, label='all actions', marker='.', color='r', )
-            ax.scatter(xx, y_safe, label='low risk', marker='.', color='b')
-            plt.savefig(root_dir_eval / f'act-{a}-scatter-{measr}.png')
-            plt.close()
-
-        # """
-        # plot all (scatter)
-        # """
-        # plot_all = analyse_all[measr]
-        # plot_all.sort(key=lambda x: x[0])
-        # x = [x[0] for x in plot_all]
-        # y_all = [y[1] for y in plot_all]
-        # y_safe = [y[2] for y in plot_all]
-        #
-        # plt.tight_layout()
-        # fig, ax = plt.subplots()
-        # ax.set_title(f'IB eval {run_name} ({measr})')
-        # ax.set_xlabel('complexity')
-        # ax.set_ylabel('reward')
+        plt.tight_layout()
+        fig, ax = plt.subplots()
+        ax.set_xlabel('complexity')
+        ax.set_ylabel('reward')
+        ax.set_ylim(-10000, -4000)  # todo
+        ax.set_title(f'{run_name} ({measr})')
         # # only if one entry per parsimony
-        # ax.scatter(x, y_all, label='all actions', marker='.', color='r')
-        # ax.scatter(x, y_safe, label='low risk', marker='.', color='b')
-        # plt.savefig(root_dir_eval / f'{measr}-scatter.png')
-        # plt.close()
-        #
-        # for dim in range(3):
-        #     plot_all = analyse_all[measr]
-        #     plot_all.sort(key=lambda x: x[0])
-        #     x = [x[0] for x in plot_all]
-        #     y_all = [y[1] for y in plot_all]
-        #     y_safe = [y[2] for y in plot_all]
+        ax.scatter(xx, y_all, label='all actions', marker='.', color='r', )
+        ax.scatter(xx, y_safe, label='low risk', marker='.', color='b')
+        plt.savefig(root_dir_eval / f'act-{a}-scatter-{measr}.png')
+        plt.close()
+
+    """
+    Plotting the best candidates per parsimony
+    """
+
+    tmp_comb = combined_all_p
+    res = [min([row for row in tmp_comb[p]], key=lambda x: x['fitness_sum']) for p in parsims]
+    # res = max([x for x in res1], key=lambda l: l[measr])
+    res.sort(key=lambda x: x['parsim_sum'])
+    xx = [x['parsim_sum'] for x in res]
+    y_all = [y['experiment'] for y in res]
+    y_safe = [y['experiment_safe'] for y in res]
+
+    plt.tight_layout()
+    fig, ax = plt.subplots()
+    ax.set_xlabel('complexity')
+    ax.set_ylabel('reward')
+    ax.set_ylim(-10000, -4000)  # todo
+    ax.set_title(f'{run_name} ({measr})')
+    # # only if one entry per parsimony
+    ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
+    ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
+    plt.savefig(root_dir_eval / f'best-for_parsim.png')
+    plt.close()
+
+    # """
+    # plot all (scatter)
+    # """
+    # plot_all = analyse_all[measr]
+    # plot_all.sort(key=lambda x: x[0])
+    # x = [x[0] for x in plot_all]
+    # y_all = [y[1] for y in plot_all]
+    # y_safe = [y[2] for y in plot_all]
+    #
+    # plt.tight_layout()
+    # fig, ax = plt.subplots()
+    # ax.set_title(f'IB eval {run_name} ({measr})')
+    # ax.set_xlabel('complexity')
+    # ax.set_ylabel('reward')
+    # # only if one entry per parsimony
+    # ax.scatter(x, y_all, label='all actions', marker='.', color='r')
+    # ax.scatter(x, y_safe, label='low risk', marker='.', color='b')
+    # plt.savefig(root_dir_eval / f'{measr}-scatter.png')
+    # plt.close()
+    #
+    # for dim in range(3):
+    #     plot_all = analyse_all[measr]
+    #     plot_all.sort(key=lambda x: x[0])
+    #     x = [x[0] for x in plot_all]
+    #     y_all = [y[1] for y in plot_all]
+    #     y_safe = [y[2] for y in plot_all]
+
+
+def combined_lists(run_name, max_parsim):
+    lsactions = ['_0/pycode_list.yaml', '_1/pycode_list.yaml', '_2/pycode_list.yaml']
+
+    agents = []
+    for act in lsactions:
+        lfile = dir_slurm / run_name /f'{run_name}{act}'
+        print(f'Looking at file: {lfile}')
+        with Path.open(lfile, 'r') as file:
+            yamload = yaml.load(file, Loader=yaml.FullLoader)
+        agents.append(yamload)
+
+    root_dir_eval = dir_slurm / f'{run_name}'
+    if not Path.is_dir(root_dir_eval):
+        Path.mkdir(root_dir_eval)
+
+    combined_all = get_combined_runs(agents)
+    combined_all.sort(key=lambda x: x['parsim_sum'])
+
+    combined_all = eval_and_lut(root_dir_eval, combined_all, max_parsim)
+
+    combined_all_p = {}
+    combined_all_a = [{}, {}, {}]
+    for row in combined_all:
+        psum = row['parsim_sum']
+        try:
+            combined_all_p[psum].append(row)
+        except:
+            combined_all_p[psum] = [row]
+        for a in range(3):
+            px = row['parsims'][a]
+            try:
+                combined_all_a[a][px].append(row)
+            except:
+                combined_all_a[a][px] = [row]
+
+    plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval)
 
 
 def main():
@@ -234,7 +264,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
-    parser.add_argument('-max_parsim', type=int, default=30)
+    parser.add_argument('-max_parsim', type=int, default=20)
     args = parser.parse_args()
 
     name = args.name

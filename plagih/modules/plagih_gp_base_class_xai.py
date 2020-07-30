@@ -24,12 +24,11 @@ class FileLocations:
 
     file_backup_pickle = 'backup/backup.p'
 
-    trees_tex = 'agents/agents_trees.tex'
+    trees_tex = 'agents_trees.tex'
     folder_pycode = 'agents/'
 
     file_pareto = 'info/paretofront.yaml'
     info_config_yaml = 'info/config.yaml'
-    file_info_config_json = 'info/config.json'
 
     samples_ready_p = 'run_files/samples_ready.p'
     samples_csv = 'run_files/samples.csv'
@@ -1256,7 +1255,8 @@ class ExplainableGP(object):
             self.pareto_append(cooltree, tree_entry, f'new simplest entry')
         else:
             best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
-            if tree_entry[1] < best[1]:  # if true, at least one insertion  # todo get self.kernel involved here
+            if tree_entry[1] < best[1]:
+                self.kernel.better_fitness_relation(tree_entry[1], best[1])# if true, at least one insertion  # todo get self.kernel involved here
                 self.pareto_append(cooltree, tree_entry, f'old fitness: {best[1]}')
 
         self.pareto_sort()  # sfeh check if required

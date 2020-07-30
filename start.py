@@ -64,11 +64,13 @@ def main():  # argv sys.argv[1:]
     print('fuck debug')
 
     if prepared_run:
-        path_origin_tree = None
-        action_name = None
 
         def pathify(x):
             return Path(__file__).parent.absolute() / 'benchmarks/' / x
+
+        path_origin_tree = None
+        action_name = None
+        root_dir = pathify(f'slurm_runs/{prepared_run[:-2]}/{prepared_run}')
 
         if 'IB' in prepared_run:
             path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
@@ -105,6 +107,8 @@ def main():  # argv sys.argv[1:]
 
         elif 'MTC' in prepared_run:
             kernel_name = 'regression bounded discrete'
+
+            root_dir = pathify(f'slurm_runs/{prepared_run}')
             if 'MTC200' in prepared_run:
                 path_data_csv = pathify('mc/gp_files/samples200.csv')
             elif 'MTC75' in prepared_run:
@@ -112,7 +116,7 @@ def main():  # argv sys.argv[1:]
             else:
                 raise
 
-            ori_trs = {'gpFfriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
+            ori_trs = {'gpfriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
                        'preset': 'mc/gp_files/tree_preset_fix.csv',
                        'simple': 'mc/gp_files/tree_simple.csv',
                        'simple_fix': 'mc/gp_files/tree_simple_fix.csv',
@@ -133,9 +137,6 @@ def main():  # argv sys.argv[1:]
             kernel_name += ' MAE'
         kernel_name += ' tanhpenalize' if 'tanh' in prepared_run else ''
         kernel_name += ' relative_regression_fun' if 'explun' in prepared_run else ''  # explun: explore-punishment
-
-        # root_dir = pathify(f'slurm_runs/{prepared_run}')
-        root_dir = pathify(f'slurm_runs/{prepared_run[:-2]}/{prepared_run}')
 
         print(f'AUTOLOAD: path_origin_tree {path_origin_tree}')
         conf.kernel_name = kernel_name

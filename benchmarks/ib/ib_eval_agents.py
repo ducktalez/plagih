@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from benchmarks.ib.test_agents import *
 from pathlib import Path
 import csv
+import math
 
 '''
 The MIT License (MIT)

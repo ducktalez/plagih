@@ -136,7 +136,8 @@ def main():  # argv sys.argv[1:]
         else:
             kernel_name += ' MAE'
         kernel_name += ' tanhpenalize' if 'tanh' in prepared_run else ''
-        kernel_name += ' relative_regression_fun' if 'explun' in prepared_run else ''  # explun: explore-punishment
+        kernel_name += ' explun' if 'explun' in prepared_run else ''
+        kernel_name += ' explun01' if 'explun01' in prepared_run else ''  # explun: explore-punishment
 
         print(f'AUTOLOAD: path_origin_tree {path_origin_tree}')
         conf.kernel_name = kernel_name

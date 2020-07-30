@@ -67,9 +67,6 @@ class MatchKernel(GPKernel):
     def best_fitness_function(self, *arg, **args):
         return max(*arg, **args)
 
-    def tf_wrap_result(self, *args):
-        pass
-
     def tf_get_pairwise_fitness(self, solution, kernel_result, results_agent):
         """
         Calculates the kernel-specific fitness for the solution.
@@ -124,6 +121,9 @@ class RegressionKernel:
     def best_fitness_function(self, *arg, **args):
         return min(*arg, **args)
 
+    def better_fitness_relation(self, x, y):
+        return x < y
+
     def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
         self.np_best_fitness = np.min
         self.kname = kernel_name
@@ -141,12 +141,12 @@ class RegressionKernel:
         self.RMSE = 'RMSE' in kernel_name
         self.MAE = 'MAE' in kernel_name
 
-        self.exploration_risk = 'relative_regression_fun' in kernel_name
+        self.exploration_risk = 'explun' in kernel_name
         self.origin_results = None  # can only be set after the evaluation of the origin...
         sfeh_help = {'pen_explorate(1)': 1.0,
                      'pen_explorate(0.5)': 0.5}
 
-        self.pen_explorate = 0.5  # todo
+        self.pen_explorate = 0.1  # todo
         for k, v in sfeh_help.items():
             if k in kernel_name:
                 self.pen_explorate = v

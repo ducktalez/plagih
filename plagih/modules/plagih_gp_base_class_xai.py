@@ -1256,7 +1256,7 @@ class ExplainableGP(object):
         else:
             best = min(p_simpler, key=lambda p: p[1])  # the fittest of the less complex ones
             if tree_entry[1] < best[1]:
-                self.kernel.better_fitness_relation(tree_entry[1], best[1])# if true, at least one insertion  # todo get self.kernel involved here
+                self.kernel.better_fitness_relation(tree_entry[1], best[1])  # if true, at least one insertion
                 self.pareto_append(cooltree, tree_entry, f'old fitness: {best[1]}')
 
         self.pareto_sort()  # sfeh check if required

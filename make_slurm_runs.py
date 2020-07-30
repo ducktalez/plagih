@@ -8,6 +8,36 @@ print('Make sure that this file is executed on top level')
 
 # a_velocity,a_gain,a_shift
 run_starts = [
+
+    # """
+    # MC200 (SARSA-Agent after 200 training steps)
+    # """
+
+    # 'MTC200_MAE_explun01_simple_fix',
+    # 'MTC200_MAE_tanh_simple_fix',
+    # 'MTC200_MAE_explun01_tanh_simple_fix',
+    # 'MTC200_RMSE_explun01_tanh_simple_fix',
+
+    # 'MTC200_MAE_scratch',
+    # 'MTC200_MAE_gpFfriendly',
+    'MTC200_MAE_preset',
+    'MTC200_MAE_simple',
+    'MTC200_MAE_simple_fix',
+    'MTC200_MAE_simplePlus_fix',
+    'MTC200_MAE_simplePlus',
+    #
+    'MTC200_MAE_explun01_simple',
+    'MTC200_MAE_explun01_gpfriendly_fix',
+    'MTC200_MAE_gpfriendly_fix',
+    'MTC200_MAE_explun01_preset_fix',
+    #
+    # """
+    # MC75 (SARSA-Agent after 75 training steps)
+    # """
+    'MTC75_MAE_scratch',
+    'MTC75_MAE_simple',
+    'MTC75_MAE_simple_fix',
+    
     # 'IB_RMSE_50_0', 'IB_RMSE_50_1', 'IB_RMSE_50_2',
     # 'IB_RMSE_explun01_50_0', 'IB_RMSE_explun01_50_1', 'IB_RMSE_explun01_50_2',
     # 'IB_RMSE_tanh_50_0', 'IB_RMSE_tanh_50_1', 'IB_RMSE_tanh_50_2',
@@ -38,35 +68,6 @@ run_starts = [
     # 'IB_RMSE_explun01_sim2_0', 'IB_RMSE_explun01_sim2_1', 'IB_RMSE_explun01_sim2_2',
     # 'IB_RMSE_tanh_sim2_0', 'IB_RMSE_tanh_sim2_1', 'IB_RMSE_tanh_sim2_2',
     # 'IB_RMSE_explun01_tanh_sim2_0', 'IB_RMSE_explun01_tanh_sim2_1', 'IB_RMSE_explun01_tanh_sim2_2',
-
-    # """
-    # MC200 (SARSA-Agent after 200 training steps)
-    # """
-    
-    # 'MTC200_MAE_explun01_simple_fix',
-    # 'MTC200_MAE_tanh_simple_fix',
-    # 'MTC200_MAE_explun01_tanh_simple_fix',
-    # 'MTC200_RMSE_explun01_tanh_simple_fix',
-    
-    # 'MTC200_MAE_scratch',
-    # 'MTC200_MAE_gpFfriendly',
-    'MTC200_MAE_preset',
-    'MTC200_MAE_simple',
-    'MTC200_MAE_simple_fix',
-    'MTC200_MAE_simplePlus_fix',
-    'MTC200_MAE_simplePlus',
-    #
-    'MTC200_MAE_explun01_simple',
-    'MTC200_MAE_explun01_gpfriendly_fix',
-    'MTC200_MAE_gpfriendly_fix',
-    'MTC200_MAE_explun01_preset_fix',
-    #
-    # """
-    # MC75 (SARSA-Agent after 75 training steps)
-    # """
-    'MTC75_MAE_scratch',
-    'MTC75_MAE_simple',
-    'MTC75_MAE_simple_fix',
 
     ### NOPE ###
 

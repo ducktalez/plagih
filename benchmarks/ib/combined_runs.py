@@ -98,10 +98,10 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim_sum, max_parsim_single)
                 try:
                     experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
                     experiment_safe = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
-                    print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_safe}')
+                    print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe}')
                     lut[lut_hash] = [experiment, experiment_safe]
                     eval_count += 1
-                    if eval_count % 50 == 0:
+                    if eval_count % 250 == 0:
                         print(f'Saving lut after evaluating 50')
                         with Path.open(lut_file, 'w') as file:
                             _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
@@ -136,6 +136,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         """
         plot best (plot)
         todo kreuztabelle?
+        todo are evaluations too different? take a look at start eval... YES! Make more evaluations... create eval_list. update list, once, first.
         """
         res = [min([row for row in combined_all_p[p]], key=lambda x: x[measr]) for p in parsims]
         # res = max([x for x in res1], key=lambda l: l[measr])
@@ -146,7 +147,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
 
         plt.tight_layout()
         fig, ax = plt.subplots()
-        ax.set_title(f'plot ({run_name}, {measr})')  # todo compare measurements
+        ax.set_title(f'plot ({run_name}, {measr})')  # todo compare measurements and remove one of them forever
         ax.set_xlabel('complexity')
         ax.set_ylabel('reward')
         ax.set_ylim(-15000, -4000)

@@ -620,7 +620,7 @@ class ExplainableGP(object):
         # in between, this might create wrong files
         # e.g. pareto entries, that do not exist at the end leave files behind
         """
-
+        self.printpl('i', f'Analysing the pareto candidates of your run!')
         # if self.conf.period['gen_analysis']:
         #     if self.gen_id % int(self.conf.period['gen_analysis']) == 0:
         #         self.analyse_pareto()
@@ -794,7 +794,7 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
-        path_hist = folder_make_dir(self.root_dir / self.file_locs.folder_histograms)
+        path_hist = folder_make_dir(self.root_dir / self.file_locs.folder_histograms)  # todo make this at the start and only use the path
 
         for (parsim, fitness, cooltree) in self.pareto:
 
@@ -1730,7 +1730,6 @@ class ExplainableGP(object):
         """
 
         self.file_analysis_plots()
-        self.analyse_pareto()
         self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
         return
 

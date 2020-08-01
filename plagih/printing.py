@@ -38,8 +38,8 @@ def print_warning(message_type, text, print_type=None, time_total=0.0):
     printez(message_type, text, print_type=print_type, time_total=time_total)
 
 
-def print_blue(*args):
-    print(f"{BColors.CYAN}{''.join(args)}{BColors.RESET}))")
+def print_blue(txt):
+    print(f"{BColors.CYAN}{txt}{BColors.RESET}")
     return
 
 

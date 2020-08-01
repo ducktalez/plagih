@@ -59,6 +59,7 @@ def load_prepared_run(conf, prepared_run):
 
     elif 'MTC' in prepared_run:
         kernel_name = 'regression bounded discrete'
+        conf.gen_max = 3000
 
         root_dir = pathify(f'slurm_runs/{prepared_run}')
         num_samples = '200' if 'MTC200' in prepared_run else '75'
@@ -86,7 +87,7 @@ def load_prepared_run(conf, prepared_run):
     elif 'MAE' in prepared_run:
         kernel_name += ' MAE'
     else:
-        raise
+        raise Exception(f'No kernel distance measurement found! (In old runs, MAE was automatically used)')
     kernel_name += ' tanhpenalize' if 'tanh' in prepared_run else ''
     kernel_name += ' explun' if 'explun' in prepared_run else ''
     kernel_name += ' explun01' if 'explun01' in prepared_run else ''  # explun: explore-punishment
@@ -96,7 +97,6 @@ def load_prepared_run(conf, prepared_run):
     conf.kernel_name = kernel_name
     conf.action_name = action_name
     conf.name = prepared_run
-    conf.gen_max = 2000
 
     return conf, root_dir, path_data_csv, path_origin_tree
 
@@ -121,6 +121,8 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-data_csv', '-samples_csv', '-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-analyse', '-analyze', action='store_true', default=None)
+    parser.add_argument('-less_files', action='store_true', help='Creates less files by not analysing pareto candidates at the end. -analysis trumps this! (option to save disk space)')
+    parser.add_argument('-no_files', action='store_true', help='Not used yet. Create no files. a todo-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-pop_max', '-pop_size', type=int)
     parser.add_argument('-gen_max', '-gen_size', type=int)
@@ -186,6 +188,17 @@ def main():  # argv sys.argv[1:]
         gp.plagih_gp_run(path_load_backup, force_new_run=force_new_run, gen_additionally=gen_additionally)
 
     gp.terminate_run()
+    if args.analyse or not args.less_files:
+        gp.analyse_pareto()
+    else:
+        print_blue('You actively decided not to use analyse out run.\n'
+                   'This option was created for distributed cluster evaluation on slurm. The files\n'
+                   '1. May be deprecated if the GP process is restarted from here'
+                   '2. take a lot of disc space (many images)\n'
+                   '3. Need to be computed, after all\n'
+                   '4. Computation (Already happened, although not lately ;~D)')
+
+    print('Program ending')
     sys.exit()
 
 

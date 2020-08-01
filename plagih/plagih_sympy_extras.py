@@ -144,7 +144,7 @@ class Orb(Function):
 
         # if (a == True or a == False) and (b == True or b == False):  # this works guaranteed
         if a == True or b == True:
-            return True  # sfeh this evaluationmight end up in error in real experiment
+            return True  # sfeh this evaluation might end up in error in real experiment
         if a.is_Boolean and b.is_Boolean:
             return a and b
         else:

@@ -20,20 +20,21 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 class FileLocations:
     folder_plots = 'plots/'
-    folder_histograms = 'agents/'
+    folder_histograms = 'histograms/'
 
     file_backup_pickle = 'backup/backup.p'
     file_backup_yaml = 'backup/backup.yaml'
 
     trees_tex = 'agents_trees.tex'
-    folder_pycode = 'agents/'
+    folder_pycode = ''
 
     file_pareto = 'info/paretofront.yaml'
     info_config_yaml = 'info/config.yaml'
 
-    samples_ready_p = 'run_files/samples_ready.p'
-    samples_csv = 'run_files/samples.csv'
-    distributions_file = 'run_files/distributions_file.yaml'
+    # Files that can can (in theory) be used to prepare a runable folder. maybe deprecated now, sfeh.
+    use_samples_ready_p = 'run_files/samples_ready.p'
+    use_samples_csv = 'run_files/samples.csv'
+    use_distributions_file = 'run_files/distributions_file.yaml'
 
 
 class ExplainableGP(object):
@@ -87,7 +88,7 @@ class ExplainableGP(object):
         """
         load relevant stuff
         """
-        self.choose_distributions = self.activate_distributions(path_distrib=None)  # sfeh path_distrib not None
+        self.choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
         self.choose_oparray2 = self.gp_load_oparray()  # path_operators sfeh this file from config version1
 
         """
@@ -661,12 +662,12 @@ class ExplainableGP(object):
                 data_prepared = data_from_csv(path_data_csv, action_name=action_name)
             else:
                 raise FileNotFoundError(f'File nust be a pickle (.p) or csv (.csv) file. Loaded file: {path_data_csv}')
-        elif Path.is_file(self.root_dir / self.file_locs.samples_ready_p):  # maybe the data was already prepared earlier sfeh load file
-            data_prepared = pickle_load(self.root_dir / self.file_locs.samples_ready_p)
-        elif Path.is_file(self.root_dir / self.file_locs.samples_csv):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh load file
-            data_prepared = data_from_csv(self.file_locs.samples_csv, action_name=action_name)
-            print(f'Prepared the raw {self.file_locs.samples_csv} behaviour. Saving for next run.')
-            pickle_dump(self.root_dir / self.file_locs.samples_ready_p, data_prepared)
+        # elif Path.is_file(self.root_dir / self.file_locs.samples_ready_p):  # maybe the data was already prepared earlier sfeh load file
+        #     data_prepared = pickle_load(self.root_dir / self.file_locs.samples_ready_p)
+        # elif Path.is_file(self.root_dir / self.file_locs.use_samples_csv):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh probably deprecated
+        #     data_prepared = data_from_csv(self.file_locs.use_samples_csv, action_name=action_name)
+        #     print(f'Prepared the raw {self.file_locs.use_samples_csv} behaviour. Saving for next run.')
+        #     pickle_dump(self.root_dir / self.file_locs.use_samples_ready_p, data_prepared)
         else:
             raise FileNotFoundError(f'No data provided? Please provide data in your config-file(or in your command line call). {path_data_csv}')
 
@@ -759,7 +760,7 @@ class ExplainableGP(object):
         """
 
         """
-        path_distrib = path_distrib if path_distrib is not None else self.root_dir / self.file_locs.distributions_file
+        path_distrib = path_distrib or self.root_dir / self.file_locs.use_distributions_file
 
         if Path.is_file(path_distrib):
             lambdadist_as_string = yaml_load(path_distrib)
@@ -900,7 +901,7 @@ class ExplainableGP(object):
             f"all_agents_more = [{all_more_info}]\n" \
             f"agent_tuples = [{agent_tuples}]\n"
 
-        pth = file_make_dir(self.root_dir / self.file_locs.folder_pycode / f"agents_{self.env_vars.eval_action.name}.py")
+        pth = file_make_dir(self.root_dir / self.file_locs.folder_pycode / f"agents.py")
         with Path.open(pth, 'w') as file:
             file.write(pyc_complete)
             self.printpl('ff', f'Pycode: {pth.as_posix()}')

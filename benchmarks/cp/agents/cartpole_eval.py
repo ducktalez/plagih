@@ -8,7 +8,7 @@ import numpy as np
 import gym
 
 
-def compare_simple(agents, verbose=False):
+def compare_simple(agents):
     for name, agent in agents:
         np.random.seed(0)
         env = gym.make('CartPole-v0')

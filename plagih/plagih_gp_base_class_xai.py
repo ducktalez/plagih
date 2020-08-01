@@ -12,7 +12,6 @@ from plagih.file_interaction import *
 from plagih.viz_with_latex import *
 from plagih.plagih_config import *
 from plagih.plagih_data import *
-from plagih.modules.Ptree2 import *
 from plagih.Ptree2 import *
 import random
 

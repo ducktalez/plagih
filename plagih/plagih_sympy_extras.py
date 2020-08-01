@@ -63,7 +63,7 @@ class Ifte(Function):
 
     @classmethod
     def eval(cls, a, b, c):
-        if a == True or a == False:  # you can not believe how long it took me to figure out why this is needed
+        if a.is_Boolean:  #  == True or a == False:  # you can not believe how long it took me to figure out why this is needed
             return b if a else c  # search for 'gotcha' in https://docs.sympy.org/latest/_modules/sympy/core/relational.html
         else:
             return
@@ -143,6 +143,8 @@ class Orb(Function):
         #     raise
 
         # if (a == True or a == False) and (b == True or b == False):  # this works guaranteed
+        if a == True or b == True:
+            return True  # sfeh this evaluationmight end up in error in real experiment
         if a.is_Boolean and b.is_Boolean:
             return a and b
         else:
@@ -252,5 +254,5 @@ if __name__ == "__main__":
     print('Running sympify example')
     expr = 'Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))'
     expr = 'Round(-123.333334234) + Round(Shift_2)'
-    expr = 'Round(-123.333334234) + Round(Round(Shift_2))'
+    expr = 'Ifte(Orb(a, True), b, c)'
     print(plagih_sympify(expr))

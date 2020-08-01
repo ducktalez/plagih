@@ -1,9 +1,8 @@
 """
 Visualising Trees with latex.
 """
-from plagih.modules.plagih_tree import *
+from plagih.plagih_tree import *
 import re
-from plagih.modules.plagih_data import obs_get_timedelta
 
 
 def latex_treeviz_full(tikz_forest_list):

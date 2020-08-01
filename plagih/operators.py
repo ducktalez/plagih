@@ -1,6 +1,4 @@
 import ast
-from plagih.modules.import_variables import *
-from plagih.modules.printing import *
 
 # import os
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
@@ -233,7 +231,7 @@ op_test = {
 
 
 def make_classes():
-    print('import os\nimport tensorflow as tf\nimport ast\nimport math\nfrom plagih.modules.plagih_data import *\n\n')
+    print('import os\nimport tensorflow as tf\nimport ast\nimport math\nfrom plagih.plagih_data import *\n\n')
     print('class Plabel:')
     print('    pass\n')
     for key, v in op_what.items():

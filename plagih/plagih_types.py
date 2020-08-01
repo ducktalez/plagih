@@ -9,7 +9,7 @@ Be careful with if-then-else though. This needs boolean and two float inputs to 
 """
 import random
 
-from plagih.modules.operators import *
+from plagih.operators import *
 import numpy as np
 
 

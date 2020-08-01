@@ -7,15 +7,13 @@ Functions, that might be addable in the future:
 import time
 
 import math
-
-from plagih.modules.file_interaction import *
-from plagih.modules.viz_with_latex import *
-from plagih.modules.plagih_config import *
-import json
-import collections.abc
-import textwrap
-from plagih.modules.plagih_data import *
+import matplotlib.pyplot as plt
+from plagih.file_interaction import *
+from plagih.viz_with_latex import *
+from plagih.plagih_config import *
+from plagih.plagih_data import *
 from plagih.modules.Ptree2 import *
+from plagih.Ptree2 import *
 import random
 
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
@@ -26,6 +24,7 @@ class FileLocations:
     folder_histograms = 'agents/'
 
     file_backup_pickle = 'backup/backup.p'
+    file_backup_yaml = 'backup/backup.yaml'
 
     trees_tex = 'agents_trees.tex'
     folder_pycode = 'agents/'
@@ -257,6 +256,8 @@ class ExplainableGP(object):
         path_backup = self.file_make_dir_root(self.file_locs.file_backup_pickle)
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
+        with Path.open(path_backup, 'wb') as file:
+            pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.printpl('f', f'Backup: {path_backup.as_posix()}')
         return
 
@@ -397,7 +398,7 @@ class ExplainableGP(object):
             printez('g', f'Done after Generation {self.gen_id}.', print_type=self.print_type)
 
         self.run_backup_save()
-        self.terminate_run()
+        # self.terminate_run()
 
         return
 
@@ -572,13 +573,11 @@ class ExplainableGP(object):
         - default is in every generation, but saving every n-th gen or after time passed is possible aswell
         """
 
-        if self.conf.period['gen_plots']:
-            if self.gen_id % int(self.conf.period['gen_plots']) == 0:
-                self.file_analysis_plots()
+        if self.gen_id % int(self.conf.period.get('gen_plots', 1)) == 0:
+            self.file_analysis_plots()
 
-        if self.conf.period['gen_save']:
-            if self.gen_id % int(self.conf.period['gen_save']) == 0:
-                self.run_backup_save()
+        if self.gen_id % int(self.conf.period.get('gen_save', 1)) == 0:
+            self.run_backup_save()
         return
 
     def file_pareto_txt(self):
@@ -615,7 +614,7 @@ class ExplainableGP(object):
 
         return
 
-    def file_conslusions(self):
+    def analyse_pareto(self):
         """
         Giving all the results
         # sfeh discussion: This is only relevant at the end. (aka not in persidical analysis)
@@ -625,7 +624,7 @@ class ExplainableGP(object):
 
         # if self.conf.period['gen_analysis']:
         #     if self.gen_id % int(self.conf.period['gen_analysis']) == 0:
-        #         self.file_conslusions()
+        #         self.analyse_pareto()
 
         # self.pareto_sort()  # is pareto not sorted?  sfeh working? check if sorted.
 
@@ -1452,7 +1451,7 @@ class ExplainableGP(object):
 
         :param linestyle: E. g. 'None', 'dashed', '-', ''
         :param set_left: Smallest left value
-        :param set_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40
+        :param set_right: E. g. if parsim_maxony is 100 -> show complete width, even if entries only go to 40
         :param padd_top: How much padding to the top border
         :param beyond_lines: in step plots, draw the line further to the left and right
 
@@ -1497,12 +1496,6 @@ class ExplainableGP(object):
                 ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
 
         path_plot = folder_make_dir(self.root_dir / self.file_locs.folder_plots)
-
-        # if save_tikz:
-        #     try:
-        #         tikzplotlib.save(path_plot / f'{title}.tex')
-        #     except Exception as tikzex:
-        #         print_e(f'tikzplotlib.save failed, exception: {tikzex}')
 
         plt.tight_layout()
         try:
@@ -1565,12 +1558,11 @@ class ExplainableGP(object):
             axs0.set_title('Population Monitoring')  # sfeh
             fig.tight_layout()
             fig.savefig(self.root_dir / f'monitoring.png', dpi=300)
-            # fig.savefig(self.root_dir / f'monitoring.pdf')  # todo?
+            # fig.savefig(self.root_dir / f'monitoring.pdf')  # asd sfeh?
             # fig.savefig(self.root_dir / f'monitoring.svg')
-            
+
             plt.close()
         except:
-            raise
             print_e(f'Yeah... should have used old monitoring dict')
 
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in self.pareto]
@@ -1583,19 +1575,6 @@ class ExplainableGP(object):
                       set_right=self.conf.parsimony_max,
                       beyond_lines=True)
 
-        # todo
-        # xx, yy = plotendify_me(self.monitoring_dict['fitness_variance'])
-        # self.plot_end(root_dir, xx, yy, title='variance in error', y_label='variance',
-        #          marker='')
-        #
-        # data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
-        # data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
-        # self.plot_end(data_tuples, title='tree parsimony (avg and std. error)', y_label='variance',
-        #          marker='', fill_variance=data_tuples_variance)
-        #
-        # data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
-        # self.plot_end(data_tuples, title='best candidate',
-        #          y_label='error', linestyle='dashed', step_post='post')
 
         # def plot_evolution_analysis():
         #     try:
@@ -1751,10 +1730,10 @@ class ExplainableGP(object):
         For new usage: Check if an update should be made before
         """
 
-        self.file_conslusions()
-
         self.file_analysis_plots()
+        self.analyse_pareto()
         self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
+        return
 
     def printpl(self, message_type, message_str):
         """

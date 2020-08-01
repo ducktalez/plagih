@@ -1,7 +1,6 @@
 from apted import APTED, Config
 from apted.helpers import Tree as aptree
-from plagih.modules.operators import *
-from plagih.modules.plagih_tree import *
+from plagih.operators import *
 
 
 class CustomConfig(Config):

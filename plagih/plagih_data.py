@@ -1,7 +1,7 @@
 from pathlib import Path
 import sklearn.model_selection as skcv
-from plagih.modules.printing import *
-from plagih.modules.operators import op
+from plagih.printing import *
+from plagih.operators import op
 import numpy as np
 import pandas as pd
 import re

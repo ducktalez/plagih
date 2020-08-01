@@ -10,7 +10,7 @@ inputs a, b, c to a function can be actual actual values but also variables with
 
 Use:
 1. Import function only
-    from plagih.modules.plagih_sympy_extras import plagih_sympify
+    from plagih.plagih_sympy_extras import plagih_sympify
 2. Use function
 
 Also, please do not ask me about when to use Ifte() and ifte(), it somehow works.

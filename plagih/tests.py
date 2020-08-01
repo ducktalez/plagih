@@ -1,9 +1,3 @@
-
-from plagih.modules.viz_with_latex import *
-from pathlib import Path
-from plagih.tree_distances.tree_edit_distance import *
-
-
 class TestHelpers:
 
     def __init__(self):

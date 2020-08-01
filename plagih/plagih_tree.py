@@ -1,12 +1,11 @@
 import os
 
-from plagih.modules.plagih_data import obs_get_timedelta, observation_get_family_and_time
-from plagih.modules.plagih_sympy_extras import plagih_sympify
-from plagih.modules.plagih_types import *
-from plagih.modules.fitness_eval_kernel import *
+from plagih.plagih_data import observation_get_family_and_time
+from plagih.plagih_sympy_extras import plagih_sympify
+from plagih.plagih_types import *
+from plagih.fitness_eval_kernel import *
 import csv
-# from plagih.modules.viz_with_latex import *
-from sympy import sympify
+# from plagih.viz_with_latex import *
 import copy
 from pathlib import Path as Path
 

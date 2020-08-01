@@ -1,9 +1,7 @@
 import pickle
-from plagih.modules.printing import *
-import matplotlib.pyplot as plt  # matplotlib.use('Agg')
+from plagih.printing import *
 import yaml
 from pathlib import Path
-import numpy as np
 
 try:
     import tikzplotlib  # actually, those look like shit?

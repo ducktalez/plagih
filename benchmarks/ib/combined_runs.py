@@ -2,7 +2,7 @@
 import argparse
 import os
 import sys
-# sys.path.append('modules/')
+# sys.path.append('.')
 from benchmarks.ib.ib_eval_agents import *
 from pathlib import Path
 import itertools
@@ -17,7 +17,7 @@ lut_file = Path(os.path.dirname(os.path.realpath(__file__))) / 'lutfile.yaml'
 # dir_slurm = Path.cwd() / f'../slurm_runs/'
 
 
-def get_combined_runs(agents, max_parsim_sum, max_parsim_single):
+def get_combined_runs(agents, parsim_max_sum, parsim_max_single):
 
     merged = list(itertools.product(agents[0], agents[1], agents[2]))
     combined_all = []
@@ -27,7 +27,7 @@ def get_combined_runs(agents, max_parsim_sum, max_parsim_single):
 
     for row in merged:
         parsim_sum = float(sum([x[0] for x in row]))
-        if parsim_sum <= max_parsim_sum and all(x[0] <= max_parsim_single for x in row):
+        if parsim_sum <= parsim_max_sum and all(x[0] <= parsim_max_single for x in row):
             fitness_sum = float(sum([x[1] for x in row]))
             f_squared = float(sum([x[1] ** 2 for x in row]))
             f_norm = float(sum([x[1] / fit_normed[ii] for ii, x in enumerate(row)]))
@@ -42,7 +42,7 @@ def get_combined_runs(agents, max_parsim_sum, max_parsim_single):
     return combined_all
 
 
-def eval_and_lut(root_dir_eval, combined_all, max_parsim_sum, max_parsim_single):
+def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single):
     """
     Evaluating with real IB
     """
@@ -64,7 +64,7 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim_sum, max_parsim_single)
     #         parsim_sum = arow['parsim_sum']
     #         lut_hash = f"{parsim_sum}_{parsims}_{fitness_sum}"
     # 
-    #         if parsim_sum <= max_parsim_sum:
+    #         if parsim_sum <= parsim_max_sum:
     #             if lut_hash in lut:
     #                 experiment, experiment_safe = lut[lut_hash]  # todo more evaluations? average?
     #             else:
@@ -91,7 +91,7 @@ def eval_and_lut(root_dir_eval, combined_all, max_parsim_sum, max_parsim_single)
         codes = arow['codes']
         lut_hash = f"{codes}"
 
-        if parsim_sum <= max_parsim_sum:
+        if parsim_sum <= parsim_max_sum:
             if lut_hash in lut:
                 experiment, experiment_safe = lut[lut_hash]  # todo more evaluations? average?
             else:
@@ -245,7 +245,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(run_name, max_parsim_sum, max_parsim_single):
+def combined_lists(run_name, parsim_max_sum, parsim_max_single):
     lsactions = ['_0/pycode_list.yaml', '_1/pycode_list.yaml', '_2/pycode_list.yaml']
 
     agents = []
@@ -260,10 +260,10 @@ def combined_lists(run_name, max_parsim_sum, max_parsim_single):
     if not Path.is_dir(root_dir_eval):
         Path.mkdir(root_dir_eval)
 
-    combined_all = get_combined_runs(agents, max_parsim_sum, max_parsim_single)
+    combined_all = get_combined_runs(agents, parsim_max_sum, parsim_max_single)
     combined_all.sort(key=lambda x: x['parsim_sum'])
 
-    combined_all = eval_and_lut(root_dir_eval, combined_all, max_parsim_sum, max_parsim_single)
+    combined_all = eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
 
     combined_all_p = {}
     combined_all_a = [{}, {}, {}]
@@ -288,27 +288,27 @@ def main():
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
-    parser.add_argument('-max_parsim_sum', type=int, default=35)
-    parser.add_argument('-max_parsim_single', type=int, default=16)
+    parser.add_argument('-parsim_max_sum', type=int, default=35)
+    parser.add_argument('-parsim_max_single', type=int, default=16)
     args = parser.parse_args()
 
     name = args.name
-    max_parsim_sum = args.max_parsim_sum
-    max_parsim_single = args.max_parsim_single
+    parsim_max_sum = args.parsim_max_sum
+    parsim_max_single = args.parsim_max_single
 
     if args.auto:
         rootdirstar = dir_slurm.glob('*')
-        # for parsim_tmp in range(5, max_parsim_sum, 5)
+        # for parsim_tmp in range(5, parsim_max_sum, 5)
         for x in rootdirstar:
             if x.is_dir():
                 if x.name[:2] == 'IB':
                     print(f'\nEvaluating {x.name}')
-                    combined_lists(x.name, max_parsim_sum, max_parsim_single)
+                    combined_lists(x.name, parsim_max_sum, parsim_max_single)
                 else:
                     print(f'\nSkipping {x.name}')
 
     else:
-        combined_lists(name, max_parsim_sum, max_parsim_single)
+        combined_lists(name, parsim_max_sum, parsim_max_single)
     return
 
 

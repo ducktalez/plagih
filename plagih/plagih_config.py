@@ -20,7 +20,7 @@ class GpConfig:
     #     self.tourn_size = 3  #: 3,  # [7 per 100] number of trees selected for tournament
     #     self.parsimony_mean = 20  #: 20,  # If you wnt your population to be a certain size
     #     self.parsimony_max = 50  #: 50,
-    #     self.gen_num_max_parsimony = 50  #: 50,  # Increase tmp_parsim to this generation
+    #     self.gen_num_parsim_maxony = 50  #: 50,  # Increase tmp_parsim to this generation
 
     # def update_dict_nested(d, u):
     #     for k, v in u.items():
@@ -58,7 +58,7 @@ class GpConfig:
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_max = conf.get('parsimony_max', 35)
-        self.period = conf.get('period', {'gen_plots': 2, 'gen_save': 5})  # todo
+        self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # todo
 
         self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 
@@ -82,4 +82,4 @@ class GpConfig:
         # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size
         # self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,
         # self.swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool # todo
-        # self.gen_num_max_parsimony = conf.get('gen_num_max_parsimony', 50)  #: 50,  # Increase tmp_parsim to this generation
+        # self.gen_num_parsim_maxony = conf.get('gen_num_parsim_maxony', 50)  #: 50,  # Increase tmp_parsim to this generation

@@ -3,15 +3,14 @@ This starts the whole genetic programming.
 This extra file was added to have a file in the root directory that can be started.
 """
 import argparse
-from plagih.modules.plagih_config import *
 import sys
 
 # sys.path = ['..'] + sys.path
-# sys.path.append('modules/')  # add directory 'modules' to the current root_dir
+# sys.path.append('.')  # add directory 'modules' to the current root_dir
 
-from plagih.modules.plagih_gp_base_class_xai import *
-from plagih.modules.plagih_data import *
-import yaml
+from plagih.plagih_gp_base_class_xai import *
+from plagih.plagih_data import *
+
 
 # import warnings
 # warnings.filterwarnings('error')
@@ -179,14 +178,14 @@ def main():  # argv sys.argv[1:]
             gp.backup_load(path_load_backup)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
-        gp.terminate_run()
 
     else:
-        # todo in the backup load process
+        # asd sfeh in the backup load process
         # if args.pop_kill:
         #     gp.pop_base = []
         gp.plagih_gp_run(path_load_backup, force_new_run=force_new_run, gen_additionally=gen_additionally)
 
+    gp.terminate_run()
     sys.exit()
 
 

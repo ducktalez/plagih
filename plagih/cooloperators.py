@@ -1,9 +1,4 @@
-import os
-import tensorflow as tf
-import ast
-import math
-
-from plagih.modules.plagih_data import *
+from plagih.plagih_data import *
 
 
 class Plabel:

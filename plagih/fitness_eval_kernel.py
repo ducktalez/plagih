@@ -1,9 +1,8 @@
-from plagih.modules.printing import *
-from plagih.modules.operators import *
+from plagih.printing import *
+from plagih.operators import *
 import numpy as np
 import sklearn.metrics as skm
 # from sys import getsizeof
-import copy
 
 
 class GPKernel:

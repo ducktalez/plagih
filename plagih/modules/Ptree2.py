@@ -371,6 +371,7 @@ class CoolCore:
             for ii, cc in enumerate(self.childs):
                 cc.set_fix_nodes(origin_coolcore.childs[ii])
 
+# todo add complexity to tree?
 
 class CoolTree:
     """

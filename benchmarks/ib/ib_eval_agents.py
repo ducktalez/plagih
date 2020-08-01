@@ -145,22 +145,24 @@ def eval_combined_agents(parsim_sum, parsims, codes, complete=True):
 
 
 def eval_agent(agent):
-    T = 100*1000
+    T = 100*100*10
+    repetitions = 100
     factor = 0.97
     time_horizon = 100
     sum = 0
-    for p in np.arange(10, 101, 10):
-        env = IDS(p=p)
+    for _ in range(repetitions):
+        for p in np.arange(10, 101, 10):
+            env = IDS(p=p)
 
-        sum_t = 0
-        for t in range(time_horizon):
-            env_state = envstate_normalize(env.state)
-            at = agent.decide(env_state)
-            markovStates = env.step(at)
+            sum_t = 0
+            for t in range(time_horizon):
+                env_state = envstate_normalize(env.state)
+                at = agent.decide(env_state)
+                markovStates = env.step(at)
 
-            entry = env.visibleState()[-1]
-            sum_t += factor ** (time_horizon-t) * entry
-        sum += sum_t / 10
+                entry = env.visibleState()[-1]
+                sum_t += factor ** (time_horizon-t) * entry
+            sum += sum_t / 10
 
         print('Discounted reward sum (p=10,20,..,100; 1000 steps)', sum)
     return agent.name, sum
@@ -210,4 +212,5 @@ def agent_create_samples_csv(T=10000):
     print('DONE!')
 
 
-# eval_agents()
+if __name__ == "__main__":
+    eval_agents()

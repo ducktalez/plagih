@@ -95,7 +95,7 @@ def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
         dist_fun = random.choice(choose_distribution[xtype])
         term = dist_fun()
         if '2f' in xtype:  # sfeh int aswell?
-            term = round(term, float_decimals)
+            term = float(round(term, float_decimals))
 
     return str(term)  # sfeh str necessary?
 

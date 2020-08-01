@@ -58,7 +58,7 @@ class GpConfig:
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_max = conf.get('parsimony_max', 35)
-        self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})
+        self.period = conf.get('period', {'gen_plots': 2, 'gen_save': 5})  # todo
 
         self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 
@@ -67,7 +67,9 @@ class GpConfig:
         self.complexity_measure = conf.get('complexity_measure', 'tree_edit_distance')  # sfeh check used origin here? backup loaded origin?
 
         self.lambdadist_as_string = conf.get('lambdadist_as_string', {'2f': ['lambda: random.normalvariate(0,1)',
-                                                                             'lambda: random.normalvariate(1,1)'],  # 'lambda: random.randint(0, 10)',  # not required
+                                                                             'lambda: random.normalvariate(1,1)',
+                                                                             'lambda: random.normalvariate(10,5)',
+                                                                             'lambda: random.randint(1, 20)'],  # not required?
                                                                       '2b': ['lambda: random.choice([True, False])'],
                                                                       'observed_floats': 100})
 

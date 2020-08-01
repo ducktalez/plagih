@@ -5,6 +5,9 @@ Functions, that might be addable in the future:
 'Integer': 'f2f', # converts a number to an integer.
 """
 import time
+
+import math
+
 from plagih.modules.file_interaction import *
 from plagih.modules.viz_with_latex import *
 from plagih.modules.plagih_config import *
@@ -62,11 +65,13 @@ class ExplainableGP(object):
         self.env_vars, self.data_train, self.data_control = self.activate_dataset(path_data_csv, self.conf.action_name)
 
         # Evaluating kernel (that uses tensorflow)
-        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log, allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
+        self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log,
+                                                  allow_soft_placement=True)  # TF device usage logging (for debugging) (default false. I lately used it to check if the GPU is used)
         self.tf_config.gpu_options.allow_growth = True
         # sfeh for now, only regression kernel
         self.origin_results = None
-        self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, "/gpu:0", self.env_vars.eval_action)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
+        self.kernel = RegressionKernel(self.conf.kernel_name, self.data_train, self.tf_config, "/gpu:0",
+                                       self.env_vars.eval_action)  # sfeh Set TF computation backend device (CPU/GPU); gpu:n = 1st, 2nd, or ... GPU device. Is cpu otherwise
         self.print_type = self.conf.print_type
 
         self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
@@ -77,7 +82,7 @@ class ExplainableGP(object):
             self.origin_cooltree = None
             self.origin_is_fix = False
 
-            if self.conf.complexity_measure in ['tree_edit_distance']:  # all origin-based distances
+            if self.conf.complexity_measure in ['tree_edit_distance']:  # all origin-based distances  # todo tree_edit_distancev2
                 self.conf.complexity_measure = 'tree_node_count'
                 print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin! Using 'tree_node_count' instead.", print_type=self.print_type)
 
@@ -101,46 +106,33 @@ class ExplainableGP(object):
             # sfeh this might be better. maybe pandas?
             def __init__(self):
                 self.population_tmp_done_size = {}
-                self.pop_parsim = {}
-                self.pop_last_evolves = {}
                 self.fitness_average = {}
                 self.fitness_variance = {}
                 self.best_candidate = {}
                 # 'complexity_list = {},  # not used, just uses memory
                 self.complexity_average = {}
-                self.complexity_mean = {}
                 self.complexity_variance = {}  # variance can be deleted, only std-error is needed delete v1
                 self.pop_trees_complexity_std_error = {}
                 self.gen_time = {}
 
             def load_old_monitoring_dict(self, monitoring_dict):
                 self.population_tmp_done_size = monitoring_dict.get('population_tmp_done-size', {})
-                self.pop_parsim = monitoring_dict.get('pop_parsim', {})
-                self.pop_last_evolves = monitoring_dict.get('pop_last_evolves', {})
+
                 self.fitness_average = monitoring_dict.get('fitness_average', {})
                 self.fitness_variance = monitoring_dict.get('fitness_variance', {})
                 self.best_candidate = monitoring_dict.get('best_candidate', {})
                 # 'complexity_list = monitoring_dict.get('complexity_list', {}),  # not used, just uses memory
+
                 self.complexity_average = monitoring_dict.get('complexity_average', {})
-                self.complexity_mean = monitoring_dict.get('complexity_mean', {})
                 self.complexity_variance = monitoring_dict.get('complexity_variance', {})  # variance can be deleted, only std-error is needed delete v1
-                self.pop_trees_complexity_std_error = monitoring_dict.get('pop:trees:complexity:std_error', {})
                 self.gen_time = monitoring_dict.get('gen_time', {})
                 self.evol_performance = monitoring_dict.get('evol_performance', {})
 
-        self.monitoring_dict = {'population_tmp_done-size': {},
-                                'pop_parsim': {},
-                                'pop_last_evolves': {},
-                                'fitness_average': {},
-                                'fitness_variance': {},
-                                'best_candidate': {},
-                                # 'complexity_list': {},  # not used, just uses memory
-                                'complexity_average': {},
-                                'complexity_mean': {},
-                                'complexity_variance': {},  # variance can be deleted, only std-error is needed delete v1
-                                'pop:trees:complexity:std_error': {},
-                                'gen_time': {},
-                                'evol_performance': {}}
+        self.monitor_pd = pd.DataFrame(columns=['pop_len', 'pop_unique',
+                                                'fit_avg', 'fit_std', 'fit_best',
+                                                'parsim_avg', 'parsim_std',
+                                                'complexity_avg',
+                                                'time'])
 
         self.evolve_loop, self.evolve_random = self.make_evolve_rates()
 
@@ -153,7 +145,7 @@ class ExplainableGP(object):
 
         """
 
-        def evolve_safety_update(evolve_list):
+        def evolve_safety_update(evolve_dict):
             """
             Updates tournament size and evolve rates
 
@@ -162,64 +154,63 @@ class ExplainableGP(object):
             'custom_params': {'build_spec': {'size_ref': 'branch_depth', 'mean': 3, 'min': 1, 'max': 5, 'gauss_var': 0.8, 'method': 'full'}}},
             """
 
-            for ii, evolve_spec in enumerate(evolve_list):
-                tourn_size = evolve_spec.get('tourn_size', self.conf.tourn_size)
-                evolve_list[ii]['tourn_size'] = tourn_size
+            for tag, evolve_spec in evolve_dict.items():
+                evolve_dict[tag]['tourn_size'] = evolve_spec.get('tourn_size', self.conf.tourn_size)
 
-                evolve_rate = evolve_list[ii].get('evolve_rate')
-                evolve_list[ii]['evolve_num'] = int(evolve_rate * self.conf.pop_max)
-                if evolve_list[ii].get('custom_params') is None:
-                    evolve_list[ii]['custom_params'] = {}
+                evolve_rate = evolve_spec.get('evolve_rate')
+                evolve_dict[tag]['evolve_num'] = int(evolve_rate * self.conf.pop_max)
+                if evolve_spec.get('custom_params') is None:
+                    evolve_spec['custom_params'] = {}
 
-            return evolve_list
+            return evolve_dict
 
         try:
             evolve_loop = self.evolve_list
             self.printpl('i', 'Using evolve rates from config')
         except:
 
-            evolve_loop = [
+            evolve_loop = {
                 # Reproduction (10%)
-                {'tag': 'Repro', 'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06, 'custom_params': {}},
-                {'tag': 'Rsympy', 'evolve_name': 'reproduce', 'evolve_rate': 0.03, 'custom_params': {'sympify_tree': True}},
-                {'tag': 'Pareto', 'evolve_name': 'revive pareto', 'evolve_rate': 0.01, 'custom_params': {}},
+                'Repro': {'evolve_name': 'reproduce', 'params': {}, 'evolve_rate': 0.06, 'custom_params': {}},
+                'Rsympy': {'evolve_name': 'reproduce', 'evolve_rate': 0.03, 'custom_params': {'sympify_tree': True}},
+                'Pareto': {'evolve_name': 'revive pareto', 'evolve_rate': 0.01, 'custom_params': {}},
 
                 # Mutation (25%)
-                {'tag': 'Point', 'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
+                'Point': {'evolve_name': 'mutate point', 'evolve_rate': 0.05, 'custom_params': {}},
 
-                # {'tag': 'BranchDF', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                #  'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'full_or_grow': 'full'}}},
-                # {'tag': 'BranchDG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                #  'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'full_or_grow': 'grow'}}},
-                {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (6, 1, 12, 3), 'full_or_grow': 'full'}}},
-                {'tag': 'BranchNG', 'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (6, 1, 12, 3), 'full_or_grow': 'grow'}}},
-                {'tag': 'BranchShrink', 'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
-                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
+                'BranchDF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
+                             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 4, 0.8), 'full_or_grow': 'full'}}},
+                'BranchDG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.00,
+                             'custom_params': {'build_spec': {'size_mode': 'branch_depth', 'mean_min_max_var': (2.5, 1, 5, 1), 'full_or_grow': 'grow'}}},
+                'BranchNF': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+                             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'full_or_grow': 'full'}}},
+                'BranchNG': {'evolve_name': 'mutate branch', 'evolve_rate': 0.05,
+                             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (7, 1, 12, 3), 'full_or_grow': 'grow'}}},
+                'BranchShrink': {'evolve_name': 'mutate branch', 'evolve_rate': 0.0,
+                                 'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (1, 1, 1, 0), 'full_or_grow': 'grow'}}},
 
-                {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
-                 'custom_params': {'mode': 'branch', 'filter_observations': True}},
-                {'tag': 'FilterB', 'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
-                 'custom_params': {'mode': 'branch', 'filter_observations': False}},
-                {'tag': 'FilterP', 'evolve_name': 'filter optimize', 'evolve_rate': 0.0, 'tourn_size': 5,
-                 'custom_params': {'mode': 'point', 'filter_observations': True}},
+                'FilterBO': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
+                             'custom_params': {'mode': 'branch', 'filter_observations': True}},
+                'FilterB': {'evolve_name': 'filter optimize', 'evolve_rate': 0.05, 'tourn_size': 5,
+                            'custom_params': {'mode': 'branch', 'filter_observations': False}},
+                'FilterP': {'evolve_name': 'filter optimize', 'evolve_rate': 0.0, 'tourn_size': 5,
+                            'custom_params': {'mode': 'point', 'filter_observations': True}},
 
                 # Crossover (35%)
-                {'tag': 'Xover', 'evolve_name': 'crossover branch', 'evolve_rate': 0.35, 'custom_params': {}},  # sum 0.70
+                'Xover': {'evolve_name': 'crossover branch', 'evolve_rate': 0.30, 'custom_params': {}},  # sum 0.70
 
                 # Leftovers are automatically filled with random trees
 
                 # Random (25%)
-                # {'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-                #  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'full_or_grow': 'full'}}},
-                # {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.10,
-                #  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
-                {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'grow'}}},
-                {'tag': 'Rand4', 'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                 'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'full'}}},  # param 'max' can be None
-            ]
+                'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.05,
+                          'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 3, 5, 1), 'full_or_grow': 'full'}}},
+                'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.00,
+                          'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
+                'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
+                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'grow'}}},
+                'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
+                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'full'}}},  # param 'max' can be None
+            }
 
         evolve_loop = evolve_safety_update(evolve_loop)
 
@@ -227,19 +218,19 @@ class ExplainableGP(object):
             try:
                 evolve_random = self.evolve_list_random['from_origin']
             except:
-                evolve_random = [{'tag': 'RandO3', 'evolve_name': 'random trees', 'evolve_rate': 1.00,
-                                  'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}]
+                evolve_random = {'RandO3': {'evolve_name': 'random trees', 'evolve_rate': 1.00,
+                                            'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}}
         else:
             try:
                 evolve_random = self.evolve_list_random['from_scratch']
             except:
-                evolve_random = [{'tag': 'Rand1', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'full_or_grow': 'full'}}},
-                                 {'tag': 'Rand2', 'evolve_name': 'random trees', 'evolve_rate': 0.30,
-                                  'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'full_or_grow': 'grow'}}},
-                                 {'tag': 'Rand3', 'evolve_name': 'random trees', 'evolve_rate': 0.40,
-                                  'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}
-                                 ]
+                evolve_random = {'Rand1': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
+                                           'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (3.5, 2, 5, 1), 'full_or_grow': 'full'}}},
+                                 'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.30,
+                                           'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4, 2, 6, 1), 'full_or_grow': 'grow'}}},
+                                 'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.40,
+                                           'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}
+                                 }
         evolve_random = evolve_safety_update(evolve_random)
 
         return evolve_loop, evolve_random
@@ -261,7 +252,7 @@ class ExplainableGP(object):
         """
 
         a_helping_dict = {'old_config': None}  # sfeh save complete config?    # sfeh i dont think we need the config
-        run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitoring_dict  # sfeh use this later, a_helping_dict
+        run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitor_pd, a_helping_dict  # sfeh use this later, a_helping_dict
 
         path_backup = self.file_make_dir_root(self.file_locs.file_backup_pickle)
         with Path.open(path_backup, 'wb') as file:
@@ -269,7 +260,7 @@ class ExplainableGP(object):
         self.printpl('f', f'Backup: {path_backup.as_posix()}')
         return
 
-    def try_load_backup(self, path_load_backup=None):
+    def backup_load(self, path_load_backup=None):
         """
         backup_load
         If a backup-file is found...
@@ -278,50 +269,62 @@ class ExplainableGP(object):
 
         if Path.is_file(path_backup):
             self.print_g('g', f'Loading data from backup-file {path_backup}')
+            # try:
+            """
+            Loading the state of the run from the pickle file
+            """
             try:
-                """
-                Loading the state of the run from the pickle file
-                """
-                try:
-                    with Path.open(path_backup, 'rb') as file:
-                        run_data = pickle.load(file)
-                except NotImplementedError as nimp:
-                    raise Exception(f'NotImplementedError: {nimp}')
-                except EOFError as eoferr:
-                    raise Exception(f'EOFError: \n{eoferr}')
+                with Path.open(path_backup, 'rb') as file:
+                    run_data = pickle.load(file)
+            except NotImplementedError as nimp:
+                raise Exception(f'NotImplementedError: {nimp}')
+            except EOFError as eoferr:
+                raise Exception(f'EOFError: \n{eoferr}')
 
-                if self.developer_fix:
-                    _, self.gen_id, self.pareto, self.pop_base, backup_monitoring_dict = run_data
-                    self.run_backup_save()  # sfeh remove this
-                    raise Exception('SFEH hopefully fixed a bug. You may delete this code.')
+            try:
+                self.gen_id, self.pareto, self.pop_base, monitor_pd, a_helping_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
+                self.monitor_pd = monitor_pd  # sfeh
+            except:
+                self.gen_id, self.pareto, self.pop_base, m = run_data
+                # self.conf.restart_count += 1
 
-                try:
-                    self.gen_id, self.pareto, self.pop_base, backup_monitoring_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
-                except:
-                    _, self.gen_id, self.pareto, self.pop_base, backup_monitoring_dict = run_data
-                    # self.conf.restart_count += 1
+                # lelz_dict = {}
+                # for skey, sval in m.items():
+                #     if skey == 'population_tmp_done-size':
+                #         lelz_dict['pop_len'] = [val for row, val in sval.items()]
+                #         self.monitor_pd.loc[row]['pop_len'] = [val]
+                #     else:
+                #         raise
+                # m = {m[k]: v[1] for k, v in xxx}
+                for time in m['population_tmp_done-size'].keys():
+                    entr = {'pop_len': m['population_tmp_done-size'][time],
+                            'pop_unique': None,
+                            'fit_avg': m['fitness_average'][time],
+                            'fit_std': math.sqrt(max(m['fitness_variance'][time], 0)),  # variance to std
+                            'fit_best': m['best_candidate'][time],
+                            'parsim_avg': m['complexity_average'][time],
+                            'parsim_std': math.sqrt(max(m['complexity_variance'][time], 0)),
+                            'complexity_avg': None,  # np.var(pop_treelen),
+                            'time': m['gen_time'][time]}
+                    self.monitor_pd.loc[time] = entr  # sfeh version1 delete this sh
 
-                self.monitoring_dict.update(backup_monitoring_dict)
+            self.check_update()
 
-                self.check_update_old_run()
+            printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
 
-                printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
-
-            except Exception as ex:
-                raise Exception(f'Even though a backup exists for this run, it could not be loaded, because of\n{ex}')
+            # except Exception as ex:
+            #     raise Exception(f'Even though a backup exists for this run, it could not be loaded, because of\n{ex}')
         else:
             raise FileNotFoundError(f'No backup-file found at {path_backup}.')
         return
 
-    def check_update_old_run(self):
+    def check_update(self):
         """
         Update paretofront
         update population (fitness, parsimony, etc)
         also, raise if fitness problem
-        todo force a new population at the start as option?
         """
-
-        self.printpl('i', f'Updating paretofront from old run. length: {len(self.pareto)}')
+        oldsize = len(self.pareto)
         pareto_list = self.pareto[:]
         self.pareto = []
         for (parsimony, fitness_train, cooltree) in pareto_list:
@@ -329,25 +332,18 @@ class ExplainableGP(object):
             cooltree.meta.fitness_train = round(fitness_train, self.conf.float_decimals)
             entry = [parsimony, fitness_train, cooltree]
             self.pareto_append(entry)
-        self.printpl('i', f'New pareto length: {len(self.pareto)}')
+        self.printpl('i', f'Updating paretofront from old run. length: {oldsize}, new pareto length: {len(self.pareto)}')
 
         # sfeh recompute parsimony and fitness for every tree (optional?)
         # also rebuild trees?
 
-        self.printpl('i', f'Updating population from old run. length: {len(self.pop_base)}')
+        poplen = len(self.pop_base)
         pop_base_copy = self.pop_base[:]
         self.pop_base = []
         for cooltree in pop_base_copy:
             cooltree.meta.fitness_train = round(cooltree.meta.fitness_train, self.conf.float_decimals)
             self.pop_base.append(cooltree)
-        self.printpl('i', f'New population length. length: {len(self.pop_base)}')
-
-    def gp_analyse(self, path_load_backup):
-        try:
-            self.try_load_backup(path_load_backup)
-        except FileNotFoundError as no_file_ex:
-            raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
-        self.terminate_run()
+        self.printpl('i', f'Updating population from old run. length: {poplen}, new population length: {len(self.pop_base)}')
 
     def pareto_sort(self):
         """
@@ -362,11 +358,12 @@ class ExplainableGP(object):
 
         if not force_new_run:
             try:
-                self.try_load_backup(path_load_backup)
+                self.backup_load(path_load_backup)
             except FileNotFoundError as fnfex:
                 print_warning('i', f'No backup file found at {fnfex}. Starting a new run.', print_type=self.print_type)
             except Exception:
                 raise
+
         if gen_additionally is not None:
             printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
@@ -442,19 +439,18 @@ class ExplainableGP(object):
 
         if self.origin_cooltree is not None:
 
-            self.pop_append(self.origin_cooltree, last_evolution='initial')  # sfeh why not :P
+            self.pop_append(self.origin_cooltree, last_evolution='origin')  # sfeh why not :P
 
         else:
-            total_rate = sum([x['evolve_rate'] for x in self.evolve_random])
+            total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
 
-            for ii, evolve_specs in enumerate(self.evolve_random):
+            for tag, evolve_specs in self.evolve_random.items():
                 evolve_num = int(self.conf.pop_max * (evolve_specs['evolve_rate'] / total_rate))
                 call_params = evolve_specs.get('custom_params')
-                tag = evolve_specs['tag']
 
                 for nn in range(evolve_num):
                     if self.origin_is_fix:
-                        new_tree = self.pop_random_from_origin_fix(call_params)
+                        new_tree = self.pop_random(call_params, from_origin=True)
                     else:
                         new_tree = self.pop_random(call_params)
                     new_cooltree = cooltree_from_oldtree(new_tree)
@@ -469,14 +465,13 @@ class ExplainableGP(object):
         """
         # All gp creators: name, function, num of trees from tournament selection
 
-        for ii, evolve_specs in enumerate(self.evolve_loop):  # all selected gp mutations
+        for tag, evolve_specs in self.evolve_loop.items():  # all selected gp mutations
 
             time_evolve = time.perf_counter()
             evolve_name = evolve_specs['evolve_name']
             evolve_num = evolve_specs['evolve_num']
             tourn_size = evolve_specs['tourn_size']
             call_params = evolve_specs.get('custom_params')
-            tag = evolve_specs['tag']
 
             self.print_g('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
             len_pop_before = len(self.population_tmp)
@@ -543,7 +538,7 @@ class ExplainableGP(object):
 
                 if self.origin_is_fix:
                     for nn in range(evolve_num):
-                        new_tree = self.pop_random_from_origin_fix(call_params)
+                        new_tree = self.pop_random(call_params, from_origin=True)
                         cooltree = cooltree_from_oldtree(new_tree)
                         self.pop_append(cooltree, last_evolution=tag)
                 else:
@@ -579,7 +574,7 @@ class ExplainableGP(object):
 
         if self.conf.period['gen_plots']:
             if self.gen_id % int(self.conf.period['gen_plots']) == 0:
-                self.file_analysis_plots(self.root_dir)
+                self.file_analysis_plots()
 
         if self.conf.period['gen_save']:
             if self.gen_id % int(self.conf.period['gen_save']) == 0:
@@ -801,62 +796,9 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
-        # for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
-        #     if 'RewardTotal' in obs_name:
-        #         continue
-        #     obs_min, obs_max = obs_info.get('minmax')
-        #     obs_x_info[ii] = {'bins': np.linspace(obs_min, obs_max, 10 + 1)}  # sfeh 32 bins?
-        # def histograms_actions(self):
-        #
-        #     # >>> Histograms for every dimension
-        #
-        #     data_dims = len(self.env_vars['obs_name'])
-        #
-        #     # for enum_aii, agent_ii in enumerate(agent_dimatrix):
-        #     for enum_aii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):
-        #         fig, axs = plt.subplots(data_dims, 1)
-        #
-        #         pairwise_fitness = agent_info['pairwise_fitness']
-        #         for obs_ii, agent_obs_info in agent_info['obs-specific'].items():  # histogram_data, parsim, tf_results['fitness']  -1? -> pairwise_fitness
-        #             hist_data = agent_obs_info['histogram_data']
-        #             axs[obs_ii].hist(hist_data, bins=obs_x_info[obs_ii]['bins'], weights=pairwise_fitness)
-        #             axs[obs_ii].set_title(obs_x_info[obs_ii].get('obs_name'))
-        #             axs[obs_ii].set_ylim(top=max_fails_per_bin)
-        #
-        #         plt.tight_layout()
-        #         plt.savefig(path_hist / f'obs_hist_{parsim}.png')
-        #         plt.clf()
-
         path_hist = folder_make_dir(self.root_dir / self.file_locs.folder_histograms)
-        #
-        # agent_dimatrix = {}
-        # obs_x_info = {}  # [None] * data_dims
-        #
-        # max_fails_per_bin = len(self.data_train)  # this value will define the y-axis height for all the histograms to look the same
 
         for (parsim, fitness, cooltree) in self.pareto:
-
-            # pairwise_fitness = tf_results['pairwise_fitness']
-            # agent_dimatrix[a_ii] = {}  # 'tf_fitness': None, 'pairwise_fitness': None, 'parsim': parsim
-            # agent_dimatrix[a_ii]['tf_fitness'] = tf_results['fitness']
-            # agent_dimatrix[a_ii]['pairwise_fitness'] = copy.deepcopy(pairwise_fitness)
-            # agent_dimatrix[a_ii]['parsim'] = parsim
-            # agent_dimatrix[a_ii]['result-solution'] = copy.deepcopy(deviation_per_action)  # this was: # action_hist_data[a_ii] = copy.deepcopy(kernel_result - solution_goal)
-
-            # for ii, (obs_name, obs_info) in enumerate(self.env_vars['obs_name'].items()):
-            #     col = obs_info.get('colpos')
-            #     if delete_this_pandas:
-            #         histogram_data = self.data_train[:, col]
-            #     else:
-            #         histogram_data = self.data_train[obs_name]
-            #     # hist, _ = np.histogram(histogram_data, bins=16 + 1, weights=pairwise_fitness)
-            #     # max_fails_per_bin = max(max(hist), max_fails_per_bin)
-            #
-            #     # agent_dimatrix[a_ii]['obs-specific'] = {}
-            #     # agent_dimatrix[a_ii]['obs-specific'][ii] = histogram_data
-            #     # obs_x_info[ii]['obs_name'] = obs_name  # sfeh meh
-
-            # for agent_ii, (parsim, agent_info) in enumerate(agent_dimatrix.items()):  # Histograms for every action
 
             act_min, act_max = self.env_vars.eval_action.minmax
             act_range = act_max - act_min
@@ -873,11 +815,10 @@ class ExplainableGP(object):
 
             fig, ax = plt.subplots()
             ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
-            ax.set_ylim(0, len(self.data_train))  # sfeh better size? max?
-            ax.set_ylabel('Frequency')  # divide by the amount of training samples
-            ax.set_xlabel('Deviation')
+            ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
             fig.tight_layout()
-            plt.savefig(path_hist / f'acthist_{parsim}.png')
+            fig.savefig(path_hist / f'acthist_{parsim}.svg')
+            fig.savefig(path_hist / f'acthist_{parsim}.png', dpi=300)
             plt.close()
         self.printpl('ff', f'Histograms: {path_hist.as_posix()}')
 
@@ -936,10 +877,10 @@ class ExplainableGP(object):
 
         py_return = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
 
-        complete_function = f"    def decide(self, input):\n"\
-                            f"        cartPos, cartVel = input\n" \
-                            f"        action = {{}}\n" \
-                            f"        return {py_return}\n"
+        complete_function = f"    def decide(self, input):\n" \
+            f"        cartPos, cartVel = input\n" \
+            f"        action = {{}}\n" \
+            f"        return {py_return}\n"
 
         all_agents = []
         all_agent_names = []
@@ -1021,7 +962,7 @@ class ExplainableGP(object):
         Mutates a number of float terminal of a tree
         """
         mode = call_params['mode']  # point/branch/all
-        filter_observations = call_params.get('filter_observations')  # point/branch/all
+        yes_observations = call_params.get('yes_observations')  # point/branch/all
         mutate_filter = 'gaussian_filter'  # sfeh change?
 
         node_ids = tree_get_mutatable_nodes(tree)
@@ -1040,7 +981,7 @@ class ExplainableGP(object):
                     obs_nodes.append(node_id)
 
         if mode == 'point':  # if pointmutation, return one nodeid as list
-            if filter_observations:
+            if yes_observations:
                 filter_id = [random.choice(float_nodes + obs_nodes)]
                 if filter_id in float_nodes:
                     float_nodes = filter_id
@@ -1055,7 +996,7 @@ class ExplainableGP(object):
                 val = label_constant_mutate(val, term_type=float, float_decimals=self.conf.float_decimals, filter_type=mutate_filter)
                 tree = tree_node_set_label(tree, node_id, val)
 
-        if obs_nodes and filter_observations:  # 'filtering' variables when they are from different times
+        if obs_nodes and yes_observations:  # 'filtering' variables when they are from different times
             for nid in obs_nodes:
                 obs_label = tree_node_get_label(tree, nid)
 
@@ -1120,63 +1061,58 @@ class ExplainableGP(object):
 
         return build_spec, size_mode, mean_min_max_var, full_or_grow
 
-    def pop_random_from_origin_fix(self, call_params):
+    def pop_random(self, call_params, from_origin=False):
         """
-        insert a (random) number of branches at the first possible "layer"
-        (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
-        - get these nodes, randomly choose a subset of those
-        - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
-        - split the amount of nodes up (randomly) and add these new branches to the tree
+        Creates random trees
         """
 
         build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
 
-        # tree_base = tree.copy()
-        # ('We are about to create new branches randomly at nodes {}.'.formjat(layer0_ids))
-        origin_tree = self.origin_cooltree.get_oldtree()
-        layer0_ids = tree_get_mutatable_layer(origin_tree, 0)
+        if from_origin:
+            """
+            insert a (random) number of branches at the first possible "layer"
+            (If all nodes are modifiable, it is the root node. Otherwise, it is a list of nodes that are the childs of the last non-modifiable nodes)
+            - get these nodes, randomly choose a subset of those
+            - get the amount of nodes we are allowed to add. (max nodes without the core-tree and the nodes we are about to delete)
+            - split the amount of nodes up (randomly) and add these new branches to the tree
+            """
 
-        build_split = []
-        if 'depth' in size_mode:
-            for ii in range(len(layer0_ids)):
-                build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-                build_split.append(build_size)
+            from_origin = self.origin_cooltree.get_oldtree()
+            layer0_ids = tree_get_mutatable_layer(from_origin, 0)
 
-        elif 'nodes' in size_mode:
-            build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
-            build_split = randomly_split_range(build_nodes, len(layer0_ids))
+            build_split = []
+            if 'depth' in size_mode:
+                for ii in range(len(layer0_ids)):
+                    build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
+                    build_split.append(build_size)
+
+            elif 'nodes' in size_mode:
+                build_nodes = choose_build_size(size_mode, mean_min_max_var, force='branch')
+                build_split = randomly_split_range(build_nodes, len(layer0_ids))
+            else:
+                raise
+
+            tree = from_origin.copy()
+            for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
+                layer0_ids = tree_get_mutatable_layer_lv0(tree)
+                node_id = layer0_ids[i]
+                first_xtype = tree_node_get_xtype(tree, node_id)
+                old_branch = tree_node_get_branch(tree, node_id, karoo=True)
+                build_size = build_split[i]
+
+                label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow)
+
+                c_core = Core_From_Labels(label_list, arity_list, xtype_list)
+                core = c_core.get_uninstanced_core()
+                tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
         else:
-            raise
+            action_xtype = self.env_vars.eval_action.xtype
+            build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
 
-        tree = origin_tree.copy()
-        for i in range(len(layer0_ids)):  # insert branches! get layer every time (node ids might have changed)
-            layer0_ids = tree_get_mutatable_layer_lv0(tree)
-            node_id = layer0_ids[i]
-            first_xtype = tree_node_get_xtype(tree, node_id)
-            old_branch = tree_node_get_branch(tree, node_id, karoo=True)
-            build_size = build_split[i]
+            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow)
 
-            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow)
-
-            c_core = Core_From_Labels(label_list, arity_list, xtype_list)
-            core = c_core.get_uninstanced_core()
-            tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
-
-        return tree
-
-    def pop_random(self, call_params):
-        """
-        Creates completely random trees from scratch
-        """
-
-        build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
-        action_xtype = self.env_vars.eval_action.xtype
-        build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
-
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow)
-
-        p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
-        tree = p_tree.get_uninstanced_tree()
+            p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
+            tree = p_tree.get_uninstanced_tree()
 
         return tree
 
@@ -1490,67 +1426,250 @@ class ExplainableGP(object):
 
         return pred_label
 
-    def file_analysis_plots(self, root_dir, subfolder=''):
+    def plot_end(self, xx, yy,
+                 title='', ax_label='', x_label='Generation', y_label='', yscale='linear',
+                 step_post='',  # plt_xparam='',
+                 linestyle='-',
+                 marker='',
+                 set_left=None, set_right=None, set_top=None,
+                 padd_r=1.05, padd_top=1.05,
+                 beyond_lines=False,
+                 fill_variance=None):
+        """
+        Make all plots in the same style - and also saving space.
+        - Makes pyplots
+
+        :param set_top:
+        :param fill_variance:
+        :param padd_r:
+        :param marker:
+        :param title:
+        :param ax_label: irrelevant for a single curve
+        :param x_label: label the x-axis
+        :param y_label: label the y-axis
+        :param yscale: only 'linear'.
+        :param step_post: makes 'step' plots- can be 'post', 'pre' or [pls google]
+
+        :param linestyle: E. g. 'None', 'dashed', '-', ''
+        :param set_left: Smallest left value
+        :param set_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40
+        :param padd_top: How much padding to the top border
+        :param beyond_lines: in step plots, draw the line further to the left and right
+
+        :return:
+
+        Options that are not used
+        # plt.legend()
+        sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
+        """
+
+        if len(xx) == 0:
+            print_e(f'Plotting empty array is not possible! Data={xx, yy}')
+            return
+
+        x, y = xx, yy
+
+        top, bottom, left, right, new_right, new_top = plot_sexyfy(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=padd_r, top_padding=padd_top)
+
+        if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
+            x = np.concatenate([[x[0]], x, [new_right + 1]])
+            y = np.concatenate([[new_top + 1], y, [y[-1]]])
+
+        fig, ax = plt.subplots()
+        ax.set_yscale(yscale)
+        ax.set_xlim(min(left, 0), new_right)
+        ax.set_ylim(min(bottom, 0), new_top)
+        fig.tight_layout()
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+        ax.set_title(title)
+
+        if step_post:
+            ax.step(x, y, linestyle=linestyle, marker=marker, label=ax_label, where=step_post)  # , plt_xparam
+        else:
+            ax.plot(x, y, linestyle=linestyle, marker=marker, label=ax_label)  # , plt_xparam
+            if fill_variance is not None:
+                x_std, y_var = fill_variance
+                y_std = np.sqrt(y_var)
+                lower_bound_stderr = y - y_std
+                upper_bound_stderr = y + y_std
+                ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
+                ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
+
+        path_plot = folder_make_dir(self.root_dir / self.file_locs.folder_plots)
+
+        # if save_tikz:
+        #     try:
+        #         tikzplotlib.save(path_plot / f'{title}.tex')
+        #     except Exception as tikzex:
+        #         print_e(f'tikzplotlib.save failed, exception: {tikzex}')
+
+        plt.tight_layout()
+        try:
+            plt.savefig(path_plot / f'{title}.png', dpi=300)
+            plt.savefig(path_plot / f'{title}.svg')
+        except PermissionError as permerr:
+            print_e(f'Could not save plot: {permerr}')
+
+        plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
+        return
+
+    def file_analysis_plots(self):
         """
         Make all plots
         """
+        try:
+            # self.monitoring_pd['complexity_avg'].plot()  # sfeh rename
+            fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
+            fig.tight_layout()
+            # plt.tight_layout()
+            plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+            xx = list(self.monitor_pd.index)
 
-        path_plots = folder_make_dir(root_dir / self.file_locs.folder_plots / subfolder)
+            axs0 = axs[0]
+            axs0.plot(self.monitor_pd['fit_avg'], label='Fitness (average)')
+            try:
+                avg = self.monitor_pd['fit_avg']
+                std = self.monitor_pd['fit_std']
+                axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')
+            except:
+                pass
+            axs0.step(x=xx, y=self.monitor_pd['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
+            axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
-        def plotendify_me(data_dict):
+            axs1 = axs[1]
+            axs1.plot(self.monitor_pd['parsim_avg'], label='Parsimony (average)')
+            try:
+                p_avg = self.monitor_pd['parsim_avg']
+                p_std = self.monitor_pd['parsim_std']
+                axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('Parsimony (average)')
+            except:
+                pass
+            axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
+
+            axs2 = axs[2]
+            # self.monitor_pd.plot(y=['pop_len', 'pop_unique'], ax=axs2), # axs2.set_title('Created trees (average)')
+            axs2.plot(self.monitor_pd['pop_len'], label='pop size')
+            axs2.plot(self.monitor_pd['pop_unique'], label='unique')
+            axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
+
+            axs3 = axs[3]
+            between_outliers = self.monitor_pd['time'].between(0, 2*self.monitor_pd['time'].mean())
+            axs3.plot(self.monitor_pd['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
+            axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
+
             """
-
+            Top level style
             """
-            # sfeh delete this version1 (working only with np-arrays, no dicts)
-            npdata_dict = np.array([list(x) for x in sorted(data_dict.items())]).T
-            return npdata_dict
+            axs3.set_xlim(xmin=0), axs3.set_xlabel('Generations')
+            axs0.set_title('Population Monitoring')  # sfeh
+            fig.tight_layout()
+            fig.savefig(self.root_dir / f'monitoring.png', dpi=300)
+            # fig.savefig(self.root_dir / f'monitoring.pdf')  # todo?
+            # fig.savefig(self.root_dir / f'monitoring.svg')
+            
+            plt.close()
+        except:
+            raise
+            print_e(f'Yeah... should have used old monitoring dict')
 
-        def get_pareto_plot_values():
-            """
+        tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in self.pareto]
+        xx, yy = np.array(tuples).T
+        self.plot_end(xx, yy,
+                      step_post='post', title='pareto dominant candidates', x_label='parsimony',
+                      y_label='regression error',
+                      linestyle='dashed',
+                      marker='.',
+                      set_right=self.conf.parsimony_max,
+                      beyond_lines=True)
 
-            """
-            tuples = []
-            for (parsim, fitness, cooltree) in self.pareto:
-                tuples.append([parsim, fitness])
-            npdata_dict = np.array(tuples).T
-            return npdata_dict
+        # todo
+        # xx, yy = plotendify_me(self.monitoring_dict['fitness_variance'])
+        # self.plot_end(root_dir, xx, yy, title='variance in error', y_label='variance',
+        #          marker='')
+        #
+        # data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
+        # data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
+        # self.plot_end(data_tuples, title='tree parsimony (avg and std. error)', y_label='variance',
+        #          marker='', fill_variance=data_tuples_variance)
+        #
+        # data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
+        # self.plot_end(data_tuples, title='best candidate',
+        #          y_label='error', linestyle='dashed', step_post='post')
 
-        data_tuples = plotendify_me(self.monitoring_dict['fitness_average'])
-        plot_end(data_tuples, path_plots, title='average error', x_label='Generation', y_label='mean error', set_left=data_tuples[0][0])
-
-        data_tuples = plotendify_me(self.monitoring_dict['population_tmp_done-size'])
-        plot_end(data_tuples, path_plots, title='genepool size', x_label='Generation', y_label='amount', linestyle='None',
-                 marker='.', set_left=data_tuples[0][0])
-
-        data_tuples = plotendify_me(self.monitoring_dict['gen_time'])
-        plot_end(data_tuples, path_plots, title='Generation time', x_label='Generation', y_label='time (sec)', linestyle='None',
-                 marker='.',
-                 set_left=data_tuples[0][0])
-
-        data_tuples = get_pareto_plot_values()
-        plot_end(data_tuples, root_dir, title='pareto dominant candidates', x_label='parsimony',
-                 y_label='regression error',
-                 linestyle='dashed',
-                 marker='.',
-                 step_where='post',
-                 set_right=self.conf.parsimony_max,
-                 beyond_lines=True)
-
-        data_tuples = plotendify_me(self.monitoring_dict['fitness_variance'])
-        plot_end(data_tuples, path_plots, title='variance in error', x_label='Generation', y_label='variance',
-                 marker='')
-
-        data_tuples = plotendify_me(self.monitoring_dict['complexity_average'])
-        data_tuples_variance = plotendify_me(self.monitoring_dict['complexity_variance'])  # sfeh update to standard error
-        plot_end(data_tuples, path_plots, title='tree parsimony (avg and std. error)', x_label='Generation', y_label='variance',
-                 marker='', fill_variance=data_tuples_variance)
-
-        data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
-        plot_end(data_tuples, path_plots, title='best candidate', x_label='Generation',
-                 y_label='error', linestyle='dashed', step_where='post')
-
-        # # todo
-        # (self.monitoring_dict['evol_performance'])
+        # def plot_evolution_analysis():
+        #     try:
+        #         # data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
+        #         # plot_end(data_tuples, path_plots, title='best candidate',
+        #         #          y_label='error', linestyle='dashed', step_where='post')
+        #
+        #         """
+        #         Plots for each tag (too much, i guess)
+        #         """
+        #         evolution_tag = [k for k in self.evolve_loop.keys() if k not in ['reproduce', 'revive pareto']]
+        #
+        #         fig, axs = plt.subplots(2, 1, figsize=(12, 9), sharex=True)  # , figsize=(9, 9)
+        #         # axs[0].set_ylabel(y_label)  # sfeh
+        #         fig.suptitle('GP Evolution analysis')
+        #         evol_performance = self.monitoring_dict['evol_performance']
+        #         for tag in evolution_tag:
+        #
+        #             evolve_function = self.evolve_loop[tag]['evolve_name']
+        #             # [last_evol]['fitness_avg'][gen_id]
+        #             try:
+        #                 xx = [[]] * 4
+        #                 yy = [[]] * 4
+        #                 xx[0], yy[0] = zip(*evol_performance['fitness_avg'][tag].items())
+        #                 xx[1], yy[1] = zip(*evol_performance['parsimony_avg'][tag].items())
+        #                 # xx[2], yy[2] = zip(*evol_performance['evolve_num'][tag].items())
+        #                 # xx2, yy2 = zip(*evol_performance['evolve_num'][tag].items())
+        #                 # size_x, size_y = zip(*evol_performance['lentree_avg'][tag].items())
+        #
+        #                 axs[0].plot(xx[0], yy[0], label=tag)
+        #                 axs[1].plot(xx[1], yy[1], label=tag)
+        #                 # axs[2].plot(xx[2], yy[2], label=tag)
+        #                 # axs[2].plot(size_x, size_y, label=tag)
+        #             except:
+        #                 print_warning('wwww', f'Could not analyse last evolution with  tag: {tag}', print_type=self.print_type)
+        #
+        #         fig.tight_layout()
+        #         plt.savefig(path_plots / f'evolve_analysis.png')
+        #         plt.close()
+        #
+        #         """
+        #         Plots for each tag (too much, i guess)
+        #         """
+        #         evol_funs = dict.fromkeys([v['evolve_name'] for v in self.evolve_loop.values()], [])
+        #         for k, v in self.evolve_loop.items():
+        #             evol_funs['evolve_name'].append(k)
+        #
+        #         fig, axs = plt.subplots(2, 1, figsize=(12, 9), sharex=True)  # , figsize=(9, 9)
+        #         # axs[0].set_ylabel(y_label)  # sfeh
+        #         fig.suptitle('GP Evolution analysis')
+        #         evol_performance = self.monitoring_dict['evol_performance']
+        #         for evoname, tags in evol_funs.items():
+        #             xx = [[]] * 4
+        #             yy = [[]] * 4
+        #             for tag in tags:
+        #                 xx[0], yy[0] = zip(*evol_performance['fitness_avg'][tag].items())
+        #                 xx[1], yy[1] = zip(*evol_performance['parsimony_avg'][tag].items())
+        #                 # xx[2], yy[2] = zip(*evol_performance['evolve_num'][tag].items())
+        #                 # xx[3], yy[3] = zip(*evol_performance['lentree_avg'][tag].items())
+        #                 xxc, yyc = zip(*evol_performance['count'][tag].items())
+        #
+        #                 axs[0].plot(xx0, yy0, label=tag)
+        #                 axs[1].plot(xx1, yy1, label=tag)
+        #                 # axs[2].plot(xx2, yy2, label=tag)
+        #                 # axs[2].plot(size_x, size_y, label=tag)
+        #
+        #         fig.tight_layout()
+        #         plt.savefig(path_plots / f'evolve_analysis.png')
+        #         plt.close()
+        #
+        #     except Exception as ex:
+        #         print_e(f'plot_evolution_analysis failed because of: {ex}')
+        #
+        # plot_evolution_analysis()
 
         return
 
@@ -1569,24 +1688,30 @@ class ExplainableGP(object):
             raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
 
         pop_fitness = [cooltree.meta.fitness_train for cooltree in popul]
-        tmp_evol_performance = {}
-        for cooltree in popul:
-            tmp_evol_performance[cooltree.meta.last_evolution] = {'fitness': cooltree.meta.fitness_train,
-                                                                  'parsimony': cooltree.meta.parsimony,
-                                                                  'size': len(cooltree)}
-            # sfeh fitness - last fitness?
-        evol_performance = {}
-        for last_evol in tmp_evol_performance:
-            try:
-                evol_performance[last_evol] = {'fitness-avg': np.average(tmp_evol_performance[last_evol]['fitness']),
-                                               'parsimony-avg': np.average(tmp_evol_performance[last_evol]['parsimony']),
-                                               'size-avg': np.average(tmp_evol_performance[last_evol]['size'])}
-            except Exception as ex:
-                print_e(f'Could not save evol_performance analysis. {ex}')
+        # tmp_evol_performance = {cooltree.meta.last_evolution: {'fitness': cooltree.meta.fitness_train,
+        #                                                        'parsimony': cooltree.meta.parsimony,
+        #                                                        'lentree': len(cooltree)} for cooltree in popul}
+        # for last_evol in tmp_evol_performance:
+        #     if last_evol in self.evolve_loop:
+        #         for evolinfo in ['fitness_avg', 'parsimony_avg', 'lentree_avg', 'evolve_num', 'count']:
+        #
+        #             if self.monitoring_dict['evol_performance'][evolinfo].get(last_evol) is None:
+        #                 self.monitoring_dict['evol_performance'][evolinfo][last_evol] = {}
+        #         try:
+        #             self.monitoring_dict['evol_performance']['fitness_avg'][last_evol][gen_id] = np.sum(tmp_evol_performance[last_evol]['fitness'])
+        #             self.monitoring_dict['evol_performance']['parsimony_avg'][last_evol][gen_id] = np.sum(tmp_evol_performance[last_evol]['parsimony'])
+        #             self.monitoring_dict['evol_performance']['lentree_avg'][last_evol][gen_id] = np.sum(tmp_evol_performance[last_evol]['lentree'])
+        #             self.monitoring_dict['evol_performance']['evolve_num'][last_evol][gen_id] = self.evolve_loop[last_evol]['evolve_num']
+        #             self.monitoring_dict['evol_performance']['count'][last_evol][gen_id] = len(tmp_evol_performance[last_evol])  # currently not used
+        #             # sfeh fitness - last fitness?
+        #         except Exception as ex:
+        #             print_e(f'Could not save evol_performance analysis. {ex}')
+        #     else:
+        #         if last_evol != 'origin':
+        #             print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
 
         pop_parsim = [cooltree.meta.parsimony for cooltree in popul]
         pop_treelen = [len(cooltree) for cooltree in popul]
-        pop_last_evolve = [cooltree.meta.last_evolution for cooltree in popul]
 
         pop_fitness_best = self.kernel.np_best_fitness(pop_fitness)
         try:
@@ -1594,29 +1719,28 @@ class ExplainableGP(object):
         except:
             self.best_fitness = pop_fitness_best
 
-        # todo safe...
-        #  tree age?
-        #
-        # # todo add complexity to tree?
-        #
-
-        self.monitoring_dict['population_tmp_done-size'][gen_id] = len(popul)
-        self.monitoring_dict['pop_parsim'][gen_id] = pop_parsim
-        self.monitoring_dict['pop_last_evolves'][gen_id] = pop_last_evolve
-        self.monitoring_dict['fitness_average'][gen_id] = np.average(pop_fitness)
-        self.monitoring_dict['fitness_variance'][gen_id] = np.var(pop_fitness)
-        self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
-        # self.monitoring_dict['complexity_list'][gen_id] = pop_treelen
-        self.monitoring_dict['complexity_average'][gen_id] = np.average(pop_treelen)
-        self.monitoring_dict['complexity_mean'][gen_id] = np.mean(pop_treelen)
-        self.monitoring_dict['pop:trees:complexity:std_error'][gen_id] = np.std(pop_treelen)
-        self.monitoring_dict['complexity_variance'][gen_id] = np.var(pop_treelen)  # sfeh version1 delete this shit
-        self.monitoring_dict['evol_performance'][gen_id] = evol_performance
-
-        gen_time = time.perf_counter() - self.time_genstart
-        self.monitoring_dict['gen_time'][gen_id] = gen_time
+        # self.monitoring_dict['population_tmp_done-size'][gen_id] = len(popul)
+        # self.monitoring_dict['fitness_average'][gen_id] = np.average(pop_fitness)
+        # self.monitoring_dict['fitness_variance'][gen_id] = np.var(pop_fitness)
+        # self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
+        # self.monitoring_dict['complexity_average'][gen_id] = np.average(pop_treelen)
+        # self.monitoring_dict['complexity_variance'][gen_id] = np.var(pop_treelen)  # sfeh version1 delete this shit
+        # self.monitoring_dict['gen_time'][gen_id] = gen_time
 
         unique_tree_count = len(set([hash(x) for x in popul]))  # sfeh analyze this?
+
+        gen_time = time.perf_counter() - self.time_genstart
+
+        self.monitor_pd.loc[gen_id] = {'pop_len': len(popul),
+                                       'pop_unique': unique_tree_count,
+                                       'fit_avg': np.average(pop_fitness),
+                                       'fit_std': np.std(pop_fitness),
+                                       'fit_best': self.best_fitness,
+                                       'parsim_avg': np.average(pop_parsim),
+                                       'parsim_std': np.std(pop_parsim),
+                                       'complexity_avg': np.var(pop_treelen),
+                                       'time': gen_time}  # sfeh version1 delete this shit
+
         self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {gen_id}. Gen took {gen_time:4.2f}s')
         # sfeh check if there are really unique... doubt it.
         return
@@ -1629,7 +1753,7 @@ class ExplainableGP(object):
 
         self.file_conslusions()
 
-        self.file_analysis_plots(self.root_dir)
+        self.file_analysis_plots()
         self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
 
     def printpl(self, message_type, message_str):

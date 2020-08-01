@@ -183,6 +183,8 @@ op = {
     'Maxi': op_what['Maxi'],
 }
 
+expr_raw_infix = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&', '|']  # sfeh / is removed for
+
 op_test = {
     # ast.BitOr
     '&': {'fun_class': '', 'fun_label': '&', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': '', 'tf': tf.logical_and, 'latex1': '\\land', 'latexF': '({}\\wedge{})',
@@ -230,4 +232,45 @@ op_test = {
 # print(', '.join(['[\'{}\', {:.2f}]'.format(v['fun_label'], 1/v['c-weight']) for k, v in op_what.items()]))  # retreive a list with all non-ast ops:
 
 
-expr_raw_infix = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&', '|']  # sfeh / is removed for
+def make_classes():
+    print('import os\nimport tensorflow as tf\nimport ast\nimport math\nfrom plagih.modules.plagih_data import *\n\n')
+    print('class Plabel:')
+    print('    pass\n')
+    for key, v in op_what.items():
+        # print(key, v)
+        # key = '>='
+        # fun = v['fun_label']
+        # inhalt = ['arity',    'xtype',    'c-weight',    'tf',    'latex1',    'latexF',    'sym_str',    'pycode']
+        #
+        # for inh in inhalt:
+        #     print(f'print("self.{inh} = {{v[{}]}})"')
+        print('')
+        classname = v['fun_class']
+        if classname == 'SKIP':
+            continue
+        # todo sym special case
+        print(f"class {classname}(Plabel):\n")
+
+        print(f"    fun_label = '{v['fun_label']}'")
+        print(f"    arity = {v['arity']}")
+        print(f"    xtype = '{v['xtype']}'")
+        print(f"    c_weight = {v['c-weight']}")
+        # vtf = inspect.getsource(v['tf'])
+        # vtf = re.sub(".*tf': ", "", str(vtf))
+        # vtf = re.sub(",.*': ", "", vtf)
+        print(f"    tf = tf.{v['tf_name']}")
+        latex1 = v['latex1']
+        latex1 = latex1.replace('\\', '\\\\')
+        print(f"    latex1 = '{latex1}'")
+        latexF = v['latexF']
+        latexF = latexF.replace('\\', '\\\\')
+        print(f"    latexF = '{latexF}'")
+        print(f"    sym_str = '{v['sym_str']}'")
+        pycc = v['pycode']
+        print(f"    pycode = '{pycc}'")
+
+        print('')
+
+
+if __name__ == "__main__":
+    make_classes()

@@ -153,29 +153,35 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         ax.set_ylim(-15000, -4000)
         # # only if one entry per parsimony
         ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
+        ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
         ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
-        plt.savefig(root_dir_eval / f'plot-{measr}.png')
+        plt.savefig(root_dir_eval / f'plot-{measr}.png', dpi=300)
         plt.close()
 
+    """
+    Plotting the performance of each action
+    """
     for a in range(3):
         tmp_comb = combined_all_a[a]
-        res = [min(row, key=lambda x: x['f_squared']) for p, row in tmp_comb.items()]
-        # res = max([x for x in res1], key=lambda l: l[measr])
+        # res = [min(row, key=lambda x: x['f_squared']) for p, row in tmp_comb.items()]  # nah
+        res = np.mean([row for p, row in tmp_comb.items()], key=lambda x: x['experiments'])
+        res_save = np.mean([row for p, row in tmp_comb.items()], key=lambda x: x['experiments_safe'])
         res.sort(key=lambda x: x['parsim_sum'])
         xx = [x['parsim_sum'] for x in res]
         y_all = [y['experiment'] for y in res]
-        y_safe = [y['experiment_safe'] for y in res]
+        y_safe = [y['experiment_safe'] for y in res_save]
 
         plt.tight_layout()
         fig, ax = plt.subplots()
-        ax.set_title(f'scatter-plot, action {a}, ({run_name}, {measr})')
+        ax.set_title(f'action {a}, ({run_name}, {measr})')
         ax.set_xlabel('complexity')
         ax.set_ylabel('reward')
         ax.set_ylim(-15000, -4000)  # todo
         # # only if one entry per parsimony
-        ax.scatter(xx, y_all, label='all actions', marker='.', color='r', )
-        ax.scatter(xx, y_safe, label='low risk', marker='.', color='b')
-        plt.savefig(root_dir_eval / f'act_{a}-scatter-{measr}.png')
+        ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
+        ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
+        plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.png', dpi=300)
+        # plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.svg')
         plt.close()
 
     """
@@ -207,7 +213,8 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     # # only if one entry per parsimony
     ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
     ax.plot(xx, y_safe, label='low risk', marker='.', color='c')
-    plt.savefig(root_dir_eval / f'best-real-expermiments.png')
+    plt.savefig(root_dir_eval / f'best-real-expermiments.png', dpi=300)
+    # plt.savefig(root_dir_eval / f'best-real-expermiments.svg')
     plt.close()
 
     # """
@@ -281,8 +288,8 @@ def main():
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
-    parser.add_argument('-max_parsim_sum', type=int, default=50)
-    parser.add_argument('-max_parsim_single', type=int, default=20)
+    parser.add_argument('-max_parsim_sum', type=int, default=35)
+    parser.add_argument('-max_parsim_single', type=int, default=16)
     args = parser.parse_args()
 
     name = args.name

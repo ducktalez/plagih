@@ -74,7 +74,7 @@ def yaml_dump(path, data, print_type=None):
     path = file_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
-        printez('ff', f'{path}', print_type=print_type)
+        printez('ff', f'{path.as_posix()}', print_type=print_type)
     return
 
 
@@ -84,7 +84,7 @@ def plot_sexyfy(x, y, set_left=None, set_right=None, set_top=None, right_padding
     """
     top, bottom, left, right = max(y), min(y), min(x), max(x)
     if set_left:
-        left = set_left
+        left = (x[0], y[0])
 
     if set_top:
         new_top = set_top
@@ -96,98 +96,3 @@ def plot_sexyfy(x, y, set_left=None, set_right=None, set_top=None, right_padding
     new_right = right * right_padding
 
     return top, bottom, left, right, new_right, new_top
-
-
-def plot_end(data_2d, path_plot,
-             title='', plt_curve_label='', x_label='', y_label='', yscale='linear',
-             step_where='',  # plt_xparam='',
-             linestyle='-',
-             marker='',
-             set_left=None, set_right=None, set_top=None,
-             right_padding=1.05, top_padding=1.05,
-             beyond_lines=False,
-             save_tikz=False,  # for the final runs...
-             subfolder=None,
-             fill_variance=None):
-    """
-    Make all plots in the same style - and also saving space.
-    - Makes pyplots
-
-
-    :param set_top:
-    :param fill_variance:
-    :param right_padding:
-    :param marker:
-    :param data_2d: array with data, e.g. [[1, 5],[2, 4], [3, 4]]
-    :param path_plot: where to save the result
-    :param title:
-    :param plt_curve_label: irrelevant for a single curve
-    :param x_label: label the x-axis
-    :param y_label: label the y-axis
-    :param yscale: only 'linear'.
-    :param step_where: makes 'step' plots- can be 'post', 'pre' or [pls google]
-    # :param plt_xparam: not in use, the same adjustment can be done with optional parameters
-    :param linestyle: E. g. 'None', 'dashed', '-', ''
-    :param set_left: Smallest left value
-    :param set_right: E. g. if max_parsimony is 100 -> show complete width, even if entries only go to 40
-    :param top_padding: How much padding to the top border
-    :param beyond_lines: in step plots, draw the line further to the left and right
-    :param save_tikz: Also save the plot as tikzpicture (for Latex)(requires tikzplotlib)
-    :param subfolder: save plot in plots/*subfolder*, e.g. if this plot is created in every generation
-    :return:
-
-    Options that are not used
-    # plt.legend()
-    sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
-    """
-
-    if len(data_2d) == 0:
-        print_e(f'Plotting empty array is not possible! Data={data_2d}')
-        return
-
-    x, y = data_2d
-
-    top, bottom, left, right, new_right, new_top = plot_sexyfy(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=right_padding, top_padding=top_padding)
-
-    if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
-        x = np.concatenate([[x[0]], x, [new_right + 1]])
-        y = np.concatenate([[new_top + 1], y, [y[-1]]])
-
-    fig, ax = plt.subplots()
-    ax.set_yscale(yscale)
-    ax.set_ylim(min(bottom, 0), new_top)
-    ax.set_xlim(min(left, 0), new_right)
-    fig.tight_layout()
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
-    ax.set_title(title)
-
-    if step_where:
-        ax.step(x, y, linestyle=linestyle, marker=marker, label=plt_curve_label, where=step_where)  # , plt_xparam
-    else:
-        ax.plot(x, y, linestyle=linestyle, marker=marker, label=plt_curve_label)  # , plt_xparam
-        if fill_variance is not None:
-            x_std, y_var = fill_variance
-            y_std = np.sqrt(y_var)
-            lower_bound_stderr = y-y_std
-            upper_bound_stderr = y+y_std
-            ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
-            ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
-
-    if subfolder:
-        path_plot = folder_make_dir(path_plot / subfolder)
-
-    if save_tikz:
-        try:
-            tikzplotlib.save(path_plot / f'{title}.tex')
-        except Exception as tikzex:
-            print_e(f'tikzplotlib.save failed, exception: {tikzex}')
-
-    plt.tight_layout()
-    try:
-        plt.savefig(path_plot / f'{title}.png')
-    except PermissionError as permerr:
-        print_e(f'Could not save plot: {permerr}')
-
-    plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
-    return

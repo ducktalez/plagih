@@ -117,7 +117,8 @@ status open
 \backslash
 global
 \backslash
-titel{Creating familiar RL-Policies with Genetic Programming}
+titel{Creating familiar Reinforcement Learning Policies with Genetic Programming
+}
 \end_layout
 
 \end_inset

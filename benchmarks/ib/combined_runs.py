@@ -71,14 +71,7 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
     # print(f'Number of best combinations (fitness_sum): {len(combined_best2["fitness_sum"])}, total combinations: {len(combined_all)}')
     # for measr in ['fitness_sum', 'f_norm', 'f_norm', 'f_normsub', 'f_0div', 'f_0sub']:
     #     for parsim_sum, arow in combined_best2[measr].items():  # todo combined_all or combined_best?
-    #         parsims = arow['parsims']
-    #         fitness_sum = arow['fitness_sum']
-    #         parsim_sum = arow['parsim_sum']
-    #         lut_hash = f"{parsim_sum}_{parsims}_{fitness_sum}"
-    # 
-    #         if parsim_sum <= parsim_max_sum:
-    #             if lut_hash in lut:
-    #                 experiment, experiment_safe = lut[lut_hash]  # todo more evaluations? average?
+    #          #  more evaluations? average?
     #             else:
     #                 codes = arow['codes']
     #                 experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
@@ -90,8 +83,7 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
     #                     print(f'Saving lut after evaluating 20')
     #                     with Path.open(lut_file, 'w') as file:
     #                         _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
-    #             combined_best2[measr]['experiment'] = experiment
-    #             combined_best2[measr]['experiment_safe'] = experiment_safe
+
     #             analyse_best[measr].append([parsim_sum, experiment, experiment_safe])
     #         else:
     #             not_evaled += 1
@@ -116,8 +108,20 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
     with Path.open(lut_file, 'w') as file:
         _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
 
-    combined_all = [x for x in combined_all if x is not None]
+    for ii, arow in enumerate(combined_all[:]):
+        if arow is not None:
+            e1, e2 = asdasd
+            parsims = arow['parsims']
 
+        # combined_best2[measr]['experiment'] = experiment
+        # combined_best2[measr]['experiment_safe'] = experiment_safe
+        #         fitness_sum = arow['fitness_sum']
+        #         parsim_sum = arow['parsim_sum']
+        #         lut_hash = f"{parsim_sum}_{parsims}_{fitness_sum}"
+        #
+        #         if parsim_sum <= parsim_max_sum:
+        #             if lut_hash in lut:
+        #                 experiment, experiment_safe = lut[lut_hash]
     return combined_all
 
 
@@ -164,18 +168,10 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         # for p, row in parsim_dict.items():
         #     res[p] =
         for p, rows in parsim_dict.items():
-            try:
-                xx.append(p)
-                exp.append(np.mean([row['experiment'] for row in rows]))
-                exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
-            except:
-                pass
+            xx.append(p)
+            exp.append(np.mean([row['experiment'] for row in rows]))
+            exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
 
-        # xx = [x['parsim_sum'] for x in res]
-        # y_all = [y['experiment'] for y in exp]
-        # y_safe = [y['experiment_safe'] for y in exp_safe]
-
-        plt.tight_layout()
         fig, ax = plt.subplots()
         ax.set_title(f'action {a}, ({run_name}, {measr})')
         ax.set_xlabel('complexity')

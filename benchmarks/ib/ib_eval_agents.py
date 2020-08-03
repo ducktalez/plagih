@@ -110,7 +110,7 @@ class AgentMerger(Ib_Agent):
         return at
 
 
-def eval_combined_agents(parsim_sum, parsims, codes, complete=True):
+def eval_combined_agents(codes, parsim_sum=None, parsims=None, complete=True):
     T = 100*1000
     factor = 0.97
     time_horizon = 100
@@ -122,7 +122,7 @@ def eval_combined_agents(parsim_sum, parsims, codes, complete=True):
         a0, a1, a2 = codes
         a2 = '0'
 
-    name = f'{parsim_sum}_{parsims[0]}_{parsims[1]}_{parsims[2]}'
+    name = 'FUCK U'  # f'{parsim_sum}_{parsims[0]}_{parsims[1]}_{parsims[2]}'
     dummy_agent = AgentMerger(name, a0, a1, a2)
 
     for p in np.arange(10, 101, 10):
@@ -132,16 +132,12 @@ def eval_combined_agents(parsim_sum, parsims, codes, complete=True):
         for t in range(time_horizon):
             env_state = envstate_normalize(env.state)
             at = dummy_agent.decide(env_state)
-            # at = [[], [], []]
-            # at[0] = exec(a0)(env_state)
-            # at[1] = exec(a1)(env_state)
-            # at[2] = exec(a2)(env_state)
             markovStates = env.step(at)
 
             entry = env.visibleState()[-1]
             sum_t += factor ** (time_horizon-t) * entry
         sum += sum_t / 10
-    return sum
+    return float(sum)
 
 
 def eval_agent(agent):

@@ -7,29 +7,6 @@ class GpConfig:
     (just to find this with quick search) self.conf self.config
     """
 
-    # def __init__(self, conf=None):
-    #
-    #     self.pl_version = PLAGIH_VERSION  # version important when loading old run
-    #     self.force_new_run = False  # : False,  # especially for testing, ignores backup files when true
-    #     self.time_max = None  # : None,  # int(60 * 60 * 12),  # 60 = 1 min
-    #     self.gen_max = 1000  # : 1000,  # Maximum amount of generations
-    #
-    #     self.pop_max = 1000  # conf['pop_max']  #: 1000,  # amount is never tested
-    #     self.tree_depth_max = 10  #: 10,  # maximum Tree depth for entire run
-    #     self.tree_depth_min = 1  #: 2,
-    #     self.tourn_size = 3  #: 3,  # [7 per 100] number of trees selected for tournament
-    #     self.parsimony_mean = 20  #: 20,  # If you wnt your population to be a certain size
-    #     self.parsimony_max = 50  #: 50,
-    #     self.gen_num_parsim_maxony = 50  #: 50,  # Increase tmp_parsim to this generation
-
-    # def update_dict_nested(d, u):
-    #     for k, v in u.items():
-    #         if isinstance(v, collections.abc.Mapping):
-    #             d[k] = update_dict_nested(d.get(k, {}), v)
-    #         else:
-    #             d[k] = v
-    #     return d
-
     def __init__(self, args):
         """
         SFEH NEVER try to save paths here. switching between systems is worse than HitlerAIDS

@@ -144,10 +144,7 @@ def main():  # argv sys.argv[1:]
     conf = GpConfig(args)
 
     prepared_run = args.prepared_run
-    # todo
-    # self.name = args.name or self.root_dir.resolve().name  # sfeh probably there are better names
-    # self.load_backup_path_loaded_dummy = args.load_backup
-    # self.data_csv_path_loaded_dummy = args.data_csv
+    # self.name = args.name or self.root_dir.resolve().name  # sfeh name? probably there are better names
 
     if prepared_run:
         conf, root_dir, path_data_csv, path_origin_tree = load_prepared_run(conf, prepared_run)
@@ -159,15 +156,7 @@ def main():  # argv sys.argv[1:]
         except:
             root_dir = None
 
-    root_dir = args.root_dir or root_dir
-    # plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
-
-    # loaded file-paths are not a good information
-    path_load_backup = args.load_backup
-
-    # Not run-specific
-    gen_additionally = args.gen_additionally
-    force_new_run = args.force_new_run  # force_new_run should not be in the config... does not define the run
+    root_dir = args.root_dir or root_dir  # plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
 
     """
     Starting the actual run
@@ -175,17 +164,26 @@ def main():  # argv sys.argv[1:]
     gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, developer_fix=args.developer_fix)
 
     if args.analyse:
-
+        if args.force_new_run:
+            raise Exception('Dude. Either analyse stuff or force a new run?')
         try:
-            gp.backup_load(path_load_backup)
+            gp.backup_load(args.load_backup)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
 
     else:
-        # asd sfeh in the backup load process
-        # if args.pop_kill:
-        #     gp.pop_base = []
-        gp.plagih_gp_run(path_load_backup, force_new_run=force_new_run, gen_additionally=gen_additionally)
+        if not args.force_new_run:
+            try:
+                gp.backup_load(args.load_backup)
+            except FileNotFoundError as ex:
+                gp.printpl('i', f'No backup file found at {ex}. Starting a new run.')
+
+        if args.pop_kill:
+            gp.pop_base = []
+            gp.pop_tmp = []
+            # sfeh test this!
+
+        gp.plagih_gp_run(gen_additionally=args.gen_additionally)
 
     gp.terminate_run()
     if args.analyse or not args.less_files:

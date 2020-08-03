@@ -166,7 +166,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
     if not Path.is_dir(folder):
         Path.mkdir(folder)
     plt.savefig(Path(folder) / f'{name}.png', dpi=300)
-    plt.savefig(Path(folder) / f'{name}.svg')
+    # plt.savefig(Path(folder) / f'{name}.svg')
     # try:
     #     tikzplotlib.save('TEST.tex'.format(name))
     # except Exception as ex:
@@ -226,7 +226,7 @@ def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path(
     plt.ylim(-200, -80)
 
     plt.savefig(folder / f'{name}.png', dpi=300)
-    plt.savefig(folder / f'{name}.svg')
+    # plt.savefig(folder / f'{name}.svg')
 
 
 def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_splits=256, name='diff', folder='img/',
@@ -302,7 +302,7 @@ def eval_agent_list(agent_list, goal_agent, n=40, folder=Path('img/')):
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
     plt.savefig(folder / 'agent_perf.png', dpi=300)
-    plt.savefig(folder / 'agent_perf.svg')
+    # plt.savefig(folder / 'agent_perf.svg')
 
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
     with (folder / 'summary.txt').open('w') as file:

@@ -28,7 +28,7 @@ def print_e(text):
     """
     Printing errors
     """
-    print(f'{BColors.FAIL}ERROR: {BColors.WARNING}{text}{BColors.RESET}')
+    print(f'{BColors.RED}ERROR: {BColors.FAIL}{text}{BColors.RESET}')
 
 
 def print_warning(message_type, text, print_type=None, time_total=0.0):
@@ -51,32 +51,20 @@ def printez(message_type, text, print_type=None, time_total=0.0):
         if message_type not in print_type:
             return
 
-    message_pretxt = BColors.RESET
-    message_posttxt = BColors.RESET
     if 'i' in message_type:
-        message_style = BColors.CYAN
-        message_pretxt = ''
-    elif 'e' in message_type:
-        message_style = BColors.RED
-        message_pretxt = 'ERROR: '
+        pre_msg = BColors.CYAN
     elif 'w' in message_type:
-        message_style = BColors.WARNING
-        message_style = BColors.WARNING
-        message_pretxt = ''
+        pre_msg = BColors.WARNING
     elif 'g' in message_type:
-        message_style = ''  # was BColors.BLUE
-        message_pretxt = f'{time_total:3.0f}s. '  # sfeh current time instead and local time at the end?
-        # message_style = BColors.WHITE
+        pre_msg = f'{time_total:3.0f}s. '  # sfeh current time instead and local time at the end?
+        # pre_msg = BColors.WHITE
     elif 'f' in message_type:
-        message_style = BColors.MAGENTA
-        message_pretxt = 'Writing File: '
+        pre_msg = f'{BColors.MAGENTA}Writing File: '
     elif 'a' in message_type:
-        message_style = BColors.GREEN
-        message_pretxt = ''
+        pre_msg = f'{BColors.GREEN}Paretofront: '
     else:
-        message_style = ''
-        printez('w', f'print_type-mode {message_type} not known.')
+        raise Exception(f'print_type-mode {message_type} not known.')
 
-    print(f'{message_style}{message_pretxt}{text}{message_posttxt}')
+    print(f'{pre_msg}{text}{BColors.RESET}')
     return
 

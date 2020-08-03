@@ -12,7 +12,7 @@ def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_a
     plt.title('Sampled Reward vs Episodes')
     plt.ylim(-200, -50)
     plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}.png', dpi=300)
-    plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}.svg')
+    # plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}.svg')
     plt.show()
 
     plt.plot(reward_sample_interval * (np.arange(len(episode_rewards1)) + 1), rewards1_avg, label=str(approach))
@@ -23,7 +23,7 @@ def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_a
     plt.title('Average Reward vs Episodes')
     plt.ylim(-200, -50)
     plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}-average.png', dpi=300)
-    plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}-average.svg')
+    # plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}-average.svg')
     plt.show()
 
     plt.close()

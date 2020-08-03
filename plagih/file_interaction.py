@@ -3,11 +3,6 @@ from plagih.printing import *
 import yaml
 from pathlib import Path
 
-try:
-    import tikzplotlib  # actually, those look like shit?
-except Exception as ex:
-    print_e(f'Need to install tikzplotlib? matplotlib2tikz is outdated. Exception:\n{ex}')
-
 T_num_lines = 15  # sfeh this var is not found otherwise
 
 

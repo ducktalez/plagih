@@ -44,7 +44,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
           'pycode': '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'},
     '**': {'fun_class': 'Power', 'fun_label': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'pow', 'tf': tf.pow, 'opgroup': [], 'latex1': '{{x}}^{{y}}', 'latexF': '{}^{}',
            # sfeh latexf requires some testing...
-           'sym_reduce': '({}**{})', 'sym_str': '({}**Round({}))', 'pycode': '({}**round({}))'},
+           'sym_reduce': '({} ** {})', 'sym_str': '({} ** Round({}))', 'pycode': '({}**round({}))'},
 
     'abs': {'fun_class': 'Abs', 'fun_label': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': 'abs', 'latexF': '|{}|',
             'sym_reduce': None, 'sym_str': 'abs({})', 'pycode': 'abs({})'},

@@ -23,6 +23,39 @@ class ClassificationKernel(GPKernel):
     def __init__(self, *args):
         super().__init__(*args)
 
+
+
+    def tf_classify_labels_map(self, result):
+
+        """
+        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
+        the quantity of true class labels provided in the samples-csv.
+        Outputs an array of tuples containing the predicted labels based upon the result and corresponding boolean condition triggered.
+
+        For comparison, the original (pre-TensorFlow) cod follows:
+
+            skew = (self.uniques_num / 2) - 1 # '-1' keeps a binary classification splitting over the
+            if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
+            elif solution == self.uniques_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
+            elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
+            else: fitness = 0 # no class match
+        sfeh remove
+
+        """
+        uniques_num = self.env_vars.eval_action.uniques
+        skew = (uniques_num / 2) - 1
+        label_rules = {uniques_num - 1: (
+            tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}
+
+        for class_label in range(uniques_num - 2, 0, -1):
+            cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
+            label_rules[class_label] = tf.cond(cond, lambda: (
+                tf.constant(class_label), tf.constant(f' <= {class_label - skew}')), lambda: label_rules[class_label + 1])
+
+        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(f' <= {0 - skew}')), lambda: label_rules[1])
+
+        return pred_label
+
     def fitness_compare(self, fitness1, fitness2):
         if fitness2 is None:
             return True

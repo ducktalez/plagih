@@ -19,22 +19,29 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 
 class FileLocations:
-    folder_plots = 'plots/'
-    folder_histograms = 'histograms/'
+    plots = 'plots/'
+    histograms = 'histograms/'
 
-    file_backup_pickle = 'backup/backup.p'
-    file_backup_yaml = 'backup/backup.yaml'
+    backup_p = 'backup/backup.p'
 
     trees_tex = 'agents_trees.tex'
     folder_pycode = ''
 
-    file_pareto = 'info/paretofront.yaml'
-    info_config_yaml = 'info/config.yaml'
+    file_pareto = 'paretofront.yaml'
+    info_config_yaml = 'used_config.yaml'
 
     # Files that can can (in theory) be used to prepare a runable folder. maybe deprecated now, sfeh.
-    use_samples_ready_p = 'run_files/samples_ready.p'
-    use_samples_csv = 'run_files/samples.csv'
     use_distributions_file = 'run_files/distributions_file.yaml'
+
+    def absolute(self, path, make_dirs=False):
+        p = self.rootpath / path
+        if make_dirs and not p.parent.is_dir():
+            p.parent.mkdir(parents=True)
+        return p
+
+    def __init__(self, rootpath):
+        self.rootpath = Path(rootpath)
+        # sfeh check stuff?
 
 
 class ExplainableGP(object):
@@ -55,7 +62,7 @@ class ExplainableGP(object):
               f'\t{self.root_dir}\n')
         self.time_start = time.perf_counter()
 
-        self.file_locs = FileLocations()
+        self.paths = FileLocations(self.root_dir)
 
         self.env_vars = EnvVars()
         self.data_train = None
@@ -127,13 +134,16 @@ class ExplainableGP(object):
                 self.gen_time = monitoring_dict.get('gen_time', {})
                 self.evol_performance = monitoring_dict.get('evol_performance', {})
 
-        self.monitor_pd = pd.DataFrame(columns=['pop_len', 'pop_unique',
+        self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique',
                                                 'fit_avg', 'fit_std', 'fit_best',
                                                 'parsim_avg', 'parsim_std',
                                                 'complexity_avg',
                                                 'time'])
 
         self.evolve_loop, self.evolve_random = self.make_evolve_rates()
+        self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
+        # self.monitor_evoldf = pd.DataFrame(columns=self.evolve_tags)
+        self.monitor_evol = dict.fromkeys(self.evolve_tags, pd.DataFrame(columns=['fitness', 'parsimony', 'lentree', 'evolve_num', 'count']))
 
         self.print_g('gg', f'Init. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
@@ -217,7 +227,7 @@ class ExplainableGP(object):
             try:
                 evolve_random = self.evolve_list_random['from_origin']
             except:
-                evolve_random = {'RandO3': {'evolve_name': 'random trees', 'evolve_rate': 1.00,
+                evolve_random = {'Rand3o': {'evolve_name': 'random trees', 'evolve_rate': 1.00,
                                             'custom_params': {'build_spec': {'size_mode': 'branch_nodes', 'mean_min_max_var': (10, 3, None, 4), 'full_or_grow': 'full'}}}}
         else:
             try:
@@ -234,14 +244,6 @@ class ExplainableGP(object):
 
         return evolve_loop, evolve_random
 
-    def file_make_dir_root(self, file):
-        """
-        Creates the folder only knowing the filekey
-        """
-        p = self.root_dir / file
-        p = file_make_dir(p)
-        return p
-
     def run_backup_save(self):
         """
         automatically saves everything important after a certain amount of time
@@ -250,15 +252,14 @@ class ExplainableGP(object):
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
-        a_helping_dict = {'old_config': None}  # sfeh save complete config?    # sfeh i dont think we need the config
-        run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitor_pd, a_helping_dict  # sfeh use this later, a_helping_dict
+        a_helping_dict = {'self.monitor_evol': self.monitor_evol}  # sfeh save complete config?    # sfeh i dont think we need the config
+        run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitor_df, a_helping_dict  # sfeh use this later, a_helping_dict
 
-        path_backup = self.file_make_dir_root(self.file_locs.file_backup_pickle)
+        path_backup = file_make_dir(self.root_dir / self.paths.backup_p)
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        with Path.open(path_backup, 'wb') as file:
-            pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.printpl('f', f'Backup: {path_backup.as_posix()}')
+            self.printpl('f', f'Backup: {path_backup.as_posix()}')
+
         return
 
     def backup_load(self, path_load_backup=None):
@@ -266,7 +267,7 @@ class ExplainableGP(object):
         backup_load
         If a backup-file is found...
         """
-        path_backup = path_load_backup or self.root_dir / self.file_locs.file_backup_pickle  # sfeh file-load
+        path_backup = path_load_backup or self.root_dir / self.paths.backup_p  # sfeh file-load
 
         if Path.is_file(path_backup):
             self.print_g('g', f'Loading data from backup-file {path_backup}')
@@ -284,7 +285,8 @@ class ExplainableGP(object):
 
             try:
                 self.gen_id, self.pareto, self.pop_base, monitor_pd, a_helping_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
-                self.monitor_pd = monitor_pd  # sfeh
+                self.monitor_df = monitor_pd  # sfeh
+                self.monitor_evol = a_helping_dict.get('self.monitor_evol') or self.monitor_evol
             except:
                 self.gen_id, self.pareto, self.pop_base, m = run_data
                 # self.conf.restart_count += 1
@@ -307,7 +309,7 @@ class ExplainableGP(object):
                             'parsim_std': math.sqrt(max(m['complexity_variance'][time], 0)),
                             'complexity_avg': None,  # np.var(pop_treelen),
                             'time': m['gen_time'][time]}
-                    self.monitor_pd.loc[time] = entr  # sfeh version1 delete this sh
+                    self.monitor_df.loc[time] = entr  # sfeh version1 delete this sh
 
             self.check_update()
 
@@ -352,47 +354,40 @@ class ExplainableGP(object):
         """
         self.pareto.sort(key=lambda x: x[0])
 
-    def plagih_gp_run(self, path_load_backup, force_new_run=False, gen_additionally=None):
+    def plagih_gp_run(self, gen_additionally=None):
         """
         regular plagih run
         """
 
-        if not force_new_run:
-            try:
-                self.backup_load(path_load_backup)
-            except FileNotFoundError as fnfex:
-                print_warning('i', f'No backup file found at {fnfex}. Starting a new run.', print_type=self.print_type)
-            except Exception:
-                raise
-
-        if gen_additionally is not None:
+        if gen_additionally:
             printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
-            self.printpl('i', f'Adding new generations, gen_max was {printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}.\nNew max gen: {self.conf.gen_max}')
+            self.printpl('i', f'Adding new generations, gen_max was {printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}. New max gen: {self.conf.gen_max}')
 
-        self.write_config_yaml()  # just to see what config is running and what the user can set
+        filename = file_make_dir(self.root_dir / self.paths.info_config_yaml)
+        yaml_dump(filename, self.conf, print_type=self.print_type)
 
         if self.gen_id == 0:
             self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
 
             self.time_genstart = time.perf_counter()
-            self.population_tmp = []
             self.gen_create_initial()
 
             self.pop_analyse()
             self.pop_base = self.population_tmp[:]
-            self.file_population_base_karoo('first')  # first gen only
+            self.population_tmp = []
+            # self.file_population_base_karoo('first')  # first gen only # sfeh deprecated?
 
-        while self.run_continues():  # max generation, max time, done...
+        while self.gen_id <= self.conf.gen_max:  # max generation, max time, done...
             # self.printpl('gggg', f'Evolving Generation {self.gen_id}')
             self.gen_id += 1
             self.time_genstart = time.perf_counter()
-            self.population_tmp = []
             self.gen_next_population()
             self.periodical_procedures()
 
             self.pop_analyse()
             self.pop_base = self.population_tmp[:]
+            self.population_tmp = []
             self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')
         else:
             printez('g', f'Done after Generation {self.gen_id}.', print_type=self.print_type)
@@ -401,28 +396,6 @@ class ExplainableGP(object):
         # self.terminate_run()
 
         return
-
-    def write_config_yaml(self):
-        """
-        write the parameters to a .csv file which can also be loaded
-        """
-        # filename = self.root_dir / info_config_yaml
-        filename = self.file_make_dir_root(self.file_locs.info_config_yaml)
-        yaml_dump(filename, self.conf, print_type=self.print_type)
-
-        return
-
-    # def write_config_json(self):
-    #     """
-    #     write the parameters to a .csv file which can also be loaded
-    #     """
-    #
-    #     path = self.file_make_dir_root(self.file_locs.file_info_config_json)
-    #
-    #     with Path.open(path, 'w') as file:
-    #         json.dump(self.conf, file, indent=4)
-    #
-    #     return
 
     def gen_create_random(self, amount):
         """
@@ -559,14 +532,6 @@ class ExplainableGP(object):
 
         return
 
-    def run_continues(self):
-        """
-        checks if the run can continue
-        """
-        cond_1 = self.gen_id <= self.conf.gen_max
-
-        return cond_1
-
     def periodical_procedures(self):
         """
         Every few generations, update the created gp_files
@@ -586,8 +551,7 @@ class ExplainableGP(object):
         sfeh save as yaml?
         """
 
-        path_pareto = self.file_make_dir_root(self.file_locs.file_pareto)
-
+        path_pareto = file_make_dir(self.root_dir / self.paths.file_pareto)
         with Path.open(path_pareto, 'w') as file:
             for (parsim, fitness, cooltree) in self.pareto:
                 file.write(f'\nParsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{cooltree.meta.expr_raw}')
@@ -597,13 +561,10 @@ class ExplainableGP(object):
     def file_population_base_karoo(self, pop_name):
         """
         Save population_* to disk.
-        # sfeh also save pareto/pop as labellists for easy loading?
         """
         file_path = file_make_dir(self.root_dir / f'info/population_{pop_name}.txt')
         with Path.open(file_path, 'w', newline='') as txt_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
-            # target = csv.writer(csv_file, delimiter=',')
-            # if self.gen_id != 0:
-            #     target.writerows([''])  # empty row before each generation
+
             txt_file.write(f'Plagih GP by Simon Fehrer, inspired by Kai Staats Karoo-gp. Generation: {self.gen_id}\n')
 
             for ii, cooltree in enumerate(self.pop_base):
@@ -629,7 +590,7 @@ class ExplainableGP(object):
         # self.pareto_sort()  # is pareto not sorted?  sfeh working? check if sorted.
 
         self.file_pareto_txt()
-        self.file_population_base_karoo('last')
+        # self.file_population_base_karoo('last')
         self.file_pareto_histograms()
         self.file_pareto_latex()
         if 'MTC' in self.conf.name:
@@ -760,7 +721,7 @@ class ExplainableGP(object):
         """
 
         """
-        path_distrib = path_distrib or self.root_dir / self.file_locs.use_distributions_file
+        path_distrib = path_distrib or self.root_dir / self.paths.use_distributions_file
 
         if Path.is_file(path_distrib):
             lambdadist_as_string = yaml_load(path_distrib)
@@ -795,7 +756,7 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
-        path_hist = folder_make_dir(self.root_dir / self.file_locs.folder_histograms)  # todo make this at the start and only use the path
+        path_hist = folder_make_dir(self.root_dir / self.paths.histograms)
 
         for (parsim, fitness, cooltree) in self.pareto:
 
@@ -816,8 +777,8 @@ class ExplainableGP(object):
             ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
             ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
             fig.tight_layout()
-            fig.savefig(path_hist / f'acthist_{parsim}.svg')
             fig.savefig(path_hist / f'acthist_{parsim}.png', dpi=300)
+            # fig.savefig(path_hist / f'acthist_{parsim}.svg')
             plt.close()
         self.printpl('ff', f'Histograms: {path_hist.as_posix()}')
 
@@ -849,14 +810,15 @@ class ExplainableGP(object):
             latex_elements.append('Tight layout:')
             # try:
             forest_viz_tight = latex_tree_get_forest(tree)
-            latex_elements.append(forest_viz_tight)
+            latex_elements.append(forest_viz_tight + '\n')
             # except Exception as tvex:
             #     print_e(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
             #     latex_elements.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
 
         latex_full_doc = latex_treeviz_full(latex_elements)
 
-        path_trees_tex = self.file_make_dir_root(self.file_locs.trees_tex)
+        path_trees_tex = file_make_dir(self.root_dir / self.paths.trees_tex)
+
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
 
@@ -901,7 +863,7 @@ class ExplainableGP(object):
             f"all_agents_more = [{all_more_info}]\n" \
             f"agent_tuples = [{agent_tuples}]\n"
 
-        pth = file_make_dir(self.root_dir / self.file_locs.folder_pycode / f"agents.py")
+        pth = file_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
         with Path.open(pth, 'w') as file:
             file.write(pyc_complete)
             self.printpl('ff', f'Pycode: {pth.as_posix()}')
@@ -1187,7 +1149,7 @@ class ExplainableGP(object):
 
     def pareto_append(self, tree_entry, msg=None):
         if msg:
-            self.printpl('a', f"Paretofront new entry ({msg}): {tree_entry[0]}, {tree_entry[1]}: {tree_entry[2].meta.expr_raw}")
+            self.printpl('a', f"New entry found! ({msg}): {BColors.RESET}{tree_entry[0]}, {tree_entry[1]}:{BColors.RESET} {tree_entry[2].meta.expr_raw}")
         self.pareto.append(tree_entry)
 
         self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or (x[0] == tree_entry[0] and x[1] == tree_entry[1])]
@@ -1394,43 +1356,7 @@ class ExplainableGP(object):
 
         return fitness_train
 
-    def tf_classify_labels_map(self, result):
-
-        """
-        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
-        the quantity of true class labels provided in the samples-csv.
-        Outputs an array of tuples containing the predicted labels based upon the result and corresponding boolean condition triggered.
-
-        For comparison, the original (pre-TensorFlow) cod follows:
-
-            skew = (self.uniques_num / 2) - 1 # '-1' keeps a binary classification splitting over the
-            if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
-            elif solution == self.uniques_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
-            elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
-            else: fitness = 0 # no class match
-        sfeh remove
-
-        """
-        uniques_num = self.env_vars.eval_action.uniques
-        skew = (uniques_num / 2) - 1
-        label_rules = {uniques_num - 1: (
-            tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}
-
-        for class_label in range(uniques_num - 2, 0, -1):
-            cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
-            label_rules[class_label] = tf.cond(cond, lambda: (
-                tf.constant(class_label), tf.constant(f' <= {class_label - skew}')), lambda: label_rules[class_label + 1])
-
-        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(f' <= {0 - skew}')), lambda: label_rules[1])
-
-        return pred_label
-
-    def plot_end(self, xx, yy,
-                 title='', ax_label='', x_label='Generation', y_label='', yscale='linear',
-                 step_post='',  # plt_xparam='',
-                 linestyle='-',
-                 marker='',
-                 set_left=None, set_right=None, set_top=None,
+    def plot_end(self, xx, yy, title='', ax_label='', x_label='Generation', y_label='', step_post='', linestyle='-', marker='', set_left=None, set_right=None, set_top=None,
                  padd_r=1.05, padd_top=1.05,
                  beyond_lines=False,
                  fill_variance=None):
@@ -1438,6 +1364,8 @@ class ExplainableGP(object):
         Make all plots in the same style - and also saving space.
         - Makes pyplots
 
+        :param yy:
+        :param xx:
         :param set_top:
         :param fill_variance:
         :param padd_r:
@@ -1446,7 +1374,6 @@ class ExplainableGP(object):
         :param ax_label: irrelevant for a single curve
         :param x_label: label the x-axis
         :param y_label: label the y-axis
-        :param yscale: only 'linear'.
         :param step_post: makes 'step' plots- can be 'post', 'pre' or [pls google]
 
         :param linestyle: E. g. 'None', 'dashed', '-', ''
@@ -1475,7 +1402,6 @@ class ExplainableGP(object):
             y = np.concatenate([[new_top + 1], y, [y[-1]]])
 
         fig, ax = plt.subplots()
-        ax.set_yscale(yscale)
         ax.set_xlim(min(left, 0), new_right)
         ax.set_ylim(min(bottom, 0), new_top)
         fig.tight_layout()
@@ -1495,12 +1421,12 @@ class ExplainableGP(object):
                 ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
                 ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
 
-        path_plot = folder_make_dir(self.root_dir / self.file_locs.folder_plots)
+        path_plot = folder_make_dir(self.root_dir / self.paths.plots)
 
         plt.tight_layout()
         try:
             plt.savefig(path_plot / f'{title}.png', dpi=300)
-            plt.savefig(path_plot / f'{title}.svg')
+            # plt.savefig(path_plot / f'{title}.svg')
         except PermissionError as permerr:
             print_e(f'Could not save plot: {permerr}')
 
@@ -1511,144 +1437,94 @@ class ExplainableGP(object):
         """
         Make all plots
         """
+
+        """
+        All monitoring infos
+        """
+        # self.monitoring_pd['complexity_avg'].plot()  # sfeh rename
+        fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
+        fig.tight_layout()
+        # plt.tight_layout()
+        plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+        xx = list(self.monitor_df.index)
+
+        axs0 = axs[0]
+        axs0.plot(self.monitor_df['fit_avg'], label='Fitness (average)')
         try:
-            # self.monitoring_pd['complexity_avg'].plot()  # sfeh rename
-            fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
-            fig.tight_layout()
-            # plt.tight_layout()
-            plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-            xx = list(self.monitor_pd.index)
-
-            axs0 = axs[0]
-            axs0.plot(self.monitor_pd['fit_avg'], label='Fitness (average)')
-            try:
-                avg = self.monitor_pd['fit_avg']
-                std = self.monitor_pd['fit_std']
-                axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')
-            except:
-                pass
-            axs0.step(x=xx, y=self.monitor_pd['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
-            axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
-
-            axs1 = axs[1]
-            axs1.plot(self.monitor_pd['parsim_avg'], label='Parsimony (average)')
-            try:
-                p_avg = self.monitor_pd['parsim_avg']
-                p_std = self.monitor_pd['parsim_std']
-                axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('Parsimony (average)')
-            except:
-                pass
-            axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
-
-            axs2 = axs[2]
-            # self.monitor_pd.plot(y=['pop_len', 'pop_unique'], ax=axs2), # axs2.set_title('Created trees (average)')
-            axs2.plot(self.monitor_pd['pop_len'], label='pop size')
-            axs2.plot(self.monitor_pd['pop_unique'], label='unique')
-            axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
-
-            axs3 = axs[3]
-            between_outliers = self.monitor_pd['time'].between(0, 2*self.monitor_pd['time'].mean())
-            axs3.plot(self.monitor_pd['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
-            axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
-
-            """
-            Top level style
-            """
-            axs3.set_xlim(xmin=0), axs3.set_xlabel('Generations')
-            axs0.set_title('Population Monitoring')  # sfeh
-            fig.tight_layout()
-            fig.savefig(self.root_dir / f'monitoring.png', dpi=300)
-            # fig.savefig(self.root_dir / f'monitoring.pdf')  # asd sfeh?
-            # fig.savefig(self.root_dir / f'monitoring.svg')
-
-            plt.close()
+            avg = self.monitor_df['fit_avg']
+            std = self.monitor_df['fit_std']
+            axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')
         except:
-            print_e(f'Yeah... should have used old monitoring dict')
+            pass
+        axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
+        axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
+        axs1 = axs[1]
+        axs1.plot(self.monitor_df['parsim_avg'], label='Parsimony (average)')
+        try:
+            p_avg = self.monitor_df['parsim_avg']
+            p_std = self.monitor_df['parsim_std']
+            axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('Parsimony (average)')
+        except:
+            pass
+        axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
+
+        axs2 = axs[2]
+        # self.monitor_pd.plot(y=['pop_len', 'pop_unique'], ax=axs2), # axs2.set_title('Created trees (average)')
+        axs2.plot(self.monitor_df['pop_len'], label='pop size')
+        axs2.plot(self.monitor_df['pop_unique'], label='unique')
+        axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
+
+        axs3 = axs[3]
+        between_outliers = self.monitor_df['time'].between(0, 2 * self.monitor_df['time'].mean())
+        axs3.plot(self.monitor_df['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
+        axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
+
+        # Top level style
+        axs3.set_xlim(xmin=0), axs3.set_xlabel('Generations')
+        axs0.set_title('Population Monitoring')  # sfeh
+        fig.tight_layout()
+        fig.savefig(self.root_dir / f'monitoring.png', dpi=300)
+        # fig.savefig(self.root_dir / f'monitoring.pdf')  # asd sfeh?
+        # fig.savefig(self.root_dir / f'monitoring.svg')
+
+        plt.close()
+
+        """
+        Plot pareto candidates
+        """
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in self.pareto]
         xx, yy = np.array(tuples).T
-        self.plot_end(xx, yy,
-                      step_post='post', title='pareto dominant candidates', x_label='parsimony',
+        self.plot_end(xx, yy, step_post='post', title='pareto dominant candidates', x_label='parsimony',
                       y_label='regression error',
                       linestyle='dashed',
                       marker='.',
                       set_right=self.conf.parsimony_max,
                       beyond_lines=True)
 
+        """
+        Plots for each tag (too much, i guess)
+        """
+        try:
+            fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
+            fig.tight_layout()
+            for tag in self.evolve_tags:
+                # ['fitness', 'parsimony', 'lentree', 'evolve_num', 'count']
+                axs[0].plot(self.monitor_evol[tag]['fitness'], label=f'{tag}')
+                axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
+                axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
+                # axs[0].set_ylim(ymin=0), axs[0].legend(loc='lower left')
+                # axs[1].set_ylim(ymin=0), axs[1].legend(loc='lower left')
+                # axs[2].set_ylim(ymin=0), axs[2].legend(loc='lower left')
 
-        # def plot_evolution_analysis():
-        #     try:
-        #         # data_tuples = plotendify_me(self.monitoring_dict['best_candidate'])
-        #         # plot_end(data_tuples, path_plots, title='best candidate',
-        #         #          y_label='error', linestyle='dashed', step_where='post')
-        #
-        #         """
-        #         Plots for each tag (too much, i guess)
-        #         """
-        #         evolution_tag = [k for k in self.evolve_loop.keys() if k not in ['reproduce', 'revive pareto']]
-        #
-        #         fig, axs = plt.subplots(2, 1, figsize=(12, 9), sharex=True)  # , figsize=(9, 9)
-        #         # axs[0].set_ylabel(y_label)  # sfeh
-        #         fig.suptitle('GP Evolution analysis')
-        #         evol_performance = self.monitoring_dict['evol_performance']
-        #         for tag in evolution_tag:
-        #
-        #             evolve_function = self.evolve_loop[tag]['evolve_name']
-        #             # [last_evol]['fitness_avg'][gen_id]
-        #             try:
-        #                 xx = [[]] * 4
-        #                 yy = [[]] * 4
-        #                 xx[0], yy[0] = zip(*evol_performance['fitness_avg'][tag].items())
-        #                 xx[1], yy[1] = zip(*evol_performance['parsimony_avg'][tag].items())
-        #                 # xx[2], yy[2] = zip(*evol_performance['evolve_num'][tag].items())
-        #                 # xx2, yy2 = zip(*evol_performance['evolve_num'][tag].items())
-        #                 # size_x, size_y = zip(*evol_performance['lentree_avg'][tag].items())
-        #
-        #                 axs[0].plot(xx[0], yy[0], label=tag)
-        #                 axs[1].plot(xx[1], yy[1], label=tag)
-        #                 # axs[2].plot(xx[2], yy[2], label=tag)
-        #                 # axs[2].plot(size_x, size_y, label=tag)
-        #             except:
-        #                 print_warning('wwww', f'Could not analyse last evolution with  tag: {tag}', print_type=self.print_type)
-        #
-        #         fig.tight_layout()
-        #         plt.savefig(path_plots / f'evolve_analysis.png')
-        #         plt.close()
-        #
-        #         """
-        #         Plots for each tag (too much, i guess)
-        #         """
-        #         evol_funs = dict.fromkeys([v['evolve_name'] for v in self.evolve_loop.values()], [])
-        #         for k, v in self.evolve_loop.items():
-        #             evol_funs['evolve_name'].append(k)
-        #
-        #         fig, axs = plt.subplots(2, 1, figsize=(12, 9), sharex=True)  # , figsize=(9, 9)
-        #         # axs[0].set_ylabel(y_label)  # sfeh
-        #         fig.suptitle('GP Evolution analysis')
-        #         evol_performance = self.monitoring_dict['evol_performance']
-        #         for evoname, tags in evol_funs.items():
-        #             xx = [[]] * 4
-        #             yy = [[]] * 4
-        #             for tag in tags:
-        #                 xx[0], yy[0] = zip(*evol_performance['fitness_avg'][tag].items())
-        #                 xx[1], yy[1] = zip(*evol_performance['parsimony_avg'][tag].items())
-        #                 # xx[2], yy[2] = zip(*evol_performance['evolve_num'][tag].items())
-        #                 # xx[3], yy[3] = zip(*evol_performance['lentree_avg'][tag].items())
-        #                 xxc, yyc = zip(*evol_performance['count'][tag].items())
-        #
-        #                 axs[0].plot(xx0, yy0, label=tag)
-        #                 axs[1].plot(xx1, yy1, label=tag)
-        #                 # axs[2].plot(xx2, yy2, label=tag)
-        #                 # axs[2].plot(size_x, size_y, label=tag)
-        #
-        #         fig.tight_layout()
-        #         plt.savefig(path_plots / f'evolve_analysis.png')
-        #         plt.close()
-        #
-        #     except Exception as ex:
-        #         print_e(f'plot_evolution_analysis failed because of: {ex}')
-        #
-        # plot_evolution_analysis()
+            plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+            fig.savefig(self.root_dir / f'monitoring_evolutions.png', dpi=300)
+            # fig.savefig(self.root_dir / f'monitoring.pdf')  # asd sfeh?
+            # fig.savefig(self.root_dir / f'monitoring.svg')
+            plt.close()
+
+        except Exception as ex:
+            print_e(f'plot_evolution_analysis failed because of: {ex}')
 
         return
 
@@ -1660,6 +1536,7 @@ class ExplainableGP(object):
         - average fitness
         - average tree parsimony
         """
+        t = time.perf_counter()
         gen_id = self.gen_id
         popul = self.population_tmp
 
@@ -1667,27 +1544,31 @@ class ExplainableGP(object):
             raise Exception('Your population isded, its empty. RIP all the computation power used to get here.')
 
         pop_fitness = [cooltree.meta.fitness_train for cooltree in popul]
-        # tmp_evol_performance = {cooltree.meta.last_evolution: {'fitness': cooltree.meta.fitness_train,
-        #                                                        'parsimony': cooltree.meta.parsimony,
-        #                                                        'lentree': len(cooltree)} for cooltree in popul}
-        # for last_evol in tmp_evol_performance:
-        #     if last_evol in self.evolve_loop:
-        #         for evolinfo in ['fitness_avg', 'parsimony_avg', 'lentree_avg', 'evolve_num', 'count']:
-        #
-        #             if self.monitoring_dict['evol_performance'][evolinfo].get(last_evol) is None:
-        #                 self.monitoring_dict['evol_performance'][evolinfo][last_evol] = {}
-        #         try:
-        #             self.monitoring_dict['evol_performance']['fitness_avg'][last_evol][gen_id] = np.sum(tmp_evol_performance[last_evol]['fitness'])
-        #             self.monitoring_dict['evol_performance']['parsimony_avg'][last_evol][gen_id] = np.sum(tmp_evol_performance[last_evol]['parsimony'])
-        #             self.monitoring_dict['evol_performance']['lentree_avg'][last_evol][gen_id] = np.sum(tmp_evol_performance[last_evol]['lentree'])
-        #             self.monitoring_dict['evol_performance']['evolve_num'][last_evol][gen_id] = self.evolve_loop[last_evol]['evolve_num']
-        #             self.monitoring_dict['evol_performance']['count'][last_evol][gen_id] = len(tmp_evol_performance[last_evol])  # currently not used
-        #             # sfeh fitness - last fitness?
-        #         except Exception as ex:
-        #             print_e(f'Could not save evol_performance analysis. {ex}')
-        #     else:
-        #         if last_evol != 'origin':
-        #             print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
+
+        tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness', 'parsimony', 'lentree']))
+        for cooltree in popul:
+            last_evol = cooltree.meta.last_evolution
+            if last_evol in self.evolve_tags:
+                row = {'fitness': cooltree.meta.fitness_train,
+                       'parsimony': cooltree.meta.parsimony,
+                       'lentree': len(cooltree)}
+                tmp_evol_performance[last_evol].loc[self.gen_id] = row
+
+        for last_evol, evodata in tmp_evol_performance.items():
+            if last_evol in self.evolve_loop:
+                try:
+                    row = {'fitness_avg': evodata['fitness'].mean(),
+                           'parsimony_avg': evodata['parsimony'].mean(),
+                           'lentree_avg': evodata['lentree'].mean(),
+                           'evolve_num': self.evolve_loop[last_evol]['evolve_num'],
+                           'count': len(tmp_evol_performance[last_evol])}
+                    self.monitor_evol[last_evol].append(row, ignore_index=True)  #
+                    # sfeh fitness - last fitness?
+                except Exception as ex:
+                    print_e(f'Could not save evol_performance analysis. {ex}')
+            else:
+                if last_evol != 'origin' and last_evol != 'Rand3o':
+                    print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
 
         pop_parsim = [cooltree.meta.parsimony for cooltree in popul]
         pop_treelen = [len(cooltree) for cooltree in popul]
@@ -1698,19 +1579,11 @@ class ExplainableGP(object):
         except:
             self.best_fitness = pop_fitness_best
 
-        # self.monitoring_dict['population_tmp_done-size'][gen_id] = len(popul)
-        # self.monitoring_dict['fitness_average'][gen_id] = np.average(pop_fitness)
-        # self.monitoring_dict['fitness_variance'][gen_id] = np.var(pop_fitness)
-        # self.monitoring_dict['best_candidate'][gen_id] = self.best_fitness
-        # self.monitoring_dict['complexity_average'][gen_id] = np.average(pop_treelen)
-        # self.monitoring_dict['complexity_variance'][gen_id] = np.var(pop_treelen)  # sfeh version1 delete this shit
-        # self.monitoring_dict['gen_time'][gen_id] = gen_time
-
         unique_tree_count = len(set([hash(x) for x in popul]))  # sfeh analyze this?
 
         gen_time = time.perf_counter() - self.time_genstart
 
-        self.monitor_pd.loc[gen_id] = {'pop_len': len(popul),
+        self.monitor_df.loc[gen_id] = {'pop_len': len(popul),
                                        'pop_unique': unique_tree_count,
                                        'fit_avg': np.average(pop_fitness),
                                        'fit_std': np.std(pop_fitness),

@@ -67,8 +67,6 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
         lut = lut or {}  # was none after loading empty file <.<
     except:
         lut = {}
-    eval_count = 0
-    not_evaled = 0
 
     # print(f'Number of best combinations (fitness_sum): {len(combined_best2["fitness_sum"])}, total combinations: {len(combined_all)}')
     # for measr in ['fitness_sum', 'f_norm', 'f_norm', 'f_normsub', 'f_0div', 'f_0sub']:
@@ -106,7 +104,7 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
         except:
             pass
 
-    mp.Process
+    mp.Process()
     with mp.Pool(min(5, mp.cpu_count()-1)) as p:
         results = p.map(mp_evall, open_combinations)
 
@@ -166,9 +164,12 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         # for p, row in parsim_dict.items():
         #     res[p] =
         for p, rows in parsim_dict.items():
-            xx.append(p)
-            exp.append(np.mean([row['experiment'] for row in rows]))
-            exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
+            try:
+                xx.append(p)
+                exp.append(np.mean([row['experiment'] for row in rows]))
+                exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
+            except:
+                pass
 
         # xx = [x['parsim_sum'] for x in res]
         # y_all = [y['experiment'] for y in exp]
@@ -289,7 +290,7 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single):
     combined_all.sort(key=lambda x: x['parsim_sum'])
 
     combined_all = eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
-    return  # todo
+
     combined_all_p = {}
     combined_all_a = [{}, {}, {}]
     for row in combined_all:

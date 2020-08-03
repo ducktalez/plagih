@@ -97,7 +97,8 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
             pass
 
     mp.Process()
-    with mp.Pool(min(5, mp.cpu_count()-1)) as p:
+    print(f'Available cores for mp: {mp.cpu_count()}')
+    with mp.Pool(mp.cpu_count()) as p:
         results = p.map(mp_evall, open_combinations)
 
     result_dict = {a: [b, c] for a, b, c in results}  # [lut_hash, experiment, experiment_safe]
@@ -110,8 +111,10 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
 
     for ii, arow in enumerate(combined_all[:]):
         if arow is not None:
-            e1, e2 = asdasd
+            e1, e2 = lut[hash(f"{arow['codes']}")]
             parsims = arow['parsims']
+            combined_all[ii]['experiment'] = e1
+            combined_all[ii]['experiment_save'] = e2
 
         # combined_best2[measr]['experiment'] = experiment
         # combined_best2[measr]['experiment_safe'] = experiment_safe
@@ -130,7 +133,6 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     parsims.sort()
         
     for measr in ['fitness_sum', 'f_norm', 'f_squared', 'f_normsub', 'f_0div', 'f_0sub']:
-
         """
         plot best (plot)
         todo kreuztabelle?

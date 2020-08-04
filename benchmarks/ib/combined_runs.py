@@ -8,6 +8,7 @@ from pathlib import Path
 import itertools
 import yaml
 import multiprocessing as mp
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,37 +18,28 @@ dir_slurm = Path(os.path.dirname(os.path.realpath(__file__))) / f'../slurm_runs/
 lut_file = Path(os.path.dirname(os.path.realpath(__file__))) / 'lutfile.yaml'
 # dir_slurm = Path.cwd() / f'../slurm_runs/'
 
-
 # def get_combined_runs(agents, parsim_max_sum, parsim_max_single):
 
-def mp_evall(arow):  # todo combined_all or combined_best?
-    parsims = arow['parsims']
-    fitness_sum = arow['fitness_sum']
-    parsim_sum = arow['parsim_sum']
+
+def mp_evall(arow):
+    # parsims = arow['parsims']
+    # fitness_sum = arow['fitness_sum']
+    # parsim_sum = arow['parsim_sum']
     codes = arow['codes']
     lut_hash = hash(f"{arow['codes']}")
 
     # if parsim_sum <= parsim_max_sum:
     #     # if lut_hash in lut:
-    #     #     experiment, experiment_safe = lut[lut_hash]  # todo more evaluations? average?
+    #     #     experiment, experiment_safe = lut[lut_hash]
     #     # else:
     try:
         experiment = eval_combined_agents(codes)
         experiment_safe = eval_combined_agents(codes, complete=False)
-        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe}')
-        # eval_count += 1
-        # if eval_count % 100 == 0:
-        #     print(f'Saving lut after evaluating 100')
-        #     with Path.open(lut_file, 'w') as file:
-        #         _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
+        # print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe}')
         return [lut_hash, experiment, experiment_safe]
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
         print(f'WARNING: arow {arow}')
-        # todo
-        # combined_all.remove(arow)
-        # combined_all[ii] = None
-        # continue
         return None
 
 
@@ -55,7 +47,7 @@ def luthash(arow):
     return hash(f"{arow['codes']}")
 
 
-def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single):
+def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single):
     """
     Evaluating with real IB
     """
@@ -97,7 +89,7 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
             pass
 
     mp.Process()
-    print(f'Available cores for mp: {mp.cpu_count()}')
+    print(f'Available cores for mp: {mp.cpu_count()-1}')  # sfeh -1 cause of my pc ;_;
     with mp.Pool(mp.cpu_count()) as p:
         results = p.map(mp_evall, open_combinations)
 
@@ -112,7 +104,6 @@ def eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
     for ii, arow in enumerate(combined_all[:]):
         if arow is not None:
             e1, e2 = lut[hash(f"{arow['codes']}")]
-            parsims = arow['parsims']
             combined_all[ii]['experiment'] = e1
             combined_all[ii]['experiment_save'] = e2
 
@@ -287,7 +278,7 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single):
 
     combined_all.sort(key=lambda x: x['parsim_sum'])
 
-    combined_all = eval_and_lut(root_dir_eval, combined_all, parsim_max_sum, parsim_max_single)
+    combined_all = eval_and_lut(combined_all, parsim_max_sum, parsim_max_single)
 
     combined_all_p = {}
     combined_all_a = [{}, {}, {}]
@@ -312,7 +303,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
-    parser.add_argument('-parsim_max_sum', type=int, default=33)
+    parser.add_argument('-parsim_max_sum', type=int, default=35)
     parser.add_argument('-parsim_max_single', type=int, default=14)
     args = parser.parse_args()
 

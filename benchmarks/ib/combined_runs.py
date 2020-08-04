@@ -2,7 +2,7 @@
 import argparse
 import os
 import sys
-# sys.path.append('.')
+sys.path.append('../../')
 from benchmarks.ib.ib_eval_agents import *
 from pathlib import Path
 import itertools
@@ -22,9 +22,9 @@ lut_file = Path(os.path.dirname(os.path.realpath(__file__))) / 'lutfile.yaml'
 
 
 def mp_evall(arow):
-    # parsims = arow['parsims']
-    # fitness_sum = arow['fitness_sum']
-    # parsim_sum = arow['parsim_sum']
+    parsims = arow['parsims']
+    fitness_sum = arow['fitness_sum']
+    parsim_sum = arow['parsim_sum']
     codes = arow['codes']
     lut_hash = hash(f"{arow['codes']}")
 
@@ -35,12 +35,12 @@ def mp_evall(arow):
     try:
         experiment = eval_combined_agents(codes)
         experiment_safe = eval_combined_agents(codes, complete=False)
-        # print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe}')
+        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe}')
         return [lut_hash, experiment, experiment_safe]
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
         print(f'WARNING: arow {arow}')
-        return None
+        return [lut_hash, None, None]
 
 
 def luthash(arow):

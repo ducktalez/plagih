@@ -1,10 +1,15 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
 \origin unavailable
 \textclass article
+\begin_preamble
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+\end_preamble
 \use_default_options true
 \begin_modules
 theorems-ams-bytype
@@ -24,8 +29,6 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype false
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -55,7 +58,6 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -64,10 +66,7 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -90,6 +89,10 @@ Vorwort
 
 \begin_layout Verse
 Ich hasse Bücher, die ein Vorwort haben.
+\end_layout
+
+\begin_layout Part
+Are you ready kids?
 \end_layout
 
 \begin_layout Standard
@@ -182,40 +185,446 @@ Dennoch will ich der Frage nicht unterstellen, sie sei trivial.
  sein.
 \end_layout
 
-\begin_layout Part
-Die moralische Wahrheit
+\begin_layout Section
+Meta Ebene
 \end_layout
 
 \begin_layout Standard
-Hallo, werter Leser.
- Ich habe sicher nicht viele Zeilen, um dich von diesem Text zu überzeugen.
- Deshalb bin ich zu einer dich provozierenden, harten Aussage gezwungen,
- um deine Aufmerksamkeit zu gewinnen:
+Noch viel interessanter ist, dass wir unser Gegenüber nicht einfach vom
+ Gegenteil überzeugen können.
+ Selbst nach stundenlangen Diskussionen nicht.
+ Das hat mich irgendwie immer gestört, weil meine Punkte ja (wie sollte
+ es denn anders sein), die logischen waren.
+ Die Diskussion über eine Diskussion ist eine Meta-diskssion und noch fast
+ noch frustrierender als die eigentliche Diskussion.
 \end_layout
 
 \begin_layout Standard
-Kein Philosophen, Denker, Jurist, Gelehrter und besonders nicht du konnten
- jemals wirklich erklären, was richtig oder falsch ist, besonders nicht
- aus moralischer Sicht.
- Ich schon, und ich werde es dir verraten und erklären.
+Eines meiner Lieblingsbeispiele: Mit meinem Vater diskutierte ich einst
+ eine der wichtigsten Fragen der Menschheit, 
+\begin_inset Quotes eld
+\end_inset
+
+Das Wäsche Paradoxon
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Die Problemstellung lautete folgendermaßen: Ich hatte meine Wäsche nicht
+ aufgeräumt und mein Vater war sauer.
+ Eigentlich zurecht, so hatten wir das ausgemacht.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Gleich
+\begin_inset Quotes erd
+\end_inset
+
+, sagte ich.
+ Mein Vater, nun sauer, 
+\begin_inset Quotes eld
+\end_inset
+
+das hast du gestern auch schon gesagt, da lag es nach einer Stunde immernoch
+ da!
+\begin_inset Quotes erd
+\end_inset
+
+.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Aber gestern musste ich noch die Aufgabe vor 16:00 fertig machen, nützt
+ nichts, die Abgabe für das Übungsblatt war um 16:00, danach habe ich das
+ ja gemacht.
+ Oder soll ich mein Studium für einen Haufen Wäsche abbrechen? Außerdem
+ ist das mein Zimmer, hier kann ich die Wäsche rumliegen lassen wie ich
+ will!
+\begin_inset Quotes erd
+\end_inset
+
+ Geniale Antwort, fand ich, schließlich hatte ich gleich mehrere Punkte
+ genannt, bei denen das moralische Momentum auf meiner Seite lag.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Letzten Monat war das genau dasselbe.
+ Selbst am nächsten Tag lag sie noch rum, weißt du eigentlich, wie zermürbend
+ das ist?
+\begin_inset Quotes erd
+\end_inset
+
+ Ja gut, da hatte er recht.
+ Aber 
+\begin_inset Quotes eld
+\end_inset
+
+Ja, wow, letzten Monat.
+ Ein weiterer Strich auf der Liste der ewigen Schuld, die geführt wird seit
+ ich drei Jahre alt bin?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Ich glaube, viel muss ich dazu nicht sagen.
+ Kennt vermutlich jeder.
+ Im Kurzdurchlauf ging es übrigens so weiter:
+\end_layout
+
+\begin_layout Itemize
+Mein Vater sagt 
+\begin_inset Quotes eld
+\end_inset
+
+Wenn ich meine Wäsche selbst wasche, kann ich machen was ich will
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Ich fing an, meine Wäsche größtenteils selbst zu waschen
+\end_layout
+
+\begin_layout Itemize
+Mein Vater ist immernoch genervt, wir führen denselben Streit, diesmal als
+ Metadiskussion.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Wir haben gesagt, wenn ich selbst wasche, kann ich tun, was ich will!
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+Nein, darauf haben wir uns sicher nie geeinigt
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+Aber genau das hast du gesagt.
+ Woran soll ich mich denn halten wenn nichtmal sowas gilt?
+\begin_inset Quotes erd
+\end_inset
+
+ - Andi: 
+\begin_inset Quotes eld
+\end_inset
+
+Ja, selbst wenn ich das gesagt habe - es stört mich immernoch massiv.
+ Ich kann das nicht ändern, ich halte das für falsch.
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Was für eine gesunde, konstruktive Diskussion voller Kompromisse, nicht?
+ 
+\end_layout
+
+\begin_layout Standard
+Mein Verhalten habe ich übrigens erst geändert, als ich ausgezogen bin und
+ gemerkt habe, dass es wirklich eigentlich gar nicht so blöd ist etwas Ordnung
+ zu halten.
+ Erzählt habe ich die Geschichte aber aus einem anderen Grund: Den Punkt,
+ ob es denn richtig wäre, meine Wäsche wegzuräumen, haben wir nie geklärt,
+ sondern nur eine sinnlose Diskussion auf der Meta-ebene geführt.
+\end_layout
+
+\begin_layout Standard
+Eine Diskussion auf der Meta-ebene macht dabei prinzipiell zwar schon Sinn,
+ aber nur, wenn sie Zielgerichtet ist.
+ Mein Vater und ich haben eigentlich zwei Metadiskussionen gleichzeitig
+ geführt, die sich wie ein Baum immer weiter aufgesplittet haben, und das
+ endet dann in einem Schlafrhythmusgebundenen Abbruch um 02:00 morgens an
+ einem Montag.
+ Keine Sorge, die Wäsche war mittlerweile aufgeräumt.
+\end_layout
+
+\begin_layout Standard
+Eigentlich hätte jemand auf den Tisch hauen müssen und sagen 
+\begin_inset Quotes eld
+\end_inset
+
+Halte ein, Diskussionspartner, und erhöre er meinen Rat! Ist es denn nicht
+ der Wahrheit begeben, dass wir eine Metadiskussin führen?
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+Hört hört, wie wahr, wie wahr! Nun sehe ich es auch! So lasset uns Speis
+ und Trank, Wein und Weib holen und den Streit für heute beilegen, so wahr
+ mir Gott beistehe
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+Hört hört! Dem sei nichts einzuwänden! Diener! So lasset das fetteste Schwein
+ schlachten und den besten Wein holen.
+ Wir wollen bis zum Morgengrauen kein Wort mehr verlieren.
+\begin_inset Quotes erd
+\end_inset
+
+ Dem hatte niemand etwas einzuwänden und so wurde die Nacht gegessen, getrunken,
+ ausgelassen gefeiert und niemand dachte an den Streit.
+ Vermutlich wusste eh schon niemand mehr, wer den Streit angefangen hatte.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Bild einfügen
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Am nächsten Morgen, nach einer langen Nacht, lagen die zwei immernoch zwischen
+ halb geöffneten Weinflaschen, Überresten von Auerochsbraten.
+ und ein paar halbnackten Huren.
+ Die meisten Gäste waren schon gegangen oder hatten sich in ein Zimmer zurückgez
+ogen.
+ Es roch nach einer Mischung von Zedernholz und Sommermorgen.
+ Der erste Sonnenstrahl kämpfte sich an der fernen Grenze des Horizontes
+ vorbei.
+ Normal wären sie nun auch schon in ihren Gemächern, mit einer oder mehreren
+ Begleitungen - doch nicht heute.
+ Der Moment war viel zu schön, um ihn nicht in ganzen Zügen auszukosten.
+ Viel zu lange schon hatten sie nicht mehr so zusammen gefeiert, ja nicht
+ mal darüber nachgedacht zu feiern.
+ Sie hatten schon vergessen wie es war, zusammen zu lachen, zu weinen, zu
+ witzeln.
+ Oder nur miteinander zu reden, egal über was.
+ Über die Händler, die bald kommen würden um ihre Ware zu verkaufen.
+ Über die Enten, die sich vor kurzem in ihrem Teich angesiedelt hatten.
+ Wie die Kinder aus ihrem Dorf mit ihnen spielten und wie schön es war,
+ die ihnen dabei zuzusehen.
+ Wie sehr sie beide ihre alte Hündin Beyond vermissten.
+ Wie sie mit ihr zusammen unterwegs waren, bei Sonne, Regen, Hagel und Sturm.
+ Ob es Gott gibt und wenn ja, ob er sich wohl gerade dieselbe Frage stellt.
+ Sie redeten über den süßen Pfirsichhintern der Tänzerinnen und wie vergänglich
+ Pfirsiche doch sind.
+ Wie sehr sie sich darauf freuen würden, wenn die Enten im Teich junge bekommen
+ würden.
+ Über eine einfachere Welt.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Weißt du, was das absurdeste ist?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Beide schauten aus dem Fenster, fasziniert, wie ein Loch in der Wand die
+ mystische Schönheit der Sonnenstrahlen in Szene setzte, die sich langsam,
+ aber dennoch mit der faszinierenden Schönheit der unaufhaltbaren Gewissheit
+ die Wand hochkräuselten.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Ich weiß gar nicht mehr, wie das hier hergekommen sind.
+\begin_inset Quotes erd
+\end_inset
+
+ Ich musste schmunzeln als er zum dritten Mal versuchte, aus einer leeren
+ Weinflasche zu trinken.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Ja.
+\end_layout
+
+\begin_layout Section
+Du bist eine der Hauptfiguren der Geschichte
+\end_layout
+
+\begin_layout Standard
+die ausschließlich den Zweck hatte, dich zu verwirren, dich aus deiner Wohlfühlz
+one herauszuholen.
+ Um dies zu erreichen war ich sogar bereit, eine der elementarsten Grundprämisse
+n eines Buches zu ignorieren: Die Unterteilende Funktion der Überschriften.
+\begin_inset Quotes erd
+\end_inset
+
+ Er schluckte.
+ Noch immer die Flasche in der Hand wurde ihm klar, dass wirklich er gemeint
+ war.
+ Wirklich er? Er schaute nochmal auf den letzten Abschnitt und sah die fehlenden
+ Anführungsstriche am Satzende.
+ Natürlich waren sie ihm aufgefallen, genau wie das komplett absurde übergehen
+ von einer Erklärung hin zu einer Geschichte von sich versöhnenden Brüdern
+ aus dem Mittelalter.
+ Teilweise hatte er sogar Sätze nachgelesen.
+ Aber um die Uhrzeit einen solchen Aufwand für einen so kurzen Abschnitt
+ betreiben? Eher nicht.
+ Er hielt kurz inne.
+ War er denn immernoch gemeint? Ist das hier der nächste Abschnitt der Geschicht
+e, die für ihn geschrieben wird? Er könnte jederzeit aufhören zu lesen,
+ das ist klar.
+ Oder sich nicht mehr mit der beschriebenen Person identifizieren.
+ Oder aber...
+ mal 
+\begin_inset Quotes eld
+\end_inset
+
+outside the box
+\begin_inset Quotes erd
+\end_inset
+
+ gedacht, könntest du die Geschichte weiterschreiben? 
+\begin_inset Newline newline
+\end_inset
+
+Ach ne, warte.
+ Das geht nicht.
+ Ich schreibe ja.
+ Haha, cool.
+ Fast hättest du mich überrumpelt :D
+\end_layout
+
+\begin_layout Standard
+Eigentlich echt absurd, was ich hier gerade ausprobiert habe.
+ Also, ernsthaft: Das Experiment ist hier vorbei.
+ Dennoch wüsste ich gerade gerne, ob mein kleiner Trick funktioniert hat.
+ Konnte ich dich als Leser, überraschen oder nur verwirren? 
+\end_layout
+
+\begin_layout Standard
+Egal, was es von beidem war, ich habe damit mein Ziel, deinen Neuronanplastizitä
+t durch diesen Reiz auch nur leicht zu beeinflussen, erreicht.
+ (falls du übrigens gar nicht überrascht warst warst du entweder zu unaufmerksam
+ oder verrückt).
+ Ich fand die Idee eigentlich ganz lustig.
+ Zurück zum Hauptthema: Es ist stets von Vorteil, wenn man bereit ist, 
+\begin_inset Quotes eld
+\end_inset
+
+outside the box
+\begin_inset Quotes erd
+\end_inset
+
+ zu denken, egal in welcher Dimension oder Metadimension-potenz.
+ Kann man einen solchen Loop nicht auflösen, ist man gefangener der Gesetzmäßigk
+eiten des Loops, in dem man sich befindet.
+\end_layout
+
+\begin_layout Standard
+Um wieder konkret auf die Diskussion von mir und meinem Vater zurückzukommen,
+ war diese natürlich nicht umsonst und gerade bei Diskussionen ist man eh
+ recht aufmerksam.
+ Dennoch kann es einem leicht passieren, dass man ewig diskutiert, ohne
+ weiterzukommen.
+\end_layout
+
+\begin_layout Standard
+Jetzt aber genug dieser maßlosen Metadiskussion, ich bin schon Kilometer
+ von meinem Plan abgewichen.
+ Ich hatte ja ein Ziel, und zwar zu erklären, warum man sich in solchen
+ Fällen auf das Hauptziel konzentrieren sollte.
+ Auf dieses sollte man hinarbeiten.
+ Wie ein informatiker, der Zeile für Zeile sein Programm verfolgt, bis er
+ das Problem gefunden hat.
+\end_layout
+
+\begin_layout Standard
+Für mich war das bei dem Wäscheproblem nicht mehr nötig.
+ Vielleicht war das Grundproblem, dass unsere Wertevorstellungen hier einfach
+ zu unterschiedlich waren.
+ Vielleicht war der Streit im Nachhinein sogar die beste Lösung für unseren
+ Streit und, für mich, sogar noch ein Rückblick auf eine schöne Geschichte
+ von zwei Individuen, die eigentlich gerne zusammen Zeit verbringen.
+\end_layout
+
+\begin_layout Section
+Der kleinste gemeinsame Nenner
+\end_layout
+
+\begin_layout Standard
+Ich wünschte gerade, ich hätte den letzten Abschnitt nicht so aprubt beendet.
+ Obwohl, nachdem ich den vorletzten Abschnitt in seiner Funktion als Abschnitt
+ so mit Füßen getreten habe, vielleicht ein Stückchen wiedergutmachung.
+\end_layout
+
+\begin_layout Standard
+Wenn ich eine chance habe, dich mit diesem Buch irgendwie zu manipulieren,
+ ist jetzt vermutlich meine letzte Chance.
+ Dies wird auch der letzte Abschnitt sein, den ich so direkt schreibe, als
+ würden wir uns gerade gegenüber sitzen.
+ Danach hageln die Formeln, Logiken und Erkenntnisse mit einer unlesbaren
+ Trockenheit in dich ein, sodass selbst ein Immanuel Kant eine Träne in
+ den Augen hätte.
+ Wie du vermutlich auch schon vermutet hast, wird dich dieses Buch dauerhaft
+ verändern.
+ Wir werden Wege ergründen, die kein Philosoph, Denker, Jurist, Gelehrter
+ und auch du nicht erklären konnte.
+ Du wirst Dinge lernen, nicht weil du sie hier liest, sondern weil du Denkprozes
+se durchmachen wirst.
+ Du wirst lernen, welche die wichtigen Fragen sind, die dich beschäftigen,
+ wie die Antworten auf diese sind, und das ganze ohne, dass es hier explizit
+ stehen würde.
+ Das Gefühl, was richtig oder falsch ist, wird zum Wissen, was richtig oder
+ falsch ist, besonders aus moralischer Sicht.
  Deine Denkprozesse werden sich dabei vermutlich drastisch ändern, ins philosoph
 ische, logische bis hin zur Selbsterkenntnis.
  Personen, die dieses Wissen nicht haben, wirst du belächeln, aber auch
  Diskussionen werden schwerer zu führen sein, da alle anderen dir wie ungebildet
 e Kleinkinder vorkommen, die selbst einfache Zusammenhänge nicht erkennen.
- Wie weit du aller verstehen wirst, weiß ich nicht.
- Aber es wird dein Leben verändern.
+ Du wirst die Beweggründe anderer Menschen leicht ergründen können, weil
+ du weißt, wie sie funktionieren.
+ Du lernst, wie du sie so beeinflussen kannst, dass sie das tun, was du
+ willst, weil du ihnen zeigst, dass sie es schon immer wollten.
+ Aber du wirst es nicht verlangen.
 \end_layout
 
 \begin_layout Standard
-Wunderbar.
+Nachdem ich nun die Erwartungen auf das unhaltbare Maximum gehoben habe,
+ sodass ich sie, wie du schon erkannt hast, niemals halten kann, können
+ wir uns jetzt den wichtigen Dingen widmen: Der Cheeseburger kostet in Österreic
+h noch einen Euro.
 \end_layout
 
 \begin_layout Standard
-Nach dem starken Start, mit Erwartungen, die ich, wie du denkst, niemals
- halten werde können, können wir uns jetzt den wichtigen Dingen widmen.
- Zuerst solltest du dir aber eine Frage stellen: Woher weißt du, was richtig
- ist?
+Und jetzt wirklich, wir klären jetzt mal, was richtig ist.
+ Woher weißt du, was richtig ist?
+\end_layout
+
+\begin_layout Part
+Die moralische Wahrheit
 \end_layout
 
 \begin_layout Part
@@ -223,11 +632,116 @@ Vorbereitung
 \end_layout
 
 \begin_layout Standard
-Diese ist vermutlich das wichtigste Kapitel und die nächsten Zeilen sind
- die wichtigsten Zeilen.
- Wir müssen nämlich jetzt einen Wandel in unseren Denkprozessen initialisieren,
- von dem wir später profitieren können, indem wir unsere bestehenden Denkstruktu
-ren aufbrechen.
+Vielleicht ist euch beim lesen aufgefallen, dass es bereits zwei Intros
+ gab und diese Zeile aktuell das dritte ist.
+ Obwohl das nicht geplant war, bildet diese aber den perfekte Zirkelschluss
+ mit meinem ersten Intro:
+\end_layout
+
+\begin_layout Standard
+Noch ist mein Ziel, zu verwirren, um feststehende Denkprozesse aufzulösen.
+ Hierfür werden wir in diesem Abschnitt ein paar Gedankenexperimente machen,
+ mit dem Ziel unsere Plastizität zwischen den Neuronen etwas zu lockern.
+ Wir unterscheiden uns prinzipiell nicht großartig von einem Computer, einer
+ künstlichen Intelligenz, die sich selbst beigebracht hat, Probleme zu lösen.
+ Unser Gehirn ist zwar viel universeller anwendbar, komplexer und vor allem
+ effizienter als ein künstliches neuronales Netz, aber dennoch können bereits
+ Probleme besser gelöst werden als vom Menschen.
+ Eine Maschine hat dabei einen wichtigen Vorteil, sie kann immer weiterlernen.
+ Wenn wir jung sind ist unser Gehirn auch noch plastischer.
+ Wir lernen viel mehr, aber über die Zeit festigen sich unsere Denkstrukturen.
+ Unsere Träume werden weniger spektakulär.
+ Unsere Fantasie nimmt ab und Filme, die früher das höchste der Gefühle
+ waren, sind heutzutage nur noch primitiv.
+ Schade eigentlich.
+ Vielleicht sehr ich die Vergangenheit mit einer mich blendenden Brille
+ der Nostalgie, aber ich fand es immer schön, mich in eine Welt zu versetzen,
+ wo ich Son Gokus Stelle im Kampf gegen Freeza übernahm und diesen leichtfüßig,
+ mit meiner unvorstellbarer Macht und einem coolen, arroganz angehauchtem
+ Lächeln besiegte.
+ Ein schönes Gefühl, doch jetzt kann ich mir nur noch den Moment vorstellen,
+ an dem ich Freezer besiegt habe und kein neuer Gegner da ist.
+ Es herrscht Frieden.
+ Ich erinner mich, wie bescheuert eigentlich das Powercreep in der Serie
+ war - um die Spannung aufreht zu erhalten, mussten die Gegner einfach immer
+ stärker werden.
+ Wir haben es verstanden.
+ Ein Trick, der seit Dragonball auch nie mehr auf diese Art und weise verwendet
+ wurde.
+ Naruto hat dieses Problem durch einen lang anhaltenden Powercreep gelöst.
+ One piece wusste nicht, wie es lösbar hätte sein können und so musste nach
+ 500 Folgen eine neue Superkraft eingeführt werden.
+ Aber immer dasselbe.
+ Immerhin wurden die Geschichten komplexer! One punch man war auch cool.
+ Der war von Anfang an der stärkste und nichts konnte ihm das Wasser reichen.
+ Wenn ich heute Spongebob schaue, identifiziere ich mich immer mehr mit
+ Thaddäus.
+ Aber eigentlich schaue ich eh alte Folgen Scrubs und Two and a Half Men
+ während ich countertsrike source, mittlerweile 16 Jahre alt, im surf-modus
+ zocke.
+ Das ist entspannent.
+\end_layout
+
+\begin_layout Standard
+Ziemlich düstere Ansicht, so schlimm ist es eigentlich gar nicht.
+ Schaut man in die andere Richtung, was noch kommt, wieht man allerdings
+ auch nichts wirklich tolles.
+ Oder, wie ist es mit 60 Jahren? Nicht nur ist es kaum mehr möglich noch
+ neue Sachen zu lernen, oft wird sich auch einfach aktiv dagegen entschieden,
+ neue Dinge kennen zu lernen.
+ Ist das schön? Lernen ist das, was unser Leben ausmacht und spannend macht.
+ Vielleicht gehörtes auch zum lernprozess dazu, sich slebst zu lernen, dass
+ es sich nun ausgelehrt hat.
+ Aber dieses Narrativ des Alterns erfüllt mich jetzt schon mit Leere.
+ Nichts lernen zu können scheint ein Zustand zu sein, auf den man hinarbeiten
+ sollte und den man nie erreichen will.
+ 
+\end_layout
+
+\begin_layout Standard
+Es ist das dauerhafteste aller Ziele.
+ Geld beeindruckt nur arme Menschen, Aussehen vergeht, auch ein guter Freundeskr
+eis kann sich anpassen.
+ Viele sozial media follower haben? Sicher auch eine Fähigkeit, die man
+ sich einfach mal erlernen könnte - genau wie die anderen, Man strebt nicht
+ nur nach dem nächsten Ziel, sondern nach allen Zielen gleichzeitig und
+ erreicht somit sogar alle Unterziele schneller.
+ Welch ein Paradoxon.
+\end_layout
+
+\begin_layout Standard
+Wie äußert sich diese Einstellung im echten Leben?
+\end_layout
+
+\begin_layout Standard
+Egal, wie bescheuert es klingen mag, was dein Freund vorschlägt, du bist
+ dabei.
+ Eine schlechte Erfahrung ist kein Grund für schlechte Laune, sondern Grund
+ zur Freude über das erlernte.
+ Und darüber, dass du dich dennoch in die nächste Erfahrung stürzt.
+ Das Wissen, dass dich erfahrungen neuronal.chemisch prägen und, einer Spitzenkar
+riere in der Politik, 
+\begin_inset Quotes eld
+\end_inset
+
+nichts festes
+\begin_inset Quotes erd
+\end_inset
+
+ mit girls und zuletzt eine wissenschaftliche Neuerung zu erschaffen, reiht
+ sich diesmal ein Ziel ein, das dort auch dauerhaft verweilen könnte.
+ Lernen ist immer gut, auch wenn du nach einiger Zeit dieses Ziel vielleicht
+ wieder ersetzt.
+ du eigenshaften sammelst, die dir später im Leben viel bringen werden.
+ Auch eine schlechte phase muss durchlebt werden, in der du dich nicht freuen
+ kannst, aber du gehst aus dieser gestärkt raus.
+ Du merkst, dass es viel lustiger ist, von die Geschichten die aus blöden
+ Fehlern entstanden sind zu erzählen als von den langweiligen Urlauben auf
+ mit all inclusive.
+ Ein All inclusive Urlaub ist aber eben auch eine Erfahrung, die es sich
+ lohnt zu machen.
+ dem wir später profitieren können, indem wir unsere bestehenden Denkstrukturen
+ aufbrechen.
  Inwiefern? Nunja, so, wie man es von einem Philosophen erwarten würde.
  Kurze Metainformation, nicht nur ist es wichtig, generell alles zu hinterfragen
 , das Hinterfragen zu hinterfragen ist einer der wichtigsten Denkprozesse
@@ -236,28 +750,22 @@ ren aufbrechen.
 \end_layout
 
 \begin_layout Standard
-Warum ist das wichtig? Starten wir mit einer kurzen Exkursion in die künstliche
- Intelligenz.
- Ein komplexer Teilbereich der Informatik, von dem ich aber glaube, dass
- er wichtig zu verstehen ist.
- Funfact: Ich schreibe gerade meine Masterarbeit in diesem Bereich und ich
- denke, dass ich dadurch sehr viel gelernt habe.
- Gelernt habe.
- Denkprozesse durchgemacht habe.
- Lustige Sache, bis vor ein paar Sekunden endete der letzte Satz noch mit
+Auch auf einem Meta-level gibt es einem die sicherheit, dass man mit einer
+ guten Einstellung an Sachen herangeht.
+ Dass du nicht auf dein Leben zurückblicken wirst mit dem Wunsch, du hättest
+ damals etwas anderes gemacht.
+ Du hast all das gemacht, was du für richtig gehalten hast.
+ Selbst der Entscheid, nicht mehr zu lernen ist dann retrospektiv nichtig.
  
-\begin_inset Quotes eld
-\end_inset
+\end_layout
 
-Wissen erlangt
-\begin_inset Quotes erd
-\end_inset
+\begin_layout Section
+Lernen ist der Sinn des Lebens - sagt mir zumindest mein Gehirn
+\end_layout
 
- habe.
- Doch genau das ist es, was ich mit diesen Zeilen nicht erreichen will.
- Sich Wissen aneignenm, Dinge auswendig lernen, ist zwar wichtig, da keine
- Fähigkeit unseres Gehirns vernachlässigt werden sollte, aber Verständnis
- (einige würden sagen 
+\begin_layout Standard
+Dinge auswendig lernen, ist zwar wichtig, da keine Fähigkeit unseres Gehirns
+ vernachlässigt werden sollte, aber Verständnis (einige würden sagen 
 \begin_inset Quotes eld
 \end_inset
 
@@ -266,8 +774,154 @@ Erleuchtung
 \end_inset
 
 ) erlangt man nicht mit auswendig lernen.
- Doch nun überlegen wir mal, wir wie ein Leben lang gelernt haben und aus
- welcher Motivation.
+ Um das lernen nicht zu verlernen, muss man vieles lernen - unter anderem,
+ ganz konkret, wie das Gehirn lernt.
+ Das Gehirn erkennt sehr, sehr gerne Muster.
+ Gesichter zum Beispiel.
+ Raubtiere im Busch.
+ Da sind wir sehr kompetent, es ist eine Funktion des Gehirns, die uns oft
+ Gesichter auh dann erkennen lässst, wenn es keine gibt.
+ Jesus auf dem Toastbrot, beispielsweise.
+ Auch bei physikalischen begebenheiten haben wir ein Grundverständnis und
+ können Probleme übertragen.
+ Wie Kant schrieb, ich muss mein Haus nicht erst untergraben um zu wissen,
+ dass es einstürzen wird.
+ Diese Fähigkeit ist in uns auch so sark verankert, dass wir bestimte Grundängst
+e haben, beispielsweise vor Höhe, die auf unglaublich viele Dinge übertragen
+ werden können, ohne dass wir direkt empirische Erfahrungen auswerten müssen.
+ Deswegen können wir auch eine KI beim lernen beobachten und für unseren
+ eigenen Lernprozess wichtige Schlüsse ziehen.
+ 
+\end_layout
+
+\begin_layout Standard
+Auf was will ich eigentlich grad hinaus? KIs lernen stets weiter.
+ Sie versuchen zwar allgemein, immer die für sie beste Entscheidung zu treffen,
+ mit einer kleinen Wahrscheinlichkeit, epsilon, machen sie aber eine zufällige
+ Aktion.
+ Es gibt genau genommen nur eine Möglichkeit, wie ein neuronales Netz nichts
+ mehr lernen kann: Wenn es den Zweck seiner Erschaffung gelöst hat, sein
+ Zziel erreicht hat.
+ Dann würde der Entwickler das Modell speichern, den 
+\begin_inset Quotes eld
+\end_inset
+
+exploraton
+\begin_inset Quotes erd
+\end_inset
+
+-parameter abstellen - ausgelernt.
+ Vermutlich sogar für immer.
+ Falls das Netz doch irgendwann weiter trainiert werden sollte, ibts es
+ vermutlich schon neue Architekturen, die komplexer sind und die lernen,
+ das Problem besser zu lösen.
+\end_layout
+
+\begin_layout Standard
+man könnte auch sagen, die KI, die lernt ein primitives Problem gut zu lösen,
+ stirbt in diesem Moment - es wird zu einem statischen, deterministischen
+ Modell.
+ Zu einer umfangreichen, konstanten.
+ Wer gkaubt etwas zu sein, hört auf, etwas zu werden.
+ Dieser Datz stammte von Oliver Kahn, aus dem Bayern Jahrbuch 97/98, ein
+ weiser Mann.
+ Ich glaube, irgend so ein sokrates hat das auch mal gesagt.
+ Es ist zwar schön zu wissen, dass man gar nicht komplett aufhören kann
+ zu lernen und dass du, also dein Gehirn, stellvertretend als Verwalter
+ seiner selbst, also dir, sein eigener Product manager ist - also Environment,
+ Hausmeister der Rewardfunktion, Agent und externer auditor, aber dennoch
+ kann man sich eine Idee ableiten.
+\end_layout
+
+\begin_layout Standard
+Wir können uns auch noch ein anderes Problem anschauen, das sehr weit verbreitet
+ ist: Overfiting.
+ Wird ein neuronales Netz zu lange auf den selben Daten trainiert, verliert
+ es irgendwann die Fähigkeit, das Problem auf andere Daten zu übertragen.
+ Klassischerweise würde man sagenm ein Fachidiot oder auch Bulemielernen.
+ Ein Gedicht auswendig zu lernen bedeutet noch lange nicht, dass man es
+ verstanden hat.
+ Beim Schach hat man mit weiß tendenziell die besseren Gewinnchancen - so
+ kann man mit der Eröffnung und einem Zug Vorsprung die Eröffnung und das
+ Spiel stärker beeinflussen als der Gegner.
+ Probiert man bei seinem Gegner eine neuartige Eröffnung aus, die man mithilfe
+ von Schachcomputern vorbereitet hat, findet sich aber dann doch in einer
+ Stellung wieder, die ausgeglichen scheint - so hat dein Gegner, der sich
+ nicht darauf vorbereitet hat die weitaus besseren Gewinnchancen, da er
+ die Stellung versteht und nich auswendig gelernt hat.
+\end_layout
+
+\begin_layout Standard
+Selbst in Situationen, die wie geschaffen für overfitting aussehen trifft
+ das nicht zu.
+\end_layout
+
+\begin_layout Standard
+Ein deutscher Speerwerfer hatte ein Problem: Er schien Talent zu haben,
+ aber stagnierte Leistungstechnisch im europaweiten Mittelfeld.
+ Aushilfe schaffte eine neue Trainingsmethode eines Sportwissenschaftlers,
+ der sich mit differentiellem lernen auseinandersetzte: Ein Jahr lang nicht
+ mit rechts werfen und nicht mit Speeren.
+ Nach einem Jahr mit dieser komischen Trainingsmethode, natürlich, ohne
+ das Fitnesstraining zu vernachlässigen, übertraf er bei seinem ersten Wurf
+ mit rechts seinen persönlichen Rekord um zwei Meter - bei Speerwerfen eine
+ unglaubliche Verbesserung.
+\end_layout
+
+\begin_layout Standard
+Was mich hier so fasziniert ist, dass Speerwerfen das sportartifizierte
+ overfitting trainigsfestival sein sollte.
+ Die einzige intellektuelle Leistung in dieser schier endlosen Reihe an
+ wiederholung von Würfen scheint lediglich zu sein, nicht zu übertreten.
+ Wie sollte gerade hier differentielles lernen helfen?
+\end_layout
+
+\begin_layout Standard
+Gute Frage, ich habe keine Ahnung.
+ Ich würde vermuten, dass selbst wenn overfitting das Ziel ist, lokale optima
+ im high end bereich nicht so einfach verlassen werden können.
+ Das Gehirn langweilt sich außerdem nicht gerne, zwingt man es das lernen
+ aufzugeben, wird man vielleicht indirekt durch das Laufen auf Spaarflamme
+ bestraft.
+ Auch ein Teufelskreis und Interaktionen mit anderen Alltagsverhalten ist
+ denkbar.
+\end_layout
+
+\begin_layout Standard
+Vermutlich aber ist es wirklich das bessere allgemeine Verständnis, welches
+ die Neuronen im Gehirn nochmal ganz anders aktiviert haben, es gezwungen
+ haben, dasselbe Verständnis nochmal, aber dennoch ein bisschen anders zu
+ erlernen, weshalb eine so counterintuitive Trainingsmethode funktionieren
+ konnte.
+\end_layout
+
+\begin_layout Standard
+Also egal wie, reize dein Gehirn.
+\end_layout
+
+\begin_layout Standard
+Wenn du eine Formel nicht verstehst, lerne zu häkeln.
+ Wenn du bei deinen Präsentationen immer dieselben Ticks hast , die dich
+ unsicher wirken lassen, mach einen Jagdschein.
+ Zugegeben, diese Beispiele sind vermutlich Murks.
+ Ich kann mir zumindest nicht, auch nicht mit viel Fantasie für differentielles
+ lernen vorstellen, dass man hier etwas mitnehmen könnte.
+ Differentielles lernen bedeutet eben nicht, dass du besser wirst, egal
+ was du machst.
+ Es muss schon irgendwie Teilkomponente lernen, die zumindest ähnlich sind.
+ Die andere hand zu nehmen ist vermutlich aus symmetriegründen, der unterteilung
+ in linke und rechte gehirnhälfte und die direkte übertragbarkeit vermutlich
+ eines der besten Beispiele.
+\end_layout
+
+\begin_layout Standard
+Aber auch hier, um eine Metaebene anzukratzen: Glaubst du, die Fähigkeit
+ eine Sache zum absoluten overfitting zu erlernen ist auch schon wieder
+ in einer form differentiell?
+\end_layout
+
+\begin_layout Standard
+Selbst vor Problemen mit weitaus abstrak, da nur noch den , ob er etwas
  In der Schule beispielsweise.
  Wir lernen dort nicht freiwillig, so werden wir ja von unseren Eltern gezwungen
  dort hinzugehen.

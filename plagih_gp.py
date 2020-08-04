@@ -197,6 +197,9 @@ def main():  # argv sys.argv[1:]
                    '4. Computation (Already happened, although not lately ;~D)')
 
     print('Program ending')
+    if prepared_run:
+        if 'IB' in prepared_run and prepared_run[-2:]=='_0':
+            pass  # sfeh todo
     sys.exit()
 
 

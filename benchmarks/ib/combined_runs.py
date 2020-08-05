@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 
 dir_slurm = Path(os.path.dirname(os.path.realpath(__file__))) / f'../slurm_runs/'
 # lut_file = root_dir_eval / 'lutfile.yaml'
-lut_file = Path(os.path.dirname(os.path.realpath(__file__))) / 'lutfile.yaml'
 # dir_slurm = Path.cwd() / f'../slurm_runs/'
 
 # def get_combined_runs(agents, parsim_max_sum, parsim_max_single):
@@ -215,8 +214,12 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(run_name, parsim_max_sum, parsim_max_single):
+def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=False):
     lsactions = ['_0/pycode_list.yaml', '_1/pycode_list.yaml', '_2/pycode_list.yaml']
+    if local_yamls:
+        lut_file = dir_slurm / run_name / 'lutfile.yaml'
+    else:
+        lut_file = Path(os.path.dirname(os.path.realpath(__file__))) / 'lutfile.yaml'
 
     agents = []
     for act in lsactions:
@@ -280,7 +283,8 @@ def main():
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
-    parser.add_argument('-parsim_max_sum', type=int, default=5)
+    parser.add_argument('-loyal_yaml', action='store_true')
+    parser.add_argument('-parsim_max_sum', type=int, default=35)
     parser.add_argument('-parsim_max_single', type=int, default=14)
     args = parser.parse_args()
 

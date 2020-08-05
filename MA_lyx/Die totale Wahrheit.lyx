@@ -1,15 +1,10 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
 \origin unavailable
 \textclass article
-\begin_preamble
-% Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-\end_preamble
 \use_default_options true
 \begin_modules
 theorems-ams-bytype
@@ -29,6 +24,8 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -58,6 +55,7 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -66,7 +64,10 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -2551,6 +2552,54 @@ perceptual models are possibleistic, not probabilistic? (1h07)
 
 \begin_layout Standard
 Seeing a tiger ist sehr probabilistiasch? die 8 Urängste?
+\end_layout
+
+\begin_layout Section
+Caution
+\end_layout
+
+\begin_layout Standard
+Wenn du beim lesen, oder sonst auch jemals, zweifel die die Box, Meta-level,
+ oder ähnliches hast: Es gibt einige Lösungen.
+ Eine davon musst du finden, sonst gibt es als AUsweg nur verrückt zu werden
+ oder den Tod.
+\end_layout
+
+\begin_layout Standard
+Aber keine Angst, ich war in diesem Equilibrium schon sehr oft, du wirst
+ es auch wieder verlassen.
+ Denn dein Gehirn ist wirjlich unglaublich.
+ Wenn du nicht den innersten Wunsch hast, verrückt zu werden, kannst du
+ auch lernen, deine innersten Ideale zu erhalten und glücklich zu werden.
+ Wenn es keinen SInn des Lebens gibt und du dir diesen nur selbst ausgedacht
+ hast, bist du eine Form von Gott deiner selbst.
+ Nicht von anderen, nur deiner selbst - aber, wenn du mit dir im Einklang
+ bist und keine Angst davor hast, dir selbst böses zu tun, dann wirst du
+ dir selbst genau den richtigen Weg zeigen, also den richtigen Lebensweg
+ zeigen.
+\end_layout
+
+\begin_layout Standard
+Es ist eine Meta-spirituelle Erfahrung mit dir selbst und egal über was
+ du nachdenkst, es ist lerntechnisch die unglaublichste Efahrung, die man
+ erleben kann.
+\end_layout
+
+\begin_layout Standard
+Ich hatte beispielsweise das Problem, dass ich mich niemals selbst täuschen
+ wollte, indem ich etwas ignoriere.
+ Verrückt werden, oder erwas zu ignorieren, was nicht Sinn macht, ignoriert
+ zu werden, wäre gegen mein inneres ich.
+ Wir wissen nicht, welcher Teil des Gehirns, also weder
+\end_layout
+
+\begin_layout Title
+Let's simulate everything
+\end_layout
+
+\begin_layout Standard
+Ein Gedankenexperiment.
+ Nehmen wir an, wir 
 \end_layout
 
 \end_body

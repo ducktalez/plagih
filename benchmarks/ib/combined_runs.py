@@ -26,12 +26,8 @@ def mp_evall(arow):
     fitness_sum = arow['fitness_sum']
     parsim_sum = arow['parsim_sum']
     codes = arow['codes']
-    lut_hash = hash(f"{arow['codes']}")
+    lut_hash = f"{arow['codes']}"
 
-    # if parsim_sum <= parsim_max_sum:
-    #     # if lut_hash in lut:
-    #     #     experiment, experiment_safe = lut[lut_hash]
-    #     # else:
     try:
         experiment = eval_combined_agents(codes)
         experiment_safe = eval_combined_agents(codes, complete=False)
@@ -41,10 +37,6 @@ def mp_evall(arow):
         print(f'WARNING: Something failed in the evaluation process: {ex}')
         print(f'WARNING: arow {arow}')
         return [lut_hash, None, None]
-
-
-def luthash(arow):
-    return hash(f"{arow['codes']}")
 
 
 def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single):
@@ -60,30 +52,10 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single):
     except:
         lut = {}
 
-    # print(f'Number of best combinations (fitness_sum): {len(combined_best2["fitness_sum"])}, total combinations: {len(combined_all)}')
-    # for measr in ['fitness_sum', 'f_norm', 'f_norm', 'f_normsub', 'f_0div', 'f_0sub']:
-    #     for parsim_sum, arow in combined_best2[measr].items():  # todo combined_all or combined_best?
-    #          #  more evaluations? average?
-    #             else:
-    #                 codes = arow['codes']
-    #                 experiment = float(eval_combined_agents(parsim_sum, parsims, codes))
-    #                 experiment_safe = float(eval_combined_agents(parsim_sum, parsims, codes, complete=False))
-    #                 print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsave: {experiment_safe}')
-    #                 lut[lut_hash] = [experiment, experiment_safe]
-    #                 eval_count += 1
-    #                 if eval_count % 20 == 0:
-    #                     print(f'Saving lut after evaluating 20')
-    #                     with Path.open(lut_file, 'w') as file:
-    #                         _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
-
-    #             analyse_best[measr].append([parsim_sum, experiment, experiment_safe])
-    #         else:
-    #             not_evaled += 1
-
     open_combinations = []
     for arow in combined_all:
         try:
-            if hash(f"{arow['codes']}") not in lut and arow['parsim_sum'] <= parsim_max_sum:
+            if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_max_sum and all(x<=parsim_max_single for x in arow['parsims']):
                 open_combinations.append(arow)
         except:
             pass
@@ -96,16 +68,21 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single):
     result_dict = {a: [b, c] for a, b, c in results}  # [lut_hash, experiment, experiment_safe]
 
     lut.update(result_dict)
-
     print(f'Saving the updated lut file.')  # {not_evaled}')
     with Path.open(lut_file, 'w') as file:
         _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
 
+    combined_all_cpy = []
     for ii, arow in enumerate(combined_all[:]):
         if arow is not None:
-            e1, e2 = lut[hash(f"{arow['codes']}")]
-            combined_all[ii]['experiment'] = e1
-            combined_all[ii]['experiment_save'] = e2
+            hashy = f"{arow['codes']}"
+            try:
+                e1, e2 = lut.get(hashy)
+                arow['experiment'] = e1
+                arow['experiment_safe'] = e2
+                combined_all_cpy.append(arow)
+            except:
+                pass
 
         # combined_best2[measr]['experiment'] = experiment
         # combined_best2[measr]['experiment_safe'] = experiment_safe
@@ -303,7 +280,7 @@ def main():
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
-    parser.add_argument('-parsim_max_sum', type=int, default=35)
+    parser.add_argument('-parsim_max_sum', type=int, default=5)
     parser.add_argument('-parsim_max_single', type=int, default=14)
     args = parser.parse_args()
 

@@ -200,7 +200,7 @@ def main():  # argv sys.argv[1:]
     print('Program ending')
     if prepared_run:
         if 'IB' in prepared_run and prepared_run[-2:] == '_0':
-            combined_lists(prepared_run[:-2], 35, 14, local_yamls=True)
+            combined_lists(prepared_run[:-2], 35, 20, local_yamls=True)
     sys.exit()
 
 

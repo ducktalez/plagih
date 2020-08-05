@@ -38,7 +38,7 @@ def mp_evall(arow):
         return [lut_hash, None, None]
 
 
-def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single):
+def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file):
     """
     Evaluating with real IB
     """
@@ -258,7 +258,7 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
 
     combined_all.sort(key=lambda x: x['parsim_sum'])
 
-    combined_all = eval_and_lut(combined_all, parsim_max_sum, parsim_max_single)
+    combined_all = eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file)
 
     combined_all_p = {}
     combined_all_a = [{}, {}, {}]

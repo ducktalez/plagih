@@ -81,10 +81,10 @@ complete_params = []
 
 # for run_name in run_starts:
 #     Path.mkdir(Path.cwd() / f'benchmarks/slurm_runs/{run_name}')  # todo hate this done here
-
+# todo --cpus-per-task=8 ? or better none
 # sfeh --output=./benchmarks/slurm_runs/{run_name}/slurm-%j.out # not used anymore cause its shit
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
-    [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts])
+    [f'sbatch --cpus-per-task=8 --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts])
 
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

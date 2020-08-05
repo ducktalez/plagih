@@ -57,7 +57,7 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file):
             if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_max_sum and all(x<=parsim_max_single for x in arow['parsims']):
                 open_combinations.append(arow)
         except:
-            pass
+            print('Fuk')
 
     mp.Process()
     print(f'Available cores for mp: {mp.cpu_count()-1}')  # sfeh -1 cause of my pc ;_;
@@ -263,16 +263,16 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
     combined_all_p = {}
     combined_all_a = [{}, {}, {}]
     for row in combined_all:
-        psum = row['parsim_sum']
+        psum = int(row['parsim_sum'])
         try:
             combined_all_p[psum].append(row)
-        except:
+        except Exception as ex:
             combined_all_p[psum] = [row]
         for a in range(3):
-            px = row['parsims'][a]
+            px = int(row['parsims'][a])
             try:
                 combined_all_a[a][px].append(row)
-            except:
+            except Exception as ex:
                 combined_all_a[a][px] = [row]
 
     plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval)
@@ -283,9 +283,9 @@ def main():
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
-    parser.add_argument('-loyal_yaml', action='store_true')
+    parser.add_argument('-locallut', action='store_true')
     parser.add_argument('-parsim_max_sum', type=int, default=35)
-    parser.add_argument('-parsim_max_single', type=int, default=14)
+    parser.add_argument('-parsim_max_single', type=int, default=20)
     args = parser.parse_args()
 
     name = args.name
@@ -299,12 +299,12 @@ def main():
             if x.is_dir():
                 if x.name[:2] == 'IB':
                     print(f'\nEvaluating {x.name}')
-                    combined_lists(x.name, parsim_max_sum, parsim_max_single)
+                    combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut)
                 else:
                     print(f'\nSkipping {x.name}')
 
     else:
-        combined_lists(name, parsim_max_sum, parsim_max_single)
+        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut)
     return
 
 

@@ -121,7 +121,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-action_name', '-eval_action', '-action', type=str, help='If there is more than one action, choose the right one. (action name)')
     parser.add_argument('-data_csv', '-samples_csv', '-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
-    parser.add_argument('-analyse', '-analyze', action='store_true', default=None)
+    parser.add_argument('-analyse', '-analyze', '-analysis', action='store_true', default=None)
     parser.add_argument('-less_files', action='store_true', help='Creates less files by not analysing pareto candidates at the end. -analysis trumps this! (option to save disk space)')
     parser.add_argument('-no_files', action='store_true', help='Not used yet. Create no files. a todo-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')

@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+sys.path.append('../../')
 from benchmarks.ib.ib_eval_agents import *
 from pathlib import Path
 import itertools

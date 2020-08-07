@@ -96,10 +96,9 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file):
 
 
 def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval):
-    parsims = list(set([x['parsim_sum'] for x in combined_all if x['parsim_sum']]))
-    parsims.sort()
+    parsims = sorted(list(set([x['parsim_sum'] for x in combined_all if x['parsim_sum']])))
         
-    for measr in ['fitness_sum', 'f_norm', 'f_squared', 'f_normsub', 'f_0div', 'f_0sub']:
+    for measr in ['fitness_sum']:  # , 'f_norm', 'f_squared', 'f_normsub', 'f_0div', 'f_0sub']:
         """
         plot best (plot)
         todo kreuztabelle?
@@ -119,7 +118,6 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         ax.set_ylabel('reward')
         ax.set_ylim(-15000, -4000)
         # # only if one entry per parsimony
-        ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
         ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
         ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
         plt.savefig(root_dir_eval / f'plot-{measr}.png', dpi=300)
@@ -189,7 +187,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     # """
     # plot all (scatter)
     # """
-    # plot_all = analyse_all[measr]
+    # plot_all = combined_all
     # plot_all.sort(key=lambda x: x[0])
     # x = [x[0] for x in plot_all]
     # y_all = [y[1] for y in plot_all]

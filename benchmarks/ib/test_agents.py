@@ -216,7 +216,6 @@ class Agent_sim1(Ib_Agent):
 
 class Agent_Test(Ib_Agent):
     """
-
     'p', 'v', 'g', 'h', 'f', 'c'
     SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
     """
@@ -234,7 +233,7 @@ class Agent_Test(Ib_Agent):
         SetPoint = self.get_h('p', 0)
 
         at = np.array([0, 0, 0], dtype=np.float32)
-        at[0] = np.sign(min(min(self.get_h('g', 7), (-self.get_h('v', 9)-0.659044)), self.get_h('h', 3)))
-        at[1] = np.sign((((self.get_h('g', 4)-self.get_h('g', 9))-SetPoint)+1.149521))
-        at[2] = -2 / self.get_h('h', 7)
+        at[0] = self.get_h('v', 0) - self.get_h('v', 5) * self.get_h('f', 0)
+        at[1] = self.get_h('g', 0) - 0.1*(self.get_h('g', 5)) - self.get_h('c', 0)
+        at[2] = self.get_h('h', 0) - self.get_h('h', 5) - self.get_h('g', 0)
         return at

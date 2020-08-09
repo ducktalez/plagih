@@ -42,7 +42,10 @@ def load_prepared_run(conf, prepared_run):
                    'sim1_2': 'ib/gp_files/ib_sim1_2.csv',
                    'sim2_0': 'ib/gp_files/ib_sim2_0.csv',
                    'sim2_1': 'ib/gp_files/ib_sim2_1.csv',
-                   'sim2_2': 'ib/gp_files/ib_sim2_2.csv'}
+                   'sim2_2': 'ib/gp_files/ib_sim2_2.csv',
+                   's3m_0': 'ib/gp_files/ib_s3m_0.csv',
+                   's3m_1': 'ib/gp_files/ib_s3m_1.csv',
+                   's3m_2': 'ib/gp_files/ib_s3m_2.csv'}
         for k, v in ori_trs.items():
             if k in prepared_run:
                 print(f'AUTOLOAD: Using origin: {v}')

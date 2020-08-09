@@ -118,7 +118,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         ax.set_ylabel('reward')
         ax.set_ylim(-15000, -4000)
         # # only if one entry per parsimony
-        ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
+        ax.plot(xx, y_all, label='all actions', marker='.', color='r')
         ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
         plt.savefig(root_dir_eval / f'plot-{measr}.png', dpi=300)
         plt.close()

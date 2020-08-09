@@ -64,7 +64,6 @@ def envstate_normalize(env_state, to_normal=True):
 
 def eval_agents():
 
-
     # agents = [Agent_Daniel_Best()]
     agents = [
         # # Agent_random(),
@@ -73,13 +72,14 @@ def eval_agents():
         # Agent_daniel_27(),
         # Agent_Daniel_29_Best(),
         # Agent_Udluft(),
-        Agent_sim1(),
+        # Agent_sim1(),
         Agent_Test()
     ]
 
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        agent_name, sum = eval_agent(agent)
+        sum = eval_agent(agent)
+        print(f'Results: {agent.name} {sum}')
 
 
 class AgentMerger(Ib_Agent):
@@ -141,27 +141,24 @@ def eval_combined_agents(codes, parsim_sum=None, parsims=None, complete=True):
 
 
 def eval_agent(agent):
-    T = 100*100*10
-    repetitions = 100
+    T = 100 * 1000
     factor = 0.97
     time_horizon = 100
     sum = 0
-    for _ in range(repetitions):
-        for p in np.arange(10, 101, 10):
-            env = IDS(p=p)
 
-            sum_t = 0
-            for t in range(time_horizon):
-                env_state = envstate_normalize(env.state)
-                at = agent.decide(env_state)
-                markovStates = env.step(at)
+    for p in np.arange(10, 101, 10):
+        env = IDS(p=p)
 
-                entry = env.visibleState()[-1]
-                sum_t += factor ** (time_horizon-t) * entry
-            sum += sum_t / 10
+        sum_t = 0
+        for t in range(time_horizon):
+            env_state = envstate_normalize(env.state)
+            at = agent.decide(env_state)
+            markovStates = env.step(at)
 
-        print('Discounted reward sum (p=10,20,..,100; 1000 steps)', sum)
-    return agent.name, sum
+            entry = env.visibleState()[-1]
+            sum_t += factor ** (time_horizon - t) * entry
+        sum += sum_t / 10
+    return float(sum)
 
 
 def agent_create_samples_csv(T=10000):

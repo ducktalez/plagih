@@ -40,7 +40,7 @@ run_starts = [
     # 'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
 
     # 'IB_RMSE_udluft_0', 'IB_RMSE_udluft_1', 'IB_RMSE_udluft_2'
-    'IB_MAE_tanh_udluft_0', 'IB_MAE_tanh_udluft_1', 'IB_MAE_tanh_udluft_2',
+    # 'IB_MAE_tanh_udluft_0', 'IB_MAE_tanh_udluft_1', 'IB_MAE_tanh_udluft_2',
 
     ### NOPE ###
 
@@ -49,30 +49,30 @@ run_starts = [
     # """
     # MC200 (SARSA-Agent after 200 training steps)
     # """
-    'MTC200_MAE_explun01_simple_fix',
-    'MTC200_MAE_tanh_simple_fix',
-    'MTC200_MAE_explun01_tanh_simple_fix',
-    'MTC200_RMSE_explun01_tanh_simple_fix',
-
-    'MTC200_MAE_scratch',
-    'MTC200_MAE_gpFfriendly',
-    'MTC200_MAE_preset',
-    'MTC200_MAE_simple',
-    'MTC200_MAE_simple_fix',
-    'MTC200_MAE_simplePlus_fix',
-    'MTC200_MAE_simplePlus',
-
-    'MTC200_MAE_explun01_simple',
-    'MTC200_MAE_explun01_gpfriendly_fix',
-    'MTC200_MAE_gpfriendly_fix',
-    'MTC200_MAE_explun01_preset_fix',
-
-    # """
-    # MC75 (SARSA-Agent after 75 training steps)
-    # """
-    'MTC75_MAE_scratch',
-    'MTC75_MAE_simple',
-    'MTC75_MAE_simple_fix',
+    # 'MTC200_MAE_explun01_simple_fix',
+    # 'MTC200_MAE_tanh_simple_fix',
+    # 'MTC200_MAE_explun01_tanh_simple_fix',
+    # 'MTC200_RMSE_explun01_tanh_simple_fix',
+    #
+    # 'MTC200_MAE_scratch',
+    # 'MTC200_MAE_gpFfriendly',
+    # 'MTC200_MAE_preset',
+    # 'MTC200_MAE_simple',
+    # 'MTC200_MAE_simple_fix',
+    # 'MTC200_MAE_simplePlus_fix',
+    # 'MTC200_MAE_simplePlus',
+    #
+    # 'MTC200_MAE_explun01_simple',
+    # 'MTC200_MAE_explun01_gpfriendly_fix',
+    # 'MTC200_MAE_gpfriendly_fix',
+    # 'MTC200_MAE_explun01_preset_fix',
+    #
+    # # """
+    # # MC75 (SARSA-Agent after 75 training steps)
+    # # """
+    # 'MTC75_MAE_scratch',
+    # 'MTC75_MAE_simple',
+    # 'MTC75_MAE_simple_fix',
 ]
 
 complete_params = []

@@ -1357,13 +1357,12 @@ class ExplainableGP(object):
         return fitness_train
 
     def plot_end(self, xx, yy, title='', ax_label='', x_label='Generation', y_label='', step_post='', linestyle='-', marker='', set_left=None, set_right=None, set_top=None,
-                 padd_r=1.05, padd_top=1.05,
-                 beyond_lines=False,
-                 fill_variance=None):
+                 padd_r=1.05, padd_top=1.05, legend_loc='lower left', beyond_lines=False, fill_variance=None):
         """
         Make all plots in the same style - and also saving space.
         - Makes pyplots
 
+        :param legend_loc:
         :param yy:
         :param xx:
         :param set_top:
@@ -1384,8 +1383,6 @@ class ExplainableGP(object):
 
         :return:
 
-        Options that are not used
-        # plt.legend()
         sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
         """
 
@@ -1395,13 +1392,25 @@ class ExplainableGP(object):
 
         x, y = xx, yy
 
-        top, bottom, left, right, new_right, new_top = plot_sexyfy(x, y, set_left=set_left, set_right=set_right, set_top=set_top, right_padding=padd_r, top_padding=padd_top)
+        top, bottom, left, right = max(y), min(y), min(x), max(x)
+        if set_left:
+            left = (x[0], y[0])
+
+        if set_top:
+            new_top = set_top
+        else:
+            new_top = (top - min(bottom, 0)) * padd_top  # top * 1.05 for better style
+
+        if set_right:
+            right = max(right, set_right)
+        new_right = right * padd_r
 
         if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
             x = np.concatenate([[x[0]], x, [new_right + 1]])
             y = np.concatenate([[new_top + 1], y, [y[-1]]])
 
         fig, ax = plt.subplots()
+        ax.legend(loc=legend_loc)
         ax.set_xlim(min(left, 0), new_right)
         ax.set_ylim(min(bottom, 0), new_top)
         fig.tight_layout()
@@ -1433,13 +1442,10 @@ class ExplainableGP(object):
         plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
         return
 
-    def file_analysis_plots(self):
-        """
-        Make all plots
-        """
-
+    def plot_performance(self):
         """
         All monitoring infos
+        sfeh den shit in Funktionen aufteilen
         """
         # self.monitoring_pd['complexity_avg'].plot()  # sfeh rename
         fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
@@ -1454,8 +1460,8 @@ class ExplainableGP(object):
             avg = self.monitor_df['fit_avg']
             std = self.monitor_df['fit_std']
             axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')
-        except:
-            pass
+        except Exception as ex:
+            raise Exception(f'Delete this. were there any problems? {ex}')
         axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
         axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
@@ -1465,8 +1471,8 @@ class ExplainableGP(object):
             p_avg = self.monitor_df['parsim_avg']
             p_std = self.monitor_df['parsim_std']
             axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('Parsimony (average)')
-        except:
-            pass
+        except Exception as ex:
+            raise Exception(f'Delete this. if this did not raise. {ex}')
         axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
 
         axs2 = axs[2]
@@ -1489,6 +1495,13 @@ class ExplainableGP(object):
         # fig.savefig(self.root_dir / f'monitoring.svg')
 
         plt.close()
+
+    def file_analysis_plots(self):
+        """
+        Make all plots
+        """
+
+        self.plot_performance()
 
         """
         Plot pareto candidates

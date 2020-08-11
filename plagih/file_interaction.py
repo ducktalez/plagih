@@ -69,23 +69,3 @@ def yaml_dump(path, data, print_type=None):
         _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
         printez('ff', f'{path.as_posix()}', print_type=print_type)
     return
-
-
-def plot_sexyfy(x, y, set_left=None, set_right=None, set_top=None, right_padding=1.05, top_padding=1.05):
-    """
-
-    """
-    top, bottom, left, right = max(y), min(y), min(x), max(x)
-    if set_left:
-        left = (x[0], y[0])
-
-    if set_top:
-        new_top = set_top
-    else:
-        new_top = (top - min(bottom, 0)) * top_padding  # top * 1.05 for better style
-
-    if set_right:
-        right = max(right, set_right)
-    new_right = right * right_padding
-
-    return top, bottom, left, right, new_right, new_top

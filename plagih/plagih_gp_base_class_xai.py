@@ -85,8 +85,8 @@ class ExplainableGP(object):
             self.origin_cooltree = None
             self.origin_is_fix = False
 
-            if self.conf.complexity_measure in ['tree_edit_distance']:  # sfeh
-                # self.conf.complexity_measure = 'tree_node_count'  # sfeh idea
+            if self.conf.complexity_measure in ['tree_edit_distance']:
+                self.conf.complexity_measure = 'tree_node_count'  # sfeh idea
                 print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin! Using 'tree_node_count' instead.", print_type=self.print_type)
 
         """
@@ -364,33 +364,54 @@ class ExplainableGP(object):
         filename = file_make_dir(self.root_dir / self.paths.info_config_yaml)
         yaml_dump(filename, self.conf, print_type=self.print_type)
 
-        if self.gen_id == 0:
-            self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
-
-            self.time_genstart = time.perf_counter()
-            self.gen_create_initial()
-
-            self.pop_analyse()
-            self.pop_base = self.population_tmp[:]
-            self.population_tmp = []
-            # self.file_population_base_karoo('first')  # first gen only # sfeh deprecated?
+        self.gens_since_last_pareto = 0
 
         while self.gen_id <= self.conf.gen_max:  # max generation, max time, done...
-            # self.printpl('gggg', f'Evolving Generation {self.gen_id}')
-            self.gen_id += 1
             self.time_genstart = time.perf_counter()
-            self.gen_next_population()
-            self.periodical_procedures()
+
+            if self.gen_id == 0:
+                self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
+                self.gen_create_initial()
+            else:
+                self.gen_next_population()
+
+            self.update_pareto_from_pop_tmp()
 
             self.pop_analyse()
             self.pop_base = self.population_tmp[:]
             self.population_tmp = []
+
             self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')
+            self.gen_id += 1
         else:
             printez('g', f'Done after Generation {self.gen_id}.', print_type=self.print_type)
 
         self.run_backup_save()
-        # self.terminate_run()
+        # if self.gen_id == 0:
+        #     self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
+        #
+        #     self.time_genstart = time.perf_counter()
+        #     self.gen_create_initial()
+        #     self.update_pareto_from_pop_tmp()
+        #
+        #     self.pop_analyse()
+        #     self.pop_base = self.population_tmp[:]
+        #     self.population_tmp = []
+        #     # self.file_population_base_karoo('first')  # first gen only # sfeh deprecated?
+        #
+        # while self.gen_id <= self.conf.gen_max:  # max generation, max time, done...
+        #     # self.printpl('gggg', f'Evolving Generation {self.gen_id}')
+        #     self.gen_id += 1
+        #     self.time_genstart = time.perf_counter()
+        #     self.gen_next_population()
+        #     self.update_pareto_from_pop_tmp()
+        #
+        #     self.periodical_procedures()
+        #
+        #     self.pop_analyse()
+        #     self.pop_base = self.population_tmp[:]
+        #     self.population_tmp = []
+        #     self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')
 
         return
 
@@ -527,19 +548,6 @@ class ExplainableGP(object):
         # if total_rate < 0:
         #     self.gen_create_random(int(self.conf.pop_max'] * (1 - total_rate)))
 
-        return
-
-    def periodical_procedures(self):
-        """
-        Every few generations, update the created gp_files
-        - default is in every generation, but saving every n-th gen or after time passed is possible aswell
-        """
-
-        if self.gen_id % int(self.conf.period.get('gen_plots', 1)) == 0:
-            self.file_analysis_plots()
-
-        if self.gen_id % int(self.conf.period.get('gen_save', 1)) == 0:
-            self.run_backup_save()
         return
 
     def file_pareto_txt(self):
@@ -1149,6 +1157,7 @@ class ExplainableGP(object):
         if msg:
             self.printpl('a', f"New entry found! ({msg}): {BColors.RESET}{tree_entry[0]}, {tree_entry[1]}:{BColors.RESET} {tree_entry[2].meta.expr_raw}")
         self.pareto.append(tree_entry)
+        self.gens_since_last_pareto = 0
 
         self.pareto = [x for x in self.pareto[:] if x[0] < tree_entry[0] or x[1] < tree_entry[1] or (x[0] == tree_entry[0] and x[1] == tree_entry[1])]
         self.pareto_sort()  # as far as I can tell, not really necessary without using iter()
@@ -1164,14 +1173,47 @@ class ExplainableGP(object):
                 sym_fitness = self.tree_eval_fitness_train(cooltree_sym)  # sfeh actually not required, delete this
                 cooltree_sym.meta.fitness_train = sym_fitness
                 cooltree_sym.meta.parsimony = parsimony
-                self.update_pareto(cooltree_sym)
+                self.update_pareto_with_tree(cooltree_sym)
         except Exception as ex:
             print_warning('www', f'Tree sympification did not work: {ex}', print_type=self.print_type)
 
         else:
             self.printpl('aaa', 'Pareto entry was already simplified')
 
-    def update_pareto(self, cooltree: CoolTree):
+    def update_pareto_from_pop_tmp(self):
+        """
+        inserts a tree into the pareto front
+        """
+
+        # first, make a local paretofront
+        # local_pop = sorted(sorted(self.population_tmp, key=lambda y: y.meta.fitness_train), key=lambda x: x.meta.parsimony)  # todo "reverse" fitness only if not regression regression
+        pop_parsimonies_dict = dict.fromkeys(sorted(set([cooltree.meta.parsimony for cooltree in self.population_tmp])))
+        for ct in self.population_tmp:
+            p = ct.meta.parsimony
+            try:
+                best_yet = pop_parsimonies_dict[p]
+                if ct.meta.fitness_train < best_yet.meta.fitness_train:  # todo kernel required for fitness comparison
+                    pop_parsimonies_dict[p] = ct
+            except:
+                pop_parsimonies_dict[p] = ct
+        # local_best = local_pop[0]
+        # local_pareto = [local_best]
+        # for cooltree in local_pop:
+        #     if cooltree.meta.fitness_train < local_best.meta.fitness_train and cooltree.meta.parsimony <= local_best.meta.parsimony:
+        #         local_pareto.append(cooltree)
+        #         local_best = cooltree
+        #     else:
+        #         pass
+
+        print('TODO UPDATE PARETO')
+
+        for p, cooltree in pop_parsimonies_dict.items():
+            self.update_pareto_with_tree(cooltree)
+
+        self.pareto_sort()  # sfeh check if required
+        return
+
+    def update_pareto_with_tree(self, cooltree: CoolTree):
         """
         inserts a tree into the pareto front
         """
@@ -1247,8 +1289,6 @@ class ExplainableGP(object):
 
         self.treelut_tree_add(cooltree)
         self.population_tmp.append(cooltree)
-
-        self.update_pareto(cooltree)
 
     def pop_selection_tournament(self, tourn_size):
         """
@@ -1612,6 +1652,15 @@ class ExplainableGP(object):
 
         self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {gen_id}. Gen took {gen_time:4.2f}s')
         # sfeh check if there are really unique... doubt it.
+
+        """
+        show plots if necessary
+        """
+        if self.gen_id % int(self.conf.period.get('gen_plots', 1)) == 0:
+            self.file_analysis_plots()
+
+        if self.gen_id % int(self.conf.period.get('gen_save', 1)) == 0:
+            self.run_backup_save()
         return
 
     def terminate_run(self):

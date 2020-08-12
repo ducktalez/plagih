@@ -3,10 +3,7 @@ import argparse
 import os
 import sys
 sys.path.append('../../')
-try:
-    from benchmarks.ib.ib_eval_agents import *
-except:
-    from .ib_eval_agents import *
+from benchmarks.ib.ib_eval_agents import *
 from pathlib import Path
 import itertools
 import yaml
@@ -136,7 +133,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         ax.plot(xx, y_all, label='all actions', marker='.', color='r')
         ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
         ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='possible combinations', linestyle='None', marker='.')
+        ax2.plot(xx, cnt, color='tab:gray', label='possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
         ax2.tick_params(axis='y', labelcolor='tab:gray')
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
@@ -321,7 +318,10 @@ def main():
             if x.is_dir():
                 if x.name[:2] == 'IB':
                     print(f'\nEvaluating {x.name}')
-                    combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut)
+                    try:
+                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut)
+                    except Exception as ex:
+                        print(f'Failed evaluation for {x.name}. ignoring. Reason: {ex}')
                 else:
                     print(f'\nSkipping {x.name}')
 

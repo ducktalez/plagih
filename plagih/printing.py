@@ -35,7 +35,15 @@ def print_warning(message_type, text, print_type=None, time_total=0.0):
     """
     Printing warnings
     """
-    printez(message_type, text, print_type=print_type, time_total=time_total)
+
+    if print_type:
+        if message_type not in print_type:
+            return
+    if message_type == 'w':
+        print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')
+    else:
+        print(f'{BColors.WARNING}Warning ({message_type}):{BColors.RESET} {text}')
+    return
 
 
 def print_blue(txt):
@@ -53,8 +61,6 @@ def printez(message_type, text, print_type=None, time_total=0.0):
 
     if 'i' in message_type:
         pre_msg = BColors.CYAN
-    elif 'w' in message_type:
-        pre_msg = BColors.WARNING
     elif 'g' in message_type:
         pre_msg = f'{time_total:3.0f}s. '  # sfeh current time instead and local time at the end?
         # pre_msg = BColors.WHITE

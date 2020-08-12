@@ -3,7 +3,10 @@ import argparse
 import os
 import sys
 sys.path.append('../../')
-from benchmarks.ib.ib_eval_agents import *
+try:
+    from benchmarks.ib.ib_eval_agents import *
+except:
+    from .ib_eval_agents import *
 from pathlib import Path
 import itertools
 import yaml
@@ -101,12 +104,24 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     for measr in ['fitness_sum']:  # , 'f_norm', 'f_squared', 'f_normsub', 'f_0div', 'f_0sub']:
         """
         plot best (plot)
-        todo kreuztabelle?
-        todo are evaluations too different? take a look at start eval... YES! Make more evaluations... create eval_list. update list, once, first.
         """
-        res = [min([row for row in combined_all_p[p]], key=lambda x: x[measr]) for p in parsims]
+        # todo kreuztabelle?
+        tmp = [min([row for row in combined_all_p[p]], key=lambda x: x[measr]) for p in parsims]
+        tmp.sort(key=lambda x: x['parsim_sum'])
+        res = []
+        cnt = []
+        best = tmp[0]
+        for p in parsims:
+            # ax2.tick_params(axis='y', labelcolor=color)
+            prows = [row for row in combined_all_p[p]]
+            best_row = min(prows, key=lambda x: x[measr])
+            if best_row['fitness_sum'] < best['fitness_sum']:
+                res.append(best_row)
+                cnt.append(len(prows))
+            else:
+                print(f'Not a better entry at {p}')
+
         # res = max([x for x in res1], key=lambda l: l[measr])
-        res.sort(key=lambda x: x['parsim_sum'])
         xx = [x['parsim_sum'] for x in res]
         y_all = [y['experiment'] for y in res]
         y_safe = [y['experiment_safe'] for y in res]
@@ -120,6 +135,11 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         # # only if one entry per parsimony
         ax.plot(xx, y_all, label='all actions', marker='.', color='r')
         ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
+        ax2 = ax.twinx()
+        ax2.plot(xx, cnt, color='tab:gray', label='possible combinations', linestyle='None', marker='.')
+        ax2.tick_params(axis='y', labelcolor='tab:gray')
+        ax.legend(loc='lower right')
+        ax2.legend(loc='lower left')
         plt.savefig(root_dir_eval / f'plot-{measr}.png', dpi=300)
         plt.close()
 
@@ -147,6 +167,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         # # only if one entry per parsimony
         ax.plot(xx, exp, label='all actions', marker='.', color='r', )
         ax.plot(xx, exp_safe, label='low risk', marker='.', color='b')
+        ax.legend(loc='lower left')
         plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.png', dpi=150)
         # plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.svg')
         plt.close()
@@ -180,6 +201,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     # # only if one entry per parsimony
     ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
     ax.plot(xx, y_safe, label='low risk', marker='.', color='c')
+    ax.legend(loc='lower left')
     plt.savefig(root_dir_eval / f'best-real-expermiments.png', dpi=300)
     # plt.savefig(root_dir_eval / f'best-real-expermiments.svg')
     plt.close()
@@ -223,8 +245,11 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
     for act in lsactions:
         lfile = dir_slurm / run_name / f'{run_name}{act}'
         print(f'Looking at file: {lfile}')
-        with Path.open(lfile, 'r') as file:
-            yamload = yaml.load(file, Loader=yaml.FullLoader)
+        try:
+            with Path.open(lfile, 'r') as file:
+                yamload = yaml.load(file, Loader=yaml.FullLoader)
+        except FileNotFoundError as fnferr:
+            raise FileNotFoundError(f'File does not exist (yet). Please check your runs first: {fnferr}')
         agents.append(yamload)
 
     root_dir_eval = dir_slurm / f'{run_name}'
@@ -283,7 +308,7 @@ def main():
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
     parser.add_argument('-parsim_max_sum', type=int, default=35)
-    parser.add_argument('-parsim_max_single', type=int, default=20)
+    parser.add_argument('-parsim_max_single', type=int, default=35)
     args = parser.parse_args()
 
     name = args.name
@@ -292,7 +317,6 @@ def main():
 
     if args.auto:
         rootdirstar = dir_slurm.glob('*')
-        # for parsim_tmp in range(5, parsim_max_sum, 5)
         for x in rootdirstar:
             if x.is_dir():
                 if x.name[:2] == 'IB':

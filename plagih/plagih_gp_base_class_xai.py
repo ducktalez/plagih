@@ -21,12 +21,9 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 class FileLocations:
     plots = 'plots/'
     histograms = 'histograms/'
-
     backup_p = 'backup/backup.p'
-
     trees_tex = 'agents_trees.tex'
     folder_pycode = ''
-
     file_pareto = 'paretofront.yaml'
     info_config_yaml = 'used_config.yaml'
 
@@ -88,8 +85,8 @@ class ExplainableGP(object):
             self.origin_cooltree = None
             self.origin_is_fix = False
 
-            if self.conf.complexity_measure in ['tree_edit_distance']:  # all origin-based distances  # todo tree_edit_distancev2
-                self.conf.complexity_measure = 'tree_node_count'
+            if self.conf.complexity_measure in ['tree_edit_distance']:  # sfeh
+                # self.conf.complexity_measure = 'tree_node_count'  # sfeh idea
                 print_warning('w', "Complexity measurement 'tree_edit_distance' is not possible without origin! Using 'tree_node_count' instead.", print_type=self.print_type)
 
         """
@@ -121,18 +118,18 @@ class ExplainableGP(object):
                 self.pop_trees_complexity_std_error = {}
                 self.gen_time = {}
 
-            def load_old_monitoring_dict(self, monitoring_dict):
-                self.population_tmp_done_size = monitoring_dict.get('population_tmp_done-size', {})
-
-                self.fitness_average = monitoring_dict.get('fitness_average', {})
-                self.fitness_variance = monitoring_dict.get('fitness_variance', {})
-                self.best_candidate = monitoring_dict.get('best_candidate', {})
-                # 'complexity_list = monitoring_dict.get('complexity_list', {}),  # not used, just uses memory
-
-                self.complexity_average = monitoring_dict.get('complexity_average', {})
-                self.complexity_variance = monitoring_dict.get('complexity_variance', {})  # variance can be deleted, only std-error is needed delete v1
-                self.gen_time = monitoring_dict.get('gen_time', {})
-                self.evol_performance = monitoring_dict.get('evol_performance', {})
+            # def load_old_monitoring_dict(self, monitoring_dict):
+            #     self.population_tmp_done_size = monitoring_dict.get('population_tmp_done-size', {})
+            #
+            #     self.fitness_average = monitoring_dict.get('fitness_average', {})
+            #     self.fitness_variance = monitoring_dict.get('fitness_variance', {})
+            #     self.best_candidate = monitoring_dict.get('best_candidate', {})
+            #     # 'complexity_list = monitoring_dict.get('complexity_list', {}),  # not used, just uses memory
+            #
+            #     self.complexity_average = monitoring_dict.get('complexity_average', {})
+            #     self.complexity_variance = monitoring_dict.get('complexity_variance', {})  # variance can be deleted, only std-error is needed delete v1
+            #     self.gen_time = monitoring_dict.get('gen_time', {})
+            #     self.evol_performance = monitoring_dict.get('evol_performance', {})
 
         self.monitor_df = pd.DataFrame(columns=['pop_len', 'pop_unique',
                                                 'fit_avg', 'fit_std', 'fit_best',
@@ -797,7 +794,8 @@ class ExplainableGP(object):
                 # origin_oldtree = self.origin_cooltree.get_oldtree()
                 # tree = tree_set_modifyable_nodes(tree, origin_tree=origin_oldtree)
                 cooltree.set_fix_nodes(self.origin_cooltree)
-            except Exception:
+            except Exception as ex:
+                print_e(f'Which exception is this? {ex}')
                 pass
 
             cooltree.meta.last_evolution = 'texify'
@@ -1356,7 +1354,7 @@ class ExplainableGP(object):
 
         return fitness_train
 
-    def plot_end(self, xx, yy, title='', ax_label='', x_label='Generation', y_label='', step_post='', linestyle='-', marker='', set_left=None, set_right=None, set_top=None,
+    def plot_end(self, xx, yy, title='', x_label='', y_label='', step_post='', linestyle='-', marker='', set_left=None, set_right=None, set_top=None,
                  padd_r=1.05, padd_top=1.05, legend_loc='lower left', beyond_lines=False, fill_variance=None):
         """
         Make all plots in the same style - and also saving space.
@@ -1392,6 +1390,8 @@ class ExplainableGP(object):
 
         x, y = xx, yy
 
+        fig, ax = plt.subplots()
+
         top, bottom, left, right = max(y), min(y), min(x), max(x)
         if set_left:
             left = (x[0], y[0])
@@ -1408,20 +1408,11 @@ class ExplainableGP(object):
         if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
             x = np.concatenate([[x[0]], x, [new_right + 1]])
             y = np.concatenate([[new_top + 1], y, [y[-1]]])
-
-        fig, ax = plt.subplots()
-        ax.legend(loc=legend_loc)
-        ax.set_xlim(min(left, 0), new_right)
-        ax.set_ylim(min(bottom, 0), new_top)
-        fig.tight_layout()
-        ax.set_xlabel(x_label)
-        ax.set_ylabel(y_label)
-        ax.set_title(title)
-
+        # label = ax_label or
         if step_post:
-            ax.step(x, y, linestyle=linestyle, marker=marker, label=ax_label, where=step_post)  # , plt_xparam
+            ax.step(x, y, linestyle=linestyle, marker=marker, label=title, where=step_post)
         else:
-            ax.plot(x, y, linestyle=linestyle, marker=marker, label=ax_label)  # , plt_xparam
+            ax.plot(x, y, linestyle=linestyle, marker=marker, label=title)
             if fill_variance is not None:
                 x_std, y_var = fill_variance
                 y_std = np.sqrt(y_var)
@@ -1429,6 +1420,16 @@ class ExplainableGP(object):
                 upper_bound_stderr = y + y_std
                 ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
                 ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
+
+        fig.tight_layout()
+        ax.set_xlim(min(left, 0), new_right)
+        ax.set_ylim(min(bottom, 0), new_top)
+        if legend_loc:
+            ax.legend(loc=legend_loc)
+        else:
+            ax.set_title(title)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
 
         path_plot = folder_make_dir(self.root_dir / self.paths.plots)
 
@@ -1439,23 +1440,25 @@ class ExplainableGP(object):
         except PermissionError as permerr:
             print_e(f'Could not save plot: {permerr}')
 
-        plt.close()  # Stackoverflow said that this is too much, # plt.clf() should be better, but does not seem to work
+        plt.close()  # Stackoverflow said that this is too much, plt.clf() should be better, but does not seem to work
         return
 
     def plot_performance(self):
         """
         All monitoring infos
         sfeh den shit in Funktionen aufteilen
+        todo: add generations since last pareto entry?
+            YES.
         """
-        # self.monitoring_pd['complexity_avg'].plot()  # sfeh rename
+
         fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
         fig.tight_layout()
-        # plt.tight_layout()
+        plt.tight_layout()
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         xx = list(self.monitor_df.index)
 
         axs0 = axs[0]
-        axs0.plot(self.monitor_df['fit_avg'], label='Fitness (average)')
+        axs0.plot(self.monitor_df['fit_avg'], label='MSE (average)')
         try:
             avg = self.monitor_df['fit_avg']
             std = self.monitor_df['fit_std']
@@ -1466,17 +1469,18 @@ class ExplainableGP(object):
         axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
         axs1 = axs[1]
-        axs1.plot(self.monitor_df['parsim_avg'], label='Parsimony (average)')
+        axs1.plot(self.monitor_df['parsim_avg'], label='complexity (average)')
+        # self.conf.complexity_measure
+
         try:
             p_avg = self.monitor_df['parsim_avg']
             p_std = self.monitor_df['parsim_std']
-            axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('Parsimony (average)')
+            axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('TED (average)')
         except Exception as ex:
             raise Exception(f'Delete this. if this did not raise. {ex}')
         axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
 
         axs2 = axs[2]
-        # self.monitor_pd.plot(y=['pop_len', 'pop_unique'], ax=axs2), # axs2.set_title('Created trees (average)')
         axs2.plot(self.monitor_df['pop_len'], label='pop size')
         axs2.plot(self.monitor_df['pop_unique'], label='unique')
         axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
@@ -1508,7 +1512,7 @@ class ExplainableGP(object):
         """
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in self.pareto]
         xx, yy = np.array(tuples).T
-        self.plot_end(xx, yy, step_post='post', title='pareto dominant candidates', x_label='parsimony',
+        self.plot_end(xx, yy, step_post='post', title='pareto dominant candidates', x_label='complexity',
                       y_label='regression error',
                       linestyle='dashed',
                       marker='.',
@@ -1549,7 +1553,7 @@ class ExplainableGP(object):
         - average fitness
         - average tree parsimony
         """
-        t = time.perf_counter()
+        # t = time.perf_counter()  # should this be used?
         gen_id = self.gen_id
         popul = self.population_tmp
 

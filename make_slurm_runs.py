@@ -10,6 +10,7 @@ print('Make sure that this file is executed on top level')
 run_starts = [
     'IB_MSE_s3m_0', 'IB_MSE_s3m_1', 'IB_MSE_s3m_2',
     'IB_MSE_tanh_s3m_0', 'IB_MSE_tanh_s3m_1', 'IB_MSE_tanh_s3m_2',
+    'IB_MSE_explun01_tanh_s3m_0', 'IB_MSE_explun01_tanh_s3m_1', 'IB_MSE_explun01_tanh_s3m_2',
 
     # 'IB_MAE_scratch_0', 'IB_MAE_scratch_1', 'IB_MAE_scratch_2',
     # 'IB_MSE_scratch_0', 'IB_MSE_scratch_1', 'IB_MSE_scratch_2',
@@ -77,16 +78,12 @@ run_starts = [
 
 complete_params = []
 
-# todo -D, --chdir=<directory>
+# sfeh -D, --chdir=<directory>
 #     Set the working directory of the batch script to directory before it is executed. The path can be specified as full path or relative path to the directory where the command is executed.
-# sfeh run more beautiful?
 
-# for run_name in run_starts:
-#     Path.mkdir(Path.cwd() / f'benchmarks/slurm_runs/{run_name}')  # todo hate this done here
-# todo --cpus-per-task=8 ? or better none
 # sfeh --output=./benchmarks/slurm_runs/{run_name}/slurm-%j.out # not used anymore cause its shit
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
-    [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts])
+    [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts])  # --cpus-per-task=8 is better, but everyone uses these engines
 
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

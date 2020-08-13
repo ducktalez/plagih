@@ -38,16 +38,16 @@ def pickle_load(path):
     return pickle_data
 
 
-def pickle_dump(path, data, print_type=None):
-    """
-    saves prepared plagih data to pickle file
-    """
-
-    path = file_make_dir(path)
-    with Path.open(path, 'wb') as file:
-        pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-        printez('f', f'{path.as_posix()}', print_type=print_type)
-    return
+# def pickle_dump(path, data, print_type=None):
+#     """
+#     saves prepared plagih data to pickle file
+#     """
+#
+#     path = file_make_dir(path)
+#     with Path.open(path, 'wb') as file:
+#         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+#         printez('f', f'{path.as_posix()}', print_type=print_type)
+#     return
 
 
 def yaml_load(yaml_path):

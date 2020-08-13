@@ -13,7 +13,7 @@ Use:
     from plagih.plagih_sympy_extras import plagih_sympify
 2. Use function
 
-Also, please do not ask me about when to use Ifte() and ifte(), it somehow works.
+Classes must currently have the exact same name as their occurance (Ifte -> Ifte, not ifte or so)
 
 Useful information:
 - These variables are set for every sympy object and thus can be tested, e.g. a.is_Boolean
@@ -57,13 +57,15 @@ from sympy import Function, sympify
 
 class Ifte(Function):
     """
-    plagih_sympify('ifte(a, b, c)')
+    plagih_sympify('Ifte(a, b, c)')
     """
     nargs = 3
+    is_Function = True
+    is_real = True
 
     @classmethod
     def eval(cls, a, b, c):
-        if a.is_Boolean:  #  == True or a == False:  # you can not believe how long it took me to figure out why this is needed
+        if a.is_Boolean:  #  :  # you can not believe how long it took me to figure out why this is needed
             return b if a else c  # search for 'gotcha' in https://docs.sympy.org/latest/_modules/sympy/core/relational.html
         else:
             return
@@ -78,12 +80,14 @@ class Mini(Function):
     min() does not work (for now), as nested min() get accumulated, which leads to problems creating the tf-graph
     """
     nargs = 2
+    is_Function = True
+    is_real = True
 
     @classmethod
     def eval(cls, a, b):
 
         # if (a < b) == True or (a < b) == False: # first solution
-        if a.is_real and b.is_real:
+        if a.is_number and b.is_number:  # must be real for a comparison
             return a if a < b else b
         else:
             return
@@ -96,12 +100,14 @@ class Maxi(Function):
     """
     """
     nargs = 2
+    is_Function = True
+    is_real = True
 
     @classmethod
     def eval(cls, a, b):
 
         # if (a < b) == True or (a < b) == False: # first solution, was working.
-        if a.is_real and b.is_real:
+        if a.is_number and b.is_number:
             return a if a > b else b
         else:
             return
@@ -114,6 +120,7 @@ class Andb(Function):
     """
     """
     nargs = 2
+    is_Function = True
 
     @classmethod
     def eval(cls, a, b):
@@ -132,6 +139,7 @@ class Orb(Function):
     """
     """
     nargs = 2
+    is_Function = True
 
     @classmethod
     def eval(cls, a, b):
@@ -162,6 +170,7 @@ class Notb(Function):
     - not(a<2) evaluates to nan
     """
     nargs = 1
+    is_Function = True
 
     @classmethod
     def eval(cls, a):
@@ -178,6 +187,8 @@ class Square(Function):
     """
     """
     nargs = 1
+    is_Function = True
+    is_real = True
 
     @classmethod
     def eval(cls, a):
@@ -195,6 +206,8 @@ class Usub(Function):
     """
     """
     nargs = 1
+    is_Function = True
+    is_real = True
 
     @classmethod
     def eval(cls, a):
@@ -208,6 +221,8 @@ class Round(Function):
     """
     """
     nargs = 1
+    is_Function = True
+    is_real = True
 
     @classmethod
     def eval(cls, a):
@@ -246,7 +261,9 @@ def plagih_sympify(function_string):
     """
     try:
         return sympify(sympify(function_string, locals=local_sympy_dict))
-    except:
+    except Exception as ex:
+        raise
+        print(f'Todo TODOTODO {ex}')
         return 'nan'  # 'nan' always evaluates to nan
 
 
@@ -254,5 +271,7 @@ if __name__ == "__main__":
     print('Running sympify example')
     expr = 'Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))'
     expr = 'Round(-123.333334234) + Round(Shift_2)'
-    expr = 'Ifte(Orb(a, True), b, c)'
-    print(plagih_sympify(expr))
+    expr_raw = '1 < Maxi(2, Ifte(1 < a, 1, 1))'
+
+    expr_raw = '(((0.326675 * Consumption_2) - Shift_9) + (0.788838 * ((-Gain_3 + Gain_9) + Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4)))))'
+    print(plagih_sympify(expr_raw))

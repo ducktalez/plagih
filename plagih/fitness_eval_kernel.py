@@ -7,25 +7,32 @@ import sklearn.metrics as skm
 
 class GPKernel:
 
-    def __init__(self, *args):
-        self.eval_action = None
-        pass
+    # def __init__(self, *args):
+    #     self.eval_action = None
+    #     pass
 
     def fitness_compare(self, fitness1, fitness2):
         pass
 
-    def best_fitness_function(self, *arg, **args):
+    def better_fitness_relation(self, x, y):
+        pass
+
+    def best_fitness_function(self, *args, **kwargs):
+        pass
+
+    def tf_get_pairwise_fitness(self, *arg):
+        pass
+
+    def conclusion(self, *arg):
         pass
 
 
 class ClassificationKernel(GPKernel):
 
     def __init__(self, *args):
-        super().__init__(*args)
+        pass
 
-
-
-    def tf_classify_labels_map(self, result):
+    def tf_classify_labels_map(self, result, env_vars):
 
         """
         For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
@@ -42,7 +49,7 @@ class ClassificationKernel(GPKernel):
         sfeh remove
 
         """
-        uniques_num = self.env_vars.eval_action.uniques
+        uniques_num = env_vars.eval_action.uniques
         skew = (uniques_num / 2) - 1
         label_rules = {uniques_num - 1: (
             tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}
@@ -62,26 +69,26 @@ class ClassificationKernel(GPKernel):
         else:
             return fitness1 > fitness2
 
-    def best_fitness_function(self, *arg, **args):
-        return max(*arg, **args)
+    def best_fitness_function(self, *args, **kwargs):
+        return max(*args, **kwargs)
 
     def tf_wrap_result(self, *args):
         pass
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result):
+    def tf_get_pairwise_fitness(self, solution, kernel_result, eval_action):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
         """
 
-        skew = (self.eval_action.uniques / 2) - 1
+        skew = (eval_action.uniques / 2) - 1
 
         rule1 = tf.logical_and(
             tf.equal(solution, 0),
             tf.less_equal(kernel_result, 0 - skew))
 
         rule2 = tf.logical_and(
-            tf.equal(solution, self.eval_action.uniques - 1),
+            tf.equal(solution, eval_action.uniques - 1),
             tf.greater(kernel_result, solution - 1 - skew))
 
         rule3 = tf.logical_and(
@@ -103,10 +110,10 @@ class MatchKernel(GPKernel):
         else:
             return fitness1 > fitness2
 
-    def best_fitness_function(self, *arg, **args):
-        return max(*arg, **args)
+    def best_fitness_function(self, *args, **kwargs):
+        return max(*args, **kwargs)
 
-    def tf_get_pairwise_fitness(self, solution, kernel_result, results_agent):
+    def tf_get_pairwise_fitness(self, solution, kernel_result):
         """
         Calculates the kernel-specific fitness for the solution.
         - classification: dummy
@@ -155,10 +162,10 @@ class MatchKernel(GPKernel):
     #     return result_str
 
 
-class RegressionKernel:
+class RegressionKernel(GPKernel):
 
-    def best_fitness_function(self, *arg, **args):
-        return min(*arg, **args)
+    def best_fitness_function(self, *args, **kwargs):
+        return min(*args, **kwargs)
 
     def better_fitness_relation(self, x, y):
         return x < y
@@ -360,13 +367,12 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             return [node.n]
         else:
-            # shape = tensors[list(tensors.keys())[0]].get_shape()  # todo
+            # shape = tensors[list(tensors.keys())[0]].get_shape()  # todo (wait, what was todo here?)
             return tf.constant(node.n, dtype=tf.float32)  # , shape=shape
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>
         if build:
             return [node.value]
-            # return node.value
         else:
             return tf.constant(node.value)
     #

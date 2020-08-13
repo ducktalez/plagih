@@ -38,7 +38,7 @@ def mp_evall(arow):
         return [lut_hash, None, None]
 
 
-def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file):
+def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max):
     """
     Evaluating with real IB
     """
@@ -60,8 +60,8 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file):
             print('Fuk')
 
     mp.Process()
-    print(f'Available cores for mp: {mp.cpu_count()-1}')  # sfeh -1 cause of my pc ;_;
-    with mp.Pool(mp.cpu_count()) as p:
+    print(f'Available cores for mp: {mp.cpu_count()}')
+    with mp.Pool(min(mp.cpu_count(), mp_cpu_cores_max)) as p:
         results = p.map(mp_evall, open_combinations)
 
     result_dict = {a: [b, c] for a, b, c in results}  # [lut_hash, experiment, experiment_safe]
@@ -231,7 +231,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=False):
+def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=False, mp_cpu_cores_max=16):
     lsactions = ['_0/pycode_list.yaml', '_1/pycode_list.yaml', '_2/pycode_list.yaml']
     if local_yamls:
         lut_file = dir_slurm / run_name / 'lutfile.yaml'
@@ -278,7 +278,7 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
 
     combined_all.sort(key=lambda x: x['parsim_sum'])
 
-    combined_all = eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file)
+    combined_all = eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max)
 
     combined_all_p = {}
     combined_all_a = [{}, {}, {}]
@@ -304,6 +304,7 @@ def main():
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
+    parser.add_argument('-mp_cpu_cores_max', default=8)
     parser.add_argument('-parsim_max_sum', type=int, default=35)
     parser.add_argument('-parsim_max_single', type=int, default=35)
     args = parser.parse_args()
@@ -319,14 +320,14 @@ def main():
                 if x.name[:2] == 'IB':
                     print(f'\nEvaluating {x.name}')
                     try:
-                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut)
+                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_cores_max=args.mp_cpu_cores_max)
                     except Exception as ex:
                         print(f'Failed evaluation for {x.name}. ignoring. Reason: {ex}')
                 else:
                     print(f'\nSkipping {x.name}')
 
     else:
-        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut)
+        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_cores_max=args.mp_cpu_cores_max)
     return
 
 

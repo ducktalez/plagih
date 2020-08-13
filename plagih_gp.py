@@ -2,16 +2,12 @@
 This starts the whole genetic programming.
 This extra file was added to have a file in the root directory that can be started.
 """
-import argparse
-import sys
-
-# sys.path = ['..'] + sys.path
-# sys.path.append('.')  # add directory 'modules' to the current root_dir
 
 from plagih.plagih_gp_base_class_xai import *
 from plagih.plagih_data import *
 from benchmarks.ib.combined_runs import *
 
+import argparse
 
 # import warnings
 # warnings.filterwarnings('error')
@@ -82,8 +78,6 @@ def load_prepared_run(conf, prepared_run):
     else:
         raise
 
-    # todo no histograms on slurm runs
-
     if 'RMSE' in prepared_run:
         kernel_name += ' RMSE'
     elif 'MSE' in prepared_run:
@@ -133,6 +127,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-gen_additionally', '-gen_add', type=int)
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
     parser.add_argument('-force_new_run', action='store_true')
+    parser.add_argument('-mp_cpu_cores_max', type=int, default=4, help='Maximum amount of cores for parallelisation. Sfeh: set default to max cores? 4 is for my old ass pc.')
     parser.add_argument('-print_all', '-debug', action='store_true')
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
     parser.add_argument('-pop_kill', action='store_true', help="Force 'killing' the whole population, creating a new generation from scratch, but keeping the paretofront."
@@ -165,7 +160,7 @@ def main():  # argv sys.argv[1:]
     """
     Starting the actual run
     """
-    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, developer_fix=args.developer_fix)
+    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, args.mp_cpu_cores_max, developer_fix=args.developer_fix)
 
     if args.analyse:
         if args.force_new_run:
@@ -174,6 +169,7 @@ def main():  # argv sys.argv[1:]
             gp.backup_load(args.load_backup)
         except FileNotFoundError as no_file_ex:
             raise FileNotFoundError(f'You need to load a backup file to analyse! {no_file_ex}')
+        # sfeh idea: track amount of created trees per parsimony? relevant for the pareto front
 
     else:
         if not args.force_new_run:
@@ -187,9 +183,10 @@ def main():  # argv sys.argv[1:]
             gp.pop_tmp = []
             # sfeh test this!
 
-        gp.plagih_gp_run(gen_additionally=args.gen_additionally)
+        gp.plagih_gp_run(args.gen_additionally)
 
-    gp.terminate_run()
+    gp.file_analysis_plots()
+
     if args.analyse or not args.less_files:
         gp.analyse_pareto()
     else:
@@ -203,7 +200,7 @@ def main():  # argv sys.argv[1:]
     print('Program ending')
     if prepared_run:
         if 'IB' in prepared_run and prepared_run[-2:] == '_0':
-            combined_lists(prepared_run[:-2], 35, 20, local_yamls=True)
+            combined_lists(prepared_run[:-2], 35, 35, local_yamls=True)
     sys.exit()
 
 

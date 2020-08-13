@@ -46,10 +46,10 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree, developer_fix=None):
+    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree, mp_cpu_cores_max, developer_fix=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
-
+        self.mp_cpu_cores_max = mp_cpu_cores_max  # todo
         self.developer_fix = developer_fix  # sfeh
 
         print(f'\n'
@@ -135,7 +135,7 @@ class ExplainableGP(object):
                                                 'fit_avg', 'fit_std', 'fit_best',
                                                 'parsim_avg', 'parsim_std',
                                                 'complexity_avg',
-                                                'time'])
+                                                'time', 'gens_since_last_pareto'])
 
         self.evolve_loop, self.evolve_random = self.make_evolve_rates()
         self.evolve_tags = list(self.evolve_loop.keys()) + list(self.evolve_random.keys())
@@ -213,9 +213,9 @@ class ExplainableGP(object):
                 'Rand2': {'evolve_name': 'random trees', 'evolve_rate': 0.00,
                           'custom_params': {'build_spec': {'size_mode': 'tree_depth', 'mean_min_max_var': (4.5, 4, 5, 1), 'full_or_grow': 'grow'}}},
                 'Rand3': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'grow'}}},
+                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'full_or_grow': 'grow'}}},
                 'Rand4': {'evolve_name': 'random trees', 'evolve_rate': 0.15,
-                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (12, 1, None, 5), 'full_or_grow': 'full'}}},  # param 'max' can be None
+                          'custom_params': {'build_spec': {'size_mode': 'tree_nodes', 'mean_min_max_var': (10, 1, None, 5), 'full_or_grow': 'full'}}},  # param 'max' can be None
             }
 
         evolve_loop = evolve_safety_update(evolve_loop)
@@ -249,7 +249,8 @@ class ExplainableGP(object):
         - Save valuable meta-data_csv_path: current generation (custom_done)
         """
 
-        a_helping_dict = {'self.monitor_evol': self.monitor_evol}  # sfeh save complete config?    # sfeh i dont think we need the config
+        a_helping_dict = {'self.monitor_evol': self.monitor_evol,
+                          'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh save complete config?    # sfeh i dont think we need the config
         run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitor_df, a_helping_dict  # sfeh use this later, a_helping_dict
 
         path_backup = file_make_dir(self.root_dir / self.paths.backup_p)
@@ -261,7 +262,6 @@ class ExplainableGP(object):
 
     def backup_load(self, path_load_backup=None):
         """
-        backup_load
         If a backup-file is found...
         """
         path_backup = path_load_backup or self.root_dir / self.paths.backup_p  # sfeh file-load
@@ -283,7 +283,10 @@ class ExplainableGP(object):
             try:
                 self.gen_id, self.pareto, self.pop_base, monitor_pd, a_helping_dict = run_data  # sfeh use a helping dictt a_helping_dict is used for a useable sldifjsdfsdfg , a_helping_dict
                 self.monitor_df = monitor_pd  # sfeh
+                if 'gens_since_last_pareto' not in self.monitor_df.columns:
+                    self.monitor_df['gens_since_last_pareto'] = np.nan
                 self.monitor_evol = a_helping_dict.get('self.monitor_evol') or self.monitor_evol
+                self.gens_since_last_pareto = a_helping_dict.get('gens_since_last_pareto') or 0  # sfeh
             except:
                 self.gen_id, self.pareto, self.pop_base, m = run_data
                 # self.conf.restart_count += 1
@@ -305,12 +308,13 @@ class ExplainableGP(object):
                             'parsim_avg': m['complexity_average'][time],
                             'parsim_std': math.sqrt(max(m['complexity_variance'][time], 0)),
                             'complexity_avg': None,  # np.var(pop_treelen),
-                            'time': m['gen_time'][time]}
+                            'time': m['gen_time'][time],
+                            'gens_since_last_pareto': 0}
                     self.monitor_df.loc[time] = entr  # sfeh version1 delete this sh
 
             self.check_update()
 
-            printez('g', f'Successfully loaded backup file. Generation: {self.gen_id}', self.print_type)
+            self.print_g('g', f'Successfully loaded backup file. Generation: {self.gen_id}')
 
             # except Exception as ex:
             #     raise Exception(f'Even though a backup exists for this run, it could not be loaded, because of\n{ex}')
@@ -320,7 +324,7 @@ class ExplainableGP(object):
 
     def check_update(self):
         """
-        Update paretofront
+        Update pareto front
         update population (fitness, parsimony, etc)
         also, raise if fitness problem
         """
@@ -332,7 +336,7 @@ class ExplainableGP(object):
             cooltree.meta.fitness_train = round(fitness_train, self.conf.float_decimals)
             entry = [parsimony, fitness_train, cooltree]
             self.pareto_append(entry)
-        self.printpl('i', f'Updating paretofront from old run. length: {oldsize}, new pareto length: {len(self.pareto)}')
+        self.printpl('i', f'Updating pareto front from old run. length: {oldsize}, new pareto length: {len(self.pareto)}')
 
         # sfeh recompute parsimony and fitness for every tree (optional?)
         # also rebuild trees?
@@ -351,7 +355,7 @@ class ExplainableGP(object):
         """
         self.pareto.sort(key=lambda x: x[0])
 
-    def plagih_gp_run(self, gen_additionally=None):
+    def plagih_gp_run(self, gen_additionally):
         """
         regular plagih run
         """
@@ -378,40 +382,15 @@ class ExplainableGP(object):
             self.update_pareto_from_pop_tmp()
 
             self.pop_analyse()
+
             self.pop_base = self.population_tmp[:]
             self.population_tmp = []
-
-            self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')
+            self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}.')
             self.gen_id += 1
         else:
-            printez('g', f'Done after Generation {self.gen_id}.', print_type=self.print_type)
+            self.print_g('g', f'Done after Generation {self.gen_id}.\nTime since start: {time.perf_counter() - self.time_start:4.2f}s')
 
         self.run_backup_save()
-        # if self.gen_id == 0:
-        #     self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
-        #
-        #     self.time_genstart = time.perf_counter()
-        #     self.gen_create_initial()
-        #     self.update_pareto_from_pop_tmp()
-        #
-        #     self.pop_analyse()
-        #     self.pop_base = self.population_tmp[:]
-        #     self.population_tmp = []
-        #     # self.file_population_base_karoo('first')  # first gen only # sfeh deprecated?
-        #
-        # while self.gen_id <= self.conf.gen_max:  # max generation, max time, done...
-        #     # self.printpl('gggg', f'Evolving Generation {self.gen_id}')
-        #     self.gen_id += 1
-        #     self.time_genstart = time.perf_counter()
-        #     self.gen_next_population()
-        #     self.update_pareto_from_pop_tmp()
-        #
-        #     self.periodical_procedures()
-        #
-        #     self.pop_analyse()
-        #     self.pop_base = self.population_tmp[:]
-        #     self.population_tmp = []
-        #     self.print_g('ggg', f'Generation {self.gen_id} took a total time of: {time.perf_counter() - self.time_genstart:4.2f}. ')
 
         return
 
@@ -607,7 +586,7 @@ class ExplainableGP(object):
 
         return
 
-    def activate_dataset(self, path_data_csv, action_name):
+    def activate_dataset(self, path_data, action_name):
         """
         loading the data which the GP will be working on.
         The .csv-file is prepared (loading correct data-type, splitting data, ...)
@@ -621,21 +600,12 @@ class ExplainableGP(object):
             # self.data_train_panda, self.data_control_panda
         """
 
-        if path_data_csv:
-            if path_data_csv.suffix == '.p':
-                data_prepared = pickle_load(path_data_csv)
-            elif path_data_csv.suffix == '.csv':
-                data_prepared = data_from_csv(path_data_csv, action_name=action_name)
-            else:
-                raise FileNotFoundError(f'File nust be a pickle (.p) or csv (.csv) file. Loaded file: {path_data_csv}')
-        # elif Path.is_file(self.root_dir / self.file_locs.samples_ready_p):  # maybe the data was already prepared earlier sfeh load file
-        #     data_prepared = pickle_load(self.root_dir / self.file_locs.samples_ready_p)
-        # elif Path.is_file(self.root_dir / self.file_locs.use_samples_csv):  # Preprocess the raw data: training/test split, env-variables, ...  sfeh probably deprecated
-        #     data_prepared = data_from_csv(self.file_locs.use_samples_csv, action_name=action_name)
-        #     print(f'Prepared the raw {self.file_locs.use_samples_csv} behaviour. Saving for next run.')
-        #     pickle_dump(self.root_dir / self.file_locs.use_samples_ready_p, data_prepared)
+        if path_data.suffix == '.p':
+            data_prepared = pickle_load(path_data)
+        elif path_data.suffix == '.csv':
+            data_prepared = data_from_csv(path_data, action_name=action_name)
         else:
-            raise FileNotFoundError(f'No data provided? Please provide data in your config-file(or in your command line call). {path_data_csv}')
+            raise FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
 
         env_vars, data_train, data_control = data_prepared  # data_control is data_test
 
@@ -894,7 +864,7 @@ class ExplainableGP(object):
         path = file_make_dir(self.root_dir / 'pycode_list.yaml')
         with Path.open(path, 'w') as file:
             _ = yaml.dump(pygents_list, file)  # , default_flow_style=False, sort_keys=False)
-            printez('ff', f'IB pycode-list: {path.as_posix()}')  # sfeh always the same print structure... just pass the path?
+            printez('ff', f'IB pycode-list: {path.as_posix()}', print_type=self.print_type)  # sfeh always the same print structure... just pass the path?
 
         return
 
@@ -1137,7 +1107,7 @@ class ExplainableGP(object):
         right_ids, right_labels, right_aritys, right_xtypes = tree_get_branch_ilax(right_tree, right_id)
 
         if not success:
-            print_warning('ww', f'Crossover conversion between trees not possible: \n{left_tree}\n{right_tree}', print_type=self.print_type)
+            print_warning('ww', f'Crossover conversion for these trees not possible: \n{left_tree}\n{right_tree}', print_type=self.print_type)
             return None, None
 
         left_core = Core_From_Labels(left_labels, left_aritys, left_xtypes).get_uninstanced_core()
@@ -1185,8 +1155,8 @@ class ExplainableGP(object):
         inserts a tree into the pareto front
         """
 
-        # first, make a local paretofront
-        # local_pop = sorted(sorted(self.population_tmp, key=lambda y: y.meta.fitness_train), key=lambda x: x.meta.parsimony)  # todo "reverse" fitness only if not regression regression
+        # first, make a local pareto front
+        self.gens_since_last_pareto += 1
         pop_parsimonies_dict = dict.fromkeys(sorted(set([cooltree.meta.parsimony for cooltree in self.population_tmp])))
         for ct in self.population_tmp:
             p = ct.meta.parsimony
@@ -1196,16 +1166,6 @@ class ExplainableGP(object):
                     pop_parsimonies_dict[p] = ct
             except:
                 pop_parsimonies_dict[p] = ct
-        # local_best = local_pop[0]
-        # local_pareto = [local_best]
-        # for cooltree in local_pop:
-        #     if cooltree.meta.fitness_train < local_best.meta.fitness_train and cooltree.meta.parsimony <= local_best.meta.parsimony:
-        #         local_pareto.append(cooltree)
-        #         local_best = cooltree
-        #     else:
-        #         pass
-
-        print('TODO UPDATE PARETO')
 
         for p, cooltree in pop_parsimonies_dict.items():
             self.update_pareto_with_tree(cooltree)
@@ -1364,7 +1324,7 @@ class ExplainableGP(object):
         origin_cooltree.meta.fitness_train = fitness_train
         origin_cooltree.meta.parsimony = 0
 
-        self.pareto.append([0, fitness_train, origin_cooltree])  # the origin tree is the only candidate for now -> it is in the paretofront
+        self.pareto.append([0, fitness_train, origin_cooltree])  # the origin tree is the only candidate for now -> it is in the pareto front
         self.print_g('gg', f'Loading origin tree, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return origin_cooltree  # self.origin_cooltree = copy.deepcopy(origin_cooltree)
@@ -1394,173 +1354,128 @@ class ExplainableGP(object):
 
         return fitness_train
 
-    def plot_end(self, xx, yy, title='', x_label='', y_label='', step_post='', linestyle='-', marker='', set_left=None, set_right=None, set_top=None,
-                 padd_r=1.05, padd_top=1.05, legend_loc='lower left', beyond_lines=False, fill_variance=None):
-        """
-        Make all plots in the same style - and also saving space.
-        - Makes pyplots
+    # def plot_rc_default(self):
+    #     rc('font', weight='bold')    # bold fonts are easier to see
+    #     rc('tick', labelsize=15)     # tick labels bigger
+    #     rc('lines', lw=1, color='k') # thicker black lines
+    #     rc('grid', c='0.5', ls='-', lw=0.5)  # solid gray grid lines
+    #     rc('savefig', dpi=300)       # higher res outputs
 
-        :param legend_loc:
-        :param yy:
-        :param xx:
-        :param set_top:
-        :param fill_variance:
-        :param padd_r:
-        :param marker:
-        :param title:
-        :param ax_label: irrelevant for a single curve
-        :param x_label: label the x-axis
-        :param y_label: label the y-axis
-        :param step_post: makes 'step' plots- can be 'post', 'pre' or [pls google]
-
-        :param linestyle: E. g. 'None', 'dashed', '-', ''
-        :param set_left: Smallest left value
-        :param set_right: E. g. if parsim_maxony is 100 -> show complete width, even if entries only go to 40
-        :param padd_top: How much padding to the top border
-        :param beyond_lines: in step plots, draw the line further to the left and right
-
-        :return:
-
-        sfeh: max_height=None,  # when creating a plot in every generation, fix the maximum height and width?
-        """
-
-        if len(xx) == 0:
-            print_e(f'Plotting empty array is not possible! Data={xx, yy}')
-            return
-
-        x, y = xx, yy
-
-        fig, ax = plt.subplots()
-
-        top, bottom, left, right = max(y), min(y), min(x), max(x)
-        if set_left:
-            left = (x[0], y[0])
-
-        if set_top:
-            new_top = set_top
-        else:
-            new_top = (top - min(bottom, 0)) * padd_top  # top * 1.05 for better style
-
-        if set_right:
-            right = max(right, set_right)
-        new_right = right * padd_r
-
-        if beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
-            x = np.concatenate([[x[0]], x, [new_right + 1]])
-            y = np.concatenate([[new_top + 1], y, [y[-1]]])
-        # label = ax_label or
-        if step_post:
-            ax.step(x, y, linestyle=linestyle, marker=marker, label=title, where=step_post)
-        else:
-            ax.plot(x, y, linestyle=linestyle, marker=marker, label=title)
-            if fill_variance is not None:
-                x_std, y_var = fill_variance
-                y_std = np.sqrt(y_var)
-                lower_bound_stderr = y - y_std
-                upper_bound_stderr = y + y_std
-                ax.fill_between(x_std, lower_bound_stderr, upper_bound_stderr, alpha=0.2)
-                ax.set_ylim(min(bottom, 0), new_top + np.max(upper_bound_stderr))
-
-        fig.tight_layout()
-        ax.set_xlim(min(left, 0), new_right)
-        ax.set_ylim(min(bottom, 0), new_top)
-        if legend_loc:
-            ax.legend(loc=legend_loc)
-        else:
-            ax.set_title(title)
-        ax.set_xlabel(x_label)
-        ax.set_ylabel(y_label)
-
-        path_plot = folder_make_dir(self.root_dir / self.paths.plots)
-
-        plt.tight_layout()
-        try:
-            plt.savefig(path_plot / f'{title}.png', dpi=300)
-            # plt.savefig(path_plot / f'{title}.svg')
-        except PermissionError as permerr:
-            print_e(f'Could not save plot: {permerr}')
-
-        plt.close()  # Stackoverflow said that this is too much, plt.clf() should be better, but does not seem to work
-        return
-
-    def plot_performance(self):
+    def plot_gen_performance(self):
         """
         All monitoring infos
         sfeh den shit in Funktionen aufteilen
-        todo: add generations since last pareto entry?
-            YES.
         """
+        with plt.rc_context(rc={'axes.grid': False}):  # todo use this everywhere?
+            fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
+            fig.tight_layout()
+            plt.tight_layout()
+            plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+            xx = list(self.monitor_df.index)
 
-        fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
-        fig.tight_layout()
-        plt.tight_layout()
-        plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-        xx = list(self.monitor_df.index)
+            axs0 = axs[0]
+            axs0.plot(self.monitor_df['fit_avg'], marker='.', label='regression error (average)')
+            try:
+                avg = self.monitor_df['fit_avg']
+                std = self.monitor_df['fit_std']
+                axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
+            except Exception as ex:
+                raise Exception(f'Delete this. were there any problems? {ex}')
+            axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='.', where='post', color='g', label='Best candidate')  # , label=ax_label
+            axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
-        axs0 = axs[0]
-        axs0.plot(self.monitor_df['fit_avg'], label='MSE (average)')
-        try:
-            avg = self.monitor_df['fit_avg']
-            std = self.monitor_df['fit_std']
-            axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')
-        except Exception as ex:
-            raise Exception(f'Delete this. were there any problems? {ex}')
-        axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
-        axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
+            axs0_twin = axs0.twinx()
+            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='generations since last pareto entry', linestyle='dashed', marker='.')  # linestyle='None'
+            axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
+            try:
+                axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 25))
+            except Exception as ex:
+                print_e(f'damn setting ylim not worksening :s {ex}')
+                axs0_twin.set_ylim(ymin=0, ymax=25)
 
-        axs1 = axs[1]
-        axs1.plot(self.monitor_df['parsim_avg'], label='complexity (average)')
-        # self.conf.complexity_measure
+            axs0_twin.legend(loc='lower right')
 
-        try:
-            p_avg = self.monitor_df['parsim_avg']
-            p_std = self.monitor_df['parsim_std']
-            axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('TED (average)')
-        except Exception as ex:
-            raise Exception(f'Delete this. if this did not raise. {ex}')
-        axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
+            axs1 = axs[1]
+            axs1.plot(self.monitor_df['parsim_avg'], label='complexity (average)')
+            # self.conf.complexity_measure
 
-        axs2 = axs[2]
-        axs2.plot(self.monitor_df['pop_len'], label='pop size')
-        axs2.plot(self.monitor_df['pop_unique'], label='unique')
-        axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
+            try:
+                p_avg = self.monitor_df['parsim_avg']
+                p_std = self.monitor_df['parsim_std']
+                axs1.fill_between(xx, p_avg - p_std, p_avg + p_std, alpha=0.2)  # axs1.set_title('TED (average)')
+            except Exception as ex:
+                raise Exception(f'Delete this if no raise since some time. {ex}')
+            axs1.set_ylim(ymin=0), axs1.legend(loc='lower left')
 
-        axs3 = axs[3]
-        between_outliers = self.monitor_df['time'].between(0, 2 * self.monitor_df['time'].mean())
-        axs3.plot(self.monitor_df['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
-        axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
+            axs2 = axs[2]
+            axs2.plot(self.monitor_df['pop_len'], label='pop size')
+            axs2.plot(self.monitor_df['pop_unique'], label='unique')
+            axs2.margins(y=0.25), axs2.set_ylim(ymin=0), axs2.legend(loc='lower left')
 
-        # Top level style
-        axs3.set_xlim(xmin=0), axs3.set_xlabel('Generations')
-        axs0.set_title('Population Monitoring')  # sfeh
-        fig.tight_layout()
-        fig.savefig(self.root_dir / f'monitoring.png', dpi=300)
-        # fig.savefig(self.root_dir / f'monitoring.pdf')  # asd sfeh?
-        # fig.savefig(self.root_dir / f'monitoring.svg')
+            axs3 = axs[3]
+            between_outliers = self.monitor_df['time'].between(0, 2 * self.monitor_df['time'].mean())
+            axs3.plot(self.monitor_df['time'][between_outliers], label='time (s)')  # sfeh could be a better rule...
+            axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
 
-        plt.close()
+            # Top level style
+            axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('Generations')  # todo
+            axs0.set_title('Population Monitoring')  # sfeh
+            fig.tight_layout()
+            path = self.root_dir / f'monitoring.png'
+            fig.savefig(path, dpi=300)
+            # fig.savefig(self.root_dir / f'monitoring.svg')
+            self.printpl('f', f"Monitoring: {path.as_posix()}")
 
-    def file_analysis_plots(self):
-        """
-        Make all plots
-        """
+        # plt.close()
 
-        self.plot_performance()
-
+    def plot_paretofront(self):
         """
         Plot pareto candidates
         """
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in self.pareto]
         xx, yy = np.array(tuples).T
-        self.plot_end(xx, yy, step_post='post', title='pareto dominant candidates', x_label='complexity',
-                      y_label='regression error',
-                      linestyle='dashed',
-                      marker='.',
-                      set_right=self.conf.parsimony_max,
-                      beyond_lines=True)
 
+        if len(xx) == 0:
+            print_e(f'Plotting empty array is not possible! Data={xx, yy}')
+            return
+
+        fig, ax = plt.subplots()
+        right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+        ax.set_xlim(min(min(xx), 0), right)
+        ax.set_ylim(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05)  # 1.05  # top * 1.05 for better style
+
+        # beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
+        xx = np.concatenate([[xx[0]], xx, [right + 1]])
+        yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
+
+        ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{self.conf.name}', where='post')
+
+        fig.tight_layout()
+        ax.legend(loc='lower left')
+        ax.set_title('pareto front')
+        ax.set_xlabel('complexity')
+        ax.set_ylabel('regression error')
+
+        plt.tight_layout()
+        fig.tight_layout()
+        try:
+            path = self.root_dir / f'paretofront {self.conf.name}.png'
+            plt.savefig(path, dpi=300)
+            self.printpl('f', f"paretofront (png): {path.as_posix()}")
+
+            path_plot = folder_make_dir(self.root_dir / self.paths.plots)
+            plt.savefig(path_plot / f'paretofront {self.conf.name}.svg')
+            self.printpl('f', f"paretofront (svg): {path_plot.as_posix()}")
+        except PermissionError as permerr:
+            print_e(f'Could not save plot: {permerr}')  # sfeh for everything?
+        plt.close()  # Stackoverflow said that this is too much, plt.clf() should be better, but does not seem to work
+        return
+
+    def plot_evolve_performance(self):
         """
-        Plots for each tag (too much, i guess)
+        Plots for each tag in the evolution list
+        (too much, i guess)
+        sfeh: this should be saved within the trees. Everything else is a waste of memory!
         """
         try:
             fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
@@ -1575,14 +1490,23 @@ class ExplainableGP(object):
                 # axs[2].set_ylim(ymin=0), axs[2].legend(loc='lower left')
 
             plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-            fig.savefig(self.root_dir / f'monitoring_evolutions.png', dpi=300)
-            # fig.savefig(self.root_dir / f'monitoring.pdf')  # asd sfeh?
+            path = self.root_dir / f'monitoring_evolutions.png'
+            fig.savefig(path, dpi=300)
+            self.printpl('f', f"monitoring_evolutions.png: {path.as_posix()}")
             # fig.savefig(self.root_dir / f'monitoring.svg')
             plt.close()
 
         except Exception as ex:
             print_e(f'plot_evolution_analysis failed because of: {ex}')
 
+    def file_analysis_plots(self):
+        """
+        Make all plots
+        """
+
+        self.plot_gen_performance()  # largest plot analysing the
+        self.plot_paretofront()
+        # self.plot_evolve_performance()  # todo
         return
 
     def pop_analyse(self):
@@ -1602,30 +1526,30 @@ class ExplainableGP(object):
 
         pop_fitness = [cooltree.meta.fitness_train for cooltree in popul]
 
-        tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness', 'parsimony', 'lentree']))
-        for cooltree in popul:
-            last_evol = cooltree.meta.last_evolution
-            if last_evol in self.evolve_tags:
-                row = {'fitness': cooltree.meta.fitness_train,
-                       'parsimony': cooltree.meta.parsimony,
-                       'lentree': len(cooltree)}
-                tmp_evol_performance[last_evol].loc[self.gen_id] = row
-
-        for last_evol, evodata in tmp_evol_performance.items():
-            if last_evol in self.evolve_loop:
-                try:
-                    row = {'fitness_avg': evodata['fitness'].mean(),
-                           'parsimony_avg': evodata['parsimony'].mean(),
-                           'lentree_avg': evodata['lentree'].mean(),
-                           'evolve_num': self.evolve_loop[last_evol]['evolve_num'],
-                           'count': len(tmp_evol_performance[last_evol])}
-                    self.monitor_evol[last_evol].append(row, ignore_index=True)  #
-                    # sfeh fitness - last fitness?
-                except Exception as ex:
-                    print_e(f'Could not save evol_performance analysis. {ex}')
-            else:
-                if last_evol != 'origin' and last_evol != 'Rand3o':
-                    print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
+        # tmp_evol_performance = dict.fromkeys(self.monitor_evol.keys(), pd.DataFrame(columns=['fitness', 'parsimony', 'lentree']))
+        # for cooltree in popul:
+        #     last_evol = cooltree.meta.last_evolution
+        #     if last_evol in self.evolve_tags:
+        #         row = {'fitness': cooltree.meta.fitness_train,
+        #                'parsimony': cooltree.meta.parsimony,
+        #                'lentree': len(cooltree)}
+        #         tmp_evol_performance[last_evol].loc[self.gen_id] = row
+        #
+        # for last_evol, evodata in tmp_evol_performance.items():
+        #     if last_evol in self.evolve_loop:
+        #         try:
+        #             row = {'fitness_avg': evodata['fitness'].mean(),
+        #                    'parsimony_avg': evodata['parsimony'].mean(),
+        #                    'lentree_avg': evodata['lentree'].mean(),
+        #                    'evolve_num': self.evolve_loop[last_evol]['evolve_num'],
+        #                    'count': len(tmp_evol_performance[last_evol])}
+        #             self.monitor_evol[last_evol].append(row, ignore_index=True)  #
+        #             # sfeh fitness - last fitness?
+        #         except Exception as ex:
+        #             print_e(f'Could not save evol_performance analysis. {ex}')
+        #     else:
+        #         if last_evol != 'origin' and last_evol != 'Rand3o':
+        #             print_warning('w', f'delete_this, sfeh, okay when the following is origin: {last_evol}')
 
         pop_parsim = [cooltree.meta.parsimony for cooltree in popul]
         pop_treelen = [len(cooltree) for cooltree in popul]
@@ -1648,7 +1572,8 @@ class ExplainableGP(object):
                                        'parsim_avg': np.average(pop_parsim),
                                        'parsim_std': np.std(pop_parsim),
                                        'complexity_avg': np.var(pop_treelen),
-                                       'time': gen_time}  # sfeh version1 delete this shit
+                                       'time': gen_time,
+                                       'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh version1 delete this shit
 
         self.print_g('gg', f'Created {len(popul)}/{self.conf.pop_max} ({unique_tree_count} unique) in generation {gen_id}. Gen took {gen_time:4.2f}s')
         # sfeh check if there are really unique... doubt it.
@@ -1663,36 +1588,26 @@ class ExplainableGP(object):
             self.run_backup_save()
         return
 
-    def terminate_run(self):
-        """
-        Program is done after writing all gp_files one last time.
-        For new usage: Check if an update should be made before
-        """
-
-        self.file_analysis_plots()
-        self.print_g('gg', f'Terminating. \tTime since start: {time.perf_counter() - self.time_start:4.2f}s')
-        return
-
     def printpl(self, message_type, message_str):
         """
         Lightweight print function.
         Instead of checking if you should print every time, this is done here.
         message_type options can be found in config
         """
-
         if message_type in self.print_type:
-            printez(message_type, message_str, print_type=self.print_type, time_total=time.perf_counter() - self.time_start)
-
+            printez(message_type, message_str, print_type=self.print_type)
         return
 
     def print_g(self, message_type, text):
         """
-
+        print informations about generations (g) progress.
+        Very common print, showing the progress of the generations.
+        always printing the time since start. used to be colored blue.
         """
-
         if message_type in self.print_type:
-            printez(message_type, text, time_total=time.perf_counter() - self.time_start)
-
+            # time_passed = time.perf_counter() - self.time_start
+            time_now = time.strftime("%H:%M", time.localtime())
+            print(f'{time_now}. {text}')
         return
 
 

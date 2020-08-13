@@ -149,7 +149,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
                 eval_action = EvalAction(column_name, ctype, cmin, cmax, uniques)
             else:
                 drop_actions.append(column_name)  # drop from data
-                printez('i', f'Ignoring action {column_name} for this run')
+                printez('i', f'Ignoring action {column_name} for this run')  # , print_type=print_type print_type does not exist yet
         else:
             obs_list.append(Obs(column_name, ctype))
 
@@ -185,8 +185,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
             choose_obs_2f.append(obs_tmp)
             choose_obs_p.append(1)
 
-    obs_2f = lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0]
-    choose_obs = {'2f': obs_2f,
+    choose_obs = {'2f': lambda: random.choices(choose_obs_2f, weights=choose_obs_p)[0],
                   '2b': None}
 
     env_vars.choose_obs = choose_obs
@@ -202,8 +201,9 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
     return env_vars, data_train, data_test
 
 
-def observation_get_family_and_time(name, re_pattern='_\d+$', none_return=None):
+def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
     """
+
     """
 
     core_label = re.split(re_pattern, name)[0]
@@ -215,45 +215,3 @@ def observation_get_family_and_time(name, re_pattern='_\d+$', none_return=None):
     except Exception:
         temp_diff = none_return  # there is only the latest version
     return core_label, temp_diff
-
-
-def obs_get_timedelta(name, re_pattern='_\d+$', none_return=0):
-    """
-    'cartVel_12' -> core_label = 'cartVel', temp_diff = 12
-    can be used to enrich old runs 'manually', otherwise only used in header_entry_get_tempdiff
-    """
-    re_search = re.search(re_pattern, name)  # re_search => ['_12']
-    # sfeh what is the best solution? '\_\d+$' is the correct regex using search.
-    if re_search:
-        temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
-        return int(temp_diff)
-    else:
-        return none_return  # there is only the latest version
-
-
-def obs_get_family(name, re_pattern='_\d+$'):
-    """
-    variable like 'temperature_12' is variable 12 steps from past (13th)
-    """
-    core_label = re.split(re_pattern, name)  #
-    if core_label:
-        core_label = core_label[0]
-    else:
-        core_label = name
-    return core_label
-
-
-def header_entry_get_tempdiff(name, column_meta_values, re_pattern='_\d+$'):
-    """
-    checking if an observation/variable is a past/historic value 'cartVel_10'
-    """
-
-    temp_diff = column_meta_values.get('temp_diff')
-
-    if temp_diff is not None:
-        temp_diff = int(temp_diff)  # convert time-difference to int-number
-    else:
-        temp_diff = obs_get_timedelta(name, re_pattern=re_pattern)
-
-    return temp_diff
-

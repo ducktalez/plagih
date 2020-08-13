@@ -1628,6 +1628,8 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     core = core_from_expr(expr_sym, env_vars)
     tree_sym = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
     tree_sym_tildefree = tree_remove_tilde(tree_sym)
+    if tree_sym_tildefree != tree_sym:
+        print_e(f'sfeh FAIL \n{tree_sym_tildefree}\n{tree_sym}')  # sfeh wasd
 
     return tree_sym_tildefree
 

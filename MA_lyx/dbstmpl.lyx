@@ -8018,14 +8018,6 @@ Fast moving car vs slowly moving generate different amount of data per area.
 \end_layout
 
 \begin_layout Section
-Gym's Swing Pole
-\end_layout
-
-\begin_layout Standard
-The swing pole is a special 
-\end_layout
-
-\begin_layout Section
 Industrial benchmark
 \end_layout
 
@@ -8060,12 +8052,9 @@ Das IB simuliert dafür einen Controler, für den ein Agent drei kontinuierliche
 \end_layout
 
 \begin_layout Standard
-For the IB, the task is to find a sequence of actions x = (Dvt, Dgt, Dht,
- Dvt+1, Dgt+1, Dht+1, .
- .
- .
- , Dvt+T􀀀1, Dgt+T􀀀1, Dht+T􀀀1) which changes the control variables in a way
- that return R is as high as possible for a given time horizon T.
+For the IB, the task is to find a sequence of actions x =...
+ which changes the control variables in a way that return R is as high as
+ possible for a given time horizon T.
  Using 100 particles and 100 PSO iterations for each state to search for
  an optimal action trajectory, PSO-P is able to solve the IB problem given
  T = 100, q = 0.05, and g = 0.97.

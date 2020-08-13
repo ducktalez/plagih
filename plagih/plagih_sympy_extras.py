@@ -1,19 +1,18 @@
 """
+sfeh: I think we should get rid of sympy in the long term. A lot of problems are related to sympy.
+
 This class enrichens the python-core 'sympy'.
 Sympy is used to reduce the functions to their most basic form.
 E. g., it reduces '1+1+a' to 'a+2' and thus saves much computation power.
-Sympy does not have some functions, e. g. 'if a then b else c', which we want to use though.
 
-This has currently only Ifte(a, b, c), which makes 'if then else' as if was a three-parametered function.
+- implementing missing functions in sympify, e. g. 'if a then b else c'.
+- All number-related functions must have set
+    is_real = True
+    otherwise: '1 < Maxi(2, Ifte(1 < a, 1, 1))' will crash. (< operators only only work on non-complex - aka real numbers)
+    check for is_number if required.
 
-inputs a, b, c to a function can be actual actual values but also variables with out a value assigned yet.
-
-Use:
-1. Import function only
-    from plagih.plagih_sympy_extras import plagih_sympify
-2. Use function
-
-Classes must currently have the exact same name as their occurance (Ifte -> Ifte, not ifte or so)
+- Classes must currently have the exact same name as their occurance (Ifte -> Ifte, not ifte or so)
+    This is because when None is returned, the class name gets replaced at the function. could be solved, but why though :P
 
 Useful information:
 - These variables are set for every sympy object and thus can be tested, e.g. a.is_Boolean
@@ -48,7 +47,6 @@ Useful information:
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
-
 """
 
 from sympy import Function, sympify
@@ -65,7 +63,7 @@ class Ifte(Function):
 
     @classmethod
     def eval(cls, a, b, c):
-        if a.is_Boolean:  #  :  # you can not believe how long it took me to figure out why this is needed
+        if a.is_Boolean:
             return b if a else c  # search for 'gotcha' in https://docs.sympy.org/latest/_modules/sympy/core/relational.html
         else:
             return
@@ -262,16 +260,16 @@ def plagih_sympify(function_string):
     try:
         return sympify(sympify(function_string, locals=local_sympy_dict))
     except Exception as ex:
-        raise
-        print(f'Todo TODOTODO {ex}')
-        return 'nan'  # 'nan' always evaluates to nan
+        # raise
+        # print(f'debugging further {ex}')
+        return 'nan'  # 'nan' always evaluates to nan. ALl nan bugs should be solved.
 
 
 if __name__ == "__main__":
     print('Running sympify example')
-    expr = 'Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))'
-    expr = 'Round(-123.333334234) + Round(Shift_2)'
-    expr_raw = '1 < Maxi(2, Ifte(1 < a, 1, 1))'
+    exprs = ['Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))',
+             'Round(-123.333334234) + Round(Shift_2)',
+             '1 < Maxi(2, Ifte(1 < a, 1, 1))']
 
-    expr_raw = '(((0.326675 * Consumption_2) - Shift_9) + (0.788838 * ((-Gain_3 + Gain_9) + Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4)))))'
-    print(plagih_sympify(expr_raw))
+    expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
+    print(plagih_sympify(expr))

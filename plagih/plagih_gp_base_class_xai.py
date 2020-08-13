@@ -46,7 +46,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, conf: GpConfig, root_dir, path_data_csv, path_origin_tree, mp_cpu_cores_max, developer_fix=None):
+    def __init__(self, conf: GpConfig, root_dir, path_data, path_origin_tree, mp_cpu_cores_max, developer_fix=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
         self.mp_cpu_cores_max = mp_cpu_cores_max  # todo
@@ -65,7 +65,9 @@ class ExplainableGP(object):
         self.data_train = None
         self.data_control = None
 
-        self.env_vars, self.data_train, self.data_control = self.activate_dataset(path_data_csv, self.conf.action_name)
+        # if path_data.suffix == '.p': data_prepared = pickle_load(path_data)
+        self.env_vars, self.data_train, self.data_control = data_from_csv(path_data, action_name=self.conf.action_name)
+        # FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
 
         # Evaluating kernel (that uses tensorflow)
         self.tf_config = tf.compat.v1.ConfigProto(log_device_placement=self.conf.tf_device_log,
@@ -328,15 +330,15 @@ class ExplainableGP(object):
         update population (fitness, parsimony, etc)
         also, raise if fitness problem
         """
-        oldsize = len(self.pareto)
-        pareto_list = self.pareto[:]
-        self.pareto = []
-        for (parsimony, fitness_train, cooltree) in pareto_list:
-            fitness_train = round(fitness_train, self.conf.float_decimals)
-            cooltree.meta.fitness_train = round(fitness_train, self.conf.float_decimals)
-            entry = [parsimony, fitness_train, cooltree]
-            self.pareto_append(entry)
-        self.printpl('i', f'Updating pareto front from old run. length: {oldsize}, new pareto length: {len(self.pareto)}')
+        # oldsize = len(self.pareto)
+        # pareto_list = self.pareto[:]
+        # self.pareto = []
+        # for (parsimony, fitness_train, cooltree) in pareto_list:
+        #     fitness_train = round(fitness_train, self.conf.float_decimals)
+        #     cooltree.meta.fitness_train = round(fitness_train, self.conf.float_decimals)
+        #     entry = [parsimony, fitness_train, cooltree]
+        #     self.pareto_append(entry)
+        # self.printpl('i', f'Updating pareto front from old run. length: {oldsize}, new pareto length: {len(self.pareto)}')
 
         # sfeh recompute parsimony and fitness for every tree (optional?)
         # also rebuild trees?
@@ -745,6 +747,7 @@ class ExplainableGP(object):
                 action_bins = np.linspace(-(breite + act_range), + (breite + act_range), num_bins + 1)  # sfeh 10 bins?
 
             expr_sym = cooltree.get_expr_sym()
+
             used_observations = cooltree.get_observation_list()
             pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
@@ -1349,7 +1352,7 @@ class ExplainableGP(object):
         fitness_train = round(float(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True)), self.conf.float_decimals)
 
         if not check_value_is_real(fitness_train):
-            raise Exception(f'Error is {fitness_train}')  # happens, eg when values are soo wrong that it leaves the float-range
+            raise Exception(f"fitness is: '{fitness_train}'")  # happens, eg when values are soo wrong that it leaves the float-range
         # fitness_train = round(fitness_train, self.conf.fitness_decimals)
 
         return fitness_train
@@ -1366,7 +1369,7 @@ class ExplainableGP(object):
         All monitoring infos
         sfeh den shit in Funktionen aufteilen
         """
-        with plt.rc_context(rc={'axes.grid': False}):  # todo use this everywhere?
+        with plt.rc_context(rc={'axes.grid': True}):  # todo use this everywhere?
             fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
             fig.tight_layout()
             plt.tight_layout()
@@ -1390,8 +1393,13 @@ class ExplainableGP(object):
             try:
                 axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 25))
             except Exception as ex:
-                print_e(f'damn setting ylim not worksening :s {ex}')
-                axs0_twin.set_ylim(ymin=0, ymax=25)
+                try:
+                    print_e(f'damn setting ylim not worksening :s {ex}')
+                    axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 25))
+                    # print(self.monitor_df['gens_since_last_pareto'].notnull().max())
+                except Exception as ex2:
+                    print_e(f'damn setting ylim not working, version 2! {ex2}')
+                    axs0_twin.set_ylim(ymin=0, ymax=25)
 
             axs0_twin.legend(loc='lower right')
 
@@ -1421,7 +1429,7 @@ class ExplainableGP(object):
             axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('Generations')  # todo
             axs0.set_title('Population Monitoring')  # sfeh
             fig.tight_layout()
-            path = self.root_dir / f'monitoring.png'
+            path = self.root_dir / f'monitoring-{self.conf.name}.png'
             fig.savefig(path, dpi=300)
             # fig.savefig(self.root_dir / f'monitoring.svg')
             self.printpl('f', f"Monitoring: {path.as_posix()}")

@@ -1351,7 +1351,14 @@ class ExplainableGP(object):
         used_observations = cooltree.get_observation_list()
         fitness_train = round(float(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True)), self.conf.float_decimals)
 
-        if not check_value_is_real(fitness_train):
+        """
+        Returns bool value if we can use the calculated fitness
+        Fitness values might evaluate to weird stuff
+        e.g. 'nan' after dividing by zero or (inf) after 20**1234
+        nan: fitness == fitness -> False
+        inf: fitness is not float('inf') -> False
+        """
+        if fitness_train != fitness_train or fitness_train == float('inf'):
             raise Exception(f"fitness is: '{fitness_train}'")  # happens, eg when values are soo wrong that it leaves the float-range
         # fitness_train = round(fitness_train, self.conf.fitness_decimals)
 
@@ -1369,7 +1376,7 @@ class ExplainableGP(object):
         All monitoring infos
         sfeh den shit in Funktionen aufteilen
         """
-        with plt.rc_context(rc={'axes.grid': True}):  # todo use this everywhere?
+        with plt.rc_context(rc={'axes.grid': True}):  # todo use this everywhere? grid?
             fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
             fig.tight_layout()
             plt.tight_layout()
@@ -1377,7 +1384,7 @@ class ExplainableGP(object):
             xx = list(self.monitor_df.index)
 
             axs0 = axs[0]
-            axs0.plot(self.monitor_df['fit_avg'], marker='.', label='regression error (average)')
+            axs0.plot(self.monitor_df['fit_avg'], marker='.', label='Regression error (average)')
             try:
                 avg = self.monitor_df['fit_avg']
                 std = self.monitor_df['fit_std']
@@ -1388,7 +1395,7 @@ class ExplainableGP(object):
             axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
             axs0_twin = axs0.twinx()
-            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='generations since last pareto entry', linestyle='dashed', marker='.')  # linestyle='None'
+            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last pareto entry', linestyle='dashed', marker='.')  # linestyle='None'
             axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
             try:
                 axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 25))
@@ -1404,7 +1411,7 @@ class ExplainableGP(object):
             axs0_twin.legend(loc='lower right')
 
             axs1 = axs[1]
-            axs1.plot(self.monitor_df['parsim_avg'], label='complexity (average)')
+            axs1.plot(self.monitor_df['parsim_avg'], label='Complexity (average)')
             # self.conf.complexity_measure
 
             try:
@@ -1427,7 +1434,7 @@ class ExplainableGP(object):
 
             # Top level style
             axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('Generations')  # todo
-            axs0.set_title('Population Monitoring')  # sfeh
+            axs0.set_title(f'{self.conf.name} monitoring generations')  # sfeh
             fig.tight_layout()
             path = self.root_dir / f'monitoring-{self.conf.name}.png'
             fig.savefig(path, dpi=300)
@@ -1460,9 +1467,9 @@ class ExplainableGP(object):
 
         fig.tight_layout()
         ax.legend(loc='lower left')
-        ax.set_title('pareto front')
-        ax.set_xlabel('complexity')
-        ax.set_ylabel('regression error')
+        ax.set_title('Pareto front')
+        ax.set_xlabel('Complexity')
+        ax.set_ylabel('Regression error')
 
         plt.tight_layout()
         fig.tight_layout()
@@ -1650,14 +1657,3 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, forc
     build_size = max(size_min, build_size)
 
     return int(build_size)
-
-
-def check_value_is_real(fitness):
-    """
-    Returns bool value if we can use the calculated fitness
-    Fitness values might evaluate to weird stuff
-    e.g. 'nan' after dividing by zero or (inf) after 20**1234
-    nan: fitness == fitness -> False
-    inf: fitness is not float('inf') -> False
-    """
-    return fitness == fitness and fitness != float('inf')

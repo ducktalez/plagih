@@ -61,7 +61,7 @@ def printez(message_type, text, print_type=None):
             return
 
     if 'i' in message_type:
-        print(f'Info:{BColors.CYAN} {text}{BColors.RESET}')
+        print(f'{BColors.CYAN}Info: {text}{BColors.RESET}')
     elif 'f' in message_type:
         print(f'{BColors.MAGENTA}Writing File: {text}{BColors.RESET}{BColors.RESET}')
     elif 'a' in message_type:

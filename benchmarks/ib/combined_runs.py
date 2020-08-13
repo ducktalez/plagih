@@ -130,10 +130,10 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         ax.set_ylabel('reward')
         ax.set_ylim(-15000, -4000)
         # # only if one entry per parsimony
-        ax.plot(xx, y_all, label='all actions', marker='.', color='r')
-        ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
+        ax.plot(xx, y_all, label='All actions', marker='.', color='r')
+        ax.plot(xx, y_safe, label='Low risk', marker='.', color='b')
         ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
+        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
         ax2.tick_params(axis='y', labelcolor='tab:gray')
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
@@ -305,7 +305,7 @@ def main():
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
     parser.add_argument('-mp_cpu_cores_max', default=8)
-    parser.add_argument('-parsim_max_sum', type=int, default=35)
+    parser.add_argument('-parsim_max_sum', type=int, default=50)
     parser.add_argument('-parsim_max_single', type=int, default=35)
     args = parser.parse_args()
 

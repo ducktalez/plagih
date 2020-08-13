@@ -98,47 +98,47 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_c
 def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_eval):
     parsims = sorted(list(set([x['parsim_sum'] for x in combined_all if x['parsim_sum']])))
         
-    for measr in ['fitness_sum']:  # , 'f_norm', 'f_squared', 'f_normsub', 'f_0div', 'f_0sub']:
-        """
-        plot best (plot)
-        """
-        # todo kreuztabelle?
-        tmp = [min([row for row in combined_all_p[p]], key=lambda x: x[measr]) for p in parsims]
-        tmp.sort(key=lambda x: x['parsim_sum'])
-        res = []
-        cnt = []
-        best = tmp[0]
-        for p in parsims:
-            # ax2.tick_params(axis='y', labelcolor=color)
-            prows = [row for row in combined_all_p[p]]
-            best_row = min(prows, key=lambda x: x[measr])
-            if best_row['fitness_sum'] < best['fitness_sum']:
-                res.append(best_row)
-                cnt.append(len(prows))
-            else:
-                print(f'Not a better entry at {p}')
+    # for measr in ['fitness_sum']:  # , 'f_norm', 'f_squared', 'f_normsub', 'f_0div', 'f_0sub']:
+    """
+    plot best (plot)
+    """
+    # todo kreuztabelle?
+    tmp = [min([row for row in combined_all_p[p]], key=lambda x: x['fitness_sum']) for p in parsims]
+    tmp.sort(key=lambda x: x['parsim_sum'])
+    res = []
+    cnt = []
+    best = tmp[0]
+    for p in parsims:
+        # ax2.tick_params(axis='y', labelcolor=color)
+        prows = [row for row in combined_all_p[p]]
+        best_row = min(prows, key=lambda x: x['fitness_sum'])
+        if best_row['fitness_sum'] < best['fitness_sum']:
+            res.append(best_row)
+            cnt.append(len(prows))
+        else:
+            print(f'Not a better entry at {p}')
 
-        # res = max([x for x in res1], key=lambda l: l[measr])
-        xx = [x['parsim_sum'] for x in res]
-        y_all = [y['experiment'] for y in res]
-        y_safe = [y['experiment_safe'] for y in res]
+    # res = max([x for x in res1], key=lambda l: l[measr])
+    xx = [x['parsim_sum'] for x in res]
+    y_all = [y['experiment'] for y in res]
+    y_safe = [y['experiment_safe'] for y in res]
 
-        plt.tight_layout()
-        fig, ax = plt.subplots()
-        ax.set_title(f'plot ({run_name}, {measr})')  # todo compare measurements and remove one of them forever
-        ax.set_xlabel('Complexity')
-        ax.set_ylabel('Reward')
-        ax.set_ylim(-15000, -4000)
-        # # only if one entry per parsimony
-        ax.plot(xx, y_all, label='All actions', marker='.', color='r')
-        ax.plot(xx, y_safe, label='Low risk', marker='.', color='b')
-        ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
-        ax2.tick_params(axis='y', labelcolor='tab:gray')
-        ax.legend(loc='lower right')
-        ax2.legend(loc='lower left')
-        plt.savefig(root_dir_eval / f'plot-{measr}.png', dpi=300)
-        plt.close()
+    plt.tight_layout()
+    fig, ax = plt.subplots()
+    ax.set_title(f'plot ({run_name}, {measr})')  # todo compare measurements and remove one of them forever
+    ax.set_xlabel('Complexity')
+    ax.set_ylabel('Reward')
+    ax.set_ylim(-15000, -4000)
+    # # only if one entry per parsimony
+    ax.plot(xx, y_all, label='All actions', marker='.', color='r')
+    ax.plot(xx, y_safe, label='Low risk', marker='.', color='b')
+    ax2 = ax.twinx()
+    ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
+    ax2.tick_params(axis='y', labelcolor='tab:gray')
+    ax.legend(loc='lower right')
+    ax2.legend(loc='lower left')
+    plt.savefig(root_dir_eval / f'combined best.png', dpi=300)
+    plt.close()
 
     """
     Plotting the performance of each action

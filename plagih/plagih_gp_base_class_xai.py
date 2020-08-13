@@ -1384,14 +1384,14 @@ class ExplainableGP(object):
             xx = list(self.monitor_df.index)
 
             axs0 = axs[0]
-            axs0.plot(self.monitor_df['fit_avg'], marker='.', label='Regression error (average)')
+            axs0.plot(self.monitor_df['fit_avg'], marker='', label='Regression error (average)')
             try:
                 avg = self.monitor_df['fit_avg']
                 std = self.monitor_df['fit_std']
                 axs0.fill_between(xx, avg - std, avg + std, alpha=0.2)  # axs0.set_title('Regression Error (average)')  # sfeh not stderr... upper/lower bound?
             except Exception as ex:
                 raise Exception(f'Delete this. were there any problems? {ex}')
-            axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='.', where='post', color='g', label='Best candidate')  # , label=ax_label
+            axs0.step(x=xx, y=self.monitor_df['fit_best'], linestyle='dashed', marker='', where='post', color='g', label='Best candidate')  # , label=ax_label
             axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
             axs0_twin = axs0.twinx()

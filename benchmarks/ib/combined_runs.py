@@ -126,8 +126,8 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         plt.tight_layout()
         fig, ax = plt.subplots()
         ax.set_title(f'plot ({run_name}, {measr})')  # todo compare measurements and remove one of them forever
-        ax.set_xlabel('complexity')
-        ax.set_ylabel('reward')
+        ax.set_xlabel('Complexity')
+        ax.set_ylabel('Reward')
         ax.set_ylim(-15000, -4000)
         # # only if one entry per parsimony
         ax.plot(xx, y_all, label='All actions', marker='.', color='r')

@@ -367,7 +367,7 @@ def ast_expr_to(node, tensors=None, build=None):
         if build:
             return [node.n]
         else:
-            # shape = tensors[list(tensors.keys())[0]].get_shape()  # todo (wait, what was todo here?)
+            # shape = tensors[list(tensors.keys())[0]].get_shape()
             return tf.constant(node.n, dtype=tf.float32)  # , shape=shape
 
     elif isinstance(node, ast.NameConstant):  # <True/False> e.g., <True>

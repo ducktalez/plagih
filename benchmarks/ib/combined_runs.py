@@ -335,5 +335,4 @@ def main():
 if __name__ == '__main__':
     main()
 
-# todo ein graph pro dimension
 # todo print 20 best results in general?

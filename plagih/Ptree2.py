@@ -165,7 +165,9 @@ class CoolCore:
         return my_result + child_results
 
     def reduce_me(self, obs_krazy):
-        # todo reduce me is obviously bullshit crapshit. lets have a new idea.
+        # todo reduce me is obviously bullshit crapshit.
+        #  sympify works with this combination only very few times
+        #  lets have a new idea.
         expr_raw = self.get_expr_raw(reduceable=True)
         try:
             expr_sym = expr_sympify(expr_raw)

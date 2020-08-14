@@ -8,6 +8,7 @@ import time
 
 import math
 import matplotlib.pyplot as plt
+import multiprocessing as mp
 from plagih.file_interaction import *
 from plagih.viz_with_latex import *
 from plagih.plagih_config import *
@@ -82,6 +83,7 @@ class ExplainableGP(object):
         self.pareto = []  # a dict with all pareto candidates. key is complexity, value is tree meta. [[1,344, meta], ...]
         if path_origin_tree:
             self.origin_cooltree = self.load_origin_tree(path_origin_tree)
+            self.origin_cooltree.meta.last_evolution = 'origin'
             self.origin_is_fix = self.origin_cooltree.core.is_fix
         else:
             self.origin_cooltree = None
@@ -379,7 +381,23 @@ class ExplainableGP(object):
                 self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
                 self.gen_create_initial()
             else:
-                self.gen_next_population()
+
+                # You can avoid this situation by calling multiprocessing.Process before you load your huge data.
+                # Then the additional memory allocations will not be reflected in the child process when you load the data in the parent.
+                # sfeh: In python 3.8, this might be availably: multiprocessing.shared_memory https://docs.python.org/3/library/multiprocessing.shared_memory.html
+                # sfeh: check memory usage! should not scale with the number of processes, only one pop_base is required, it does not change.
+
+                self.mp_cpu_cores_max = 1  # todo
+                if self.mp_cpu_cores_max >= 2:
+                    pass  # todo
+                    # mp.Process()  # maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
+                    #
+                    # print(f'Trying to make parallel new population: {mp.cpu_count()}')
+                    # with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
+                    #     results = p.map(self.gen_next_population_mp_parallel_ugly_name_lol, )
+                    # time_evolve = time.perf_counter()
+                else:
+                    self.gen_next_population()
 
             self.update_pareto_from_pop_tmp()
 
@@ -412,7 +430,7 @@ class ExplainableGP(object):
 
         if self.origin_cooltree is not None:
 
-            self.pop_append(self.origin_cooltree, last_evolution='origin')  # sfeh why not :P
+            self.pop_append(self.origin_cooltree)  # sfeh why not :P
 
         else:
             total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
@@ -427,7 +445,8 @@ class ExplainableGP(object):
                     else:
                         new_tree = self.pop_random(call_params)
                     new_cooltree = cooltree_from_oldtree(new_tree)
-                    self.pop_append(new_cooltree, last_evolution=tag)
+                    new_cooltree.meta.last_evolution = tag
+                    self.pop_append(new_cooltree)
         return
 
     def gen_next_population(self):
@@ -440,14 +459,12 @@ class ExplainableGP(object):
 
         for tag, evolve_specs in self.evolve_loop.items():  # all selected gp mutations
 
-            time_evolve = time.perf_counter()
             evolve_name = evolve_specs['evolve_name']
             evolve_num = evolve_specs['evolve_num']
             tourn_size = evolve_specs['tourn_size']
             call_params = evolve_specs.get('custom_params')
 
             self.print_g('gggg', f'->Evolving \'{tag}\' {evolve_num}x starting...')
-            len_pop_before = len(self.population_tmp)
             if evolve_name == 'reproduce':
                 """
                 
@@ -457,10 +474,11 @@ class ExplainableGP(object):
                     if call_params.get('sympify_tree'):
                         try:
                             cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
+                            cooltree.meta.last_evolution = tag
                         except Exception as ex:
                             print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.print_type)
 
-                    self.pop_append(cooltree, last_evolution=tag)
+                    self.pop_append(cooltree)  # append anyways... it was worth a try :P
 
             elif evolve_name == 'mutate point':
                 """
@@ -471,7 +489,8 @@ class ExplainableGP(object):
                     cooltree.evolve_mutate_point(self.choose_oparray2,
                                                  self.env_vars.choose_obs,
                                                  self.choose_distributions, self.conf.float_decimals)
-                    self.pop_append(cooltree, last_evolution=tag)
+                    cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
 
             elif evolve_name == 'mutate branch':
 
@@ -480,7 +499,8 @@ class ExplainableGP(object):
                     tree = cooltree.get_oldtree()
                     new_tree = self.pop_mutate_branch(call_params, tree)
                     new_cooltree = cooltree_from_oldtree(new_tree)
-                    self.pop_append(new_cooltree, last_evolution=tag)
+                    new_cooltree.meta.last_evolution = tag
+                    self.pop_append(new_cooltree)
 
             elif evolve_name == 'crossover branch':
                 for nn in range(int(evolve_num / 2)):  # two childs
@@ -489,8 +509,10 @@ class ExplainableGP(object):
                     parent_a = parent_a.get_oldtree()
                     parent_b = parent_b.get_oldtree()
                     child_a, child_b = self.pop_crossover_branch(parent_a, parent_b)
-                    self.pop_append(child_a, last_evolution=tag)
-                    self.pop_append(child_b, last_evolution=tag)
+                    child_a.meta.last_evolution = tag
+                    child_b.meta.last_evolution = tag
+                    self.pop_append(child_a)
+                    self.pop_append(child_b)
 
             elif evolve_name == 'filter optimize':
 
@@ -499,13 +521,15 @@ class ExplainableGP(object):
                     tree = cooltree.get_oldtree()
                     new_tree = self.pop_mutate_filter(call_params, tree)
                     new_cooltree = cooltree_from_oldtree(new_tree)
-                    self.pop_append(new_cooltree, last_evolution=tag)
+                    new_cooltree.meta.last_evolution = tag
+                    self.pop_append(new_cooltree)
 
             elif evolve_name == 'revive pareto':
 
                 for nn in range(evolve_num):
                     fitness_train, parsim, cooltree = random.choice(self.pareto)
-                    self.pop_append(cooltree, last_evolution=tag)
+                    cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
 
             elif evolve_name == 'random trees':
 
@@ -513,16 +537,125 @@ class ExplainableGP(object):
                     for nn in range(evolve_num):
                         new_tree = self.pop_random(call_params, from_origin=True)
                         cooltree = cooltree_from_oldtree(new_tree)
-                        self.pop_append(cooltree, last_evolution=tag)
+                        cooltree.meta.last_evolution = tag
+                        self.pop_append(cooltree)
                 else:
                     for nn in range(evolve_num):
                         new_tree = self.pop_random(call_params)
                         cooltree = cooltree_from_oldtree(new_tree)
-                        self.pop_append(cooltree, last_evolution=tag)
+                        cooltree.meta.last_evolution = tag
+                        self.pop_append(cooltree)
             else:
                 print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
-            created_trees = (len(self.population_tmp) - len_pop_before)
-            self.print_g('ggg', f'->Evolving \'{tag}\' (success {created_trees}/{evolve_num}) took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
+
+            # self.print_g('ggg', f'->Evolving \'{tag}\' (success {len(self.population_tmp)}/{evolve_num}) took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
+
+        # sfeh automatically fill with random trees
+        # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
+        # if total_rate < 0:
+        #     self.gen_create_random(int(self.conf.pop_max'] * (1 - total_rate)))
+
+        return
+
+    def gen_next_population_mp_parallel_ugly_name_lol(self, tag, evolve_specs):
+        """
+        Creates all new Generations.
+        - adjust parameters for this generation (parsimony threshold)
+        - Create a gene pool (kick out too complex candidates)
+        """
+        # All gp creators: name, function, num of trees from tournament selection
+
+        # for tag, evolve_specs in self.evolve_loop.items():  # all selected gp mutations
+
+        evolve_name = evolve_specs['evolve_name']
+        evolve_num = evolve_specs['evolve_num']
+        tourn_size = evolve_specs['tourn_size']
+        call_params = evolve_specs.get('custom_params')
+
+        if evolve_name == 'reproduce':
+            """
+            
+            """
+            for nn in range(evolve_num):
+                cooltree = self.pop_selection_tournament(tourn_size)
+                if call_params.get('sympify_tree'):
+                    try:
+                        cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
+                        cooltree.meta.last_evolution = tag
+                    except Exception as ex:
+                        print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.print_type)
+
+                self.pop_append(cooltree)  # append anyways... it was worth a try :P
+
+        elif evolve_name == 'mutate point':
+            """
+            Point mutation, One point (terminal or function) gets mutated.
+            """
+            for nn in range(evolve_num):
+                cooltree = self.pop_selection_tournament(tourn_size)
+                cooltree.evolve_mutate_point(self.choose_oparray2,
+                                             self.env_vars.choose_obs,
+                                             self.choose_distributions, self.conf.float_decimals)
+                cooltree.meta.last_evolution = tag
+                self.pop_append(cooltree)
+
+        elif evolve_name == 'mutate branch':
+
+            for nn in range(evolve_num):
+                cooltree = self.pop_selection_tournament(tourn_size)
+                tree = cooltree.get_oldtree()
+                new_tree = self.pop_mutate_branch(call_params, tree)
+                new_cooltree = cooltree_from_oldtree(new_tree)
+                new_cooltree.meta.last_evolution = tag
+                self.pop_append(new_cooltree)
+
+        elif evolve_name == 'crossover branch':
+            for nn in range(int(evolve_num / 2)):  # two childs
+                parent_a = self.pop_selection_tournament(tourn_size)
+                parent_b = self.pop_selection_tournament(tourn_size)
+                parent_a = parent_a.get_oldtree()
+                parent_b = parent_b.get_oldtree()
+                child_a, child_b = self.pop_crossover_branch(parent_a, parent_b)
+                child_a.meta.last_evolution = tag
+                child_b.meta.last_evolution = tag
+                self.pop_append(child_a)
+                self.pop_append(child_b)
+
+        elif evolve_name == 'filter optimize':
+
+            for nn in range(evolve_num):
+                cooltree = self.pop_selection_tournament(tourn_size)
+                tree = cooltree.get_oldtree()
+                new_tree = self.pop_mutate_filter(call_params, tree)
+                new_cooltree = cooltree_from_oldtree(new_tree)
+                new_cooltree.meta.last_evolution = tag
+                self.pop_append(new_cooltree)
+
+        elif evolve_name == 'revive pareto':
+
+            for nn in range(evolve_num):
+                fitness_train, parsim, cooltree = random.choice(self.pareto)
+                cooltree.meta.last_evolution = tag
+                self.pop_append(cooltree)
+
+        elif evolve_name == 'random trees':
+
+            if self.origin_is_fix:
+                for nn in range(evolve_num):
+                    new_tree = self.pop_random(call_params, from_origin=True)
+                    cooltree = cooltree_from_oldtree(new_tree)
+                    cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
+            else:
+                for nn in range(evolve_num):
+                    new_tree = self.pop_random(call_params)
+                    cooltree = cooltree_from_oldtree(new_tree)
+                    cooltree.meta.last_evolution = tag
+                    self.pop_append(cooltree)
+        else:
+            print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
+
+            # self.print_g('ggg', f'->Evolving \'{tag}\' (success {len(self.population_tmp)}/{evolve_num}) took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
 
         # sfeh automatically fill with random trees
         # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
@@ -892,7 +1025,7 @@ class ExplainableGP(object):
                 'expr_raw': cooltree.meta.expr_raw,
                 'expr_sym': cooltree.meta.expr_sym}
 
-        tree_ident = hash(cooltree)
+        tree_ident = hash(cooltree)  # attention: hashes change between python runs. do not save anything on their hash values <.<
 
         self.tree_lut[tree_ident] = meta
         return
@@ -1165,7 +1298,7 @@ class ExplainableGP(object):
             p = ct.meta.parsimony
             try:
                 best_yet = pop_parsimonies_dict[p]
-                if ct.meta.fitness_train < best_yet.meta.fitness_train:  # todo kernel required for fitness comparison
+                if ct.meta.fitness_train < best_yet.meta.fitness_train:  # sfeh asd kernel required for fitness comparison
                     pop_parsimonies_dict[p] = ct
             except:
                 pop_parsimonies_dict[p] = ct
@@ -1198,7 +1331,7 @@ class ExplainableGP(object):
         self.pareto_sort()  # sfeh check if required
         return
 
-    def pop_append(self, cooltree: CoolTree, last_evolution=''):
+    def pop_append(self, cooltree: CoolTree):
         """
         Safely append a tree to the population.
         Even though the raw trees should have everything to display their expression,
@@ -1213,7 +1346,7 @@ class ExplainableGP(object):
         try:
             cooltree.check_all()
         except Exception as ex:
-            print_warning('w', f'tree failed the quick check. last-mod: {last_evolution}. Reason:\n{ex}', print_type=self.print_type)
+            print_warning('w', f'tree failed the quick check. last-mod: {cooltree.meta.last_evolution}. Reason:\n{ex}', print_type=self.print_type)
             return
 
         # tree = self.tree_finish_nodes(tree, last_evolution=last_evolution)
@@ -1226,14 +1359,12 @@ class ExplainableGP(object):
         else:
             parsimony = cooltree.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony > self.conf.parsimony_max:
-                print_warning('wwww', f'Parsimony too high, last evolution: {last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
+                print_warning('wwww', f'Parsimony too high, last evolution: {cooltree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
                 return
             try:
                 fitness_train = self.tree_eval_fitness_train(cooltree)
             except Exception as evalex:
                 print_warning('wwww', f'Exception while evaluating: {evalex}', print_type=self.print_type)
-                # eval_fails.append(str(ex))  # sfeh
-                # continue
                 return
 
         expr_raw = cooltree.get_expr_raw()
@@ -1245,13 +1376,13 @@ class ExplainableGP(object):
 
         cooltree.meta.fitness_train = fitness_train
         cooltree.meta.parsimony = parsimony
-        cooltree.meta.last_evolution = last_evolution
         cooltree.meta.expr_raw = expr_raw
         cooltree.meta.expr_sym = expr_sym
         # cooltree.set_meta(fitness_train, parsimony, last_evolution, expr_raw, expr_sym)
 
         self.treelut_tree_add(cooltree)
         self.population_tmp.append(cooltree)
+        return
 
     def pop_selection_tournament(self, tourn_size):
         """
@@ -1433,7 +1564,7 @@ class ExplainableGP(object):
             axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
 
             # Top level style
-            axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('Generations')  # todo
+            axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('Generations')
             axs0.set_title(f'{self.conf.name} monitoring generations')  # sfeh
             fig.tight_layout()
             path = self.root_dir / f'monitoring-{self.conf.name}.png'

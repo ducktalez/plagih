@@ -118,7 +118,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-analyse', '-analyze', '-analysis', action='store_true', default=None)
     parser.add_argument('-less_files', action='store_true', help='Creates less files by not analysing pareto candidates at the end. -analysis trumps this! (option to save disk space)')
-    parser.add_argument('-no_files', action='store_true', help='Not used yet. Create no files. a todo-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
+    parser.add_argument('-no_files', action='store_true', help='Not used yet. Create no files. a sfeh wasd-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-pop_max', '-pop_size', type=int)
     parser.add_argument('-gen_max', '-gen_size', type=int)

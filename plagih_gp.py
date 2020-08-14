@@ -20,6 +20,7 @@ def load_prepared_run(conf, prepared_run):
     path_origin_tree = None
     action_name = None
     root_dir = pathify(f'slurm_runs/{prepared_run[:-2]}/{prepared_run}')
+    conf.gen_max = 4000
 
     if 'IB' in prepared_run:
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
@@ -55,11 +56,8 @@ def load_prepared_run(conf, prepared_run):
                 print(f'AUTOLOAD: Using action: {v}')
                 action_name = v
 
-        conf.gen_max = 3000
-
     elif 'MTC' in prepared_run:
         kernel_name = 'regression bounded discrete'
-        conf.gen_max = 3000
 
         root_dir = pathify(f'slurm_runs/{prepared_run}')
         num_samples = '200' if 'MTC200' in prepared_run else '75'
@@ -127,7 +125,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-gen_additionally', '-gen_add', type=int)
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
     parser.add_argument('-force_new_run', action='store_true')
-    parser.add_argument('-mp_cpu_cores_max', type=int, default=4, help='Maximum amount of cores for parallelisation. Sfeh: set default to max cores? 4 is for my old ass pc.')
+    parser.add_argument('-mp_cpu_cores_max', type=int, default=4, help='Maximum amount of cores for parallelisation. Sfeh: set default to max cores? 4 is for my old ass pc. Sorry^^')
     parser.add_argument('-print_all', '-debug', action='store_true')
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
     parser.add_argument('-pop_kill', action='store_true', help="Force 'killing' the whole population, creating a new generation from scratch, but keeping the paretofront."
@@ -200,7 +198,7 @@ def main():  # argv sys.argv[1:]
     print('Program ending')
     if prepared_run:
         if 'IB' in prepared_run and prepared_run[-2:] == '_0':
-            combined_lists(prepared_run[:-2], 35, 35, local_yamls=True)
+            combined_lists(prepared_run[:-2], 40, 40, local_yamls=True, mp_cpu_cores_max=args.mp_cpu_cores_max)
     sys.exit()
 
 

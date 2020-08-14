@@ -35,7 +35,7 @@ def mp_evall(arow):
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
         print(f'WARNING: arow {arow}')
-        return [lut_hash, None, None]
+        return None  # [lut_hash, None, None]
 
 
 def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max):
@@ -125,7 +125,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
 
     plt.tight_layout()
     fig, ax = plt.subplots()
-    ax.set_title(f'plot ({run_name}, {measr})')  # todo compare measurements and remove one of them forever
+    ax.set_title(f'plot-({run_name})')  # todo compare measurements and remove one of them forever
     ax.set_xlabel('Complexity')
     ax.set_ylabel('Reward')
     ax.set_ylim(-15000, -4000)
@@ -157,7 +157,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
             exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
 
         fig, ax = plt.subplots()
-        ax.set_title(f'action {a}, ({run_name}, {measr})')
+        ax.set_title(f'action {a}, ({run_name})')
         ax.set_xlabel('complexity')
         ax.set_ylabel('reward')
         ax.set_ylim(-15000, -4000)  # todo
@@ -165,7 +165,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
         ax.plot(xx, exp, label='all actions', marker='.', color='r', )
         ax.plot(xx, exp_safe, label='low risk', marker='.', color='b')
         ax.legend(loc='lower left')
-        plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.png', dpi=150)
+        plt.savefig(root_dir_eval / f'act_{a}-plot.png', dpi=150)
         # plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.svg')
         plt.close()
 
@@ -191,7 +191,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
 
     plt.tight_layout()
     fig, ax = plt.subplots()
-    ax.set_title(f'Best{run_name} ({measr})')
+    ax.set_title(f'Best{run_name}')
     ax.set_xlabel('complexity')
     ax.set_ylabel('reward')
     ax.set_ylim(-15000, -4000)  # todo
@@ -304,9 +304,9 @@ def main():
     parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
-    parser.add_argument('-mp_cpu_cores_max', default=8)
-    parser.add_argument('-parsim_max_sum', type=int, default=50)
-    parser.add_argument('-parsim_max_single', type=int, default=35)
+    parser.add_argument('-mp_cpu_cores_max', type=int,  default=8)
+    parser.add_argument('-parsim_max_sum', type=int, default=40)
+    parser.add_argument('-parsim_max_single', type=int, default=40)
     args = parser.parse_args()
 
     name = args.name
@@ -323,6 +323,7 @@ def main():
                         combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_cores_max=args.mp_cpu_cores_max)
                     except Exception as ex:
                         print(f'Failed evaluation for {x.name}. ignoring. Reason: {ex}')
+                        # sfeh except only the one fail that is required?
                 else:
                     print(f'\nSkipping {x.name}')
 

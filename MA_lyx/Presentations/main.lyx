@@ -42,7 +42,7 @@
 \usecolortheme{lmu}
 \useoutertheme{dbsthesis}
 
-\AtBeginSection[]{%
+\AtBeginSection[]{
 	\begin{frame}[plain, squeeze, noframenumbering]{Outline}%
 		\small%
 		\setcounter{tocdepth}{5}%
@@ -400,126 +400,7 @@ asd
 \end_layout
 
 \begin_layout Frame
-jipoüjopü
-\end_layout
 
-\begin_layout Frame
-
-\end_layout
-
-\begin_layout Frame
-
-\end_layout
-
-\begin_layout Standard
-gzuikgzuikgil
-\end_layout
-
-\begin_layout Frame
-123
-\end_layout
-
-\begin_layout Frame
-sdfgsdfgsdfg
-\end_layout
-
-\begin_layout Frame
-
-\end_layout
-
-\begin_layout Frame
-\begin_inset Argument 4
-status open
-
-\begin_layout Plain Layout
-cfghnxchgfj
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Frame
-gziukll
-\end_layout
-
-\begin_layout Frame
-
-\end_layout
-
-\begin_layout Frame
-
-\end_layout
-
-\begin_deeper
-\begin_layout FrameSubtitle
-sdfsdf
-\end_layout
-
-\end_deeper
-\begin_layout Frame
-fghjfghjk
-\end_layout
-
-\begin_layout PlainFrame
-\begin_inset Argument 4
-status open
-
-\begin_layout Plain Layout
-xghxfghxfgh
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout PlainFrame
-holhoöl
-\end_layout
-
-\begin_layout PlainFrame
-jklö
-\end_layout
-
-\begin_layout PlainFrame
-
-\end_layout
-
-\begin_layout PlainFrame
-
-\end_layout
-
-\begin_layout FragileFrame
-\begin_inset Argument 4
-status open
-
-\begin_layout Plain Layout
-guioguio
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout FragileFrame
-joilöjklö
-\end_layout
-
-\begin_deeper
-\begin_layout FrameTitle
-huiolöhjnoiö
-\end_layout
-
-\end_deeper
-\begin_layout FragileFrame
-jiopöjioö
-\end_layout
-
-\begin_layout Frame
-vhjkvhjk
 \end_layout
 
 \begin_layout Frame

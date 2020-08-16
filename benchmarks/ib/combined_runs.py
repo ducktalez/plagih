@@ -305,8 +305,8 @@ def main():
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
     parser.add_argument('-mp_cpu_cores_max', type=int,  default=8)
-    parser.add_argument('-parsim_max_sum', type=int, default=40)
-    parser.add_argument('-parsim_max_single', type=int, default=40)
+    parser.add_argument('-parsim_max_sum', type=int, default=35)
+    parser.add_argument('-parsim_max_single', type=int, default=35)
     args = parser.parse_args()
 
     name = args.name

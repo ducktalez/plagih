@@ -6,6 +6,7 @@ from benchmarks.ib.test_agents import *
 from pathlib import Path
 import csv
 import math
+from itertools import accumulate
 
 '''
 The MIT License (MIT)
@@ -34,7 +35,7 @@ SOFTWARE.
 '''
 
 
-def envstate_normalize(env_state, to_normal=True):
+def envstate_normalize(env_state, to_daniel=True):
     """
     velocity, gain, shift (v, g, h)
     p, v, g, h, f, c
@@ -50,7 +51,7 @@ def envstate_normalize(env_state, to_normal=True):
         'f': [37.51, 31.17],
         'c': [166.33, 139.44]}
 
-    if to_normal:
+    if to_daniel:
         norm_values = {}
         for k, val in IB_norm_dict.items():
             norm_values[k] = (env_state[k] - val[0]) / val[1]
@@ -68,9 +69,9 @@ def eval_agents():
     agents = [
         # # Agent_random(),
         # Agent_nothing(),
-        # Agent_daniel_21(),
-        # Agent_daniel_27(),
-        # Agent_Daniel_29_Best(),
+        Agent_daniel_21(),
+        Agent_daniel_27(),
+        Agent_Daniel_29_Best(),
         # Agent_Udluft(),
         # Agent_sim1(),
         Agent_Test()
@@ -110,11 +111,7 @@ class AgentMerger(Ib_Agent):
         return at
 
 
-def eval_combined_agents(codes, parsim_sum=None, parsims=None, complete=True):
-    T = 100*1000
-    factor = 0.97
-    time_horizon = 100
-    sum = 0
+def eval_combined_agents(codes, complete=True):
 
     if complete:
         a0, a1, a2 = codes
@@ -122,43 +119,33 @@ def eval_combined_agents(codes, parsim_sum=None, parsims=None, complete=True):
         a0, a1, a2 = codes
         a2 = '0'
 
-    name = 'FUCK U'  # f'{parsim_sum}_{parsims[0]}_{parsims[1]}_{parsims[2]}'
-    dummy_agent = AgentMerger(name, a0, a1, a2)
+    dummy_agent = AgentMerger('Herbert', a0, a1, a2)
 
-    for p in np.arange(10, 101, 10):
+    return eval_agent(dummy_agent, complete=complete)
+
+
+def eval_agent(agent, complete=True):
+    discount_factor = 0.97
+    T = 100  # time_horizon
+    discount_len = -100
+    sum_discounted_p = []
+    # setpoint_range = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    for p in range(10, 101, 10):
+
         env = IDS(p=p)
 
-        sum_t = 0
-        for t in range(time_horizon):
-            env_state = envstate_normalize(env.state)
-            at = dummy_agent.decide(env_state)
-            markovStates = env.step(at)
+        sums_p = []
+        for t in range(T):
+            normal_state = envstate_normalize(env.state)
+            at = agent.decide(normal_state)
+            env.step(at)  # also returns markovStates, if needed
+            reward = env.visibleState()[-1]
+            sums_p.append(reward)
 
-            entry = env.visibleState()[-1]
-            sum_t += factor ** (time_horizon-t) * entry
-        sum += sum_t / 10
-    return float(sum)
+        cumcum_discounted = list(accumulate(sums_p[discount_len:][::-1], lambda x_last, x: (x + (discount_factor * x_last))))
+        sum_discounted_p.append(cumcum_discounted[-1])
 
-
-def eval_agent(agent):
-    T = 100 * 1000
-    factor = 0.97
-    time_horizon = 100
-    sum = 0
-
-    for p in np.arange(10, 101, 10):
-        env = IDS(p=p)
-
-        sum_t = 0
-        for t in range(time_horizon):
-            env_state = envstate_normalize(env.state)
-            at = agent.decide(env_state)
-            markovStates = env.step(at)
-
-            entry = env.visibleState()[-1]
-            sum_t += factor ** (time_horizon - t) * entry
-        sum += sum_t / 10
-    return float(sum)
+    return float(np.average(sum_discounted_p))
 
 
 def agent_create_samples_csv(T=10000):

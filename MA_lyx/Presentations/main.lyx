@@ -391,7 +391,7 @@ Introduction
 status open
 
 \begin_layout Plain Layout
-asd
+Industrial Benchmark
 \end_layout
 
 \end_inset
@@ -400,6 +400,17 @@ asd
 \end_layout
 
 \begin_layout Frame
+
+\end_layout
+
+\begin_layout Frame
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/MA_lyx/img/IB/ib_stochasticity_compared.PNG
+	lyxscale 30
+	height 8cm
+
+\end_inset
+
 
 \end_layout
 

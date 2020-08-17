@@ -125,7 +125,7 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
 
     plt.tight_layout()
     fig, ax = plt.subplots()
-    ax.set_title(f'plot-({run_name})')  # todo compare measurements and remove one of them forever
+    ax.set_title(f'{run_name} (best regression sum)')
     ax.set_xlabel('Complexity')
     ax.set_ylabel('Reward')
     ax.set_ylim(-15000, -4000)
@@ -137,37 +137,37 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     ax2.tick_params(axis='y', labelcolor='tab:gray')
     ax.legend(loc='lower right')
     ax2.legend(loc='lower left')
-    plt.savefig(root_dir_eval / f'combined best.png', dpi=300)
+    plt.savefig(root_dir_eval / f'{run_name} regression_sum.png', dpi=300)
     plt.close()
 
     """
     Plotting the performance of each action
     # todo GP Idee: Robustheit durch Angriffe auf die Genetik?
     """
-    for a, parsim_dict in enumerate(combined_all_a):
-        xx = []
-        exp = []
-        exp_safe = []
-        # res = [min(row, key=lambda x: x['f_squared']) for p, row in parsim_dict.items()]  # nah
-        # for p, row in parsim_dict.items():
-        #     res[p] =
-        for p, rows in parsim_dict.items():
-            xx.append(p)
-            exp.append(np.mean([row['experiment'] for row in rows]))
-            exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
-
-        fig, ax = plt.subplots()
-        ax.set_title(f'action {a}, ({run_name})')
-        ax.set_xlabel('complexity')
-        ax.set_ylabel('reward')
-        ax.set_ylim(-15000, -4000)  # todo
-        # # only if one entry per parsimony
-        ax.plot(xx, exp, label='all actions', marker='.', color='r', )
-        ax.plot(xx, exp_safe, label='low risk', marker='.', color='b')
-        ax.legend(loc='lower left')
-        plt.savefig(root_dir_eval / f'act_{a}-plot.png', dpi=150)
-        # plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.svg')
-        plt.close()
+    # for a, parsim_dict in enumerate(combined_all_a):
+    #     xx = []
+    #     exp = []
+    #     exp_safe = []
+    #     # res = [min(row, key=lambda x: x['f_squared']) for p, row in parsim_dict.items()]  # nah
+    #     # for p, row in parsim_dict.items():
+    #     #     res[p] =
+    #     for p, rows in parsim_dict.items():
+    #         xx.append(p)
+    #         exp.append(np.mean([row['experiment'] for row in rows]))
+    #         exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
+    #
+    #     fig, ax = plt.subplots()
+    #     ax.set_title(f'action {a}, ({run_name})')
+    #     ax.set_xlabel('complexity')
+    #     ax.set_ylabel('reward')
+    #     ax.set_ylim(-15000, -4000)  # todo
+    #     # # only if one entry per parsimony
+    #     ax.plot(xx, exp, label='all actions', marker='.', color='r', )
+    #     ax.plot(xx, exp_safe, label='low risk', marker='.', color='b')
+    #     ax.legend(loc='lower left')
+    #     plt.savefig(root_dir_eval / f'act_{a}-plot.png', dpi=150)
+    #     # plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.svg')
+    #     plt.close()
 
     """
     Plotting the best candidates per parsimony
@@ -191,7 +191,6 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
 
     plt.tight_layout()
     fig, ax = plt.subplots()
-    ax.set_title(f'Best{run_name}')
     ax.set_xlabel('complexity')
     ax.set_ylabel('reward')
     ax.set_ylim(-15000, -4000)  # todo
@@ -199,7 +198,8 @@ def plotibeval(combined_all, combined_all_p, combined_all_a, run_name, root_dir_
     ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
     ax.plot(xx, y_safe, label='low risk', marker='.', color='c')
     ax.legend(loc='lower left')
-    plt.savefig(root_dir_eval / f'best-real-expermiments.png', dpi=300)
+    ax.set_title(f'{run_name} (best)')
+    plt.savefig(root_dir_eval / f'{run_name} (best).png', dpi=300)  # todo why is blue sometimes better
     # plt.savefig(root_dir_eval / f'best-real-expermiments.svg')
     plt.close()
 
@@ -263,16 +263,19 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
         parsim_sum = float(sum([x[0] for x in row]))
         if parsim_sum <= parsim_max_sum and all(x[0] <= parsim_max_single for x in row):
             fitness_sum = float(sum([x[1] for x in row]))
-            f_squared = float(sum([x[1] ** 2 for x in row]))
-            f_norm = float(sum([x[1] / fit_normed[ii] for ii, x in enumerate(row)]))
-            f_normsub = float(sum([x[1] - fit_normed[ii] for ii, x in enumerate(row)]))
-            f_0div = float(sum([x[1] / fit_0st[ii] for ii, x in enumerate(row)]))
-            f_0sub = float(sum([x[1] - fit_0st[ii] for ii, x in enumerate(row)]))
+            # f_squared = float(sum([x[1] ** 2 for x in row]))
+            # f_norm = float(sum([x[1] / fit_normed[ii] for ii, x in enumerate(row)]))
+            # f_normsub = float(sum([x[1] - fit_normed[ii] for ii, x in enumerate(row)]))
+            # f_0div = float(sum([x[1] / fit_0st[ii] for ii, x in enumerate(row)]))
+            # f_0sub = float(sum([x[1] - fit_0st[ii] for ii, x in enumerate(row)]))
             parsims = [float(row[0][0]), float(row[1][0]), float(row[2][0])]
             codes = [x[3] for x in row]
-            combined_all.append(
-                {'parsim_sum': parsim_sum, 'experiment': None, 'experiment_safe': None, 'parsims': parsims, 'codes': codes,
-                 'fitness_sum': fitness_sum, 'f_squared': f_squared, 'f_norm': f_norm, 'f_normsub': f_normsub, 'f_0div': f_0div, 'f_0sub': f_0sub})
+            combined_all.append({'parsim_sum': parsim_sum,
+                                 'experiment': None,
+                                 'experiment_safe': None,
+                                 'parsims': parsims,
+                                 'codes': codes,
+                                 'fitness_sum': fitness_sum})
     # return combined_all
     # combined_all = get_combined_runs(agents, parsim_max_sum, parsim_max_single)
 

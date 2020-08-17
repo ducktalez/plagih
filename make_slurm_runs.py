@@ -8,9 +8,10 @@ print('Make sure that this file is executed on top level')
 
 # a_velocity,a_gain,a_shift
 run_starts = [
-    'IB_MSE_s3m_0', 'IB_MSE_s3m_1', 'IB_MSE_s3m_2',
     'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
     'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
+    'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_tanh_s3m_1', 'IB_RMSE_explun01_tanh_s3m_2',
+    'IB_MSE_s3m_0', 'IB_MSE_s3m_1', 'IB_MSE_s3m_2',
     'IB_MSE_tanh_s3m_0', 'IB_MSE_tanh_s3m_1', 'IB_MSE_tanh_s3m_2',
     'IB_MSE_explun01_tanh_s3m_0', 'IB_MSE_explun01_tanh_s3m_1', 'IB_MSE_explun01_tanh_s3m_2',
 

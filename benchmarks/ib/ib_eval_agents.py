@@ -91,9 +91,9 @@ class AgentMerger(Ib_Agent):
     def __init__(self, name, a0, a1, a2):
         self.name = f'merged_{name}'
         super().__init__()
-        self.a0 = (a0)
-        self.a1 = (a1)
-        self.a2 = (a2)
+        self.a0 = a0
+        self.a1 = a1
+        self.a2 = a2
 
     def decide(self, env_state):
         self.state_history.appendleft(env_state)

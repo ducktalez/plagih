@@ -366,8 +366,8 @@ def main():
         combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_cores_max=args.mp_cpu_cores_max)
     return
 
-# todo
-combine_paretos('IB_MSE_s3m')
+# # todo
+# combine_paretos('IB_MSE_s3m')
 
 if __name__ == '__main__':
     main()

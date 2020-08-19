@@ -390,15 +390,17 @@ class ExplainableGP(object):
 
                 self.mp_cpu_cores_max = 1  # todo
                 if self.mp_cpu_cores_max >= 2:
-                    pass  # todo
-                    # mp.Process()  # maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
-                    #
-                    # print(f'Trying to make parallel new population: {mp.cpu_count()}')
-                    # with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
-                    #     results = p.map(self.gen_next_population_mp_parallel_ugly_name_lol, )
-                    # time_evolve = time.perf_counter()
+                    mp.Process()  # sfeh maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
+
+                    print(f'Trying to make parallel new population: {mp.cpu_count()}')
+                    with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
+
+                        evolve_list = [[tag, evolve_specs] for tag, evolve_specs in self.evolve_loop.items()]
+                        results = p.map(self.gen_next_population_mp_parallel_ugly_name_lol, evolve_list)
+                    time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
+                    pass
 
             self.update_pareto_from_pop_tmp()
 
@@ -558,7 +560,7 @@ class ExplainableGP(object):
 
         return
 
-    def gen_next_population_mp_parallel_ugly_name_lol(self, tag, evolve_specs):
+    def gen_next_population_mp_parallel_ugly_name_lol(self, evolve_entry):
         """
         Creates all new Generations.
         - adjust parameters for this generation (parsimony threshold)
@@ -567,7 +569,7 @@ class ExplainableGP(object):
         # All gp creators: name, function, num of trees from tournament selection
 
         # for tag, evolve_specs in self.evolve_loop.items():  # all selected gp mutations
-
+        tag, evolve_specs = evolve_entry
         evolve_name = evolve_specs['evolve_name']
         evolve_num = evolve_specs['evolve_num']
         tourn_size = evolve_specs['tourn_size']

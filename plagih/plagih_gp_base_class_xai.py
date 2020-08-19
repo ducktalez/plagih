@@ -499,8 +499,26 @@ class ExplainableGP(object):
 
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
-                    tree = cooltree.get_oldtree()
-                    new_tree = self.pop_mutate_branch(call_params, tree)
+
+                    new_tree = cooltree.get_oldtree()
+                    build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
+                    full_or_grow = build_spec.get('full_or_grow') or random.choice(['full', 'grow'])
+                    node_ids = tree_get_mutatable_nodes(new_tree, no_root=True)
+                    old_node = random.choice(node_ids)
+                    old_xtype = tree_node_get_xtype(new_tree, old_node)
+                    build_size = choose_build_size(size_mode, mean_min_max_var, tree=new_tree, node_id=old_node)
+
+                    label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow)
+
+                    if label_list:
+                        c_core = Core_From_Labels(label_list, arity_list, xtype_list)
+                        core_insert = c_core.get_uninstanced_core()
+                        branch_nodes_ids = tree_node_get_branch(new_tree, old_node, karoo=True)
+                        new_tree = tree_insert_subtree(new_tree, core_insert, branch_nodes_ids, karoo=True)
+                        new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+                    else:
+                        new_tree = None
+
                     new_cooltree = cooltree_from_oldtree(new_tree)
                     new_cooltree.meta.last_evolution = tag
                     self.pop_append(new_cooltree)
@@ -550,113 +568,6 @@ class ExplainableGP(object):
                         self.pop_append(cooltree)
             else:
                 print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
-
-            # self.print_g('ggg', f'->Evolving \'{tag}\' (success {len(self.population_tmp)}/{evolve_num}) took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
-
-        # sfeh automatically fill with random trees
-        # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
-        # if total_rate < 0:
-        #     self.gen_create_random(int(self.conf.pop_max'] * (1 - total_rate)))
-
-        return
-
-    def gen_next_population_mp_parallel_ugly_name_lol(self, evolve_entry):
-        """
-        Creates all new Generations.
-        - adjust parameters for this generation (parsimony threshold)
-        - Create a gene pool (kick out too complex candidates)
-        """
-        # All gp creators: name, function, num of trees from tournament selection
-
-        # for tag, evolve_specs in self.evolve_loop.items():  # all selected gp mutations
-        tag, evolve_specs = evolve_entry
-        evolve_name = evolve_specs['evolve_name']
-        evolve_num = evolve_specs['evolve_num']
-        tourn_size = evolve_specs['tourn_size']
-        call_params = evolve_specs.get('custom_params')
-
-        if evolve_name == 'reproduce':
-            """
-            
-            """
-            for nn in range(evolve_num):
-                cooltree = self.pop_selection_tournament(tourn_size)
-                if call_params.get('sympify_tree'):
-                    try:
-                        cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
-                        cooltree.meta.last_evolution = tag
-                    except Exception as ex:
-                        print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.print_type)
-
-                self.pop_append(cooltree)  # append anyways... it was worth a try :P
-
-        elif evolve_name == 'mutate point':
-            """
-            Point mutation, One point (terminal or function) gets mutated.
-            """
-            for nn in range(evolve_num):
-                cooltree = self.pop_selection_tournament(tourn_size)
-                cooltree.evolve_mutate_point(self.choose_oparray2,
-                                             self.env_vars.choose_obs,
-                                             self.choose_distributions, self.conf.float_decimals)
-                cooltree.meta.last_evolution = tag
-                self.pop_append(cooltree)
-
-        elif evolve_name == 'mutate branch':
-
-            for nn in range(evolve_num):
-                cooltree = self.pop_selection_tournament(tourn_size)
-                tree = cooltree.get_oldtree()
-                new_tree = self.pop_mutate_branch(call_params, tree)
-                new_cooltree = cooltree_from_oldtree(new_tree)
-                new_cooltree.meta.last_evolution = tag
-                self.pop_append(new_cooltree)
-
-        elif evolve_name == 'crossover branch':
-            for nn in range(int(evolve_num / 2)):  # two childs
-                parent_a = self.pop_selection_tournament(tourn_size)
-                parent_b = self.pop_selection_tournament(tourn_size)
-                parent_a = parent_a.get_oldtree()
-                parent_b = parent_b.get_oldtree()
-                child_a, child_b = self.pop_crossover_branch(parent_a, parent_b)
-                child_a.meta.last_evolution = tag
-                child_b.meta.last_evolution = tag
-                self.pop_append(child_a)
-                self.pop_append(child_b)
-
-        elif evolve_name == 'filter optimize':
-
-            for nn in range(evolve_num):
-                cooltree = self.pop_selection_tournament(tourn_size)
-                tree = cooltree.get_oldtree()
-                new_tree = self.pop_mutate_filter(call_params, tree)
-                new_cooltree = cooltree_from_oldtree(new_tree)
-                new_cooltree.meta.last_evolution = tag
-                self.pop_append(new_cooltree)
-
-        elif evolve_name == 'revive pareto':
-
-            for nn in range(evolve_num):
-                fitness_train, parsim, cooltree = random.choice(self.pareto)
-                cooltree.meta.last_evolution = tag
-                self.pop_append(cooltree)
-
-        elif evolve_name == 'random trees':
-
-            if self.origin_is_fix:
-                for nn in range(evolve_num):
-                    new_tree = self.pop_random(call_params, from_origin=True)
-                    cooltree = cooltree_from_oldtree(new_tree)
-                    cooltree.meta.last_evolution = tag
-                    self.pop_append(cooltree)
-            else:
-                for nn in range(evolve_num):
-                    new_tree = self.pop_random(call_params)
-                    cooltree = cooltree_from_oldtree(new_tree)
-                    cooltree.meta.last_evolution = tag
-                    self.pop_append(cooltree)
-        else:
-            print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
 
             # self.print_g('ggg', f'->Evolving \'{tag}\' (success {len(self.population_tmp)}/{evolve_num}) took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
 
@@ -1191,39 +1102,6 @@ class ExplainableGP(object):
 
             p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
             tree = p_tree.get_uninstanced_tree()
-
-        return tree
-
-    def pop_mutate_branch(self, call_params, tree):
-
-        """
-        Mutate branch of a tree.
-
-        """
-
-        build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
-
-        full_or_grow = build_spec.get('full_or_grow')
-        if full_or_grow is None:
-            full_or_grow = random.choice(['full', 'grow'])
-        node_ids = tree_get_mutatable_nodes(tree, no_root=True)
-        old_node = random.choice(node_ids)
-        old_xtype = tree_node_get_xtype(tree, old_node)
-        build_size = choose_build_size(size_mode, mean_min_max_var, tree=tree, node_id=old_node)
-
-        label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow)
-
-        if label_list:
-            # core_insert = core_from_labels(label_list, arity_list, xtype_list)
-
-            c_core = Core_From_Labels(label_list, arity_list, xtype_list)
-            core_insert = c_core.get_uninstanced_core()
-
-            branch_nodes_ids = tree_node_get_branch(tree, old_node, karoo=True)
-            tree = tree_insert_subtree(tree, core_insert, branch_nodes_ids, karoo=True)
-            tree = tree_prune_depth(tree, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-        else:
-            tree = None
 
         return tree
 

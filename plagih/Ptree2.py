@@ -146,6 +146,37 @@ class CoolCore:
 
             return [self]
 
+    def prune_depth(self, max_depth):
+        # """
+        # reduces the depth of a Tree to depth (in case it is too deep).
+        # # sfeh prune node_count?
+        # # todo only relevant when blind crossover
+        # # todo check during build process?
+        # """
+        #
+        # nodes = []
+        #
+        # for node_id in range(root_id, len(tree[3])):
+        #
+        #     node_depth = tree_node_get_depth(tree, node_id)
+        #     node_arity = tree_node_get_arity(tree, node_id)
+        #     if node_depth == max_depth and node_arity > 0:  # replace this node with terminal
+        #         label = tree_node_get_label(tree, node_id)
+        #         xtype = xtype_get_from_label(label, obs_krazy)
+        #         tree = tree_node_set_arity(tree, node_id, 0)
+        #         new_term = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals)  # replace label
+        #         tree = tree_node_set_label(tree, node_id, new_term)
+        #
+        #     elif tree_node_get_depth(tree, node_id) > max_depth:  # record nodes deeper than the maximum allowed Tree depth
+        #         nodes.append(node_id)
+        #
+        # tree = np.delete(tree, nodes, axis=1)  # delete nodes deeper than the maximum allowed Tree depth
+        # tree = evolve_node_arity_fix(tree)  # fix all node arities
+        #
+        # return tree
+        raise Exception('TODO')
+        pass
+
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
         sum_layers=False, get_closest=True, return_all_layers=False
@@ -581,6 +612,13 @@ class CoolTree:
             print_e(f'FFS Trees just become larger? {self.get_expr_raw()}')
         # self.meta.clear()
         self.finalize_structure()
+
+    def evolve_mutate_branch(self, call_params):
+        pass
+        # todo
+
+    def prune_depth(self, max_depth):
+        self.core.prune_depth(max_depth)
 
     def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):
         parsimony = self.core.eval_parsimony(parsimony_distance, origin_cooltree=origin_cooltree, weights=weights)

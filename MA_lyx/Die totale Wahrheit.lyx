@@ -1,0 +1,2607 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\begin_modules
+theorems-ams-bytype
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Die totale Wahrheit
+\end_layout
+
+\begin_layout Verse
+Vorwort
+\end_layout
+
+\begin_layout Verse
+Ich hasse Bücher, die ein Vorwort haben.
+\end_layout
+
+\begin_layout Part
+Are you ready kids?
+\end_layout
+
+\begin_layout Standard
+Leute, ich könnte ausrasten.
+ Ich habe in den letzten drei Tagen mit drei verschiedenen Leuten eine der
+ einfachsten Aussagen der Welt, nur kurz, klären wollen und jedes Mal endete
+ diese Frage aus verschiedenen Gründen im Chaos.
+\end_layout
+
+\begin_layout Standard
+Die Frage lautete:
+\end_layout
+
+\begin_layout Definition
+Nehmen wir an, ein Zug fährt unaufhaltsam auf einem Gleis und wird dabei
+ 5 Personen überrollen.
+ Du kannst diesen Zug auf ein Gleis lenken, auf dem nur eine Person liegt.
+ Was tust du?
+\end_layout
+
+\begin_layout Standard
+Eine Frage, die für mich einfach zu beantworten ist: Fünf Menschenleben
+ sind fünf mal mehr wert als ein Menschenleben.
+ Es wäre moralisch richtig, eine Person zu opfern.
+ Um uns die Diskussion, ob aktives töten dafür eine Rechtfertigung ist,
+ vorerst zu ignorieren, wandeln wie diese 
+\begin_inset Quotes eld
+\end_inset
+
+Urform
+\begin_inset Quotes erd
+\end_inset
+
+ des Problems mal etwas ab:
+\end_layout
+
+\begin_layout Lemma
+Zwei Züge fahren auf zwei Gleisen.
+ Du hast Zeit, entweder fünf Menschen zu retten oder einen.
+ Was tust du?
+\end_layout
+
+\begin_layout Standard
+Hier erscheint mir die Lösung noch offensichtlicher.
+\end_layout
+
+\begin_layout Standard
+Wie geht ihr nun mit folgenden Fragen um?
+\end_layout
+
+\begin_layout Itemize
+Es gibt immer einen dritten Weg.
+ Ich versuche, alle Personen zu retten.
+\end_layout
+
+\begin_layout Itemize
+Eine allgemein gültige Handlungsanweisung ist nicht möglich, da das kulturell
+ geprägt ist.
+\end_layout
+
+\begin_layout Itemize
+Ich weiß zu wenig über diese Menschen.
+ Es sind nicht alle Menschen gleich, was wenn die eine Person mein Kind
+ ist?
+\end_layout
+
+\begin_layout Itemize
+Dieses Beispiel ist vollkommen realitätsfern.
+\end_layout
+
+\begin_layout Standard
+Wenn man diese Punkte nun in das Experiment mit einbezieht, ergibt sich
+ nämlich eine andere Frage:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Quotes eld
+\end_inset
+
+Wollt ihr mich eigentlich verarschen??
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Dennoch will ich der Frage nicht unterstellen, sie sei trivial.
+ Es fordert einen enormen Denkaufwand, um sich für alle Fragen sicher zu
+ sein.
+\end_layout
+
+\begin_layout Section
+Meta Ebene
+\end_layout
+
+\begin_layout Standard
+Noch viel interessanter ist, dass wir unser Gegenüber nicht einfach vom
+ Gegenteil überzeugen können.
+ Selbst nach stundenlangen Diskussionen nicht.
+ Das hat mich irgendwie immer gestört, weil meine Punkte ja (wie sollte
+ es denn anders sein), die logischen waren.
+ Die Diskussion über eine Diskussion ist eine Meta-diskssion und noch fast
+ noch frustrierender als die eigentliche Diskussion.
+\end_layout
+
+\begin_layout Standard
+Eines meiner Lieblingsbeispiele: Mit meinem Vater diskutierte ich einst
+ eine der wichtigsten Fragen der Menschheit, 
+\begin_inset Quotes eld
+\end_inset
+
+Das Wäsche Paradoxon
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Die Problemstellung lautete folgendermaßen: Ich hatte meine Wäsche nicht
+ aufgeräumt und mein Vater war sauer.
+ Eigentlich zurecht, so hatten wir das ausgemacht.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Gleich
+\begin_inset Quotes erd
+\end_inset
+
+, sagte ich.
+ Mein Vater, nun sauer, 
+\begin_inset Quotes eld
+\end_inset
+
+das hast du gestern auch schon gesagt, da lag es nach einer Stunde immernoch
+ da!
+\begin_inset Quotes erd
+\end_inset
+
+.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Aber gestern musste ich noch die Aufgabe vor 16:00 fertig machen, nützt
+ nichts, die Abgabe für das Übungsblatt war um 16:00, danach habe ich das
+ ja gemacht.
+ Oder soll ich mein Studium für einen Haufen Wäsche abbrechen? Außerdem
+ ist das mein Zimmer, hier kann ich die Wäsche rumliegen lassen wie ich
+ will!
+\begin_inset Quotes erd
+\end_inset
+
+ Geniale Antwort, fand ich, schließlich hatte ich gleich mehrere Punkte
+ genannt, bei denen das moralische Momentum auf meiner Seite lag.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Letzten Monat war das genau dasselbe.
+ Selbst am nächsten Tag lag sie noch rum, weißt du eigentlich, wie zermürbend
+ das ist?
+\begin_inset Quotes erd
+\end_inset
+
+ Ja gut, da hatte er recht.
+ Aber 
+\begin_inset Quotes eld
+\end_inset
+
+Ja, wow, letzten Monat.
+ Ein weiterer Strich auf der Liste der ewigen Schuld, die geführt wird seit
+ ich drei Jahre alt bin?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Ich glaube, viel muss ich dazu nicht sagen.
+ Kennt vermutlich jeder.
+ Im Kurzdurchlauf ging es übrigens so weiter:
+\end_layout
+
+\begin_layout Itemize
+Mein Vater sagt 
+\begin_inset Quotes eld
+\end_inset
+
+Wenn ich meine Wäsche selbst wasche, kann ich machen was ich will
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Ich fing an, meine Wäsche größtenteils selbst zu waschen
+\end_layout
+
+\begin_layout Itemize
+Mein Vater ist immernoch genervt, wir führen denselben Streit, diesmal als
+ Metadiskussion.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Wir haben gesagt, wenn ich selbst wasche, kann ich tun, was ich will!
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+Nein, darauf haben wir uns sicher nie geeinigt
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Quotes eld
+\end_inset
+
+Aber genau das hast du gesagt.
+ Woran soll ich mich denn halten wenn nichtmal sowas gilt?
+\begin_inset Quotes erd
+\end_inset
+
+ - Andi: 
+\begin_inset Quotes eld
+\end_inset
+
+Ja, selbst wenn ich das gesagt habe - es stört mich immernoch massiv.
+ Ich kann das nicht ändern, ich halte das für falsch.
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Was für eine gesunde, konstruktive Diskussion voller Kompromisse, nicht?
+ 
+\end_layout
+
+\begin_layout Standard
+Mein Verhalten habe ich übrigens erst geändert, als ich ausgezogen bin und
+ gemerkt habe, dass es wirklich eigentlich gar nicht so blöd ist etwas Ordnung
+ zu halten.
+ Erzählt habe ich die Geschichte aber aus einem anderen Grund: Den Punkt,
+ ob es denn richtig wäre, meine Wäsche wegzuräumen, haben wir nie geklärt,
+ sondern nur eine sinnlose Diskussion auf der Meta-ebene geführt.
+\end_layout
+
+\begin_layout Standard
+Eine Diskussion auf der Meta-ebene macht dabei prinzipiell zwar schon Sinn,
+ aber nur, wenn sie Zielgerichtet ist.
+ Mein Vater und ich haben eigentlich zwei Metadiskussionen gleichzeitig
+ geführt, die sich wie ein Baum immer weiter aufgesplittet haben, und das
+ endet dann in einem Schlafrhythmusgebundenen Abbruch um 02:00 morgens an
+ einem Montag.
+ Keine Sorge, die Wäsche war mittlerweile aufgeräumt.
+\end_layout
+
+\begin_layout Standard
+Eigentlich hätte jemand auf den Tisch hauen müssen und sagen 
+\begin_inset Quotes eld
+\end_inset
+
+Halte ein, Diskussionspartner, und erhöre er meinen Rat! Ist es denn nicht
+ der Wahrheit begeben, dass wir eine Metadiskussin führen?
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+Hört hört, wie wahr, wie wahr! Nun sehe ich es auch! So lasset uns Speis
+ und Trank, Wein und Weib holen und den Streit für heute beilegen, so wahr
+ mir Gott beistehe
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+Hört hört! Dem sei nichts einzuwänden! Diener! So lasset das fetteste Schwein
+ schlachten und den besten Wein holen.
+ Wir wollen bis zum Morgengrauen kein Wort mehr verlieren.
+\begin_inset Quotes erd
+\end_inset
+
+ Dem hatte niemand etwas einzuwänden und so wurde die Nacht gegessen, getrunken,
+ ausgelassen gefeiert und niemand dachte an den Streit.
+ Vermutlich wusste eh schon niemand mehr, wer den Streit angefangen hatte.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Bild einfügen
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Am nächsten Morgen, nach einer langen Nacht, lagen die zwei immernoch zwischen
+ halb geöffneten Weinflaschen, Überresten von Auerochsbraten.
+ und ein paar halbnackten Huren.
+ Die meisten Gäste waren schon gegangen oder hatten sich in ein Zimmer zurückgez
+ogen.
+ Es roch nach einer Mischung von Zedernholz und Sommermorgen.
+ Der erste Sonnenstrahl kämpfte sich an der fernen Grenze des Horizontes
+ vorbei.
+ Normal wären sie nun auch schon in ihren Gemächern, mit einer oder mehreren
+ Begleitungen - doch nicht heute.
+ Der Moment war viel zu schön, um ihn nicht in ganzen Zügen auszukosten.
+ Viel zu lange schon hatten sie nicht mehr so zusammen gefeiert, ja nicht
+ mal darüber nachgedacht zu feiern.
+ Sie hatten schon vergessen wie es war, zusammen zu lachen, zu weinen, zu
+ witzeln.
+ Oder nur miteinander zu reden, egal über was.
+ Über die Händler, die bald kommen würden um ihre Ware zu verkaufen.
+ Über die Enten, die sich vor kurzem in ihrem Teich angesiedelt hatten.
+ Wie die Kinder aus ihrem Dorf mit ihnen spielten und wie schön es war,
+ die ihnen dabei zuzusehen.
+ Wie sehr sie beide ihre alte Hündin Beyond vermissten.
+ Wie sie mit ihr zusammen unterwegs waren, bei Sonne, Regen, Hagel und Sturm.
+ Ob es Gott gibt und wenn ja, ob er sich wohl gerade dieselbe Frage stellt.
+ Sie redeten über den süßen Pfirsichhintern der Tänzerinnen und wie vergänglich
+ Pfirsiche doch sind.
+ Wie sehr sie sich darauf freuen würden, wenn die Enten im Teich junge bekommen
+ würden.
+ Über eine einfachere Welt.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Weißt du, was das absurdeste ist?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Beide schauten aus dem Fenster, fasziniert, wie ein Loch in der Wand die
+ mystische Schönheit der Sonnenstrahlen in Szene setzte, die sich langsam,
+ aber dennoch mit der faszinierenden Schönheit der unaufhaltbaren Gewissheit
+ die Wand hochkräuselten.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Ich weiß gar nicht mehr, wie das hier hergekommen sind.
+\begin_inset Quotes erd
+\end_inset
+
+ Ich musste schmunzeln als er zum dritten Mal versuchte, aus einer leeren
+ Weinflasche zu trinken.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Ja.
+\end_layout
+
+\begin_layout Section
+Du bist eine der Hauptfiguren der Geschichte
+\end_layout
+
+\begin_layout Standard
+die ausschließlich den Zweck hatte, dich zu verwirren, dich aus deiner Wohlfühlz
+one herauszuholen.
+ Um dies zu erreichen war ich sogar bereit, eine der elementarsten Grundprämisse
+n eines Buches zu ignorieren: Die unterteilende Funktion der Überschriften.
+\begin_inset Quotes erd
+\end_inset
+
+ Er schluckte.
+ Noch immer die Flasche in der Hand wurde ihm klar, dass wirklich er gemeint
+ war.
+ Wirklich er? Er schaute nochmal auf den letzten Abschnitt und sah die fehlenden
+ Anführungsstriche am Satzende.
+ Natürlich waren sie ihm aufgefallen, genau wie das komplett absurde übergehen
+ von einer Erklärung hin zu einer Geschichte von sich versöhnenden Brüdern
+ aus dem Mittelalter.
+ Teilweise hatte er sogar Sätze nachgelesen.
+ Aber um die Uhrzeit einen solchen Aufwand für einen so kurzen Abschnitt
+ betreiben? Eher nicht.
+ Er hielt kurz inne.
+ War er denn immernoch gemeint? Ist das hier der nächste Abschnitt der Geschicht
+e, die für ihn geschrieben wird? Er könnte jederzeit aufhören zu lesen,
+ das ist klar.
+ Oder sich nicht mehr mit der beschriebenen Person identifizieren.
+ Oder aber...
+ mal 
+\begin_inset Quotes eld
+\end_inset
+
+outside the box
+\begin_inset Quotes erd
+\end_inset
+
+ gedacht, könntest du die Geschichte weiterschreiben? 
+\begin_inset Newline newline
+\end_inset
+
+Ach ne, warte.
+ Das geht nicht.
+ Ich schreibe ja.
+ Haha, cool.
+ Fast hättest du mich überrumpelt :D
+\end_layout
+
+\begin_layout Standard
+Eigentlich echt absurd, was ich hier gerade ausprobiert habe.
+ Also, ernsthaft: Das Experiment ist hier vorbei.
+ Dennoch wüsste ich gerade gerne, ob mein kleiner Trick funktioniert hat.
+ Konnte ich dich als Leser überraschen? Oder nur verwirren? 
+\end_layout
+
+\begin_layout Standard
+Egal was es von beidem war, ich habe damit mein Ziel, deinen Neuronanplastizität
+ durch diesen Reiz auch nur leicht zu beeinflussen, erreicht.
+ (falls du übrigens gar nicht überrascht warst warst du entweder zu unaufmerksam
+ oder verrückt).
+ Ich fand die Idee eigentlich ganz lustig.
+ Zurück zum Hauptthema: Es ist stets von Vorteil, wenn man bereit ist, 
+\begin_inset Quotes eld
+\end_inset
+
+outside the box
+\begin_inset Quotes erd
+\end_inset
+
+ zu denken, egal in welcher Dimension oder Metadimension-potenz.
+ Kann man einen solchen Loop nicht auflösen, ist man gefangener der Gesetzmäßigk
+eiten des Loops, in dem man sich befindet.
+\end_layout
+
+\begin_layout Standard
+Um wieder konkret auf die Diskussion von mir und meinem Vater zurückzukommen,
+ war diese natürlich nicht umsonst und gerade bei Diskussionen ist man eh
+ recht aufmerksam.
+ Dennoch kann es einem leicht passieren, dass man ewig diskutiert, ohne
+ weiterzukommen.
+\end_layout
+
+\begin_layout Standard
+Jetzt aber genug dieser maßlosen Metadiskussion, ich bin schon Kilometer
+ von meinem Plan abgewichen.
+ Ich hatte ja ein Ziel, und zwar zu erklären, warum man sich in solchen
+ Fällen auf das Hauptziel konzentrieren sollte.
+ Auf dieses sollte man hinarbeiten.
+ Wie ein informatiker, der Zeile für Zeile sein Programm verfolgt, bis er
+ das Problem gefunden hat, an dem der Computer nicht m ehr das tut, was
+ er sollte.
+\end_layout
+
+\begin_layout Standard
+Für mich war das bei dem Wäscheproblem nicht mehr nötig.
+ Vielleicht war das Grundproblem, dass unsere Wertevorstellungen hier einfach
+ zu unterschiedlich waren.
+ Vielleicht war der Streit im Nachhinein sogar die beste Lösung für unseren
+ Streit und, für mich, sogar noch ein Rückblick auf eine schöne Geschichte
+ von zwei Individuen, die eigentlich gerne zusammen Zeit verbringen.
+\end_layout
+
+\begin_layout Section
+Der kleinste gemeinsame Nenner
+\end_layout
+
+\begin_layout Standard
+Ich wünschte gerade, ich hätte den letzten Abschnitt nicht so aprubt beendet.
+ Obwohl, nachdem ich den vorletzten Abschnitt in seiner Funktion als Abschnitt
+ so mit Füßen getreten habe, vielleicht ein Stückchen wiedergutmachung.
+\end_layout
+
+\begin_layout Standard
+Wenn ich eine chance habe, dich mit diesem Buch irgendwie zu manipulieren,
+ ist jetzt vermutlich meine letzte Chance.
+ Dies wird auch der letzte Abschnitt sein, den ich so direkt schreibe, als
+ würden wir uns gerade gegenüber sitzen.
+ Danach hageln die Formeln, Logiken und Erkenntnisse mit einer unlesbaren
+ Trockenheit in dich ein, sodass selbst ein Immanuel Kant eine Träne in
+ den Augen hätte.
+ Wie du vermutlich auch schon vermutet hast, wird dich dieses Buch dauerhaft
+ verändern.
+ Wir werden Wege ergründen, die kein Philosoph, Denker, Jurist, Gelehrter
+ und auch du nicht erklären konnte.
+ Du wirst Dinge lernen, nicht weil du sie hier liest, sondern weil du Denkprozes
+se durchmachen wirst.
+ Du wirst lernen, welche die wichtigen Fragen sind, die dich beschäftigen,
+ wie die Antworten auf diese sind, und das ganze ohne, dass es hier explizit
+ stehen würde.
+ Das Gefühl, was richtig oder falsch ist, wird zum Wissen, was richtig oder
+ falsch ist, besonders aus moralischer Sicht.
+ Deine Denkprozesse werden sich dabei vermutlich drastisch ändern, ins philosoph
+ische, logische bis hin zur Selbsterkenntnis.
+ Personen, die dieses Wissen nicht haben, wirst du belächeln, aber auch
+ Diskussionen werden schwerer zu führen sein, da alle anderen dir wie ungebildet
+e Kleinkinder vorkommen, die selbst einfache Zusammenhänge nicht erkennen.
+ Du wirst die Beweggründe anderer Menschen leicht ergründen können, weil
+ du weißt, wie sie funktionieren.
+ Du lernst, wie du sie so beeinflussen kannst, dass sie das tun, was du
+ willst, weil du ihnen zeigst, dass sie es schon immer wollten.
+ Aber du wirst es nicht verlangen.
+\end_layout
+
+\begin_layout Standard
+Nachdem ich nun die Erwartungen auf das unhaltbare Maximum gehoben habe,
+ sodass ich sie, wie du schon erkannt hast, niemals halten kann, können
+ wir uns jetzt den wichtigen Dingen widmen: Der Cheeseburger kostet in Österreic
+h noch einen Euro.
+\end_layout
+
+\begin_layout Standard
+Und jetzt wirklich, wir klären jetzt mal, was richtig ist.
+ Woher weißt du, was richtig ist?
+\end_layout
+
+\begin_layout Part
+Die moralische Wahrheit
+\end_layout
+
+\begin_layout Part
+Vorbereitung
+\end_layout
+
+\begin_layout Standard
+Vielleicht ist euch beim lesen aufgefallen, dass es bereits zwei Intros
+ gab und diese Zeile aktuell das dritte ist.
+ Obwohl das nicht geplant war, bildet diese aber den perfekte Zirkelschluss
+ mit meinem ersten Intro:
+\end_layout
+
+\begin_layout Standard
+Noch ist mein Ziel, zu verwirren, um feststehende Denkprozesse aufzulösen.
+ Hierfür werden wir in diesem Abschnitt ein paar Gedankenexperimente machen,
+ mit dem Ziel unsere Plastizität zwischen den Neuronen etwas zu lockern.
+ Wir unterscheiden uns prinzipiell nicht großartig von einem Computer, einer
+ künstlichen Intelligenz, die sich selbst beigebracht hat, Probleme zu lösen.
+ Unser Gehirn ist zwar viel universeller anwendbar, komplexer und vor allem
+ effizienter als ein künstliches neuronales Netz, aber dennoch können bereits
+ Probleme besser gelöst werden als vom Menschen.
+ Eine Maschine hat dabei einen wichtigen Vorteil, sie kann immer weiterlernen.
+ Wenn wir jung sind ist unser Gehirn auch noch plastischer.
+ Wir lernen viel mehr, aber über die Zeit festigen sich unsere Denkstrukturen.
+ Unsere Träume werden weniger spektakulär.
+ Unsere Fantasie nimmt ab und Filme, die früher das höchste der Gefühle
+ waren, sind heutzutage nur noch primitiv.
+ Schade eigentlich.
+ Vielleicht sehr ich die Vergangenheit mit einer mich blendenden Brille
+ der Nostalgie, aber ich fand es immer schön, mich in eine Welt zu versetzen,
+ wo ich Son Gokus Stelle im Kampf gegen Freeza übernahm und diesen leichtfüßig,
+ mit meiner unvorstellbarer Macht und einem coolen, arroganz angehauchtem
+ Lächeln besiegte.
+ Ein schönes Gefühl, doch jetzt kann ich mir nur noch den Moment vorstellen,
+ an dem ich Freezer besiegt habe und kein neuer Gegner da ist.
+ Es herrscht Frieden.
+ Ich erinner mich, wie bescheuert eigentlich das Powercreep in der Serie
+ war - um die Spannung aufreht zu erhalten, mussten die Gegner einfach immer
+ stärker werden.
+ Wir haben es verstanden.
+ Ein Trick, der seit Dragonball auch nie mehr auf diese Art und weise verwendet
+ wurde.
+ Naruto hat dieses Problem durch einen lang anhaltenden Powercreep gelöst.
+ One piece wusste nicht, wie es lösbar hätte sein können und so musste nach
+ 500 Folgen eine neue Superkraft eingeführt werden.
+ Aber immer dasselbe.
+ Immerhin wurden die Geschichten komplexer! One punch man war auch cool.
+ Der war von Anfang an der stärkste und nichts konnte ihm das Wasser reichen.
+ Wenn ich heute Spongebob schaue, identifiziere ich mich immer mehr mit
+ Thaddäus.
+ Aber eigentlich schaue ich eh alte Folgen Scrubs und Two and a Half Men
+ während ich countertsrike source, mittlerweile 16 Jahre alt, im surf-modus
+ zocke.
+ Das ist entspannent.
+\end_layout
+
+\begin_layout Standard
+Ziemlich düstere Ansicht, so schlimm ist es eigentlich gar nicht.
+ Schaut man in die andere Richtung, was noch kommt, wieht man allerdings
+ auch nichts wirklich tolles.
+ Oder, wie ist es mit 60 Jahren? Nicht nur ist es kaum mehr möglich noch
+ neue Sachen zu lernen, oft wird sich auch einfach aktiv dagegen entschieden,
+ neue Dinge kennen zu lernen.
+ Ist das schön? Lernen ist das, was unser Leben ausmacht und spannend macht.
+ Vielleicht gehörtes auch zum lernprozess dazu, sich slebst zu lernen, dass
+ es sich nun ausgelehrt hat.
+ Aber dieses Narrativ des Alterns erfüllt mich jetzt schon mit Leere.
+ Nichts lernen zu können scheint ein Zustand zu sein, auf den man hinarbeiten
+ sollte und den man nie erreichen will.
+ 
+\end_layout
+
+\begin_layout Standard
+Es ist das dauerhafteste aller Ziele.
+ Geld beeindruckt nur arme Menschen, Aussehen vergeht, auch ein guter Freundeskr
+eis kann sich anpassen.
+ Viele sozial media follower haben? Sicher auch eine Fähigkeit, die man
+ sich einfach mal erlernen könnte - genau wie die anderen, Man strebt nicht
+ nur nach dem nächsten Ziel, sondern nach allen Zielen gleichzeitig und
+ erreicht somit sogar alle Unterziele schneller.
+ Welch ein Paradoxon.
+\end_layout
+
+\begin_layout Standard
+Wie äußert sich diese Einstellung im echten Leben?
+\end_layout
+
+\begin_layout Standard
+Egal, wie bescheuert es klingen mag, was dein Freund vorschlägt, du bist
+ dabei.
+ Eine schlechte Erfahrung ist kein Grund für schlechte Laune, sondern Grund
+ zur Freude über das erlernte.
+ Und darüber, dass du dich dennoch in die nächste Erfahrung stürzt.
+ Das Wissen, dass dich erfahrungen neuronal.chemisch prägen und, einer Spitzenkar
+riere in der Politik, 
+\begin_inset Quotes eld
+\end_inset
+
+nichts festes
+\begin_inset Quotes erd
+\end_inset
+
+ mit girls und zuletzt eine wissenschaftliche Neuerung zu erschaffen, reiht
+ sich diesmal ein Ziel ein, das dort auch dauerhaft verweilen könnte.
+ Lernen ist immer gut, auch wenn du nach einiger Zeit dieses Ziel vielleicht
+ wieder ersetzt.
+ du eigenshaften sammelst, die dir später im Leben viel bringen werden.
+ Auch eine schlechte phase muss durchlebt werden, in der du dich nicht freuen
+ kannst, aber du gehst aus dieser gestärkt raus.
+ Du merkst, dass es viel lustiger ist, von die Geschichten die aus blöden
+ Fehlern entstanden sind zu erzählen als von den langweiligen Urlauben auf
+ mit all inclusive.
+ Ein All inclusive Urlaub ist aber eben auch eine Erfahrung, die es sich
+ lohnt zu machen.
+ dem wir später profitieren können, indem wir unsere bestehenden Denkstrukturen
+ aufbrechen.
+ Inwiefern? Nunja, so, wie man es von einem Philosophen erwarten würde.
+ Kurze Metainformation, nicht nur ist es wichtig, generell alles zu hinterfragen
+, das Hinterfragen zu hinterfragen ist einer der wichtigsten Denkprozesse
+ dabei.
+ Nimm nichts für gegeben an.
+\end_layout
+
+\begin_layout Standard
+Auch auf einem Meta-level gibt es einem die sicherheit, dass man mit einer
+ guten Einstellung an Sachen herangeht.
+ Dass du nicht auf dein Leben zurückblicken wirst mit dem Wunsch, du hättest
+ damals etwas anderes gemacht.
+ Du hast all das gemacht, was du für richtig gehalten hast.
+ Selbst der Entscheid, nicht mehr zu lernen ist dann retrospektiv nichtig.
+ 
+\end_layout
+
+\begin_layout Section
+Lernen ist der Sinn des Lebens - sagt mir zumindest mein Gehirn
+\end_layout
+
+\begin_layout Standard
+Dinge auswendig lernen, ist zwar wichtig, da keine Fähigkeit unseres Gehirns
+ vernachlässigt werden sollte, aber Verständnis (einige würden sagen 
+\begin_inset Quotes eld
+\end_inset
+
+Erleuchtung
+\begin_inset Quotes erd
+\end_inset
+
+) erlangt man nicht mit auswendig lernen.
+ Um das lernen nicht zu verlernen, muss man vieles lernen - unter anderem,
+ ganz konkret, wie das Gehirn lernt.
+ Das Gehirn erkennt sehr, sehr gerne Muster.
+ Gesichter zum Beispiel.
+ Raubtiere im Busch.
+ Da sind wir sehr kompetent, es ist eine Funktion des Gehirns, die uns oft
+ Gesichter auh dann erkennen lässst, wenn es keine gibt.
+ Jesus auf dem Toastbrot, beispielsweise.
+ Auch bei physikalischen begebenheiten haben wir ein Grundverständnis und
+ können Probleme übertragen.
+ Wie Kant schrieb, ich muss mein Haus nicht erst untergraben um zu wissen,
+ dass es einstürzen wird.
+ Diese Fähigkeit ist in uns auch so sark verankert, dass wir bestimte Grundängst
+e haben, beispielsweise vor Höhe, die auf unglaublich viele Dinge übertragen
+ werden können, ohne dass wir direkt empirische Erfahrungen auswerten müssen.
+ Deswegen können wir auch eine KI beim lernen beobachten und für unseren
+ eigenen Lernprozess wichtige Schlüsse ziehen.
+ 
+\end_layout
+
+\begin_layout Standard
+Auf was will ich eigentlich grad hinaus? KIs lernen stets weiter.
+ Sie versuchen zwar allgemein, immer die für sie beste Entscheidung zu treffen,
+ mit einer kleinen Wahrscheinlichkeit, epsilon, machen sie aber eine zufällige
+ Aktion.
+ Es gibt genau genommen nur eine Möglichkeit, wie ein neuronales Netz nichts
+ mehr lernen kann: Wenn es den Zweck seiner Erschaffung gelöst hat, sein
+ Zziel erreicht hat.
+ Dann würde der Entwickler das Modell speichern, den 
+\begin_inset Quotes eld
+\end_inset
+
+exploraton
+\begin_inset Quotes erd
+\end_inset
+
+-parameter abstellen - ausgelernt.
+ Vermutlich sogar für immer.
+ Falls das Netz doch irgendwann weiter trainiert werden sollte, ibts es
+ vermutlich schon neue Architekturen, die komplexer sind und die lernen,
+ das Problem besser zu lösen.
+\end_layout
+
+\begin_layout Standard
+man könnte auch sagen, die KI, die lernt ein primitives Problem gut zu lösen,
+ stirbt in diesem Moment - es wird zu einem statischen, deterministischen
+ Modell.
+ Zu einer umfangreichen, konstanten.
+ Wer gkaubt etwas zu sein, hört auf, etwas zu werden.
+ Dieser Datz stammte von Oliver Kahn, aus dem Bayern Jahrbuch 97/98, ein
+ weiser Mann.
+ Ich glaube, irgend so ein sokrates hat das auch mal gesagt.
+ Es ist zwar schön zu wissen, dass man gar nicht komplett aufhören kann
+ zu lernen und dass du, also dein Gehirn, stellvertretend als Verwalter
+ seiner selbst, also dir, sein eigener Product manager ist - also Environment,
+ Hausmeister der Rewardfunktion, Agent und externer auditor, aber dennoch
+ kann man sich eine Idee ableiten.
+\end_layout
+
+\begin_layout Standard
+Wir können uns auch noch ein anderes Problem anschauen, das sehr weit verbreitet
+ ist: Overfiting.
+ Wird ein neuronales Netz zu lange auf den selben Daten trainiert, verliert
+ es irgendwann die Fähigkeit, das Problem auf andere Daten zu übertragen.
+ Klassischerweise würde man sagenm ein Fachidiot oder auch Bulemielernen.
+ Ein Gedicht auswendig zu lernen bedeutet noch lange nicht, dass man es
+ verstanden hat.
+ Beim Schach hat man mit weiß tendenziell die besseren Gewinnchancen - so
+ kann man mit der Eröffnung und einem Zug Vorsprung die Eröffnung und das
+ Spiel stärker beeinflussen als der Gegner.
+ Probiert man bei seinem Gegner eine neuartige Eröffnung aus, die man mithilfe
+ von Schachcomputern vorbereitet hat, findet sich aber dann doch in einer
+ Stellung wieder, die ausgeglichen scheint - so hat dein Gegner, der sich
+ nicht darauf vorbereitet hat die weitaus besseren Gewinnchancen, da er
+ die Stellung versteht und nich auswendig gelernt hat.
+\end_layout
+
+\begin_layout Standard
+Selbst in Situationen, die wie geschaffen für overfitting aussehen trifft
+ das nicht zu.
+\end_layout
+
+\begin_layout Standard
+Ein deutscher Speerwerfer hatte ein Problem: Er schien Talent zu haben,
+ aber stagnierte Leistungstechnisch im europaweiten Mittelfeld.
+ Aushilfe schaffte eine neue Trainingsmethode eines Sportwissenschaftlers,
+ der sich mit differentiellem lernen auseinandersetzte: Ein Jahr lang nicht
+ mit rechts werfen und nicht mit Speeren.
+ Nach einem Jahr mit dieser komischen Trainingsmethode, natürlich, ohne
+ das Fitnesstraining zu vernachlässigen, übertraf er bei seinem ersten Wurf
+ mit rechts seinen persönlichen Rekord um zwei Meter - bei Speerwerfen eine
+ unglaubliche Verbesserung.
+\end_layout
+
+\begin_layout Standard
+Was mich hier so fasziniert ist, dass Speerwerfen das sportartifizierte
+ overfitting trainigsfestival sein sollte.
+ Die einzige intellektuelle Leistung in dieser schier endlosen Reihe an
+ wiederholung von Würfen scheint lediglich zu sein, nicht zu übertreten.
+ Wie sollte gerade hier differentielles lernen helfen?
+\end_layout
+
+\begin_layout Standard
+Gute Frage, ich habe keine Ahnung.
+ Ich würde vermuten, dass selbst wenn overfitting das Ziel ist, lokale optima
+ im high end bereich nicht so einfach verlassen werden können.
+ Das Gehirn langweilt sich außerdem nicht gerne, zwingt man es das lernen
+ aufzugeben, wird man vielleicht indirekt durch das Laufen auf Spaarflamme
+ bestraft.
+ Auch ein Teufelskreis und Interaktionen mit anderen Alltagsverhalten ist
+ denkbar.
+\end_layout
+
+\begin_layout Standard
+Vermutlich aber ist es wirklich das bessere allgemeine Verständnis, welches
+ die Neuronen im Gehirn nochmal ganz anders aktiviert haben, es gezwungen
+ haben, dasselbe Verständnis nochmal, aber dennoch ein bisschen anders zu
+ erlernen, weshalb eine so counterintuitive Trainingsmethode funktionieren
+ konnte.
+\end_layout
+
+\begin_layout Standard
+Also egal wie, reize dein Gehirn.
+\end_layout
+
+\begin_layout Standard
+Wenn du eine Formel nicht verstehst, lerne zu häkeln.
+ Wenn du bei deinen Präsentationen immer dieselben Ticks hast , die dich
+ unsicher wirken lassen, mach einen Jagdschein.
+ Zugegeben, diese Beispiele sind vermutlich Murks.
+ Ich kann mir zumindest nicht, auch nicht mit viel Fantasie für differentielles
+ lernen vorstellen, dass man hier etwas mitnehmen könnte.
+ Differentielles lernen bedeutet eben nicht, dass du besser wirst, egal
+ was du machst.
+ Es muss schon irgendwie Teilkomponente lernen, die zumindest ähnlich sind.
+ Die andere hand zu nehmen ist vermutlich aus symmetriegründen, der unterteilung
+ in linke und rechte gehirnhälfte und die direkte übertragbarkeit vermutlich
+ eines der besten Beispiele.
+\end_layout
+
+\begin_layout Standard
+Aber auch hier, um eine Metaebene anzukratzen: Glaubst du, die Fähigkeit
+ eine Sache zum absoluten overfitting zu erlernen ist auch schon wieder
+ in einer form differentiell?
+\end_layout
+
+\begin_layout Standard
+Selbst vor Problemen mit weitaus abstrak, da nur noch den , ob er etwas
+ In der Schule beispielsweise.
+ Wir lernen dort nicht freiwillig, so werden wir ja von unseren Eltern gezwungen
+ dort hinzugehen.
+ Dabei haben wir meist nichtmal Freude oder großes Interesse am Lernen -
+ schließlich ist lernen ja ein wiederkehrender Prozess des Scheiterns an
+ Problemen, die einem noch unbekannt sind und des Gefühls der Unterlegenheit
+ gegenüber allen älteren.
+ Gelernt wird nur so schnell, wie der Lehrer es vorgibt - also langweilst
+ du dich entweder oder du bist überfordert.
+ Die Hauptmotivation, weshalb du etwas lernst, sind gute Noten vom Lehrer
+ zu erhalten, da diese dir Anerkennung von deinen Eltern, deinen Mitschülern,
+ vom Lehrer - also allgemein gesagt, von der gesamten dir bekannten Gesellschaft
+ verspricht.
+ Und dieses Schulsystem soll uns wirklich zu mündigen Bürgern machen?
+\begin_inset Newline newline
+\end_inset
+
+Denkt mal über die letzten Zeilen etwas nach.
+ 
+\end_layout
+
+\begin_layout Standard
+Noch ein Beispiel: Kürzlich schickte mich der Youtube-Algorithmus auf eine
+ Reise in die Motivationstrainer.
+ Was zwar ein Upgrade war zu meinen vorherigen Youtube loops von Dingen,
+ die in einer Hydraulikpresse gequetscht werden, einem Typen der über 1000
+ Videos davon gemacht hat, wie er Schlösser knackt oder auch Reviews zu
+ Golfsportutensilien.
+ Ich habe noch nie einen Golfschläger in der Hand gehalten.
+ Dieser Motivationscoach hatte auf jeden Fall ein interessantes Beispiel
+ aus der Schule mitgebracht.
+ https://www.youtube.com/watch?v=KWrocimbPHI&t=2708s [Beschreibe das Problem
+ pls] 
+\end_layout
+
+\begin_layout Standard
+Wie empöhrend.
+\end_layout
+
+\begin_layout Standard
+Das ist zumindest, was ich über unser Schulsystem sagen würde, wenn ich
+ dieser Meinung wäre.
+ Bin ich aber nicht.
+\end_layout
+
+\begin_layout Standard
+Diese Kinder lernen dort, sich irgendwie und möglichst effizient durchzumogeln.
+ Auf der Metaebene lernen sie, sich Modelle der Gesellschaft zu bauen, um
+ ihre Ziele zu erreichen - wenn man will, von ihrem eigenen Leben - also
+ auch auf der Meta-ebene des Lernens interessant.
+ Außerdem lernen sie, Dinge zu akzeptieren - auch eine wichtige Eigenschaft.
+ Man kann nicht alles überprüfen, sich für alle Dinge interessieren - gerade
+ Kinder sind schon so früh spielend draußen, dass sie ohne die Fähigkeit,
+ Dinge zu akzeptieren und ihrem gesunden Menschenverstand, unweigerlich
+ sterben würden.
+ 
+\end_layout
+
+\begin_layout Standard
+Die Herdplatte fasst du nicht an.
+ Wäsche wird sauberer, wenn wir Seife dazugeben.
+ Du gehst zur Schule, damit du mal was wirst.
+ Kinder bringt der Storch.
+ Du bist das Kind deiner Eltern.
+ Bäume machen Luft.
+ Wir atmen Luft.
+\end_layout
+
+\begin_layout Standard
+Das gesamtwissen, welches nötig ist, ist dafür zu unüberschauber und die
+ logischen Zusammenhänge sind auch nicht leicht herzustellen.
+ Vielmehr behaupte ich, dass der Doktor der Medizin, der nun ein Coach ist,
+ für die meisten Dinge ebenfalls nur akzeptiert.
+ Die Fähigkeit unseres Gehirns, Modelle zu bauen, mit denen wir die Welt
+ erklären und vorhersagen können, ist Intelligenz.
+ Das Unvermögen, ein solches Modell anzupassen, ist Sturheit.
+ Was glaubst du, ist der Glaube an die Überlegenheit seines eigenen Systems?
+ Arroganz.
+ Der Glaube an die Überlegenheit des eigenen Modells - der Werte, die dich
+ intrinsisch ausmachen, ist deine Wertschätzung gegenüber dir selbst.
+ Das Festhalten an solchen Modellen ist die Angst, statt einem Fels in der
+ Brandung nur eine rumtreibende Nussschale zu sein und die Fähigkeit, ein
+ Modell zu verwerfen, auf dem man alles aufgebaut hat, welches man sein
+ Leben lang bestätigt hat, ist wohl eines der schwersten Ziele, die sich
+ ein Mensch vornehmen kann.
+\end_layout
+
+\begin_layout Standard
+Überlegen wir nur mal, wie schwer es jemandem fällt, sich einen Fehler,
+ den er sein Leben lang gemacht hat, einzugestehen.
+ Wie schwer es Menschen fällt, in einer hitzigen Diskussion dem Gegenüber
+ rechtzugeben.
+ Beispielsweise aus Scham.
+ Aus Angst, man hat Jahrzehntelang etwas falsches gelernt und Zeit verloren.
+ Jemand, der seinen Glauben verliert, verliert nicht nur ein abstraktes
+ Modell, welches ihm viele unerklärbare Fragen erklärt, moralische Prämissen
+ vorgibt und Angst vor dem Nichts und dem Tod nimmt.
+ Fragen, über deren Tragweite man sich immer bewusst war - schließlich umfassen
+ sie das Wesen unseres Daseins im Kern - und an deren Stelle nun Leere steht.
+ Nicht-wissen.
+ Nichtmal ein neues Modell, mit welchem wir das alte ersetzen könnten.
+ Außerdem eine unglaubliche Menge an Selbstzweifel.
+ Und wofür? Für das wohlige Gefühl zu wissen, dass man einem Irrtum weniger
+ unterliegt? Warum sollte man (auf Metaebene) sich so eine Bürde auflasten?
+ 
+\end_layout
+
+\begin_layout Standard
+Nun ja.
+ Das wäre zumindest die Einstellung eines Kleingeistes, einer emotional
+ labilen Person.
+ Ich bin stets bereit, mir Fehler einzugestehen und neue Dinge zu lernen.
+ Sich zu irren ist immernoch ein Beweis dafür, dass man Bereit ist, sich
+ zu ändern - was mehr als alles andere für ein erfolgreiches Leben in jeder
+ Lebenslage garantiert.
+ Mehr noch ist eine der größten Ängste, dass ich irgendwann, in einigen
+ Jahrem nichts mehr lernen könnte.
+ Nicht etwa, weil ich glauben würde, alles zu wissen - sondern weil meine
+ Plastizität in den Neuronen zu festgefahren ist.
+ Dass mein Modell zu lange fest im Sattel gesessen ist, sofass ich Irrtümer
+ nicht erkenne.
+ Die maximale Langeweile.
+ Das Equilibrium des Wissens und das Ende der Konvergenz meiner Lernfähigkeit.
+ Ich mag mich irren, aber ich hoffe, dass allein das Streben nach diesem
+ Zustand, nach dem optimalen Modell, verhindert vielleicht schon, dass ich
+ ihn erreichen kann.
+ Auch auf diesem Weg bin ich bereit, meine präferenzen zu ändern.
+ Vielleicht ist mein Vater und Opa aus gutem Grund doch irgendwann zu dem
+ Schluss gekommen, dass nichts mehr zu lernen etwas tolles ist.
+ Und ich bin auch bereit, diese gesamte Theorie über den Haufen zu werfen.
+\end_layout
+
+\begin_layout Standard
+Um unser Gehirn maximal zu plastifizieren, hier einige interessante Fragen,
+ die du dir nacheinander stellen solltest:
+\end_layout
+
+\begin_layout Standard
+Bitte schaue dir immer nur eine Frage an und versuche, diese zu beantworten,
+ bis du mit deiner Antwort intrinsisch zufrieden bist.
+\end_layout
+
+\begin_layout Itemize
+Woher weißt du, ob etwas richtig ist?
+\end_layout
+
+\begin_layout Itemize
+Was ist der Sinn des Lebens?
+\end_layout
+
+\begin_layout Itemize
+Welche Farbe könnte eine neue Farbe außerhalb des Farbspektrums haben?
+\end_layout
+
+\begin_layout Itemize
+Gibt es einen, oder mehrere, Sinn des Lebens? Muss es einen Sinn des Lebens
+ geben? Wollen wir, dass das Leben einen Sinn hat?
+\end_layout
+
+\begin_layout Itemize
+Wenn du dir sicher bist, was richtig ist...
+ Würde jeder Mensch oder nicht Mensch zum selben Schluss kommen, wenn er
+ sich diese Frage lang genug stellen würde?
+\end_layout
+
+\begin_layout Itemize
+Was ist intelligenz und wie könntest du einem Alien beweisen, dass du intelligen
+t bist und ein Bewusstsein hast?
+\end_layout
+
+\begin_layout Itemize
+Könnte ein Computer dir beweisen, dass er echt intelligent ist oder ein
+ Bewusstsein hat?
+\end_layout
+
+\begin_layout Itemize
+Warum finden wir Musik so toll und warum passt sich unsere Stimmung so der
+ Musik an?
+\end_layout
+
+\begin_layout Itemize
+Warum existiert überhaupt irgendetwas? Quarks, Protonen, Neutronen, Atome,
+ Quanten?
+\end_layout
+
+\begin_layout Itemize
+Die Welt existiert erst sein letztem Donnerstag, alles was wir kennen, inklusive
+ der Messmethoden für Zeit, gibt es erst seitdem.
+\end_layout
+
+\begin_layout Standard
+Allein der Fakt, dass wir uns diese Frage stellen können ist ein Glücksfall
+ der Geschichte.
+\end_layout
+
+\begin_layout Section
+Der Trugschluss unserer Erfahrung
+\end_layout
+
+\begin_layout Standard
+Fangen wir mal langsam an, diese Fragen aufzudröseln.
+ Woher wissen wir, ob etwas richtig ist? Um mal ein paar Names zu droppen:
+ Sie haben sicher schon von Alan Touring gehört, der einst den Touring Test
+ bestrieb 
+\end_layout
+
+\begin_layout Section
+Was ist Wahrheit?
+\end_layout
+
+\begin_layout Standard
+Joscha Bach, der mich zur Zeit oft mit seinen Erkenntnissen amüsiert, hat
+ es mal passend Wann können wir uns sicher sein, dass wir eine Prämisse
+ gefunden haben, ob die gefundene Definition richtig ist? Historisch waren
+ sich viel zu viele Leute dessen sicher, was sie angenommen haben.
+ Jeder Mensch macht das, so ist es doch die einzige Möglichkeit, das wir
+ Entscheidungen treffen können.
+ Ich weiß, dass aus dem 10.
+ Stock zu springen eine dumme Idee ist, das würde jeder Unterschreiben.
+ Dennoch würde ich mich weigern, dies bereits als Wahrheit zu akzeptieren,
+ aus vielen Gründen.
+\end_layout
+
+\begin_layout Enumerate
+Es ist nicht garantiert, dass nicht aus dem 10.
+ Stock schlecht ist.
+\begin_inset Newline newline
+\end_inset
+
+Versteht mich nicht falsch, ich würde das niemandem empfehlen, dennoch wäre
+ folgender Ausgang denkbar: Wir brechen uns lediglich ein Bein, im Krankenhaus
+ wird dann durch Zufall eine heilbare, tödliche Krankheit früh genug erkannt,
+ dass sie noch geheilt werden kann und deine behandelnde Ärztin wird deine
+ Frau.
+ Oder kannst du diesen Fall ausschließen? Mehr noch, Gedankenexperiment,
+ wenn du falsch liegst, kommst du auf Ewigkeit, unendlich, in die Höllte.
+ Von mir aus auch nur ein einzelner weißer Raum.
+ Wir nehmen dir nicht nur die Fähigkeit dich zu töten, sondern auch, verrückt
+ zu werden.
+\begin_inset Newline newline
+\end_inset
+
+Ich glaube, nicht, ich würde es nicht ausschließen.
+ Diese Geschichte ist frei erfunden, aber es gibt ähnliche Fälle.
+\begin_inset Newline newline
+\end_inset
+
+Beispiel: Eine Frau findet raus, dass ihr Mann sie betrügt, springt auf
+ dem Fenster und landet, so wie es der Zufall will, auf ihrem Mann.
+ Sie überlebt ohne Verletzungen, der Mann stirbt.
+ Na hoffentlich hast du heute nicht gewettet!
+\begin_inset Newline newline
+\end_inset
+
+Somit wird diese Möglichkeit also direkt verworfen..
+ Warum eigentlich?
+\end_layout
+
+\begin_layout Section
+Was ist ein Modell? Wendler - Egal.
+\end_layout
+
+\begin_layout Standard
+Wer bist du? Genau genommen bist du ein Gehirn, welches einen ca.
+ 80kg schweren Fleischklops steuert.
+ Das Gefühl, dass du auch dein Körper bist, ist bereits ein Modell deines
+ Gehirns - und ich finde kein all zu schlechtes.
+ Sollte man an dieser Stelle bereits die Realität anzweifeln? Eher nicht.
+ Die Rasiermesser der Philosophie haben mich, als ich sie damals in einem
+ Video von vsauce kennengelernt habe, sehr beeindruckt.
+ Eine nicht wissenschaftliche Theorie wie der Glaube an Gott konnte somit
+ zwar nicht widerlegt werden, aber dennoch können so allgemein gültige Maximen
+ beschrieben werden, die zu einer allgemein gültigen Logik hin konvergieren.
+ Genau so ist es mit der Philosophie und der Frage nach der Realität.
+ Was ist real? Gibt es mich?
+\end_layout
+
+\begin_layout Standard
+Ich denke, also bin ich.
+\end_layout
+
+\begin_layout Standard
+Ein sehr einfacher Satz, aber dennoch so schön.
+ Er ist der Beweis dafür, dass Dinge existieren - sei es auch nur ein abstrakter
+ Gedanke.
+ Eine in sich gültige Prämisse.
+ Könnte man sie widerlegen oder das Gegenteil beweisen, würde sie sich bereits
+ selbst wieder bewahrheiten.
+ 
+\end_layout
+
+\begin_layout Standard
+Sehen wir alle andere Farben?
+\end_layout
+
+\begin_layout Standard
+Gibt es einen Gott?
+\end_layout
+
+\begin_layout Standard
+Dennoch würde ich gerne Occhams Razor oder Newtons razor um eine Einstellung
+ erweitern: Wenn es nicht widerlegt werden kann ist eine Diskussion unnötig,
+ zu folgernde Entscheidungen sind irrelevant und dadurch ist es, intrinsisch,
+ egal.
+ Leben wir in der echten Realität, oder ist das hier nur eine Simulation
+ oder Einbildung, ein Wachzustand? Sind wir der Mittelpunkt einer Geschichte
+ und alle anderen Menschen Roboter oder Simulationen? Haben wir eine Seele?
+ Was passiert nach dem Tod? Ist Wahrheit ein Konstrukt? Alles Fragen, die
+ viele Leute beschäftigen, sie nachts wach halten, weil sie nicht nur nicht
+ wiederlegbar sind, sondern im Bereich des nicht widerlegbaren die uns am
+ sinnvollsten erscheinenden Modelle sind.
+ Die Suche nach Spiritualität, sozusagen.
+\end_layout
+
+\begin_layout Standard
+Was ist mein Modell an dieser Stelle?
+\end_layout
+
+\begin_layout Standard
+Nun ja...
+ Auch wenn ich manchmal über diese Probleme nachdenken mag und so meine
+ Gedankengänge habe - bin ich letzten Endes immer zu demselben Schluss gekommen:
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Es ist völlig egal
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Was würde denn die Erkenntnis, das hier wäre eine Simulation bringen? Nichts
+ real messbares würde sich verändern.
+ Was ist, wenn ich weiß, dass ich keine Seele habe (Was soll eine Seele
+ überhaupt sein) oder sie mir genommen wird? Ich könnte sie ja schlecht
+ vermissen.
+ All die Fragen verändern mein Leben nicht, erfordern keiner Entscheidung
+ oder einem Modell und können somit getrost ignoriert werden.
+\end_layout
+
+\begin_layout Standard
+Was wäre, wenn wir alle ein anderes Farbspektrum hätten? Oder, könnte es
+ eine weitere Farbe geben ohne dass wir wissen, wie diese ausschaut? Unser
+ Gehirn hat hier auch schließlich nur gelernt, einen Teil des UV-Bereiches
+ (der sehr klein ist), farblich zu kategorisieren.
+ Die Farben bilden auch eine, mathematisch gesehen, zaklische Gruppe, schließlic
+h kommt man von den drei Farben in Übergängen immer zu einer anderen bekannten
+ Farbe.
+ Dennoch ist die Existenz einer weiteren Farbe für uns leichter vorstellbar,
+ als die Existens einer ganzen Zahl zwischen 0 und 1.
+ Obwohl wir uns beides nicht vorstellen können.
+ Für mich ist das ein bisschen so, wie die ganzen Zahlen von 1 bis unendlich
+ und die rationalen Zahlen.
+ Beides ist unendlich, dennoch gibt es 
+\begin_inset Quotes eld
+\end_inset
+
+mehr
+\begin_inset Quotes erd
+\end_inset
+
+ rationale Zahlen zwischen 0 und 1 als irrationale Zahlen insgesammt.
+ Wie ist wohl das Gefühl für Farbenblinde, die eine dieser Brillen aufsetzen
+ und auf einmal mehr Licht vom Spektrum sehen können? Wie ist es für ein
+ Baby, dass immer unscharf gesehen hat, auf einmal sehen zu können? Farben
+ sehen macht viel Spaß.
+\end_layout
+
+\begin_layout Standard
+Wir haben auch starke Angst davor, unser Augenlicht zu verlieren, scheint
+ es doch der wichtigste unserer Analysatoren zu sein.
+ Oder auch noch das Gehör dazu.
+ Aus dem Stand würde ich sagen, ab diesem Zeitpunkt könnte ich mir gut vorstelle
+n, dass ich meinen Lebenssinn als verloren anerkennen würde, der Tod wäre
+ mir vermutlich recht.
+ Aber jemand, der all das nie kennen gelernt hat? Jemand, der nie gelernt
+ hat zu sehen, wird mit diesen Informationen überfordert sein.
+ Er kann nicht dreidimensional sehen.
+ Jede Fahrt auf der Autobahn endet deshalb meistens in Panik bei jeder Autobahnb
+rücke.
+ Auch hier können wir uns aber vorstellen, wie es für den Blinden, der das
+ sehen gelernt hat, wohl sein muss.
+ Zumindest glauben wir es.
+ Ist für uns wohl etwas ähnliches möglich? Gibt es Dinge zu empfinden, die
+ wir nicht kennen und niemals kennen lernen können? Ist ein Spiegel eigentlich
+ eine Farbe und wie könnte man sie in die anderen Farben mischen?
+\end_layout
+
+\begin_layout Standard
+Sehen wir die Farben des Spektrums vielleicht teilweise Verschoben? Ist
+ mein Grün dein Blau, einer anderen Persones Gelb und niemandes rot? Warum
+ sind nur Schwarz und weiß abstufbar in der Funktion ihrer eigentlichen
+ Sicht?
+\end_layout
+
+\begin_layout Standard
+Hier kann man ja sogar den direkten Zusammenhang zwischen dem evolutionären
+ erlernen des Sehens, von schwarz-weiß, also dem blosen Erkennen von Licht,
+ Feuer, Hitze - also Photonen bis hin zu der Unterscheidung von verschiedenen
+ Pilzfarben nachempfinden.
+\end_layout
+
+\begin_layout Standard
+Gibt es nun tatsächlich noch eine weitere Farbe, die wir uns nicht vorstellen
+ können, weil wir sie noch nie gesehen haben?
+\end_layout
+
+\begin_layout Standard
+Das mag sein.
+ Aber, wie gesagt: Die Diskussion ist zu hypothetisch, um ihr etwas abzugewinnen.
+ Eine Diskussion macht keinen Sinn, außer um uns auf der Meta-Ebene oder
+ auch der Meta-meta ebene zu amäsieren und somit wieder nur unser Verstand,
+ der sich rekursiv mit sich selbst beschäftigt.
+ Irgendwie gruselig oder? Aber eben auch egal.
+\end_layout
+
+\begin_layout Standard
+Allein, dass wir und damit beschäftigen können ist übrigens schon ein Grund
+ zur Freude: Diese Maximalform der Kultur wäre ohne Intelligenz, Frieden,
+ gesichertes Leben, Angstlosigkeit und den wissenschaftlichen Erkenntnissen
+ nicht möglich.
+\end_layout
+
+\begin_layout Standard
+Auch die Frage, oder die Erkenntnis, dass wir die richtige Welt nicht sehen,
+ mag zwar interessant sein - aber letzten Endes ist sie vollkommen irrelevant.
+ Denn die Existenz dieser Welt und meine Einschätzung, diese Informationen
+ als korrekt annehmen zu können, ist der Einzige Grund, weshalb ich überleben
+ kann.
+ Diese Annahma macht einfach Sinn.
+ Wenn wir die echte Welt nicht sehen, fühlen oder schmecken können und wir
+ nicht sicher sein können, was sie in wirklichkeit steckt - gut - davon
+ können wir ausgehen - aber sich mit 
+\begin_inset Quotes eld
+\end_inset
+
+der echten Welt
+\begin_inset Quotes erd
+\end_inset
+
+ zu beschäftigen, wenn diese ja durch Mangel an Erfahrung unsererseits in
+ wirklichkeit hypothetischer ist als meine auf meiner Retina ablaufenden
+ Simulation meines Gehirns - inwiefern würde das denn Sinn machen? Wir sind
+ eben nur die Ansammlung der Informationen, die wir haben - und nehmen an,
+ dass wir alle in derselben Welt mit denselben Gesetzen wohnen.
+ Viele Zusammenhänge die es gibt können wir nicht fühlen oder eventuell
+ auch nicht erkennen.
+ Aber genau hier liegt ja der Spaß, wir können sie ja auch nicht vermissen.
+\end_layout
+
+\begin_layout Standard
+Würden wir etwas vermissen, ohne uns überhaupt sicher zu sein, was es ist,
+ würden wir unweigerlich verrückt werden.
+\end_layout
+
+\begin_layout Subsection
+Man muss nicht an Gott glauben
+\end_layout
+
+\begin_layout Standard
+Die Angst der Menschen, es gibt keinen Gott, ist nur vor dem unbekannten.
+\end_layout
+
+\begin_layout Section
+Aber zurück zum Lehrer
+\end_layout
+
+\begin_layout Standard
+Ich lerne in der Schule nicht nur zu lesen, zu schreiben und zu rechnen.
+ Auf Metaebene lerne ich, Dinge zu akzeptieren.
+ Ich lerne, diese Dinge zu filtern und auszusortieren.
+ Durch Scheitern lerne ich nicht nur, was ich falsch gemacht habe, sondern
+ auch weshalb ich Dinge falsch gemacht habe.
+ Ich lerne, dass meine Modelle oft falsch liegen und ich ihnen niemals uneingesc
+hränkt vertrauen sollte.
+ Lernen wir, davon abgesehen, Dinge auf einer höheren Meta-ebene? Wenn man
+ so will, auf der Metaebene-quadrat? Haha.
+\end_layout
+
+\begin_layout Standard
+Wir lernen auch, dass es wichtig ist, unser gelerntes richtig einzuschätzen
+ und auf welchen Prämissen unsere Fehler beruhen.
+ Wir lernen, dass nicht alles gelernte ein aktiver Lernprozess mit Aha Effekt
+ ist.
+\end_layout
+
+\begin_layout Section
+Wichtige Rasiermesser
+\end_layout
+
+\begin_layout Section
+Kant's Kategorischer Imperativ
+\end_layout
+
+\begin_layout Standard
+Am ehesten gestehe ich das Finden einer moralischen Wahrheit noch Immanuel
+ Kanz zu, der mit seinem kategorischen Imperativ 
+\begin_inset Quotes eld
+\end_inset
+
+Handle nur nach derjenigen Maxime, durch die du zugleich wollen kannst,
+ dass sie ein allgemeines Gesetz werde
+\begin_inset Quotes erd
+\end_inset
+
+ unser heutiges Moralverständnis prägen sollte.
+ Ein schöner Satz, so umfasst er eine ziemlich allgemein gültige Handlungsanweis
+ung, die man auch einem Roboter programmieren würde.
+ Doch selbst diese These genügt nicht meinen Ansprüchen, weil sie leider
+ nicht allgemein genug gültig ist.
+ So würden ein Moslem, ein Christ, ein Jude, ein Atheist stets die Werte
+ ihrer Kulturen verteidigen und sich gegenseitig bekämpfen.
+\end_layout
+
+\begin_layout Standard
+Wir müssen noch eine Ebene weiter runter.
+ Eine Ebene näher zu der reinen Logik.
+ Unsere Formulierung muss so allgemein gültig sein und akkurat sein, dass
+ ein Computer, der unglaubliche Möglichkeiten hat aber selbst nicht nachdenken
+ kann, immer die moralisch richtige Entscheidung trifft.
+ Puh, das ist schwer.
+ Gibt es denn überhaupt eine 
+\begin_inset Quotes eld
+\end_inset
+
+richtige
+\begin_inset Quotes erd
+\end_inset
+
+ Entscheidung, so sind doch all unsere Moralvorstellungen verschieden? Der
+ Moslem wird überzeugt sein, das Töten ungläubiger ist korrekt, die Religiösen
+ werden sich bei Homosexualität, außerehelichem Sex und dem Monotheismus
+ an ihren Gott einig sein.
+ Wie soll das also gehen? Es gibt eine allgemein gültige Lösung, die auch
+ einfach zu formulieren ist.
+ Sie einfach hier zu sagen ist leider zu einfach - um sie gänzlich zu verstehen
+ und Fehlinterpretationen zu vermeiden, muss ich sie erklären.
+ Nur soviel: Die dafür notwendige Ebene muss zwangsweise die mathematische
+ Prämisse sein.
+\end_layout
+
+\begin_layout Standard
+Wenn du dein Leben darauf Obwohl es von uns vermutlich noch niemand probiert
+ hat.
+ Dessen sollte ich mir auch Ein gesunder Zweifel und auch die Offenheit,
+ sich einen Irrtum einzugestehen, sind Tugenden die mir absolut wichtig
+ sind.
+ Nicht nur lässt sie einen am ehesten das Gesicht bewahren, man selbst bleibt
+ auch stets lernbereit und interessiert.
+ Eine Eigenschaft, die viele Menschen verlieren und die ich mir immer erhalten
+ wollte.
+\end_layout
+
+\begin_layout Section
+h 
+\begin_inset Quotes eld
+\end_inset
+
+richtige
+\begin_inset Quotes erd
+\end_inset
+
+ Entscheidungen?
+\end_layout
+
+\begin_layout Standard
+Ich konnte nicht glauben, dass ich mir mit anderen Menschen hier so uneinig
+ bin.
+ 
+\end_layout
+
+\begin_layout Standard
+Ich dachte immer, wenn logisch denkende Menschen dieselben Informationen
+ bekommen würden, müssten ihre Aussagen immer dieselben sein.
+ Genau genommen gibt es vier Gründe, weshalb man mit einer anderen Person
+ nicht derselben Meinung ist:
+\end_layout
+
+\begin_layout Enumerate
+Die andere Person weiß etwas nicht, was du weißt.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Die andere Person versteht einen logischen Zusammenhang nicht.
+\end_layout
+
+\begin_layout Enumerate
+Die andere Person handelt aus Boshaftigkeit
+\end_layout
+
+\begin_layout Enumerate
+DU irrst dich.
+\begin_inset Newline newline
+\end_inset
+
+Diesen Punkt nehme ich mir am meisten zu Herzen.
+ Schon oft habe ich geglaubt, ich wüsste den richtigen Weg und wurde eines
+ besseren belehrt.
+\end_layout
+
+\begin_layout Standard
+Eigentlich wollte ich nur darauf Hinaus, dass es 
+\begin_inset Quotes eld
+\end_inset
+
+gute
+\begin_inset Quotes erd
+\end_inset
+
+ und 
+\begin_inset Quotes eld
+\end_inset
+
+böse
+\begin_inset Quotes erd
+\end_inset
+
+ Entscheidungen gibt.
+ Oder zumindest 
+\begin_inset Quotes eld
+\end_inset
+
+allgemein als moralisch wertvolle
+\begin_inset Quotes erd
+\end_inset
+
+ Entscheidungen.
+ Manche Entscheidungen gelten als richtig und manche Entscheidungen als
+ falsch.
+\end_layout
+
+\begin_layout Standard
+Dies wollte ich vor dem Hintergrund klären, dass ich glaube, dass ich eine
+ solche Maxime formulieren kann, die Handlungen oder Entscheidungen ganz
+ klar 
+\begin_inset Quotes eld
+\end_inset
+
+richtig
+\begin_inset Quotes erd
+\end_inset
+
+ oder 
+\begin_inset Quotes eld
+\end_inset
+
+falsch
+\begin_inset Quotes erd
+\end_inset
+
+ zuordnen kann.
+\end_layout
+
+\begin_layout Standard
+Nur der Vollständigkeit halber: Meine Definition dafür ist:
+\end_layout
+
+\begin_layout Theorem
+Eine Entscheidung ist richtig, wenn das Gesamtglück dadurch steigt.
+ 
+\end_layout
+
+\begin_layout Standard
+Als kleine Abwandlung hierfür gilt auch:
+\end_layout
+
+\begin_layout Theorem
+Eine Gruppe sollte eine Entscheidung dann treffen, wenn das Gesamtglück
+ ihrer Mitglieder dadurch steigt.
+\end_layout
+
+\begin_layout Standard
+Eine genaue Erklärung erfolg alsbald, falls diese Aussagen stimmen, sind
+ allerdings sehr viele grundlegenden Fragen eindeutig zu klären.
+ Dazu gehören:
+\end_layout
+
+\begin_layout Itemize
+Welche Moralvorstellungen soll ein Programmierer einem Roboter mitgeben?
+\end_layout
+
+\begin_layout Itemize
+Ist zum jetzigen Zeitpunkt eine Entscheidung richtig?
+\end_layout
+
+\begin_layout Standard
+Den obrigen Entscheidungen ging einlangwieriger Denkprozess voraus und einige
+ andere formulierungen, die Aufgrund von Beispielen wieder verworfen werden
+ mussten.
+ Auch die obrige Formulierung bin ich bereit sofort zu verwerfen, wenn sie
+ durch eine Gegenbeispiel entkräftet werden würde.
+ Auf diesen Denkprozess möchte ich euch mitnehmen.
+\end_layout
+
+\begin_layout Section
+Der Weg zur Lösung
+\end_layout
+
+\begin_layout Subsection
+Moral ist Willkür der Kultur?
+\end_layout
+
+\begin_layout Standard
+Ist Heutzutage sind viele Menschen der Ansicht, die Kultur, der Zeitgeist,
+ in der wir leben, präge uns unwiederruflich.
+ Wir wären gefangene der willkürlichen Werte, die unsere Gesellschaft, unsere
+ Eltern uns vorgeben.
+ In der Tat gibt es einen Haufen an Beispielen hierfür.
+\end_layout
+
+\begin_layout Subsubsection
+Die Erde ist eine Scheibe!
+\end_layout
+
+\begin_layout Standard
+Ein Klassiker.
+ Danach haben die 
+\end_layout
+
+\begin_layout Subsubsection
+Homosexualität
+\end_layout
+
+\begin_layout Standard
+Eines der lustigsten beispiele hierfür ist wohl die Homosexualität.
+ Bei den Griechen in der Antike war sie ein Zeichen der Männlichkeit und
+ durchaus angesehen.
+ In der Zeit danach, bis ins 20.
+ Jahrhundert, war sie verpöhnt und aktuell, im 21.
+ Jahrhundert.
+ Dies gilt zumindest für die Welt der Guten, also natürlich unsere Welt.
+ Auch heute findet man auf der Welt eine Vielzahl an Ländern, auf die wir
+ mit einem moralischen Chauvinismus blicken dürfen - schließlich haben wir
+ bereits seit fast 5 Jahren die Ehe für Homosexuelle erlaubt.
+ Welch mittelalterliche Bauernnationen die Russen doch sind, dort wird die
+ Homosexualität nämlich nicht gefeiert.
+\end_layout
+
+\begin_layout Standard
+Zur Zeit der Olympiade in Russland habe ich mich mal mit einer Mädchengruppe
+ zu dem Thema unterhalten.
+ Irgendeiner ihrer Freunde erdreistete sich zu behaupten, 
+\begin_inset Quotes eld
+\end_inset
+
+Schwul sein ist nicht normal
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Was für ein Frevel in unserer heutigen Zeit, wie kann er nur! Auch mir
+ liegt es fern, Homosexualität als etwas schlechtes anzusehen.
+ Aber als normal? Absolut nicht.
+ Etwa 
+\begin_inset Formula $2.5-3\%$
+\end_inset
+
+ der Männer in Deutschland sind ungefähr schwul, eine eindeutigere Abweichung
+ der Norm wird selten so deutlich sein.
+ Dass 
+\begin_inset Quotes eld
+\end_inset
+
+schwul sein
+\begin_inset Quotes erd
+\end_inset
+
+ nicht 
+\begin_inset Quotes eld
+\end_inset
+
+normal
+\begin_inset Quotes erd
+\end_inset
+
+ ist, dürfte somit faktisch korrekt sein, ohne dass das eine Bewertung ist.
+ Das ändert sich schnell, wenn jemand behauptet, homosexuell zu sein wäre
+ moralisch verwerflich.
+ Hier ist eine Wertung drin, die nicht meiner Vorstellung entspricht.
+ Aber würde ich chauvinistisch die Nase über ein Volk rümpfen, die hier
+ anderer Meinung sind? Das kommt darauf an, wie stark diese ausgeprägt ist.
+ Reden wir von einem muslimisch geprägten Land, in dem ein Verbot mit drakonisch
+en Strafen darauf steht - wahrscheinlich schon.
+ Solche Kulturen denken oft, schwul sein sei ein Fluch oder nur eine psychische
+ Krankheit, die es auszutreiben gilt oder abzutrainieren.
+ Wir, als westliche Nation, haben aber herausgefunden, dass das angeboren
+ ist.
+ Oder, haben wir? Gibt es das Schwulen-gen? Sicher gibt es auch einige Schwule,
+ die sich wirklich dazu entschieden haben.
+ Ich glaube zumindest nicht, dass es einen harten Wahr-falsch übergang gibt.
+ Für angebohrene Eigenschaften sollte aber zumindest kein Mensch bestraft
+ werden, so unsere Einstellung.
+\end_layout
+
+\begin_layout Standard
+Gedankenexperiment? Na gut.
+ Ein Pädophiler kann auch nichts für seine Sexualität.
+ todo Sex mit Tieren ist auch eine Sexuelle Vorliebe, für die die betroffenen
+ nichts können.
+ Oder Pädophilie.
+ Oder schwul sein.
+ Warum ist es verboten, Sex mit 10-hährigen zu haben? Mal angenommen, die
+ beiden lieben sich wirklich, es würde im Einverständnis geschehen und auch
+ die Eltern wären einverstanden.
+ 
+\end_layout
+
+\begin_layout Subsection
+Gesinnungsethik und Verantwortungsethik: 
+\begin_inset Quotes eld
+\end_inset
+
+Der will doch nur spielen!
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Zum ersten Mal aktiv Gedanken machte ich mir dazu im Religionsunterricht.
+ Hier wurde der Unterschied von Gesinnungsethik und Verantwortungsethik
+ beschrieben.
+ Um was handelt es sich dabei überhaupt?
+\end_layout
+
+\begin_layout Itemize
+Gesinnungsethik: Die Handlungsabsicht entspricht moralischen Werten.
+\end_layout
+
+\begin_layout Itemize
+Verantwortungsethik: Das Resultat der Handlung entspricht moralischen Werten.
+\end_layout
+
+\begin_layout Standard
+Beispiele? Angenommen, jemand fragt dich nach dem Weg.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="3">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top">
+<column alignment="left" valignment="top">
+<column alignment="left" valignment="top">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Nicht gesinnungsethisch
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Gesinnungsethik
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Du beschreibst den Weg den du vermutest.
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Du beschreibst absichtlich einen falschen Weg.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Verantwortungsethik 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Die Person kommt am richtigen Ziel an.
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Die Person kommt am falschen Ziel an.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Vernunftbegabte Menschen akzeptieren zumindest, dass es es die Kombination
+ dieser vier Fälle gibt.
+\end_layout
+
+\begin_layout Standard
+Wir sind uns hoffentlich einig sind ist, dass eine Entscheidung auf jeden
+ Fall 
+\begin_inset Quotes eld
+\end_inset
+
+moralisch
+\begin_inset Quotes erd
+\end_inset
+
+, wenn sowohl die Handlungsabsicht als auch das Resultat moralisch ist.
+ Jemand, der nicht gesinnungsethisch handelt ist jemand den ich als böse
+ bezeichnen würde- da die Absicht seiner Handlung nicht seinen Werten entspricht.
+ 
+\end_layout
+
+\begin_layout Standard
+Nicht Gesinnungset
+\end_layout
+
+\begin_layout Standard
+Beschreibt man einer Person beispielsweise absichtlich den falschen Weg,
+ diese kommt durch Zufall aber am richtigen Ziel an ist die Entscheidung
+ zwar nicht Gesinnungsethisch, dafür aber Verantwortungsethisch.
+\end_layout
+
+\begin_layout Standard
+Interessante Überspitzungen hiervon sind:
+\end_layout
+
+\begin_layout Itemize
+Ein Psychopath tötet eine will kürliche Person.
+ Diese Person ist Hitler und hätte einen Weltkrieg herberigeführt- das wurde
+ dadurch verhindert.
+\end_layout
+
+\begin_layout Itemize
+Dr.
+ Cox führt an einer Person ohne Grund eine schmetzhafte Untersuchung durch.
+ Dadurch wird gerade noch rechtzeitig eine seltene Krankheit gefunden, die
+ geheilt werden kann.
+\end_layout
+
+\begin_layout Standard
+so ist das eine Lustige Geschichte für das Morgenblatt, es eine weitere
+ Diskussion macht allerdings keinen Sinn.
+\end_layout
+
+\begin_layout Standard
+Diskussionsstoff bietet viel mehr die Gesinnungsethik:
+\end_layout
+
+\begin_layout Standard
+Viel interessanter sind allerdings folgende Gesinnungsethischen Fälle:
+\end_layout
+
+\begin_layout Itemize
+Dein Kind isst gerne Schokolade, um ihm eine Freude zu machen gibst du sie
+ ihm.
+ Das Kind wird dadurch fettleibig, krank und wird gehänselt.
+\end_layout
+
+\begin_layout Itemize
+Ein Hund 
+\begin_inset Quotes eld
+\end_inset
+
+will einfach nur spielen
+\begin_inset Quotes erd
+\end_inset
+
+ und fällt ein Kind an
+\end_layout
+
+\begin_layout Itemize
+Die EU schicken Ennenshilfen an Afrika und zerstören somit den afrikanischen
+ Fleischproduktionsmarkt.
+\end_layout
+
+\begin_layout Standard
+Warum wird dabei eigentlich überhaupt zwischen diesen beiden Formen unterschiede
+n? Eine Entscheidung kann also sowohl Gesinnungsethisch als auch verantwortungse
+thisch sein - zumindest auf irgendeine Form ethisch.
+ Nun aber folgende Frage:
+\end_layout
+
+\begin_layout Standard
+Wenn wir das Resultat kennen - gibt es einen Unterschied zwischen Verantwortungs
+ethik und Gesinnungsethik?
+\end_layout
+
+\begin_layout Standard
+Eine sehr interessante Frage.
+ Wie leben in einem deterministischen universum wo eine Handlung Folgen
+ hat.
+ Wüssten wir bereits, dass unsere gut gemeinte Handlung etwas schlechtes
+ bewirkt - handelt es sich dann noch um eine gute Handlung?
+\end_layout
+
+\begin_layout Standard
+Eine Frage, die für mich wieder eindeutig ist, an der sich die Geister leider
+ aber scheiden.
+ Für mich ist die Gesinnungsethik die Ethik der Dummen, die nicht fähig
+ sind, die Auswirkungen ihrer Handlung einzuschätzen.
+ Die Gutmenschen.
+ Die Mortys von Rick & Morty, die Claudia Roth der Grünen, die Lisa Neubauer
+ der FFF-Bewegung.
+ Die Familie mit dem dicken, verwöhnten Scheidungskind, das alles kriegt
+ was es will.
+ 
+\end_layout
+
+\begin_layout Standard
+Ihnen gegenüber stehen Menschen, die gesellschaftlich für ihr augenscheinlich
+ unmoralisches Handeln geächtet werden.
+ Der Vater, der seinem Kind verbietet, den ganzen Tag fernzusehen, wofür
+ ihn das Kind hassen mag.
+ Gerhard Schröder, den alle für seine als ungerecht empfundene Agenda 2010
+ gehasst haben, wodurch aber die Armut und Arbeitslosigkeit bekämpft werden
+ konnte.
+\end_layout
+
+\begin_layout Subsubsection
+Seenotrettung
+\end_layout
+
+\begin_layout Standard
+Einen der ersten Denkanstöße formulierte für mich damals Prof.
+ Hans-Werner Sinn, den ich aus vielen Gründen sehr schätze.
+ Eines seiner erwähnten Beispiele dabei war, wie man mit Flüchtlingen aus
+ Afrika oder Spanien umgehen soll, die die nach Europa wollen und deshalb
+ absichtlich vor Spanien/Italien in Seenot geraten.
+ Einige aus Europa privat finanzierten Schiffe pendelten zwischen Afrika
+ und Europa und brachten alle Flüchtlinge nach Europa.
+ Eine kritische Frage, die zwar in ihrer vollen Komplexität ein riesen Fass
+ aufmacht.
+ Deshalb wurden diese Akte des Menschenhandels mit der Begründung gerechtfertigt
+, dass Menschenleben gerettet werden würden.
+ Wie ihr seht, brodelt es zur Seenotrettung bei mir, aber dennoch will ich
+ die Aufmerksamkeit an dieser Stelle auf den Beweggrund der Seenotrettung
+ machen: Das retten von Menschenleben.
+\end_layout
+
+\begin_layout Standard
+Hierzu gibt es ein interessantes Beispiel: Spanien und Italien hatten mit
+ den Anreinerstaaten in Afrika ein Rückführungsabkommen erhandelt.
+ Dies sah vor, dass die Flüchtlinge aus Seenot gerettet wurden, danach aber
+ nicht nach Europa, sondern zurück in die afrikanischen Anreinerländer gebracht
+ wurden.
+ Große Enttäuschung bei den geretteten Afrikanern- schließlich haben sie
+ das Risiko der Reise auf sich genommen mit dem Ziel, Europa zu erreichen.
+ Das mag eine harte Realität für die Afrikaner sein - resultat war aber,
+ wie konnte es anders sein, dass sich keiner mehr auf den Weg nach Europa
+ machte.
+ Die Todeszahlen sanken faktisch auf Null.
+\end_layout
+
+\begin_layout Standard
+Natürlich eine logische Schlussfolgerung.
+ Wenn ich zum Championsleague-Finale ins Stadion will aber kein Ticket habe,
+ mache ich mich auch nicht auf den Weg.
+ Zu einem Bierzelt oder Club kann ich mich immer mit einem Funken Hoffnung
+ auf den Weg machen, auch wenn ich auch keine Chance habe, reinzukommen.
+\end_layout
+
+\begin_layout Standard
+Auch Australien hat zur Zeit der Flüchtlingskrise eine harte Null-Roleranz
+ Linie verfolgt: 
+\begin_inset Quotes eld
+\end_inset
+
+You will not make Australia make your new home
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Selbst, wenn du lebendig in Australien ankommen würdest, würde dich dort
+ keiner willkommen heißen.
+ Wie lieblos von den bösen Australiern.
+ Auf dem Weg nach Australien ist in diesen Jahren kein Mensch gestorben.
+\end_layout
+
+\begin_layout Standard
+Hier hat Prof.
+ Sinn einen interessanten Satz gesagt: Wenn man ein Ziel verfolgt, dasr
+ man kein Zwischenziel zum neuen Hauptziel erklären.
+ Ein Trugschluss, dem viele Menschen viel zu leicht unterliegen.
+ Will man Menschenleben retten, ist daraus nicht zu folgern, dass Seenotrettung
+ nötig ist.
+\end_layout
+
+\begin_layout Subsection
+Es gibt nur 
+\begin_inset Quotes eld
+\end_inset
+
+die eine
+\begin_inset Quotes erd
+\end_inset
+
+, richtige, Moralvorstellung
+\end_layout
+
+\begin_layout Standard
+asd
+\end_layout
+
+\begin_layout Section
+Der Weg zur Erleuchtung
+\end_layout
+
+\begin_layout Standard
+Mit dem Wissen im Hinterkopf, dass es keine Maxime gibt, die die bisherigen
+ Fälle ausreichend abdecken, habe ich mir überlegt, wie ich denn eine Entscheidu
+ng für allgemein, moralisch richtig halten würde.
+\end_layout
+
+\begin_layout Subsection
+Demokratie?
+\end_layout
+
+\begin_layout Standard
+Fangen wir mit der Basis an, wie heutzutage entschieden wird, ob etwas richtig
+ ist, der demokratischen Entscheidung.
+ Demokratie heißt 
+\begin_inset Quotes eld
+\end_inset
+
+Herrschaft des Volkes
+\begin_inset Quotes erd
+\end_inset
+
+, in welcher Form auch immer.
+ Die Herrschaft des Volkes ist sehr schwer umzusetzen- als Ersatzmodell
+ an die perfekte Demokratie haben wir die Mehrheit der Bevölkerung gewählt.
+ Nun ist eine Entscheidung aber bei weitem nicht richtig, nur weil sie von
+ der Mehrheit entschieden wurde.
+\end_layout
+
+\begin_layout Standard
+Ein kleines, lustiges Beispiel: In einem Bundesstaat in Amerika errechnete
+ ein Mathematiklehrer, das Pi eigentlich 3.2 sein müsste.
+ Einen Beweis dafür hatte er auch parat.
+ Euphorisiert ob seiner Entdeckung legte er dem Senat des Landes diesen
+ Beweis zur Abstimmung vor - Pi sollte auf 3.2 festgelegt werden und die
+ Rechte an dieser Erkenntnis sollten dem Bundesstaat gehören.
+ Ebenfalls euphorisiert wurde dieses Gesetz akzeptiert um es dem Senat der
+ USA vorzulegen.
+ Am gleichen Tag war ein Mathematiker im Gebäude und deckte den schwachsinnigen
+ Beweis als offensichtlich schwachsinnig auf.
+ Das Gelächter war groß und die Geschichte zeigt uns: Selbst Aussagen der
+ reinsten Form, mathematische Wahrheiten, können demokratisch für falsch
+ erklärt werden.
+\end_layout
+
+\begin_layout Standard
+Das gilt auch für moralische Fragen.
+ Was wäre, wenn Hitler über die Vergasung der Juden abgestimmt hätte- 80.000.000
+ Ja-Stimmen der nicht-Juden würden den 6.000.000 Ja-Stimmen der Juden gegenüberste
+hen.
+ Dann wäre das eine demokratische Entscheidung.
+\end_layout
+
+\begin_layout Standard
+Noch überspitzter? Eine Grußßenvergewaltigung ist auch eine demokratisch
+ getroffene Entscheidung der Mehrheit.
+\end_layout
+
+\begin_layout Standard
+Auch kann ich erwarten, dass Zwei Menschen beim Wiederbeleben einer anderen
+ Person die Hose mit Blut besudeln.
+ Aber wie ist das zu quantifizieren? Eine Frage, für deren Antwort wir direkt
+ eine abstrakt-philosophische Lösung zur Hilfe nehmen müssen: Wir summieren
+ den Nutzen beider Seiten.
+\end_layout
+
+\begin_layout Subsection
+Geld als Nutzen?
+\end_layout
+
+\begin_layout Standard
+Nutzen ist leicht gesagt.
+ In der Volkswirtschaftslehre ist dieser oft mit einem Geldbetrag gleichgesetzt-
+ ein Maß, das ansich zwar schon ziemlich gut das erreicht, was wir brauchen:
+ Eine stetig steigende, relationale Bezifferung, was Menschen eine bestimmte
+ Entscheidung wert ist.
+ Bitte verschont mich an der Stelle mit Argumenten wie 
+\begin_inset Quotes eld
+\end_inset
+
+Geld ist ansich eine Belastung, ich würde gerne ohne Geld leben
+\begin_inset Quotes erd
+\end_inset
+
+ - wir müssen wieder mal eine grundlegende Annahme machen und behaupten,
+ dass Geld als Tauschmittel für all das, was man sich wünscht, gut ist und
+ mehr Geld immer Besser.
+ Die Verantwortung oder ähnliche Sorgen, die ironischerweise be Reichen
+ Menschen oft auftreten sind phychologisch bedingt und lassen sich nicht
+ aus der Funktion des Geldes ableiten.
+ Obwohl genau dies einer der Gründe ist, weshalb es als Maßeinheit nicht
+ nutzbar ist: Der sinkende Grenznutzen.
+ Das Problem bedeutet, dass ein ein zusätzlicher Euro einem reichen Menschen
+ weniger Wert ist, als einem armen Menschen.
+ Der Nutzen und das Geld korreliert deshalb nicht linear.
+ Der Nutzen kann also nicht mit geld gleichgesetzt werden.
+ Dazu gibt es moralische Kategorien, die nicht mit Geld abgewogen werden
+ können- selbst alles Geld der Welt würden die meisten nicht für das Leben
+ ihres Kindes aufs Spiel setzen.
+ 
+\end_layout
+
+\begin_layout Standard
+Ein weiterer Grund ist, dass eine reiche Person mehr Nutzen impliziert,
+ dadurch dass die Mehr Geld zur Verfüfung hat.
+ Dies würde die Wirklichkeit verziehen- das Leben eines reichen ist grundsätzlic
+h nicht mehr Wert als das Leben eines armen.
+\end_layout
+
+\begin_layout Subsection
+Glück als Nutzen?
+\end_layout
+
+\begin_layout Standard
+Die Frage, was ich für richtig halte, scheint für mich absolut logisch.
+ Doch ist sie das? Schließlich gibt es kulturell geprägt große Unterschiede
+ in Wertvorstellungen.
+ Fragt man einen CHinesen nach dem Weg, so wird er seinen Werten entsprechend
+ niemals zugeben, dass er den Weg nicht kennt, sondern dir eher noch einen
+ falschen Weg nennen.
+ In Nordvietnam gilt es als unhöflich, als Gast in einem Haus ein angebotenes
+ Getränk abzulehnen- Im Süden gilt das Annehmen als unhöflich.
+ Sind unsere Moralvorstellungen also komplett zufällig entstanden und wurden
+ uns nur kulturell weitergegeben?
+\end_layout
+
+\begin_layout Standard
+Ist der Tiger böse, weil er das Zebra brutal zerfleischt? Ist ein Bakterium
+ böde, welches ganze Völker ausgerottet hat? Ich ein überzeugter Islamist
+ böse, wenn er glaubt, er Sprengt sich für einen guten Zweck in die Luft?
+ Ist Hitler böse, weil er für seinen Traum kämpft, Lebensraum im Osten für
+ seine, der restlichen Menschheit überlegene Rasse der Arier, zu erobern?
+ Zugegeben, letztere waren eine Überspitzung, aber aus rein philosophischer
+ Ebene schwer zu erklären.
+ Gibt es denn überhaupt böse, oder gibt es in jedem Menschen verborgen einen
+ nachvollziehbaren Grund für handeln?
+\end_layout
+
+\begin_layout Standard
+Weder Psychologen noch meine Freunde waren sich einig.
+\end_layout
+
+\begin_layout Standard
+Ich bin mir einig, böse Menschen existieren.
+ Böse Handlungen existieren für mich zumindest.
+\end_layout
+
+\begin_layout Standard
+...
+\end_layout
+
+\begin_layout Standard
+Glück ist ein komplexes gesamtkonstrukt und für jeden Menschen unterschiedlich.
+ Der eine Mag blau, der andere rot.
+\end_layout
+
+\begin_layout Subsection
+Tierwohl
+\end_layout
+
+\begin_layout Standard
+Auf eine interessante Frage bin ich beim Tierwohl gestoßen.
+ Sollte dieses beachtet werden? Umgekehrt würden Tiere uns auch kaum eine
+ solche Wohltat zugestehen.
+\end_layout
+
+\begin_layout Standard
+Dennoch gibt es für mich ein Abstufung
+\end_layout
+
+\begin_layout Part
+Ewig gültige Gedankenexperimente
+\end_layout
+
+\begin_layout Standard
+Komplexe Probleme lassen sich meistens leicht lösen, wenn man sie nur gut
+ genug eingrenzt.
+ Gedankenexperimente haben als eine Form der Eingrenzung mehrere gute Eigenschaf
+ten:
+\end_layout
+
+\begin_layout Enumerate
+Sie grenzen das Problemein
+\end_layout
+
+\begin_layout Enumerate
+Sie abstrahieren das Problem
+\end_layout
+
+\begin_layout Enumerate
+Sie zeigen die Logik des Problems ein
+\end_layout
+
+\begin_layout Enumerate
+Menschen sind leichter gewillt, sich ihre eigenen Fehler einzugestehen
+\end_layout
+
+\begin_layout Standard
+Aber let's get it started.
+\end_layout
+
+\begin_layout Standard
+Fangen wir mit der ersten, sehr provokanten Frage an: 
+\begin_inset Quotes eld
+\end_inset
+
+Manche Menschenleben sind mehr wert als andere.
+\begin_inset Quotes erd
+\end_inset
+
+ Uff.
+ Mit der Formulierung in einem linken Viertel - ja gute Nacht.
+ Sowas kann man ja nicht sagen.
+ 
+\end_layout
+
+\begin_layout Section
+Die Gesellschaft prägt uns extrem.
+\end_layout
+
+\begin_layout Section
+Das Trolley Problem
+\end_layout
+
+\begin_layout Section
+Sexuelle Freiheit
+\end_layout
+
+\begin_layout Part
+Überlegenheitsgefühl als Tugend
+\end_layout
+
+\begin_layout Standard
+Das Gefühl der Überlegenheit ist ein schönes Gefühl.
+ Jeder will etwas besonderes sein oder besondere Eigenschaften haben.
+ Das ist auch durchaus stark kulturell geprägt.
+ Zur Zeit der Könige war es dein Blut, die dich ausgemacht hat.
+ Warst du weder adlig noch daraus Jeder hat es, aber keiner gibt es zu -
+ das Gefühl, einer anderen Person überlegen zu sein.
+ Jeder braucht es auch.
+ Im Optimalfall ist man hübscher, klüger, sportlicher, erfolgreicher und
+ - im grunde desagt - einfach besser in jedem denkbaren bereich als andere.
+ Aber wer ist das schon außer mir (LEL).
+ Vermutlich wird es dennoch Menschen geben, die für dich nichts besonderes
+ sind.
+\end_layout
+
+\begin_layout Section
+Philosophen ohne Praxis
+\end_layout
+
+\begin_layout Standard
+Alle Philosophen haben leider nie den direkten Weg zu einer Handfesten Sache
+ gefunden.
+ Nichts, was man als normaler Bürger nutzen könnte.
+\end_layout
+
+\begin_layout Section
+Frustration
+\end_layout
+
+\begin_layout Standard
+Frustration ist nichts schönes.
+ Sie hält uns davon ab, Dinge, die nicht funktionieren, immer und immer
+ wieder zu versuchen.
+ Sie ist ein Faktor der Reduktion 
+\end_layout
+
+\begin_layout Section
+Menschen sind Idioten
+\end_layout
+
+\begin_layout Standard
+Glaube niemandem, der meint, er wüsste genau, wie ich etwas gemeint habe.
+ Die Menschen sind Idioten und die, die am wenigsten an sich zweifeln, sind
+ die größten.
+\end_layout
+
+\begin_layout Standard
+Manche können in der Logikketter in der kurzen Zeit des denkens mehr Information
+en einbeziehen, manche weniger.
+ Manche haben valide Informationen an manchen Punkten, zu denen die Kette
+ führt, die eine richtige Entscheidung vereinfachen.
+\end_layout
+
+\begin_layout Section
+dieses Buch
+\end_layout
+
+\begin_layout Standard
+Ein aufmerksamer Leser wird gemerkt haben, dass ich sicher an einigen Stellen
+ Denkfehler gemacht habe.
+ Ich bin mir denen nicht bewusst, aber auch ich bin nicht perfekt.
+ Falls du welche gefunden hast, spricht das für dich, falls nicht, spricht
+ das nicht gegen dich.
+\end_layout
+
+\begin_layout Section
+Wie ernst kann man dieses Buch nehmen?
+\end_layout
+
+\begin_layout Standard
+Ich bin von dem, was hier drin steht, überzeugt.
+ Dennoch gibt es nichts gefährlicheres als sein Modell, auch wenn es ein
+ nicht widerlegbares Modell über alle Modelle sein mag, für gegeben hinnimmt.
+ Versteht mich nicht falsch, man sollte es deswegen nicht als nicht gegeben
+ hinnehmen - aber das Wissen, dass sich die meisten Menschen irren, wenn
+ sie eigenständig zu weit von der Wahrheit wegdenken (haha), besser gesagt,
+ je mehr ein Mensch eigenständig denkt, desto sicherer kann ich mir sein,
+ dass er einem Denkfehler und einem intrinsischen confirmation bias unterliegt,
+ eventuell sogar auf meta-ebene
+\end_layout
+
+\begin_layout Section
+Wer oder was bist du?
+\end_layout
+
+\begin_layout Standard
+Dein Gehirn denkt über sich nach.
+ Aber wieviel und welcher Teil deines Gehirns bist du? Bist du noch du,
+ wenn du deine Fähigkeit verlierst, zu fühlen? Existierst du schon allein
+ deswegen als Seele, weil du dir vorstellst, eine sein zu können, ohne auch
+ nur zu wissen was eine Seele ist oder daran zu glauben? Bist du, bin ich
+ ein Zusammenschluss meiner Gehirnzellen, die ab einer kritischen Masse
+ wie ein Haufen Uran ein Bewusstsein entwickelt?
+\end_layout
+
+\begin_layout Standard
+Was sind gefühle? Klar, Elektronenströme, aber es fühlt sich doch nach mehr
+ an.
+ Etwas, was nicht logisch zu erklären ist.
+ 
+\end_layout
+
+\begin_layout Section
+Welche ist die höchste Dimension?
+\end_layout
+
+\begin_layout Standard
+Mandelbrot - befinde ich mich auf der höchsten Ebene? Gibt es eine höchste
+ Ebene in dieser Simulation der Ebenen? Könnte man einen versteckten Punkt
+ im Mandelbrotraum finden? Ist das Universum ein Fraktal? Ist eine Interpretatio
+n der Welt als Simulation schon eine falsche Annahme?
+\end_layout
+
+\begin_layout Section
+Der Weg zur Eruelchtung (lol) zu meinen Gedanken
+\end_layout
+
+\begin_layout Standard
+Ich bin zu diesen Schlüssen gekommen, weil ich gewisse Erfahrungen gemacht
+ habe.
+ Ich hoffe, dass ich mit diesem Buch soviele Erfahrungen wie nötig erzeugen
+ kann, dass es nachempfunden werden kann.
+ Oder, dass du eh schon weiter bist als ich.
+\end_layout
+
+\begin_layout Section
+Mut zum ich, Mut zum nicht-wissen
+\end_layout
+
+\begin_layout Standard
+Joscha Bach hat zu Gefühlen gesagt, dass sie quasi ein Feature des eigenen
+ Gehirns sind, das existiert, weil das Gehirn entschieden hat, dass es sie
+ gibt.
+ Sie sind somit mit einem Zirkelschluss begründbar.
+\end_layout
+
+\begin_layout Standard
+Hier muss ich wiedersprechen.
+ Gefühle sind in der Tat schwer zu erklären und ich behaupte, dass eine
+ Maschine nicht das Gefühl nachempfinden werden kann, das ich gerade habe.
+ Erklären, was es ist, weiß ich nicht.
+ Aber ich bin mir nicht sicher, dass ich nicht irgendwann doch erfahren
+ oder sogar formulieren könnte, was für mich den Unterschied zu einem Computer
+ ausmacht.
+\end_layout
+
+\begin_layout Section
+Wissen zur Erzeugung eines guten Modells
+\end_layout
+
+\begin_layout Standard
+Für meine Masterarbeit habe ich 
+\end_layout
+
+\begin_layout Section
+Für meine Masterarbeit habe ich ein Framework geschrieben
+\end_layout
+
+\begin_layout Standard
+In der genetischen Programmierung werden automatisch Kandidaten erzeugt.
+\end_layout
+
+\begin_layout Standard
+Welche Informationen kriegen die Bäume, um zu mutieren?
+\end_layout
+
+\begin_layout Standard
+beschließe ich, wie ein Züchter, von außen, welche Kandidaten überleben,
+ welche sterben? Welche mutation durchgeführt wird?
+\end_layout
+
+\begin_layout Standard
+Soll durch puren Zufall mutiert werden?
+\end_layout
+
+\begin_layout Standard
+Irgendwann habe ich in jeden Baum die Funktion eingebaut, der es ihm ermöglicht,
+ seine Blattknoten/Werte selbst zu verändern.
+ Natürlich nur, wenn die Evolution ihm diese Funktion zuweist.
+ Aber, sollte er das eventuell selbst entscheiden können? Sollte er dazu
+ auch noch Teile von sich selbst ausbauen und ersetzen dürfen? Nach welcher
+ Logik sollte das geschehen? Soll zu dem impliziten Filteroperator noch
+ ein Mutationsoperator dazukommen? Der Crossoveroperator? Crossover nach
+ einer Phase der Selbstoptimierung?
+\end_layout
+
+\begin_layout Standard
+Soll ein Baum gar so umfassend sein, dass er nicht nur seine Werte intrinsisch
+ trägt und die Möglichkeit, diese anzupassen, sondern dazu auch noch das
+ Wissen über die Evaluation, etc beinhalten? Was, wenn ich ihm nicht nur
+ das ganze Framework in jeden einzelnen Knoten einpflanze, sondern ihm auch
+ noch einen eigenen Rechner zur Verfügung stelle, inklusive der Entscheidung
+ ob er überhaupt teil meiner genetischen Programmierung sein will?
+\end_layout
+
+\begin_layout Standard
+Aye...
+\end_layout
+
+\begin_layout Section
+Was ist nicht mit Metaphysik zu erklären?
+\end_layout
+
+\begin_layout Standard
+Auch wenn das hier alles philosophische Theorien sind, gehen sie ein Problem
+ allesamt nicht an: Warum gibt es irgendetwas? Raum, Zeit, etc.
+\end_layout
+
+\begin_layout Section
+Zu guter letzt
+\end_layout
+
+\begin_layout Standard
+Das Modell, das ich hier gemalt habe, ist beeinflusst durch die Erfahrungen,
+ die ich in meinem Leben gemacht habe.
+ Diese basieren vermutlich stark auf den informatik-wissenschaftlichen Erkenntni
+ssen, die ich auf dem Weg hier her gemacht habe.
+ Nun versuche ich, aus dem speziellen auf das allgemeine zu schließen.
+ Woher weiß ich, ob mein Modell stimmt? Klar, ich sollte von seiner Richtigkeit
+ ausgehen, aber ich weiß genauso, wie leicht ein einfaches neuronales Netz
+ ein Problem overfitten kann.
+\end_layout
+
+\begin_layout Standard
+Ich kann nur sagen, höre nie auf zu denken.
+ Und das Leben ist schön, wenn man ihm einen Sinn gibt.
+\end_layout
+
+\begin_layout Section
+Possiblistic vs probabilistic
+\end_layout
+
+\begin_layout Standard
+https://www.youtube.com/watch?v=P-2P3MSZrBM
+\end_layout
+
+\begin_layout Standard
+perceptual models are possibleistic, not probabilistic? (1h07)
+\end_layout
+
+\begin_layout Standard
+Seeing a tiger ist sehr probabilistiasch? die 8 Urängste?
+\end_layout
+
+\begin_layout Section
+Caution
+\end_layout
+
+\begin_layout Standard
+Wenn du beim lesen, oder sonst auch jemals, zweifel die die Box, Meta-level,
+ oder ähnliches hast: Es gibt einige Lösungen.
+ Eine davon musst du finden, sonst gibt es als AUsweg nur verrückt zu werden
+ oder den Tod.
+\end_layout
+
+\begin_layout Standard
+Aber keine Angst, ich war in diesem Equilibrium schon sehr oft, du wirst
+ es auch wieder verlassen.
+ Denn dein Gehirn ist wirjlich unglaublich.
+ Wenn du nicht den innersten Wunsch hast, verrückt zu werden, kannst du
+ auch lernen, deine innersten Ideale zu erhalten und glücklich zu werden.
+ Wenn es keinen SInn des Lebens gibt und du dir diesen nur selbst ausgedacht
+ hast, bist du eine Form von Gott deiner selbst.
+ Nicht von anderen, nur deiner selbst - aber, wenn du mit dir im Einklang
+ bist und keine Angst davor hast, dir selbst böses zu tun, dann wirst du
+ dir selbst genau den richtigen Weg zeigen, also den richtigen Lebensweg
+ zeigen.
+\end_layout
+
+\begin_layout Standard
+Es ist eine Meta-spirituelle Erfahrung mit dir selbst und egal über was
+ du nachdenkst, es ist lerntechnisch die unglaublichste Efahrung, die man
+ erleben kann.
+\end_layout
+
+\begin_layout Standard
+Ich hatte beispielsweise das Problem, dass ich mich niemals selbst täuschen
+ wollte, indem ich etwas ignoriere.
+ Verrückt werden, oder erwas zu ignorieren, was nicht Sinn macht, ignoriert
+ zu werden, wäre gegen mein inneres ich.
+ Wir wissen nicht, welcher Teil des Gehirns, also weder
+\end_layout
+
+\begin_layout Title
+Let's simulate everything
+\end_layout
+
+\begin_layout Standard
+Ein Gedankenexperiment.
+ Nehmen wir an, wir 
+\end_layout
+
+\end_body
+\end_document

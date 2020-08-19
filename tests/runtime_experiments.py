@@ -49,6 +49,7 @@ class WhatsBetter:
     def b_r(self, repeats, x):
         for i in range(1, repeats):
             _ = x
+
     def a_w(self, repeats):
         for i in range(1, repeats):
             self.x = 1
@@ -57,6 +58,7 @@ class WhatsBetter:
         for i in range(1, repeats):
             x = 1
         return x
+
 
 WhatsBetter(100)
 WhatsBetter(10000000)

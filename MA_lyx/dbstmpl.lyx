@@ -30,8 +30,12 @@
 \global\ort{Munich}
 \global\fach{Computer Science}
 % Added by lyx2lyx
+% Added by lyx2lyx
 \end_preamble
 \use_default_options true
+\begin_modules
+theorems-ams-bytype
+\end_modules
 \maintain_unincluded_children false
 \language english
 \language_package default
@@ -109,11 +113,12 @@ status open
 
 \begin_layout Plain Layout
 
- 
+
 \backslash
 global
 \backslash
-titel{Learning optimization of interpretable and familiar rules}
+titel{Creating familiar Reinforcement Learning Policies with Genetic Programming
+}
 \end_layout
 
 \end_inset
@@ -169,13 +174,10 @@ ing to the thinking structure of a developer.
  measure, which reflects the number of changes to the reference program.
  For the implementation a regression on offline data of the benchmarks was
  performed.
-\end_layout
-
-\begin_layout Abstract
 \begin_inset Note Comment
 status open
 
-\begin_layout Abstract
+\begin_layout Plain Layout
 Machine learning Ansätze erzielen in immer mehr Bereichen übermenschliche
  Performance, da die Verwendeten Strukturen allerdings als Black Box akzeptiert
  werden und Entscheidungen nicht erklärt werden können, wird vor allem in
@@ -199,34 +201,41 @@ es Programm mithilfe von pareto genetischer Programmierung mit möglichst
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+List of abbreviations?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 Intro
 \end_layout
 
 \begin_layout Standard
-Artificial intelligence (AI) has been experiencing a boom for some years
- now, the end of which is not yet in sight.
- Particularly in the field of reinforcement learning, superhuman performance
- has often been achieved through the use of neural networks.
- This performance comes at the price of unexplainable decisions - control
- is given to the machine and its decisions must be trusted.
+Erklärbarkeit ist ein schwer zu erreichendes Gut im Bereich Reinforcement
+ Learning (RL).
+ Als Teilgebiet des Machine Learning (ML) werden dafür meist sehr komplexe
+ Datenstrukturen verwendet, 
 \end_layout
 
 \begin_layout Standard
-Explainable artificial intelligence, in contrast, is a relatively young
- field of research that is primarily concerned with the problem of making
- the learned decisions of a machine explainable.
- To explain a machine-learned (ML) solution is not trivial, since the structures
- used are mostly chaotic and incredibly complex and can only be optimized
- by lengthy training processes.
 \begin_inset Note Comment
 status collapsed
 
 \begin_layout Plain Layout
-Künstliche Intelligenz (AI) erfährt seit einigen Jahren einen Boom, dessen
- Ende nicht absehbar ist.
- Vor allem im Bereich des Reinforcement-learning konnte durch die Verwengung
- von neuronalen Netzen oft übermenschliche Performance erreicht werden.
+Reinforcement Learning (RL) erfährt seit einigen Jahren immer größere Beliebthei
+t.
+ Als Teilgebiet des machine learnings (ML) kann ein Computer nicht nur lernen,
+ Probleme ohne menschliche Vorgaben zu erledigen - oft übertrifft er den
+ Menschen dabei sogar.
+ Hierfür erstellt ein Agent eine policy, deren 
 \end_layout
 
 \begin_layout Plain Layout
@@ -285,56 +294,42 @@ To verify the approach, many versions of the approach were tested.
 \end_layout
 
 \begin_layout Section
-Motivation of solving the 
-\begin_inset Quotes eld
-\end_inset
-
-black box
-\begin_inset Quotes erd
-\end_inset
-
-
+Motivation
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Maschinen, die sich selbst verbessern können und fatale Fehlentscheidungen
- treffen, sind für jeden ML-Philosophen ein interessantes Thema.
- Elon Musk und Stephen Hawking haben beide ausdrücklich vor den Risiken
- der künstlichen Intelligenz gewarnt.
- Auch in der Bevölkerung gobt es oftmals Vorbehalte gegenüber ML.
- Diese müssen nicht zwangweise die Ausmaße von 
-\begin_inset Quotes eld
-\end_inset
-
-Matrix
-\begin_inset Quotes erd
-\end_inset
-
- haben.
+Great progress has been made in the field of Machine Learning (ML) in recent
+ years, which means that more and more tasks previously reserved for humans
+ can now be performed by machines.
+ Reinforcement learning (RL), in which a machine learns independently to
+ solve a problem without any previous knowledge, is of particular interest
+ to industry.
+ Tasks that were previously reserved for humans are thus not only solvable,
+ the solution often even exceeds the known approaches.
+ Examples are AlphaZero or AlphaGo, which achieved superhuman performance
+ in the games of Chess and Go and could even beat all known chess computers.
+  From observations of their way of playing, tactics could even be derived
+ that have changed the way they play in the long term.
 \end_layout
 
-\begin_layout Plain Layout
-Es gibt bereits einige einige Beispiele, bei denen bereits gut trainierte
- künstliche Intelligenzen fatale Fehler machten.
+\begin_layout Standard
+There are also many areas in industry, such as controllers, which promise
+ a lot of room for optimization.
+ Nevertheless, there are great reservations about the use of such an approach
+ because decisions cannot be explained and the process must therefore be
+ considered a black box.
+ This is not a problem for games or simulations, but in sensitive areas
+ such as controlling a gas turbine or even a nuclear power plant, for example,
+ this safety is essential.
 \end_layout
 
-\begin_layout Plain Layout
-Im Jahr 2018 verursachte der Tesla-Autopilot einen tödlichen Unfall, weil
- er einen quer stehenden Lastwagen mit einem Straßenschild verwechselte.
- 2015 sorgte ein Unternehmen für Aufsehen, indem es behauptete, mittels
- Data Mining eine wichtige Rolle bei den Präsidentschaftswahlen in Amerika
- und bei der Brexit-Entscheidung in Großbritannien gespielt zu haben.
- Neben diesen Horrorszenarien gibt es weitere Gründe, warum es nicht einfach
- ist, auf die Erklärungen zu verzichten.
+\begin_layout Standard
+The search for approaches in which the performance gain is not at the expense
+ of lost control is therefore very great.
 \end_layout
 
-\end_inset
-
-
+\begin_layout Subsection
+Popular examples
 \end_layout
 
 \begin_layout Standard
@@ -351,22 +346,19 @@ cite tesla, wahlen, musk + hawking
 \end_layout
 
 \begin_layout Standard
-Maschinen, die sich selbst verbessern können und fatale Fehlentscheidungen
- treffen, sind für jeden ML-Philosophen ein interessantes Thema.
- Elon Musk und Stephen Hawking haben beide ausdrücklich vor den Risiken
- der künstlichen Intelligenz gewarnt.
- Auch in der Bevölkerung gobt es oftmals Vorbehalte gegenüber ML.
- Diese müssen nicht zwangweise die Ausmaße von “Matrix” haben.
- Elon Musk and Stephen Hawking have both explicitly warned about the risks
- of artificial intelligence.
+Despite this danger, ML solutions are already being used in many areas,
+ even in sensitive areas.
+ This is a development that makes part of the population feel uncomfortable.
+\end_layout
+
+\begin_layout Standard
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hawking_AI_warning"
-literal "false"
+literal "true"
 
 \end_inset
 
- There are also often reservations about ML in the population.
  These do not necessarily have to have the dimensions of 
 \begin_inset Quotes eld
 \end_inset
@@ -375,252 +367,123 @@ matrix
 \begin_inset Quotes erd
 \end_inset
 
-.
+, even though Elon Musk and Stephen Hawking have both explicitly warned
+ about the risks of artificial intelligence.
 \end_layout
 
 \begin_layout Standard
 There are already a few examples where even well trained artificial intelligence
 s made fatal mistakes.
-\end_layout
-
-\begin_layout Standard
-In 2018, the Tesla autopilot caused a fatal accident because it mistook
- a truck standing crossways for a road sign.
+ In 2018, the car autopilot of a Tesla caused a fatal accident because it
+ mistook a truck standing crossways for a road sign.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "false"
+literal "true"
 
 \end_inset
 
-
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-citation genug zu tesla? sonst außerordentliche performance erwähnen?
-\end_layout
-
-\end_inset
-
+ Even areas that are not considered dangerous, such as marketing, have experienc
+ed incidents.
  In 2015, a company caused a stir by claiming to have played a major role
  in the presidential election in America and the Brexit decision in Great
- Britain by means of data mining.
- Elon Musk and Stephen Hawking have both explicitly warned about the risks
- of artificial intelligence.
- Apart from these horror scenarios, there are other reasons why it is not
+ Britain by means of data mining.Admittedly, here the machine did not make
+ a mistake, but only what the company wanted it to do - but it shows the
+ potential and risk of such powerful approaches.
+\end_layout
+
+\begin_layout Section
+Reasons for explainability
+\end_layout
+
+\begin_layout Standard
+Apart from these horror scenarios, there are other reasons why it is not
  easy to dispense with the explanations.
 \end_layout
 
 \begin_layout Itemize
-Problems cannot be debugged by a developer as in classical programming.
- Even if the bug is found, it is difficult to adapt it without affecting
- other parts of the network.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Probleme können nicht, wie in der klassischen Programmierung, von einem
- Entwickler gedebugged werden.
- Selbst, wenn der Fehler gefunden wird, kann er nur schwer angepasst werden
- ohne andere Teile des Netzes zu beeinflussen.
-\end_layout
-
+Security 
+\begin_inset Newline newline
 \end_inset
 
-
+The most important point for sensitive areas is probably that fatal mistakes
+ do not only not occur statistically - by verification of programs a behavior
+ can be guaranteed and misbehavior can be reduced.
+ The solution may be based on a logic that for some cases works, but is
+ discarded as not universally valid can be.
+ Under certain circumstances, the solution is based on a logic that works
+ for some cases, but which can be rejected as not universally valid.
+ For example, suppose the autopilot of a car evaluates the ambivalent informatio
+n ``Object is too low'' and ``Object is highway sign''.
+ It is quite conceivable that, in the training process, it was learned incorrect
+ly that a motorway sign can absolutely always be passed.
+ A fatal, over-fitted wrong decision, which an examiner would probably have
+ noticed during an analysis.
 \end_layout
 
 \begin_layout Itemize
-Small changes in the requirements for a neural network require a completely
- new training process.
+Knowledge discovery
+\begin_inset Newline newline
+\end_inset
+
+Especially from a scientific point of view, it is of great interest not
+ only to have an outside view on a solution, but to understand the hidden
+ logic.
+ Under certain circumstances, a problem may be based on a basic logic that
+ man has never considered before.
+ Possible questions here would be 
+\begin_inset Quotes eld
+\end_inset
+
+What is the main difference between a dog and a cat
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+What physical laws are based on the orbit of a planet
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Adaptations by humans
+\begin_inset Newline newline
+\end_inset
+
+If the requirements for a task change even slightly, a completely new training
+ process is often necessary.
+ Not only are the subgoals for the decision leading to a decision not clearly
+ identifiable, they also cannot be modified.
  The old network can only be used to a limited extent.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Kleine Änderungen an die Anforderungen an ein neuronales Netz erfordern
- einen komplett neuen Trainingsprozess.
- Das alte Netz kann nur bedingt weiterverwendet werden.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Itemize
-A constant behaviour of a network cannot be guaranteed, it is a risk factor
- at all times.
- Especially in sensitive areas, where individual decisions can often be
- a big problem, the use of such a solution is very problematic.
- People who are not familiar with the technology will be even more sceptical
- about its use - often a manager will decide against a machine solution
- although it might make sense.
- This is especially important in court when a developer has to justify the
- primarily random but nevertheless chosen approach.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Ein konstantes Verhalten eines Netzes kann nicht garantiert werden, es ist
- zu jeder Zeit ein Risikofaktor.
- Besonders in sensiblen Bereichen, wo einzelne Entscheidungen oft ein großes
- Problem sein können, ist der Einsatz einer solchen Lösung sehr problematisch.
- Menschen, die mit der Technik nicht vertraut sind, werden dem Einsatz gegenüber
- noch skeptischer sein- oft wird ein Manager sich gegen eine maschinell
- gestellte Lösung entscheiden, obwohl sie vielleicht Sinn machen würde.
- Das ist insbesondere auch vor Gericht von Bedeutung, wenn ein Entwickler
- den vorrangig von Zufall abhängigen, aber dennoch gewählten Ansatz rechtfertige
-n muss.
-\end_layout
-
+In court
+\begin_inset Newline newline
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Especially in sensitive areas, for example controllers in the industry,
- human written programs are still strongly used.
- 
-\end_layout
-
-\begin_layout Standard
-If there was an ML solution that the developer could follow, he would be
- greatly helped.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Besonders in sensiblen Bereichen, beispielsweise bei Controllern in der
- Industrie, wird deshalb immernoch stark auf menschlich geschriebene Programme
- gesetzt.
- 
-\end_layout
-
-\begin_layout Plain Layout
-Gäbe es eine ML Lösung, die für den Entwickler nachvolziehbar ist, wäre
- ihm sehr stark geholfen.
-\end_layout
-
-\end_inset
-
-
+If the question of guilt is to be clarified in court, it must be possible
+ to explain how a wrong decision could have been made.
+ The developer's task is to provide an explanation for the agent's behavior.
+ If this is not possible, you make yourself legally contestable, even if
+ an agent is otherwise considered safe.
+ This is particularly important in view of the fact that an agent takes
+ on many tasks for which the risks were previously borne by the user.
 \end_layout
 
 \begin_layout Section
-Machine Learning
+Machine Learning, Reinforcement learning
 \end_layout
 
 \begin_layout Standard
 Machine Learning is an important part of Artificial Intelligence, in which
  a machine learns to solve a task without human instructions.
- 
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Machine Learning ist ein bedeutender Teil der künstlichen Intelligenz, bei
- dem eine Maschine lernt, eine Aufgabe ohne menschliche Anweisungen selbst
- zu lösen.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Supervised learning 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo image]
-\end_layout
-
-\end_inset
-
- is the task of learning a function that, for any given data, maps inputs
- to outputs only by training on samples of known data.
- This is mostly done by using neural networks which derive a mapping from
- the inputs to outputs.
- An example is labeling animals on image inputs correctly or recognizing
- handwritten letters.
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo cite?]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The tasks learned there are often complex, but as the training data is mostly
- labeled by humans, it can hardly surpass human performance.
- 
-\end_layout
-
-\begin_layout Standard
-In the case of reinforcing learning, on the other hand, a policy for a problem
- must be learned for which no clear best solution is known.
- Whether the decisions made to solve the problem were good is determined
- by a reward.
-\end_layout
-
-\begin_layout Standard
-In these areas ML solutions can often exceed human solutions many times
- over.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Die dort gelernten Aufgaben sind oft komplex, können aber vom Menschen sehr
- gut selbst gelöst werden.
- 
-\end_layout
-
-\begin_layout Plain Layout
-Beim bestärkenden lernen hingegen muss eine policy für ein Problem erlernt
- werden, für den meistens keine eindeutig beste Lösung bekannt ist.
- Ob die getroffenen Entscheidungen zur Lösung des Problems gut waren, wird
- über eine Belohnung geregelt.
-\end_layout
-
-\begin_layout Plain Layout
-In diesen Bereichen können ML Lösungen menschliche Lösungen oft um ein vielfache
-s übertreffen.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Reinforcement learning
-\end_layout
-
-\begin_layout Standard
-Reinforcement learning features an agent which has the task of learning
+ Reinforcement learning features an agent which has the task of learning
  the optimal behaviour in an environment without any default knowledge.
  To do so, the agent receives a reward for actions it performed as well
  as the state of the environment that it is currently in.
@@ -1814,17 +1677,26 @@ No solution is also a solution.
 \end_layout
 
 \begin_layout Section
-Explainability criteria
+Explainability by familiarity
 \end_layout
 
 \begin_layout Standard
-Explainability in programs is not linked to a specific characteristic and
- cannot be easily achieved.
- Programmers often don't understand their own code after some time, although
- it (hopefully) even has documentation.
- If programs, which are to be understood by the developer, are now to be
- created automatically, much more attention must be paid to clarity so that
- the viewer is not overwhelmed with information.
+Um programmiercode zu verstehen und verändern zu können, muss die ihm zugrunde
+ liegende Logik verstanden werden und nachvollziehbar sein.
+ Erklärbarbeit ist kein klar definierbare Eigenschaft sondern hängt von
+ einer einem multivariaten Modell ab, deren Wertung und mathematischer Zusammenh
+ang von Entwickler als auch Problemart abhängen.
+ programmcode ist selbst bei vom Menschen geschriebenem Code nicht automatisch
+ gegeben, obwohl in diesem mithilfe von Kommentaren oder intuitiv gewählten
+ Variablennamen die Intention des Entwicklers dokumentiert werden können.
+ GP-Kandidaten müssen ohne diese Metainformationen erklärbar sein, weshalb
+ die gefundenen Lösungen aus sich heraus bereits möglich erklärbar sein
+ sollen.
+ Mögliche Einflussfaktoren und deren Potential als Komplexitätsmaß werden
+ dafür analysiert und diskutiert.
+ Als Ergebnis wird ein Distanzmaß verwendet, welches auf Vertrautheit von
+ besondere Form der Erklärbarkeit ist wegen der Vertrautheit bei wird mithilfeAn
+zahl der nötigen Änderungen mit der Tree Edit Distance (TED) berechnet.
 \end_layout
 
 \begin_layout Standard
@@ -2356,7 +2228,7 @@ The human brain is very good at recognizing patterns.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "humanPatternRecognition"
-literal "false"
+literal "true"
 
 \end_inset
 
@@ -2800,9 +2672,6 @@ An example for a tree used in the mountain car problem can be seen in
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "img:tree_modifiable_nodes_modified"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3805,9 +3674,6 @@ name "tree-difference-capsuled"
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tree-difference-operations"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3881,7 +3747,7 @@ literal "false"
 \end_layout
 
 \begin_layout Subsection
-GP Operators
+Operators
 \end_layout
 
 \begin_layout Standard
@@ -3951,7 +3817,7 @@ Explainability-unrelated gp framework features
 \end_layout
 
 \begin_layout Subsection
-Evaluation, Fitness (tensorflow)
+technical part Evaluation, Fitness (tensorflow)
 \end_layout
 
 \begin_layout Standard
@@ -4027,25 +3893,440 @@ status open
  
 \end_layout
 
-\begin_layout Subsubsection
-Sample selection
+\begin_layout Section
+Surrogate model: Regression
 \end_layout
 
 \begin_layout Standard
-If the primary goal is to improve performance, samples could be selected
- from the very best runs only.
- However, care should be taken here, as the best episodes are often those
- that are easy to solve from scratch.
- In contrast, the runs where the black box has the most progress over the
- agent are really interesting.
- Also conceivable is a collection of outstandingly solved runs to achieve
- a fitness improvement.
- 
+Ein wichtiger Punkt
+\end_layout
+
+\begin_layout Subsubsection
+What data for the regression?
+\end_layout
+
+\begin_layout Standard
+The decision is taken into consideration with the regression kernel.
+ Should the states come from the expert or the beginner or a mixture? e.g.
+ chess engine alpha zero (pro)… 
+\end_layout
+
+\begin_layout Itemize
+Pro: alpha zero matches (especially those that end in a draw) can have excessive
+ly long endgames that a beginner would never be able to achieve.
+ These would affect the training process at largest, even though they are
+ pretty straight forward.
+ In Mountaincar, the most relevant situations are the ones where the car
+ is the fastest, leaving only few training data.
+ Also, the decision is actually just depending on a few corridors where
+ the revert-decision is made, everything else is just performing the same
+ action? 
+\end_layout
+
+\begin_layout Itemize
+Pro: playing against yourself excludes the states emerging from playing
+ silly openings or some blunders a priori 
+\end_layout
+
+\begin_layout Itemize
+Noob: often does not have an endgame to perfect 
+\end_layout
+
+\begin_layout Itemize
+combining both can both be the best and worst of both worlds?
+\end_layout
+
+\begin_layout Section
+Surrogate model for offline learning: Regression
+\end_layout
+
+\begin_layout Standard
+As Daniel Hein has found out in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+literal "true"
+
+\end_inset
+
+
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-[TODO check this out?]
+Genaue Seite angeben? z.B.
+ S.
+ 125
+\end_layout
+
+\end_inset
+
+, policies trained on surrogate models (for example also by regression on
+ data) are almost always significantly worse than the versions trained on
+ real system dynamics.
+ Also, the variance in fitness becomes very large for complex candidates
+ where the overfitting becomes noticeable.
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
+Wie Daniel Hein in herausgefunden hat, sind Policies, die auf Ersatzmodellen
+ trainiert worden sind (zum Beispiel auch durch Regression auf Daten) fast
+ immer signifikant schlechter als die auf der echten Systemdynamik trainierten
+ Versionen.
+ Auch wird die Varianz der Fitness bei komplexen Kandidaten sehr groß, bei
+ denen das Overfitting bemerkbar wird.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For all experiments in this thesis, the candidates are rated based on the
+ regression error.
+ The regression error is a distance measure to indicate how well a model
+ can predict the labels of a data set (in our case: perform the same actions
+ as the target program).
+ This seems strange at first sight, as we have an environment where we could
+ also calculate the fitness.
+ In the domain of RL this is usually the reward.
+\end_layout
+
+\begin_layout Standard
+Both the regression error and the fitness correlate strongly.
+ Nevertheless, the differences in the evaluation process and the importance
+ that can be attached to them is greater than one might think.
+\end_layout
+
+\begin_layout Standard
+The fitness, of course, is the more honest value as it represents the actual
+ performance.
+ The main down side that it is very computation-intensive compared to a
+ regression.
+ In an average run, hundreds of generations with about 
+\begin_inset Formula $\approx1000$
+\end_inset
+
+ programs or more have to be evaluated.
+ Above all, it requires a lot of CPU power, which would slow down the framework
+ written for this work to a large extent, as it would slow down the special
+ ability to execute jobs in parallel on the GPU by converting it to a tensorflow
+ graph.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+
+\backslash
+begin{forest}
+\end_layout
+
+\begin_layout Plain Layout
+for tree={symbol, rounded corners,draw=black!100, fill=green!20}   
+\end_layout
+
+\begin_layout Plain Layout
+point/.style={coordinate,},   
+\end_layout
+
+\begin_layout Plain Layout
+symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},   
+\end_layout
+
+\begin_layout Plain Layout
+terminal/.style={symbol,},   
+\end_layout
+
+\begin_layout Plain Layout
+nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},  
+ 
+\end_layout
+
+\begin_layout Plain Layout
+operation/.style={symbol, rounded rectangle,},   
+\end_layout
+
+\begin_layout Plain Layout
+fixnode/.style={draw=black!100, fill=red!20,}, 
+\end_layout
+
+\begin_layout Plain Layout
+terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},   
+\end_layout
+
+\begin_layout Plain Layout
+variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
+   
+\end_layout
+
+\begin_layout Plain Layout
+constant/.style={rectangle, symbol,},  [{$+$},nonterminal,fixnode[{$-$},nontermin
+al,fixnode[{$
+\backslash
+cdot$},nonterminal[{1},terminal,constant][{2},terminal,constant]][{$
+\backslash
+cdot$},nonterminal[{3},terminal,constant][{4},terminal,constant]]][{$-$},nonterm
+inal[{$
+\backslash
+cdot$},nonterminal[{5},terminal,constant][{6},terminal,constant]][{$
+\backslash
+cdot$},nonterminal[{7},terminal,constant][{8},terminal,constant]]]]
+\end_layout
+
+\begin_layout Plain Layout
+
+\backslash
+end{forest}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+The following regression kernels were evaluated for their suitability.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+%
+\backslash
+item match: counting the amount of perfect fits.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+%The match-kernel suits very well for categorical data results such as fitting
+ names, animals or cities.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+maximum penalties.
+ trying to reduce the large amount of 
+\end_layout
+
+\begin_layout Itemize
+simulate evaluation process by assigning values to action space.
+ Every continuous result gets assigned to the closest action.
+ The functions hiding behind this last step is kind of hidden.
+ Small improvements can not be made easily, as it is only discovered when
+ at least one point gets assigned correctly.
+ 
+\end_layout
+
+\begin_layout Itemize
+only punish wrong decisions with regression 
+\end_layout
+
+\begin_layout Itemize
+simulate evaluation with a small regression penalty
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+IDEE: grund für erklärbarkeit: Mensch muss oftmals schnell einschreiten
+ und keine Zeit für training!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Regression Kernels, distance/cost function 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+name this better, ist y^ die richtige Bezeichnung hier?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Common measurements are the 
+\begin_inset Formula $L_{1}$
+\end_inset
+
+or 
+\begin_inset Formula $L_{2}$
+\end_inset
+
+.
+ ??
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The regression error results from a distance relation between the candidates
+ results and the data set.
+ 
+\begin_inset Formula $y\sim\hat{y}$
+\end_inset
+
+The cost function defines a regression kernel in how deviations are evaluated.
+ Klassische Kostenfunktionen sind die euklidische Distanz, oft wird diese
+ auch quadriert.
+ 
+\end_layout
+
+\begin_layout Itemize
+Regularization of the regression
+\begin_inset Newline newline
+\end_inset
+
+The primary task of the cost function as a surrogate model is to replace
+ the reward function.
+ There are many options as distance measure, known measures are for example
+ L1 or L2.
+ It was not necessary to use an explicit measure, each action dimension
+ was optimized in separate runs and metric distances in this space are identical.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Formula $L_{1}=$
+\end_inset
+
+...
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+TODO symbole für:
+\end_layout
+
+\begin_layout Plain Layout
+penalty
+\end_layout
+
+\begin_layout Plain Layout
+rundungsfunktion statt <0.5
+\end_layout
+
+\begin_layout Plain Layout
+distanznamen d_L1, d_bounded, ...
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+cost function for discrete Action space
+\end_layout
+
+\begin_layout Subsubsection
+Action space upper and lower limit 
+\end_layout
+
+\begin_layout Standard
+If the action area has a minimum and maximum value, results outside the
+ action area are interpreted as belonging strongly to the limit value.
+ If the limit value corresponds to the desired result, it is assigned to
+ it accordingly, otherwise the error is calculated
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Formula 
+\[
+d_{bounded}\begin{cases}
+0 & d(\min(\max(x_{ik},a_{\min}),a_{\max}),x_{jk})=0\\
+\min(d,\text{penalty}) & \text{otherwise}
+\end{cases}
+\]
+
+\end_inset
+
+The aim is to find a mathematical formula that produces moderate results
+ and does not produce overfitted extreme values even in special cases.
+ 
+\begin_inset Newline newline
+\end_inset
+
+todo an example of this would be a formula that uses a formula such as x^4
+ to delimit a special case
+\begin_inset Newline newline
+\end_inset
+
+Reason for rejection
+\begin_inset Newline newline
+\end_inset
+
+Here, a second measure, which aims to produce moderate values, was mixed
+ with the main measure, which should indicate the distance to the target
+ solution.
+ The second measure automatically becomes the KO criterion for candidates,
+ single wrong points distort the regression error beyond recognition.
+ This slowed down the training process extremely, furthermore, the most
+ effective solution was not a formula that only generates moderate values,
+ but the use of the min and max function.
+\begin_inset Newline newline
+\end_inset
+
+version 2
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+A conceivable solution would be to use a constantly increasing weighting
+ function, such as tanh or log, as a distance to the edge area, to greatly
+ reduce the influence of the values.
+ Allerdings muss auch hier akribisch aufgepasst werden, dass die Distanzfunktion
+ durch einen zu großen Zweitfaktor Zweckentfremdet wird, was zu einer kompletten
+ Fehlbewertung von Kandidaten führen würde.
+ Ist der Anteil der Kandidaten, die diese künstlich erzeugte Zweitbewertung
+ überwinden konnten nicht groß genug, ist der genetische Selektionsprozess
+ obsolet.
+ Der Anteil dieser Bestrafung auf den finalen Wert wird zu einem Fehlerfaktor
+ innerhalb der Regression, die ja bereits ein surrogate model ist.
 \end_layout
 
 \end_inset
@@ -4054,11 +4335,937 @@ status open
 \end_layout
 
 \begin_layout Subsubsection
-Sample outlier problems
+Assign to discrete values 
 \end_layout
 
 \begin_layout Standard
+Non-discrete results cannot be interpreted in the real model.
+ In a surrogate model, however, this appears to be an option that brings
+ with it a number of possibilities.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Formula 
+\[
+d_{todo}(x_{i},x_{j})=\sum\begin{cases}
+0 & d(x_{ik},x_{jk})<0.5\\
+d(x_{ik},x_{jk}) & \text{otherwise}
+\end{cases}
+\]
+
+\end_inset
+
+This solution can be interpreted as follows If the next discrete decision
+ is correct, no penalty is applied.
+ Otherwise the continuous distance is chosen, so that even small optimizations
+ in the right direction are rewarded If the result is above or below the
+ result found, the mathematical function to be searched for and optimized
+ can be improved filigree.
+ 
+\begin_inset Newline newline
+\end_inset
+
+However, could not actually be used.
+ To 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+L1 L2 formeln
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/done/regression_kernel_cost.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/done/regression_kernel_cost.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Regression kernels 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+IDEE IDEA: weight starting points for mtc??
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Frage: definitionen in latex?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Relative regression kernels
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Die pareto-optimierung in der genetischen Programmieung bedeutet eine Optimierun
+g in zwei Dimensionen mit der Fitness als Hauptbedingung und der Komplexität
+ als Nebenbedingung.
+ Das gp Modell soll die Logik der Blackbox adaptieren, ohne dessen Struktur
+ zu kennen oder in betracht zu ziehen, sondern nur durch Beobachtung des
+ Verhaltens.
+ Um Rechenleistung zu sparen, wird dafür ein Regressions surrogatemodell
+ verwendet, sonst könnten die modelle laufend verbessert werden.
+ eventuell könnte sogar versucht werden, das markov Modell dem die umgebung
+ zugrundeliegt nachzubauen.
+ (GAN-GP?) Um overfitting zu vermeiden und Erklärbarkeit zu ermöglichen
+ wird dabei versucht, sich möglichst nah an der STruktur des bekannten Programme
+s zu orientieren.
+ Im GP-Prozess wird die Fitness optimiert, ein Kandidat gilt aber dann als
+ paretoeffizient wenn weder in fitness oder in komplexität schlechter als
+ ein anderer Kandidat ist.
+ Alle paretoeffizienten Kandidaten befinden sich auf der Paretofront.
+ Hier kann der Nutzer dann entscheiden, welcher Tradeoff zwischen Fitness
+ und Komplexität für ihn am besten geeignet ist.In den bisherigen Regressionskern
+els ist dafür lediglich der Regressionsfehler zur Optimallösung relevant.
+ Die Kandidaten werden auf einer Paretofront angeordnet, wo die Einfachsten
+ Kandidaten zu jeder Fitness zu finden sind.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Paretoeffizienz
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo zweifach beschrieben
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Relative Kernels sind eine Erweiterung der bekannten kernel.
+ Der Regressionsfehler ist die Summe der Abweichungsdistanzen zur Optimallösung.
+ Relative Kernels erweitern dieses Distanzmaß um eine Gewichtung/bestrafung
+ der Distanz je nach Entfernung zur Optimallösung.
+ 
+\end_layout
+
+\begin_layout Standard
+Sichere Kandidaten können vor allem in sensiblen Bereichen von großem Interesse
+ sein, da sie vorsichtiger agieren.
+ Lieber wird eine Änderung nicht durchgeführt, als ein Risiko einzugehen.
+\end_layout
+
+\begin_layout Standard
+Eine mögliche Strukturierung der Abweichung könnte vier Bereiche umfassen:
+\end_layout
+
+\begin_layout Enumerate
+Sichere Verbesserung.
+ Der Punkt liegt zwischen Basis und Ziel.
+ Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
+ nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
+ 
+\end_layout
+
+\begin_layout Enumerate
+unsichere Verbesserung.
+ Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
+ von der bekannten pllicy nötig.
+ Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
+ es auch bevorzugt werden.
+ Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
+ Form der möglichen Bestrafung.
+\end_layout
+
+\begin_layout Enumerate
+Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
+ hat.
+ Die bekannte policy wäre zu bevorzugen.
+ Diese sollten vermieden werden und sollten entsprechend bestraft werden.
+ 
+\begin_inset Newline newline
+\end_inset
+
+Auch diese können in Zwei Bereiche unterteils werden:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Sichere Verschlechterung.
+ Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
+ war eindeutig falsch, ohne Chance auf Verbesserung.
+ In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
+ dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
+ auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
+ an einder anderen Stelle in Kauf genommen.
+\end_layout
+
+\begin_layout Enumerate
+Unsichere Verschlechterung.
+ Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
+ über das Ziel hinausgeschossen.
+ Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
+ die größte Unsicherheit.
+ Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Idee Bild: Überlegung 
+\begin_inset Quotes eld
+\end_inset
+
+ ich koche meine Eier für 2 min.
+ empfolhen sind 6.
+ sind 4 min oder 8 min die bessere Alternative? 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+Diese Bereiche könnten je nach Belieben einen zusätzlichen mit konstanten
+ oder sinkenden zusätzlichen Steigung gewertet werden.
+\end_layout
+
+\begin_layout Standard
+Auch eine weitere Dimension auf der Paretofront wäre denkbar, wo eine Regression
+ zur bekannten policy durchgeführt wird.
+\end_layout
+
+\begin_layout Standard
+Als sicherste Version könnten Bereiche auch mit Dummy-werten belegt werden,
+ die eine Änderung über eine Grenze hinaus so stark bestrafen, dass eine
+ solche Änderung nicht möglich ist.
+\end_layout
+
+\begin_layout Standard
+Eine solche Änderung sollte aber besser durch gezielte Ansatzpunkt für die
+ GP erzielt werden.
+ Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
+ in denen optimiert werden darf.
+ Auch wäre eine teilweise Übernahme durch die gp denkbar.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+GAN-Beziehung zwischen GP-Prozess und nn?
+\end_layout
+
+\end_inset
+
+ Ein weiterer Lösungsansatz wäre, die Daten der Regression im Vorhinein
+ clustern und je nach Erreichen durch die Originalpolicy zu bewerten.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Auch denkbar wäre immer weiter Gruppen aus dem Datensatz hinzuzunehmen und
+ solang ein Modell weiterzuentwickeln, bin eine Gewisse Fehlergrenze untersfhrit
+ten wurde.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Unterschiede in der regression könnenverschieden entstehen.
+ Die Verteilung der Unterschiede ist dafür relevant! (nicht transitiv, symmetris
+ch)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+symbols?
+\end_layout
+
+\begin_layout Plain Layout
+expertenpolicy, modell
+\end_layout
+
+\begin_layout Plain Layout
+zielpolicy, modell
+\end_layout
+
+\begin_layout Plain Layout
+agentenpolicy, modell
+\end_layout
+
+\begin_layout Plain Layout
+daten
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\forall_{i\in\text{data}_{\text{goal}}}\hat{y}_{\text{0}}^{^{(i)}}\leq\hat{y}_{\text{gp}}^{^{(i)}}\leq\hat{y}_{\text{goal}}^{^{(i)}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Ein Kandidat gilt als paretoeffizient im Sinne der Verbesserung, wenn all
+ seine 
+\end_layout
+
+\begin_layout Standard
+Pareto-efficient candidates are of great interest for several reasons:
+\end_layout
+
+\begin_layout Itemize
+Within the regression, there are no cases where anything would go wrong.
+\end_layout
+
+\begin_layout Itemize
+Changes in logic will most likely at least not lead to a deterioration
+\end_layout
+
+\begin_layout Itemize
+Logic changes comprise a new insight that can be viewed in isolation
+\end_layout
+
+\begin_layout Itemize
+Logic changes can be easily combined
+\end_layout
+
+\begin_layout Itemize
+Familiarity becomes a reference pptogram not only through structural similarity,
+ but also through more similar behaviour.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/dummy/MA_relative_kernel_dummy.png
+	lyxscale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conceivable relevant areas for penalizing changes in a relative regression
+ to an optimum, relative to a known solution.
+ todo.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Sample selection
+\end_layout
+
+\begin_layout Standard
+Die für die Regression verwendeten Daten sind das Wesen des Surrogatmodells.
+ Je nachdem, wie sie gewählt wurden, kann sich das Ergebnis stark verändern
+ und auf bestimmte Ziele gerichtet werden.
+ Für unsere Benchmarks wurden die Daten folgendermaßen ausgewählt:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="8" columns="5">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MC
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+IB
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa200
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PSO
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\approx1100$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\approx2000$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $10000$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $10000$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $10$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $20$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Training/Test Split
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $80/20$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $80/20$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $80/20$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $80/20$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+past values
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+30
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Training size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\approx800$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\approx1600$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $8000$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $8000$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Weitere Optionen
+\end_layout
+
+\begin_layout Itemize
+Datenselektion.
+ Steht im Vordergrund, eine bessere Leistung zu erreichen (und nicht die
+ black box zu erklären) können die gewählten samples selektiert werden.
+ Dies sollte aber nur dann erfolgen, wenn man sich der guten Performance
+ sicher ist.
+ Nur samples aus den besten Läufen zu nehmen wäre ein fataler Trugschluss,
+ weil diese oft die einfachsten sind.
+ Von weitaus größerer Relevanz wären die Läufe, bei denen man sicher ist,
+ dass sie vom RL Agent besser gelöst wurde.
+ Diese Information sind in einer vom Zufall abhängigen Umgebung jedoch nicht
+ bekannt.
+ Deswegen ist eine Datenselektion nicht empfehlenswert.
+ Die einzige Möglichkeit, die man hat, sind Fälle auszusortieren, die nachweisli
+ch zu Fehlentscheidungen führten.
+\end_layout
+
+\begin_layout Itemize
+Komplett möglicher Datenraum normalverteilt? Ist irrelevant, da viele Zustände
+ oft nicht erreicht werden können.
+ Anpassungen müssen oft filigran an bestimmten Bereichen ansetzen.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Neustart von Läufen, geht von einer anderen Origin aus? hört sich interessant
+ an...
+ jedes mal werden punkte gewählt und zu denen muss eine verbesserung gefunden
+ werden.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Outlier problems
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 [todo should they be handeled?]
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -4163,196 +5370,6 @@ You can not be sure if an outlier is actually important or not
 \end_layout
 
 \end_deeper
-\begin_layout Subsubsection
-What data for the regression?
-\end_layout
-
-\begin_layout Standard
-The decision is taken into consideration with the regression kernel.
- Should the states come from the expert or the beginner or a mixture? e.g.
- chess engine alpha zero (pro)… 
-\end_layout
-
-\begin_layout Itemize
-Pro: alpha zero matches (especially those that end in a draw) can have excessive
-ly long endgames that a beginner would never be able to achieve.
- These would affect the training process at largest, even though they are
- pretty straight forward.
- In Mountaincar, the most relevant situations are the ones where the car
- is the fastest, leaving only few training data.
- Also, the decision is actually just depending on a few corridors where
- the revert-decision is made, everything else is just performing the same
- action? 
-\end_layout
-
-\begin_layout Itemize
-Pro: playing against yourself excludes the states emerging from playing
- silly openings or some blunders a priori 
-\end_layout
-
-\begin_layout Itemize
-Noob: often does not have an endgame to perfect 
-\end_layout
-
-\begin_layout Itemize
-combining both can both be the best and worst of both worlds?
-\end_layout
-
-\begin_layout Section
-Learning offline on a regression surrogate model
-\end_layout
-
-\begin_layout Standard
-As Daniel Hein has found out in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "daniel_hein_doktorarbeit"
-literal "false"
-
-\end_inset
-
-
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Genaue Seite angeben? z.B.
- S.
- 125
-\end_layout
-
-\end_inset
-
- Genaue Seite angeben? e.g.
- p.
- 125, policies trained on replacement models (for example also by regression
- on data) are almost always significantly worse than the versions trained
- on real system dynamics.
- Also, the variance in fitness becomes very large for complex candidates
- where the overfitting becomes noticeable.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Wie Daniel Hein in herausgefunden hat, sind Policies, die auf Ersatzmodellen
- trainiert worden sind (zum Beispiel auch durch Regression auf Daten) fast
- immer signifikant schlechter als die auf der echten Systemdynamik trainierten
- Versionen.
- Auch wird die Varianz der Fitness bei komplexen Kandidaten sehr groß, bei
- denen das Overfitting bemerkbar wird.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-For all experiments in this thesis, the candidates are rated based on the
- regression error.
- The regression error is a distance measure to indicate how well a model
- can predict the labels of a data set (in our case: perform the same actions
- as the target program).
- This seems strange at first sight, as we have an environment where we could
- also calculate the fitness.
- In the domain of RL this is usually the reward.
-\end_layout
-
-\begin_layout Standard
-Both the regression error and the fitness correlate strongly.
- Nevertheless, the differences in the evaluation process and the importance
- that can be attached to them is greater than one might think.
-\end_layout
-
-\begin_layout Standard
-The fitness, of course, is the more honest value as it represents the actual
- performance.
- The main down side that it is very computation-intensive compared to a
- regression.
- In an average run, hundreds of generations with about 
-\begin_inset Formula $\approx1000$
-\end_inset
-
- programs or more have to be evaluated.
- Above all, it requires a lot of CPU power, which would slow down the framework
- written for this work to a large extent, as it would slow down the special
- ability to execute jobs in parallel on the GPU by converting it to a tensorflow
- graph.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\backslash
-begin{forest}
-\end_layout
-
-\begin_layout Plain Layout
-for tree={symbol, rounded corners,draw=black!100, fill=green!20}   
-\end_layout
-
-\begin_layout Plain Layout
-point/.style={coordinate,},   
-\end_layout
-
-\begin_layout Plain Layout
-symbol/.style={draw=black,text height=1.5ex,text depth=.25ex,},   
-\end_layout
-
-\begin_layout Plain Layout
-terminal/.style={symbol,},   
-\end_layout
-
-\begin_layout Plain Layout
-nonterminal/.style={rectangle, symbol, rounded corners,fill=green!20},  
- 
-\end_layout
-
-\begin_layout Plain Layout
-operation/.style={symbol, rounded rectangle,},   
-\end_layout
-
-\begin_layout Plain Layout
-fixnode/.style={draw=black!100, fill=red!20,},   
-\end_layout
-
-\begin_layout Plain Layout
-terminal/.style={rectangle, symbol,draw=black!100, fill=green!20,},   
-\end_layout
-
-\begin_layout Plain Layout
-variable/.style={rounded corners, symbol,draw=black!100, fill=green!20,},
-   
-\end_layout
-
-\begin_layout Plain Layout
-constant/.style={rectangle, symbol,},  [{$+$},nonterminal,fixnode[{$-$},nontermin
-al,fixnode[{$
-\backslash
-cdot$},nonterminal[{1},terminal,constant][{2},terminal,constant]][{$
-\backslash
-cdot$},nonterminal[{3},terminal,constant][{4},terminal,constant]]][{$-$},nonterm
-inal[{$
-\backslash
-cdot$},nonterminal[{5},terminal,constant][{6},terminal,constant]][{$
-\backslash
-cdot$},nonterminal[{7},terminal,constant][{8},terminal,constant]]]]
-\end_layout
-
-\begin_layout Plain Layout
-
-\backslash
-end{forest}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Chapter
 Benchmarks
 \end_layout
@@ -4371,7 +5388,7 @@ This chapter presents the benchmarks against which the approach has been
 status open
 
 \begin_layout Plain Layout
-% todo regression aswell?
+% todo regression aswell? no cartpole?
 \end_layout
 
 \end_inset
@@ -4706,6 +5723,10 @@ o-dimensional state space s = (r, ˙r)
 
 \end_layout
 
+\begin_layout Plain Layout
+make better mountaincar picture?
+\end_layout
+
 \end_inset
 
 
@@ -4765,6 +5786,23 @@ Implementation
 
 \begin_layout Standard
 In the discrete version of MC there are three possible actions
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Tables should be in float figures (?)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Standard
@@ -5008,7 +6046,7 @@ MC offers the opportunity to create decision plots.
  These show which decisions have been made for the respective observation
  dimensions.
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Für die MC Auswertung können dank der niedrigen Eingabedimensionen Entscheidungs
@@ -5066,12 +6104,6 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-SimpleAgent.png
 	lyxscale 50
@@ -5089,38 +6121,6 @@ status open
 
 
 \end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Die standard-policy
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -5159,7 +6159,7 @@ Action 0
  It has recognized the upper limit as superfluous.
  
 \begin_inset Note Comment
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Preset policy: Erkennbar sind verwendeten mathematischen Strukturen wie
@@ -5177,11 +6177,6 @@ Aktion 0
  Rechts ist eine Vereinfachung erkennbar, gefunden mithilfe der genetischen
  Programmierung.
  Sie hat die Obergrenze als überflüssig erkannt.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -5345,7 +6340,7 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "false"
+literal "true"
 
 \end_inset
 
@@ -5854,9 +6849,6 @@ The “simple” policy reached the target with an average episode reward of
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "img:MTC-heuristic-vs-sarsa-reward"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5924,7 +6916,7 @@ Sarsa75 implementation learns to outperform the heuristic on average, but
 \end_layout
 
 \begin_layout Subsection
-Learning goals on the way to the perfect solution
+Subgoals for the best solution
 \end_layout
 
 \begin_layout Standard
@@ -5982,19 +6974,6 @@ Auf diese Weise wird der Wagen immer das Ziel erreichen, aber es gibt noch
 Reverse early: To reach the goal, you don't have to take the maximum momentum.
  If you turn back earlier, a lot of time can be saved.
  
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Vorzeitig umkehren: Um das Ziel zu erreichen, muss man nicht den maximalen
- Schwung nehmen.
- Wenn Sie früher umkehren, können Sie viel Zeit sparen.
- 
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Itemize
@@ -6861,7 +7840,7 @@ closed policy: current lederboard leader
 \end_layout
 
 \begin_layout Subsection
-fitness kernel fitting error regression 
+Fitness kernel fitting error regression 
 \begin_inset Note Note
 status open
 
@@ -6914,69 +7893,7 @@ Return the action as part of the gp-process evaluation.
 \end_layout
 
 \begin_layout Standard
-The following regression kernels were evaluated for their suitability.
- 
-\end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-%
-\backslash
-item match: counting the amount of perfect fits.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-%The match-kernel suits very well for categorical data results such as fitting
- names, animals or cities.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-The action space has a minimum and maximum value.
- If the program calculates values out of this bound, they should be interpreted
- as if the bias towards this decision is “stronger” , making the maximum
- difference 2, where values larger or smaller should not be punished.
- 
-\end_layout
-
-\begin_layout Itemize
-maximum penalties.
- trying to reduce the large amount of 
-\end_layout
-
-\begin_layout Itemize
-simulate evaluation process by assigning values to action space.
- Every continuous result gets assigned to the closest action.
- The functions hiding behind this last step is kind of hidden.
- Small improvements can not be made easily, as it is only discovered when
- at least one point gets assigned correctly.
- 
-\end_layout
-
-\begin_layout Itemize
-only punish wrong decisions with regression 
-\end_layout
-
-\begin_layout Itemize
-simulate evaluation with a small regression penalty
 \end_layout
 
 \begin_layout Standard
@@ -7101,20 +8018,12 @@ Fast moving car vs slowly moving generate different amount of data per area.
 \end_layout
 
 \begin_layout Section
-Gym's Swing Pole
-\end_layout
-
-\begin_layout Standard
-The swing pole is a special 
-\end_layout
-
-\begin_layout Section
 Industrial benchmark
 \end_layout
 
 \begin_layout Standard
-The Industrial benchmark was introduced by scientists at Siemens to meet
- the high requirements of complex industrial processes.
+The Industrial Benchmark was introduced by scientists at Siemens to meet
+ the high requirements of complex, real world industrial processes.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
@@ -7126,11 +8035,728 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-The results in gym-environments were very promising.
- Now it is time to test the method in an industrial environment.
- The Industrial Benchmark gives us access to real industrial data and applicatio
-ns, which represent much more complex relationships that are also used in
- industry.
+Das IB simuliert dafür einen Controler, für den ein Agent drei kontinuierliche
+ Aktionen setzen kann, sodass innerhalb eines time horizon T der Reward
+ 
+\begin_inset Formula $R$
+\end_inset
+
+ maximiert wird.
+ Der Markov-zustand hat Die möglichen Werte  mit einer Beschränkung von
+ 
+\begin_inset Formula $a_{v,g,s}\in[-1;1]$
+\end_inset
+
+ gesetzt.
+ 
+\end_layout
+
+\begin_layout Standard
+For the IB, the task is to find a sequence of actions x =...
+ which changes the control variables in a way that return R is as high as
+ possible for a given time horizon T.
+ Using 100 particles and 100 PSO iterations for each state to search for
+ an optimal action trajectory, PSO-P is able to solve the IB problem given
+ T = 100, q = 0.05, and g = 0.97.
+ Moreover, the experimental results show that the policy performance is
+ robust even against highly stochastic benchmark dynamics as present in
+ the IB.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="8" columns="8">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+setpoint
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+velocity
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+gain
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+shift
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fatigue
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+consumption
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+reward
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+acronym
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+p
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+v
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+g
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+h
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+f
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+c
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+r
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Description
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+external driver
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+relevant for reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+relevant for reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+adjustable (action)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+adjustable (
+\begin_inset Formula $\pm1$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+adjustable (
+\begin_inset Formula $\pm1$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+adjustable (
+\begin_inset Formula $\pm1$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+min/max value
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[10,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+data mean
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+55
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+48.75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+50.53
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+49.45
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+37.51
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+166.33
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+data deviation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+28.72
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+12.31
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+29.91
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+29.22
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+31.17
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+139.44
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+past time steps
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0 (Value always remains the same over the time horizon)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Not used in the GP process
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Relevant IB features for the agent
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/IB/ib_stochasticity_compared.PNG
+	lyxscale 40
+	height 6cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+IB compared to other benchmarks
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter

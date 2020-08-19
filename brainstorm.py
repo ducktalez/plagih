@@ -1,13 +1,12 @@
-"""
-Simon's file for brainstorming new stuff
-"""
-import sys
-from pathlib import Path
-sys.path.append(str(Path('C:/Users/Rapid/PycharmProjects/plagih')))
-from benchmarks.gym_mountaincar.agents.quick_eval import *
-from plagih.modules.plagih_types import *
-import math
-import numpy as np
-import matplotlib.pyplot as plt
-import re
-from pathlib import Path
+from multiprocessing import Pool
+
+
+def f(x):
+    return x*x
+
+
+if __name__ == '__main__':
+    with Pool(5) as p:
+        x = p.map(f, [1, 2, 3])
+
+    print(x)

@@ -25,6 +25,7 @@ class FileLocations:
     backup_p = 'backup/backup.p'
     trees_tex = 'agents_trees.tex'
     folder_pycode = ''
+    folder_tex = 'texfiles'
     file_pareto = 'paretofront.yaml'
     info_config_yaml = 'used_config.yaml'
 
@@ -47,7 +48,7 @@ class ExplainableGP(object):
 
     """
 
-    def __init__(self, conf: GpConfig, root_dir, path_data, path_origin_tree, mp_cpu_cores_max, developer_fix=None):
+    def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
         self.mp_cpu_cores_max = mp_cpu_cores_max  # todo
@@ -884,13 +885,14 @@ class ExplainableGP(object):
             used_observations = cooltree.get_observation_list()
             pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
-            fig, ax = plt.subplots()
-            ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
-            ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
-            fig.tight_layout()
-            fig.savefig(path_hist / f'acthist_{parsim}.png', dpi=300)
-            # fig.savefig(path_hist / f'acthist_{parsim}.svg')
-            plt.close()
+            with plt.rc_context(rc={}):  # todo use this everywhere? grid?
+                fig, ax = plt.subplots()
+                ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
+                ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
+                fig.tight_layout()
+                fig.savefig(path_hist / f'acthist_{parsim}.png', dpi=300)
+                # fig.savefig(path_hist / f'acthist_{parsim}.svg')
+
         self.printpl('ff', f'Histograms: {path_hist.as_posix()}')
 
     def file_pareto_latex(self):
@@ -900,39 +902,40 @@ class ExplainableGP(object):
         - fill tree meta-data, just in case we want to visualise anything of it
         - create latex-forest representation
         """
-        latex_elements = []
+        latex_row1 = []
+        input_single_tex = {}
 
         for (parsim, fitness, cooltree) in self.pareto:
 
-            try:
-                # origin_oldtree = self.origin_cooltree.get_oldtree()
-                # tree = tree_set_modifyable_nodes(tree, origin_tree=origin_oldtree)
-                cooltree.set_fix_nodes(self.origin_cooltree)
-            except Exception as ex:
-                print_e(f'Which exception is this? {ex}')
-                pass
-
+            cooltree.set_fix_nodes(self.origin_cooltree)
             cooltree.meta.last_evolution = 'texify'
             tree = cooltree.get_oldtree()
-            latex_elements.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n\n')
+            latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n\n')
 
             forest_viz = latex_tree_get_forest(tree, tight_viz=False)
-            latex_elements.append(forest_viz)
+            latex_row1.append(forest_viz)
+            if parsim < 14:
+                input_single_tex[parsim] = forest_viz
 
-            latex_elements.append('Tight layout:')
+            latex_row1.append('Tight layout:')
             # try:
             forest_viz_tight = latex_tree_get_forest(tree)
-            latex_elements.append(forest_viz_tight + '\n')
+            latex_row1.append(forest_viz_tight + '\n')
             # except Exception as tvex:
             #     print_e(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
-            #     latex_elements.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
+            #     latex_row1.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
 
-        latex_full_doc = latex_treeviz_full(latex_elements)
+        latex_full_doc = latex_treeviz_full(latex_row1)
 
         path_trees_tex = file_make_dir(self.root_dir / self.paths.trees_tex)
 
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
+
+        path_folder_tex = folder_make_dir(self.root_dir / self.paths.folder_tex)
+        for parsim, forest_tree in input_single_tex.items():
+            with Path.open(path_folder_tex / f'{self.conf.name}-parsim{parsim}.tex', 'w') as file:
+                file.write(forest_tree)
 
         self.printpl('ff', f'Latex-trees: {path_trees_tex.as_posix()}')
 
@@ -1509,8 +1512,6 @@ class ExplainableGP(object):
         """
         with plt.rc_context(rc={'axes.grid': True}):  # todo use this everywhere? grid?
             fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
-            fig.tight_layout()
-            plt.tight_layout()
             plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
             xx = list(self.monitor_df.index)
 
@@ -1526,18 +1527,18 @@ class ExplainableGP(object):
             axs0.set_ylim(ymin=0), axs0.legend(loc='lower left')  # , shadow=True
 
             axs0_twin = axs0.twinx()
-            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last pareto entry', linestyle='dashed', marker='.')  # linestyle='None'
+            axs0_twin.plot(xx, self.monitor_df['gens_since_last_pareto'], color='tab:gray', label='Generations since last pareto entry', linestyle='dashed', marker='')  # linestyle='None'
             axs0_twin.tick_params(axis='y', labelcolor='tab:gray')
             try:
-                axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 25))
+                axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 50))
             except Exception as ex:
                 try:
                     print_e(f'damn setting ylim not worksening :s {ex}')
-                    axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 25))
+                    axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
                     # print(self.monitor_df['gens_since_last_pareto'].notnull().max())
                 except Exception as ex2:
                     print_e(f'damn setting ylim not working, version 2! {ex2}')
-                    axs0_twin.set_ylim(ymin=0, ymax=25)
+                    axs0_twin.set_ylim(ymin=0, ymax=50)
 
             axs0_twin.legend(loc='lower right')
 
@@ -1564,15 +1565,13 @@ class ExplainableGP(object):
             axs3.set_ylim(ymin=0), axs3.legend(loc='lower left')
 
             # Top level style
-            axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('Generations')
-            axs0.set_title(f'{self.conf.name} monitoring generations')  # sfeh
+            axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generations')
+            axs0.set_title(f'monitoring gp generations {self.conf.name}')  # sfeh
             fig.tight_layout()
             path = self.root_dir / f'monitoring-{self.conf.name}.png'
             fig.savefig(path, dpi=300)
             # fig.savefig(self.root_dir / f'monitoring.svg')
-            self.printpl('f', f"Monitoring: {path.as_posix()}")
-
-        # plt.close()
+            self.printpl('f', f"monitoring: {path.as_posix()}")
 
     def plot_paretofront(self):
         """
@@ -1585,36 +1584,37 @@ class ExplainableGP(object):
             print_e(f'Plotting empty array is not possible! Data={xx, yy}')
             return
 
-        fig, ax = plt.subplots()
-        right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
-        ax.set_xlim(min(min(xx), 0), right)
-        ax.set_ylim(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05)  # 1.05  # top * 1.05 for better style
+        run_name = self.conf.name
+        with plt.rc_context(rc={}):  # todo use this everywhere? grid?
+            fig, ax = plt.subplots()
+            right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
+            ax.set_xlim(min(min(xx), 0), right)
+            ax.set_ylim(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05)  # 1.05  # top * 1.05 for better style
 
-        # beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
-        xx = np.concatenate([[xx[0]], xx, [right + 1]])
-        yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
+            # beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
+            xx = np.concatenate([[xx[0]], xx, [right + 1]])
+            yy = np.concatenate([[max(yy) + 1], yy, [yy[-1]]])
 
-        ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{self.conf.name}', where='post')
+            ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
 
-        fig.tight_layout()
-        ax.legend(loc='lower left')
-        ax.set_title('Pareto front')
-        ax.set_xlabel('Complexity')
-        ax.set_ylabel('Regression error')
+            ax.legend(loc='lower left')
+            # ax.set_title('Pareto front')
+            ax.set_xlabel('complexity')
+            ax.set_ylabel('regression error')
+            # ax.set_ylim(ymin=0, ymax=50)  # sfeh
 
-        plt.tight_layout()
-        fig.tight_layout()
-        try:
-            path = self.root_dir / f'paretofront {self.conf.name}.png'
-            plt.savefig(path, dpi=300)
-            self.printpl('f', f"paretofront (png): {path.as_posix()}")
+            fig.tight_layout()
+            try:
+                path = self.root_dir / f'paretofront {run_name}.png'
+                fig.savefig(path, dpi=300)
+                self.printpl('f', f"paretofront (png): {path.as_posix()}")
 
-            path_plot = folder_make_dir(self.root_dir / self.paths.plots)
-            plt.savefig(path_plot / f'paretofront {self.conf.name}.svg')
-            self.printpl('f', f"paretofront (svg): {path_plot.as_posix()}")
-        except PermissionError as permerr:
-            print_e(f'Could not save plot: {permerr}')  # sfeh for everything?
-        plt.close()  # Stackoverflow said that this is too much, plt.clf() should be better, but does not seem to work
+                path_plot = folder_make_dir(self.root_dir / self.paths.plots)
+                fig.savefig(path_plot / f'paretofront {run_name}.svg')
+                self.printpl('f', f"paretofront (svg): {path_plot.as_posix()}")
+            except PermissionError as permerr:
+                print_e(f'Could not save plot: {permerr}')  # sfeh for everything?
+        # plt.close()  # Stackoverflow said that this is too much, plt.clf() should be better, but does not seem to work
         return
 
     def plot_evolve_performance(self):
@@ -1624,23 +1624,23 @@ class ExplainableGP(object):
         sfeh: this should be saved within the trees. Everything else is a waste of memory!
         """
         try:
-            fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
-            fig.tight_layout()
-            for tag in self.evolve_tags:
-                # ['fitness', 'parsimony', 'lentree', 'evolve_num', 'count']
-                axs[0].plot(self.monitor_evol[tag]['fitness'], label=f'{tag}')
-                axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
-                axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
-                # axs[0].set_ylim(ymin=0), axs[0].legend(loc='lower left')
-                # axs[1].set_ylim(ymin=0), axs[1].legend(loc='lower left')
-                # axs[2].set_ylim(ymin=0), axs[2].legend(loc='lower left')
+            with plt.rc_context(rc={}):  # todo use this everywhere? grid?
+                fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
+                fig.tight_layout()
+                for tag in self.evolve_tags:
+                    # ['fitness', 'parsimony', 'lentree', 'evolve_num', 'count']
+                    axs[0].plot(self.monitor_evol[tag]['fitness'], label=f'{tag}')
+                    axs[1].plot(self.monitor_evol[tag]['parsimony'], label=f'{tag}')
+                    axs[2].plot((self.monitor_evol[tag]['lentree'] / self.monitor_evol[tag]['evolve_num']), label=f'{tag}')
+                    # axs[0].set_ylim(ymin=0), axs[0].legend(loc='lower left')
+                    # axs[1].set_ylim(ymin=0), axs[1].legend(loc='lower left')
+                    # axs[2].set_ylim(ymin=0), axs[2].legend(loc='lower left')
 
-            plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-            path = self.root_dir / f'monitoring_evolutions.png'
-            fig.savefig(path, dpi=300)
-            self.printpl('f', f"monitoring_evolutions.png: {path.as_posix()}")
-            # fig.savefig(self.root_dir / f'monitoring.svg')
-            plt.close()
+                plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
+                path = self.root_dir / f'monitoring_evolutions.png'
+                fig.savefig(path, dpi=300)
+                self.printpl('f', f"monitoring_evolutions.png: {path.as_posix()}")
+                # fig.savefig(self.root_dir / f'monitoring.svg')
 
         except Exception as ex:
             print_e(f'plot_evolution_analysis failed because of: {ex}')

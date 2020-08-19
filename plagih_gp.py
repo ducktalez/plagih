@@ -116,22 +116,23 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-action_name', '-eval_action', '-action', type=str, help='If there is more than one action, choose the right one. (action name)')
     parser.add_argument('-data_csv', '-samples_csv', '-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
-    parser.add_argument('-analyse', '-analyze', '-analysis', action='store_true', default=None)
-    parser.add_argument('-less_files', action='store_true', help='Creates less files by not analysing pareto candidates at the end. -analysis trumps this! (option to save disk space)')
-    parser.add_argument('-no_files', action='store_true', help='Not used yet. Create no files. a sfeh wasd-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
     parser.add_argument('-pop_max', '-pop_size', type=int)
     parser.add_argument('-gen_max', '-gen_size', type=int)
     parser.add_argument('-gen_additionally', '-gen_add', type=int)
-    parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
-    parser.add_argument('-force_new_run', action='store_true')
     parser.add_argument('-mp_cpu_cores_max', type=int, default=4, help='Maximum amount of cores for parallelisation. Sfeh: set default to max cores? 4 is for my old ass pc. Sorry^^')
-    parser.add_argument('-print_all', '-debug', action='store_true')
     parser.add_argument('-prepared_run', '-config_lookup', '-run_prepared', '-lookup', type=str, help='Handy lookup for quick access to runs that (at least I) currently use a lot')
+    # "action='store_true'"-arguments
+    parser.add_argument('-analyse', '-analyze', '-analysis', action='store_true', default=None)
+    parser.add_argument('-less_files', action='store_true', help='Creates less files by not analysing pareto candidates at the end. -analysis trumps this! (option to save disk space)')
+    parser.add_argument('-no_files', action='store_true', help='Not used yet. Create no files. a sfeh wasd-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
+    parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs (A LOT of) tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
+    parser.add_argument('-force_new_run', action='store_true')
+    parser.add_argument('-print_all', '-debug', action='store_true')
     parser.add_argument('-pop_kill', action='store_true', help="Force 'killing' the whole population, creating a new generation from scratch, but keeping the paretofront."
                                                                                               " Like a reboot, keeps local optima.")
-
-    parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated is certain code should be executed. Now used to fix Linux/Windows paths-bug.')
+    parser.add_argument('-testrun', action='store_true', help='TODO (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
+    parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated if certain code should be executed. Now used to fix Linux/Windows paths-bug.')
 
     args = parser.parse_args()
 
@@ -198,7 +199,7 @@ def main():  # argv sys.argv[1:]
     print('Program ending')
     if prepared_run:
         if 'IB' in prepared_run and prepared_run[-2:] == '_0':
-            combined_lists(prepared_run[:-2], 35, 35, local_yamls=True, mp_cpu_cores_max=args.mp_cpu_cores_max)
+            combined_lists(prepared_run[:-2], 40, 40, local_yamls=True, mp_cpu_cores_max=args.mp_cpu_cores_max)
     sys.exit()
 
 

@@ -14,8 +14,8 @@ class Agent_nothing():
     def decide(self, state):
         self.state_history.appendleft(state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         at = np.array([0, 0, 0])
         at[0] = 0
@@ -36,8 +36,8 @@ class Agent_random():
     def decide(self, state):
         self.state_history.appendleft(state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
         at = 2 * np.random.rand(3) - 1
@@ -47,16 +47,17 @@ class Agent_random():
 class Ib_Agent:
 
     def __init__(self):
-        self.state_history = collections.deque()
+        self.state_history = collections.deque(maxlen=30)
 
     def get_h(self, name, steps):
 
         def get_max_history(index, history_list):
-            if index > len(history_list) - 1:
+            if index >= len(history_list):
                 # print('Not enough history for index {}, len list: {}'.format(index, len(history_list)))
-                return history_list[-1]
+                return history_list[-1]  # return last value
             else:
                 return history_list[index]
+
         return get_max_history(steps, self.state_history)[name]
 
 
@@ -91,8 +92,8 @@ class Agent_daniel_21(Ib_Agent):
     def decide(self, env_state):
         self.state_history.appendleft(env_state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+        # if len(self.state_history) > 10:
+        #     self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = - self.get_h('v', 5) - 0.91
@@ -110,8 +111,8 @@ class Agent_daniel_27(Ib_Agent):
     def decide(self, state):
 
         self.state_history.appendleft(state)
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         # # idk why, but these are the best??
@@ -133,8 +134,8 @@ class Agent_Daniel_29_Best(Ib_Agent):
     def decide(self, state):
 
         self.state_history.appendleft(state)
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = -self.get_h('v', 4) - 0.96  # 27
@@ -156,8 +157,8 @@ class Agent_Test(Ib_Agent):
     def decide(self, state):
         self.state_history.appendleft(state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = -self.get_h('g', 5) - 1.8  # 27
@@ -178,8 +179,8 @@ class Agent_Udluft(Ib_Agent):
     def decide(self, state):
         self.state_history.appendleft(state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         at[0] = -self.get_h('f', 0) - self.get_h('v', 3)  # 27
@@ -202,8 +203,8 @@ class Agent_sim1(Ib_Agent):
     def decide(self, state):
         self.state_history.appendleft(state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         SetPoint = self.get_h('p', 0)
 
@@ -227,8 +228,8 @@ class Agent_Test(Ib_Agent):
     def decide(self, state):
         self.state_history.appendleft(state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         SetPoint = self.get_h('p', 0)
 

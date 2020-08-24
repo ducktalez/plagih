@@ -98,8 +98,8 @@ class AgentMerger(Ib_Agent):
     def decide(self, env_state):
         self.state_history.appendleft(env_state)
 
-        if len(self.state_history) > 10:
-            self.state_history.pop()
+#        if len(self.state_history) > 10:
+#            self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
         SetPoint = self.get_h('p', 0)
@@ -121,16 +121,20 @@ def eval_combined_agents(codes, complete=True):
 
     dummy_agent = AgentMerger('Herbert', a0, a1, a2)
 
-    return eval_agent(dummy_agent, complete=complete)
+    return eval_agent(dummy_agent)
 
 
-def eval_agent(agent, complete=True):
+def eval_agent(agent):
     discount_factor = 0.97
-    T = 100  # time_horizon
+    T = 1000  # time_horizon
     discount_len = -100
     sum_discounted_p = []
     # setpoint_range = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    conuts_dict_copypaste = {10: 11, 20: 7, 30: 16, 40: 10, 50: 11, 60: 10, 70: 12, 80: 7, 90: 6, 100: 10}
+
     for p in range(10, 101, 10):
+    # for p in [30, 60, 10, 30, 70, 90, 30, 50, 20, 60]:
+    # for p in [30, 60, 10, 30, 70, 90, 30, 50, 20, 60, 10, 50, 100, 90, 50, 20, 90, 50, 30, 50, 40, 100, 30, 30, 80, 80, 20, 70, 10, 70, 40, 10, 70, 60, 70, 40, 100, 30, 40, 50, 10, 40, 20, 30, 20, 80, 20, 70, 10, 30, 80, 10, 30, 30, 70, 40, 40, 30, 10, 40, 80, 100, 70, 60, 50, 10, 30, 40, 100, 90, 60, 60, 60, 30, 70, 30, 70, 30, 10, 60, 80, 20, 50, 100, 90, 80, 50, 70, 40, 90, 100, 50, 10, 100, 50, 60, 100, 70, 60, 100]:
 
         env = IDS(p=p)
 

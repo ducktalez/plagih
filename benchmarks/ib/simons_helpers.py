@@ -2,9 +2,10 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import matplotlib.pyplot  as plt
 
-samples_all = Path('../run_sources/IB/samples.csv')
-samples_prepared = Path('../run_sources/IB/samples_prepared.csv')
+samples_all = Path('gp_files/samples_raw.csv')
+samples_prepared = Path('gp_files/samples_prepared.csv')
 
 
 def make_labellist_tree_files():
@@ -40,8 +41,9 @@ def back_this_thing_up():
     ppp = [int(round(toreal(p))) for p in ppp]
     unique, counts = np.unique(ppp, return_counts=True)
     counts = dict(zip(unique, counts))
-    import matplotlib.pyplot as plt
-    plt.plot(counts.items())
+    print(counts)
+    conuts_dict_copypaste = {10: 11, 20: 7, 30: 16, 40: 10, 50: 11, 60: 10, 70: 12, 80: 7, 90: 6, 100: 10}
 
 
-samples_preprocessing_csv()
+back_this_thing_up()
+# samples_preprocessing_csv()

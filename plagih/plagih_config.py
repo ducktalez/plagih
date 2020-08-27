@@ -35,7 +35,7 @@ class GpConfig:
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_max = conf.get('parsimony_max', 35)
-        self.period = conf.get('period', {'gen_plots': 5, 'gen_save': 5})  # todo
+        self.period = conf.get('period', {'gen_plots': 10, 'gen_save': 10})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
         self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 
@@ -51,12 +51,12 @@ class GpConfig:
                                                                       'observed_floats': 100})
 
         """
-        Not used?
+        Not used
         """
         # self.restart_count
         # self.fitness_decimals = int(conf.get('fitness_decimals', 6))  # rounding the fitness
         # self.float_decimals = int(conf.get('float_decimals', 6))  # None or 1-30 decimals
         # self.parsimony_mean = conf.get('parsimony_mean', 15)  #: 20,  # If you wnt your population to be a certain size
         # self.tree_depth_min = conf.get('tree_depth_min', 1)  #: 2,
-        # self.swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool # todo
+        # self.swim = 'p'  # require (p)artial or (f)ull set of features (operators) for each Tree entering the gene_pool
         # self.gen_num_parsim_maxony = conf.get('gen_num_parsim_maxony', 50)  #: 50,  # Increase tmp_parsim to this generation

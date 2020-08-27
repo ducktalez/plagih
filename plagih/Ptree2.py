@@ -150,8 +150,7 @@ class CoolCore:
         # """
         # reduces the depth of a Tree to depth (in case it is too deep).
         # # sfeh prune node_count?
-        # # todo only relevant when blind crossover
-        # # todo check during build process?
+        #
         # """
         #
         # nodes = []
@@ -174,8 +173,7 @@ class CoolCore:
         # tree = evolve_node_arity_fix(tree)  # fix all node arities
         #
         # return tree
-        raise Exception('TODO')
-        pass
+        raise Exception('Sfeh needs to do this')  # todo only relevant when blind crossover? check during build process?
 
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
@@ -217,7 +215,7 @@ class CoolCore:
 
     def get_mutatable_nodes(self):
         """
-
+        was tree_get_mutatable_nodes(tree) in oldtree
         """
         add_me = [] if self.is_fix else [self]
         return add_me + sum([cc.get_mutatable_nodes() for cc in self.childs], [])
@@ -403,7 +401,6 @@ class CoolCore:
             for ii, cc in enumerate(self.childs):
                 cc.set_fix_nodes(origin_coolcore.childs[ii])
 
-# todo add complexity to tree?
 
 class CoolTree:
     """
@@ -500,10 +497,11 @@ class CoolTree:
 
     def finalize_completely(self):
         self.finalize_structure()
+        # self.finalize_meta()
         self.complete = True
 
     def finalize_meta(self):
-        # todo set_meta
+        # sfeh asd does this work?
         self.meta.expr_raw = self.get_expr_raw()
         self.meta.expr_sym = self.get_expr_sym()
         self.meta.parsimony = None  # save origin apted in root?
@@ -613,11 +611,69 @@ class CoolTree:
         # self.meta.clear()
         self.finalize_structure()
 
+    # def evolve_mutate_filter(self, call_params):
+    #     """
+    #     sfeh wasd
+    #     Mutates a number of float terminal of a tree
+    #     """
+    #     pass
+    #     mode = call_params['mode']  # point/branch/all
+    #     yes_observations = call_params.get('yes_observations')  # point/branch/all
+    #     mutate_filter = 'gaussian_filter'  # sfeh change?
+    #
+    #     node_ids = self.core.get_mutatable_nodes()
+    #     if mode == 'branch':
+    #         node_id = random.choice(node_ids)  # sfeh should this be completely random?
+    #         node_ids = tree_node_get_branch(tree, node_id)  # select the whole branch
+    #
+    #     float_nodes = []
+    #     obs_nodes = []
+    #     for node_id in node_ids:
+    #         if tree_node_get_xtype(tree, node_id) == '2f':
+    #             try:
+    #                 _ = float(tree_node_get_label(tree, node_id))
+    #                 float_nodes.append(node_id)
+    #             except ValueError:
+    #                 obs_nodes.append(node_id)
+    #
+    #     if mode == 'point':  # if pointmutation, return one nodeid as list
+    #         if yes_observations:
+    #             filter_id = [random.choice(float_nodes + obs_nodes)]
+    #             if filter_id in float_nodes:
+    #                 float_nodes = filter_id
+    #             else:
+    #                 obs_nodes = filter_id
+    #         else:
+    #             float_nodes = [random.choice(float_nodes)]
+    #
+    #     if float_nodes:
+    #         for node_id in float_nodes:
+    #             val = float(tree_node_get_label(tree, node_id))
+    #             val = label_constant_mutate(val, term_type=float, float_decimals=float_decimals, filter_type=mutate_filter)
+    #             tree = tree_node_set_label(tree, node_id, val)
+    #
+    #     if obs_nodes and yes_observations:  # 'filtering' variables when they are from different times
+    #         for nid in obs_nodes:
+    #             obs_label = tree_node_get_label(tree, nid)
+    #
+    #             is_negative = obs_label[0] == '-'  # workaround for negative labels
+    #             if is_negative:
+    #                 obs_label = obs_label[1:]
+    #
+    #             hello_node = env_vars.obs_infos[obs_label]
+    #             hello_node.filter_new_index()
+    #             obs_label = hello_node.name
+    #
+    #             new_obs = '-' + obs_label if is_negative else obs_label
+    #             tree = tree_node_set_label(tree, nid, new_obs)
+
     def evolve_mutate_branch(self, call_params):
-        pass
-        # todo
+        pass  # sfeh
 
     def prune_depth(self, max_depth):
+        """
+        sfeh not used (not required!?)
+        """
         self.core.prune_depth(max_depth)
 
     def eval_parsimony(self, parsimony_distance, origin_cooltree=None, weights=None):

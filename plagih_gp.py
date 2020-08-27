@@ -131,7 +131,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-print_all', '-debug', action='store_true')
     parser.add_argument('-pop_kill', action='store_true', help="Force 'killing' the whole population, creating a new generation from scratch, but keeping the paretofront."
                                                                                               " Like a reboot, keeps local optima.")
-    parser.add_argument('-testrun', action='store_true', help='TODO (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
+    parser.add_argument('-testrun', action='store_true', help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
     parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated if certain code should be executed. Now used to fix Linux/Windows paths-bug.')
 
     args = parser.parse_args()

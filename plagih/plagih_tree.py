@@ -564,7 +564,7 @@ def tree_try_get_swapids(a_tree, b_tree, version='default'):
     if version == 'default':
         # choose a node from parent a
         a_ids = tree_get_mutatable_nodes(a_tree, no_root=True)
-        # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # todo
+        # a_ids = tree_get_mutatable_layer_lv0(a_tree)  # sfeh wasd
         a_id = random.choice(a_ids)
         a_label, _, a_xtype = tree_node_get_lax_v3(a_tree, a_id)
 
@@ -1260,27 +1260,6 @@ def evolve_node_arity_fix(tree):
     return tree
 
 
-def tree_init_first_column():
-    tree = np.array(
-        [['tree_id'],
-         ['tree_type'],
-         ['tree_depth_base'],
-         ['node_id'],
-         ['node_depth'],
-         ['node_type'],
-         ['node_label'],
-         ['node_parent'],
-         ['node_arity'],
-         ['node_c1'],
-         ['node_c2'],
-         ['node_c3'],
-         ['fitness'],
-         ['node_modify'],
-         ['parsimony']])
-
-    return tree
-
-
 def tree_core_init_depth(tree, parent_list=None):
     """
     Automatically filly node depth
@@ -1345,30 +1324,6 @@ def tree_core_build_childs(tree, parent_list=None):
     return tree
 
 
-def tree_core_childs(tree, parent_list=None):
-    """
-    automaticalls fills c1, c2, c3 for each node
-    Needed: node_parent
-    """
-    if not parent_list:
-        parent_list = tree_row_int(tree, N_parent)
-
-    c_iter = 0
-    last_parent = -1
-
-    # parent_list [-1, 0, 0, 0, 1, 1]
-    for i, parent_id in enumerate(parent_list):
-        if parent_id >= 0:
-
-            if parent_id == last_parent:
-                c_iter += 1
-            else:
-                last_parent = parent_id
-                c_iter = 0
-            tree[N_c1 + c_iter][parent_id] = i
-    return tree
-
-
 def tree_row_int(tree, row_id):
     row = []
     for x in tree[row_id]:
@@ -1410,32 +1365,6 @@ def core_from_expr(expr, obs_krazy):
     xtype_list = xtypes_from_labels(label_list, obs_krazy)
     core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
     return core
-
-
-def evolve_c_buffer_karoo(tree, node):
-    """
-    Generates the c_buffer for a node of a ptree
-
-    """
-
-    parent_arity_sum = 0
-    prior_sibling_arity = 0
-    prior_siblings = 0
-
-    for n in range(1, len(tree[3])):  # increment through all nodes (exclude 0) in array 'tree'
-
-        if int(tree[N_depth][n]) == int(tree[N_depth][node]) - 1:  # find parent nodes at the prior depth
-            if tree[N_arity][n] != '':
-                parent_arity_sum = parent_arity_sum + int(tree[N_arity][n])  # sum arities of parents at  prior depth
-
-        if int(tree[N_depth][n]) == int(tree[N_depth][node]) and int(tree[3][n]) < int(tree[3][node]):  # find prior siblings at the current depth
-            if tree[N_arity][n] != '':
-                prior_sibling_arity = prior_sibling_arity + int(tree[N_arity][n])  # sum prior sibling arity
-            prior_siblings = prior_siblings + 1  # sum quantity of prior siblings
-
-    c_buffer = node + (parent_arity_sum + prior_sibling_arity - prior_siblings)  # One algo to rule the world!
-
-    return c_buffer
 
 
 def evolve_c_buffer(ztree, node_id, karoo=False):
@@ -1497,7 +1426,23 @@ def tree_convert_pcore_to_karoo(plagih_tree):
     tests has a first row with nonsense and nodes start with 1
     plagih has no first row and nodes start with 0
     """
-    first_col = tree_init_first_column()
+    first_col = np.array(
+        [['tree_id'],
+         ['tree_type'],
+         ['tree_depth_base'],
+         ['node_id'],
+         ['node_depth'],
+         ['node_type'],
+         ['node_label'],
+         ['node_parent'],
+         ['node_arity'],
+         ['node_c1'],
+         ['node_c2'],
+         ['node_c3'],
+         ['fitness'],
+         ['node_modify'],
+         ['parsimony']])
+
     tree_withfirst = np.concatenate((first_col, plagih_tree), axis=1)
     tree_karoo = tree_convert_plusnode(tree_withfirst, add_or_sub=1, firstrow=1)
     tree_karoo[N_parent][1] = ''
@@ -1609,7 +1554,6 @@ def evolve_node_renum(tree):
 
     This is required after a new generation is evolved as the node_id numbers are carried forward from the previous
     generation but are no longer in order.
-
     """
 
     for n in range(0, len(tree[N_id])):
@@ -1627,11 +1571,11 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
     expr_sym = expr_sympify(expr_raw)
     core = core_from_expr(expr_sym, env_vars)
     tree_sym = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
-    tree_sym_tildefree = tree_remove_tilde(tree_sym)
-    if tree_sym_tildefree != tree_sym:
-        print_e(f'sfeh FAIL \n{tree_sym_tildefree}\n{tree_sym}')  # sfeh wasd
+    # tree_sym_tildefree = tree_remove_tilde(tree_sym)    # sfeh still needed?
+    # if tree_sym_tildefree != tree_sym:
+    #     print_e(f'sfeh FAIL \n{tree_sym_tildefree}\n{tree_sym}')  # sfeh wasd
 
-    return tree_sym_tildefree
+    return tree_sym
 
 
 # def tree_evolve_mutate_point(tree, choose_oparray2, random_obs, choose_distributions):
@@ -1659,24 +1603,26 @@ def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
 def tree_remove_tilde(tree):
     """
     ~- workaround
-    todo still needed?
     """
-    while True:
-        for node_id in tree_iterate_range(tree, karoo=True):
-            if tree_node_get_label(tree, node_id) == '~':
-                try:
-                    c_id = tree_node_get_child(tree, node_id, 0)
-                except IndexError:
-                    return tree
-                clabel, carity, cxtype = tree_node_get_lax_v3(tree, c_id)
-                if carity == 0:
-                    tree = tree_node_set_label(tree, c_id, f'-{clabel}')
-                    tree = tree_remove_node_with_child0(tree, node_id)
-                    break
-            else:
-                pass
-        else:
-            break
+    pass
+    # while True:
+    #     for node_id in tree_iterate_range(tree, karoo=True):
+    #         if tree_node_get_label(tree, node_id) == '~':
+    #             print('this is apparently still needed')
+    #             raise Exception('this is apparently still needed')
+    #             try:
+    #                 c_id = tree_node_get_child(tree, node_id, 0)
+    #             except IndexError:
+    #                 return tree
+    #             clabel, carity, cxtype = tree_node_get_lax_v3(tree, c_id)
+    #             if carity == 0:
+    #                 tree = tree_node_set_label(tree, c_id, f'-{clabel}')
+    #                 tree = tree_remove_node_with_child0(tree, node_id)
+    #                 break
+    #         else:
+    #             pass
+    #     else:
+    #         break
     return tree
 
 
@@ -1915,7 +1861,7 @@ def tree_prune_depth(tree, max_depth, obs_krazy, choose_obs, choose_distribution
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
     # sfeh prune node_count?
-    # todo only relevant when blind crossover
+    # sfeh wasd only relevant when blind crossover
     """
 
     nodes = []

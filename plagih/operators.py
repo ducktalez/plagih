@@ -246,7 +246,7 @@ def make_classes():
         classname = v['fun_class']
         if classname == 'SKIP':
             continue
-        # todo sym special case
+        # todo (irrelevant todo, but must not be forgotten) sym special case
         print(f"class {classname}(Plabel):\n")
 
         print(f"    fun_label = '{v['fun_label']}'")

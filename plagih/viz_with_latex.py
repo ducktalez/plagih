@@ -15,9 +15,7 @@ def latex_treeviz_full(tikz_forest_list):
     sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
-    # TODO color used variables (allow colormap?)
-
-    forest_trees = ' '.join(tikz_forest_list)  # sfeh todo there was a \n does this work now?
+    forest_trees = ' '.join(tikz_forest_list)  # sfeh todo there was a \n does this work now? color used variables (allow colormap?)
 
     latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{standalone}' \
                        '\n\\usepackage{forest}' \

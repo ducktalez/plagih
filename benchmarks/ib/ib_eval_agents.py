@@ -79,7 +79,7 @@ def eval_agents():
 
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        sum = eval_agent(agent)
+        sum = eval_agent(agent, randomize=50)
         print(f'Results: {agent.name} {sum}')
 
 
@@ -111,7 +111,7 @@ class AgentMerger(Ib_Agent):
         return at
 
 
-def eval_combined_agents(codes, complete=True):
+def eval_combined_agents(codes, complete=True, randomize=0):
 
     if complete:
         a0, a1, a2 = codes
@@ -121,16 +121,16 @@ def eval_combined_agents(codes, complete=True):
 
     dummy_agent = AgentMerger('Herbert', a0, a1, a2)
 
-    return eval_agent(dummy_agent)
+    return eval_agent(dummy_agent, randomize=randomize)
 
 
-def eval_agent(agent):
+def eval_agent(agent, randomize=0):
     discount_factor = 0.97
-    T = 10000  # time_horizon
+    T = 100  # time_horizon
     discount_len = -100
     sum_discounted_p = []
     # setpoint_range = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    conuts_dict_copypaste = {10: 11, 20: 7, 30: 16, 40: 10, 50: 11, 60: 10, 70: 12, 80: 7, 90: 6, 100: 10}
+    # conuts_dict_copypaste = {10: 11, 20: 7, 30: 16, 40: 10, 50: 11, 60: 10, 70: 12, 80: 7, 90: 6, 100: 10}
 
     # for p in [30, 60, 10, 30, 70, 90, 30, 50, 20, 60]:
     # for p in [30, 60, 10, 30, 70, 90, 30, 50, 20, 60, 10, 50, 100, 90, 50, 20, 90, 50, 30, 50, 40, 100, 30, 30, 80, 80, 20, 70, 10, 70, 40, 10, 70, 60, 70, 40, 100, 30, 40, 50, 10, 40, 20, 30, 20, 80, 20, 70, 10, 30, 80, 10, 30, 30, 70, 40, 40, 30, 10, 40, 80, 100, 70, 60, 50, 10, 30, 40, 100, 90, 60, 60, 60, 30, 70, 30, 70, 30, 10, 60, 80, 20, 50, 100, 90, 80, 50, 70, 40, 90, 100, 50, 10, 100, 50, 60, 100, 70, 60, 100]:
@@ -138,6 +138,9 @@ def eval_agent(agent):
     for p in range(10, 101, 10):
 
         env = IDS(p=p)
+        for num in range(randomize):  # get a more bad state
+            at = 2 * np.random.rand(3) - 1  # "random"-function from og ib
+            env.step(at)  # also returns markovStates, if needed
 
         sums_p = []
         for t in range(T):

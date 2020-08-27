@@ -51,7 +51,7 @@ class ExplainableGP(object):
     def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
-        self.mp_cpu_cores_max = mp_cpu_cores_max  # todo
+        self.mp_cpu_cores_max = mp_cpu_cores_max  # sfeh
         self.developer_fix = developer_fix  # sfeh
 
         print(f'\n'
@@ -388,16 +388,17 @@ class ExplainableGP(object):
                 # sfeh: In python 3.8, this might be availably: multiprocessing.shared_memory https://docs.python.org/3/library/multiprocessing.shared_memory.html
                 # sfeh: check memory usage! should not scale with the number of processes, only one pop_base is required, it does not change.
 
-                self.mp_cpu_cores_max = 1  # todo
+                self.mp_cpu_cores_max = 1  # sfeh wasd
                 if self.mp_cpu_cores_max >= 2:
-                    mp.Process()  # sfeh maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
-
-                    print(f'Trying to make parallel new population: {mp.cpu_count()}')
-                    with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
-
-                        evolve_list = [[tag, evolve_specs] for tag, evolve_specs in self.evolve_loop.items()]
-                        results = p.map(self.gen_next_population_mp_parallel_ugly_name_lol, evolve_list)
-                    time_evolve = time.perf_counter()
+                    pass
+                    # mp.Process()  # sfeh maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
+                    #
+                    # print(f'Trying to make parallel new population: {mp.cpu_count()}')
+                    # with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
+                    #
+                    #     evolve_list = [[tag, evolve_specs] for tag, evolve_specs in self.evolve_loop.items()]
+                    #     results = p.map(self.gen_next_population_mp_parallel_ugly_name_lol, evolve_list)
+                    # time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
                     pass
@@ -798,7 +799,7 @@ class ExplainableGP(object):
             used_observations = cooltree.get_observation_list()
             pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
-            with plt.rc_context(rc={}):  # todo use this everywhere? grid?
+            with plt.rc_context(rc={}):
                 fig, ax = plt.subplots()
                 ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
                 ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
@@ -1000,9 +1001,6 @@ class ExplainableGP(object):
                 new_obs = '-' + obs_label if is_negative else obs_label
                 tree = tree_node_set_label(tree, nid, new_obs)
 
-        # print_warning('www', 'Tree does not seem to have any nodes for filtering.', print_type=self.print_type)  # usually happens with point-filtering
-        # pass
-
         return tree
 
     def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow):
@@ -1116,7 +1114,6 @@ class ExplainableGP(object):
         """
 
         # 1. two parents
-
         # 2. search nodes for left and right that can be exchanged. convert_needed
         left_id, right_id, success = tree_try_get_swapids(left_tree, right_tree)
         if not success:
@@ -1390,7 +1387,7 @@ class ExplainableGP(object):
         All monitoring infos
         sfeh den shit in Funktionen aufteilen
         """
-        with plt.rc_context(rc={'axes.grid': True}):  # todo use this everywhere? grid?
+        with plt.rc_context(rc={'axes.grid': True}):
             fig, axs = plt.subplots(nrows=4, ncols=1, figsize=(16, 9), gridspec_kw={'height_ratios': [5, 3, 2, 1]}, sharex='all')  # , figsize=(9, 9)
             plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
             xx = list(self.monitor_df.index)
@@ -1465,7 +1462,7 @@ class ExplainableGP(object):
             return
 
         run_name = self.conf.name
-        with plt.rc_context(rc={}):  # todo use this everywhere? grid?
+        with plt.rc_context(rc={}):
             fig, ax = plt.subplots()
             right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
             ax.set_xlim(min(min(xx), 0), right)
@@ -1504,7 +1501,7 @@ class ExplainableGP(object):
         sfeh: this should be saved within the trees. Everything else is a waste of memory!
         """
         try:
-            with plt.rc_context(rc={}):  # todo use this everywhere? grid?
+            with plt.rc_context(rc={}):
                 fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
                 fig.tight_layout()
                 for tag in self.evolve_tags:
@@ -1532,7 +1529,7 @@ class ExplainableGP(object):
 
         self.plot_gen_performance()  # largest plot analysing the
         self.plot_paretofront()
-        # self.plot_evolve_performance()  # todo
+        # self.plot_evolve_performance()  # sfeh
         return
 
     def pop_analyse(self):

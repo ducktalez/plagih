@@ -42,7 +42,7 @@ def mp_evall(arow):
         return None  # [lut_hash, None, None]
 
 
-def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max, eval_all=False):
+def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max):
     """
     Evaluating with real IB
     """
@@ -334,7 +334,7 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
-    (I now found a much better way by loading from the backup file, but sfeh is lazy x~~~D)
+    (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
     """
     root_dir_eval = dir_slurm / f'{run_name}'
     if not Path.is_dir(root_dir_eval):

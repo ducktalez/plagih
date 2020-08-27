@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -31,6 +31,11 @@
 \global\fach{Computer Science}
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -51,8 +56,6 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -63,16 +66,16 @@ theorems-ams-bytype
 \use_hyperref false
 \papersize a4paper
 \use_geometry false
-\use_package amsmath 0
-\use_package amssymb 0
-\use_package cancel 0
-\use_package esint 0
-\use_package mathdots 0
-\use_package mathtools 0
-\use_package mhchem 0
-\use_package stackrel 0
-\use_package stmaryrd 0
-\use_package undertilde 0
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
 \cite_engine basic
 \cite_engine_type default
 \biblio_style plain
@@ -82,7 +85,6 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -91,10 +93,7 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -355,7 +354,6 @@ Despite this danger, ML solutions are already being used in many areas,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hawking_AI_warning"
-literal "true"
 
 \end_inset
 
@@ -379,7 +377,6 @@ s made fatal mistakes.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -622,7 +619,6 @@ status open
 LatexCommand href
 name "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
-literal "false"
 
 \end_inset
 
@@ -630,7 +626,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -680,7 +675,6 @@ reference "TODO"
 \begin_inset CommandInset href
 LatexCommand href
 target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
-literal "false"
 
 \end_inset
 
@@ -688,7 +682,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -856,7 +849,6 @@ There is one thing that is decisive for the explainability: no matter at
 \begin_inset CommandInset href
 LatexCommand href
 target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c"
-literal "false"
 
 \end_inset
 
@@ -890,7 +882,6 @@ oll ich ein paar erwähnen?]
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -1245,8 +1236,11 @@ status open
 \end_layout
 
 \begin_layout Itemize
-functions / Operators: The set of mathematical operators that make up the
- program.
+functions / Operators: 
+\begin_inset Newline newline
+\end_inset
+
+The set of mathematical operators that make up the program.
  Possible operators are 
 \begin_inset Note Note
 status open
@@ -1273,7 +1267,7 @@ status open
 \end_layout
 
 \begin_layout Itemize
-Terminals: Input values: The amount of possible observations in a problem.
+Terminals: The amount of possible observations in a problem.
  Variables (optional): Randomly chosen constant values.
  Beside simple values like 
 \begin_inset listings
@@ -1357,7 +1351,6 @@ se in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -2228,7 +2221,6 @@ The human brain is very good at recognizing patterns.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "humanPatternRecognition"
-literal "true"
 
 \end_inset
 
@@ -2570,7 +2562,6 @@ T'
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -2597,7 +2588,6 @@ reference "fig:TED_explain_operators"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3734,7 +3724,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Metric_(mathematics)"
-literal "false"
 
 \end_inset
 
@@ -3827,7 +3816,6 @@ The most complex part of the improvement process is to compute the fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -3945,7 +3933,6 @@ As Daniel Hein has found out in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -5235,37 +5222,8 @@ Komplett möglicher Datenraum normalverteilt? Ist irrelevant, da viele Zustände
  Anpassungen müssen oft filigran an bestimmten Bereichen ansetzen.
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Neustart von Läufen, geht von einer anderen Origin aus? hört sich interessant
- an...
- jedes mal werden punkte gewählt und zu denen muss eine verbesserung gefunden
- werden.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsubsection
 Outlier problems
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo should they be handeled?]
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -5377,30 +5335,18 @@ Benchmarks
 \begin_layout Standard
 This chapter presents the benchmarks against which the approach has been
  tested.
- This includes Mountain car (MC) and Cartpole (CP), as well as the Industrial
- Benchmark (IB).
- The first benchmarks are widely used, simple toy benchmarks, where the
- concept can be tested well.
+ This includes Mountain car (MC) as well as the Industrial Benchmark (IB).
+ MC is a widely used, simple toy benchmark, where the concept can be tested
+ well.
  The IB is, in contrast, a stochastically independent, high-dimensional
  testbed, which was especially designed by scientists at Siemens for the
  simulation of very complex processes in industry for reinforcement learning.
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-% todo regression aswell? no cartpole?
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="4">
+<lyxtabular version="3" rows="7" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -5419,15 +5365,6 @@ status open
 
 \begin_layout Plain Layout
 MC
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-CP
 \end_layout
 
 \end_inset
@@ -5465,15 +5402,6 @@ Observation dimensionality
 \begin_inset Text
 
 \begin_layout Plain Layout
-4
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 6
 \end_layout
 
@@ -5486,15 +5414,6 @@ Observation dimensionality
 
 \begin_layout Plain Layout
 Action dimensionality
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1
 \end_layout
 
 \end_inset
@@ -5541,15 +5460,6 @@ discrete
 \begin_inset Text
 
 \begin_layout Plain Layout
-discrete
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 continuous
 \end_layout
 
@@ -5570,16 +5480,7 @@ Episode end
 \begin_inset Text
 
 \begin_layout Plain Layout
-at target
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-after fail
+at target / 200
 \end_layout
 
 \end_inset
@@ -5617,15 +5518,6 @@ none
 \begin_inset Text
 
 \begin_layout Plain Layout
-none
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 state-dependent
 \end_layout
 
@@ -5638,15 +5530,6 @@ state-dependent
 
 \begin_layout Plain Layout
 Markov state observability
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fully
 \end_layout
 
 \end_inset
@@ -5700,7 +5583,6 @@ The problem was first introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -5789,23 +5671,12 @@ In the discrete version of MC there are three possible actions
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
-Tables should be in float figures (?)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Tabular
 <lyxtabular version="3" rows="4" columns="2">
 <features tabularvalignment="middle">
@@ -5892,6 +5763,27 @@ push right
 </cell>
 </row>
 </lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \end_inset
 
@@ -6325,7 +6217,6 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -6340,7 +6231,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -7119,27 +7009,6 @@ Simple, two actions,
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Als ersten Agenten testen wir den 
-\begin_inset Quotes eld
-\end_inset
-
-einfachsten
-\begin_inset Quotes erd
-\end_inset
-
- Ansatz, der immer in die Richtung beschleunigt, in die er sich gerade bewegt.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 As the first agent, we test the 
 \begin_inset Quotes eld
 \end_inset
@@ -7175,53 +7044,6 @@ else:
 \begin_layout Plain Layout
 
   push right
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Kleiner-gleich als Bedingung zu nehmen war allerdings bereits ein Fehler.
-\end_layout
-
-\begin_layout Plain Layout
-Unter Bedingung 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Formula $\leq$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
- wird, da die Startgeschwindigkeit 
-\begin_inset Formula $v_{start}=0$
-\end_inset
-
- ist, immer nach links losgefahren.
- Das ist weitaus langsamer als Bedingung 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Formula $<$
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
-, weshalb das Expertenprogramm an dieser Stelle bereits abgeändert wurde.
- 
 \end_layout
 
 \end_inset
@@ -7286,20 +7108,6 @@ The best version of the simplest agent is used as the starting program.
 \begin_layout Standard
 The computational tree consists of 6 nodes, all of which can be modified.
  
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Die beste Version des einfachsten Agenten wird als Startprogramm verwendet.
-\end_layout
-
-\begin_layout Plain Layout
-Der Computational tree besteht aus 6 Knoten, die alle verändert werden können.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -7481,7 +7289,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -8027,7 +7834,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -9109,7 +8915,6 @@ modifiable nodes erweitern.
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Genetic_improvement_(computer_science)"
-literal "false"
 
 \end_inset
 

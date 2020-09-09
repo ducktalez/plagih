@@ -218,10 +218,265 @@ Intro
 \end_layout
 
 \begin_layout Standard
-Erklärbarkeit ist ein schwer zu erreichendes Gut im Bereich Reinforcement
- Learning (RL).
- Als Teilgebiet des Machine Learning (ML) werden dafür meist sehr komplexe
- Datenstrukturen verwendet, 
+Fakt ist: Erklärbarkeit ist ein wesentlicher Bestandteil jeder intelligenten
+ Entscheidung.
+ So kann der Mensch für jede bewusst getroffene Entscheidung Rechenschaft
+ ablegen und sie begründen.
+ Im Bereich der künstlichen Intelligenz wurde dieser Aspekt bisher großräumig
+ ausgeklammert.
+ 
+\end_layout
+
+\begin_layout Standard
+Bisher galt das Hauptziel hier auch vorrangig, überhaupt einer Maschine
+ die Werkzeuge zu geben, sich etwas selbst beizubringen.
+ Im Reinforcement learning wurde hier in den letzten Jahren, vor allem unter
+ Verwendung neuronaler Netze, ein unglaublicher Fortschritt erzielt.
+ 
+\end_layout
+
+\begin_layout Standard
+Deep Mind gab mit 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[TODO]
+\end_layout
+
+\end_inset
+
+ den Startschuss eines neuen Booms indem sie zeigten, wie sich eine Maschine
+ mithilfe von einem externen Reward (Reinforcement Learning, RL) und sonst
+ nur auf Basis von Bilddaten beibringen konnte, ATARI zu spielen.
+ Die Probleme waren allerdings ansich nur von niederer Komplexität und komplexe,
+ lang zu planende Strategien galten als dem Menschen vorbehalten.
+ Nach kurzer Zeit konnten aber auch Probleme dieser Dimension gelöst werden,
+ große Bekanntheit erreichte hier beispielsweise AlphaGo (Go) oder AlphaZero
+ (Schach), die sogar alle menschlichen Lösungen übertreffen konnten.
+ 
+\end_layout
+
+\begin_layout Standard
+Heutzutage gelten nur noch wenige Probleme als unantastbar.
+\end_layout
+
+\begin_layout Standard
+Nachdem dieser Meilenstein überwunden wurde, stellt sich nun viel mehr die
+ Frage nach der Erklärbarkeit von Entscheidungen.
+ Erklärbarkeit umfasst in der künstlichen Intelligenz das Problem, Entscheidunge
+n neuronaler Netze erklären können zu wollen.
+ Neuronale Netze werden immernoch blackbox betrachtet, wodurch die Frage
+ aufkommt, inwieweit man ihnen vertrauen kann.
+ Künstliche Intelligenz kann auch als Automatisierung statistischer Verfahren
+ beschrieben werden, die mit einem Explorationsparameter epsilon trainiert
+ werden.
+ Neuronale Netze unterliegen deshalb sowohl einem over-als auch underfitting
+ problem über die sich die KI nicht bewusst ist.
+ Da sie auch nicht erklären können, wie Entscheidungen getroffen werden,
+ beschränkt sich das Vertrauen auf statistischer Ebene durch Tests.
+ 
+\end_layout
+
+\begin_layout Standard
+Diese Testverfahren sind insbesondere von großer Relevanz, da aktuelle Verfahren
+ keine allgemeine Intelligenz besitzen, die sie davor bewahren würde, einige
+ (für den Menschen offensichtlichen) Fehler zu machen.
+ Obwohl allgemeine Intelligenz vielleicht gar nicht in so weiter Ferne liegt,
+ gibt es durchaus praktische Gründe, weiterhin Fachidioten statt Universalkönner
+ zu trainieren: Kosten.
+\end_layout
+
+\begin_layout Standard
+Die Modelle, die zur Lösung von Problemen von einem Entwickler implementiert
+ werden, werden meistens so konzipiert, dass sie für kaum ein anderes Problem
+ nutzbar sind.
+ Für Bilderkennung werden meist eine Vielzahl an Filtern verwendet, die
+ vom Menschen vorgegeben werden.
+ Das ist allerdings keine Voraussetzung.
+ In 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+YOUTUBE ERKENNEN
+\end_layout
+
+\end_inset
+
+ wurde gezeigt, dass mit ausreichend Neuronen und genügend Rechenpower auch
+ ohne Vorgabe durch den Menschen Bildverarbeitung erlernt werden konnte.
+ Diese war zu dem Zeitpunkt der Veröffentlichung sogar erfolgreicher als
+ alle anderen bekannten Ansätze.
+ Dieses Experiment benötigte aber 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+viele nodes und kostete 4m $
+\end_layout
+
+\end_inset
+
+, weshalb es keine option für normale Probleme darstellt.
+\end_layout
+
+\begin_layout Standard
+Auch die erfolgreichen Beispiele der künstlichen Intelligenz unterliegen
+ oft diesem Problem.
+ In der Doku zu AlphaGO wurde beispielsweise erwähnt, dass AlphaGO oft zwischen
+ der Genialität in der Trainingsphase auch oft groben Denkfehlern unterlag.
+ Ein menschlicher GO Profi überwachte deshalb den Lernprozess und half an
+ einigen Stellen, diese zu verbessern.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+GO Doku
+\end_layout
+
+\end_inset
+
+ Ein ähnlicher Ansatz wurde auch bei AlphaZero gewählt um echtes Wissen
+ aus dem komplexen Agenten zu extrahieren: Ergebnisanalysen.
+ AlphaZero spielte recht aggressiv, was die state-of-the-art spielweise
+ nachhaltig verändern sollte.
+ Der Prozess der Extraktion der wichtigsten Logik, von der angenommen werden
+ kann, dass sie durch ein neuronales Netz angenähert wird, ist ein sehr
+ aufwendiger Prozess.
+ Selbst wenn wir ein neuronales Netz uns sagen könnte, wieso es eine Entscheidun
+g trifft, würde die Antwort vermutlich sehr kompliziert sein.
+ Schließlich beinhaltet sie im Optimalfall ja eine Idee oder einen logischen
+ Gedanken, der Teil der noch über die komplexe, menschliche Lösung hinaus
+ geht.
+ Wenn wir einem Computer Anweisungen geben, was er tun soll, verwenden wir
+ eine praktische und minimalistische Abstraktionm die Programmiersprachen.
+ Im Gegensatz dazu wäre es praktisch, wenn ein neuronales Netz uns auch
+ durch eine vereinfachte Formel, ähnlich einer Programmiersprache, zeigen
+ würde, was es für eine Logik beinhaltet.
+\end_layout
+
+\begin_layout Standard
+Dieser Prozess ist natürlich mit einem Informationsverlust behaftet, da
+ die erwähnte Logik stark vereinfacht werden muss.
+ Außerdem muss es automatisch erfolgen, ohne dass der Mensch die Entscheidungen
+ analysieren muss.
+\end_layout
+
+\begin_layout Standard
+Hierfür eignet sich beispielsweise die von Koza 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+todo
+\end_layout
+
+\end_inset
+
+ geprägte genetische Programmierung.
+ Die so erstellten modelle sind durch die zusammenstellung aus verschiedensten
+ mathematischen Formeln viel mächtiger als die sehr komplexen neuronalen
+ Netze und können durch gezielte Verwendung von Formelbestandteilen, oft
+ ohne ein Ergebnis zu overfitten, Reinforcementlearningprobleme lösen können.
+ Wie in 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+hein
+\end_layout
+
+\end_inset
+
+ gezeigt werden konnte, eignen sich diese nicht nur aus Performancesicht,
+ sondern liefern auch für den Menschen interpretierbare Lösungen.
+ Die gefundenen Lösungen stellen, je nach Komplexitätsmaß, vor allem kompakte
+ mathematische Formeln dar, welche meistens nicht mit der logischen Abstraktion
+ menschlicher Lösungen vergleichbar sind.
+ Entsprechend ist es auch hier immernoch schwierig, die Lösungen durch den
+ Menschen zu validieren.
+ Reverse engineering ist eine sehr aufwendige Aufgabe, vor allem, wenn man
+ mehrere Kandidaten analysieren will.
+ 
+\end_layout
+
+\begin_layout Standard
+Deshalb wäre ein umgekehrter Ansatz praktisch, wo ein vom Menschen geschriebener
+ Code mithilfe von genetischer Programmierung so erweitert wird, dass dem
+ Entwickler möglichst effizient gezeigt wird, wo das neuronale Netz denn
+ eine andere Logik verfolgt als der code.
+\end_layout
+
+\begin_layout Standard
+Dieser Ansatz wird in dieser Masterarbeit mit der Tree Edit Distance (TED)
+ als Maß für den Umfang von Änderungen beschrieben, implementiert und getestet.
+ Als Benchmarks werden sowohl Mountaincar (MC), als auch das Industrial
+ Benchmark (IB) verwendet.
+ Der Trainingsprozess erfolgt dabei durch eine Regression von Daten, die
+ durch das neuronale Netz generiert wurden.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+In den letzten Jahrzehnten wurde der Bereich der künstlichen Intelligenz
+ etwas erreicht, was undenkbar galt: Computer können sich selbst beibringen,
+ Probleme mithilfe einer externen Zielvorgabe zu lösen (Reinforcement Learning,
+ RL).
+ Die möglchkeiten sind hier durch die Verwendung neuronaler Netze und intensiver
+ Forschung stetig gewachsen.
+ DQN ATARI Spiele gelöst werden konnten., die lange Zeit als dem Menschen
+ vorbehalten galten.
+ Dies fing 
+\end_layout
+
+\begin_layout Plain Layout
+Bis vor einigen Jahrzehnten war künstliche Intelligenz noch undenkbar.
+ Dur In den letzten Jahrzehnten wurden aber, vor allem durch die Verwendung
+ neuronaler Netze intensive Forschung 
+\end_layout
+
+\begin_layout Plain Layout
+Der menschliche Versuch, künstliche Intelligenz zu erzeugen nimmt seit einigen
+ Jahren immer mehr Fahrt auf.
+\end_layout
+
+\begin_layout Plain Layout
+Erklärbarkeit ist ein schwer zu erreichendes Gut im Bereich der künstlichen
+ Intelligenz.
+ Bisher wird
+\end_layout
+
+\begin_layout Plain Layout
+Fast allen aktuelle Ansätzen der künstlichen Intelligenz fehlt es an allgemeiner
+ Intelligenz.
+ Für die meisten Probleme mag das irrelevant erscheinen, doch gerade in
+ sensiblen Bereichen n
+\end_layout
+
+\begin_layout Plain Layout
+Der Hauptgrund, weshalb Reinforcement learning lösungen für viele Probleme
+ noch nicht eingesetzt werden ist fehlende allgemeine Intelligenz 
+\end_layout
+
+\begin_layout Plain Layout
+So kann beispielsweise im Bereich des reinforcement learning (RL) ein Agent
+ ein Modell für ein Problem erstellen, welches allen menschlichen Lösungen
+ überlegen ist.
+ Gerade aber bei diesem, erreichen  problem zwar oft übermenschliche Performance
+ erreichen, doch vielzähligen Architekturen auf das Problem zugeschnitten,
+ wel Reinforcement Learning (RL) Als Teilgebiet des Machine Learning (ML)
+ werden dafür meist sehr komplexe Datenstrukturen verwendet, 
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -390,12 +645,11 @@ ed incidents.
 \end_layout
 
 \begin_layout Section
-Reasons for explainability
+Verständnis als 
 \end_layout
 
 \begin_layout Standard
-Apart from these horror scenarios, there are other reasons why it is not
- easy to dispense with the explanations.
+Ein neuronales Netz ist nichts anderes als ein
 \end_layout
 
 \begin_layout Itemize
@@ -492,56 +746,35 @@ Machine Learning is an important part of Artificial Intelligence, in which
 \end_layout
 
 \begin_layout Standard
-The problem is similar to supervised learning as a mapping from inputs to
- outputs has to be learned with the main difference being that no 
-\begin_inset Quotes eld
-\end_inset
-
-right
-\begin_inset Quotes erd
-\end_inset
-
- decisions are known.
- Well known examples are bots playing computer games like pong, doom or
- chess.
- For a long time, reinforcement learning was limited to rather simple, discrete
- problems.
- When state spaces are very large, for example in chess or in games with
- multi-dimensional continuous state spaces like 3d games have to be approximated.
- An option to do so is tiling 
+Anders formuliert könnte man auch sagen, dass es sich allgemein um automatisiert
+e Verfahren der Statistik handelt, die mit einem Epsilon Parameter als explorati
+onsfaktor angewendet werden.
+  Durch intensive Forschung wurden eine Vielzahl an Ansäten und Architekturen
+ entwickelt, wodurch .
+ Diestets neue Archifür vielerlei Probleme zu finden.
+ sind zweifelsohne trotzdem oft effizienter als menschliche Lösungen..
+ Die gängigen Ansätze schaffen es zwar, ein Modell für ein spezielles Problem
+ zu finden, sind aber letzten Endes nur automatisierte statistische Verfahren.
+ Diese können durch viel Aufwand mithilfe eines Epsilon-explorations parameters
+ erstellt werden, richtiges Verständnis für kausale Zusammenhänge kann aber
+ so nicht erlangt werden.
+ Außerhalb der Probleme sind die Modelle nicht verwendbar.
+ Diese 
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-[todo cite]
+Youtube paper
 \end_layout
 
 \end_inset
 
-, but the major breakthroughs were achieved by using neural networks aswell.
- In reinforcement learning, they can be used to perform exactly this mapping.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo image]pong, doom or chess.
- [todo cite]
-\end_layout
-
-\begin_layout Plain Layout
-[todo images]
-\end_layout
-
-\begin_layout Plain Layout
-exploration-exploitation [todo cite]
-\end_layout
-
-\end_inset
-
-
+Im Jahr [] wurde ein solches Experiment gestartet, wo ein NN ohne Anweisungen
+ gelernt hat, Bilder zu erkennen - erfolgreicher als alle bisherigen Ansätze.
+ Normalerweise ist es aber effizienter, kleinere Netze bis zu einer gewünschten
+ Performance zu trainieren, die from scratch ein vorimplementiertes Model
+ trainieren.
+ 
 \end_layout
 
 \begin_layout Section
@@ -549,25 +782,6 @@ TODO
 \begin_inset CommandInset label
 LatexCommand label
 name "TODO"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Beispiele
-\end_layout
-
-\begin_layout Standard
-Maschine Learning Lösungen haben so schon in vielen Bereichen übermenschliche
- Leistungen erreicht.
- Dies bietet beispielsweise viele Möglichkeiten bei sehr aufwendigen Aufgaben,
- wie beispielsweise Schrifterkennung bei handgeschriebenen Texten oder das
- Decoden von Genen.
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "TODO"
 
 \end_inset
 
@@ -715,6 +929,10 @@ Artificial neural networks are computing systems inspired by the biological
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 An artificial neural network is modeled with artificial neurons that are
  strung together in form of layers.
  The layers are connected in series between the neurons can communicate
@@ -728,6 +946,11 @@ An artificial neural network is modeled with artificial neurons that are
  If it is wrong though, the error is fed back through all layers with an
  algorithm called backpropagation where the weights are adjusted to support
  making the right decision next time.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -783,6 +1006,10 @@ ReLu and Sigmoid activation
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Greyedout
+status open
+
+\begin_layout Plain Layout
 Artificial neural networks are computer systems that are strongly oriented
  towards the biological brain.
  An input layer receives all important information and an output layer evaluates
@@ -796,7 +1023,7 @@ Artificial neural networks are computer systems that are strongly oriented
  values so that the next time the right decision is made.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 A neuron is modeled as follows (see Neuron).
  For a group of neurons from the previous layer (often all neurons) the
  signals are received and weighted.
@@ -807,7 +1034,7 @@ A neuron is modeled as follows (see Neuron).
  The result is then passed on to the neurons of the next layer.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 The complexity of such a network depends on the number of layers, the number
  of nodes per layer and the type of interconnection between layers.
  A possible network to solve Mountain Car could be for example an input
@@ -815,6 +1042,11 @@ The complexity of such a network depends on the number of layers, the number
  as three hidden layers with 24, 48 and 24 layers each.
  Full connectivity between the layers is not unusual, resulting in the following
  number of connections:
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1019,11 +1251,6 @@ Genetische Programmierung (GP) ist ein evolutionärer maschineller Lernansatz,
 \begin_layout Plain Layout
 Im Gegensatz zu neuronalen Netzen sind die so erstellten Policies lesbare
  Programme unf sind für den Menschen interpretierbar.
-\end_layout
-
-\begin_layout Plain Layout
-Das Ziel von GP ist es, über viele Generationen hinweg das eine Programm
- zu finden, das besser ist als alle anderen.
  Um dieses Programm zu finden, muss die Programmpopulation sowohl die besten
  Programme fördern als auch Raum für neue Ansätze schaffen.
  Zu diesem Zweck müssen sowohl die Selektion als auch die genetischen Modifikati
@@ -1083,31 +1310,6 @@ The fitness is the common measurement to rate candidates in a GP population,
 ), from which the fittest candidate for the next population is chosen.
  This way, even programs that have a poor fitness but may contain genes
  that will help them survive in the future.
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-n: tournament size 
-\end_layout
-
-\begin_layout Plain Layout
-
-choose n candidates from population 
-\end_layout
-
-\begin_layout Plain Layout
-
-select best candidate
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection
@@ -1173,29 +1375,30 @@ Reproduction
 \end_layout
 
 \begin_layout Itemize
-Some good candidates of the last generation can enter the next one without
- mutation.
- This is commonly used in genetic programming [todo source].
- Besides, we introduced two additional forms of reproduction: tes, that
- are rather close to the origin in the future, without specifically having
- to reduce the tree-distance between candidates.
+gute kandidaten sollen sich auch ohne veränderungen vervielfachen, um erfolgreic
+he kandidaten relevanter zu machen.
+\begin_inset Newline newline
+\end_inset
+
+Besides, we introduced two additional forms of reproduction: tes, that are
+ rather close to the origin in the future, without specifically having to
+ reduce the tree-distance between candidates.
  
 \end_layout
 
 \begin_layout Itemize
-Reproduce from 
+we introduce the 
 \begin_inset Quotes eld
 \end_inset
 
-olymp
+reproduction from olymp
 \begin_inset Quotes erd
 \end_inset
 
 .
  All pareto efficient candidates, including the origin, have a chance to
  enter the new generation.
- they are simple and good, its pareto.should be able to give their genes
- constantly to next gen 
+ should be able to give their genes constantly to next gen 
 \end_layout
 
 \begin_layout Itemize
@@ -1205,6 +1408,18 @@ simplify candidates.
  Not all trees should be saved in their basic form, as they might have branches
  with potential for further changes.
  On the other side, we want simple trees and generally the most basic solution.
+\end_layout
+
+\begin_layout Itemize
+filtering
+\begin_inset Newline newline
+\end_inset
+
+variablen nach zeit
+\begin_inset Newline newline
+\end_inset
+
+konstanten
 \end_layout
 
 \begin_layout Subsection
@@ -1241,16 +1456,16 @@ functions / Operators:
 \end_inset
 
 The set of mathematical operators that make up the program.
- Possible operators are 
+ The 
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
 [TODO 
-\begin_inset Formula $+,-,\cdot$
+\begin_inset Formula $+,-,\cdot,$
 \end_inset
 
-]
+/,]
 \end_layout
 
 \end_inset
@@ -1729,8 +1944,8 @@ Measuring explainability
 \end_layout
 
 \begin_layout Standard
-The essential goal of this approach is therefore to find a measure of the
- explainability in programs that can be optimized in addition to fitness.
+One essential goal of this approach is to find a measure of the explainability
+ in programs that can be optimized in addition to fitness.
  This measure must apply equally to all program components and types of
  problems.
 \end_layout
@@ -1776,12 +1991,26 @@ More than anything else, the actual sense is mainly based on naturally shaped
 \end_layout
 
 \begin_layout Standard
-The developer probably asks himself most of all what he has to change in
- his program to improve it even more.
- Thereby as little as possible should be changed.
- Our complexity measure has therefore been based primarily on the following
- question: “How much must be changed in the reference program to achieve
- a certain fitness?
+Diese komplexitätsmaße eignen sich sehr gut um overfitting zu vermeiden
+ und den Rechenaufwand überschaubar zu halten.
+ Dennoch stellen sie meistens eine komplexe, oft unübersichtliche oder augensche
+inlich zusammenhangslose mathematische Formel dar.
+ Um sie zu verstehen, muss der Entwickler die Struktur reverse engineeren
+ - ein sehr aufwendiger und kompizierter Prozess, vor allem, wenn man mehrere
+ Lösungen vergleichen will.
+\end_layout
+
+\begin_layout Standard
+Ein Softwareentwickler hat im Normalfall durch Jahrelange Erfahrung gelernt,
+ Probleme sinnvoll zu zerlegen.
+ So würde er für Probleme sodass er jeden Bestandteil des Programms einer
+ anderen Person erklären kann.
+ 
+\end_layout
+
+\begin_layout Standard
+Diese können aber dennoch sehr komplex sein “How much must be changed in
+ the reference program to achieve a certain fitness?
 \end_layout
 
 \begin_layout Standard
@@ -2041,6 +2270,24 @@ In this part, most of the factors influencing explainability are explained
  and it is discussed whether they are suitable as factors for a distance
  measure.
  
+\end_layout
+
+\begin_layout Subsubsection
+Explainability vs complexity?
+\end_layout
+
+\begin_layout Standard
+Explainability is a meta-measurement how easy an explanation is to be understood
+ by humans and thus.
+\end_layout
+
+\begin_layout Standard
+Ob etwas für den Menschen leicht zu versthen ist, ist stark abhängig von
+ den Denkstruktu
+\end_layout
+
+\begin_layout Itemize
+Länge
 \end_layout
 
 \begin_layout Subsubsection
@@ -7201,35 +7448,6 @@ Simple algorithm
 
 \begin_layout Plain Layout
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Wie man vor allem bei den komplexeren Lösungen sehen kann, verliert die
- TED ab einer gewissen Größe ihre Wirkung.
- Die Aktion 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- wird zudem häufig ausgewählt, vor allem In Randbereichen.
-\end_layout
-
-\begin_layout Plain Layout
-Zu beiden Problemen kann der Entwickler bereits im Vorhinein Einschränkungen
- machen, beispielsweise indem die if-Entscheidung auf die beiden Fälle 0
- und 2 beschränkt wird.
 \end_layout
 
 \end_inset

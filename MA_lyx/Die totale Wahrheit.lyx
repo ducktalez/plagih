@@ -1,10 +1,15 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
 \origin unavailable
 \textclass article
+\begin_preamble
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+\end_preamble
 \use_default_options true
 \begin_modules
 theorems-ams-bytype
@@ -24,8 +29,6 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype false
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -55,7 +58,6 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -64,10 +66,7 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -2455,6 +2454,682 @@ Hier muss ich wiedersprechen.
  Aber ich bin mir nicht sicher, dass ich nicht irgendwann doch erfahren
  oder sogar formulieren könnte, was für mich den Unterschied zu einem Computer
  ausmacht.
+\end_layout
+
+\begin_layout Section
+Echte Lösung des Touring tests: Lasst uns eine unglaubliche Simulation starten.
+\end_layout
+
+\begin_layout Subsection
+Touring test - bist du intelligent?
+\end_layout
+
+\begin_layout Standard
+Wie kann man feststellen, ob eine Maschine wirklich intelligent ist, eventuell
+ sogar ob sie eine Bewusstsein hat? Alan Touring, ein Schüler Wittgensteins
+ und einer der bekanntesten Informatiker der Geschichte, formulierte hierfür
+ einen Test.
+ Wenn ein Mensch zwei online chats mit je einem Computer und einem Menschen
+ führt und nicht zwischen Maschine und Mensch unterscheiden kann, so gilt
+ der Test als bestanden.
+\end_layout
+
+\begin_layout Standard
+Zugegeben, dieser Test reduziert das Problem vor allem auf blose Intelligenz
+ und kann nicht die Frage nach einem Bewusstsein klären.
+ Aber, Gegenfrage: Könntest du mir beweisen, dass du ein Bewusstsein, eine
+ Seele oder Intelligenz besitzt? Was ist der Unterschied, der einen Computer
+ wirklich von einem Menschen unterscheidet.
+ Es fällt einem überraschend schwer, dafür überhaupt Gründe zu finden.
+\end_layout
+
+\begin_layout Standard
+Wer 
+\begin_inset Quotes eld
+\end_inset
+
+Terminator 3
+\begin_inset Quotes erd
+\end_inset
+
+ (oder 2) gesehen hat wird dieses Problem vielleicht schon mal begegnet
+ sein.
+ Einer der Protagonisten kämpft härter als alle anderen gegen die Roboter,
+ die er so hasst.
+ Sie haben ihm seine Familie genommen, sind kalt und gefühlslos.
+ Man könnte fast sagen, Maschinen verkörpern für ihn alles, was schlecht
+ ist.
+ Am Ende wird er von einem Roboter schwer verletzt - und sieht statt Blut
+ aus seinen Armen, dass er einen Roboterarm hat.
+ Er ist selbst ein Roboter.
+\end_layout
+
+\begin_layout Standard
+Intelligenz ist die Fähigkeit, Modelle für die Umwelt zu erstellen und diese
+ anzupassen - diese kann vereits heutzutage, dank NLP, relativ gut simuliert
+ werden und dieser einfache Touring test wurde bereits oft bestanden.
+ 
+\end_layout
+
+\begin_layout Standard
+Eine stufe interessanter wäre folgende Konstellation: Eine andere (Android)
+ Person und du müssen sich darüber einig werden, wer das höhere Wesen ist.
+ Als Extremversion sagen wir, wenn eine Seite die andere überzeugt, muss
+ der Verlierer sterben.
+ Könntest du dich überzeugen lassen oder könntest du die andere Person überzeuge
+n? Kannst du dir sicher sein, dass du kein Roboter bist?
+\end_layout
+
+\begin_layout Standard
+Was ist, wenn du einfach nur mit einem Spiegelbild deinerselbst kommunizieren
+ würdest?
+\end_layout
+
+\begin_layout Standard
+Man ist eine der beiden Parteien wirklich eine Maschine, so wird man vermutlich
+ merken, dass die Maschine keine echte Angst vordem Tod haben kann.
+ Schließlich kann ihr Prozess ohne Probleme pausiert werden - beim Menschen
+ geht das nicht.
+ Man könnte versuchen, der Maschine auch eben diese konstante Todesangst
+ zu vermitteln - ihr Triebe, Hunger, Durst, Liebe antrainiert.
+ Dann muss man sie aber gleichzeitig darüber mit einem sehr unfangreichen
+ Mechanismus und tief verankerten Mechanismus diese Triebe 
+\begin_inset Quotes eld
+\end_inset
+
+vorlügen
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Die Maschine weiß also entweder, dass sie nur ein künstlich simuliertes
+ Ende hat oder muss über die echte Realität hinweg getäuscht werden.
+\end_layout
+
+\begin_layout Subsection
+Mein Touring Test
+\end_layout
+
+\begin_layout Standard
+Der Mensch hat in der Zeit der Evolution unglaublich viel Entwicklung durchgemac
+ht.
+ 
+\end_layout
+
+\begin_layout Subsection
+Leben wir in einer Simulation?
+\end_layout
+
+\begin_layout Standard
+Egal, wie weit wir jemals mit der Wissenschaft kommen werden, eine Frage
+ werden wir wohl nie beantworten können: Warum gibt es irgendwas? Wie entstand
+ der Urknall? Was ist hinter dem Universum?
+\end_layout
+
+\begin_layout Standard
+Interessant wird es aber, das Problem mal umzudrehen: Wir starten eine riesengro
+ße Simulation mit lauter sehr komplexen Agenten, die eine Aufgabe lösen
+ müssen.
+ Nehmen wir mal ein Universum an, in dem Agenten Bilder erkennen müssen.
+ Den rest versuchen wir so ähnlich wie unser Universum zu machen - neuronale
+ Netze, gepaart mit einem evolutionären Ansatz, wo Kandidaten Kinder kriegen
+ können.
+ Diese werden so intelligent, dass sie auch ein Bewusstsein entwickeln.
+ Sie lernen mehrere Bilder gleichzeitig und besser zu erkennen, können sich
+ in Gruppen zusammenschließen um ihr Wissen zu kombinieren, bilden Gesellschafte
+n und fragen sich irgendwann, woher eigentlich die ganzen Bilder kommen.
+ Könnten wir einem solchen Programm erklären, dass es in einem Computer
+ lebt? Wohl kaum, genau wie wir einem Blinden keine Farben erklären können.
+ Wir könnten es auch nicht aus der Simulation herausholen.
+ Wir könnten versuchen, ihm mit Bildern einen Eindruck von unserer dreidimension
+alen, 
+\begin_inset Quotes eld
+\end_inset
+
+realen
+\begin_inset Quotes erd
+\end_inset
+
+ Welt zu vermitteln - aber vermutlich wäre es etwas, was die Agenten maßlos
+ überfordern würde.
+\end_layout
+
+\begin_layout Standard
+Zugegeben, ein komisches Universum, das nur auf Bilderkennung basiert.
+ Wie sollte die Simulation am besten aussehen, damit sie sich von alleine
+ entwickelt?
+\end_layout
+
+\begin_layout Standard
+Vermutlich würden wir ein riesengrßes Rechenzentrum aufbauen, mit tausenden
+ untereinander vernetzten Servern, die miteinander kommunizieren können.
+ Alle würden auf derselben physics-engine laufen.
+ Stellen wir uns einfach mal Minecraft vor.
+ Die Agenten müssen, wie im klassischen Minecraft, können sich fortpflanzen
+ und müssen sterben.
+ Was würden wir beobachten?
+\end_layout
+
+\begin_layout Standard
+Die Agenten, die keinen Überlebensinstinkt entwickeln, werden schnell aussterben.
+ Unter Umständen stirbt sogar unsere gesamte Population.
+ Zur Sicherheit würden wir dafür einen konstanten Strom neuer Agenten auf
+ der Karte spawnen falls die Population zu niedrig wird.
+ Die Agenten werden immer klüger werden.
+ Das Ziel vom Minecraft ist genau genommen, den Enderdrachen zu besiegen
+ - danach hat man das Spiel 
+\begin_inset Quotes eld
+\end_inset
+
+geschafft
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Was würde wohl passieren, wenn ein Agent so schnell so klug würde, wenn
+ er nicht nur das Ziel sieht, sondern auch, dass danach nichts mehr kommt?
+ Wenn er merkt, dass er nur in einer Simulation lebt?
+\end_layout
+
+\begin_layout Standard
+Vermutlich wird dieses Ende schnell eintreten, oder der Enderdrache wird
+ sterben.
+ auch denkbar wäre, dass ein Agent es schafft, einen Bug zu finden und das
+ System zu hacken.
+ Eventuell wird ein Agent so klug, dass seine Berechnungen einen Server
+ verlangsamt.
+ Minecraft ist eigentlich schon wieder viel zu viel menschlicher Einfluss.
+ 
+\end_layout
+
+\begin_layout Standard
+Was wäre eigentlich das Ziel unserer 
+\begin_inset Quotes eld
+\end_inset
+
+Simulation
+\begin_inset Quotes erd
+\end_inset
+
+, unserem Universum? 
+\end_layout
+
+\begin_layout Subsubsection
+Paradigmen unseres Universums
+\end_layout
+
+\begin_layout Standard
+Alles in unserem Universum unterliegt eigentlich einem Paradigma: Energieeffizie
+nz.
+ Um das zu simulieren, müssen wir eine Ebene tiefer gehen.
+ 
+\end_layout
+
+\begin_layout Standard
+Unsre Welt baut auf Paradigmen auf, die wir grob alle simulieren können.
+ Das Kernstück der Simulation sind natürlich auf der uns bekannten Logik
+ laufende Prozessoren.
+ Alles, was passiert, muss logisch ablaufen: Nicht wahr ist falsch, wahr
+ und wahr ist wahr - diese Dinge.
+ Logische Prämissen, die in unserem universum gelten, unter der Annahme,
+ dass dieses universum logisch ist.
+ Unsere Serversimulation beinhaltet dieselbe Logik, wie könnte man sich
+ auch etwas anderes vorstellen als Logik.
+ Die Logik ist die Prämisse unseres Systems, aber leider macht sie von alleine
+ noch nichts.
+ Wenn wir den Speicher unseres Systems mit zufälligen Verteilungen von 0
+ und 1 befüllen würde noch nichts passieren.
+ 
+\end_layout
+
+\begin_layout Standard
+Also, Abbruch, neuer Versuch: Wir müssen dafür sorgen, dass Information
+ fließt, dass irgendetwas passiert.
+ Wir brauchen ein Betriebssystem, das auf dieser Logik aufbaut und einen
+ Loop erzeugt, in dem Dinge passieren.
+ Wenn wir uns unser riesiges Server cluster mal als dreidimensionalen Speicher
+ vorstellen, würden wir vermutlich mal etwas ganz einfaches probieren: Die
+ Bits ziehen sich einfach alle gegenseitig an und fließen zu einem Mittelpunkt,
+ nehmen wir einfach mal den Server in der Mitte.
+ Endlich fließt Information! Geil.
+ Dumme Sache nur, unser Loop war noch nicht ganz durchdacht - als sich zwei
+ Bits getroffen haben, ist unser Programm einfach abgestürzt, exception:
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Can not save two bytes in the same memory.
+ Error.
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Aber ist bei uns ja auch ähnlich, Quarks vereinen sich ja auch nicht.
+ Also gut.
+ Denselben Song nochmal, diesmal aber reihen sich die Bits nur nebeneinander
+ an und ziehen dann zusammen durch die gegend.
+ Kein Absturz mehr!
+\end_layout
+
+\begin_layout Subsubsection
+Bytes statt bits viel effizienter
+\end_layout
+
+\begin_layout Standard
+Bits sind natürlich eigentlich gar nicht direkt addressierbar.
+ Unsere computer arbeiten mit bytes - acht bits, die hintereinander liegen.
+ Lass uns einfach gleich bytes nehmen, quarks tun sich ja auch zusammen
+ und treten als Elektronen, Neutronen und Protonen auf.
+ Keine Ahnung.
+\end_layout
+
+\begin_layout Standard
+Schon der dritte Neustart, billig war das nicht, Leute.
+ Leider tut sich immernoch nicht viel.
+ Die CPUs laufen dauernd auf 100%, überhitzen, alles stürzt ab.
+ Schade, unsere Rechenleistung ist eben doch beschränkt.
+ Oh, ich seh grad: wenn sich alle bytes gegenseitig anziehen ist das, was
+ die Berechnungen angeht ziemlich uneffizient.
+ Wir müsen das räumlich irgendwie unterteilen.
+ Sagen wir mal, diese Anziehung nimmt mit der Entfernung einfach ab.
+ Dann kann ein Prozessor für seinen Speicher alle Berechnungen durchführen
+ und leitet einfach einen etas vereinfachten Dummywert an seine Nachbarserver
+ weiter.
+ Ist zwar nicht soo genau, aber etwas besseres fällt mir nicht ein.
+\end_layout
+
+\begin_layout Standard
+Das ist schon viel schneller! Aber trotzdem gibt es da einen Server, der
+ immer länger braucht, als die anderen.
+ Zeit ist Geld, irgendie lässt sich das sicher noch verbessern.
+ Wir könnten beispielsweise alle Tasks asynchron ablaufen lassen.
+ Wenn auf einem Server nichts passiert, wird die Umgebung ja auch kaum beeinflus
+st - dank dem vorhin eingeführten lokalitätsprinzip im Raum unserer Simulation.
+ Cooler Nebeneffekt: Wenn die neue Generation Ryzen rauskommt, können wir
+ ohne große Probleme auch mal einen Server warten ohne dass der Rest gleich
+ abstürzt.
+ Auch selten vorkommende Fehler könnte man vor dem restlichen System abschirmen.
+\end_layout
+
+\begin_layout Standard
+Könnte es dabei Probleme geben? Okay, vermutlich sollten wir zumindest eine
+ genormte Zeit einführen.
+ Die Anzahl an Schritten, die passiert sind scheint am sinnvollsten.
+ Ist zwar nicht optimal, aber man kann zumindest schonmal ein bisschen synchroni
+sation erzeugen.
+ Zeitreisen sind möglich und die Anziehungskraft kommt am Anderen Ende zu
+ einer ganz anderen Zeit an.
+ Wirklich nicht optimal, aber wir machen hier Realpolitik, keine Tagträumereien.
+\end_layout
+
+\begin_layout Subsubsection
+Visualisierung
+\end_layout
+
+\begin_layout Standard
+So, geil.
+ Jeder Server läuft für sich, Information fließt.
+ Sieht sicher richtig hamermäßig aus, oder? Schade, dass wir nichts sehen
+ können.
+ Kennen sie aber beispielsweise Mandelbrot? Hier wird auch ein komplexes
+ Gleichungssystem eingefärbt, sodass den Verlauf sehen kann und das Muster
+ ist der Hammer.
+ Eine Visualisierung von den Dingen, die sich da abspielen, sollte ja wohl
+ nicht all zu schwer sein.
+ Ich lasse einfach jedes bit für eine bestimmte Farbe stehen, sodass alle
+ RGB-Farben entstehen.
+ Die Orte, an denen leere bits sind, färbe ich einfach schwarz.
+ Die Anziehungskraft der Bits hat zwar immernoch den Vorrang bei der CPU,
+ aber ich hätte schon gerne, dass man das wie beim Mandelbrot von überall
+ sehen könnte, wenn man in die richtige RIchtung zoomt.
+ Bevor ich das jetzt aber committe, sollte ich aber vielleicht schauen,
+ dass die eigentliche Simulation nicht zu langsam wird.
+ Einen Kern von acht Kernen kann ich wohl dafür entbehren.
+ Aber das wird definitiv ein slave process.
+ Wenn zuviele Interaktionen stattfinden, wird eben wieder schwarz eingefärbt.
+ Okay, schwarze Löcher gibt es nun wohl auch.
+\end_layout
+
+\begin_layout Standard
+Jetzt können wir erstmal genießen.
+ Erinnert mich bisschen an damals, als ich zum ersten mal ein Objekt modelliert
+ habe.
+ Eigentlich sollte ich weiterarbeiten, aber ich habe dauernd nur das Ding
+ von allen Seiten betrachtet, rumgezogen und meine Leistung genossen.
+ Alle Bits ziehen sich zusammen und konvergieren richtung Mitte.
+ Ganz selten entstehen mal Wirbel, wenn viele bytes an zwei Servern zusammenkomm
+en und sich in einer logarithmischen Spirale umeinander drehen.
+ Aber von außen betrachtet...
+ Vorrangig zieht sich halt alles zusammen und ist recht schnell vorbei.
+ Kugeln formen sich und fusionieren zu weiteren Kugeln.
+ Gegen Ende wird alles schneller, aber spannend ist es trotzdem nicht.
+ WIr brauchen glaub ich mehr Chaos, mehr Unordnung.
+ Wäre auch schön, wenn die Simulation etwas länger gehen würde.
+ Ich habe da aber eine lustige Idee: Wir haben ja 1.000.000 Server hier stehen.
+ Wir setzen jetzt einfach mal nur einige bytes in unserem zentralen Server
+ auf 1 und alle anderen server sind ausschließlich Nullen.
+ Die schießen wir einfach mit einer zufälligen Maximalreichweite der äußeren
+ Server nach außen.
+ So entsteht ein riesen Haufen Chaos, die Simulation dauert etwas länger
+ und die coolen wirbel können sich bilden.
+ Ach was solls, jetzt haben wir eh schon soviel verändert: Die coolsten
+ server isolier ich kurz danach einfach mal und mach noch einen Urknall.
+ Wir sicher ein cooles Kunstwerk.
+\end_layout
+
+\begin_layout Standard
+Der Urknall.
+\end_layout
+
+\begin_layout Standard
+Das sieht jetzt mal nach was aus! läuft alles sogar flüssiger, jetzt, wo
+ öfters mal größerer Zwischenraum entstanden ist.
+ Nun ist erstmal wieder Zeit, mein 3d-Mandelbrot abzuchecken.
+ Diese Visualisierung.
+ Gibt sicher gut Klicks auf youtube!
+\end_layout
+
+\begin_layout Subsubsection
+Wie weit ist denn die KI mittlerweile?
+\end_layout
+
+\begin_layout Standard
+Das hatte ich ja fast vergessen.
+ Wir wollten ja eigentlich das purste intelligente Leben from scratch erzeugen.
+ Planeten und Galaxien haben sich zwar gebildet, umindest vom aussehen her
+ - aber mein Monitoring script hat noch nichts gefunden.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+Wir haben keine Zeit, der Kunde wartet schon
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Ok, schade.
+ Dann muss ich wohl wieder ran.
+ Suchen wir uns erstmal einfach eine Stelle, wo sich zwar einigermaßen viel
+ Materie befindet aber auch noch genügend CPU-power für diese ganzen neuronalen
+ Netze übrig ist.
+ Sicher nicht in einem schwarzen Loch oder einem Sternennebel.
+ Irgend ein Planet, der bereits verdichtet ist und wo es viele Elemente
+ gibt, am besten nicht zu groß und wenig Interaktion.
+ Ah, da ist eine passende Galaxie, die ist ruhig.
+ Kein Sternnebel und kein schwarzes Loch in Sicht, perfekt.
+ Erstmal müssen wir den Planeten stabilisieren, das ist ja Augenkrebs.
+ Meh, ich lass einfach einen anderen Planeten um den rukreisen, das sollte
+ reichen.
+\end_layout
+
+\begin_layout Standard
+Aber moment mal...
+ ich greife schon wieder viel zu sehr aktiv ein, das soll ja von selbst
+ entstehen.
+ Wir brauchen einfach noch mehr Exploration, Zufall und Zeit, vielleicht
+ entsteht das Leben ja doch von alleine.
+ Zeit, Hand anzulegen.
+ Die Bytes ziehen sich einfach zusammen und dann passiert ja gar nichts
+ mehr, wie uncool.
+ Lauter kleine, schwarze Löcher eigentlich.
+ Die sollen sich nicht mehr weiter zusammenziehen.
+ Ich glaub ich schlage zwei Fliegen mit einer Klappe: Wir vergrößern den
+ Baukasten nochmal.
+ Die kleinsten Bausteine sind ab jetzt 64byte Blöck-kombinationen und die
+ stoßen sich alle gegenseitig ab.
+ Ja ich weiß, das was gar nicht das, was ich als alter Romantiker mir am
+ Anfang vorgestellt habe.
+ Aber neue Probleme erfordern neue Lösungen und das Betriebssystem hat ja
+ eh noch nicht soo viel code.
+ Damit nicht alle 64byte blöcke nur aus einsen bestehen geb ich der Kombination
+ mal nur drei Zeitschritte sich zu kombinieren - danach ist das byte fertig.
+ Nach der Kombination werden erstmal alle anderen Protonen und neutronen
+ und elektronen nicht mehr akzeptiert.
+  Upps, ich meinte ja bytes.
+\end_layout
+
+\begin_layout Standard
+Irgendwie sieht das trotzdem noch eher wie ein Strohfeuer aus.
+ Ich brauch genau solche Zustände, aber über einen längeren Zeitraum.
+ Eigentlich müsste ich konstant Energie zu dem Stellen mit Reaktionen hinzufügen.
+ Wie soll denn da dauerhaft irgendwas entstehen? Die Urknall Rakete ist
+ zwar gestartet, Aber die Explosion ist schnell vorbei.
+ Wir brauchen solche sparkles.
+ Lauter kleine, neue Urknalle.
+ Oder soll ich die Anziehungskraft nach einiger Zeit reduzieren oder ausschalten
+? Nein, ein konstanter Energiezufluss ist die längerfristige Lösung.
+ Fuck it, wir machen dasselbe wie beim Urknall jetzt nochmal in klein: Wenn
+ die sich bytes kombinieren, entsteht einfach Energie die in alle Richtungen
+ ausstrahlt.
+ Kann ich gleich noch mit der Abstoßungskraft kombinieren.
+ Alter, abstoßen, wie ein Magnet! Das ist die Idee, dann dauert ja alles
+ nochmal viel länger! 
+\end_layout
+
+\begin_layout Standard
+commit, push, sudo upgrade.
+\end_layout
+
+\begin_layout Standard
+Warum zerfallen hier eigentlich manche Atome wieder in ihre Bestandteile?
+ Die sind ja viel zu groß, ich hab doch gesagt maximum 64 bit? Die sind
+ ja viel zu großals Bausteine für die Simulation.
+ Scheiß parallel computing und diese semaphore.
+ Gar nicht ein Ding.
+ Ich lass die einfach wieder zerfallen wenn ich sie sehe und, was solls!
+ Nochmal mehr Energie.
+ Energie muss einfach her.
+ Wenn mein Chef das sieht, der killt mich, aber was macht er auch so nen
+ Stress.
+\end_layout
+
+\begin_layout Standard
+Die Byte-moleküle kriegen jetzt alle vergleichbare Eigenschaften.
+ Nur noch eine Berechnung statt jedes Teil zu berechnen, auch gut! Atome
+ sind der shit.
+ Die Elektronen kriegen einfach einen zufälligen zustand, ist zwar nicht
+ ganz korrekt, aber gut genug.
+\end_layout
+
+\begin_layout Standard
+Moment, immernoch zuviel Harmonie? Jetzt reichts.
+ Molekühle, die mit Wasserstoff, dem häufigsten Molekül, eine Verbindung
+ eingehen, kriegn nochmal ganz anders eigenschaften.
+ Zeit wird knapp.
+ Alle anderen Moleküle kriegen ungefähr ihre Erwartungseigenschaften mit
+ kleinen Abweichungen.
+\end_layout
+
+\begin_layout Standard
+Meilenstein 1.
+\end_layout
+
+\begin_layout Standard
+Huch, was zeigt das monitoring denn da für einen Fehler an? Gibt es da wirklich
+ schon Moleküle, die unglaublich lange Ketten unter Energieeinfluss bilden?
+ Ist ja abgefahren, aber nicht wirklich unerwartet.
+ Ich bin mal gespannt was die Moleküle für Eigenschaften haben, sieht sehr
+ interessant aus.
+ Sie machen zwar noch nicht viel, aber was mich dennoch überrascht ist,
+ dass manche Teile der Moleküle Teile von anderen Molekülen bewegen können.
+ Zwar nur zufällig bei optimalen Bedingungen, aber einige Moleküle schaffen
+ es, sich dauerhaft in diesen optimalbedingungen zu halten.
+\end_layout
+
+\begin_layout Standard
+Endlich das grobe, physische, geschafft.
+ Lebenswerte Planeten sind zwar selten, aber dennoch existieren sie.
+ Nun kann ich mich endlich an die Entwicklung von KIs machen.
+ Um den Prozess abzukürzen, spawnen wir einfach mal einen konstanten Strom
+ an den Zellen aus dem letzten Experiment.
+ 
+\end_layout
+
+\begin_layout Subsection
+Die Universumssimulation
+\end_layout
+
+\begin_layout Standard
+Um den Touring test auf einer so tiefen Ebene lösen zu können, dürfen wir
+ den Entwicklungsprozess nur so wenig wie möglich beeinflussen.
+ Alles muss sich irgendwie durch Zufall ergeben.
+\end_layout
+
+\begin_layout Standard
+Fangen wir mit einem einfachen Problem an, welches ein einzelnes neuronales
+ Netz lösen kann: Bilderkennung.
+ Eine Aufgabe, die uns Menschen unglaublich einfach fällt, egal ob Handschrift,
+ Gegenstände oder auch Gesichter erkannt werden sollen.
+ Hier kann man durchaus bereits von intelligenz reden.
+ Allerdings wird hier lediglich ein einziges Problem gelöst - Bilderkennung
+ - davon abgesehen kann es nichts.
+ Was fehlt dem Agenten noch alles, was der Mensch hat?
+\end_layout
+
+\begin_layout Itemize
+Allgemeinere Anwendbarkeit der Intelligenz und ein effizienter Lernprozess
+\end_layout
+
+\begin_layout Itemize
+Die Fähigkeit, sich selbst Ziele setzen zu können
+\end_layout
+
+\begin_layout Itemize
+Die Angst zu sterben, Instinkt und Ängste
+\end_layout
+
+\begin_layout Itemize
+Die Frage, was man selbst ist
+\end_layout
+
+\begin_layout Standard
+Das erste Problem scheint noch relativ leicht zu lösen sein.
+ Wir könnten mehrere sehr große neuronale Netze verschiedene Probleme trainieren
+ lassen und diese miteinander kombinieren.
+ Oder auch dasselbe neuronale Netz für viele Probleme.
+ Die Struktur des Gehirns ist (noch) nicht mit einem NN vergleichbar und
+ auch der Lernprozess ist unglaublich viel aufwendiger, aber vom Prinzip
+ her stellt diese Frage kein Problem dar.
+\end_layout
+
+\begin_layout Standard
+Doch empathie, Instinkte, Ängste kann eine Maschine nicht so einfach so
+ lernen, wie es ein Mensch kann.
+ Wir könnten es der Maschine zwar implementieren, wie beispielsweise der
+ Maus, die einen negativen Reward für jeden Schritt kriegt - aber es wäre
+ nicht mit dem vergleichbar, was ein Mensch hier fühlt.
+ Es handelt sich hierbei um einen Millionen jahre langen, Generationsübergleifen
+den Lernprozess, der ausschließlich von dieser Angst geprägt war - und das
+ ist in jeder unserer Zellen erhalten.
+ Eine Maschine kann diese Angst nur auf eine Art erlernen, wie ein Psychopath
+ versucht, Liebe oder andere Emotionen zu erlernen.
+ Circa 1/100 Personen sind Psychopathen.
+ Psychopathen sind beim besten Willen keine herzlosen Killer - sie können
+ nur nicht die Emotionen fühlen wie es andere Menschen können.
+ Sie sind häufig auch sehr intelligent und erfolgreich - in Vorständen von
+ Unternehmen sind 7/100 Psychopathen.
+ Ein Psychopath wird schnell merken, dass er ohne Empathie im Leben nicht
+ weit kommt - und versucht, all diese Emotionen nachzuempfinden, ähnlich
+ wie eine Maschine lernt.
+ Ein Psychopath hat mal beschrieben, was für ihn Liebe ist: 
+\begin_inset Quotes eld
+\end_inset
+
+Das Gefühl der Starken Abhängigkeit von einem anderen Person, welches nach
+ ein paar Wochen verschwindet (todo)
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Der Psychopath hat sich selbst das Ziel gesetzt, Emotionen zu empfinden
+ und hat ein Modell generiert, welches für ihn nah genug an eine solche
+ Emotion heranreicht.
+ Aber es hat mehr von einer selbsterzwungenen Konditionierung als von echtem
+ Verständnis.
+\end_layout
+
+\begin_layout Standard
+Eine Maschine kann dieses gefühl nicht 
+\begin_inset Quotes eld
+\end_inset
+
+wirklich
+\begin_inset Quotes erd
+\end_inset
+
+ erlernen - weil man eine Maschine jederzeit pausieren kann.
+ Man kann sie von einem beliebigen Zustand neu starten.
+ Einen Menschen könnte man zwar vielleicht in ein künstliches Kome versetzen,
+ herunterkühlen und aud diese Weise sehr lange überleben lassen - aber den
+ Tod kann man nicht aufhalten.
+ Eine Maschine kann unendlich lang leben - genau genommen genau so lang,
+ wie die simulation geht.
+ Man kann sie pausieren und später neu starten.
+ Man könnte einer Maschine natürlich auch eine maximale Lebensdauer geben,
+ ohne dass man weiß, wann genau der Tod eintritt - beispiel durch den Zerfall
+ einer gewisser Anzahl von nuklearen Atomen.
+ Doch, irgendwie, wäre es auch nicht dasselbe wie das, was der Mensch durchlebt.
+\end_layout
+
+\begin_layout Subsection
+Minecraft als engine?
+\end_layout
+
+\begin_layout Standard
+Doch wie erwähnt kann man sehr viele Dinge erlernen.
+ Aber wie sollte das ohne externes Rewardsystem gehen?
+\end_layout
+
+\begin_layout Standard
+Die Lösung liegt in einer
+\end_layout
+
+\begin_layout Standard
+Dazu gibt es ein sehr interessantes Experiment, wo ein sehr komplexes neuronales
+ Netz ausschließlich rohe Bilddaten von youtube videos 
+\begin_inset Quotes eld
+\end_inset
+
+sehen
+\begin_inset Quotes erd
+\end_inset
+
+ konnte.
+ Nach ca.
+ 4 Millionen Euro an CPU power hat sich das Netz automatisch beigebracht,
+ Bilder zu erkennen.
+ dass wir einer solchen Maschine das Recht geben würden, zu wählen.
+ Mit genügend Rechenpower sollte es doch auch möglich sein, das Gehirn des
+ Menschen nachempfinden zu können? 
+\end_layout
+
+\begin_layout Standard
+Prinzipiell steht dem kein Hindernis entgegen.
+ Was wäre die unglaublichste Simulation, mit der wir sich selbst erzeugende
+ Intelligenz generieren könnten? Wenn wir der KI genügend Neuronen und Zeit
+ geben, sollte sie doch irgendwann ein Verständnis für sich selbst erreichen,
+ oder?
+\end_layout
+
+\begin_layout Standard
+Allerdings ist eine Bilderkennung wohl die falsche 
+\begin_inset Quotes eld
+\end_inset
+
+physics engine
+\begin_inset Quotes erd
+\end_inset
+
+ dafür - sie gibt dem Agenten nicht genügend Möglichkeiten für eine freie
+ Entfaltung.
+ Besser geeignet wäre vermutlich eine unserer Welt ähnliche Simulation:
+ Dreidimensional, mit ähnlicher Physik wie in unserer Welt.
+\end_layout
+
+\begin_layout Standard
+Interessant wäre beispielsweise eine riesengroße Minecraft welt, in die
+ wir immer wieder Agenten reinspawnen.
+ Das Problem dabei könnte nur sein, 
 \end_layout
 
 \begin_layout Section

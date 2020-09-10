@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -12,7 +12,7 @@
 \usepackage{forest}
 
 \renewcommand{\thesubsection}{\alph{subsection})}
-\renewcommand{\labelitemi}{$-$}
+%\renewcommand{\labelitemi}{$-$}
 \newcommand{\inlinecode}[2]{\lstinline[language=#1]$#2$}
 %\fxusetheme{color}
 %Simons latex code end
@@ -32,10 +32,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -56,6 +52,8 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -85,6 +83,7 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -93,7 +92,10 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -214,59 +216,418 @@ List of abbreviations?
 \end_layout
 
 \begin_layout Chapter
-Intro
+Intro / Motivation
 \end_layout
 
 \begin_layout Standard
-Fakt ist: Erklärbarkeit ist ein wesentlicher Bestandteil jeder intelligenten
- Entscheidung.
- So kann der Mensch für jede bewusst getroffene Entscheidung Rechenschaft
- ablegen und sie begründen.
- Im Bereich der künstlichen Intelligenz wurde dieser Aspekt bisher großräumig
- ausgeklammert.
+Erklärbare künstliche Intelligenz (XAI) beschäftigt sich mit der Frage,
+ wie machine learning (ML) Ansätze zu Entscheidungen kommen.
+ In dieser Arbeit wird dafür das Konzept der Vertrautheit eingeführt, unter
+ dessen Berücksichtigung mithilfe von genetischer Programmierung (GP) für
+ den Menschen verständliche und leicht nachvollziehbare Policies erzeugt
+ werden können.
+ Vertrautheit bedeutet für gefundene Lösungen, dass sie ähnlich einer Lösung
+ sind, die der Entwickler selbst erzeugt hat und somit nachvollziehen kann.
+ Als Maß für die Vertrautkeit werden die Anzahl der nötigen Änderungen an
+ dem computation tree der heuristik des Entwicklers (origin) um den neuen
+ Baum zu erhalten berechnet.
+\end_layout
+
+\begin_layout Section
+XAI als Teil der AI.
+ Warum ist XAI so schwer?
+\end_layout
+
+\begin_layout Standard
+Erklärbarkeit ist ein wesentlicher Bestandteil jeder Form von Intelligenz.
+ Sie impliziert eine Logik, die eine intelligent (heuristisch) getroffene
+ Entscheidung von rein zufälligem handeln unterscheidet.
+\end_layout
+
+\begin_layout Standard
+Die Kunst dabei ist, dieses Wissen einem Empfänger (in diesem Fall dem Menschen)
+ so zu vermitteln, dass er einen echten Mehrwert hat.
+ Die Analyse der Informationen und deren Integration in das eigene Modell
+ muss also weniger aufwändig sein als diese Informationen selbst zu erlernen.
+ Ein guter Erklärungsprozess braucht dafür folgende Voraussetzungen:
+\end_layout
+
+\begin_layout Itemize
+Tiefergehendes Verständnis/Intelligenz für das Problem
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Ausreichendes-Verständnis"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Sprache (Kommunikationsprotokoll)
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Sprache-Kommunikationsprotokoll"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Für den Menschen ist sie vor allem beim aktiven erlernen einer Fähigkeit
+ Die Kunst der Erklärbarkeit ist dabei, diese Logik in einer Sprache (Kommunikat
+ionsprotokoll) zu formulieren, als auch sie möglich so weit .
+\end_layout
+
+\begin_layout Itemize
+Wissen, welche Informationen für den Partner wichtig sind
+\end_layout
+
+\begin_layout Itemize
+Verständnis über den Lernprozess des Empfängers und die Fähigkeit, ihm etwas
+ zu erlernen
+\end_layout
+
+\begin_layout Subsection
+Tiefergehendes Verständnis für das Problem
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Ausreichendes-Verständnis"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Der Suche nach einer Erklärung erfordert zuerst den Wunsch, überhaupt eine
+ solche zu erhalten.
+\end_layout
+
+\begin_layout Standard
+Das Hauptziel lag bisher vorrangig darin, einer Maschine die Werkzeuge zu
+ geben, sich etwas selbst beizubringen.
+ Superhuman performance war zwar möglich, dieser beschränkte sich aber meistens
+ auf stupide Aufgaben im Bereich des supervised learning, für die man von
+ Haus aus keine einfach verständliche Erklärung erwarten würde, da die Lediglich
+ Menschliches Verständnis für ein Problem nachempfunden werden konnte.
+ Ein Beispiel hierfür wäre Bilderkennung.
+ Maschinen können zwar mit viel größeren Datenmengen arbeiten und erkennen
+ teilweise Objekte auch besser als der Mensch, sind aber 
+\begin_inset Quotes eld
+\end_inset
+
+Fachidioten
+\begin_inset Quotes erd
+\end_inset
+
+, die sich nur mit einem Problem auskennen und die dem Menschen keine echte
+ Intelligenz oder Verständnis für das Problem vorraus haben.
+ Die ein-pixel-attacke 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "one_pixel_attack"
+literal "false"
+
+\end_inset
+
+ hat beispielsweise gezeigt, wie leicht sich eine Bilderkennung zu groben
+ Fehlschlüssen bringen lässt weil ihr allgemeinere Intelligenz fehlt.
+\end_layout
+
+\begin_layout Standard
+Echte superhuman performance kann nur dort erreicht werden, wo eine Maschine
+ die Möglichkeit hat, eigenständig Strategien zu entwickeln komplexer sein
+ können als die des Menschen.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Deep RL
+\end_layout
+
+\begin_layout Standard
+Dies ist im Bereich des Reinforcement Rearning (RL) möglich.
  
 \end_layout
 
 \begin_layout Standard
-Bisher galt das Hauptziel hier auch vorrangig, überhaupt einer Maschine
- die Werkzeuge zu geben, sich etwas selbst beizubringen.
- Im Reinforcement learning wurde hier in den letzten Jahren, vor allem unter
- Verwendung neuronaler Netze, ein unglaublicher Fortschritt erzielt.
- 
+RL features an agent which has the task of learning a strategy without any
+ default knowledge in an environment by receiving an external reward.
 \end_layout
 
 \begin_layout Standard
-Deep Mind gab mit 
-\begin_inset Note Note
+Ein Durchbruch gelang dabei Deepmind bei den Spielen Schach und Go.
+ Diese Spiele galten aufgrund des tief gehenden Verständnis für Positionen
+ und der enorm hohen Möglichkeit an möglichen Zügen als dem Menschen vorbehalten.
+ Beide Ansätze waren sowohl dem Menschen als auch den vom Menschen geschriebenen
+ Heuristiken überlegen.
+\end_layout
+
+\begin_layout Subsubsection
+Das AlphaGO-problem
+\end_layout
+
+\begin_layout Standard
+Probleme, die bei alpha go auftraten
+\end_layout
+
+\begin_layout Itemize
+entwickler ka von GO –> Experte
+\begin_inset Newline newline
+\end_inset
+
+Doch selbst eine so mächtige KI wie AlphaGO, die von einem ganzen Forscherteam
+ Jahrelang geplant und tausende Stunden trainiert wurde, war letzten Ende
+ auch nur ein Fachidiot.
+\begin_inset Newline newline
+\end_inset
+
+In der Doku zu AlphaGO wurde beispielsweise erwähnt 
+\begin_inset Note Comment
 status open
 
 \begin_layout Plain Layout
-[TODO]
+\begin_inset CommandInset href
+LatexCommand href
+target "https://youtu.be/WXuK6gekU1Y?t=1390"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
 
- den Startschuss eines neuen Booms indem sie zeigten, wie sich eine Maschine
- mithilfe von einem externen Reward (Reinforcement Learning, RL) und sonst
- nur auf Basis von Bilddaten beibringen konnte, ATARI zu spielen.
- Die Probleme waren allerdings ansich nur von niederer Komplexität und komplexe,
- lang zu planende Strategien galten als dem Menschen vorbehalten.
- Nach kurzer Zeit konnten aber auch Probleme dieser Dimension gelöst werden,
- große Bekanntheit erreichte hier beispielsweise AlphaGo (Go) oder AlphaZero
- (Schach), die sogar alle menschlichen Lösungen übertreffen konnten.
+, dass AlphaGO oft zwischen der Genialität in der Trainingsphase auch oft
+ groben Denkfehlern unterlag.
+ Ein menschlicher GO Profi überwachte deshalb den Lernprozess und fand genau
+ einen solchen groben, spielentscheidenden Denkfehler.
+ 
+\end_layout
+
+\begin_layout Itemize
+nicht sicher, obs funktioniert –> Tests.
+ Tests u.u.
+ nicht ausreichend.
+ Tests haben versagt
+\end_layout
+
+\begin_layout Itemize
+grobe und peinliche denkfehler möglich
+\end_layout
+
+\begin_layout Itemize
+Verbesserungen nur schwer möglich
+\end_layout
+
+\begin_layout Quotation
+\begin_inset Quotes eld
+\end_inset
+
+It’s unbelieveably superhuman, in general, but it has some particular weaknesses
+ in some situations.
+ We can think of there being this space of all the things it knows about,
+ and it knows about most of it extremely well.
+ Then there will be these tricky lumps of knowledge, that it just understands
+ very poorly.
+ And it's really hard for us to characterize when it is going to enter into
+ one of these lumps.
+ But if it does, it can be completely delusional, thinking that it is alive
+ on one part of the board when, in fact, it's dead or vice versa.
+ So, there is a real risk that we could lose the match.
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset href
+LatexCommand href
+target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Nachdem der Fehler identifiziert war, stand das Team vor dem Problem, wie
+ ein solcher Fehler behoben werden kann.
+\begin_inset Newline newline
+\end_inset
+
+Was hänschen nicht lerne, lernt hans nimmer mehr
+\end_layout
+
+\begin_layout Subsection
+Sprache (Kommunikationsprotokoll)
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Sprache-Kommunikationsprotokoll"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Aktuelle Ansätze, beispielsweise neuronale Netze (NN), können ihre Entscheidunge
+n meist weder erklären, noch ist es für den Menschen ohne weiteres möglich,
+ die Datenstrukturen nachzuvollziehen.
+ Um trotzdem herauszufinden, was eine solche ML-blackbox tut, muss auf aufwendig
+e Art und Weise das Verhalten des Agenten analysiert werden.
+ Optimalerweise können so Denkanstöße gefunden werden, die in bereits existieren
+de Lösungen integriert werden könnten.
+\end_layout
+
+\begin_layout Standard
+In dieser Arbeit wird dieser Prozess mithilfe von genetischer Programmierung
+ (GP) automatisiert und dem Menschen mithilfe des Konzeptes der 
+\begin_inset Quotes eld
+\end_inset
+
+Vertrautheit
+\begin_inset Quotes erd
+\end_inset
+
+ erklärbar gemacht.
+\end_layout
+
+\begin_layout Standard
+Vertrautheit beschreibt die Eigenschaft gefundener Lösungen, Ähnlichkeit
+ zu bereits verstandenen (z.
+ B: weil von Menschen erzeugten) Lösungen zu haben.
+ Dies wird dadurch erreicht, dass die Startlösung für das Problem (origin)
+ nur geringfügig geändert wird, was mithilfe der Tree-Edit-Distance (TED)
+ umgesetzt wurde.
+\end_layout
+
+\begin_layout Standard
+Ergebnisse Zeigen, dass sich die menschliche Logikstruktur und die maschinelle
+ Verbesserung oft sehr sinnvoll ergänzen.
+ Die Ergebnisse waren sowohl performanter als auch erklärbarer.
+\end_layout
+
+\begin_layout Section
+Egg-and-spoon race
+\end_layout
+
+\begin_layout Standard
+die Logik so weit auf das wesentliche Problem zu reduzieren der Informationen
+ weniger Aufwand mit dem hat sie in sein eigenes 
+\begin_inset Quotes eld
+\end_inset
+
+Modell
+\begin_inset Quotes erd
+\end_inset
+
+ zu integrieren
+\end_layout
+
+\begin_layout Standard
+Was 
+\begin_inset Quotes eld
+\end_inset
+
+wesentlich
+\begin_inset Quotes erd
+\end_inset
+
+ für ein Problem ist, liegt dabei stark im Auge des Betrachters.
  
 \end_layout
 
 \begin_layout Standard
-Heutzutage gelten nur noch wenige Probleme als unantastbar.
+Betrachten wir beispielsweise das Spiel 
+\begin_inset Quotes eld
+\end_inset
+
+Egg-and-spoon race
+\begin_inset Quotes erd
+\end_inset
+
+, wo ein Ei auf einem Löffel balanciert werden muss während man zu einem
+ Ziel läuft.
+ Sowohl das erkennen des Ziels als auch die Fähigkeit aufrecht zu laufen
+ oder etwas in den Händen zu balancieren sind Fähigkeiten, die isoliert
+ alle einfach für uns sind.
+ Der schwierige Teil des Problems ist schnell klar: Das Löffel-Ei Konstrukt
+ ist sehr instabil, weshalb man seine Aufmerksamkeit auf dieses richtet
+ und nur langsam läuft.
+ Hat man zufällig schon mal ein Weinglas auf einem Tablett balanciert wird
+ einem vielleicht einfallen, dass es hilft, die balance zu halten, wenn
+ man einen stabilen Punkt in der Ferne fokussiert.
+ Einem Freund könnte man deshalb den Tipp geben 
+\begin_inset Quotes eld
+\end_inset
+
+Schau nur auf das Ziel
+\begin_inset Quotes erd
+\end_inset
+
+, was die Aufgabe für ihn vermutlich stark vereinfacht.
 \end_layout
 
 \begin_layout Standard
-Nachdem dieser Meilenstein überwunden wurde, stellt sich nun viel mehr die
- Frage nach der Erklärbarkeit von Entscheidungen.
+Im Bereich des Machine learning würde man ein solches Problem reinforcementlearn
+ing problem modellieren, wo das Kind die Rolle eines Agenten übernimmt.
+\end_layout
+
+\begin_layout Subsection
+RL
+\end_layout
+
+\begin_layout Standard
+Das Problem würden wir hierdennoch sind die Wahrnehmungen zwischen den meisten
+ Menschen so ähnlich, dass die meisten Probleme 
+\end_layout
+
+\begin_layout Standard
+Menschen haben, im Vergleich zu einer Maschine, nur begrenzt Zeit für einen
+ Lernprozess und können sich dabei auch keine groben Fehltritte erlauben.
+ Der Mensch lernt deshalb bereits sehr früh, getroffene Entscheidungen zu
+ hinterfragen und allgemeines Verständnis für die Gesetze der Natur zu entwickel
+n.
+ Ab einem gewiAb einem bestimmten Punkt ist eine Fähigkeit so gut verstanden,
+ dass sie auch automatisiert und unterbewusst ablaufen kann.
+\end_layout
+
+\begin_layout Standard
+Wenn beispielsweise ein Baby das Laufen lernt, braucht es seine komplette
+ Aufmerksamkeit um ein möglichst schnellen Lernprozess zu garantieren.
+ 
+\end_layout
+
+\begin_layout Standard
+Maschinen haben nur einen winzigen Bruchteil der Neuronen zur Verfügung,
+ die das menschliche Gehirn hat - dafür können Lernprozesse Wäre eine Maschine
+ mit demselben Problem konfrontiert
+\end_layout
+
+\begin_layout Standard
+für jede bewusst getroffene Entscheidung Rechenschaft ablegen und sie begründen.
+ Im Bereich der künstlichen Intelligenz wurde dieser Aspekt bisher großräumig
+ ausgeklammert.
  Erklärbarkeit umfasst in der künstlichen Intelligenz das Problem, Entscheidunge
-n neuronaler Netze erklären können zu wollen.
- Neuronale Netze werden immernoch blackbox betrachtet, wodurch die Frage
+n neuronaler Netze zu erklären.
+ Neuronale Netze werden immernoch als blackbox betrachtet, wodurch die Frage
  aufkommt, inwieweit man ihnen vertrauen kann.
  Künstliche Intelligenz kann auch als Automatisierung statistischer Verfahren
  beschrieben werden, die mit einem Explorationsparameter epsilon trainiert
@@ -282,19 +643,22 @@ n neuronaler Netze erklären können zu wollen.
 Diese Testverfahren sind insbesondere von großer Relevanz, da aktuelle Verfahren
  keine allgemeine Intelligenz besitzen, die sie davor bewahren würde, einige
  (für den Menschen offensichtlichen) Fehler zu machen.
+ Die Modelle, die zur Lösung von Problemen von einem Entwickler implementiert
+ werden, werden meistens so konzipiert, dass sie für kaum ein anderes Problem
+ nutzbar sind.
+ Für Bilderkennung werden meist eine Vielzahl an Filtern verwendet, die
+ vom Menschen vorgegeben werden.
  Obwohl allgemeine Intelligenz vielleicht gar nicht in so weiter Ferne liegt,
  gibt es durchaus praktische Gründe, weiterhin Fachidioten statt Universalkönner
  zu trainieren: Kosten.
 \end_layout
 
+\begin_layout Subsection
+Youtube Bilderkennung, allgemeine Intelligenz
+\end_layout
+
 \begin_layout Standard
-Die Modelle, die zur Lösung von Problemen von einem Entwickler implementiert
- werden, werden meistens so konzipiert, dass sie für kaum ein anderes Problem
- nutzbar sind.
- Für Bilderkennung werden meist eine Vielzahl an Filtern verwendet, die
- vom Menschen vorgegeben werden.
- Das ist allerdings keine Voraussetzung.
- In 
+In 
 \begin_inset Note Note
 status open
 
@@ -321,35 +685,18 @@ viele nodes und kostete 4m $
 , weshalb es keine option für normale Probleme darstellt.
 \end_layout
 
-\begin_layout Standard
-Auch die erfolgreichen Beispiele der künstlichen Intelligenz unterliegen
- oft diesem Problem.
- In der Doku zu AlphaGO wurde beispielsweise erwähnt, dass AlphaGO oft zwischen
- der Genialität in der Trainingsphase auch oft groben Denkfehlern unterlag.
- Ein menschlicher GO Profi überwachte deshalb den Lernprozess und half an
- einigen Stellen, diese zu verbessern.
- 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-GO Doku
+\begin_layout Subsection
+Erklärbarkeit erreichen - wie?
 \end_layout
 
-\end_inset
-
- Ein ähnlicher Ansatz wurde auch bei AlphaZero gewählt um echtes Wissen
- aus dem komplexen Agenten zu extrahieren: Ergebnisanalysen.
- AlphaZero spielte recht aggressiv, was die state-of-the-art spielweise
- nachhaltig verändern sollte.
- Der Prozess der Extraktion der wichtigsten Logik, von der angenommen werden
+\begin_layout Standard
+Der Prozess der Extraktion der wichtigsten Logik, von der angenommen werden
  kann, dass sie durch ein neuronales Netz angenähert wird, ist ein sehr
  aufwendiger Prozess.
  Selbst wenn wir ein neuronales Netz uns sagen könnte, wieso es eine Entscheidun
 g trifft, würde die Antwort vermutlich sehr kompliziert sein.
- Schließlich beinhaltet sie im Optimalfall ja eine Idee oder einen logischen
- Gedanken, der Teil der noch über die komplexe, menschliche Lösung hinaus
- geht.
+ Schließlich beinhaltet sie im Optimalfall eine Idee oder einen logischen
+ Gedanken, der noch über die komplexe, menschliche Lösung hinaus geht.
  Wenn wir einem Computer Anweisungen geben, was er tun soll, verwenden wir
  eine praktische und minimalistische Abstraktionm die Programmiersprachen.
  Im Gegensatz dazu wäre es praktisch, wenn ein neuronales Netz uns auch
@@ -362,6 +709,32 @@ Dieser Prozess ist natürlich mit einem Informationsverlust behaftet, da
  die erwähnte Logik stark vereinfacht werden muss.
  Außerdem muss es automatisch erfolgen, ohne dass der Mensch die Entscheidungen
  analysieren muss.
+\end_layout
+
+\begin_layout Standard
+Ein ähnlicher Ansatz wurde auch bei AlphaZero gewählt um echtes Wissen aus
+ dem komplexen Agenten zu extrahieren: 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Ergebnisanalysen
+\end_layout
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+AlphaZero spielte recht aggressiv, was die state-of-the-art spielweise nachhalti
+g verändern sollte.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+GP zur Erklärung? Nur mit Familiarity.
 \end_layout
 
 \begin_layout Standard
@@ -420,101 +793,8 @@ Dieser Ansatz wird in dieser Masterarbeit mit der Tree Edit Distance (TED)
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-In den letzten Jahrzehnten wurde der Bereich der künstlichen Intelligenz
- etwas erreicht, was undenkbar galt: Computer können sich selbst beibringen,
- Probleme mithilfe einer externen Zielvorgabe zu lösen (Reinforcement Learning,
- RL).
- Die möglchkeiten sind hier durch die Verwendung neuronaler Netze und intensiver
- Forschung stetig gewachsen.
- DQN ATARI Spiele gelöst werden konnten., die lange Zeit als dem Menschen
- vorbehalten galten.
- Dies fing 
-\end_layout
-
-\begin_layout Plain Layout
-Bis vor einigen Jahrzehnten war künstliche Intelligenz noch undenkbar.
- Dur In den letzten Jahrzehnten wurden aber, vor allem durch die Verwendung
- neuronaler Netze intensive Forschung 
-\end_layout
-
-\begin_layout Plain Layout
-Der menschliche Versuch, künstliche Intelligenz zu erzeugen nimmt seit einigen
- Jahren immer mehr Fahrt auf.
-\end_layout
-
-\begin_layout Plain Layout
-Erklärbarkeit ist ein schwer zu erreichendes Gut im Bereich der künstlichen
- Intelligenz.
- Bisher wird
-\end_layout
-
-\begin_layout Plain Layout
-Fast allen aktuelle Ansätzen der künstlichen Intelligenz fehlt es an allgemeiner
- Intelligenz.
- Für die meisten Probleme mag das irrelevant erscheinen, doch gerade in
- sensiblen Bereichen n
-\end_layout
-
-\begin_layout Plain Layout
-Der Hauptgrund, weshalb Reinforcement learning lösungen für viele Probleme
- noch nicht eingesetzt werden ist fehlende allgemeine Intelligenz 
-\end_layout
-
-\begin_layout Plain Layout
-So kann beispielsweise im Bereich des reinforcement learning (RL) ein Agent
- ein Modell für ein Problem erstellen, welches allen menschlichen Lösungen
- überlegen ist.
- Gerade aber bei diesem, erreichen  problem zwar oft übermenschliche Performance
- erreichen, doch vielzähligen Architekturen auf das Problem zugeschnitten,
- wel Reinforcement Learning (RL) Als Teilgebiet des Machine Learning (ML)
- werden dafür meist sehr komplexe Datenstrukturen verwendet, 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Reinforcement Learning (RL) erfährt seit einigen Jahren immer größere Beliebthei
-t.
- Als Teilgebiet des machine learnings (ML) kann ein Computer nicht nur lernen,
- Probleme ohne menschliche Vorgaben zu erledigen - oft übertrifft er den
- Menschen dabei sogar.
- Hierfür erstellt ein Agent eine policy, deren 
-\end_layout
-
-\begin_layout Plain Layout
-Diese Leistung kommt aber mit dem Preis der nicht erklärbarkeit von Entscheidung
-en- die Kontrolle wird an die Maschine abgegeben und ihren Entscheidungen
- muss vertraut werden.
-\end_layout
-
-\begin_layout Plain Layout
-Erklärbare künstliche Intelligenz ist im Gegensatz dazu ein relativ junger
- Forschungsbereich, der sich vorrangig mit dem Problem beschäftigt, die
- erlernten Entscheidungen einer Maschine erklärbar zu machen.
- Eine maschinell gelernte (ML) Lösung zu erklären ist dabei nicht trivial,
- da die Verwendeten Strukturen meist chaotisch und unglaublich komplex sind
- und nur durch langwierige Trainigsprozesse optimiert werden können.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Note
-status open
+status collapsed
 
 \begin_layout Plain Layout
 Originating from an explainable solution provided by an expert, genetic
@@ -552,18 +832,11 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-Great progress has been made in the field of Machine Learning (ML) in recent
- years, which means that more and more tasks previously reserved for humans
- can now be performed by machines.
- Reinforcement learning (RL), in which a machine learns independently to
- solve a problem without any previous knowledge, is of particular interest
- to industry.
- Tasks that were previously reserved for humans are thus not only solvable,
- the solution often even exceeds the known approaches.
- Examples are AlphaZero or AlphaGo, which achieved superhuman performance
- in the games of Chess and Go and could even beat all known chess computers.
-  From observations of their way of playing, tactics could even be derived
- that have changed the way they play in the long term.
+Die Motivation für Erklärbare Ansätze ist sehr vielfältig.
+\end_layout
+
+\begin_layout Subsection
+Interest for industry
 \end_layout
 
 \begin_layout Standard
@@ -573,8 +846,11 @@ There are also many areas in industry, such as controllers, which promise
  because decisions cannot be explained and the process must therefore be
  considered a black box.
  This is not a problem for games or simulations, but in sensitive areas
- such as controlling a gas turbine or even a nuclear power plant, for example,
- this safety is essential.
+ such as controlling a gas turbine or even a nuclear power plant this safety
+ is essential.
+ As experience showsm, even well-trained artificial intelligences, which
+ are already widely used in the public sector like Teslas car autopilot,
+ has been the cause for an avoidable car accident in 2018.
 \end_layout
 
 \begin_layout Standard
@@ -582,26 +858,68 @@ The search for approaches in which the performance gain is not at the expense
  of lost control is therefore very great.
 \end_layout
 
-\begin_layout Subsection
-Popular examples
+\begin_layout Subsubsection
+RL in der Industrie
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-cite tesla, wahlen, musk + hawking
+Diese Leistung kommt aber mit dem Preis der nicht erklärbarkeit von Entscheidung
+en- die Kontrolle wird an die Maschine abgegeben und ihren Entscheidungen
+ muss vertraut werden.
 \end_layout
 
+\begin_layout Standard
+Erklärbare künstliche Intelligenz ist im Gegensatz dazu ein relativ junger
+ Forschungsbereich, der sich vorrangig mit dem Problem beschäftigt, die
+ erlernten Entscheidungen einer Maschine erklärbar zu machen.
+ Eine maschinell gelernte (ML) Lösung zu erklären ist dabei nicht trivial,
+ da die Verwendeten Strukturen meist chaotisch und unglaublich komplex sind
+ und nur durch langwierige Trainigsprozesse optimiert werden können.
+\end_layout
+
+\begin_layout Section
+Security 
+\end_layout
+
+\begin_layout Standard
+The most important point for sensitive areas is probably that fatal mistakes
+ do not only not occur statistically - by verification of programs a behavior
+ can be guaranteed and misbehavior can be reduced.
+ The solution may be based on a logic that for some cases works, but is
+ discarded as not universally valid can be.
+ Under certain circumstances, the solution is based on a logic that works
+ for some cases, but which can be rejected as not universally valid.
+ For example, suppose the autopilot of a car evaluates the ambivalent informatio
+n 
+\begin_inset Quotes eld
 \end_inset
 
+Object is too low
+\begin_inset Quotes erd
+\end_inset
 
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Object is highway sign
+\begin_inset Quotes erd
+\end_inset
+
+.
+ It is quite conceivable that, in the training process, it was learned incorrect
+ly that a motorway sign can absolutely always be passed.
+ A fatal, over-fitted wrong decision, which an examiner would probably have
+ noticed during an analysis.
+\end_layout
+
+\begin_layout Subsection
+Popular examples (security)
 \end_layout
 
 \begin_layout Standard
 Despite this danger, ML solutions are already being used in many areas,
- even in sensitive areas.
+ even in sensitive ones.
  This is a development that makes part of the population feel uncomfortable.
 \end_layout
 
@@ -609,19 +927,11 @@ Despite this danger, ML solutions are already being used in many areas,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hawking_AI_warning"
+literal "true"
 
 \end_inset
 
- These do not necessarily have to have the dimensions of 
-\begin_inset Quotes eld
-\end_inset
-
-matrix
-\begin_inset Quotes erd
-\end_inset
-
-, even though Elon Musk and Stephen Hawking have both explicitly warned
- about the risks of artificial intelligence.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -632,6 +942,7 @@ s made fatal mistakes.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
@@ -639,44 +950,30 @@ key "Tesla_Autopilot_crash_article"
 ed incidents.
  In 2015, a company caused a stir by claiming to have played a major role
  in the presidential election in America and the Brexit decision in Great
- Britain by means of data mining.Admittedly, here the machine did not make
- a mistake, but only what the company wanted it to do - but it shows the
- potential and risk of such powerful approaches.
+ Britain by means of data mining.
+ Admittedly, here the machine did not make a mistake, but only what the
+ company wanted it to do - but it shows the potential and risk of such powerful
+ approaches.
 \end_layout
 
-\begin_layout Section
-Verständnis als 
+\begin_layout Subsection
+In court
 \end_layout
 
 \begin_layout Standard
-Ein neuronales Netz ist nichts anderes als ein
+Wenn die Schuldfrage vor Gericht geklärt werden soll, muss die Fehlentscheidung
+ der KI gerechtfertigt werden.
+ Bei einem neuronalen Netz wird man zugeben müssen, dass man absichtlich
+ eine (mithilfe von Zufall erzeugte) Blackbox verwendet hat, die zwar generell
+ gut sein mag, für dessen Robustheit aber niemals garantiert werden kann.
+ Ein solcher Fall würde vermutlich stark zu Gunsten des Geschädigten ausgehen.
 \end_layout
 
-\begin_layout Itemize
-Security 
-\begin_inset Newline newline
-\end_inset
-
-The most important point for sensitive areas is probably that fatal mistakes
- do not only not occur statistically - by verification of programs a behavior
- can be guaranteed and misbehavior can be reduced.
- The solution may be based on a logic that for some cases works, but is
- discarded as not universally valid can be.
- Under certain circumstances, the solution is based on a logic that works
- for some cases, but which can be rejected as not universally valid.
- For example, suppose the autopilot of a car evaluates the ambivalent informatio
-n ``Object is too low'' and ``Object is highway sign''.
- It is quite conceivable that, in the training process, it was learned incorrect
-ly that a motorway sign can absolutely always be passed.
- A fatal, over-fitted wrong decision, which an examiner would probably have
- noticed during an analysis.
-\end_layout
-
-\begin_layout Itemize
+\begin_layout Subsection
 Knowledge discovery
-\begin_inset Newline newline
-\end_inset
+\end_layout
 
+\begin_layout Standard
 Especially from a scientific point of view, it is of great interest not
  only to have an outside view on a solution, but to understand the hidden
  logic.
@@ -701,87 +998,140 @@ What physical laws are based on the orbit of a planet
 .
 \end_layout
 
-\begin_layout Itemize
+\begin_layout Subsection
 Adaptations by humans
-\begin_inset Newline newline
-\end_inset
-
-If the requirements for a task change even slightly, a completely new training
- process is often necessary.
- Not only are the subgoals for the decision leading to a decision not clearly
- identifiable, they also cannot be modified.
- The old network can only be used to a limited extent.
 \end_layout
 
-\begin_layout Itemize
-In court
-\begin_inset Newline newline
+\begin_layout Standard
+Wenn sich die Anforderungen an eine Aufgabe auch nur geringfügig ändern,
+ ist oft ein völlig neuer Lernprocess erforderlich.
+ Die Teilziele für die Entscheidung, die zu einer Entscheidung führt, sind
+ nicht nur nicht eindeutig identifizierbar, sie können auch nicht geändert
+ werden.
+ Das alte Netzwerk kann nur eingeschränkt genutzt werden.
+\end_layout
+
+\begin_layout Subsection
+Improved performance?
+\end_layout
+
+\begin_layout Standard
+Ausgestattet mit allgemeiner Intelligenz versucht der hypothetische Entwickler
+ von einfachen, abstrahierten Paradigmen das Problem 
+\begin_inset Quotes eld
 \end_inset
 
-If the question of guilt is to be clarified in court, it must be possible
- to explain how a wrong decision could have been made.
- The developer's task is to provide an explanation for the agent's behavior.
- If this is not possible, you make yourself legally contestable, even if
- an agent is otherwise considered safe.
- This is particularly important in view of the fact that an agent takes
- on many tasks for which the risks were previously borne by the user.
+menschlich logisch
+\begin_inset Quotes erd
+\end_inset
+
+ zu lösen.
+ Falls der Denkansatz des Menschen nicht vollkommen falsch ist, ist für
+ die Lösung des Problems bereits ein wichtiger Schritt erledigt worden.
+ Dieser muss sowohl nicht mehr 
+\begin_inset Quotes eld
+\end_inset
+
+gefunden
+\begin_inset Quotes erd
+\end_inset
+
+ werden, es wird aber auch nicht so leicht eine 
+\begin_inset Quotes eld
+\end_inset
+
+komische
+\begin_inset Quotes erd
+\end_inset
+
+ Logik gefunden, die das Problem vielleicht overfittet.
 \end_layout
 
 \begin_layout Section
-Machine Learning, Reinforcement learning
+Fitness
+\end_layout
+
+\begin_layout Subsection
+Overfitting and Underfitting
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:OverfittingUnderfitting"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-Machine Learning is an important part of Artificial Intelligence, in which
- a machine learns to solve a task without human instructions.
- Reinforcement learning features an agent which has the task of learning
- the optimal behaviour in an environment without any default knowledge.
- To do so, the agent receives a reward for actions it performed as well
- as the state of the environment that it is currently in.
- In order to choose the best action, the agent has to learn a policy for
- all possible states.
- To improve the policy, the agent both has to exploit the experience that
- was made in the past, but also has to explore new possible solutions.
- This is called the exploration-exploitation tradeoff.
+Die Fitness eines Modells beschreibt, wie gut es die Realität beschreibt.
+\end_layout
+
+\begin_layout Chapter
+State of the art machine learning 
+\end_layout
+
+\begin_layout Section
+Erklärbarkeit neuronaler Netze
 \end_layout
 
 \begin_layout Standard
-Anders formuliert könnte man auch sagen, dass es sich allgemein um automatisiert
-e Verfahren der Statistik handelt, die mit einem Epsilon Parameter als explorati
-onsfaktor angewendet werden.
-  Durch intensive Forschung wurden eine Vielzahl an Ansäten und Architekturen
- entwickelt, wodurch .
- Diestets neue Archifür vielerlei Probleme zu finden.
- sind zweifelsohne trotzdem oft effizienter als menschliche Lösungen..
- Die gängigen Ansätze schaffen es zwar, ein Modell für ein spezielles Problem
- zu finden, sind aber letzten Endes nur automatisierte statistische Verfahren.
- Diese können durch viel Aufwand mithilfe eines Epsilon-explorations parameters
- erstellt werden, richtiges Verständnis für kausale Zusammenhänge kann aber
- so nicht erlangt werden.
- Außerhalb der Probleme sind die Modelle nicht verwendbar.
- Diese 
+Künstliche neuronale Netze sind Computersysteme, die von dem neuronalen
+ Netz des biologischen Gehirns inspiriert sind.
+ Solche Systeme "lernen" die Ausführung von Aufgaben anhand von Beispielen,
+ im Allgemeinen ohne mit aufgabenspezifischen Regeln programmiert zu sein.
+ 
+\end_layout
+
+\begin_layout Standard
+Inspiriert von dem Gehirn als natürliches neuronales Netz bestehen auch
+ künstliche neuronale Netze aus Neuronen.
+ Diese können Signale empfangen, verarbeiten und weiterleiten.
+ Die eingehenden Signale werden dafür gewichtet, addiert und in eine Aktivierung
+sfunktion gesteckt, beispielsweise die ReLu-Funktion oder die Sigmoid-funktion.
+ Der Lernprozess wird dadurch erreicht, dass ein Neuron die Gewichtungen
+ in einem backpropagation-Schritt, je nachdem ob die Entscheidung richtig
+ oder falsch war, angepasst werden.
+\end_layout
+
+\begin_layout Standard
+Die erste Schicht umfasst dabei den Eingabevektor des Problems, die letzte
+ Schicht stellt die Tendenz für alle möglichen Entscheidungen dar.
+\end_layout
+
+\begin_layout Standard
+Ein neuronales Netz ist somit, vereinfacht gesagt, ein sehr (über-) komplexes,
+ statistisches Gleichungssystem, dessen Parameter automatisch angepasst
+ werden.
+ Die Logik (Struktur der Neuronen, Aktivierungsfunktionen, Anznahl der Schichten
+, etc.) muss allerdings vom Entwickler gewählt werden.
+ Ist die gewählte Architektur nicht für das Problem geeignet, so wird es
+ auch nicht funktionieren.
+\end_layout
+
+\begin_layout Standard
+Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
+ einen Hund dafür zu trainieren und eine Taube, um Nachrichten zu übermitteln
+ - umgekehrt funktioniert es nicht.
+ Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
+ uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
+ Das neuronale netz anzusehen ist auch keine Option, da es sowohl meistens
+ zu umfangreich (xxx parameter) als auch zu unintuitiv (xxx siehe aktivierungsfu
+nktionen) ist.
+\end_layout
+
+\begin_layout Standard
+Um verstehen zu können, was passiert und wie Lösungen gefunden werden, kann
+ nur das Verhalten beobachtet werden.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-Youtube paper
+Andere Beispiele für XAI (Wiki?) Erklärbarkeit vs.
+ Interpretierbarkeit?
 \end_layout
-
-\end_inset
-
-Im Jahr [] wurde ein solches Experiment gestartet, wo ein NN ohne Anweisungen
- gelernt hat, Bilder zu erkennen - erfolgreicher als alle bisherigen Ansätze.
- Normalerweise ist es aber effizienter, kleinere Netze bis zu einer gewünschten
- Performance zu trainieren, die from scratch ein vorimplementiertes Model
- trainieren.
- 
-\end_layout
-
-\begin_layout Section
-TODO
-\begin_inset CommandInset label
-LatexCommand label
-name "TODO"
 
 \end_inset
 
@@ -789,16 +1139,66 @@ name "TODO"
 \end_layout
 
 \begin_layout Subsection
+Exploration exploitation by humans, NN and GP
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Anders formuliert könnte man auch sagen, dass es sich allgemein um automatisiert
+e Verfahren der Statistik handelt, welche Modelle für gemachte Erfahrungen
+ erstellen.
+  Um nicht nur  die mit einem Epsilon Parameter als explorationsfaktor angewende
+t werden.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Allgemeine künstliche Intelligenz
+\end_layout
+
+\begin_layout Standard
+Richtiges Verständnis für kausale Zusammenhänge kann aber so nicht erlangt
+ werden.
+ Außerhalb der Probleme sind die Modelle nicht verwendbar.
+ Diese 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Youtube paper, Building High-level FeaturesUsing Large Scale Unsupervised
+ Learning
+\end_layout
+
+\end_inset
+
+Im Jahr 2012 wurde ein solches Experiment gestartet, wo ein NN ohne Anweisungen
+ gelernt hat, Bilder zu erkennen - erfolgreicher als alle bisherigen Ansätze.
+ Normalerweise ist es aber effizienter, kleinere Netze bis zu einer gewünschten
+ Performance zu trainieren, die from scratch ein vorimplementiertes Model
+ trainieren.
+ 
+\end_layout
+
+\begin_layout Subsection
 Neural Networks
 \end_layout
 
 \begin_layout Standard
-Great progress has been made in recent years, especially with the help of
- neural networks.
- A well-known example is provided by Deepmind, who taught a machine Atari
- games with the help of neural networks.
- A large number of architectures developed since then offer special architecture
-s for different problems.
+Neuronale Netze sind Zusammenschlüsse von Neuronen, die zusammen ein Gehirn
+ bvil
+\end_layout
+
+\begin_layout Standard
+A large number of architectures developed since then offer special architectures
+ for different problems.
  For example, AlphaGo or AlphaZero were able to master the complex strategy
  games Go and Chess, which until then were considered too complex for machines.
  Even in everyday life, ML solutions are often indispensable; be it the
@@ -833,6 +1233,7 @@ status open
 LatexCommand href
 name "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
+literal "false"
 
 \end_inset
 
@@ -840,6 +1241,7 @@ target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -889,6 +1291,7 @@ reference "TODO"
 \begin_inset CommandInset href
 LatexCommand href
 target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
+literal "false"
 
 \end_inset
 
@@ -896,6 +1299,7 @@ target "https://www.nytimes.com/2020/02/25/business/tesla-autopilot-ntsb.html"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -911,28 +1315,10 @@ key "one_pixel_attack"
 \end_layout
 
 \begin_layout Subsection
-Functionalities
+NN Functionalities
 \end_layout
 
 \begin_layout Standard
-In order to find out whether and how one can resolve the logic within a
- neural network, we have to take a closer look at the functionalities.
-\end_layout
-
-\begin_layout Standard
-Artificial neural networks are computing systems inspired by the biological
- brain.
- Such systems “learn” to perform tasks by considering examples, generally
- without being programmed with task-specific rules.
- The brain is made up of neurons which can activate each other to lead to
- a decision.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 An artificial neural network is modeled with artificial neurons that are
  strung together in form of layers.
  The layers are connected in series between the neurons can communicate
@@ -946,11 +1332,6 @@ An artificial neural network is modeled with artificial neurons that are
  If it is wrong though, the error is fed back through all layers with an
  algorithm called backpropagation where the weights are adjusted to support
  making the right decision next time.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -1006,8 +1387,8 @@ ReLu and Sigmoid activation
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Greyedout
-status open
+\begin_inset Note Note
+status collapsed
 
 \begin_layout Plain Layout
 Artificial neural networks are computer systems that are strongly oriented
@@ -1064,6 +1445,10 @@ the system thus consists of n
  variables.
 \end_layout
 
+\begin_layout Subsection
+NN always has the same complexity
+\end_layout
+
 \begin_layout Standard
 There is one thing that is decisive for the explainability: no matter at
  what point in time the network is viewed, it always has the same complexity.
@@ -1081,6 +1466,7 @@ There is one thing that is decisive for the explainability: no matter at
 \begin_inset CommandInset href
 LatexCommand href
 target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c"
+literal "false"
 
 \end_inset
 
@@ -1088,32 +1474,10 @@ target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqn
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Over the years, many architectures of neural networks have been developed,
- which can often solve a specific problem very well.
- Worth mentioning are ...
-\end_layout
-
-\begin_layout Plain Layout
-[todo, such as: convolutional neural networks, lstm, autoencoder, numerous
- activation functions, mcts, dqn double dqn, rainbow, ...
- S
-\end_layout
-
-\begin_layout Plain Layout
-oll ich ein paar erwähnen?]
-\end_layout
-
-\end_inset
-
-.
- 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -1230,68 +1594,22 @@ Bayesian neural network, dropping out, early stopping, ...
 
 \end_layout
 
-\begin_layout Section
-Genetic programming
+\begin_layout Chapter
+Genetic Programming with familiarity
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 Genetische Programmierung (GP) ist ein evolutionärer maschineller Lernansatz,
- der automatisch Programme zur Lösung eines Problems generieren und verbessern
- kann.
- Zu diesem Zweck werden die besten Programme aus zufällig generierten Kandidaten
- einer Population ausgewählt.
- Die ausgewählten Kandidaten können mutiert und gekreuzt werden, um über
- Generationen hinweg immer besser zu werden.
-\end_layout
-
-\begin_layout Plain Layout
-Im Gegensatz zu neuronalen Netzen sind die so erstellten Policies lesbare
- Programme unf sind für den Menschen interpretierbar.
- Um dieses Programm zu finden, muss die Programmpopulation sowohl die besten
- Programme fördern als auch Raum für neue Ansätze schaffen.
- Zu diesem Zweck müssen sowohl die Selektion als auch die genetischen Modifikati
-onen entsprechend gewählt werden.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Genetic programming (GP) is an evolutionary machine learning approach that
- can automatically generate and improve programs to solve a problem.
- For this purpose, the best programs are selected from randomly generated
- candidates of a population.
- The selected candidates can be mutated and crossed to become better and
- better over generations.
-\end_layout
-
-\begin_layout Standard
-The goal of GP is to find the one program over many generations that is
- better than all the others.
- To find this program, the population of programs must both promote the
- best programs and create space for new approaches.
+ der automatisch Programme zur Lösung eines Problems generiert.
  
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-(todo Exploration-exploitation tradeoff?)
 \end_layout
 
-\end_inset
-
- For this purpose, both the selection and the genetic modifications must
- be chosen accordingly.
-\end_layout
-
-\begin_layout Subsection
-Selection (Tournament Selection)
+\begin_layout Standard
+Für diese Arbeit wurde ein GP-Framework geschrieben, welches die Prinzipien
+ der GP nach Koza [xxx koza, gp buch] umsetzt.
+ Um die Auswertung zu beschleunigen wurde Tensorflow verwendet, was einen
+ [xxx speedup karoo] erzeugt.
+ Außerdem enthält es folgende features
 \end_layout
 
 \begin_layout Standard
@@ -1302,14 +1620,41 @@ The fitness is the common measurement to rate candidates in a GP population,
  and their fitness is calculated.
  The best candidates for the next generation are then evaluated through
  a selection process.
- A common way to combine these two approaches is tournament selection.
- A tournament is formed from a handful of candidates (often 3 to 
-\begin_inset Formula $7$
+ 
+\end_layout
+
+\begin_layout Section
+Explainable framework features
+\end_layout
+
+\begin_layout Subsection
+Tournament Selection
+\end_layout
+
+\begin_layout Standard
+Die tournament selection ist die gängigste Form der Selektion bei genetischer
+ Programmierung.
+ Um lokale optima zu vermeiden wurde die tournament-size auf den niedrigst
+ möglichen Wert von 3 gesetzt.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Höhere Werte (z.
+ B.
+ 7) führten zwar schneller zu guten Lösungen, die Population wurde bei niedriger
+en Werten aber weitaus vielfältiger.
+ Hiervon konnten die Läufe mit niedrigeren Werten oft erst später profitieren.
+ 
+\end_layout
+
 \end_inset
 
-), from which the fittest candidate for the next population is chosen.
- This way, even programs that have a poor fitness but may contain genes
- that will help them survive in the future.
+
 \end_layout
 
 \begin_layout Subsection
@@ -1317,8 +1662,8 @@ Mutation
 \end_layout
 
 \begin_layout Standard
-During the mutation, parts of programs are changed.Point Mutation: A single
- node of a tree is selected and changed.
+Mutationen sind änderungen an den Knoten (Genen) xxxxxx Baum Point Mutation:
+ A single node of a tree is selected and changed.
  If the node is a function, it is randomly replaced by a new one.
  If it is a variable, its value is genetically optimized, for which purpose
  it is changed with a Gaussian filter.
@@ -1556,29 +1901,20 @@ Interpretable Genetic programming
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 Möglichkeiten, wie interpretierbaren Policies, die mithilfe von GP selbst
  für hochkomplexe Industrieanwendungen erstellt werden können, wird beispielswei
 se in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
 vorgestellt.
- 
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
+\begin_layout Section
 What is considered explainable?
 \end_layout
 
@@ -1642,8 +1978,8 @@ Better name for this
 The approach starts from the point of view of a developer who has dealt
  with a problem (e.g.
  Mountain Car) in detail and has already written a program to solve it.
- Although the program is already very mature, there is a parallel Reinforcement
- Learning solution that performs better than the expert's program.
+ Although the program is already very mature, there is a parallel RL solution
+ that performs better than the expert's program.
  This solution is considered a black box and can thus not be explained.
  The Expert's program is now to be modified with genetic programming in
  such a way that it performs just as well as the black box, but still remains
@@ -1762,7 +2098,7 @@ This includes:
 \end_layout
 
 \begin_layout Itemize
-reinforcement learning approaches 
+RL approaches 
 \end_layout
 
 \begin_layout Itemize
@@ -2468,6 +2804,7 @@ The human brain is very good at recognizing patterns.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "humanPatternRecognition"
+literal "true"
 
 \end_inset
 
@@ -2809,6 +3146,7 @@ T'
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -2835,6 +3173,7 @@ reference "fig:TED_explain_operators"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3971,6 +4310,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Metric_(mathematics)"
+literal "false"
 
 \end_inset
 
@@ -4063,6 +4403,7 @@ The most complex part of the improvement process is to compute the fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -4180,6 +4521,7 @@ As Daniel Hein has found out in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -5587,7 +5929,7 @@ This chapter presents the benchmarks against which the approach has been
  well.
  The IB is, in contrast, a stochastically independent, high-dimensional
  testbed, which was especially designed by scientists at Siemens for the
- simulation of very complex processes in industry for reinforcement learning.
+ simulation of very complex processes in industry for RL.
 \end_layout
 
 \begin_layout Standard
@@ -5830,6 +6172,7 @@ The problem was first introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -6464,6 +6807,7 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -6478,6 +6822,7 @@ target "https://github.com/openai/gym/wiki/Leaderboard"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -7507,6 +7852,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -8052,6 +8398,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -9133,6 +9480,7 @@ modifiable nodes erweitern.
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Genetic_improvement_(computer_science)"
+literal "false"
 
 \end_inset
 

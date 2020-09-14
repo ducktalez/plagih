@@ -211,6 +211,30 @@ status open
 List of abbreviations?
 \end_layout
 
+\begin_layout Plain Layout
+AI Artificial Intelligence
+\end_layout
+
+\begin_layout Plain Layout
+ML Machine Learning
+\end_layout
+
+\begin_layout Plain Layout
+RL Reinforcement Learning
+\end_layout
+
+\begin_layout Plain Layout
+GP Genetic Programming
+\end_layout
+
+\begin_layout Plain Layout
+NN Neural Network
+\end_layout
+
+\begin_layout Plain Layout
+TED Tree Edit Distance
+\end_layout
+
 \end_inset
 
 
@@ -246,24 +270,114 @@ literal "true"
 \begin_layout Standard
 In dieser Arbeit wird Vertrautheit als Konzept zum Erstellen von Reinforcement
  Learning (RL) Policies mithilfe von Genetischer Programmierung (GP) vorgestellt.
- Als Bezugspunkt für die Vertrautheit gilt dabei eine von einem Experten
- formulierte Heuristik, die mit so wenig änderungen wie möglich und unter
- bestmöglichem Erhalt ihrer Grundstruktur verbessert werden soll und die
- Policies somit möglichst erklärbar hält.
- Erklärbarkeit ist vor allem in sensiblen Bereichen von großer Bedeutung,
- weil die zum lernen verwendeten Datenstrukturen des machine learning (ML)
- aktuell meistens noch als black box angesehen werden müssen und einen großen
- Unsicherheitsfaktor darstellen.
+ RL ist ein wichtiger Teil des machine learning (ML), bei dem ein Agent
+ ohne Vorkenntnisse eine Strategie in einer Umgebung erlernen muss, von
+ dem er einen externen Reward erhält.
+ Große Bekanntheit erlangte dieser Bereich vor allem durch das Entwickeln
+ von übermenschlichen Strategien, beispielsweise für das Spiel Go [xxx AlphaGo].
+ Der Lernprozess wird dabei oft durch die Verwendung extrem komplexer Datenstruk
+turen wie neuronalen Netzen (NN) ermöglicht, die als Blackbox angesehen
+ werden müssen.
+ Vor allem in sensiblen Bereichen wie in der Industrie stellt ein tradeoff
+ zugunsten der Performance auf Kosten von Kontrollverlust oft keine Option
+ dar, da selbst selten vorkommende Fehlentscheidungen fatale Folgen haben
+ könnten.
+ 
 \end_layout
 
 \begin_layout Standard
-Als Maß für die Vertrautkeit werden die Anzahl der nötigen Änderungen an
- dem computation tree der heuristik des Entwicklers (origin) um den neuen
- Baum zu erhalten berechnet.
+Selbst AlphaGo unterlag, als Prestigeprojekt des RL, einem solchen Denkfehler.
+ Wie man in der Doku erfahren kann, konnte dieser nur durch Zufall von einem
+ Menschen aufgedeckt werden.
 \end_layout
 
-\begin_layout Section
-Der Wunsch nach Erklärbarkeit
+\begin_layout Quotation
+\begin_inset Quotes eld
+\end_inset
+
+It’s unbelieveably superhuman, in general, but it has some particular weaknesses
+ in some situations.
+ We can think of there being this space of all the things it knows about,
+ and it knows about most of it extremely well.
+ Then there will be these tricky lumps of knowledge, that it just understands
+ very poorly.
+ And it's really hard for us to characterize when it is going to enter into
+ one of these lumps.
+ But if it does, it can be completely delusional, thinking that it is alive
+ on one part of the board when, in fact, it's dead or vice versa.
+ So, there is a real risk that we could lose the match.
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset href
+LatexCommand href
+target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Den Fehler zu lösen stellte das Team von Deepmind vor ein großes Problem,
+ da ein umfangreicher Trainingsprozess dafür nötig wäre.
+ Das Risiko war hier in Form einer öffentlichen Blamage noch relativ überschauba
+r; für die Industrie, die für Fehlentwicklungen auch vor Gericht belangt
+ werden können, ist deshalb die Entwicklung erklärbarer Policies von großer
+ Bedeutung.
+ 
+\end_layout
+
+\begin_layout Standard
+Im Bereich der AI stellt die Genetische Programmierung (GP) eine Möglichkeit
+ zum erstellen interpretierbarer Policies dar.
+ Dies ist ein evolutionärer Ansatz im Bereich des machine Learning, mit
+ dem über Generationen hinweg und mit Hilfe von Selektion und zufälligen
+ Änderungn, automatisch Programme Programme geschrieben werden können.
+ In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
+
+\end_inset
+
+wird beispielsweise gezeigt, wie Policies für hochkomplexe Industrieanwendungen
+ erstellt werden können.
+ 
+\end_layout
+
+\begin_layout Standard
+Diese sind weitaus weniger komplex als die Gleichungssysteme eines neuronalen
+ Netzes, sind aber dennoch oft schwer für den Menschen nachvollziehbar.
+ Dies liegt oft in der Ursache, dass Experten Probleme oft in Teilprobleme
+ zerlegen und logisch abstrahieren, während maschinelle Lösungen oft blos
+ eine Formel finden, die aus wenig Elementen besteht.
+ [xxx Bilder von MTC: NN, GP, Human, FGP]
+\end_layout
+
+\begin_layout Standard
+In dieser Arbeit wird deshalb die Vertrautheit als Komplexitätsmaß eingeführt.
+ Statt klassischen Komplexitätsmaßen wie der Anzahl der Operatoren und Terminale
+ einer Formel wird stattdessen die Anzahl der nötigen Änderungen an einer
+ von einem Experten formulierten Heuristik gewählt.
+ Diese wird unter bestmöglichem Erhalt ihrer Grundstruktur verbessert.
+ 
+\end_layout
+
+\begin_layout Standard
+Dieses Vertrautheitsmaß wird mithilfe der Tree Edit Distance (TED) berechnet.
 \end_layout
 
 \begin_layout Standard
@@ -397,441 +511,155 @@ Especially from a scientific point of view, it is of great interest not
 
 \end_layout
 
-\begin_layout Standard
-Künstliche Intelligenz stellt, vor allem für die Industrie, ein unglaubliches
- Potential dar.
- Reinforcement Learning (RL) konnte in den letzten Jahren in vielen Bereichen
- Lösungsansätze mit übermenschlicher performence erlernt werden.
- Ein Agent muss sich dabei ohne Vorkenntnisse eine Strategie in einer Umgebung
- erlernen, von dem er einen externen Reward erhält.
- Der Lernprozess wird dabei oft durch die Verwendung extrem komplexer Datenstruk
-turen wie neuronalen Netzen (NN) ermöglicht, die als Blackbox angesehen
- werden muss.
-\end_layout
-
-\begin_layout Standard
-Vor allem in sensiblen Bereichen wie der Industrie ist ein tradeoff zugunsten
- der Performance auf Kosten von Kontrollverlust oft keine Option.
- Selbst selten vorkommende Fehlentscheidungen können hier oft fatale Folgen
- haben,  weshalb das Finden von erklärbaren policies von großem Interesse
- ist.
- 
-\end_layout
-
-\begin_layout Section
-Das AlphaGO-problem
-\end_layout
-
-\begin_layout Standard
-AlphaGO ist ein RL Agent von Deepmind der das Spiel Go lernte und in einem
- stark medial begleiteten Match einen der weltbesten Spieler schlagen konnte.
- Bisherige Ansätze des RL waren weit davon entfernt, ein Problem dieser
- Komplexität zu lösen, weshalb es einen Meilenstein des RL darstellt.
-\end_layout
-
-\begin_layout Standard
-In der Doku zu AlphaGO wird erwähnt 
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset href
-LatexCommand href
-target "https://youtu.be/WXuK6gekU1Y?t=1390"
-literal "false"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-, wie selbst ein so professionell erstellter RL-Ansatz wie AlphaGo in der
- Endphase der Entwicklung noch groben und 
-\begin_inset Quotes eld
-\end_inset
-
-peinlichen
-\begin_inset Quotes erd
-\end_inset
-
- Denkfehlern unterliegen konnte, die nur durch Zufall einem menschlichen
- Tester aufgefallen sind.
-\end_layout
-
-\begin_layout Quotation
-\begin_inset Quotes eld
-\end_inset
-
-It’s unbelieveably superhuman, in general, but it has some particular weaknesses
- in some situations.
- We can think of there being this space of all the things it knows about,
- and it knows about most of it extremely well.
- Then there will be these tricky lumps of knowledge, that it just understands
- very poorly.
- And it's really hard for us to characterize when it is going to enter into
- one of these lumps.
- But if it does, it can be completely delusional, thinking that it is alive
- on one part of the board when, in fact, it's dead or vice versa.
- So, there is a real risk that we could lose the match.
-\begin_inset Quotes erd
-\end_inset
-
-
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset href
-LatexCommand href
-target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Nachdem der Fehler identifiziert war, stand das Team vor dem Problem, wie
- ein solcher Fehler behoben werden kann, da dies nur mit erneutem Training
- möglich wäre.
-\end_layout
-
-\begin_layout Subsection
-Interpretable Genetic programming in industry
-\end_layout
-
-\begin_layout Standard
-Genetische Programmierung (GP) im Bereich der AI eine der wenigen Alternativen
- zum e rstellen interpretierbarer Policies.
- selbst für hochkomplexe Industrieanwendungen erstellt werden können, wird
- beispielsweise in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
-
-\end_inset
-
-vorgestellt.
-\end_layout
-
 \begin_layout Chapter
 Erklärbare künstliche Intelligenz
 \end_layout
 
 \begin_layout Standard
-Im Bereich der AI bezieht sich Erklärbarkeit üblicherweise darauf, dass
- ein Agent seine Entscheidungen begründen soll.
+In diesem Abschnitt wird beschrieben, was Erklärbarkeit ist und warum sie
+ ein wichtiger Sicherheitsfaktor für Strategien darstellt.
+ Des weiteren wird vertrautheitsbasierte GP als probates Mittel vorgeschlagen.
+\end_layout
+
+\begin_layout Paragraph
+Warum wurde Familiarity ausgewählt?
+\end_layout
+
+\begin_layout Standard
+Intelligenz bedeutet die Fähigkeit, Strategien zur Lösung eines Problems
+ entwickeln zu können.
+ Die meisten RL-Probleme sind dabei zu komplex, als dass Lösungsstrategien
+ für alle Fälle getestet werden können.
+ Der Mensch setzt, um Modellen zu vertrauen, auf Erklärungen, wohingegen
+ bei ML größtenteils darauf verzichtet wird.
+ Um zu verstehen, warum Vertrautheit ein wichtiges Konzept für die Erklärbarkeit
+ darstellt, soll nachfolgend erklärt werden.
+\end_layout
+
+\begin_layout Paragraph
+Definition
+\end_layout
+
+\begin_layout Standard
+Eine Erklärung ist die Formulierung von Wissen als Sprache, dessen Inhalt
+ eine kausal Logik Ursachen für den Menschen verständlich macht.
+\end_layout
+
+\begin_layout Paragraph
+Warum ist Erklärbarkeit so wichtig für den Menschen?
+\end_layout
+
+\begin_layout Standard
+Auch der Mensch erlernt sich Strategien zum lösen von Problemen, die sich
+ in einigen Punkten fundamental von Strategien der AI unterscheiden.
  
 \end_layout
 
 \begin_layout Standard
-In diesem Abschnitt wird diskutiert, was Erklärbarkeit ist, wann etwas erklärbar
- ist und warum dies mit dem aktuellen Stand der AI schwer zu erreichen ist.
- Die Möglichkeit, Vertrautheit zu nutzen wird als probater Weg, erklärbarkeit
- zu erlangen vorgestellt.
-\end_layout
-
-\begin_layout Section
-Allgemeine Erklärbarkeit
-\end_layout
-
-\begin_layout Standard
-Meistens umfasst eine Erklärung dabei den Denkprozess
+So verfügt der Mensch über Schutzmechanismen, die sich über den Evolutionsprozes
+s des Menschen entwickelt haben und jeden Lernprozess begleiten.
+ Durch ihn erlangen wir unter anderem die Fähigkeit Gefahren zu erkennen
+ und zu vermeiden, was Vorsicht und das erkennen kausaler Zusammenhänge
+ erfordert.
+ Wir können also sicher sein, dass unser gesamtes Handlungsmuster Lebensbedrohli
+chen Schaden für uns ausschließt.
 \end_layout
 
 \begin_layout Standard
-Etwas zu Erklären zu können ist die Fähigkeit, komplexe Informationen auf
- das nötigste reduziert in eine Sprache zu fassen.
- Erklärbarkeit ist ein wesentlicher Bestandteil jeder Form von Intelligenz.
- Sie impliziert eine Logik, die eine intelligent (heuristisch) getroffene
- Entscheidung von rein zufälligem handeln unterscheidet.
+Der Mensch hat neben diesen Urinstinkten auch noch weitere große Auswahl
+ Fähigkeiten erlernt, die einen schnellen Lernprozess ermöglichen.
+ Ein bekanntes Beispiel für eine solche gemeisterte Fähigkeit ist das erkennen
+ von Formen und Gesichtern, welches der Mensch schon als Baby so weit perfektion
+iert, dass es zwischenmenschlich keiner Erklärung mehr bedarf.
+ Künstliche Bilderkennung erfordert aktuell immernoch Menschliche Hilfen
+ wie die Implementierung von Filtern.
+ Dennoch zeigte die [xxx 1 pixel attack], wie fehleranfällig Bilderkennung
+ trotzdem sein kann.
+ Allgemeinere Ansätze versprechen zwar außerordentliche Performance, wie
+ in 2012 [xxx] gezeigt werden konnte, die Kosten dafür sind aber zu hoch
+ für eine allgemeinere Anwendung.
 \end_layout
 
 \begin_layout Standard
-Die Fähigkeit, etwas zu Erklären ist die Fähigkeit, mithilfe von einer Sprache
- etwas zu lehren.
- Die Kunst dabei ist, dieses Wissen einem Empfänger (in diesem Fall dem
- Menschen) so zu vermitteln, dass er einen echten Mehrwert hat.
- Die Analyse der Informationen und deren Integration in das eigene Modell
- muss dafür weniger aufwändig sein als diese Wissen selbst zu erlernen.
+Diese Grundkenntnisse sind dabei für alle Menschen vergleichbar.
+ Der Mensch kann somit nicht nur kausale Logik aus einem Modell extrahieren,
+ aufgrund der ähnlichen Denkprozesse ist es ihm möglich, sich in eine andere
+ Person hineinzuversetzen und auf pädagogisch wertvolle Art diese Informationen
+ zu vermitteln.
+\end_layout
+
+\begin_layout Paragraph
+Puzzle
+\end_layout
+
+\begin_layout Standard
+Betrachten wir beispielsweise das Spiel 
+\begin_inset Quotes eld
+\end_inset
+
+Puzzle
+\begin_inset Quotes erd
+\end_inset
+
+ als NP-hartes Problem, bei dem ein Gesamtbild aus einem Haufen von Teilen
+ zusammengesetzt werden muss.
+ Die meisten Menschen wissen, wie Farben erkannt werden, dass man Puzzelteile
+ erst auf die Farbige Seite drehen muss und dass man das Bild auf der Verpackung
+ als Anhaltspunkt nutzen sollte.
+ Ein beliebter Anfängertipp ist deshalb, dass man mit dem Puzzlerand beginnen
+ sollte.
  
 \end_layout
 
+\begin_layout Paragraph
+Ergebnisanalyse
+\end_layout
+
 \begin_layout Standard
+Ein RL Agent hat leider von Haus aus nur eine funktionierende Strategie
+ ohne weitere Informationen.
+ Ein non-verbaler Lernprozess ist meist nur in Form von ausführlicher Beobachtun
+g des Verhaltens durch den Menschen möglich.
+ Ein Experte schaut sich dafür Spiele des Agenten an und versucht zu erkennen,
+ wo die wichtigsten Strategischen unterschiede sind, damit er diese Erklären
+ kann.
+ Bei AlphaGo konnten so beispielsweise allgemein gültige Strategien gefunden
+ werden, die bisher noch unbekannt waren.
+ [xxx] Obwohl dieses Verfahren aufwändig ist, hat es doch den entscheidenden
+ Vorteil, dass das bereits erlernte Modell behalten werden kann und zusätzlich
+ noch einen logischen Kern liefert.
+ Der Teil, der über einen Lern- und Verständnisprozess in das eigene Modell
+ integriert werden muss ist somit weitaus geringer.
+\end_layout
+
+\begin_layout Standard
+Die Aufgabe des in dieser Arbeit vorgestellten Ansatz ist es grundsätzlich,
+ diesen Prozess weitesgehend zu automatisieren.
+ 
 \begin_inset Note Comment
 status open
 
 \begin_layout Plain Layout
-Was normalerweise ein Entwickler für Maschinen macht - mithilfe von progrmamcode
- anweisungen zu schreiben - muss hier umgekehrt werden.
- Die Maschine soll uns ANweisungen geben, was wir zu tun haben um das Problem
- (besser) zu lösen.
+Dabei gibt es automatisch einen Tradeoff zwischen dem Umfang des neu erlangten
+ Verständnisses und der benötigten Zeit um dieses so weit zu verstehen,
+ dass es als logisch erklärbar ist.
+ 
 \end_layout
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection
-Voraussetzungen
-\end_layout
-
-\begin_layout Standard
-Ein Erklärungsprozess hat folgende Voraussetzungen:
-\end_layout
-
-\begin_layout Itemize
-Verständnis für das Problem
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "subsec:Ausreichendes-Verständnis"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Wissen, welche Informationen für den Partner wichtig sind; Verständnis über
- den Lernprozess des Empfängers und die Fähigkeit, ihm etwas zu erlernen
-\end_layout
-
-\begin_layout Itemize
-Sprache (Kommunikationsprotokoll)
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "subsec:Sprache-Kommunikationsprotokoll"
-
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-Für den Menschen ist sie vor allem beim aktiven erlernen einer Fähigkeit
- Die Kunst der Erklärbarkeit ist dabei, diese Logik in einer Sprache (Kommunikat
-ionsprotokoll) zu formulieren, als auch sie möglich so weit .
 \end_layout
 
 \begin_layout Section
-Bestandteile einer Erklärung
-\end_layout
-
-\begin_layout Subsection
-Verständnis für das Problem
-\begin_inset CommandInset label
-LatexCommand label
-name "subsec:Ausreichendes-Verständnis"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-asd
-\end_layout
-
-\begin_layout Subsection
-Formulierung in einer Sprache (Kommunikationsprotokoll)
-\begin_inset CommandInset label
-LatexCommand label
-name "subsec:Sprache-Kommunikationsprotokoll"
-
-\end_inset
-
-
+Allgemeine Erklärbarkeit in der Sprache
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
+\begin_inset Note Comment
+status collapsed
 
 \begin_layout Plain Layout
-xxx Verständnis über den Lernprozess des Empfängers und die Fähigkeit, ihm
- etwas zu erlernen
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Aktuelle Ansätze, beispielsweise neuronale Netze (NN), können ihre Entscheidunge
-n meist weder erklären, noch ist es für den Menschen ohne weiteres möglich,
- die Datenstrukturen nachzuvollziehen.
- Um trotzdem herauszufinden, was eine solche ML-blackbox tut, muss auf aufwendig
-e Art und Weise das Verhalten des Agenten analysiert werden.
- Optimalerweise können so Denkanstöße gefunden werden, die in bereits existieren
-de Lösungen integriert werden könnten.
-\end_layout
-
-\begin_layout Standard
-In dieser Arbeit wird dieser Prozess mithilfe von genetischer Programmierung
- (GP) automatisiert und dem Menschen mithilfe des Konzeptes der 
-\begin_inset Quotes eld
-\end_inset
-
-Vertrautheit
-\begin_inset Quotes erd
-\end_inset
-
- erklärbar gemacht.
-\end_layout
-
-\begin_layout Standard
-Vertrautheit beschreibt die Eigenschaft gefundener Lösungen, Ähnlichkeit
- zu bereits verstandenen (z.
- B: weil von Menschen erzeugten) Lösungen zu haben.
- Dies wird dadurch erreicht, dass die Startlösung für das Problem (origin)
- nur geringfügig geändert wird, was mithilfe der Tree-Edit-Distance (TED)
- umgesetzt wurde.
-\end_layout
-
-\begin_layout Standard
-Ergebnisse Zeigen, dass sich die menschliche Logikstruktur und die maschinelle
- Verbesserung oft sehr sinnvoll ergänzen.
- Die Ergebnisse waren sowohl performanter als auch erklärbarer.
-\end_layout
-
-\begin_layout Subsubsection
-What is considered explainable?
-\end_layout
-
-\begin_layout Standard
-There are neural networks from which humans can extract information extremely
- easily: Our own brain.
- It is not only the most complex structure in the universe, it is also more
- energy-efficient than all artificial versions and, moreover, it already
- has a lot of instinct and life experience.
- physics applies everywhere to the same extent, which is why solutions found
- in certain areas can often be transferred to others in a similar form.
- [xxx cite, idea] developers and experts have the wonderful ability to extract
- this information so efficiently that they can formulate a heuristic as
- a program after a short training period, often without any training at
- all.
-\end_layout
-
-\begin_layout Standard
-Programs are probably the simplest way to describe a complex function.
-\end_layout
-
-\begin_layout Standard
-Good coding style is a virtue even among experienced developers.
- In order to be able to understand programs written by computers as far
- as possible, special quality criteria apply.
- For our approach we have introduced some original features to achieve this.
-\end_layout
-
-\begin_layout Subsubsection
-Erklärbarkeit erreichen - wie?
-\end_layout
-
-\begin_layout Standard
-Der Prozess der Extraktion der wichtigsten Logik, von der angenommen werden
- kann, dass sie durch ein neuronales Netz angenähert wird, ist ein sehr
- aufwendiger.
- Selbst wenn ein neuronales Netz begründen könnte, wieso es eine Entscheidung
- trifft, 
-\end_layout
-
-\begin_layout Standard
-wären die gelernten Zusammenhänge wahrschneinlich zu komplex und abstrakt,
- um Sie mit der begrenzten menschlichen Auffassungsgabe sinvoll interpretieren
- zu können.
- ( Schließlich beinhaltet sie im Optimalfall eine Idee oder einen logischen
- Gedanken, der noch über die komplexe, menschliche Lösung hinaus geht.) Wenn
- wir einem Computer Anweisungen geben, was er tun soll, verwenden wir eine
- praktische und minimalistische Abstraktion die Programmiersprachen.
- Im Gegensatz dazu wäre es praktisch, wenn ein neuronales Netz uns auch
- durch eine vereinfachte Formel, ähnlich einer Programmiersprache, zeigen
- würde, was es für eine Logik beinhaltet.
-\end_layout
-
-\begin_layout Standard
-Dieser Prozess ist natürlich mit einem Informationsverlust behaftet, da
- die erwähnte Logik stark vereinfacht werden muss.
- Außerdem muss es automatisch erfolgen, ohne dass der Mensch die Entscheidungen
- analysieren muss.
-\end_layout
-
-\begin_layout Standard
-Ein ähnlicher Ansatz wurde auch bei AlphaZero gewählt um echtes Wissen aus
- dem komplexen Agenten zu extrahieren: 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Ergebnisanalysen
-\end_layout
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-AlphaZero spielte recht aggressiv, was die state-of-the-art spielweise nachhalti
-g verändern sollte.
- 
-\end_layout
-
-\begin_layout Subsubsection
-Die Fähigkeit zu lehren
-\end_layout
-
-\begin_layout Standard
-Wissen, welche Informationen für den Partner wichtig sind
-\end_layout
-
-\begin_layout Standard
-die Wahrnehmungen zwischen den meisten Menschen so ähnlich, dass die meisten
- Probleme 
-\end_layout
-
-\begin_layout Subsubsection
-Egg-and-spoon race
-\end_layout
-
-\begin_layout Standard
-die Logik so weit auf das wesentliche Problem zu reduzieren der Informationen
- weniger Aufwand mit dem hat sie in sein eigenes 
-\begin_inset Quotes eld
-\end_inset
-
-Modell
-\begin_inset Quotes erd
-\end_inset
-
- zu integrieren
-\end_layout
-
-\begin_layout Standard
-Was 
-\begin_inset Quotes eld
-\end_inset
-
-wesentlich
-\begin_inset Quotes erd
-\end_inset
-
- für ein Problem ist, liegt dabei stark im Auge des Betrachters.
- 
-\end_layout
-
-\begin_layout Standard
 Betrachten wir beispielsweise das Spiel 
 \begin_inset Quotes eld
 \end_inset
@@ -862,27 +690,312 @@ Schau nur auf das Ziel
 , was die Aufgabe für ihn vermutlich stark vereinfacht.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Im Bereich des Machine learning würde man ein solches Problem reinforcementlearn
 ing problem modellieren, wo das Kind die Rolle eines Agenten übernimmt.
 \end_layout
 
-\begin_layout Subsubsection
-asd
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-Um programmiercode zu verstehen und verändern zu können, muss die ihm zugrunde
- liegende Logik verstanden werden und nachvollziehbar sein.
- Erklärbarbeit ist kein klar definierbare Eigenschaft sondern hängt von
- einer einem multivariaten Modell ab, deren Wertung und mathematischer Zusammenh
-ang von Entwickler als auch Problemart abhängen.
- programmcode ist selbst bei vom Menschen geschriebenem Code nicht automatisch
- gegeben, obwohl in diesem mithilfe von Kommentaren oder intuitiv gewählten
- Variablennamen die Intention des Entwicklers dokumentiert werden können.
- GP-Kandidaten müssen ohne diese Metainformationen erklärbar sein, weshalb
- die gefundenen Lösungen aus sich heraus bereits möglich erklärbar sein
- sollen.
+Die Heuristik, die ein Experte zur Lösung eines Problems entwickelt hat,
+ wird im Folgenden als 
+\begin_inset Quotes eld
+\end_inset
+
+origin
+\begin_inset Quotes erd
+\end_inset
+
+ bezeichnet und kann als Touringvollständige Formulierung betrachtet werden.
+ [xxx ?]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Ein guter Erklärungsprozess hat folgende Voraussetzungen:
+\end_layout
+
+\begin_layout Itemize
+Verständnis für das Problem
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Ausreichendes-Verständnis"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Wissen, welche Informationen für den Empfänger wichtig sind; Verständnis
+ über den Lernprozess des Empfängers und die Fähigkeit, ihm etwas zu erlernen
+\end_layout
+
+\begin_layout Itemize
+Sprache (Kommunikationsprotokoll)
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Sprache-Kommunikationsprotokoll"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Für den Menschen ist sie vor allem beim aktiven erlernen einer Fähigkeit
+ Die Kunst der Erklärbarkeit ist dabei, diese Logik in einer Sprache (Kommunikat
+ionsprotokoll) zu formulieren, als auch sie möglich so weit .
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Ein Modell ist dann erklärbar, wenn alle getroffenen Entscheidungen begründet
+ werden könnten, selbst wenn das in vielen Fällen vielleicht nicht ohne
+ weiteres möglich ist.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Eine Erklärung ist dann sinnvoll, wenn ihre Formulierung dem Schüler einen
+ Mehrwert bietet.
+ Dies bedeutet, dass ihr Verständnis einfacher ist als eine gleich gute
+ Lösung zu suchen.
+ Für Menschen bedeutet eine gute Erklärung somit, dass sie für ihn möglichst
+ schnell Sinn ergibt.
+ Das Wissen sollte somit nicht nur korrekt, sondern auch pädagogisch wertvoll
+ als Lehrprozess vermittelt werden.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "sinnvolle-erklärung"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+NN funktionsweise
+\end_layout
+
+\begin_layout Plain Layout
+Will man ein bei einem neuronalen Netz (NN) wissen, weshalb eine Entscheidung
+ getroffen wurde, steht man vor einem Problem.
+ Es ist zwar möglich, die Parametrisierung der Neuronen anzusehen, welche
+ Inputs relevant waren oder beo , weshalb es eine Entscheidung getroffen
+ hat, könnte es keine Auskunft darüber geben.
+ Es könnte uns zwar die Werte - ist letzten Endes nur eine mathematische
+ Formel.
+ Künstliche neuronale Netze (NN) orientieren sich an der Funktionsweise
+ des Gehirns und bestehen aus Neuronen, die sich gegenseitig, meist sequentiell,
+ aktivieren können und für einen das Problem beschreibenden Eingabevektor
+ einen Ausgabevektor möglicher Aktionen berechnen.
+ Die eingehenden Signale werden dafür gewichtet, addiert und in eine Aktivierung
+sfunktion gesteckt, beispielsweise die ReLu-Funktion oder die Sigmoid-funktion.
+ Der Lernprozess wird dadurch erreicht, dass ein Neuron die Gewichtungen
+ in einem backpropagation-Schritt, je nachdem ob die Entscheidung richtig
+ oder falsch war, angepasst werden.
+ Der Lernprozess gestaltet sich somit implizit 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Sinnvolle Erklärungen
+\end_layout
+
+\begin_layout Plain Layout
+Sinnvoll ist eine 
+\end_layout
+
+\begin_layout Plain Layout
+Die Sprache stellt dabei als Formulierung für Logische Zusammenhänge vorrangig
+ auch nur für diese zur Verfügung.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+Im Bereich der Bilderkennung wäre es deshalb vermutlich sinnvoller, jemandem
+ einen Hund und eine Katze zu zeigen als zu versuchen, den Unterschied zwischen
+ den beiden zu erklären.
+\end_layout
+
+\begin_layout Plain Layout
+Der Mensch muss sehr effizient lernen und versucht dabei, Probleme strategisch
+ auf seine deterministischen Bestandteile zu zerlegen - welche deshalb eine
+ kausal nachvollziehbare Kette bilden.
+ Eine bewusst getroffene Entscheidung kann somit immer auf physikalische
+ oder logische Paradigmen reduziert werden.
+\end_layout
+
+\begin_layout Plain Layout
+Menschliche Erklärungen zu Verhalten vertreten unter anderem folgende Ansätze:
+\end_layout
+
+\begin_layout Itemize
+Reduktion auf eine gefundene Logik, weshalb eine Entscheidung richtig sein
+ muss
+\end_layout
+
+\begin_layout Itemize
+Bei noch nicht gefundener Logik: Verweis auf Erfahrungen, die zu einem Verhalten
+ geführt haben.
+\begin_inset Newline newline
+\end_inset
+
+Hier wird eine Fehlende Logik mit gründlicher Epistemie ersetzt
+\end_layout
+
+\begin_layout Plain Layout
+Eine gute Erklärung reduziert die Logik deshalb nicht nur quantitativ auf
+ die Zahl der nötigen Aussagenteile oder qualitativ auf die Bewertung allgemeine
+r komplexitätsregeln sondern vermittelt die Informationen, die der Schüler
+ braucht, um Erkenntnis zu erlangen.
+\end_layout
+
+\begin_layout Plain Layout
+Etwas zu Erklären zu können ist somit die Fähigkeit, Informationen verständlich
+ zu kommunizieren.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Formulierung in einer Sprache (Kommunikationsprotokoll)
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Sprache-Kommunikationsprotokoll"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Vertrautheit beschreibt die Eigenschaft gefundener Lösungen, Ähnlichkeit
+ zu bereits verstandenen (z.
+ B: weil von Menschen erzeugten) Lösungen zu haben.
+ Dies wird dadurch erreicht, dass die Startlösung für das Problem (origin)
+ nur geringfügig geändert wird, was mithilfe der Tree-Edit-Distance (TED)
+ umgesetzt wurde.
+\end_layout
+
+\begin_layout Standard
+Ergebnisse Zeigen, dass sich die menschliche Logikstruktur und die maschinelle
+ Verbesserung oft sehr sinnvoll ergänzen.
+ Die Ergebnisse waren sowohl performanter als auch erklärbarer.
+\end_layout
+
+\begin_layout Standard
+There are neural networks from which humans can extract information extremely
+ easily: Our own brain.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+developers and experts have the wonderful ability to extract this information
+ so efficiently that they can formulate a heuristic as a program after a
+ short training period, often without any training at all.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Good coding style is a virtue even among experienced developers.
+ In order to be able to understand programs written by computers as far
+ as possible, special quality criteria apply.
+ For our approach we have introduced some original features to achieve this.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Selbst wenn ein neuronales Netz begründen könnte, wieso es eine Entscheidung
+ trifft, 
+\end_layout
+
+\begin_layout Plain Layout
+wären die gelernten Zusammenhänge wahrschneinlich zu komplex und abstrakt,
+ um Sie mit der begrenzten menschlichen Auffassungsgabe sinvoll interpretieren
+ zu können.
+ ( Schließlich beinhaltet sie im Optimalfall eine Idee oder einen logischen
+ Gedanken, der noch über die komplexe, menschliche Lösung hinaus geht.) Wenn
+ wir einem Computer Anweisungen geben, was er tun soll, verwenden wir eine
+ praktische und minimalistische Abstraktion die Programmiersprachen.
+ Im Gegensatz dazu wäre es praktisch, wenn ein neuronales Netz uns auch
+ durch eine vereinfachte Formel, ähnlich einer Programmiersprache, zeigen
+ würde, was es für eine Logik beinhaltet.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Dieser Prozess ist natürlich mit einem Informationsverlust behaftet, da
+ die erwähnte Logik stark vereinfacht werden muss.
+\end_layout
+
+\end_inset
+
+ 
 \end_layout
 
 \begin_layout Section
@@ -892,19 +1005,6 @@ Erklärbarkeit bei NN.
 
 \begin_layout Paragraph
 asd
-\end_layout
-
-\begin_layout Standard
-Künstliche neuronale Netze (NN) orientieren sich an der Funktionsweise des
- Gehirns und bestehen aus Neuronen, die sich gegenseitig, meist sequentiell,
- aktivieren können und für einen das Problem beschreibenden Eingabevektor
- einen Ausgabevektor möglicher Aktionen berechnen.
- Die eingehenden Signale werden dafür gewichtet, addiert und in eine Aktivierung
-sfunktion gesteckt, beispielsweise die ReLu-Funktion oder die Sigmoid-funktion.
- Der Lernprozess wird dadurch erreicht, dass ein Neuron die Gewichtungen
- in einem backpropagation-Schritt, je nachdem ob die Entscheidung richtig
- oder falsch war, angepasst werden.
- Der Lernprozess gestaltet sich somit implizit 
 \end_layout
 
 \begin_layout Standard
@@ -927,20 +1027,48 @@ asd
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 Anders formuliert könnte man auch sagen, dass es sich allgemein um automatisiert
 e Verfahren der Statistik handelt, welche mithilfe eines Explorationsparameters
  epsilon Modelle für gemachte Erfahrungen erstellen.
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Ein neuronales Netz ist, vereinfacht gesagt, ein sehr (über-) komplexes,
  statistisches Gleichungssystem, dessen Parameter automatisch angepasst
  werden.
  
 \end_layout
 
+\begin_layout Plain Layout
+xxx
+\end_layout
+
+\begin_layout Plain Layout
+Künstliche Intelligenz kann auch als Automatisierung statistischer Verfahren
+ beschrieben werden, die mit einem Explorationsparameter epsilon trainiert
+ werden.
+ Neuronale Netze unterliegen deshalb sowohl einem over-als auch underfitting
+ problem über die sich die KI nicht bewusst ist.
+ Da sie auch nicht erklären können, wie Entscheidungen getroffen werden,
+ beschränkt sich das Vertrauen auf statistischer Ebene durch Tests.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 Die Logik dieses Modells muss allerdings vom Entwickler, in Form der Architektur
  des ML-Ansatzes implementiert werden (Verwendung neuronaler Netze, Anzahl
  der hidden layer, topologie zwischen den Schichten, Aktivierungsfunktionen
@@ -949,7 +1077,7 @@ Die Logik dieses Modells muss allerdings vom Entwickler, in Form der Architektur
  auch nicht funktionieren.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
  einen Hund dafür zu trainieren und keine Taube.
  Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
@@ -957,21 +1085,30 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
  uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
  
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 Das neuronale netz anzusehen ist auch keine Option, da es sowohl meistens
  zu umfangreich (xxx parameter) als auch zu unintuitiv (xxx siehe aktivierungsfu
 nktionen) ist.
 \end_layout
 
-\begin_layout Standard
-Um verstehen zu können, was passiert und wie Lösungen gefunden werden, kann
- nur das Verhalten beobachtet werden.
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1098,68 +1235,46 @@ asd
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 Menschen haben, im Vergleich zu einer Maschine, nur begrenzt Zeit für einen
  Lernprozess und können sich dabei auch keine groben Fehltritte erlauben.
  Der Mensch lernt deshalb bereits sehr früh, getroffene Entscheidungen zu
  hinterfragen und allgemeines Verständnis für die Gesetze der Natur zu entwickel
 n.
- Ab einem gewiAb einem bestimmten Punkt ist eine Fähigkeit so gut verstanden,
- dass sie auch automatisiert und unterbewusst ablaufen kann.
+ Ab einem bestimmten Punkt ist eine Fähigkeit so gut verstanden, dass sie
+ auch automatisiert und unterbewusst ablaufen kann.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-Wenn beispielsweise ein Baby das Laufen lernt, braucht es seine komplette
- Aufmerksamkeit um ein möglichst schnellen Lernprozess zu garantieren.
- 
-\end_layout
+\begin_inset Note Comment
+status open
 
-\begin_layout Standard
-Maschinen haben nur einen winzigen Bruchteil der Neuronen zur Verfügung,
- die das menschliche Gehirn hat - dafür können Lernprozesse Wäre eine Maschine
- mit demselben Problem konfrontiert
-\end_layout
-
-\begin_layout Standard
-für jede bewusst getroffene Entscheidung Rechenschaft ablegen und sie begründen.
- Im Bereich der künstlichen Intelligenz wurde dieser Aspekt bisher großräumig
- ausgeklammert.
- Erklärbarkeit umfasst in der künstlichen Intelligenz das Problem, Entscheidunge
-n neuronaler Netze zu erklären.
- Neuronale Netze werden immernoch als blackbox betrachtet, wodurch die Frage
- aufkommt, inwieweit man ihnen vertrauen kann.
- Künstliche Intelligenz kann auch als Automatisierung statistischer Verfahren
- beschrieben werden, die mit einem Explorationsparameter epsilon trainiert
- werden.
- Neuronale Netze unterliegen deshalb sowohl einem over-als auch underfitting
- problem über die sich die KI nicht bewusst ist.
- Da sie auch nicht erklären können, wie Entscheidungen getroffen werden,
- beschränkt sich das Vertrauen auf statistischer Ebene durch Tests.
- 
-\end_layout
-
-\begin_layout Standard
-Diese Testverfahren sind insbesondere von großer Relevanz, da aktuelle Verfahren
- keine allgemeine Intelligenz besitzen, die sie davor bewahren würde, einige
- (für den Menschen offensichtlichen) Fehler zu machen.
- Die Modelle, die zur Lösung von Problemen von einem Entwickler implementiert
- werden, werden meistens so konzipiert, dass sie für kaum ein anderes Problem
- nutzbar sind.
- Für Bilderkennung werden meist eine Vielzahl an Filtern verwendet, die
- vom Menschen vorgegeben werden.
- Obwohl allgemeine Intelligenz vielleicht gar nicht in so weiter Ferne liegt,
- gibt es durchaus praktische Gründe, weiterhin Fachidioten statt Universalkönner
- zu trainieren: Kosten.
-\end_layout
-
-\begin_layout Subsection
+\begin_layout Plain Layout
 Lernprozess als Teil der Erklärung
 \end_layout
 
-\begin_layout Subsection
-Analysing the black box vs observing the black box
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Analysing the black box vs observing the black box
+\end_layout
+
+\begin_layout Plain Layout
 The decisions cannot be explained.
  Although the developer can theoretically analyze the neural network and
  individual decisions can possibly be simulated, the structures of the neural
@@ -1194,24 +1309,17 @@ literal "true"
  
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Faktoren, die eine gute Erklärung begünstigen
 \end_layout
 
 \begin_layout Standard
 Wenn 
-\end_layout
-
-\begin_layout Itemize
-Der Mensch hat einige Präferenzen
-\end_layout
-
-\begin_layout Itemize
-Eine Maschine führt Programmiercode einfach aus.
-\end_layout
-
-\begin_layout Itemize
-Sprache = Anweisung in diesem Fall
 \end_layout
 
 \begin_layout Itemize
@@ -1224,15 +1332,11 @@ Eine Erklärung bildet üblicherweise den Weg ab, der dazu führt, dass man
 obviousness of meaning
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Itemize
 Logisch erschließbarer Aufbau, der Weg ist das Ziel
 \end_layout
 
 \begin_layout Standard
-Der 
-\end_layout
-
-\begin_layout Subsection
 Möglichst wenig neues zu lernen
 \end_layout
 
@@ -1325,22 +1429,11 @@ Komplexität steigt exponentiell mit der anzahl der kombinierten einflussfaktore
 
 \end_layout
 
-\begin_layout Itemize
-Vertrautheit, pattern and structures.
- 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
+\begin_layout Paragraph
 order of logic
 \end_layout
 
-\begin_layout Itemize
-encapsulation 
-\end_layout
-
-\begin_deeper
-\begin_layout Subsubsection
+\begin_layout Paragraph
 \begin_inset Quotes eld
 \end_inset
 
@@ -1372,39 +1465,7 @@ For the complexity measure, the If function could be given a low weighting,
  is not yet part of the complexity measure.
 \end_layout
 
-\end_deeper
-\begin_layout Itemize
-possibility to recognize relevant parts.
- 
-\end_layout
-
-\begin_layout Itemize
-mathematical fields
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-operators(comparison operators, angle-based operators, classic mathematical
- operators)
-\end_layout
-
-\begin_layout Itemize
-variable types
-\end_layout
-
-\end_deeper
-\end_deeper
-\begin_layout Itemize
-Darstellungsform, Tree-specific
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-level, on which variables occur
-\end_layout
-
-\end_deeper
-\begin_layout Subsubsection
+\begin_layout Subsection
 Verwendete Terminale
 \end_layout
 
@@ -1440,6 +1501,10 @@ For example, if only one variable or a small subset of variables is in use
 
 \begin_layout Paragraph
 Constants
+\end_layout
+
+\begin_layout Itemize
+variable types
 \end_layout
 
 \begin_layout Standard
@@ -1511,6 +1576,11 @@ Kommutativität oder assoziativität sind mathematische Vereinfachungen, die
 Typen von Operatoren in Formeln
 \end_layout
 
+\begin_layout Itemize
+operators(comparison operators, angle-based operators, classic mathematical
+ operators)
+\end_layout
+
 \begin_layout Standard
 The patterns of some functions are easier to understand than others because
  they represent more natural relationships.
@@ -1541,25 +1611,12 @@ In addition, operators can be weighted to indicate their occurrence by a
  could be achieved when complex functions are not used at all.
 \end_layout
 
-\begin_layout Paragraph
-Recognition of origin, number and type of changes
-\end_layout
-
-\begin_layout Standard
-In our case, the expert's reference program is regarded as a special case
- of recognition.
-\end_layout
-
-\begin_layout Standard
-The logical core structure it provides is not only a gene already recognized
- by the developer (at least hopefully) which can therefore be easily adopted
- in any candidate - if its structure is recognized by the developer, it
- also provides an easy to understand anchor point for the rest of the code.
- The reference to the origin should therefore be relatively easy to establish.
-\end_layout
-
 \begin_layout Subsection
 Für die Darstellung als Baum
+\end_layout
+
+\begin_layout Itemize
+level, on which variables occur
 \end_layout
 
 \begin_layout Subsubsection
@@ -1614,10 +1671,6 @@ Familiarity based Genetic Programming
 \begin_layout Standard
 \begin_inset Note Comment
 status open
-
-\begin_layout Plain Layout
-no consciousness in machines
-\end_layout
 
 \begin_layout Plain Layout
 XAI = Giving machines the possibility to write computer code that is understanda
@@ -1757,7 +1810,7 @@ nt in his program.
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Explicability measure for pareto GP
 \end_layout
 
@@ -1822,7 +1875,7 @@ Univariate or low-dimansional multivariate formula die auf wenigen paradigmen
 Not fundamentally limiting the pareto GP
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Optimizing GP candidates with fitness and complexity
 \end_layout
 
@@ -1885,9 +1938,14 @@ els ist dafür lediglich der Regressionsfehler zur Optimallösung relevant.
 Familiar Genetic Programming with the Tree Edit Distance (TED)
 \end_layout
 
+\begin_layout Subsection
+Tree Edit Distance (TED)
+\end_layout
+
 \begin_layout Standard
-In this section, the most important enhancements are presented, which have
- been added to the classical programming to make it even easier to explain.
+In diesem Teil wird die Tree Edit Distance (TED) als in der GP verwendbares
+ Maß für Vertrautheit vorgestellt.
+ Außerdem werden Limitierungen und mögliche Verbesserungen diskutiert.
 \end_layout
 
 \begin_layout Paragraph
@@ -1948,10 +2006,6 @@ Ein Softwareentwickler hat im Normalfall durch Jahrelange Erfahrung gelernt,
  So würde er für Probleme sodass er jeden Bestandteil des Programms einer
  anderen Person erklären kann.
  
-\end_layout
-
-\begin_layout Subsection
-Tree Edit Distance (TED)
 \end_layout
 
 \begin_layout Standard
@@ -2055,10 +2109,6 @@ Accumulated number of changes since start.
  [xxx proves triangle inequality]
 \end_layout
 
-\begin_layout Paragraph
-asd
-\end_layout
-
 \begin_layout Standard
 \begin_inset Float figure
 wide false
@@ -2101,7 +2151,7 @@ Basic TED operators
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Weighting TED
 \end_layout
 
@@ -2126,7 +2176,7 @@ This extra measurement is very personalised though and thus was not evaluated
  specifically for this thesis.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 TED limitations
 \end_layout
 
@@ -2151,7 +2201,7 @@ Frühe Experimente zeigten, dass der implizite Schutz logischer Kernstrukturen
  
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Potential improvements
 \end_layout
 
@@ -2165,14 +2215,8 @@ se die kleinste oder mittlere TED verwendet wird.
  
 \end_layout
 
-\begin_layout Subsection
-Explainable Neural Networks
-\end_layout
-
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
+\begin_inset Note Comment
 status open
 
 \begin_layout Plain Layout
@@ -2183,25 +2227,10 @@ status open
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
+ 
 \begin_inset CommandInset label
 LatexCommand label
 name "SARSA-plot-fragments"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-State-Action mapping on SARSA-policy with several arbitrary fragments
-\end_layout
 
 \end_inset
 

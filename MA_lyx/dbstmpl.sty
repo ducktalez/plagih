@@ -14,6 +14,8 @@
 %\RequirePackage{amssymb}
 \RequirePackage{geometry}
 \RequirePackage{fancyhdr}
+\RequirePackage{amsfonts}
+\RequirePackage[T1]{fontenc}
 %\RequirePackage[nottoc]{tocbibind}
 %\RequirePackage{graphicx}
 %\RequirePackage{subfigure}
@@ -22,10 +24,10 @@
 
 
 \newcommand{\declarationhead}{Declaration of Authorship}
-\newcommand{\declaration}{I hereby declare that the thesis submitted is my own unaided work. All direct or indirect
-sources used are acknowledged as references. \newline
-This paper was not previously presented to another examination board and has not
-been published.
+\newcommand{\declaration}{
+I hereby declare that the thesis submitted is my own unaided work.
+All direct or indirect sources used are acknowledged as references.\\
+This paper was not previously presented to another examination board and has not been published.
 
 \vspace{1cm}
 \the\ort, \the\abgabetermin
@@ -38,7 +40,8 @@ been published.
 \DeclareOption{german}{
 \selectlanguage{german}
 \renewcommand{\declarationhead}{Erklärung}
-\renewcommand{\declaration}{Ich erkläre hiermit, dass ich die vorliegende Arbeit selbständig angefertigt habe. Die aus fremden Quellen direkt und indirekt übernommenen Gedanken sind als solche kenntlich gemacht.\newline
+\renewcommand{\declaration}{Ich erkläre hiermit, dass ich die vorliegende Arbeit selbständig angefertigt habe.
+Die aus fremden Quellen direkt und indirekt übernommenen Gedanken sind als solche kenntlich gemacht.\\
 Die Arbeit wurde weder einer anderen Prüfungsbehörde vorgelegt noch veröffentlicht.
 
 \vspace{1cm}

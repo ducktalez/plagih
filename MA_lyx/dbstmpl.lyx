@@ -575,8 +575,15 @@ Der Mensch hat neben diesen Urinstinkten auch noch weitere große Auswahl
 iert, dass es zwischenmenschlich keiner Erklärung mehr bedarf.
  Künstliche Bilderkennung erfordert aktuell immernoch Menschliche Hilfen
  wie die Implementierung von Filtern.
- Dennoch zeigte die [xxx 1 pixel attack], wie fehleranfällig Bilderkennung
- trotzdem sein kann.
+ Dennoch zeigte die One pixel attack 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "one_pixel_attack"
+literal "false"
+
+\end_inset
+
+, wie fehleranfällig Bilderkennung trotzdem sein kann.
  Allgemeinere Ansätze versprechen zwar außerordentliche Performance, wie
  in 2012 [xxx] gezeigt werden konnte, die Kosten dafür sind aber zu hoch
  für eine allgemeinere Anwendung.
@@ -654,7 +661,7 @@ Ein non-verbaler Lernprozess ist meist nur in Form von ausführlicher Beobachtun
  kann.
  Bei AlphaGo konnten so beispielsweise allgemein gültige Strategien gefunden
  werden, die bisher noch unbekannt waren.
- [xxx] Obwohl dieses Verfahren aufwändig ist, hat es doch den entscheidenden
+ [xx] Obwohl dieses Verfahren aufwändig ist, hat es doch den entscheidenden
  Vorteil, dass das bereits erlernte nicht verworfen werden muss, sondern
  sogar noch einen sinnvollen Kern liefert.
  Der Teil, der über einen Lern- und Verständnisprozess in das eigene Modell
@@ -696,9 +703,27 @@ e Gleichungen als sinnvoll herausgestellt.
 Neuronale Netze sind verallgemeinerte, sehr umfangreiche Gleichungssysteme,
  die über automatisierte statistische Verfahren und zufälliger Exploration
  die eigenen Parameter in einem Trainingsprozess anpassen können.
- Diese Gleichungen beinhalten oft mehrere tausend Variablen [xxx], verknüpft
- mit unintuitiven Aktivierungsfunktionen [xxx], weshalb sie für den Menschen
- nicht interpretierbar sind.
+ Diese Gleichungen beinhalten oft mehrere tausend Variablen [xx], verknüpft
+ mit unintuitiven Aktivierungsfunktionen wie die ReLu-Funktion 
+\begin_inset Formula $ReLu(x)=\max(0,x)$
+\end_inset
+
+ oder der Sigmoid-Funktion 
+\begin_inset Formula $sig(t)=\frac{1}{1+e^{-t}}$
+\end_inset
+
+ , weshalb sie für den Menschen nicht interpretierbar sind.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:relu-sigmoid"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -709,6 +734,41 @@ Genetische Programmierung erzeugt weitaus übersichtlichere Formeln, die
  nicht in Unterprobleme unterteilen sondern dieses als gesamtes lösen [xxx].
  Dennoch sind die so erzeugten Ausdrücke als touringvollständigen Programmierspr
 ache gut nutzbar.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Die ReLu und Sigmoid Funktion sind beliebte Aktivierungsfunktionen für Neuronen
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:relu-sigmoid"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -860,28 +920,6 @@ literal "true"
 \begin_layout Standard
 \begin_inset Note Comment
 status open
-
-\begin_layout Plain Layout
-Popular activation functions are the sigmoid function:
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Formula $sig(t)=\frac{1}{1+e^{-t}}$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-aswell as the rectified linear unit function (ReLu):
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Formula $ReLu(x)=\max(0,x)$
-\end_inset
-
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Note Note
@@ -1402,6 +1440,124 @@ In diesem Teil wird die Tree Edit Distance (TED) als in der GP verwendbares
 \end_layout
 
 \begin_layout Paragraph
+complexity measure for trees
+\end_layout
+
+\begin_layout Standard
+The complexity that is a problem to understand is largely affected on these
+ points:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xxx, do i need a lot of sources here? xxx grafik für alles
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Length.
+ The more elements an expression has, the more complex it is.
+ The sheer length of an expression is probably the most obvious cause of
+ complexity.
+ 
+\end_layout
+
+\begin_layout Itemize
+difference 
+\end_layout
+
+\begin_layout Itemize
+structure 
+\end_layout
+
+\begin_layout Itemize
+patterns.
+ Humans tend to recognize patterns easily.
+ This means that both recurrent code elements and already known code are
+ easier to realte to.
+ 
+\end_layout
+
+\begin_layout Itemize
+function types.
+ A special pattern is the function type.
+ Some are easy to relate, for example the basic mathematical operations
+ and some are hard to relate to, for example the 
+\begin_inset Formula $tan$
+\end_inset
+
+-function.
+ 
+\end_layout
+
+\begin_layout Itemize
+variable types: Variables are better to understand, the more simpler they
+ are.
+ 
+\end_layout
+
+\begin_layout Standard
+We already accepted the pattern of the original program as a main influence.
+ The explainability distance to the potential candidates are resulted in
+ the following considerations for a complexity measurement.
+ 
+\end_layout
+
+\begin_layout Itemize
+Total amount of operations.
+ 
+\begin_inset Newline newline
+\end_inset
+
+A very easy approach is to just count the amount of operations compared
+ to the original program.
+ To reduce this risk, a potential solution is to force genetic crossover
+ with the original heuristic.
+ Besides all other approaches, it seems so make sense to also include a
+ value that is not dependent from relative changes to the original heuristic.
+ 
+\end_layout
+
+\begin_layout Itemize
+Tree Edit distance.
+ 
+\begin_inset Newline newline
+\end_inset
+
+Amount of operations applied to the origin.
+ The amount of operations the genetic programming added to the original
+ heuristic seems to be a very reasonable approach, as it corresponds to
+ the lines of code he has to add to his program.
+ However, computational tree-distances have to be computed to receive a
+ correct measurement.
+ This is a known problem in theoretical information technology and has no
+ easy solutions to it.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tree-difference-operations"
+
+\end_inset
+
+ [xxx Quelle tree distance]
+\end_layout
+
+\begin_layout Standard
+Faktoren, die hilfreich sein könnten, die aber nicht bewertet wurden:
+\end_layout
+
+\begin_layout Itemize
+Gewichtete TED
+\end_layout
+
+\begin_layout Subparagraph
 GP complexity
 \end_layout
 
@@ -1421,6 +1577,10 @@ Diese komplexitätsmaße eignen sich sehr gut um overfitting zu vermeiden
  Dennoch stellen sie meistens eine komplexe, oft unübersichtliche oder augensche
 inlich zusammenhangslose mathematische Formel dar.
  Um sie zu verstehen, muss der Entwickler die 
+\end_layout
+
+\begin_layout Paragraph
+TED
 \end_layout
 
 \begin_layout Standard
@@ -1518,7 +1678,7 @@ Possible TED changes on a tree: insert (green), delete (red), modify (yellow)
 
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 Weighting TED
 \end_layout
 
@@ -1542,7 +1702,7 @@ This extra measurement is very personalised though and thus was not evaluated
  specifically for this thesis.
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 TED limitations
 \end_layout
 
@@ -1567,7 +1727,7 @@ Frühe Experimente zeigten, dass der implizite Schutz logischer Kernstrukturen
  
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 Potential improvements
 \end_layout
 
@@ -1651,16 +1811,7 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Bilder für alle genetischen operatoren
-\end_layout
-
-\end_inset
-
-
+[xxx Bilder für alle genetischen operatoren]
 \end_layout
 
 \begin_layout Standard
@@ -1674,8 +1825,6 @@ tree-based
 \end_inset
 
 Programs can be displayed as a computational tree.
- [xxx image] These are very memory efficient and their components can be
- easily recognized and divided.
  
 \end_layout
 
@@ -1749,7 +1898,7 @@ Olymp-reproduction
 \begin_inset Newline newline
 \end_inset
 
-Doe olymp-reproduktion umfasst insbesondere auch die Möglichkeit für den
+Die olymp-reproduktion umfasst insbesondere auch die Möglichkeit für den
  origin tree sich zu reproduzieren.
 \end_layout
 
@@ -1800,16 +1949,37 @@ Menge aus 100 Zufallswerten aus dem Datensatz
 \end_layout
 
 \begin_layout Itemize
-Gaussverteilungen rationaler Zahlen (durchschnittswert [1, 2], Varianz=1
- [xxx])
+Gaussverteilungen rationaler Zahlen ( 
+\begin_inset Formula $\mathcal{N}(1,2)$
+\end_inset
+
+)
+\begin_inset Note Comment
+status open
+
+\begin_layout Itemize
+asd 
+\begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
-Gaussverteilung natürlicher Zahlen
+Gaussverteilung natürlicher Zahlen (
+\begin_inset Formula $[1,2,...,10]$
+\end_inset
+
+)
 \end_layout
 
 \begin_layout Itemize
-Menge aus mathematisch relevanten Konstanten ([xxx pi, e, sqrt 2])
+Menge aus mathematisch relevanten Konstanten
 \end_layout
 
 \end_deeper
@@ -1920,34 +2090,21 @@ nodesize-based build options including the full- and grow-method
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
+\begin_inset Float algorithm
 wide false
 sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-# get all fix nodes 
+get all modifiable nodes
 \end_layout
 
 \begin_layout Plain Layout
-
-# get all fix nodes with non-fix childs
+choose random node
 \end_layout
 
 \begin_layout Plain Layout
-
-# get all non-fix childs 
-\end_layout
-
-\end_inset
-
-
+mutate this node
 \end_layout
 
 \begin_layout Plain Layout
@@ -1959,6 +2116,10 @@ Pseudocode for getting first layer of modifiable nodes
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -2217,6 +2378,24 @@ Real training advantages
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Wie Daniel Hein in [S.
+ 125] herausgefunden hat, sind Policies, die auf Ersatzmodellen trainiert
+ worden sind (zum Beispiel auch durch Regression auf Daten) fast immer signifika
+nt schlechter als die auf der echten Systemdynamik trainierten Versionen.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As Daniel Hein has found out in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
@@ -2224,22 +2403,10 @@ literal "true"
 
 \end_inset
 
-
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Genaue Seite angeben? z.B.
- S.
- 125
-\end_layout
-
-\end_inset
-
-Wie Daniel Hein in [xxx] herausgefunden hat, sind Policies, die auf Ersatzmodell
-en trainiert worden sind (zum Beispiel auch durch Regression auf Daten)
- fast immer signifikant schlechter als die auf der echten Systemdynamik
- trainierten Versionen.
+[xxx p.
+ 125], policies that have been trained on substitute models (for example
+ also by regression on data) are almost always significantly worse than
+ the versions trained on real system dynamics.
  
 \end_layout
 
@@ -2341,28 +2508,6 @@ Regression Kernels, distance/cost function
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Common measurements are the 
-\begin_inset Formula $L_{1}$
-\end_inset
-
-or 
-\begin_inset Formula $L_{2}$
-\end_inset
-
-.
- ??
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 The regression error results from a distance relation between the candidates
  results and the data set.
  
@@ -2417,7 +2562,7 @@ bedingte regression für diskreten Raum
 \begin_layout Standard
 Hierfür wurde eine bedingte regression getestet, bei der kein Fehler entstehen
  soll, wenn die zugewiesene Aktion korrekt ist.
- Dieser Ansatz funktioniert nicht
+ Dieser Ansatz funktioniert nicht.
 \end_layout
 
 \begin_layout Standard
@@ -2431,17 +2576,11 @@ d(x_{ik},x_{jk}) & \text{otherwise}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Dadurch kann das Optimierungsverfahren dazu, dass die Kandidaten darauf
  trainiert werden, korrekte Ergebnisse nur sehr ungenau zu treffen und möglichst
  ungenau bei den restlichen zu sein.
- DIe Idee wurde deshalb verworfen.
-\end_layout
-
-\begin_layout Standard
+ Die Idee wurde deshalb verworfen.
+ 
 \begin_inset Note Note
 status open
 
@@ -2462,7 +2601,7 @@ Upper and lower bound
 If the action area has a minimum and maximum value, results outside the
  action area are interpreted as belonging strongly to the limit value.
  If the limit value corresponds to the desired result, it is assigned to
- it accordingly, otherwise the error is calculated
+ it accordingly, otherwise the error is calculated.
 \end_layout
 
 \begin_layout Standard
@@ -2487,17 +2626,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Regression kernels 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-todo
-\end_layout
-
-\end_inset
-
-
+Regression kernels [xxx ca.
+ 6 kernels?]
 \end_layout
 
 \end_inset
@@ -2700,15 +2830,6 @@ Auch denkbar wäre immer weiter Gruppen aus dem Datensatz hinzuzunehmen und
 ten wurde.
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
 \begin_layout Plain Layout
 Unterschiede in der regression könnenverschieden entstehen.
  Die Verteilung der Unterschiede ist dafür relevant! (nicht transitiv, symmetris
@@ -2797,6 +2918,7 @@ status open
 \begin_inset Graphics
 	filename img/dummy/MA_relative_kernel_dummy.png
 	lyxscale 50
+	width 80text%
 
 \end_inset
 
@@ -2809,7 +2931,7 @@ status open
 \begin_layout Plain Layout
 Conceivable relevant areas for penalizing changes in a relative regression
  to an optimum, relative to a known solution.
- todo.
+ [xxx]
 \end_layout
 
 \end_inset
@@ -2820,147 +2942,6 @@ Conceivable relevant areas for penalizing changes in a relative regression
 \end_inset
 
 
-\end_layout
-
-\begin_layout Section
-complexity measure for trees
-\end_layout
-
-\begin_layout Standard
-The complexity that is a problem to understand is largely affected on these
- points:
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx, do i need a lot of sources here? xxx grafik für alles
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Length.
- The more elements an expression has, the more complex it is.
- The sheer length of an expression is probably the most obvious cause of
- complexity.
- 
-\end_layout
-
-\begin_layout Itemize
-difference 
-\end_layout
-
-\begin_layout Itemize
-structure 
-\end_layout
-
-\begin_layout Itemize
-patterns.
- Humans tend to recognize patterns easily.
- This means that both recurrent code elements and already known code are
- easier to realte to.
- 
-\end_layout
-
-\begin_layout Itemize
-function types.
- A special pattern is the function type.
- Some are easy to relate, for example the basic mathematical operations
- and some are hard to relate to, for example the 
-\begin_inset Formula $tan$
-\end_inset
-
--function.
- 
-\end_layout
-
-\begin_layout Itemize
-variable types: Variables are better to understand, the more simpler they
- are.
- 
-\end_layout
-
-\begin_layout Standard
-We already accepted the pattern of the original program as a main influence.
- The explainability distance to the potential candidates are resulted in
- the following considerations for a complexity measurement.
- 
-\end_layout
-
-\begin_layout Itemize
-Total amount of operations.
- 
-\begin_inset Newline newline
-\end_inset
-
-A very easy approach is to just count the amount of operations compared
- to the original program.
- The problem we get here is, that possibly a completely different approach
- to a problem is a possible solution.
- This would leave the user with an approach, where he 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[xxx or her?]
-\end_layout
-
-\end_inset
-
- has to give up on his old code.
- To reduce this risk, a potential solution is to force genetic crossover
- with the original heuristic.
- Besides all other approaches, it seems so make sense to also include a
- value that is not dependent from relative changes to the original heuristic.
- 
-\end_layout
-
-\begin_layout Itemize
-Tree Edit distance.
- 
-\begin_inset Newline newline
-\end_inset
-
-Amount of operations applied to the origin.
- The amount of operations the genetic programming added to the original
- heuristic seems to be a very reasonable approach, as it corresponds to
- the lines of code he has to add to his program.
- However, computational tree-distances have to be computed to receive a
- correct measurement.
- This is a known problem in theoretical information technology and has no
- easy solutions to it.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "tree-difference-operations"
-
-\end_inset
-
- 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx Quelle tree distance 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Faktoren, die hilfreich sein könnten, die aber nicht bewertet wurden:
-\end_layout
-
-\begin_layout Itemize
-Gewichtete TED
 \end_layout
 
 \begin_layout Section
@@ -3435,6 +3416,11 @@ Komplett möglicher Datenraum normalverteilt? Ist irrelevant, da viele Zustände
  Anpassungen müssen oft filigran an bestimmten Bereichen ansetzen.
 \end_layout
 
+\begin_layout Itemize
+Beobachten, wann die ersten Unterschiede in der Entscheidung sind.
+ Diese können der Anfang des Übels sein.
+\end_layout
+
 \begin_layout Subsection
 Outlier problems
 \end_layout
@@ -3518,22 +3504,14 @@ Many small changes can accumulate, leaving the
 Crossover does not have complexity measurement.
  Each node is selected with the same probability, doesn't matter if you
  weight 
-\begin_inset Quotes eld
-\end_inset
-
-arctan(x)
-\begin_inset Quotes erd
+\begin_inset Formula $\arctan(x)$
 \end_inset
 
  thousand times higher than 
-\begin_inset Quotes eld
+\begin_inset Formula $-(x)$
 \end_inset
 
--(x)
-\begin_inset Quotes erd
-\end_inset
-
- 
+ .
 \end_layout
 
 \begin_layout Itemize
@@ -3805,7 +3783,7 @@ literal "true"
 
 \begin_layout Standard
 \begin_inset Note Note
-status collapsed
+status open
 
 \begin_layout Plain Layout
 % todo hein 
@@ -3817,10 +3795,6 @@ o-dimensional state space s = (r, ˙r)
 \end_inset
 
 
-\end_layout
-
-\begin_layout Plain Layout
-make better mountaincar picture?
 \end_layout
 
 \end_inset
@@ -3836,7 +3810,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/MTC_experiment.PNG
+	filename img/inkscape/mountaincar_dummy.pdf
 	lyxscale 50
 	scale 50
 
@@ -3859,7 +3833,7 @@ name "img_mc_experiment"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-A possible starting position in MC [xxx bette]
+A possible starting position in MC
 \end_layout
 
 \end_inset
@@ -3917,7 +3891,7 @@ Action
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3926,7 +3900,7 @@ Action
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3937,7 +3911,7 @@ push left
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3946,7 +3920,7 @@ push left
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3957,7 +3931,7 @@ no push
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3966,7 +3940,7 @@ no push
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3984,33 +3958,6 @@ push right
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The state space of the environment includes the position and velocity.
- Es sollte erwähnt werden, dass die Wertemenge der Position um den Faktor
- 10 größer als die Geschwindugkeit ist.
-\end_layout
-
-\begin_layout Standard
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="4">
 <features tabularvalignment="middle">
@@ -4057,7 +4004,7 @@ Max
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4066,7 +4013,7 @@ Max
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4075,7 +4022,7 @@ position
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4084,7 +4031,7 @@ position
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4095,7 +4042,7 @@ position
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4104,7 +4051,7 @@ position
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4113,7 +4060,7 @@ velocity
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4122,7 +4069,7 @@ velocity
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4139,6 +4086,33 @@ velocity
 
 \end_layout
 
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+MC observation- and actionspace
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The state space of the environment includes the position and velocity.
+ Es sollte erwähnt werden, dass die Wertemenge der Position um den Faktor
+ 10 größer als die Geschwindigkeit ist.
+\end_layout
+
 \begin_layout Standard
 [xxxx decision plots]
 \end_layout
@@ -4148,418 +4122,100 @@ Kernel
 \end_layout
 
 \begin_layout Subsubsection
-Decision plots
+Analysing results, visualizing results, Decision plots
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Standard
+The mountain car problem is very clear with only two dimensions, which opens
+ up many possibilities for clear graphics.
+ A widespread visualization of the mountaincar problem is the decision plot,
+ on which you can see the selected actions of the agent for the whole state
+ space as a 2d-grid.
+ The x-axis is the position and the y-axis as speed, the actions are divided
+ by colors.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[xxx Images, Analysis Images]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+However, the relevant state space is much smaller.
+ A functioning agent only comes into states that are arranged in a snail-like
+ fashion as seen in [xxx ref].
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+[xxx images]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Problems
+\end_layout
+
+\begin_layout Standard
+The initial state is a major problem for regression analyses because, despite
+ its crucial role, it occurs only once in the data set.
+ For this reason, there are sometimes large differences in performance when
+ testing the agents.
+ Just past is also beside the point.
+ Some Sarsa runs end with very tight finishes.
+ Some runs of the trained agents are unfortunately not lucky and have to
+ turn back shortly before the finish.
+\end_layout
+
+\begin_layout Standard
+The SARSA approach was chosen because it was the fastest that could solve
+ mountain car well.
+ However, this meant that little was explored in the learning process and
+ often there are wrong decisions that but there's still a lot of air up
+ there.
+ Very easy to learn that the goal can be achieved with less momentum and
+ you can turn with 
+\end_layout
+
+\begin_layout Standard
+funfact: cartvel 
+\begin_inset Formula $<$
+\end_inset
+
+ 0 then 0 else 2 cartvel 
+\begin_inset Formula $\leq$
+\end_inset
+
+ 0 then 0 else 2 
+\end_layout
+
+\begin_layout Standard
+Reverse early
+\end_layout
+
+\begin_layout Standard
+This simple policy can further be improved, where the most efficient way
+ is probably by reversing early on the opposite side.
+ 
+\end_layout
+
+\begin_layout Paragraph
 Black box: SARSA with tiling
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 50
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
-	lyxscale 50
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-75 Episoden (links) hat mehr unsichere Flecken als 200 Episoden (rechts)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
-	lyxscale 50
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
-	lyxscale 50
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-1000 Episoden (links) lassen noch ein Muster erkennen, während 10000 Episoden
- vollkommenes Chaos hinterlassen [xxx]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-Origin
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-SimpleAgent.png
-	lyxscale 50
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Decision plot for moving towards the current direction
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-Preset policy
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetAgent.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Preset policy with its first improvement
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-Human, if-then-else based
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-Good_Expert.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Preset policy: Recognizable are used mathematical structures such as parabolas
- and the renunciation of 
-\begin_inset Quotes eld
-\end_inset
-
-Action 0
-\begin_inset Quotes erd
-\end_inset
-
-.
- On the right, a simplification is visible, found with the help of gp.
- It has recognized the upper limit as superfluous.
- 
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Preset policy: Erkennbar sind verwendeten mathematischen Strukturen wie
- z.
- B.
- Parabeln sowie der Verzicht auf 
-\begin_inset Quotes eld
-\end_inset
-
-Aktion 0
-\begin_inset Quotes erd
-\end_inset
-
-.
- Rechts ist eine Vereinfachung erkennbar, gefunden mithilfe der genetischen
- Programmierung.
- Sie hat die Obergrenze als überflüssig erkannt.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-asd
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-TODO reference
-\end_layout
-
-\end_inset
-
- 
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Hier erkennt man auch gut die Logik, die bestimmten Lernansätzen zugrunde
- liegt.
-\end_layout
-
-\begin_layout Plain Layout
-Alle SARSA-Ansätze haben viele wilde Fleckenlandschaften, die ein großer
- Unsicherheitsfaktor sind.
-\end_layout
-
-\begin_layout Plain Layout
-Der menschlich geschriebene, pragmatische Ansatz lässt hingegen die Unterteilung
- in if-segmente erkennen.
-\end_layout
-
-\begin_layout Plain Layout
-Die genetische Programmieung
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Runs
-\end_layout
-
-\begin_layout Subsubsection
-\begin_inset Quotes eld
-\end_inset
-
-200, gp-friendly
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
-	lyxscale 30
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa-75 decision plot for the complete state space (left) and for the occuring
- states only (right)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-MC Black box approach (Sarsa)
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/mtc_simple_tree.png
-	lyxscale 50
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mtc_simple_tree"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Computational tree of the simplest program
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -4597,18 +4253,6 @@ literal "true"
 
 \end_inset
 
- 
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Der zum damaligen Zeitpunkt beste RL-Ansatz wurde als Blackbox gewählt,
- welcher einen SARSA Ansatz, gepaart mit Tiling, nutzt um in 75 Episoden
- das Ziel von unter 110 Schritten erreicht.
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -4621,6 +4265,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
+	lyxscale 37
 	height 5cm
 
 \end_inset
@@ -4628,21 +4273,8 @@ status open
 
 \begin_inset Graphics
 	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
-	lyxscale 50
+	lyxscale 20
 	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-uniform height 5cm?
-\end_layout
 
 \end_inset
 
@@ -4664,7 +4296,129 @@ Sarsa-75 decision plot for the complete state space (left) and for the occuring
 
 \end_inset
 
+In the chosen approach, cherrypicking was actively not used, since every
+ approach should work if its average performance is better.
+ Nevertheless, it should be mentioned that the approaches used on the Leaderboar
+d were explicitly not designed for robustness, but for rapid learning success.
+ In the case of the Sarsa75 approach, this manifests itself in a generally
+ poor exploration, coupled with clearly 
+\begin_inset Quotes eld
+\end_inset
 
+wrong
+\begin_inset Quotes erd
+\end_inset
+
+ decisions in some areas [xxx show image].
+ This can lead to problems in the GP process, as discussed in [xxx ref].
+\end_layout
+
+\begin_layout Subparagraph
+Sarsa-75 performance
+\end_layout
+
+\begin_layout Standard
+The simple policy reached the target with an average episode reward of 
+\begin_inset Formula $-119$
+\end_inset
+
+ without fails very constantly.
+ The average reward of the SARSA-agent is, with an average reward of 
+\begin_inset Formula $103$
+\end_inset
+
+, outperforming the simple approach with about 
+\begin_inset Formula $14\%$
+\end_inset
+
+.
+ A grain of salt however is, that the SARSA Approach seems to be relatively
+ unstable, even causing the policy to almost fail to reach the target in
+ 200 steps, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "img:MTC-heuristic-vs-sarsa-reward"
+
+\end_inset
+
+.
+ The reason for poor performance was not evaluated, even though it can be
+ assumed that this is caused by uncommon starting states where not enough
+ experience was made yet.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10-average.jpg
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10.jpg
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "img:MTC-heuristic-vs-sarsa-reward"
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa75 implementation learns to outperform the heuristic on average, but
+ with outliers
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Sarsa-200 update
+\end_layout
+
+\begin_layout Standard
+To compare a slightly better explored approach, the same Sarsa approach
+ was trained for 200 steps.
+ Uncertainties still exist, but they play a much smaller role and the performanc
+e increases accordingly by almost 5 steps to 
+\begin_inset Formula $\approx-103.4$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The same approach war also trained for 200 episodes but a better average
+ result of 
+\begin_inset Formula $\approx-98.7$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -4673,16 +4427,16 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
-	lyxscale 50
-	scale 40
+	lyxscale 20
+	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
 	filename img/MTC/dummy_plots/dummy-sarsa_agent_200.png
-	lyxscale 50
-	scale 40
+	lyxscale 20
+	height 5cm
 
 \end_inset
 
@@ -4708,107 +4462,159 @@ Sarsa-200 decision plot for the complete state space (left) and for the
 \end_layout
 
 \begin_layout Standard
-In the chosen approach, cherrypicking was actively not used, since every
- approach should work if its average performance is better.
- Nevertheless, it should be mentioned that the approaches used on the Leaderboar
-d were explicitly not designed for robustness, but for rapid learning success.
- In the case of the Sarsa75 approach, this manifests itself in a generally
- poor exploration, coupled with clearly 
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+75 Episoden (links) hat mehr unsichere Flecken als 200 Episoden (rechts)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+1000 Episoden (links) lassen noch ein Muster erkennen, während 10000 Episoden
+ vollkommenes Chaos hinterlassen [xxx]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Runs, Origins
+\end_layout
+
+\begin_layout Standard
+As an 
 \begin_inset Quotes eld
 \end_inset
 
-wrong
+expert program
 \begin_inset Quotes erd
 \end_inset
 
- decisions in some areas
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-todo show in image
+ a large number of differently structured agents were tested.
+ The differences are divided into different aspects.
 \end_layout
 
-\end_inset
-
-.
- This can lead to problems in the GP process, as discussed in 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-in todo ref
+\begin_layout Itemize
+Heuristics
 \end_layout
 
-\end_inset
-
-.
+\begin_deeper
+\begin_layout Enumerate
+accelerate in the current direction
 \end_layout
 
-\begin_layout Standard
-To compare a slightly better explored approach, the same Sarsa approach
- was trained for 200 steps.
- Uncertainties still exist, but they play a much smaller role and the performanc
-e increases accordingly by almost 5 steps to 
-\begin_inset Formula $\approx-103.4$
-\end_inset
+\begin_layout Enumerate
+preset policy with parabolic upper and lower limit
+\end_layout
 
-.
-\begin_inset Note Comment
-status collapsed
+\begin_layout Enumerate
+human, improved solution
+\end_layout
 
-\begin_layout Plain Layout
-Bei dem gewählten Ansatz wurde aktiv kein cherrypicking verwendet, da jeder
- Ansatz funktionieren sollte, wenn seine Durchschnittsperformance besser
- ist.
- Dennoch sollte erwähnt werden, dass die Ansätze die auf dem Leaderboard
- verwendet wurden, explizit nicht auf robustheit ausgelegt wurden, sondern
- auf einen schnellen Lernerfolg.
- Dies äußert sich im Fall des Sarsa75 Ansatzes durch eine allgemein schlechte
- exploration, gepaart mit teilweise flächendeckend klar 
+\end_deeper
+\begin_layout Itemize
+Black box data
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Sarsa Agent after 75 training steps (Sarsa75)
+\end_layout
+
+\begin_layout Enumerate
+Sarsa Agent after 200 training steps (Sarsa200)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Some nodes are fixed as core structure
+\end_layout
+
+\begin_layout Itemize
+Exclude action 
 \begin_inset Quotes eld
 \end_inset
 
-falschen
+no push
 \begin_inset Quotes erd
 \end_inset
 
- Entscheidungen.
- Dies kann beim GP Prozess zu Problemen führen, wie in 
-\begin_inset Note Note
+ in advance
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
-todo ref
-\end_layout
-
-\end_inset
-
-gezeigt wird.
-\end_layout
-
-\begin_layout Plain Layout
-Um einen etwas besser explorierten Ansatz im Vergleich zu sehen, wurde derselbe
- Ansatz für 200 Schritte trainiert.
- Unsicherheiten kommen zwar immernoch vor, spielen aber eine viel geringere
- Rolle und die Performance steigt entsprechend auch um fast 5 Schritte.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The same approach war also trained for 200 episodes but a better average
- result of 
-\begin_inset Formula $\approx-98.7$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="3">
 <features tabularvalignment="middle">
@@ -4838,14 +4644,15 @@ Training episodes
 \begin_inset Text
 
 \begin_layout Plain Layout
-Average episode reward (100 runs)
+Avg.
+ reward (100 runs)
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4854,7 +4661,7 @@ Sarsa 75
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4863,7 +4670,7 @@ Sarsa 75
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4874,7 +4681,7 @@ Sarsa 75
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4883,7 +4690,7 @@ Sarsa 200
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4892,7 +4699,7 @@ Sarsa 200
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4903,7 +4710,7 @@ Sarsa 200
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4912,7 +4719,7 @@ Sarsa 1000
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4921,7 +4728,7 @@ Sarsa 1000
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4932,7 +4739,7 @@ Sarsa 1000
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4941,7 +4748,7 @@ Sarsa 10000
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4950,7 +4757,7 @@ Sarsa 10000
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4961,7 +4768,7 @@ Sarsa 10000
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4974,7 +4781,7 @@ Simple agent (
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4983,7 +4790,7 @@ Simple agent (
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4994,7 +4801,7 @@ Simple agent (
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5003,7 +4810,7 @@ Simple agent (<=)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5012,7 +4819,7 @@ Simple agent (<=)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5023,7 +4830,7 @@ Simple agent (<=)
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5032,7 +4839,7 @@ Fix preset Policy
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5041,7 +4848,7 @@ Fix preset Policy
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5056,6 +4863,24 @@ Fix preset Policy
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+MC Agents in comparison
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+[xxx table]
 \end_layout
 
 \begin_layout Standard
@@ -5068,7 +4893,6 @@ status collapsed
 \begin_layout Plain Layout
 Die Black box wurde absichtlich nicht betrachtet, bis auf den Fakt, dass
  sie eine bessere Performance als der Expertenansatz haben musste.
- 
 \end_layout
 
 \end_inset
@@ -5076,68 +4900,8 @@ Die Black box wurde absichtlich nicht betrachtet, bis auf den Fakt, dass
 
 \end_layout
 
-\begin_layout Paragraph
-Missing actions (MTC)
-\end_layout
-
-\begin_layout Standard
-In his reference program, the expert may exclude certain actions that are
- used by the black box.
- Often the neural networks create rather smooth transitions.
- Thus, the policy can never be completely approximated.
- This is often a missing neutral action of “do nothing”, which neural networks
- decide to go for in borderline cases, as weights are only adjusted slowly.
- This can then manifest itself in randomized or partially destructive behavior,
- since the value of the regression from the two extremes to the neutral
- element is identically equal, and programs with the same regression error
- can do the complete opposite in situations.
- An example is the [xxx ref simple agent], which pushes the car either left
- or right, but never does nothing.
-\end_layout
-
-\begin_layout Paragraph
-First evaluation
-\end_layout
-
-\begin_layout Standard
-The “simple” policy reached the target with an average episode reward of
- 
-\begin_inset Formula $-119$
-\end_inset
-
- without fails very constantly.
- The average reward of the SARSA-agent is, with an average reward of 
-\begin_inset Formula $103$
-\end_inset
-
-, outperforming the “simple” approach with about 
-\begin_inset Formula $14\%$
-\end_inset
-
-.
- A grain of salt however is, that the SARSA Approach seems to be relatively
- unstable, even causing the policy to almost fail to reach the target in
- 200 steps, as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "img:MTC-heuristic-vs-sarsa-reward"
-
-\end_inset
-
-.
- The reason for poor performance was not evaluated, even though it can be
- assumed that this is caused by uncommon starting states where not enough
- experience was made yet.
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo epsilon wert = 0?]
-\end_layout
-
-\end_inset
-
-
+\begin_layout Subparagraph
+simple, maximum momentum
 \end_layout
 
 \begin_layout Standard
@@ -5148,24 +4912,89 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10-average.jpg
-	lyxscale 40
-	scale 40
+	filename img/MTC/decision_plots/decisions-SimpleAgent.png
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+[xxx Schnecke]
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/tree_simple.pdf
+	lyxscale 50
+
+\end_inset
+
+[xxx fix nodes]
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mtc_simple_tree"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational tree of the simplest program [xxx doubled image]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Preset policy
+\end_layout
+
+\begin_layout Standard
+Diese preset policy wurde ebenfalls in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "false"
+
+\end_inset
+
+ beschrieben und beinhaltet eine Ober- und Untergrenze in der nach rechts
+ gefahren werden soll.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-XiaoPresetAgent.png
+	lyxscale 20
+	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10.jpg
-	lyxscale 40
-	scale 40
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "img:MTC-heuristic-vs-sarsa-reward"
+	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
+	lyxscale 20
+	height 5cm
 
 \end_inset
 
@@ -5173,8 +5002,110 @@ name "img:MTC-heuristic-vs-sarsa-reward"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Sarsa75 implementation learns to outperform the heuristic on average, but
- with outliers
+Preset policy with its first improvement
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Human, if-then-else based
+\end_layout
+
+\begin_layout Standard
+Diese Lösung stellt eine von Menschenhand geschriebene Heuristik dar, welche
+ die Umkehrpunkt mithilfe von if-Anweisungen umsetzt.
+ Wie in [xxx preset] zu sehen sind diese als eckige Blöcke sichtbar.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-Good_Expert.png
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Preset policy: Recognizable are used mathematical structures such as parabolas
+ and the renunciation of Action 0.
+ On the right, a simplification is visible, found with the help of gp.
+ It has recognized the upper limit as superfluous.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Preset-policy:-Recognizable"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+GP-friendly
+\end_layout
+
+\begin_layout Standard
+This one should help finding the starting action.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
+	lyxscale 20
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-75 decision plot for the complete state space (left) and for the occuring
+ states only (right)
 \end_layout
 
 \end_inset
@@ -5187,7 +5118,28 @@ Sarsa75 implementation learns to outperform the heuristic on average, but
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subparagraph
+MC Agents in comparison
+\end_layout
+
+\begin_layout Subparagraph
+Missing actions (MTC)
+\end_layout
+
+\begin_layout Standard
+In his reference program, the expert may exclude certain actions that are
+ used by the black box.
+ This is often a missing neutral action of doing nothing, which neural networks
+ decide to go for in borderline cases, as weights are only adjusted slowly.
+ This can then manifest itself in randomized or partially destructive behavior,
+ since the value of the regression from the two extremes to the neutral
+ element is identically equal, and programs with the same regression error
+ can do the complete opposite in situations.
+ An example is the [xxx ref simple agent], which pushes the car either left
+ or right, but never does nothing.
+\end_layout
+
+\begin_layout Paragraph
 Subgoals for the best solution
 \end_layout
 
@@ -5243,31 +5195,34 @@ Auf diese Weise wird der Wagen immer das Ziel erreichen, aber es gibt noch
 \end_layout
 
 \begin_layout Itemize
-Reverse early: To reach the goal, you don't have to take the maximum momentum.
+Reverse early:
+\begin_inset Newline newline
+\end_inset
+
+To reach the goal, you don't have to take the maximum momentum.
  If you turn back earlier, a lot of time can be saved.
  
 \end_layout
 
 \begin_layout Itemize
-Discard Action 1 
-\begin_inset Quotes eld
+Discard Action 1 of doing nothing
+\begin_inset Newline newline
 \end_inset
 
-Do nothing
-\begin_inset Quotes erd
-\end_inset
-
-: Doing nothing makes no sense in principle - speed is lost when taking
- a swing and when turning around, instead of doing nothing two consecutive
+Doing nothing makes no sense in principle - speed is lost when taking a
+ swing and when turning around, instead of doing nothing two consecutive
  times, you could normally accelerate in the opposite direction.
  
 \end_layout
 
 \begin_layout Itemize
-Minimum number of necessary turns.
- Depending on the starting position, the goal can be reached deterministically
- with two turns (to the left, to the right) or with three turns (to the
- right, to the left, to the right).
+Minimum number of necessary turns
+\begin_inset Newline newline
+\end_inset
+
+Depending on the starting position, the goal can be reached deterministically
+ with two turns (to the left, to the right) or with three turns (right,
+ left, right).
  Since this decision is relatively far from the end, it is difficult to
  be learn by an agent.
 \begin_inset Note Comment
@@ -5287,123 +5242,17 @@ Mindestanzahl der erforderlichen Umdrehungen.
 
 \end_layout
 
-\begin_layout Subsection
-All mountaincar runs
+\begin_layout Subparagraph
+asd
 \end_layout
 
 \begin_layout Standard
-As an 
-\begin_inset Quotes eld
-\end_inset
-
-expert program
-\begin_inset Quotes erd
-\end_inset
-
- a large number of differently structured agents were tested.
- The differences are divided into different aspects.
-\end_layout
-
-\begin_layout Itemize
-Heuristics
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-accelerate in the current direction
-\end_layout
-
-\begin_layout Enumerate
-preset policy with parabolic upper and lower limit
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Black box data
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sarsa Agent after 75 training steps (Sarsa75)
-\end_layout
-
-\begin_layout Enumerate
-Sarsa Agent after 200 training steps (Sarsa200)
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Some nodes are fixed as core structure
-\end_layout
-
-\begin_layout Itemize
-Exclude action 
-\begin_inset Quotes eld
-\end_inset
-
-no push
-\begin_inset Quotes erd
-\end_inset
-
- in advance
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
+\begin_inset Float algorithm
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
-
-if cartVel <= 0:
-\end_layout
-
-\begin_layout Plain Layout
-
-  push left
-\end_layout
-
-\begin_layout Plain Layout
-
-else
-\end_layout
-
-\begin_layout Plain Layout
-
-	push right
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-Simple, two actions, 
-\begin_inset Quotes eld
-\end_inset
-
-<=
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-As the first agent, we test the 
-\begin_inset Quotes eld
-\end_inset
-
-simplest
-\begin_inset Quotes erd
-\end_inset
-
- approach, which always accelerates in the direction in which it is currently
- moving.
-\end_layout
-
-\begin_layout Standard
 \begin_inset listings
 inline false
 status open
@@ -5433,21 +5282,51 @@ else:
 
 \end_layout
 
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Simple, two actions, <=
+\end_layout
+
+\begin_layout Standard
+As the first agent, we test the 
+\begin_inset Quotes eld
+\end_inset
+
+simplest
+\begin_inset Quotes erd
+\end_inset
+
+ approach, which always accelerates in the direction in which it is currently
+ moving.
+\end_layout
+
 \begin_layout Standard
 To take smaller-even as a condition, however, was already a mistake.
 \end_layout
 
 \begin_layout Standard
 Under condition 
-\begin_inset Quotes eld
-\end_inset
-
-
 \begin_inset Formula $\leq$
-\end_inset
-
-
-\begin_inset Quotes erd
 \end_inset
 
 , since the start speed is 
@@ -5456,31 +5335,15 @@ Under condition
 
 , the vehicle always starts to the left.
  This is much slower than condition 
-\begin_inset Quotes eld
-\end_inset
-
-
 \begin_inset Formula $<$
-\end_inset
-
-
-\begin_inset Quotes erd
 \end_inset
 
 , which is why the expert program has already been modified at this point.
  
 \end_layout
 
-\begin_layout Subsubsection
-Simple, two actions, 
-\begin_inset Quotes eld
-\end_inset
-
-<
-\begin_inset Quotes erd
-\end_inset
-
-
+\begin_layout Subparagraph
+Simple, two actions, <
 \end_layout
 
 \begin_layout Standard
@@ -5542,16 +5405,16 @@ filename "tikz/MTC_trees/test_simple_v1.tex"
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-SimpleAgent.png
-	lyxscale 50
-	scale 40
+	lyxscale 20
+	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
 	filename img/MTC/decision_plots/diff-MTC200_tree_simple0.png
-	lyxscale 50
-	scale 40
+	lyxscale 20
+	height 5cm
 
 \end_inset
 
@@ -5561,8 +5424,8 @@ filename "tikz/MTC_trees/test_simple_v1.tex"
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/MTC200_tree_simple0.png
-	lyxscale 50
-	scale 40
+	lyxscale 20
+	height 5cm
 
 \end_inset
 
@@ -5617,23 +5480,15 @@ if
 -decision to the two cases 0 and 2.
 \end_layout
 
-\begin_layout Subsubsection
-Simple, three actions, 
-\begin_inset Quotes eld
-\end_inset
-
-<=
-\begin_inset Quotes erd
-\end_inset
-
-
+\begin_layout Subparagraph
+Simple, three actions, <=
 \end_layout
 
 \begin_layout Standard
 This version 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subparagraph
 Close-form preset policy
 \end_layout
 
@@ -5753,7 +5608,7 @@ ent hat.
  Sarsa75 policy.
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 Real solution, optimal solution and expert abstraction
 \end_layout
 
@@ -5766,7 +5621,7 @@ As we will see and discuss in [xxx ref], the first decision is most relevant
  emphasizes this state.
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 Sample data
 \end_layout
 
@@ -5790,8 +5645,8 @@ The samples sample size of the data resulted from going through 15 complete
  test data to verify the results.
 \end_layout
 
-\begin_layout Paragraph
-Missing action “no push”
+\begin_layout Subparagraph
+Nicht beschleunigen
 \end_layout
 
 \begin_layout Standard
@@ -5822,16 +5677,7 @@ samples, which is about
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo insert picture of the tree and/or the sarsa choices]
-\end_layout
-
-\end_inset
-
-
+[xxx insert picture of the tree and/or the sarsa choices]
 \end_layout
 
 \begin_layout Standard
@@ -5920,17 +5766,7 @@ closed policy: current lederboard leader
 \end_layout
 
 \begin_layout Section
-Fitness kernel fitting error regression 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[todo what name?]
-\end_layout
-
-\end_inset
-
-
+Fitness kernel fitting error regression [xxx what name?]
 \end_layout
 
 \begin_layout Standard
@@ -5951,17 +5787,7 @@ The action space further is one discrete dimension, leaving plenty of options
 \begin_layout Itemize
 one-hot encoding.
  All actions are one-hot encoded for which a softmax-probability is calculated
- 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[TODO softmax]
-\end_layout
-
-\end_inset
-
-.
+ [xxx softmax].
  This does resemble the structure of a regular program though, what makes
  it difficult to use the tree edit distance.
  
@@ -5977,119 +5803,6 @@ The genetic programming process without fix nodes has the advantage that
  optimisations can be made easier.
 \end_layout
 
-\begin_layout Section
-Analysing results, visualizing results
-\end_layout
-
-\begin_layout Standard
-The mountain car problem is very clear with only two dimensions, which opens
- up many possibilities for clear graphics.
- A widespread visualization of the mountaincar problem is the decision plot,
- on which you can see the selected actions of the agent for the whole state
- space as a 2d-grid.
- The x-axis is the position and the y-axis as speed, the actions are divided
- by colors.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[TODO Images, Analysis Images]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-However, the relevant state space is much smaller.
- A functioning agent only comes into states that are arranged in a snail-like
- fashion as seen in [todo ref].
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[TODO images]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Since two agents are to be compared, the same plot can also be visualized
- as a plot of decision differences.
- Again, the plot can be limited to the areas that are actually reached by
- the agent.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-[TODO Images]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Problems
-\end_layout
-
-\begin_layout Standard
-The initial state is a major problem for regression analyses because, despite
- its crucial role, it occurs only once in the data set.
- For this reason, there are sometimes large differences in performance when
- testing the agents.
- Just past is also beside the point.
- Some Sarsa runs end with very tight finishes.
- Some runs of the trained agents are unfortunately not lucky and have to
- turn back shortly before the finish.
-\end_layout
-
-\begin_layout Standard
-The SARSA approach was chosen because it was the fastest that could solve
- mountain car well.
- However, this meant that little was explored in the learning process and
- often there are wrong decisions that but there's still a lot of air up
- there.
- Very easy to learn that the goal can be achieved with less momentum and
- you can turn with 
-\end_layout
-
-\begin_layout Standard
-funfact: cartvel 
-\begin_inset Formula $<$
-\end_inset
-
- 0 then 0 else 2 cartvel 
-\begin_inset Formula $\leq$
-\end_inset
-
- 0 then 0 else 2 
-\end_layout
-
-\begin_layout Standard
-Reverse early
-\end_layout
-
-\begin_layout Standard
-This simple policy can further be improved, where the most efficient way
- is probably by reversing early on the opposite side.
- 
-\end_layout
-
 \begin_layout Subsubsection
 asd
 \end_layout
@@ -6100,7 +5813,7 @@ d.
  The better the original structure we had was, the better...
  An interesting concept is the performance and robustness achieved while
  learning different approaches.
- The concept of differentiel learning [todo source] is also known in sport
+ The concept of differential learning [xxx source] is also known in sport
  science.
  Learning to solve a situation completely different but with the same goal
  lets you combine the best of both worlds.
@@ -6467,11 +6180,10 @@ adjustable (action)
 \begin_inset Text
 
 \begin_layout Plain Layout
-adjustable (
 \begin_inset Formula $\pm1$
 \end_inset
 
-)
+
 \end_layout
 
 \end_inset
@@ -6480,11 +6192,10 @@ adjustable (
 \begin_inset Text
 
 \begin_layout Plain Layout
-adjustable (
 \begin_inset Formula $\pm1$
 \end_inset
 
-)
+
 \end_layout
 
 \end_inset
@@ -6493,11 +6204,10 @@ adjustable (
 \begin_inset Text
 
 \begin_layout Plain Layout
-adjustable (
 \begin_inset Formula $\pm1$
 \end_inset
 
-)
+
 \end_layout
 
 \end_inset
@@ -6889,7 +6599,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-IB compared to other benchmarks
+IB compared to Mountain Car and other benchmarks [xxx Hein]
 \end_layout
 
 \end_inset
@@ -6907,7 +6617,7 @@ Approaches
 \end_layout
 
 \begin_layout Subsubsection
-lack box: PSONN
+Black box: PSONN
 \end_layout
 
 \begin_layout Standard

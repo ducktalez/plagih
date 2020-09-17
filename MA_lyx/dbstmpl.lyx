@@ -1127,26 +1127,7 @@ Zur Umsetzung wurde ein GP Framework entwickelt, welches pareto genetische
  Programmierung umsetzt, stark typisiert ist und Tensorflow zur Auswertung
  nutzt.
  Außerdem wurde als optionaler Anker an der Expertenheuristik die Verwendung
- von fixer Knoten eingeführt.
-\end_layout
-
-\begin_layout Paragraph
-technical part Evaluation, Fitness (tensorflow)
-\end_layout
-
-\begin_layout Standard
-The most complex part of the improvement process is to compute the fitness
- of a tree.
- As proposed in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "karooGPpaper"
-literal "true"
-
-\end_inset
-
-, a significant speedup can be achieved by converting the computational
- tree to tensors and using gpu-parallelism to retrieve fast runs.
+ von fixen Knoten eingeführt.
 \end_layout
 
 \begin_layout Paragraph
@@ -1398,8 +1379,7 @@ Fulfilling the prerequisites for a distance measure
 
 \end_deeper
 \begin_layout Itemize
-Ability to show even small differences.
- 
+Kleine Unterschiede messen
 \end_layout
 
 \begin_layout Itemize
@@ -1440,17 +1420,7 @@ Diese komplexitätsmaße eignen sich sehr gut um overfitting zu vermeiden
  und den Rechenaufwand überschaubar zu halten.
  Dennoch stellen sie meistens eine komplexe, oft unübersichtliche oder augensche
 inlich zusammenhangslose mathematische Formel dar.
- Um sie zu verstehen, muss der Entwickler die Struktur reverse engineeren
- - ein sehr aufwendiger und kompizierter Prozess, vor allem, wenn man mehrere
- Lösungen vergleichen will.
-\end_layout
-
-\begin_layout Standard
-Ein Softwareentwickler hat im Normalfall durch Jahrelange Erfahrung gelernt,
- Probleme sinnvoll zu zerlegen.
- So würde er für Probleme sodass er jeden Bestandteil des Programms einer
- anderen Person erklären kann.
- 
+ Um sie zu verstehen, muss der Entwickler die 
 \end_layout
 
 \begin_layout Standard
@@ -1507,54 +1477,6 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-Other options that were discussed before deciding to use the tree edit distance
- were: 
-\end_layout
-
-\begin_layout Itemize
-number of positions to be applied: 
-\begin_inset Newline newline
-\end_inset
-
-From an explanatory point of view, it is interesting to count the number
- of branches inserted.
- As a form of encapsulation, a tree with a small number of additional branches
- would be preferable.
- However, it is out of question as the main measure.
- On the one hand, an expansion at several places may be unavoidable, which
- would be the next problem: It does not allow for simple gradations of complexit
-y.
- In order to offer interfaces to the genetic programming where there is
- a lot of potential for improvement, the expert should also formulate and
- structure the initial program in such a way that extensions at as many
- points as possible are understandable and can be integrated meaningfully.
- In the case of Mountain Car, the “simple” program was extended in such
- a way that Action 0 can be integrated without much effort.
-\end_layout
-
-\begin_layout Itemize
-Arbitrary generated function.
- 
-\begin_inset Newline newline
-\end_inset
-
-For each node that is not part of the original, its arity is added as penalty.
- This measure has been tested among others, but compared to the actual number
- of changes, it is only an artificially created aid that does not offer
- as results with the same precision and plausibility as the tree edit distance.
- 
-\end_layout
-
-\begin_layout Itemize
-Accumulated number of changes since start.
- This measurement is unsuitable for two reasons.
- First, it makes the use of crossover impossible, as it is unclear which
- parents complexity value should be accumulated.
- Second, as a distance measure it does not satisfy the triangle inequality.
- [xxx proves triangle inequality]
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -1563,7 +1485,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/general/ted_explain.png
+	filename img/inkscape/TED_operators.pdf
 	lyxscale 60
 	scale 50
 
@@ -1583,7 +1505,7 @@ name "fig:TED_explain_operators"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Basic TED operators
+Possible TED changes on a tree: insert (green), delete (red), modify (yellow)
 \end_layout
 
 \end_inset
@@ -1606,7 +1528,6 @@ Weighting functions is very practical for an expert as he can add his own
  [xxx reference] This is enabled by not only computing the distance itself
  but also analysing the required mapping of performed edits to change the
  origin tree to the found solution.
- 
 \end_layout
 
 \begin_layout Standard
@@ -1710,9 +1631,23 @@ The fitness is the common measurement to rate candidates in a GP population,
  
 \end_layout
 
+\begin_layout Paragraph
+technical part Evaluation, Fitness (tensorflow)
+\end_layout
+
 \begin_layout Standard
-Finding the optimal weight for the adjustments is not part of this paper,
- it shall only be shown that improvements based on one factor can be made.
+The most complex part of the improvement process is to compute the fitness
+ of a tree.
+ As proposed in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "karooGPpaper"
+literal "true"
+
+\end_inset
+
+, a significant speedup can be achieved by converting the computational
+ tree to tensors and using gpu-parallelism to retrieve fast runs.
 \end_layout
 
 \begin_layout Standard
@@ -1752,6 +1687,10 @@ starke typisierung
 Das Framework akzeptiert numerische und boolsche Werte, die nicht automatisch
  ineinander umgewandelt werden.
  Knoten dürfen bei passenden Datentypen ausgetauscht oder eingesetzt werden.
+\end_layout
+
+\begin_layout Itemize
+operators: if-then-else, math, [xxx]
 \end_layout
 
 \begin_layout Itemize
@@ -1875,7 +1814,7 @@ Menge aus mathematisch relevanten Konstanten ([xxx pi, e, sqrt 2])
 
 \end_deeper
 \begin_layout Paragraph
-Fix nodesi
+Fix nodes
 \end_layout
 
 \begin_layout Standard
@@ -1927,49 +1866,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/trees/tree_modifiable_nodes.png
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\backslash
-caption{Red nodes have to stay the same, green ones can be modified} 
-\end_layout
-
-\begin_layout Plain Layout
-
-\backslash
-label{img:tree_modifiable_nodes} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/trees/tree_modifiable_nodes_improved.png
-
-\end_inset
-
-
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\backslash
-centering 
-\end_layout
+	filename img/inkscape/fix_nodes_mutation.pdf
 
 \end_inset
 
@@ -1987,7 +1884,7 @@ name "img:tree_modifiable_nodes_modified"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The same tree with inserted nodes in blue
+A tree with fixed nodes (blue) remains untouched by a branch mutation
 \end_layout
 
 \end_inset
@@ -4242,6 +4139,10 @@ velocity
 
 \end_layout
 
+\begin_layout Standard
+[xxxx decision plots]
+\end_layout
+
 \begin_layout Subsubsection
 Kernel
 \end_layout
@@ -4250,22 +4151,8 @@ Kernel
 Decision plots
 \end_layout
 
-\begin_layout Standard
-MC offers the opportunity to create decision plots.
- These show which decisions have been made for the respective observation
- dimensions.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Für die MC Auswertung können dank der niedrigen Eingabedimensionen Entscheidungs
--plots erstellt, die für die jeweiligen Observations-dimensionen zeigen,
- welche Entscheidungen getroffen wurden.
-\end_layout
-
-\end_inset
-
-
+\begin_layout Subsection
+Black box: SARSA with tiling
 \end_layout
 
 \begin_layout Standard
@@ -4275,10 +4162,14 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
 	lyxscale 50
-	scale 40
+	height 5cm
 
 \end_inset
 
@@ -4286,7 +4177,19 @@ status open
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
 	lyxscale 50
-	scale 40
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+75 Episoden (links) hat mehr unsichere Flecken als 200 Episoden (rechts)
+\end_layout
 
 \end_inset
 
@@ -4297,7 +4200,7 @@ status open
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
 	lyxscale 50
-	scale 40
+	height 5cm
 
 \end_inset
 
@@ -4305,7 +4208,7 @@ status open
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
 	lyxscale 50
-	scale 40
+	height 5cm
 
 \end_inset
 
@@ -4313,21 +4216,84 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+1000 Episoden (links) lassen noch ein Muster erkennen, während 10000 Episoden
+ vollkommenes Chaos hinterlassen [xxx]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Origin
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-SimpleAgent.png
 	lyxscale 50
-	scale 40
+	height 5cm
 
 \end_inset
 
 
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-AgentV1p40.png
-	lyxscale 50
-	scale 40
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Decision plot for moving towards the current direction
+\end_layout
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Preset policy
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -4342,6 +4308,45 @@ status open
 
 \begin_inset Graphics
 	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Preset policy with its first improvement
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Human, if-then-else based
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/decision_plots/decisions-Good_Expert.png
 	lyxscale 50
 	scale 40
 
@@ -4392,17 +4397,6 @@ Aktion 0
 
 
 \end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-Good_Expert.png
-	lyxscale 50
-	scale 40
 
 \end_inset
 
@@ -5744,16 +5738,12 @@ name "code:MC-agent:preset_policy"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 Mit 36 Knoten hat dieses Expertenprogramm bereits eine enorme natürliche
  Baumgröße, wodurch die TED selbst bei relativ großen Änderungen nicht ihre
  Wirkung verliert.
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 Dadurch konnten hier auch zwei essentielle Verbesserungen gefunden werden.
  Zum einen wurde erkannt, dass die Obergrenze keine Bedeutung für das MC-Experim
 ent hat.
@@ -5763,98 +5753,21 @@ ent hat.
  Sarsa75 policy.
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-With 36 nodes, this expert program already has an enormous natural tree
- size, so that the TED does not lose its effect even with relatively large
- changes.
-\end_layout
-
-\begin_layout Standard
-Thus two essential improvements could be found here.
- Firstly, it was recognized that the upper limit has no significance for
- the MC experiment.
- In the second case an enormous improvement was achieved by a small change.
- This improvement is even better than the Sarsa75 policy in the real experiment.
-\end_layout
-
-\begin_layout Paragraph
-Problems
-\end_layout
-
-\begin_layout Standard
-The initial state is a major problem for regression analyses because, despite
- its crucial role, it occurs only once in the data set.
- For this reason, there are sometimes large differences in performance when
- testing the agents.
- Just past is also beside the point.
- Some Sarsa runs end with very tight finishes.
- Some runs of the trained agents are unfortunately not lucky and have to
- turn back shortly before the finish.
-\end_layout
-
-\begin_layout Standard
-The SARSA approach was chosen because it was the fastest that could solve
- mountain car well.
- However, this meant that little was explored in the learning process and
- often there are wrong decisions that but there's still a lot of air up
- there.
- Very easy to learn that the goal can be achieved with less momentum and
- you can turn with 
-\end_layout
-
-\begin_layout Standard
-funfact: cartvel 
-\begin_inset Formula $<$
-\end_inset
-
- 0 then 0 else 2 cartvel 
-\begin_inset Formula $\leq$
-\end_inset
-
- 0 then 0 else 2 
-\end_layout
-
-\begin_layout Standard
-Reverse early
-\end_layout
-
-\begin_layout Standard
-This simple policy can further be improved, where the most efficient way
- is probably by reversing early on the opposite side.
- 
-\end_layout
-
 \begin_layout Paragraph
 Real solution, optimal solution and expert abstraction
 \end_layout
 
 \begin_layout Standard
-As we will see and discuss in
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-
-\backslash
-ref{todo}
-\end_layout
-
-\end_inset
-
-, the first decision is most relevant for the optimal solution.
+As we will see and discuss in [xxx ref], the first decision is most relevant
+ for the optimal solution.
  The starting velocity is always 0, but depending on the starting position,
  you have to take three or four turns to reach the goal.
  For this purpose, another expert policy has been implemented, which explicitly
  emphasizes this state.
 \end_layout
 
-\begin_layout Subsection
-GP preparation
+\begin_layout Paragraph
+Sample data
 \end_layout
 
 \begin_layout Standard
@@ -5877,7 +5790,7 @@ The samples sample size of the data resulted from going through 15 complete
  test data to verify the results.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Missing action “no push”
 \end_layout
 
@@ -5970,7 +5883,7 @@ More effort at the GP
 more complex trees
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Reference programs
 \end_layout
 
@@ -6006,7 +5919,7 @@ true expert: compact but high end program that exceeds the fitness of sarsa75
 closed policy: current lederboard leader
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Fitness kernel fitting error regression 
 \begin_inset Note Note
 status open
@@ -6060,15 +5973,11 @@ Return the action as part of the gp-process evaluation.
 \end_layout
 
 \begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
 The genetic programming process without fix nodes has the advantage that
  optimisations can be made easier.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Analysing results, visualizing results
 \end_layout
 
@@ -6134,19 +6043,75 @@ status open
 
 \end_layout
 
-\begin_layout Section
-Mountain car experiments
-\end_layout
-
-\begin_layout Subsection
-simple binary + SARSA 75, fix nodes
+\begin_layout Paragraph
+Problems
 \end_layout
 
 \begin_layout Standard
-Improving the simple binary approach leaves the genetic programming w
+The initial state is a major problem for regression analyses because, despite
+ its crucial role, it occurs only once in the data set.
+ For this reason, there are sometimes large differences in performance when
+ testing the agents.
+ Just past is also beside the point.
+ Some Sarsa runs end with very tight finishes.
+ Some runs of the trained agents are unfortunately not lucky and have to
+ turn back shortly before the finish.
 \end_layout
 
 \begin_layout Standard
+The SARSA approach was chosen because it was the fastest that could solve
+ mountain car well.
+ However, this meant that little was explored in the learning process and
+ often there are wrong decisions that but there's still a lot of air up
+ there.
+ Very easy to learn that the goal can be achieved with less momentum and
+ you can turn with 
+\end_layout
+
+\begin_layout Standard
+funfact: cartvel 
+\begin_inset Formula $<$
+\end_inset
+
+ 0 then 0 else 2 cartvel 
+\begin_inset Formula $\leq$
+\end_inset
+
+ 0 then 0 else 2 
+\end_layout
+
+\begin_layout Standard
+Reverse early
+\end_layout
+
+\begin_layout Standard
+This simple policy can further be improved, where the most efficient way
+ is probably by reversing early on the opposite side.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+asd
+\end_layout
+
+\begin_layout Standard
+While testing the mountain car approach, an interesting occurrence was discovere
+d.
+ The better the original structure we had was, the better...
+ An interesting concept is the performance and robustness achieved while
+ learning different approaches.
+ The concept of differentiel learning [todo source] is also known in sport
+ science.
+ Learning to solve a situation completely different but with the same goal
+ lets you combine the best of both worlds.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 Problems with mountain car experiments 
 \end_layout
 
@@ -6182,6 +6147,11 @@ Difference 2-1 and 0-1 is the same, although completely different actions
 \begin_layout Itemize
 Fast moving car vs slowly moving generate different amount of data per area.
  coarse data can be fit better than dense data.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -6814,7 +6784,7 @@ past time steps
 \begin_inset Text
 
 \begin_layout Plain Layout
-0 (Value always remains the same over the time horizon)
+0
 \end_layout
 
 \end_inset
@@ -6892,7 +6862,13 @@ Relevant IB features for the agent
 
 \end_inset
 
-
+Von den drei Aktionen hat die letzte dabei eine besondere Rolle, da mit
+ ihr ein großes Risiko verbunden ist.
+ Durch Abweichungen vom Normalwert kann die Performance zwar verbessert
+ werden, jedoch führt eine Abweichung in einen falschen Bereich zu hohen
+ Strafen.
+ Bei der Analyse wurde deshalb immer zusätzlich noch eine sichere Version
+ ausgewertet, die Aktion 2 nicht setzt.
 \end_layout
 
 \begin_layout Standard
@@ -6927,48 +6903,86 @@ IB compared to other benchmarks
 \end_layout
 
 \begin_layout Subsection
-Blacl box
+Approaches
 \end_layout
 
-\begin_layout Chapter
-Discussion
+\begin_layout Subsubsection
+lack box: PSONN
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Section
-Choosing the favorite candidate
+Als Black box wurde ein particle swarm optimisation algorithmus with neural
+ networks (PSONN) [xxx] ausgewählt.
+ Dieser [xxx funktioniert so] und hat einen angenäherten Fitness Wert von
+ [xxx].
+ Dieser Ansatz ist ähnlich komplex wie der eines neuronalen Netzes, jedoch
+ kann es hier zu einem noch [xxx sparse] Lösungsraum kommen.
+ Das kann, kombiniert mit der Komplex der Benchmarks, die eh schon außerordentli
+ch hoch ist, zu hoher Varianz im Suchraum führen.
 \end_layout
 
-\begin_layout Plain Layout
-Regarding the pareto efficient candidates, the developer has the chance
- to choose the solution that lies on his own sweet spot between complexity
- and performance.
+\begin_layout Subsubsection
+Origins
+\end_layout
+
+\begin_layout Standard
+Für das IB gibt es keine bekannten Lösungsstrategien.
+ Eine Lösung, die dennoch relativ gut funktioniert, ist alle Werte auf 50
+ zu stellen.
+ Eine weitere implementierte Lösung verfolgte außerdem einen Ansatz, dem
+ GP Prozess durch Verwendung nützlicher Werte einen guten Anhaltspunkt zu
+ bieten.
  
 \end_layout
 
-\begin_layout Section
-todo Crossing good approaches
+\begin_layout Standard
+Nach der normalisierung der Werte führte das zu folgenden origin-bäumen:
+ [xxx]
 \end_layout
 
-\begin_layout Plain Layout
-While testing the mountain car approach, an interesting occurrence was discovere
-d.
- The better the original structure we had was, the better...
- An interesting concept is the performance and robustness achieved while
- learning different approaches.
- The concept of differentiel learning [todo source] is also known in sport
- science.
- Learning to solve a situation completely different but with the same goal
- lets you combine the best of both worlds.
- 
+\begin_layout Subsection
+Results
 \end_layout
 
-\end_inset
+\begin_layout Standard
+The results schow extraordinary well performance in reward, robustness and
+ explainablilty.
+ [xxx]
+\end_layout
 
+\begin_layout Subsubsection
+Scratch
+\end_layout
 
+\begin_layout Standard
+asd
+\end_layout
+
+\begin_layout Subsubsection
+50-50-50
+\end_layout
+
+\begin_layout Standard
+asd
+\end_layout
+
+\begin_layout Subsubsection
+Simons Try
+\end_layout
+
+\begin_layout Standard
+asd
+\end_layout
+
+\begin_layout Subsection
+Analysis
+\end_layout
+
+\begin_layout Standard
+Das IB zeigte außerordentlich gute Performance für ein Benchmark, das schwer
+ zu erreichen ist.
+ Wissen über Strategie, die PSONN verfolgte konnte nicht erlangt werden.
+ Dies könnte aber auch daran liegen, dass ich bei weitem kein Experte bin.
 \end_layout
 
 \begin_layout Chapter
@@ -6981,6 +6995,43 @@ What would be nice: We were able to improve programs which were close to
  The code could even be added isolated to each learning process, making
  it super easy to add explicability to any existing machine learning black
  box.
+\end_layout
+
+\begin_layout Standard
+Regarding the pareto efficient candidates, the developer has the chance
+ to choose the solution that lies on his own sweet spot between complexity
+ and performance.
+ 
+\end_layout
+
+\begin_layout Standard
+Diese Arbeit hat gezeigt, dass das Erzeugen von Kandidaten mit genetischer
+ Programmierung auf Basis von bereits bekannten Programmen möglich ist und
+ die GP sowie das RL um einen Ansatz erweitert, der effizient verständliche
+ Lösungen erzeugen kann.
+\end_layout
+
+\begin_layout Standard
+Die Regression hat als Surrogatmodell dennoch seine Limitierungen gezeigt.
+ Der Mountaincar Ansatz hängt so beispielsweise stark von ersten Entscheidung
+ ab, welche durch einen einzelnen Datenpunkt nicht ausreichend beschrieben
+ wird.
+\end_layout
+
+\begin_layout Standard
+Die TED zeigt in seiner Rohform auch Probleme bei origin-programmen, die
+ extrem klein sind, da Änderungen bereits nach wenigen Knoten sich nicht
+ mehr entscheident von der Startlösung unterscheiden.
+\end_layout
+
+\begin_layout Standard
+Die so erzeugten Kandidaten konnten klassische Ansätze der genetischen Programmi
+erung zwar nicht weit, aber doch in sämtlichen Punkten (Fitness, Robustheit,
+ Erklärbarkeit) übertreffen.
+ Aufbauend auf diesem Ansatz bieten sich viele Ideen an, die mit modifizierten
+ Vertrautheitsmaßen oder einer anderen Version einer Regression noch sicherere
+ oder performantere Ergebnisse liefern, die unter Umständen noch erklärbarer
+ sind.
 \end_layout
 
 \begin_layout Standard

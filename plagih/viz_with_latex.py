@@ -201,12 +201,16 @@ def latex_tree_get_forest(tree, tight_viz=True):
     else:
         bracket_tree = latex_brackettree(tree)
 
+    # latex predefined colors:
+    # black, blue, brown, cyan, darkgray, gray, green, lightgray, lime, magenta, olive, orange, pink, purple, red, teal, violet, white, yellow.
     forest_complete = f'\n\\begin{{forest}}' \
                       f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
                       f'\n  terminal/.style={{rectangle,}},' \
                       f'\n  fixnode/.style={{fill=blue!60,}},' \
                       f'\n  observation/.style={{rectangle,}},' \
                       f'\n  variable/.style={{rectangle,}},' \
+                      f'\n  nodeinsert/.style={{fill=green!50,}},' \
+                      f'\n  nodechanged/.style={{fill=orange!50,}},' \
                       f'\n {bracket_tree}' \
                       f'\n\\end{{forest}}\n'
 

@@ -79,7 +79,7 @@ def eval_agents():
 
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        sum = eval_agent(agent, randomize=50)
+        sum = eval_agent(agent, randomize=0)  # todo randomize 50 or 0?
         print(f'Results: {agent.name} {sum}')
 
 

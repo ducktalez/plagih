@@ -2557,6 +2557,47 @@ ht.
  
 \end_layout
 
+\begin_layout Paragraph
+xxx Lösungen finden
+\end_layout
+
+\begin_layout Standard
+Maschinen sollen dem Menschen lästige Aufgaben abnehmen.
+ Meistens primitive Aufgaben, so erspart ein Auto uns langweilige Märsche.
+ Auch Programme erledigen stupide Aufgaben, wie das erstellen von Listen.
+\end_layout
+
+\begin_layout Standard
+Doch manche Aufgaben sind zu komplex, als dass der Mensch sie als Heuristik
+ formulieren könnte.
+ Könntest du ein Programm schreiben, welches in einem Pixel-Bild Gesichter
+ erkennt? Vermutlich nicht.
+ Diese Zusammenhänge werden impliziert besser 
+\begin_inset Quotes eld
+\end_inset
+
+programmiert
+\begin_inset Quotes erd
+\end_inset
+
+ - und zwar implizit.
+ Viele, beschriftete Bilder (meistens tausende) werden dafür einer Maschine
+ zum lernen zur Verfügung gestellt.
+ Noch interessanter ist dabei Reinforcement Learning - dort lernt ein Agent
+ mit externem Feedback sogar, Spiele zu spielen, ohne dass der Mensch ihm
+ Verhalten vorgeben müsste - und kann den Menschen sogar strategisch übertreffen.
+ Das interessante dabei ist vor allem, dass die Lösungen besser werden,
+ je weniger sich der Mensch einmischt.
+ RL erfordert allerdings immernoch eine Reward-funktion, die einem Agenten
+ zeigt, ob es bestimmte Ziele erreicht hat oder nicht.
+ Diese kann man der Maschine aber nicht überlassen.
+ Welchen Antrieb hätte die Maschine sonst noch, etwas zu tun?
+\end_layout
+
+\begin_layout Standard
+Wo ist die Grenze dieser Freiheit, der man der Maschine geben müsste?
+\end_layout
+
 \begin_layout Subsection
 Leben wir in einer Simulation?
 \end_layout

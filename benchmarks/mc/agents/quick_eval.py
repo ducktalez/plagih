@@ -12,7 +12,7 @@ import numpy as np
 import gym
 import pickle
 
-import tikzplotlib
+# import tikzplotlib
 
 
 def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
@@ -166,7 +166,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
     if not Path.is_dir(folder):
         Path.mkdir(folder)
     plt.savefig(Path(folder) / f'{name}.png', dpi=300)
-    # plt.savefig(Path(folder) / f'{name}.svg')
+    plt.savefig(Path(folder) / f'{name}.pdf')
     # try:
     #     tikzplotlib.save('TEST.tex'.format(name))
     # except Exception as ex:

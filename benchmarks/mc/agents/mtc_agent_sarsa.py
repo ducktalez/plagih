@@ -72,29 +72,33 @@ def plagih_get_behaviour_samples(env, agent, episodes):
 
 
 def train_sarsa_agent_pickle(seed=0):
+    """
+    train and save agents with n steps for mountain car (75, 200, 1000, 10000)
+    """
     env = gym.make('MountainCar-v0')
     env.seed(seed)
 
     agent = SARSALambdaAgent(env)
-    # steps_done = 0
-    # for training_steps in [75, 200, 1000, 10000]:
-    #     episode_rewards = []
-    #     steps_left = training_steps - steps_done
-    #     for episode in range(steps_left):
-    #         episode_reward = mountaincar_play_once(env, agent, train=True)
-    #         episode_rewards.append(episode_reward)
+    steps_done = 0
+    for training_steps in [75, 200, 1000, 10000]:
+        episode_rewards = []
+        steps_left = training_steps - steps_done
+        print(f'steps left? {steps_left}')
+        for episode in range(steps_left):
+            episode_reward = mountaincar_play_once(env, agent, train=True)
+            episode_rewards.append(episode_reward)
+
+        with open(Path('sarsa_agent_{}.p'.format(str(training_steps))), 'wb') as file:
+            pickle.dump(agent, file)
+
+    # episode_rewards = []
+    # for episode in range(75):
+    #     episode_reward = mountaincar_play_once(env, agent, train=True)
+    #     episode_rewards.append(episode_reward)
+    # print('...saved agent pickle')
     #
-    #     with open(Path('pickle/sarsa_agent_{}.p'.format(str(training_steps))), 'wb') as file:
-    #         pickle.dump(agent, file)
-
-    episode_rewards = []
-    for episode in range(75):
-        episode_reward = mountaincar_play_once(env, agent, train=True)
-        episode_rewards.append(episode_reward)
-    print('...saved agent pickle')
-
-    with open('sarsa_75.p', 'wb') as file:
-        pickle.dump(agent, file)
+    # with open('sarsa_75.p', 'wb') as file:
+    #     pickle.dump(agent, file)
 
     return
 
@@ -129,3 +133,6 @@ if __name__ == "__main__":
     sarsa_agent_75, sarsa_agent_200, _, _ = load_sarsas()
     create_plagih_samples_csv(sarsa_agent_75, '75')
     create_plagih_samples_csv(sarsa_agent_200, '200')
+
+
+# train_sarsa_agent_pickle()

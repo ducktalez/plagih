@@ -101,6 +101,7 @@ def thesis_decision_plots_dummied():
 
 
 thesis_decision_plots_dummied()
+thesis_decision_plots_fullspace()
 
 # print('results:', mtc_play(Good_Expert(), n=100))
 # print('results:', mtc_play(sarsa_agent_75, n=100))

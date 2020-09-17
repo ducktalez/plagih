@@ -5,6 +5,7 @@
 \usepackage{amsmath}
 \usepackage{tabularx}
 
+\usepackage{svg}
 \usepackage{beamercolorthemelmu}
 \usepackage[utf8]{inputenc}
 \usepackage{array}
@@ -24,6 +25,7 @@
 % align oversets (available in TeXLive 18 - overleaf currently runs w/ texlive 17 - 5.11.19)
 % \usepackage{aligned-overset}
 \usepackage{bbm}
+
 
 % Indicate clickability by colour
 \hypersetup{
@@ -81,31 +83,62 @@
 \end{frame}
 
 \begin{frame}{Introduction}
-\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
+%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
+\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
 \end{frame}
 
 \begin{frame}{Introduction}
 \includegraphics[height=0.89\textheight]{img/nn-blackbox.png}
 \end{frame}
 
-\begin{frame}{Introduction}
-\includegraphics[height=0.89\textheight]{img/3-teacher.png}
-\begin{itemize}
-\item Verständnis
-\item 
-\end{itemize}
 
-Nicht nötig:
+\begin{frame}
+\frametitle{Using Columns}
+\begin{columns}
+\column{0.5\textwidth}
+\includegraphics[width=1\linewidth]{img/3-teacher_small.png}
+\column{0.5\textwidth}
+	\begin{itemize}
+		\item Understanding the problem
+		\item Understanding what you have ahead of the other
+		\item Formulating the difference as language
+	\end{itemize}
+\end{columns}
+\end{frame}
 
-\begin{itemize}
-\item Fehler
-\item 
-\end{itemize}
+
+
+
+\begin{frame}{Reinforcement Learning}
+\includegraphics[height=0.8\textheight]{img/agent-env.png} 
 \end{frame}
 
 
 
 %\section{Introduction}
+\begin{frame}
+\frametitle{Mountain car policies}
+\begin{columns}
+\column{0.30\textwidth}
+\includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_75.pdf}
+\includegraphics[height=0.4\textheight]{img/mtc/decisions-XiaoPresetAgent.png}
+
+\column{0.30\textwidth}
+\includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_200.pdf}
+\includegraphics[height=0.4\textheight]{img/mtc/decisions-Good_Expert.png}
+
+\column{0.4\textwidth}
+Different policies
+\begin{itemize}
+		\item Neural networks (75, 200)
+		\item Genetic Programming
+		\item Human
+	\end{itemize}
+
+
+
+\end{columns}
+\end{frame}
 
 
 %\section{Motivation}
@@ -117,10 +150,6 @@ Nicht nötig:
 %\end{block}
 %\begin{alertblock}{Expected challenges}
 %\end{alertblock}
-
-\begin{frame}{Familiarity}
-\includegraphics[height=0.8\textheight]{img/agent-env.png} 
-\end{frame}
 
 
 \section{Benchmark: Industrial Benchmark}
@@ -135,9 +164,8 @@ TODO
 %\includegraphics[width=0.3\textwidth]{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/paretofront IB_MSE_s3m_1.png}
 %\includegraphics[width=0.3\textwidth]{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/paretofront IB_MSE_s3m_2.png}
 
-%\includegraphics[width=0.3\textwidth]{img/dummies/combined_pareto_IB_MSE_s3m-dashed.png}
-%\includegraphics[width=0.3\textwidth]{img/dummies/combined_pareto_IB_MSE_s3m-dotted.png}
-%\includegraphics[width=0.3\textwidth]{img/dummies/combined_pareto_IB_MSE_s3m-None.png}
+\includegraphics[width=0.45\textwidth]{img/dummies/combined_pareto_IB_MSE_s3m-dashed.png}
+\includegraphics[width=0.45\textwidth]{img/dummies/combined_pareto_IB_MSE_s3m-dotted.png}
 
 \end{frame}
 

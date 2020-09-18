@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -33,6 +33,11 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -53,8 +58,6 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -84,7 +87,6 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -93,10 +95,7 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -254,7 +253,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -317,7 +315,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -349,7 +346,6 @@ Im Bereich der AI stellt die Genetische Programmierung (GP) eine Möglichkeit
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -388,7 +384,6 @@ status open
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hawking_AI_warning"
-literal "true"
 
 \end_inset
 
@@ -481,7 +476,6 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -579,7 +573,6 @@ iert, dass es zwischenmenschlich keiner Erklärung mehr bedarf.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "false"
 
 \end_inset
 
@@ -717,9 +710,6 @@ Neuronale Netze sind verallgemeinerte, sehr umfangreiche Gleichungssysteme,
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:relu-sigmoid"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -897,7 +887,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c"
-literal "false"
 
 \end_inset
 
@@ -905,7 +894,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -1152,7 +1140,7 @@ Im folgenden wird die implementierung des Ansatzes um genetische Programmierung
  mit Vertrautheit zu verknüpfen, vorgestellt und begründet.
  Als Referenz für die Vertrautheit wird dafür eine Heuristik verwendet,
  die ein Experte zur Lösung eines Problems entwickelt hat (origin).
- [xxx ?] Als Maß für die Änderungen werden einige Einflussfaktoren vorgestellt,
+ Als Maß für die Änderungen werden einige Einflussfaktoren vorgestellt,
  die zur Nutzung der Tree Edit Distance (TED) geführt haben, welche die
  Anzahl der Unterschiede von computational trees berechnet.
  [xxx] Die Fitness der Kandidaten wird dabei als ein möglicher Weg über
@@ -1601,7 +1589,6 @@ ty of candidates.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -1629,7 +1616,6 @@ reference "fig:TED_explain_operators"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -1802,7 +1788,6 @@ The most complex part of the improvement process is to compute the fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -2399,7 +2384,6 @@ As Daniel Hein has found out in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3774,7 +3758,6 @@ The problem was first introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -4234,7 +4217,6 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -4249,7 +4231,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -4964,7 +4945,6 @@ Diese preset policy wurde ebenfalls in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "false"
 
 \end_inset
 
@@ -5497,7 +5477,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -5877,7 +5856,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -7041,7 +7019,6 @@ modifiable nodes erweitern.
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Genetic_improvement_(computer_science)"
-literal "false"
 
 \end_inset
 

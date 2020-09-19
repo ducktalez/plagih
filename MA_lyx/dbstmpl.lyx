@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -34,10 +34,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -58,6 +54,8 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -87,6 +85,7 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -95,7 +94,10 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -253,6 +255,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
@@ -315,6 +318,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -346,6 +350,7 @@ Im Bereich der AI stellt die Genetische Programmierung (GP) eine Möglichkeit
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -384,6 +389,7 @@ status open
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hawking_AI_warning"
+literal "true"
 
 \end_inset
 
@@ -476,6 +482,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -573,6 +580,7 @@ iert, dass es zwischenmenschlich keiner Erklärung mehr bedarf.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -887,6 +895,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c"
+literal "false"
 
 \end_inset
 
@@ -894,6 +903,7 @@ target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqn
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -1252,7 +1262,7 @@ A relatable scheme which an expert created with the hope to represent some
 \end_layout
 
 \begin_layout Enumerate
-black box solution
+Black box solution
 \begin_inset Newline newline
 \end_inset
 
@@ -1261,14 +1271,13 @@ A solution that outperforms the known approach which has to be explained.
 \end_layout
 
 \begin_layout Enumerate
-Plausible improvements
+Familiar improvements
 \begin_inset Newline newline
 \end_inset
 
-A genetic programming framework has to improve the hand-written code to
- the level of the Machine-learning solution while letting the developer
- understand the changes and where the most substantial improvements can
- be made.
+A genetic programming framework has to improve the origin code to the level
+ of the ML solution while letting the developer understand the changes and
+ where the most substantial improvements can be made.
 \end_layout
 
 \begin_layout Paragraph
@@ -1308,11 +1317,12 @@ Optimizing GP candidates with fitness and complexity
 \end_layout
 
 \begin_layout Standard
-Pareto genetic programming is a special form of genetic programming and
- can be used to optimize candidates two-dimensional, both on their fitness
- and a complexity measurement.
- [xxx bild paretofront] Pareto kandidaten sind somit entweder weniger komplex
- oder haben einen niedrigeren Regressionsfehler als die anderen.
+To optimize candidates two-dimensional, both on their fitness and a complexity
+ measurement, we use a special form of genetic programming called Pareto
+ genetic programming.
+ Statt nur den besten Kandidaten zu speichern wird hier eine Pareto Front
+ erzeugt, auf der sich die fittesten Kandidaten zur jeweiligen Komplexität
+ befinden.
 \end_layout
 
 \begin_layout Standard
@@ -1322,13 +1332,17 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/general/paretofront_example.png
-	lyxscale 20
+	lyxscale 10
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/general/paretofront_example2.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -1337,7 +1351,9 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-GP candidates on the Pareto front
+GP candidates on the Pareto front.
+ [xxx two styles] Der Zugewinn an Fitness nimmt mit zunehmender Komplexität
+ meistens ab.
 \end_layout
 
 \end_inset
@@ -1359,7 +1375,7 @@ Vertrautheitsmaß
 \end_layout
 
 \begin_layout Standard
-Ds Komplexitätsmaß soll nicht nur Vertrautheit indizieren, sie muss auch
+Das Komplexitätsmaß soll nicht nur Vertrautheit indizieren, es muss auch
   
 \begin_inset CommandInset label
 LatexCommand label
@@ -1432,8 +1448,10 @@ complexity measure for trees
 \end_layout
 
 \begin_layout Standard
-The complexity that is a problem to understand is largely affected on these
- points:
+We already accepted the pattern of the original program as a main influence.
+ The explainability distance to the potential candidates are resulted in
+ the following considerations for a complexity measurement.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -1449,122 +1467,29 @@ xxx, do i need a lot of sources here? xxx grafik für alles
 
 \end_layout
 
-\begin_layout Itemize
-Length.
- The more elements an expression has, the more complex it is.
- The sheer length of an expression is probably the most obvious cause of
- complexity.
- 
-\end_layout
-
-\begin_layout Itemize
-difference 
-\end_layout
-
-\begin_layout Itemize
-structure 
-\end_layout
-
-\begin_layout Itemize
-patterns.
- Humans tend to recognize patterns easily.
- This means that both recurrent code elements and already known code are
- easier to realte to.
- 
-\end_layout
-
-\begin_layout Itemize
-function types.
- A special pattern is the function type.
- Some are easy to relate, for example the basic mathematical operations
- and some are hard to relate to, for example the 
-\begin_inset Formula $tan$
-\end_inset
-
--function.
- 
-\end_layout
-
-\begin_layout Itemize
-variable types: Variables are better to understand, the more simpler they
- are.
- 
-\end_layout
-
-\begin_layout Standard
-We already accepted the pattern of the original program as a main influence.
- The explainability distance to the potential candidates are resulted in
- the following considerations for a complexity measurement.
- 
-\end_layout
-
-\begin_layout Itemize
-Total amount of operations.
- 
-\begin_inset Newline newline
-\end_inset
-
-A very easy approach is to just count the amount of operations compared
- to the original program.
- To reduce this risk, a potential solution is to force genetic crossover
- with the original heuristic.
- Besides all other approaches, it seems so make sense to also include a
- value that is not dependent from relative changes to the original heuristic.
- 
-\end_layout
-
-\begin_layout Itemize
-Tree Edit distance.
- 
-\begin_inset Newline newline
-\end_inset
-
-Amount of operations applied to the origin.
- The amount of operations the genetic programming added to the original
- heuristic seems to be a very reasonable approach, as it corresponds to
- the lines of code he has to add to his program.
- However, computational tree-distances have to be computed to receive a
- correct measurement.
- This is a known problem in theoretical information technology and has no
- easy solutions to it.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "tree-difference-operations"
-
-\end_inset
-
- [xxx Quelle tree distance]
-\end_layout
-
-\begin_layout Standard
-Faktoren, die hilfreich sein könnten, die aber nicht bewertet wurden:
-\end_layout
-
-\begin_layout Itemize
-Gewichtete TED
-\end_layout
-
-\begin_layout Subparagraph
+\begin_layout Paragraph
 GP complexity
 \end_layout
 
 \begin_layout Standard
-Um zu verhindern, dass die Kandidaten der GP zu komplex werden 
+Komplexitätsmaße werden auf viele Arten eingesetzt.
+ Die Baumtiefe stellt beispielsweise eine praktische Lösung dar um zu komplexe
+ Ausdrücke und somit overfitting zu vermeiden, die Anzahl der Knoten steigt
+ aber mit der Tiefe exponentiell an.
+ Um intertretierbarkeit zu gewährleisten werden deshalb üblicherweise die
+ Anzahl der Knoten gezählt.
+ Zusätzlich können bestimmte Operatoren, die als besonders komplex gelten
+ (beispielsweise der Tangens) gewichtet werden.
+ 
 \end_layout
 
 \begin_layout Standard
-The selected complexity measures usually depend on the node [xxx cite],
- the depth of the tree [xxx cite] and variations thereof [xxx, evaluation
- of func, ...].
-\end_layout
-
-\begin_layout Standard
-Diese komplexitätsmaße eignen sich sehr gut um overfitting zu vermeiden
- und den Rechenaufwand überschaubar zu halten.
- Dennoch stellen sie meistens eine komplexe, oft unübersichtliche oder augensche
-inlich zusammenhangslose mathematische Formel dar.
- Um sie zu verstehen, muss der Entwickler die 
+Dennoch entstehen mithilfe dieser Komplexitätsmaße meist mathematische Formel
+ die versuchen das Problem als Ganzes zu lösen statt es zu abstrahieren.
+ Oft verfolgen die Kandidaten einer Paretofront dabei zusätzlich komplett
+ verschiedene Ansätze, weshalb es für einen Entwickler sehr umständlich
+ ist, alle Kandidaten zu reverse-engineeren.
+ [xxx Beispiels]
 \end_layout
 
 \begin_layout Paragraph
@@ -1572,11 +1497,16 @@ TED
 \end_layout
 
 \begin_layout Standard
-The Tree Edit Distance (TED) was selected as basis measurement for the familiari
-ty of candidates.
- It is a well-known problem from theoretical computer science which [xxx]
- welches sich mit der Frage beschäftigt, wieviele elementare Änderungen
- an einem Baum T nötig sind, um einen Baum T' zu erreichen.
+Als Distanzmaß für die Vertrautheit wird deshalb statt der Anzahl der Knoten
+ die Anzahl der Änderungen am origin programm berechnet, welche mithilfe
+ der Tree Edit Distance (TED) berechnet werden kann.
+ Die TED is a well-known problem from theoretical computer science which
+ [xxx] welches sich mit der Frage beschäftigt, wieviele elementare Änderungen
+ 
+\begin_inset Formula $\{\text{delete},\text{insert,\text{modify}\}}$
+\end_inset
+
+ an einem Baum T mindestens nötig sind, um einen Baum T' zu erreichen.
 \end_layout
 
 \begin_layout Quote
@@ -1589,6 +1519,7 @@ ty of candidates.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -1596,26 +1527,14 @@ key "tedOldestPaper"
 \end_layout
 
 \begin_layout Standard
-The TED counts the minimum amount of required changes 
-\begin_inset Formula $\{\text{delete},\text{insert,\text{modify}\}}$
-\end_inset
-
- steps that are required to transform one tree (the origin) to the gp-candidate
- tree as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:TED_explain_operators"
-
-\end_inset
-
-.
- Thanks to numerous improvements made in the last years, the state of the
+Thanks to numerous improvements made in the last years, the state of the
  art TED computation is robust and fast enough for evaluating numerous of
- gp-generated trees.
+ GP trees for the framework.
  
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -1651,7 +1570,9 @@ name "fig:TED_explain_operators"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Possible TED changes on a tree: insert (green), delete (red), modify (yellow)
+Possible TED changes on a tree: insert (green), delete (red), modify (yellow).
+ If the position of a node in a branch changes, only the remaining changes
+ are evaluated.
 \end_layout
 
 \end_inset
@@ -1664,7 +1585,7 @@ Possible TED changes on a tree: insert (green), delete (red), modify (yellow)
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Weighting TED
 \end_layout
 
@@ -1674,6 +1595,16 @@ Weighting functions is very practical for an expert as he can add his own
  [xxx reference] This is enabled by not only computing the distance itself
  but also analysing the required mapping of performed edits to change the
  origin tree to the found solution.
+ This option is very personalised and thus was not evaluated specifically
+ for this thesis.
+ Außerdem lässt es Fragen offen, wie sich Gewichtungen auf die jeweiligen
+ Änderungen auswirken sollten.
+ Möglich wären folgende Regeln:
+\end_layout
+
+\begin_layout Itemize
+Die absolute Komplexität der origin wird als Startkomplexität gewählt, wenn
+ Knoten entfernt oder geändert werden wird ein Anteil der Gewichtung abgezogen
 \end_layout
 
 \begin_layout Standard
@@ -1683,12 +1614,7 @@ The occurrence of variables could be weighted separately with a relatively
  keeping it simple.
 \end_layout
 
-\begin_layout Standard
-This extra measurement is very personalised though and thus was not evaluated
- specifically for this thesis.
-\end_layout
-
-\begin_layout Subparagraph
+\begin_layout Paragraph
 TED limitations
 \end_layout
 
@@ -1706,24 +1632,45 @@ Gewichtung nur umständlich möglich
 \end_inset
 
 Frühe Experimente zeigten, dass der implizite Schutz logischer Kernstrukturen
- durch die TED oftmals nicht ausreichte.
+ durch die TED oftmals nicht ausreicht.
  Vor allem sehr einfache Programme können die TED seh ein Entwickler als
  besonders schützenswert (weil essentiell für die logische Abstraktion)
  ansehen könnte.
  
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Potential improvements
 \end_layout
 
-\begin_layout Standard
-Es ist außerdem denkbar, sowohl nicht vollständige Strukturen (z.
+\begin_layout Itemize
+Ausschließen von Terminal-knoten.
+ Operatoren erforden Rechenaufwand und sind somit auch schwerer zu verstehen.
+ Die Anzahl der Terminalknoten ist von der Anzahl der darüber liegenden
+ Knoten und dem branching faktor abhängig und deshalb ein starker Einflussfaktor.
+ Dies verhindert den Nutzen von if-funktionen.
+ Änderungen an Werten, die oft schon eine Verbesserung darstellen sind somit
+ sehr teuer.
+ Stattdessen sollte eine separate TED für die verwendeten Observationen
+ als dummy addiert werden.
+ Allerdings, oho, werden so leider auch oft ähnliche Ansätze mit verschiedener
+ Ausprägung gewählt, die sich unter Umständen nicht kombinieren lassen und
+ über die Rolle der Werte keine AUskunft geben [xxx Daniel Lösungen IB was
+ is nun?]
+\end_layout
+
+\begin_layout Itemize
+Verwendung unvollständiger Strukturen als origin (z.
  B.
- fehlende Terminal-Knoten) zu verwenden.
- Auch mehrere origins könnten in einem Lauf verwendet werden, wobei beispielswei
-se die kleinste oder mittlere TED verwendet wird.
- So könnten auch mehrere verständliche Ansätze direkt verglichen werden.
+ fehlende Terminal-Knoten)
+\end_layout
+
+\begin_layout Itemize
+verwendung mehrerer bekannter origins in einem Lauf, wobei beispielsweise
+ die kleinste oder mittlere TED verwendet wird.
+ So könnten auch mehrere verständliche Ansätze auf ihre Erweiterbarkeit
+ direkt verglichen werden oder mehrere Teillösungen separat eingebracht
+ werden.
  
 \end_layout
 
@@ -1788,6 +1735,7 @@ The most complex part of the improvement process is to compute the fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -1800,8 +1748,7 @@ key "karooGPpaper"
 \end_layout
 
 \begin_layout Standard
-Um die erzeugten Programme aus dem Prozess der genetischen Programmierung
- heraus möglichst einfach zu halten wurden folgende Features implementiert:
+Das Framework zeichnet sich durch folgende Eigenschaften aus:
 \end_layout
 
 \begin_layout Itemize
@@ -1818,9 +1765,13 @@ starke typisierung
 \begin_inset Newline newline
 \end_inset
 
-Das Framework akzeptiert numerische und boolsche Werte, die nicht automatisch
- ineinander umgewandelt werden.
- Knoten dürfen bei passenden Datentypen ausgetauscht oder eingesetzt werden.
+Es werden nur numerische und boolsche Werte an den passenden Stellen akzeptiert.
+ Eine Umwandlung muss deshalb explizit durch einen separaten Operator erfolgen
+ und noten dürfen bei passenden Datentypen ausgetauscht oder eingesetzt
+ werden.
+ Ob die bereitgestellten Operatoren closure ermöglichen wird deshalb überprüft,
+ außerdem gibt es ein mutual exklusives crossover [xxx crossovermechanismus
+ code].
 \end_layout
 
 \begin_layout Itemize
@@ -1848,24 +1799,153 @@ Gewichtung für die Verwendung von Operatoren
 \end_layout
 
 \begin_layout Itemize
-Tree branch building method full and grow
+Random tree branch building method full and grow
 \end_layout
 
 \begin_layout Itemize
 depth-based and nodecount-based build size definition
 \end_layout
 
-\begin_layout Standard
-Irgendwelche features
+\begin_layout Itemize
+A Tournament winner can enter the next generation including the following
+ changes
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+6% No changes (Reproduction): Candidates entering the next generation without
+ changes.
 \end_layout
 
 \begin_layout Itemize
-Vereinfachung der Ausdrücke nach mathematischen Regeln (sympy)
+3% simplification
+\begin_inset Newline newline
+\end_inset
+
+Vereinfachung der Ausdrücke nach mathematischen Regeln (sympy).
+ Ganze Bäume oder zufällige Äste werden mithilfe von Sympify [xxx] reduziert
+ und über einen als neuer Ast aufgebaut.
+ Neue Pareto-einträge werden immer versucht, vereinfacht abgespeichert zu
+ werden.
+ Ausdrücke werden dabei auch in derselben Ordnung abgespeichert, was die
+ Verwendung der TED vereinfacht: 
+\begin_inset Formula $1+a\longrightarrow a+1$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+1% Pareto
+\end_layout
+
+\begin_layout Itemize
+Point mutation
+\begin_inset Newline newline
+\end_inset
+
+A randomly selected node gets replaced without changing the rest of the
+ structure.
+\end_layout
+
+\begin_layout Itemize
+Branch mutation
+\begin_inset Newline newline
+\end_inset
+
+A randomly selected node gets replaced with a randomly created branch.
+ The tree depth was not used due to interference with depth level of fix
+ nodes.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+5% Full, total amount of nodes [xxx normal, 7,3] min=1, max=12
+\end_layout
+
+\begin_layout Itemize
+5% Grow, total amount of nodes [xxx normal, 7,3] min=1, max=12
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Branch shrink [None]
+\end_layout
+
+\begin_layout Itemize
+Filtering.
+\begin_inset Newline newline
+\end_inset
+
+The filtering for values included: Absolute changes, relative changes, changes
+ based on observations
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+0% random terminal node
+\end_layout
+
+\begin_layout Itemize
+5% all values in a branch of a random node
+\end_layout
+
+\begin_layout Itemize
+5% all values in a branch of a random node, if possible including observation
+ timestamps.
+ This was especially included for the IB [xxx], where filtering the time-index
+ of an observation can make sense.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Crossover
+\begin_inset Newline newline
+\end_inset
+
+Crossover requires two tournament selections.
+ Two randomly selected branches of the same type are exchanged to create
+ two child trees.
+\end_layout
+
+\begin_layout Itemize
+Random trees
+\begin_inset Newline newline
+\end_inset
+
+35% of a population consists of random new trees.
+ These are created by
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+5% Tree depth, full: 'mean_min_max_var': (4.5, 3, 5, 1)
+\end_layout
+
+\begin_layout Itemize
+15% nodecount, grow: 'mean_min_max_var': (10, 1, None, 5)
+\end_layout
+
+\begin_layout Itemize
+15% nodecount, full: 'mean_min_max_var': (10, 1, None, 5)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+Außerdem wurden einige nicht essentielle, aber als praktisch empfundene
+ Features implementiert:
 \end_layout
 
 \begin_layout Standard
 Außerdem enthält es folgende features eingeführt, die den GP-Prozess allgemein
  verbessern sollen:
+\begin_inset Newline newline
+\end_inset
+
+Um die erzeugten Programme aus dem Prozess der genetischen Programmierung
+ heraus möglichst einfach zu halten wurden folgende Features implementiert:
 \end_layout
 
 \begin_layout Itemize
@@ -2384,6 +2464,7 @@ As Daniel Hein has found out in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3735,6 +3816,11 @@ partially
 
 \end_layout
 
+\begin_layout Standard
+Die Ergebnisse wurden mit Lösungen verglichen, die mit verglciehbarer klassische
+r genetischer Programmierung gefunden wurden.
+\end_layout
+
 \begin_layout Section
 Mountain car
 \begin_inset CommandInset label
@@ -3747,42 +3833,61 @@ name "experiment:mountaincar"
 \end_layout
 
 \begin_layout Standard
-With the Mountain car problem, a car is supposed to drive up a mountain
- that is too steep for the car's engine.
- To achieve is to build up momentum to reach the target as fast as possible
- given the position p and velocity v of the car.
-\end_layout
-
-\begin_layout Standard
-The problem was first introduced in 1990 
+The Mountain car problem was introduced in 1990 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
- and has since become a widely used RL benchmark.
+, where a car is supposed to drive up a mountain as fast as possible that
+ is too steep for the car's engine.
+ Der Agent kenn die Position und Geschwindigkeit des Autos und kann es nach
+ links oder rechts beschleunigen.
+ Um zum Ziel zu kommen muss ein Agent lernen, den Gegenhang zum Schwung
+ holen zu nutzen.
+ Außerdem haben sich Folgende Punkte als hilfreich herausgestellt:
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-% todo hein 
-\begin_inset Quotes eld
+\begin_layout Itemize
+Vorzeitiges Umkehren
+\begin_inset Newline newline
 \end_inset
 
-o-dimensional state space s = (r, ˙r)
-\begin_inset Quotes erd
-\end_inset
-
-
+Das Ziel auch ohne maximalen Schwung erreicht werden, vor allem beim letzten
+ Schwung kann deshalb viel Weg und somit auch Zeit gespart werden.
 \end_layout
 
+\begin_layout Itemize
+Immer beschleunigen
+\begin_inset Newline newline
+\end_inset
+
+Nichts zu tun statt zu beschleunigen macht nur an Wendepunkten Sinn, sonst
+ dabei Geschwindigkeit verloren.
+ Meistens kann ein solches Warten deshalb mit beschleunigen in die Gegenrichtung
+ ersetzt werden.
+ Diese neutrale Aktion wird von neuronalen Netzen häufig in unsicheren Grenzfäll
+en gewählt, da die Gewichte nur langsam angepasst werden.
+\end_layout
+
+\begin_layout Itemize
+Die erste Aktion 
+\begin_inset CommandInset label
+LatexCommand label
+name "MC-first_action"
+
 \end_inset
 
 
+\begin_inset Newline newline
+\end_inset
+
+Zur Startposition ist bereits klar, ob das Ziel mit zwei oder drei Schwüngen
+ erreicht werden kann.
+ Wieviele Schwünge geholt werden wird in der Startposition entschieden,
+ weshalb sie einen extrem großen Einfluss auf die benötigte Zeit hat.
 \end_layout
 
 \begin_layout Standard
@@ -3824,21 +3929,20 @@ A possible starting position in MC
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
 \end_layout
 
-\begin_layout Subsection
-Implementation
-\end_layout
-
 \begin_layout Standard
-In the discrete version of MC there are three possible actions
+Der Zustandsraumist dabei ungewöhnlich implementiert, die Position der Autos
+ ist beispielsweise um den Faktor 10 größer als die Geschwindigkeit.
+ Vor allem die genetische Programmierung ist das kombinieren dieser Werte
+ oft schwer.
+ Im Bereich der AI werden solche Werte deshalb oft normalisiert.
+ Für die folgenden Experimente nehmen aber wir an, dass der Entwickler die
+ Werte für sein Programm nicht normalisiert hat und suchen die Lösungen
+ ohne diesen Zwischenschritt.
 \end_layout
 
 \begin_layout Standard
@@ -4067,6 +4171,13 @@ velocity
 \end_inset
 
 
+\begin_inset CommandInset label
+LatexCommand label
+name "MC-observationspace"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Plain Layout
@@ -4081,41 +4192,22 @@ MC observation- and actionspace
 
 \end_layout
 
-\begin_layout Plain Layout
+\end_inset
 
-\end_layout
+Da der Zustandsraum des Mountaincar Problems zweidimensional ist, lässt
+ er sich als zweidimensionaler Plot darstellen, wo für jeden Zustand die
+ Aktion farblich markiert wird.
+ Verschiedene Umsetzungen davon sind beispielsweise in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sarsa75_problem_decision_plots"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-The state space of the environment includes the position and velocity.
- Es sollte erwähnt werden, dass die Wertemenge der Position um den Faktor
- 10 größer als die Geschwindigkeit ist.
-\end_layout
-
-\begin_layout Standard
-[xxxx decision plots]
-\end_layout
-
-\begin_layout Subsubsection
-Kernel
-\end_layout
-
-\begin_layout Subsubsection
-Analysing results, visualizing results, Decision plots
-\end_layout
-
-\begin_layout Standard
-The mountain car problem is very clear with only two dimensions, which opens
- up many possibilities for clear graphics.
- A widespread visualization of the mountaincar problem is the decision plot,
- on which you can see the selected actions of the agent for the whole state
- space as a 2d-grid.
- The x-axis is the position and the y-axis as speed, the actions are divided
- by colors.
+ zu sehen.
 \end_layout
 
 \begin_layout Standard
@@ -4123,7 +4215,15 @@ The mountain car problem is very clear with only two dimensions, which opens
 status open
 
 \begin_layout Plain Layout
-[xxx Images, Analysis Images]
+% todo hein 
+\begin_inset Quotes eld
+\end_inset
+
+o-dimensional state space s = (r, ˙r)
+\begin_inset Quotes erd
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -4131,77 +4231,29 @@ status open
 
 \end_layout
 
-\begin_layout Standard
-However, the relevant state space is much smaller.
- A functioning agent only comes into states that are arranged in a snail-like
- fashion as seen in [xxx ref].
+\begin_layout Subsection
+Black box: Sarsa with Tiling
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
+Als Black box Lösung wurde der Spitzenreiter der gym-leaderboards ausgewählt,
+ welcher einen SARSA-Ansatz mit Tiling verwendet und so nach 75 Trainingsepisode
+n das Ziel von maximal 110 Schritten erreicht.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "true"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-[xxx images]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subparagraph
-Problems
-\end_layout
-
-\begin_layout Standard
-The initial state is a major problem for regression analyses because, despite
- its crucial role, it occurs only once in the data set.
- For this reason, there are sometimes large differences in performance when
- testing the agents.
- Just past is also beside the point.
- Some Sarsa runs end with very tight finishes.
- Some runs of the trained agents are unfortunately not lucky and have to
- turn back shortly before the finish.
-\end_layout
-
-\begin_layout Standard
-The SARSA approach was chosen because it was the fastest that could solve
- mountain car well.
- However, this meant that little was explored in the learning process and
- often there are wrong decisions that but there's still a lot of air up
- there.
- Very easy to learn that the goal can be achieved with less momentum and
- you can turn with 
-\end_layout
-
-\begin_layout Standard
-funfact: cartvel 
-\begin_inset Formula $<$
-\end_inset
-
- 0 then 0 else 2 cartvel 
-\begin_inset Formula $\leq$
-\end_inset
-
- 0 then 0 else 2 
-\end_layout
-
-\begin_layout Standard
-Reverse early
-\end_layout
-
-\begin_layout Standard
-This simple policy can further be improved, where the most efficient way
- is probably by reversing early on the opposite side.
- 
-\end_layout
-
-\begin_layout Paragraph
-Black box: SARSA with tiling
-\end_layout
-
-\begin_layout Standard
 The gym-environment has a leaderboard containing the approaches that have
  been able to learn the fastest to create a policy that solves the problem
  in steps of less than 
@@ -4209,14 +4261,12 @@ The gym-environment has a leaderboard containing the approaches that have
 \end_inset
 
 .
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
+ 
 \begin_inset CommandInset href
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -4225,16 +4275,26 @@ target "https://github.com/openai/gym/wiki/Leaderboard"
 
 \end_inset
 
- The best RL approach at that time was chosen as a black box, which uses
- a SARSA approach paired with tiling to achieve the target of less than
- 110 steps in 75 episodes.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "xiao2019"
+ The average reward of the SARSA-agent is, with an average reward of 
+\begin_inset Formula $-103$
+\end_inset
+
+, outperforming the simple approach of a developer that will be introduced
+ in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "par:simple,-maximum-momentum"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 
+ with about 
+\begin_inset Formula $14\%$
+\end_inset
 
+.
 \end_layout
 
 \begin_layout Standard
@@ -4260,14 +4320,25 @@ status open
 \end_inset
 
 
+\begin_inset CommandInset label
+LatexCommand label
+name "sarsa75_problem_decision_plots"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Sarsa-75 decision plot for the complete state space (left) and for the occuring
- states only (right)
+Sarsa-75 performance on MC.
+ The marked patches in the decision plot (left) show untraceable and unsafe
+ behavior in the whole space.
+ The trajectories of 50 runs have the shape of a snail (right), with an
+ outlier which only just missed the target (top right in the picture) and
+ needed another run-up.
 \end_layout
 
 \end_inset
@@ -4277,55 +4348,7 @@ Sarsa-75 decision plot for the complete state space (left) and for the occuring
 
 \end_inset
 
-In the chosen approach, cherrypicking was actively not used, since every
- approach should work if its average performance is better.
- Nevertheless, it should be mentioned that the approaches used on the Leaderboar
-d were explicitly not designed for robustness, but for rapid learning success.
- In the case of the Sarsa75 approach, this manifests itself in a generally
- poor exploration, coupled with clearly 
-\begin_inset Quotes eld
-\end_inset
 
-wrong
-\begin_inset Quotes erd
-\end_inset
-
- decisions in some areas [xxx show image].
- This can lead to problems in the GP process, as discussed in [xxx ref].
-\end_layout
-
-\begin_layout Subparagraph
-Sarsa-75 performance
-\end_layout
-
-\begin_layout Standard
-The simple policy reached the target with an average episode reward of 
-\begin_inset Formula $-119$
-\end_inset
-
- without fails very constantly.
- The average reward of the SARSA-agent is, with an average reward of 
-\begin_inset Formula $103$
-\end_inset
-
-, outperforming the simple approach with about 
-\begin_inset Formula $14\%$
-\end_inset
-
-.
- A grain of salt however is, that the SARSA Approach seems to be relatively
- unstable, even causing the policy to almost fail to reach the target in
- 200 steps, as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "img:MTC-heuristic-vs-sarsa-reward"
-
-\end_inset
-
-.
- The reason for poor performance was not evaluated, even though it can be
- assumed that this is caused by uncommon starting states where not enough
- experience was made yet.
 \end_layout
 
 \begin_layout Standard
@@ -4375,28 +4398,48 @@ Sarsa75 implementation learns to outperform the heuristic on average, but
 
 \end_layout
 
-\begin_layout Subparagraph
-Sarsa-200 update
-\end_layout
-
 \begin_layout Standard
-To compare a slightly better explored approach, the same Sarsa approach
- was trained for 200 steps.
- Uncertainties still exist, but they play a much smaller role and the performanc
-e increases accordingly by almost 5 steps to 
-\begin_inset Formula $\approx-103.4$
+Das Leaderboard umfasst dabei lediglich, wie schnell das Training ablief
+ und nicht, wie sicher der Ansatz ist.
+ In the case of the Sarsa75 approach, this manifests itself in a generally
+ poor exploration, coupled with clearly bad decisions in some cases 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sarsa75_problem_decision_plots"
+plural "false"
+caps "false"
+noprefix "false"
+
 \end_inset
 
 .
+ Diese Fälle kommen selten vor und beeinflussen das durchschnittliche Ergebnis
+ nicht maßgeblich, was in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "img:MTC-heuristic-vs-sarsa-reward"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ zu sehen ist, stellen aber ein Risiko dar.
+ Dennoch stellt der Ansatz nach 75 Schritten einen sehr unerfahrenen Agenten
+ dar, was sich schon durch das Anführen der Erwähnten Leaderboards ergibt.
+ Besonders für sensible Bereiche würde mehr Wert auf Sicherheit gelegt.
+ Das kann sich auf die gefundenen Kandidaten auswirken, weshalb mit einer
+ Version nach 200 Episoden Training verglichen wurde (Sarsa-200).
 \end_layout
 
 \begin_layout Standard
-The same approach war also trained for 200 episodes but a better average
- result of 
+Uncertainties still exist, but they play a much smaller role and the performance
+ increases accordingly by almost 5 steps to 
 \begin_inset Formula $\approx-98.7$
 \end_inset
 
-
+.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -4443,43 +4486,29 @@ Sarsa-200 decision plot for the complete state space (left) and for the
 \end_layout
 
 \begin_layout Standard
+Weiteres Training führte zu keinen weiteren Verbesserungen.
+ Im Gegenteil, sie verschlechterten sich stark, was sich auch in unregelmäßigkei
+ten in den Plots bemerkbar macht, siehe 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sarsa1000-plots"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_75.png
-	lyxscale 20
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
-	lyxscale 20
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-75 Episoden (links) hat mehr unsichere Flecken als 200 Episoden (rechts)
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -4500,6 +4529,13 @@ status open
 \end_inset
 
 
+\begin_inset CommandInset label
+LatexCommand label
+name "sarsa1000-plots"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Plain Layout
@@ -4507,7 +4543,7 @@ status open
 
 \begin_layout Plain Layout
 1000 Episoden (links) lassen noch ein Muster erkennen, während 10000 Episoden
- vollkommenes Chaos hinterlassen [xxx]
+ vollkommenes Chaos hinterlassen.
 \end_layout
 
 \end_inset
@@ -4524,69 +4560,40 @@ status open
 
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsection
 Runs, Origins
 \end_layout
 
 \begin_layout Standard
-As an 
-\begin_inset Quotes eld
-\end_inset
+We tested several origin policies, including these aspects.
+\end_layout
 
-expert program
-\begin_inset Quotes erd
-\end_inset
+\begin_layout Enumerate
+Maximum momentum by accelerating towards the current direction
+\end_layout
 
- a large number of differently structured agents were tested.
- The differences are divided into different aspects.
+\begin_layout Enumerate
+Preset policy with a parabolic upper and lower limit
+\end_layout
+
+\begin_layout Enumerate
+GP-friendly by trying to give the GP process interfaces for Innovations
+\end_layout
+
+\begin_layout Standard
+Außerdem wurde, je nach Möglichkeit die folgenden Verbesserungen getestet:
 \end_layout
 
 \begin_layout Itemize
-Heuristics
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-accelerate in the current direction
-\end_layout
-
-\begin_layout Enumerate
-preset policy with parabolic upper and lower limit
-\end_layout
-
-\begin_layout Enumerate
-human, improved solution
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Black box data
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sarsa Agent after 75 training steps (Sarsa75)
-\end_layout
-
-\begin_layout Enumerate
-Sarsa Agent after 200 training steps (Sarsa200)
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Some nodes are fixed as core structure
+Markieren eines zentralen Struktur mit fixen Knoten
 \end_layout
 
 \begin_layout Itemize
-Exclude action 
-\begin_inset Quotes eld
-\end_inset
+Force pushing in any direction (excluding action 1)
+\end_layout
 
-no push
-\begin_inset Quotes erd
-\end_inset
-
- in advance
+\begin_layout Standard
+[xxx Disgramm als Vergleich]
 \end_layout
 
 \begin_layout Standard
@@ -4754,7 +4761,7 @@ Sarsa 10000
 
 \begin_layout Plain Layout
 Simple agent (
-\begin_inset Formula $>$
+\begin_inset Formula $<$
 \end_inset
 
 )
@@ -4786,7 +4793,11 @@ Simple agent (
 \begin_inset Text
 
 \begin_layout Plain Layout
-Simple agent (<=)
+Simple agent (
+\begin_inset Formula $\leq$
+\end_inset
+
+)
 \end_layout
 
 \end_inset
@@ -4815,7 +4826,7 @@ Simple agent (<=)
 \begin_inset Text
 
 \begin_layout Plain Layout
-Fix preset Policy
+Preset Policy
 \end_layout
 
 \end_inset
@@ -4853,6 +4864,13 @@ MC Agents in comparison
 \end_inset
 
 
+\begin_inset CommandInset label
+LatexCommand label
+name "table:MC_agents_rewards"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -4860,29 +4878,62 @@ MC Agents in comparison
 
 \end_layout
 
-\begin_layout Standard
-[xxx table]
+\begin_layout Subsubsection
+Simple by Maximum Momentum 
+\begin_inset CommandInset label
+LatexCommand label
+name "par:simple,-maximum-momentum"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-The black box was deliberately not considered, except for the fact that
- it had to perform better than the expert approach.
- 
+Die vermutlich verständlichste Lösung ist immer in die Richtung zu beschleunigen
+, in die man sich bewegt.
+ Dadurch wird der maximale Schwung geholt und das Ziel wird so immer erreicht.
+\end_layout
+
+\begin_layout Standard
+Die Implementierung ist als if-Anweisung ziemlich kurz und kann mit 6 Knoten
+ dargestellt werden.
+ Dennoch spielt hier bereits die genaue Implementierung der Vergleichsoperation
+ eine wichtige Rolle, was die relevante erste Entscheidung 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "MC-first_action"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ maßgeblich beeinflusst 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "table:MC_agents_rewards"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Comment
-status collapsed
+status open
 
 \begin_layout Plain Layout
-Die Black box wurde absichtlich nicht betrachtet, bis auf den Fakt, dass
- sie eine bessere Performance als der Expertenansatz haben musste.
+verfahren um die Bereiche zu erkennen, in denen ein Agent mit Fehlentscheidungen
+ den Zustand zu stark beeinflusst (das ist wohl zu schwer zu erkennen)
 \end_layout
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subparagraph
-simple, maximum momentum
 \end_layout
 
 \begin_layout Standard
@@ -4936,7 +4987,7 @@ Computational tree of the simplest program [xxx doubled image]
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Subsubsection
 Preset policy
 \end_layout
 
@@ -4945,6 +4996,7 @@ Diese preset policy wurde ebenfalls in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -4957,10 +5009,6 @@ key "xiao2019"
 wide false
 sideways false
 status open
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -4982,7 +5030,19 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Preset policy with its first improvement
+Preset policy and a GP improvement.
+ Recognizable are used mathematical structures such as parabolas and the
+ renunciation of action 1.
+ On the right, a simplification is visible, found with the help of GP.
+ It has recognized the upper limit as superfluous.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Preset-policy:-Recognizable"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -4999,7 +5059,7 @@ Preset policy with its first improvement
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Subsubsection
 Human, if-then-else based
 \end_layout
 
@@ -5031,18 +5091,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Preset policy: Recognizable are used mathematical structures such as parabolas
- and the renunciation of Action 0.
- On the right, a simplification is visible, found with the help of gp.
- It has recognized the upper limit as superfluous.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:Preset-policy:-Recognizable"
-
-\end_inset
-
-
+The if statements of this origin are recognizable as square blocks
 \end_layout
 
 \end_inset
@@ -5055,7 +5104,7 @@ name "fig:Preset-policy:-Recognizable"
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Subsubsection
 GP-friendly
 \end_layout
 
@@ -5063,63 +5112,11 @@ GP-friendly
 This one should help finding the starting action.
 \end_layout
 
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
-	lyxscale 20
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa-75 decision plot for the complete state space (left) and for the occuring
- states only (right)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subparagraph
+\begin_layout Subsubsection
 MC Agents in comparison
 \end_layout
 
-\begin_layout Subparagraph
-Missing actions (MTC)
-\end_layout
-
-\begin_layout Standard
-In his reference program, the expert may exclude certain actions that are
- used by the black box.
- This is often a missing neutral action of doing nothing, which neural networks
- decide to go for in borderline cases, as weights are only adjusted slowly.
- This can then manifest itself in randomized or partially destructive behavior,
- since the value of the regression from the two extremes to the neutral
- element is identically equal, and programs with the same regression error
- can do the complete opposite in situations.
- An example is the [xxx ref simple agent], which pushes the car either left
- or right, but never does nothing.
-\end_layout
-
-\begin_layout Paragraph
+\begin_layout Subsubsection
 Subgoals for the best solution
 \end_layout
 
@@ -5128,16 +5125,8 @@ Attempts to reduce the distance to the target by accelerating in its direction
  are quickly recognized as unsuccessful.
  In order to reach the target at all, the agent must learn to gain momentum
  with the help of the counter slope.
- This can be achieved, for example, with the 
-\begin_inset Quotes eld
-\end_inset
-
-simple
-\begin_inset Quotes erd
-\end_inset
-
- heuristic of always accelerating in the direction in which one is currently
- moving.
+ This can be achieved, for example, with the simple heuristic of always
+ accelerating in the direction in which one is currently moving.
 \end_layout
 
 \begin_layout Standard
@@ -5174,55 +5163,7 @@ Auf diese Weise wird der Wagen immer das Ziel erreichen, aber es gibt noch
 
 \end_layout
 
-\begin_layout Itemize
-Reverse early:
-\begin_inset Newline newline
-\end_inset
-
-To reach the goal, you don't have to take the maximum momentum.
- If you turn back earlier, a lot of time can be saved.
- 
-\end_layout
-
-\begin_layout Itemize
-Discard Action 1 of doing nothing
-\begin_inset Newline newline
-\end_inset
-
-Doing nothing makes no sense in principle - speed is lost when taking a
- swing and when turning around, instead of doing nothing two consecutive
- times, you could normally accelerate in the opposite direction.
- 
-\end_layout
-
-\begin_layout Itemize
-Minimum number of necessary turns
-\begin_inset Newline newline
-\end_inset
-
-Depending on the starting position, the goal can be reached deterministically
- with two turns (to the left, to the right) or with three turns (right,
- left, right).
- Since this decision is relatively far from the end, it is difficult to
- be learn by an agent.
-\begin_inset Note Comment
-status collapsed
-
-\begin_layout Plain Layout
-Mindestanzahl der erforderlichen Umdrehungen.
- Je nach Ausgangslage kann das Ziel deterministisch mit zwei Drehungen (nach
- links, nach rechts) oder mit drei Drehungen (nach rechts, nach links, nach
- rechts) erreicht werden.
- Da diese Entscheidung relativ weit vom Ziel entfernt ist, ist es schwierig,
- von einem Agenten erlernt zu werden.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subparagraph
+\begin_layout Paragraph
 asd
 \end_layout
 
@@ -5283,7 +5224,7 @@ else:
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Simple, two actions, <=
 \end_layout
 
@@ -5322,7 +5263,7 @@ Under condition
  
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Simple, two actions, <
 \end_layout
 
@@ -5460,7 +5401,7 @@ if
 -decision to the two cases 0 and 2.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Simple, three actions, <=
 \end_layout
 
@@ -5468,7 +5409,7 @@ Simple, three actions, <=
 This version 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Close-form preset policy
 \end_layout
 
@@ -5477,6 +5418,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -5587,7 +5529,7 @@ ent hat.
  Sarsa75 policy.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Real solution, optimal solution and expert abstraction
 \end_layout
 
@@ -5600,7 +5542,7 @@ As we will see and discuss in [xxx ref], the first decision is most relevant
  emphasizes this state.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Sample data
 \end_layout
 
@@ -5624,7 +5566,7 @@ The samples sample size of the data resulted from going through 15 complete
  test data to verify the results.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Nicht beschleunigen
 \end_layout
 
@@ -5856,6 +5798,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -7019,6 +6962,7 @@ modifiable nodes erweitern.
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Genetic_improvement_(computer_science)"
+literal "false"
 
 \end_inset
 

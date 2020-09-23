@@ -246,36 +246,48 @@ Intro / Motivation
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-In 2018 for example, the car autopilot of a Tesla caused a fatal accident
- because it mistook a truck standing crossways for a road sign.
+In this thesis, familiarity is introduced as a concept for creating Reinforcemen
+t Learning (RL) policies using Genetic Programming (GP).
+ RL is an important part of machine learning (ML), where an agent without
+ prior knowledge has to learn a strategy in an environment from which he
+ receives an external reward.
+ This area has become very popular due to the development of superhuman
+ strategies, for example for the game Go.
 \begin_inset CommandInset citation
 LatexCommand cite
-key "Tesla_Autopilot_crash_article"
-literal "true"
+key "AlphaGo_paper"
+literal "false"
 
 \end_inset
 
- Obwohl der Autopilot weniger Unfälle als der Mensch baut [xxx] muss diese
- Fehlentscheidung vor Gericht erklärt, und vermutlich auch gehaftet werden.
-\end_layout
-
-\end_inset
-
-
+ The learning process is often made possible by the use of extremely complex
+ data structures such as neural networks (NN), which must be regarded as
+ black boxes.
+ Especially in sensitive areas such as industry, a tradeoff in favor of
+ performance at the expense of loss of control is often not an option, since
+ even rarely occurring wrong decisions could have fatal consequences.
+ 
 \end_layout
 
 \begin_layout Standard
+Even AlphaGo, as a prestige project of the RL, was subject to such an error
+ of reasoning.
+ As you can read in the documentation, this could only be discovered by
+ chance by a human being.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status collapsed
+
+\begin_layout Plain Layout
 In dieser Arbeit wird Vertrautheit als Konzept zum Erstellen von Reinforcement
  Learning (RL) Policies mithilfe von Genetischer Programmierung (GP) vorgestellt.
  RL ist ein wichtiger Teil des machine learning (ML), bei dem ein Agent
  ohne Vorkenntnisse eine Strategie in einer Umgebung erlernen muss, von
  dem er einen externen Reward erhält.
  Große Bekanntheit erlangte dieser Bereich vor allem durch das Entwickeln
- von übermenschlichen Strategien, beispielsweise für das Spiel Go [xxx AlphaGo].
+ von übermenschlichen Strategien, beispielsweise für das Spiel Go.
  Der Lernprozess wird dabei oft durch die Verwendung extrem komplexer Datenstruk
 turen wie neuronalen Netzen (NN) ermöglicht, die als Blackbox angesehen
  werden müssen.
@@ -286,10 +298,15 @@ turen wie neuronalen Netzen (NN) ermöglicht, die als Blackbox angesehen
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Selbst AlphaGo unterlag, als Prestigeprojekt des RL, einem solchen Denkfehler.
  Wie man in der Doku erfahren kann, konnte dieser nur durch Zufall von einem
  Menschen aufgedeckt werden.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Quotation
@@ -346,7 +363,11 @@ Im Bereich der AI stellt die Genetische Programmierung (GP) eine Möglichkeit
  Dies ist ein evolutionärer Ansatz im Bereich des machine Learning, mit
  dem über Generationen hinweg und mit Hilfe von Selektion und zufälligen
  Änderungn, automatisch Programme Programme geschrieben werden können.
- In 
+ 
+\end_layout
+
+\begin_layout Standard
+In 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
@@ -517,6 +538,131 @@ Erklärbare künstliche Intelligenz
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Dabei gibt es automatisch einen Tradeoff zwischen dem Umfang des neu erlangten
+ Verständnisses und der benötigten Zeit um dieses so weit zu verstehen,
+ dass es als logisch erklärbar ist.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This section describes what explainability is and why it is an important
+ safety factor for learned strategies.
+ Furthermore, familiarity-based GP is proposed as a proven tool.
+\end_layout
+
+\begin_layout Paragraph
+Why was familiarity chosen?
+\end_layout
+
+\begin_layout Standard
+Intelligence means the ability to develop strategies to solve a problem.
+ Most RL-problems are too complex to test solution strategies for all cases.
+ Man relies on explanations to trust models, whereas ML largely dispenses
+ with explanations.
+ In order to understand why familiarity is an important concept for explainabili
+ty, the following will be explained.
+\end_layout
+
+\begin_layout Paragraph
+Definition Explanability
+\end_layout
+
+\begin_layout Standard
+An explanation is the formulation of knowledge as a language, whose content
+ makes a causal logic causes understandable for humans.
+\end_layout
+
+\begin_layout Standard
+Humans can usually explain learned strategies because causality already
+ plays an important role in the learning process.
+ The learning process is decisive and differs fundamentally in some points
+ from strategies of AI.
+ 
+\end_layout
+
+\begin_layout Paragraph
+How does a human being learn strategies that can be explained?
+\end_layout
+
+\begin_layout Standard
+Humans have protective mechanisms at their disposal, which have developed
+ through the evolutionary process of humans and accompany every learning
+ process.
+ Among other things, it enables us to recognize and avoid dangers, which
+ requires caution and the recognition of causal relationships.
+ We can therefore be sure that our entire pattern of action excludes life-threat
+ening damage for us.
+\end_layout
+
+\begin_layout Standard
+In addition to these basic instincts, humans have also learned a wide range
+ of other skills that enable a rapid learning process.
+ A well-known example of such a mastered ability is the recognition of shapes
+ and faces, which man perfected as a baby to such an extent that interpersonal
+ explanations are no longer necessary.
+ Artificial image recognition currently still requires human assistance
+ such as the implementation of filters.
+ Nevertheless the One pixel attack 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "one_pixel_attack"
+literal "true"
+
+\end_inset
+
+ showed how error-prone image recognition can be.
+ More general approaches promise extraordinary performance, as could be
+ shown in 2012 with 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "false"
+
+\end_inset
+
+, but the costs are too high for a more general application.
+\end_layout
+
+\begin_layout Standard
+These basic skills are comparable for all people.
+ Thus, the human being is not only able to extract causal logic from a model,
+ but due to the similar thought processes it is possible for him to put
+ himself in another person's shoes and to convey this information in a pedagogic
+ally valuable way.
+\end_layout
+
+\begin_layout Subparagraph
+Puzzle example
+\end_layout
+
+\begin_layout Standard
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ Most people know how to recognize colors, that you first have to turn puzzle
+ pieces to the colored side and that you should use the picture on the box
+ as a reference point.
+ A popular tip for beginners is therefore that you should start with the
+ edge of the puzzle.
+\end_layout
+
+\begin_layout Standard
+This is helpful, because the learning process in humans usually consists
+ of the composition of many comprehensibly strung together steps.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 In diesem Abschnitt wird beschrieben, was Erklärbarkeit ist und warum sie
  ein wichtiger Sicherheitsfaktor für erlernte Strategien darstellt.
  Des weiteren wird vertrautheitsbasierte GP als probates Mittel vorgeschlagen.
@@ -526,7 +672,7 @@ In diesem Abschnitt wird beschrieben, was Erklärbarkeit ist und warum sie
 Warum wurde Familiarity ausgewählt?
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Intelligenz bedeutet die Fähigkeit, Strategien zur Lösung eines Problems
  entwickeln zu können.
  Die meisten RL-Probleme sind dabei zu komplex, als dass Lösungsstrategien
@@ -541,12 +687,12 @@ Intelligenz bedeutet die Fähigkeit, Strategien zur Lösung eines Problems
 Definition Erklärbarkeit
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Eine Erklärung ist die Formulierung von Wissen als Sprache, dessen Inhalt
  eine kausal Logik Ursachen für den Menschen verständlich macht.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Der Mensch kann erlernte Strategien üblicherweise Erklären, weil Kausalität
  bereits im Lernprozess eine wichtige Rolle spielt.
  Der Lernprozess ist entscheident und unterscheidet sich in einigen Punkten
@@ -558,7 +704,7 @@ Der Mensch kann erlernte Strategien üblicherweise Erklären, weil Kausalität
 Wie erlernt der Mensch strategien mit Erklärbarkeit?
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 So verfügt der Mensch über Schutzmechanismen, die sich über den Evolutionsprozes
 s des Menschen entwickelt haben und jeden Lernprozess begleiten.
  Durch ihn erlangen wir unter anderem die Fähigkeit Gefahren zu erkennen
@@ -568,7 +714,7 @@ s des Menschen entwickelt haben und jeden Lernprozess begleiten.
 chen Schaden für uns ausschließt.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Der Mensch hat neben diesen Urinstinkten auch noch weitere große Auswahl
  Fähigkeiten erlernt, die einen schnellen Lernprozess ermöglichen.
  Ein bekanntes Beispiel für eine solche gemeisterte Fähigkeit ist das erkennen
@@ -586,11 +732,19 @@ literal "true"
 
 , wie fehleranfällig Bilderkennung trotzdem sein kann.
  Allgemeinere Ansätze versprechen zwar außerordentliche Performance, wie
- in 2012 [xxx] gezeigt werden konnte, die Kosten dafür sind aber zu hoch
- für eine allgemeinere Anwendung.
+ 2012 mit 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "false"
+
+\end_inset
+
+ gezeigt werden konnte, die Kosten dafür sind aber zu hoch für eine allgemeinere
+ Anwendung.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Diese Grundkenntnisse sind dabei für alle Menschen vergleichbar.
  Der Mensch kann somit nicht nur kausale Logik aus einem Modell extrahieren,
  aufgrund der ähnlichen Denkprozesse ist es ihm möglich, sich in eine andere
@@ -598,21 +752,13 @@ Diese Grundkenntnisse sind dabei für alle Menschen vergleichbar.
  zu vermitteln.
 \end_layout
 
-\begin_layout Subparagraph
-Puzzlebeispiel
+\begin_layout Plain Layout
+Puzzle Example
 \end_layout
 
-\begin_layout Standard
-Betrachten wir beispielsweise das Spiel 
-\begin_inset Quotes eld
-\end_inset
-
-Puzzle
-\begin_inset Quotes erd
-\end_inset
-
- als NP-hartes Problem, bei dem ein Gesamtbild aus einem Haufen von Teilen
- zusammengesetzt werden muss.
+\begin_layout Plain Layout
+Betrachten wir beispielsweise das Spiel Puzzle als NP-hartes Problem, bei
+ dem ein Gesamtbild aus einem Haufen von Teilen zusammengesetzt werden muss.
  Die meisten Menschen wissen, wie Farben erkannt werden, dass man Puzzelteile
  erst auf die Farbige Seite drehen muss und dass man das Bild auf der Verpackung
  als Anhaltspunkt nutzen sollte.
@@ -620,9 +766,14 @@ Puzzle
  sollte.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Dies ist hilfreich, weil der Lernprozess beim Menschen meist aus der Zusammenset
 zung vieler nachvollziehbar aneinandergereihter Schritte besteht.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
@@ -674,21 +825,6 @@ Die Aufgabe des in dieser Arbeit vorgestellten Ansatz ist es grundsätzlich,
  diesen Prozess weitesgehend zu automatisieren.
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Dabei gibt es automatisch einen Tradeoff zwischen dem Umfang des neu erlangten
- Verständnisses und der benötigten Zeit um dieses so weit zu verstehen,
- dass es als logisch erklärbar ist.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Paragraph
 Sprache als Mittel
 \end_layout
@@ -735,7 +871,7 @@ ache gut nutzbar.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
+\begin_inset Float table
 wide false
 sideways false
 status open
@@ -1136,11 +1272,6 @@ Boolean operators such as
 
 \end_layout
 
-\begin_layout Standard
-All these operators can be generated from subsets without much trouble,
- so some of them can be omitted.
-\end_layout
-
 \begin_layout Chapter
 Familiarity based Genetic Programming
 \end_layout
@@ -1153,9 +1284,8 @@ Im folgenden wird die implementierung des Ansatzes um genetische Programmierung
  Als Maß für die Änderungen werden einige Einflussfaktoren vorgestellt,
  die zur Nutzung der Tree Edit Distance (TED) geführt haben, welche die
  Anzahl der Unterschiede von computational trees berechnet.
- [xxx] Die Fitness der Kandidaten wird dabei als ein möglicher Weg über
- eine Regression berechnet, dessen Daten von Blackbox ansätzen generiert
- werden.
+ Die Fitness der Kandidaten wird dabei als ein möglicher Weg über eine Regressio
+n berechnet, dessen Daten von Blackbox ansätzen generiert werden.
 \end_layout
 
 \begin_layout Standard
@@ -1213,7 +1343,7 @@ name "img:plausibility-concept"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Improving a known solution with Familiarity Genetic Programming [xxx]
+Improving a known solution with familiarity based Genetic Programming
 \end_layout
 
 \end_inset
@@ -1262,7 +1392,7 @@ A relatable scheme which an expert created with the hope to represent some
 \end_layout
 
 \begin_layout Enumerate
-Black box solution
+Black box RL solution
 \begin_inset Newline newline
 \end_inset
 
@@ -1271,7 +1401,7 @@ A solution that outperforms the known approach which has to be explained.
 \end_layout
 
 \begin_layout Enumerate
-Familiar improvements
+Familiar candidates from GP
 \begin_inset Newline newline
 \end_inset
 
@@ -1807,14 +1937,17 @@ depth-based and nodecount-based build size definition
 \end_layout
 
 \begin_layout Itemize
+Random creation of trees
+\end_layout
+
+\begin_layout Itemize
 A Tournament winner can enter the next generation including the following
  changes
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-6% No changes (Reproduction): Candidates entering the next generation without
- changes.
+6% No changes (xxx): Candidates entering the next generation without changes.
 \end_layout
 
 \begin_layout Itemize
@@ -1934,14 +2067,331 @@ Random trees
 \end_deeper
 \end_deeper
 \begin_layout Standard
-Außerdem wurden einige nicht essentielle, aber als praktisch empfundene
- Features implementiert:
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="10" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Evolution
 \end_layout
 
-\begin_layout Standard
-Außerdem enthält es folgende features eingeführt, die den GP-Prozess allgemein
- verbessern sollen:
-\begin_inset Newline newline
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Options
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ratio
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6%
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+random branch simplification
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3%
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+from pareto candidates
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Point Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Point
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Branch Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+asd
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
 \end_inset
 
 Um die erzeugten Programme aus dem Prozess der genetischen Programmierung
@@ -2481,7 +2931,7 @@ Regression error as fitness
 
 \begin_layout Standard
 Die vertrautheitsbasierte GP-Prozess kann sowohl online auf der Simulation
- als auch offlne auf den Daten trainiert werden.
+ als auch offline auf den Daten trainiert werden.
  Obwohl dieser Punkt entscheident sein kann, gibt es auch viele Vorteile,
  mit offline verfügbaren Daten zu trainieren.
 \end_layout
@@ -2507,10 +2957,6 @@ Real evaluation still possible / Hybrid approach
 A not yet tested approach includes a hybrid approach that evaluates a special
  selection of outstanding offline candidates on the real dataset.
  [xxx the developer IS the hybrid approach]
-\end_layout
-
-\begin_layout Subsubsection
-Why use neural networks as intermediate step?
 \end_layout
 
 \begin_layout Paragraph
@@ -2621,7 +3067,7 @@ Non-discrete results cannot be interpreted in the real model, which forces
 \end_layout
 
 \begin_layout Paragraph
-bedingte regression für diskreten Raum
+Bedingte regression für diskreten Raum
 \end_layout
 
 \begin_layout Standard
@@ -5678,7 +6124,7 @@ little expert: simple agent reversing earlier on the last turn
 \end_layout
 
 \begin_layout Itemize
-true expert: compact but high end program that exceeds the fitness of sarsa75
+true expert: compact but high end program that exceeds the fitness of Sarsa-75
  
 \end_layout
 
@@ -6533,6 +6979,13 @@ IB compared to Mountain Car and other benchmarks [xxx Hein]
 
 \end_layout
 
+\begin_layout Standard
+Stochastische Benchmarks sind stellen als häufiger Anwendungsbereich und
+ als große Herausforderung für RL ein besonders großes Interesse für die
+ Instustrie dar.
+ In wet chicken [xxx]
+\end_layout
+
 \begin_layout Subsection
 Approaches
 \end_layout
@@ -6543,7 +6996,18 @@ Black box: PSONN
 
 \begin_layout Standard
 Als Black box wurde ein particle swarm optimisation algorithmus with neural
- networks (PSONN) [xxx] ausgewählt.
+ networks (PSONN) mit einem errechneten
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Die Ausgangszustände des IB waren in [xxx] randomisiert.
+ Zur 
+\end_layout
+
+\end_inset
+
+ IB reward von [xxx] ausgewählt.
  Dieser [xxx funktioniert so] und hat einen angenäherten Fitness Wert von
  [xxx].
  Dieser Ansatz ist ähnlich komplex wie der eines neuronalen Netzes, jedoch
@@ -6686,6 +7150,29 @@ status open
 
 \backslash
 newpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+In 2018 for example, the car autopilot of a Tesla caused a fatal accident
+ because it mistook a truck standing crossways for a road sign.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Tesla_Autopilot_crash_article"
+literal "true"
+
+\end_inset
+
+ Obwohl der Autopilot weniger Unfälle als der Mensch baut [xxx] muss diese
+ Fehlentscheidung vor Gericht erklärt, und vermutlich auch gehaftet werden.
 \end_layout
 
 \end_inset

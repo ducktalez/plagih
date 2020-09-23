@@ -125,6 +125,12 @@ def eval_combined_agents(codes, complete=True, randomize=0):
 
 
 def eval_agent(agent, randomize=0):
+    """
+    Results: Daniel_21 -5263 (5651)
+    Results: Daniel_27 -5275 (5628)
+    Results: Daniel_29 -5270 (5611)
+
+    """
     discount_factor = 0.97
     T = 100  # time_horizon
     discount_len = -100

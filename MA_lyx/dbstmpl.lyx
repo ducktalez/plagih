@@ -7001,8 +7001,20 @@ Als Black box wurde ein particle swarm optimisation algorithmus with neural
 status open
 
 \begin_layout Plain Layout
-Die Ausgangszustände des IB waren in [xxx] randomisiert.
- Zur 
+The initial states of the IB in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+literal "false"
+
+\end_inset
+
+ were randomized.
+ Comparable values could be obtained by a randomized initial state, but
+ the results were very volatile.
+ The difference of agents in Hein's work was 7% worse on average.
+ This value was used for comparison.
+ 
 \end_layout
 
 \end_inset

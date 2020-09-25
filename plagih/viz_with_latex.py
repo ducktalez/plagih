@@ -5,9 +5,9 @@ from plagih.plagih_tree import *
 import re
 
 
-def latex_treeviz_full(tikz_forest_list):
+def latex_treeviz_full_document(tikz_forest_list):
     """
-    Latex standalone document of forest trees.
+    Creating Latex standalone document of forest trees.
     Possible \documentclass options:
     [varwidth=\\maxdimen,convert,border=5pt]{standalone}  # -> newpage does not exist
     {article}     # -> tree_sep should be \newpage

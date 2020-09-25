@@ -24,6 +24,7 @@ class FileLocations:
     histograms = 'histograms/'
     backup_p = 'backup/backup.p'
     trees_tex = 'agents_trees.tex'
+    trees_sub_tex = 'visualisation/'
     folder_pycode = ''
     folder_tex = 'texfiles'
     file_pareto = 'paretofront.yaml'
@@ -839,7 +840,19 @@ class ExplainableGP(object):
             #     print_e(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
             #     latex_row1.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
 
-        latex_full_doc = latex_treeviz_full(latex_row1)
+            # save every tree-visualisation in subfolder
+            # create folder
+            path_subfolder_tex = folder_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
+            # create full document including just one tree (file must have a nice name)
+            subtex1 = latex_treeviz_full_document([forest_viz])
+            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_{fitness:.2f}.tex', 'w') as file:
+                file.write(subtex1)
+            subtex2 = latex_treeviz_full_document([forest_viz_tight])
+            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_{fitness:.2f}_tight.tex', 'w') as file:
+                file.write(subtex2)
+            #   filename? -> <run_name>_<complexity>[_tight].tex
+
+        latex_full_doc = latex_treeviz_full_document(latex_row1)
 
         path_trees_tex = file_make_dir(self.root_dir / self.paths.trees_tex)
 

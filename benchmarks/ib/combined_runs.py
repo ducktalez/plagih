@@ -348,7 +348,7 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
     agents = []
     for act in ['0', '1', '2']:
         lfile = dir_slurm / run_name / f'{run_name}_{act}/pycode_list.yaml'
-        print(f'Looking at file: {lfile}')
+        print(f'combining runs. Trying to load yaml file at: {lfile}')
         try:
             with Path.open(lfile, 'r') as file:
                 yamload = yaml.load(file, Loader=yaml.FullLoader)
@@ -426,7 +426,7 @@ def combine_paretos(run_name):
         fig.tight_layout()
         fig.savefig(dir_slurm / run_name / f'{run_name}_pareto_combined', dpi=300)
 
-    print('AYYYYE')
+    print('combined runs: merged pareto entries into one plot!')
 
 
 def main():

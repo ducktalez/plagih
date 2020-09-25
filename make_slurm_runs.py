@@ -8,9 +8,9 @@ print('Make sure that this file is executed on top level')
 
 # a_velocity,a_gain,a_shift
 run_starts = [
-    'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
-    'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
-    'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_tanh_s3m_1', 'IB_RMSE_explun01_tanh_s3m_2',
+    # 'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
+    # 'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
+    # 'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_tanh_s3m_1', 'IB_RMSE_explun01_tanh_s3m_2',
     'IB_MSE_s3m_0', 'IB_MSE_s3m_1', 'IB_MSE_s3m_2',
     'IB_MSE_tanh_s3m_0', 'IB_MSE_tanh_s3m_1', 'IB_MSE_tanh_s3m_2',
     'IB_MSE_explun01_tanh_s3m_0', 'IB_MSE_explun01_tanh_s3m_1', 'IB_MSE_explun01_tanh_s3m_2',
@@ -18,13 +18,13 @@ run_starts = [
     # 'IB_MAE_scratch_0', 'IB_MAE_scratch_1', 'IB_MAE_scratch_2',
     'IB_MSE_scratch_0', 'IB_MSE_scratch_1', 'IB_MSE_scratch_2',
     # 'IB_MAE_tanh_scratch_0', 'IB_MAE_tanh_scratch_1', 'IB_MAE_tanh_scratch_2',
-    #
+
+    # # # sim2 # #
     # 'IB_MAE_sim2_0', 'IB_MAE_sim2_1', 'IB_MAE_sim2_2',
     # 'IB_MAE_explun01_sim2_0', 'IB_MAE_explun01_sim2_1', 'IB_MAE_explun01_sim2_2',
     # 'IB_MAE_tanh_sim2_0', 'IB_MAE_tanh_sim2_1', 'IB_MAE_tanh_sim2_2',
     # 'IB_MAE_explun01_tanh_sim2_0', 'IB_MAE_explun01_tanh_sim2_1', 'IB_MAE_explun01_tanh_sim2_2',
     #
-    # # MSE (mean sqare error)
     # 'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
     # 'IB_MSE_explun01_sim2_0', 'IB_MSE_explun01_sim2_1', 'IB_MSE_explun01_sim2_2',
     # 'IB_MSE_tanh_sim2_0', 'IB_MSE_tanh_sim2_1', 'IB_MSE_tanh_sim2_2',
@@ -36,7 +36,8 @@ run_starts = [
     # 'IB_RMSE_tanh_sim2_0', 'IB_RMSE_tanh_sim2_1', 'IB_RMSE_tanh_sim2_2',
     # 'IB_RMSE_explun01_tanh_sim2_0', 'IB_RMSE_explun01_tanh_sim2_1', 'IB_RMSE_explun01_tanh_sim2_2',
 
-    # 'IB_RMSE_50_0', 'IB_RMSE_50_1', 'IB_RMSE_50_2',
+    # _50
+    'IB_MSE_50_0', 'IB_MSE_50_1', 'IB_MSE_50_2',
     # 'IB_RMSE_explun01_50_0', 'IB_RMSE_explun01_50_1', 'IB_RMSE_explun01_50_2',
     # 'IB_RMSE_tanh_50_0', 'IB_RMSE_tanh_50_1', 'IB_RMSE_tanh_50_2',
 
@@ -58,13 +59,21 @@ run_starts = [
     # 'MTC200_MAE_explun01_tanh_simple_fix',
     # 'MTC200_RMSE_explun01_tanh_simple_fix',
     #
-    # 'MTC200_MAE_scratch',
-    # 'MTC200_MAE_gpFfriendly',
-    # 'MTC200_MAE_preset',
-    # 'MTC200_MAE_simple',
-    # 'MTC200_MAE_simple_fix',
-    # 'MTC200_MAE_simplePlus_fix',
-    # 'MTC200_MAE_simplePlus',
+    'MTC200_MAE_scratch',
+    'MTC200_MAE_gpFriendly',
+    'MTC200_MAE_preset',
+    'MTC200_MAE_simple',
+    'MTC200_MAE_simple_fix',
+    'MTC200_MAE_simplePlus_fix',
+    'MTC200_MAE_simplePlus',
+
+    'MTC200_MSE_scratch',
+    'MTC200_MSE_gpFriendly',
+    'MTC200_MSE_preset',
+    'MTC200_MSE_simple',
+    'MTC200_MSE_simple_fix',
+    'MTC200_MSE_simplePlus_fix',
+    'MTC200_MSE_simplePlus',
     #
     # 'MTC200_MAE_explun01_simple',
     # 'MTC200_MAE_explun01_gpfriendly_fix',
@@ -74,9 +83,13 @@ run_starts = [
     # # """
     # # MC75 (SARSA-Agent after 75 training steps)
     # # """
-    # 'MTC75_MAE_scratch',
-    # 'MTC75_MAE_simple',
-    # 'MTC75_MAE_simple_fix',
+    'MTC75_MAE_scratch',
+    'MTC75_MAE_simple',
+    'MTC75_MAE_simple_fix',
+
+    'MTC75_MSE_scratch',
+    'MTC75_MSE_simple',
+    'MTC75_MSE_simple_fix',
 ]
 
 complete_params = []

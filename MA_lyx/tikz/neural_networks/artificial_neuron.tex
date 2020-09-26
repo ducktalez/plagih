@@ -1,3 +1,10 @@
+\documentclass{standalone} %[varwidth=\maxdimen,convert,border=5pt]
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{amsmath}
+\begin{document}
+
+
 \begin{tikzpicture}[
 init/.style={
   draw,
@@ -44,3 +51,5 @@ start chain=2,node distance=13mm
 
 \draw[decorate,decoration={brace,mirror}] (x1.north west) -- node[left=10pt] {Inputs} (x3.south west);
 \end{tikzpicture}
+
+\end{document}

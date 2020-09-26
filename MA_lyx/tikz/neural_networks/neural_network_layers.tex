@@ -1,5 +1,11 @@
-\begin{figure}
-\begin{minipage}[t]{\textwidth}
+\documentclass{standalone} %[varwidth=\maxdimen,convert,border=5pt]
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{amsmath}
+\begin{document}
+
+%\begin{figure}
+%\begin{minipage}[t]{\textwidth}
 \centering
 %\resizebox{\columnwidth}{!}{
     \begin{tikzpicture}[plain/.style={
@@ -33,7 +39,9 @@
     \draw[->] (mat-6-3) -- node[above] {Ouput} +(2cm,0);
     \end{tikzpicture}
 %}
-\caption{neural network with one fully connected hidden layer}
-\label{tikz neural network layers}
-\end{minipage}
-\end{figure}
+%\caption{neural network with one fully connected hidden layer}
+%\label{tikz neural network layers}
+%\end{minipage}
+%\end{figure}
+
+\end{document}

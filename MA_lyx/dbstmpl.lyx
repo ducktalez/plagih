@@ -1617,7 +1617,7 @@ Genetic programming generally is free of bias and thus can create better
 status open
 
 \begin_layout Plain Layout
-[xxx Source http://geneticprogramming.com/]
+[xx Source http://geneticprogramming.com/]
 \end_layout
 
 \end_inset
@@ -1792,7 +1792,7 @@ Not fundamentally limiting the pareto GP
 \end_layout
 
 \begin_layout Subsection
-Tree Edit Distance (TED) xxx
+Tree Edit Distance (TED)
 \end_layout
 
 \begin_layout Standard
@@ -1816,14 +1816,9 @@ In diesem Teil wird die Tree Edit Distance (TED) als in der GP verwendbares
 
 \end_layout
 
-\begin_layout Paragraph
-TED
-\end_layout
-
 \begin_layout Standard
-Die TED is a well-known problem from theoretical computer science which
- It is a problem, which deals with the question, how many elementary changes
- 
+The TED is a well-known problem from theoretical computer science.
+ It deals with the question, how many elementary changes 
 \begin_inset Formula $\{\text{delete},\text{insert,\text{modify}\}}$
 \end_inset
 
@@ -1918,14 +1913,14 @@ Weighting functions is very practical for an expert as he can add his own
  origin tree to the found solution.
  This option is very personalised and thus was not evaluated specifically
  for this thesis.
- Außerdem lässt es Fragen offen, wie sich Gewichtungen auf die jeweiligen
- Änderungen auswirken sollten.
- Möglich wären folgende Regeln:
+ It also leaves open questions about how weightings should affect the respective
+ changes.
+ The following rules are possible:
 \end_layout
 
 \begin_layout Itemize
-Die absolute Komplexität der origin wird als Startkomplexität gewählt, wenn
- Knoten entfernt oder geändert werden wird ein Anteil der Gewichtung abgezogen
+The absolute complexity of the origin is chosen as initial complexity, if
+ nodes are removed or changed a part of the weighting is subtracted
 \end_layout
 
 \begin_layout Standard
@@ -1940,24 +1935,21 @@ TED limitations
 \end_layout
 
 \begin_layout Itemize
-small origin programs are not very change-robust
-\end_layout
-
-\begin_layout Itemize
-Gewichtung nur umständlich möglich
-\end_layout
-
-\begin_layout Itemize
-Übergang in normale Distanz (ist das gut?)
+Small origin programs are not robust to changes and problem and transition
+ to normal distance.
+ 
 \begin_inset Newline newline
 \end_inset
 
-Frühe Experimente zeigten, dass der implizite Schutz logischer Kernstrukturen
- durch die TED oftmals nicht ausreicht.
- Vor allem sehr einfache Programme können die TED seh ein Entwickler als
- besonders schützenswert (weil essentiell für die logische Abstraktion)
- ansehen könnte.
+Early experiments showed that the implicit protection of logical core structures
+ by the TED is often not sufficient.
+ Especially very simple programs can be seen by a developer as especially
+ worth protecting (because essential for logical abstraction).
  
+\end_layout
+
+\begin_layout Itemize
+Weighting only laboriously possible
 \end_layout
 
 \begin_layout Paragraph
@@ -1976,7 +1968,7 @@ Ausschließen von Terminal-knoten.
  als dummy addiert werden.
  Allerdings, oho, werden so leider auch oft ähnliche Ansätze mit verschiedener
  Ausprägung gewählt, die sich unter Umständen nicht kombinieren lassen und
- über die Rolle der Werte keine AUskunft geben [xxx Daniel Lösungen IB was
+ über die Rolle der Werte keine Auskunft geben [xxx Daniel Lösungen IB was
  is nun?]
 \end_layout
 
@@ -2051,13 +2043,23 @@ https://github.com/ducktalez/plagih
 \end_layout
 
 \begin_layout Standard
-Für diese Arbeit wurde ein GP suite in der Sprache python, welches die Prinzipie
-n der klassischen genetischen Programmierung [xxx koza, gp buch] mit dem
- Konzept der Familiarität erweitert.
- Dafür kann, unter anderem, ein origin-Baum von einem Experten als Referenz
- geladen werden.
- Entwickelt wurde es von Simon Fehrer.
- Inspiration von Karoo GP 
+Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
+ zu klassischen GP-Methoden im wesentlichen GP auf einem origin Baum ermöglicht,
+ der von einem Experten als Referenz geladen werden.
+ Entwickelt wurde es von Simon Fehrer unter Berücksichtigung der bekannten
+ Prinzipien der GP.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "poli08:fieldguide_to_genetic_programming"
+literal "false"
+
+\end_inset
+
+ Als Inspiration für dieses Framework gilt Karoo GP, einem GP suite von
+ Kai Staats und Iurii Milovanov, welcher für die Auswertung der Fitness
+ Tensorflow nutzt und durch die mögliche Parallelisierung auf der Grafikkarte
+ einen 2-15 fachen Speedup ermöglicht.
+ 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
@@ -2065,12 +2067,17 @@ literal "false"
 
 \end_inset
 
-, einem GP suite von Kai Staats und Iurii Milovanov, welches für die Auswertung
- der Fitness Tensorflow nutzt und so einen 2-15 fachen Speedup erzeugt.
- Durch massive Änderungen, sowohl an der Baumstruktur als auch resultierend
- aus notwendigen Änderungen zur Verwendung von if-operatoren konnte dieser
- Speedup sogar noch erhöht werden.
- [xx hier war es noch schneller, claim, Daniel Hein Hilfe, Koza Prinzipien]
+ Da KarooGP keinen if-operator bereitstellt und es auch nicht start typisiert
+ ist waren massive Änderungen, sodass das entstandene Framework eine Neuentwickl
+ung darstellt.
+ Durch Verwendung rekursiver Baumstrukturen konnte der Speedup von Karoo
+ sogar noch erhöht werden.
+ 
+\end_layout
+
+\begin_layout Standard
+[xx hier war es noch schneller - claim, Daniel Hein Hilfe?, Koza erwähnen
+ - ein buch genug?]
 \end_layout
 
 \begin_layout Standard
@@ -3904,6 +3911,20 @@ Tree structures
 \end_layout
 
 \begin_layout Itemize
+A strong typification of trees requires an explicit transformation of truth
+ values into numbers and vice versa.
+ In many programming languages this is done automatically, but it is very
+ confusing in mathematical expressions.
+ Furthermore, a frequent change between data types is not only desired,
+ in tensorflow this is also not possible.
+ Values can be converted either by if-then-else or comparison operators.
+ Therefore we check if the provided operators allow closure.
+ For more secure crossover a mutual exclusive crossover was implemented,
+ which always finds two matching nodes in trees.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
 Eine starke typisierung der Bäume erfordert eine explizite Umwandlung von
  Wahrheitswerten in Zahlen und umgekehrt.
  In vielen Programmiersprachen erfolgt dieser automatisch, er ist jedoch
@@ -3912,26 +3933,391 @@ Eine starke typisierung der Bäume erfordert eine explizite Umwandlung von
  in tensorflow ist diese außerdem nicht möglich.
  Werte können dabei entweder durch if-then-else oder Vergleichsoperatoren
  umgewandelt werden.
- Ob die bereitgestellten Operatoren closure ermöglichen wird deshalb überprüft,
- außerdem gibt es ein mutual exklusives crossover [xxx crossovermechanismus
- code].
+ Ob die bereitgestellten Operatoren closure ermöglichen wird deshalb überprüft.
+ Für sichereres crossover wurde außerdem ein mutual exklusives crossover
+ implementiert, welches immer zwei passende Knoten in Bäumen findet
 \end_layout
 
-\begin_deeper
-\begin_layout Itemize
-Gewichtung für die Verwendung von Operatoren xxx
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+treeA, treeB
 \end_layout
 
-\end_deeper
+\begin_layout Plain Layout
+
+nodeA = random_node(treeA)
+\end_layout
+
+\begin_layout Plain Layout
+
+if type(nodeA) in (treeB):
+\end_layout
+
+\begin_layout Plain Layout
+
+	nodeB = random_node_byType(treeB, type(nodeA))
+\end_layout
+
+\begin_layout Plain Layout
+
+else:
+\end_layout
+
+\begin_layout Plain Layout
+
+	nodeB = random_node(treeB)
+\end_layout
+
+\begin_layout Plain Layout
+
+	nodeA = random_node_byType(treeA, type(nodeB))
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Selecting matching nodes for the crossover evolution.
+ If no
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Itemize
 paretofront, pareto optimisation
 \end_layout
 
 \begin_layout Itemize
-functions / Operators: , Variables (optional): 
+functions / Operators: , Variables (optional)
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="4">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Operator group
 \end_layout
 
-\begin_layout Paragraph
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+in
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+out
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+examples
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+calculation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+num
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+num
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $x+y,x-y,x\cdot y,\frac{x}{y},x^{2},x^{y},\sqrt{x},|x|$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+angles
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+num
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+num
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\sin,\cos,\tan,\tanh,\sin^{-1},...$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+comparisson
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+num
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bool
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $=,\neq,<,\leq,...$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+boolean
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bool
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bool
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\lnot,\land,\lor,...$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+conditional
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bool, num
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+num
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\begin{cases}
+\text{<num 1>} & \text{<bool>}\\
+\text{<num 2>}
+\end{cases}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Aufteilung der Operatoren in ihre Aufgabenbereiche.
+ Viele Aufgaben können mit einer Untergruppe an Operatoren ausreichend erzeugt
+ werden.
+ [xx]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Evolutionary process
 \end_layout
 
@@ -3987,6 +4373,49 @@ Im full-modus wird ein neuer Ast solang wie möglich auf jeder Ebene mit
  (50% Wahrscheinlichkeit).
  [xxx zeige den Unterschied, dass a+1*2 nicht untereinander erzeugt werden
  kann, kommutativgesetz, Algorithmus]
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/full_vs_grow_example.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A full tree generates complex expressions 
+\begin_inset Formula $(a-3)*\frac{b}{2}$
+\end_inset
+
+ 
+\begin_inset Newline newline
+\end_inset
+
+A grow tree has a lower branching factor and produces more encapsulated
+ expressions 
+\begin_inset Formula $(a-\frac{b}{2})*3$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_deeper
@@ -3995,8 +4424,62 @@ Allgemeine mathematische Vereinfachung
 \begin_inset Newline newline
 \end_inset
 
-Either parts of a complete tree gets reduced to the most basic mathematical
- form possible.
+Die mathematischen Ausdrücke in Bäumen oder Ästen zu vereinfachen ist nicht
+ neu und ist bei Ästen möglich, deren Ausdruck auch einfacher hingeschrieben
+ werden kann.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/sympy_reduction_example.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Selbst vereinfachte Ausdrücke können verschiedene Schreibweisen haben.
+ 
+\begin_inset Formula $(a+a)\cdot2=\begin{cases}
+a\cdot4\\
+4\cdot a
+\end{cases}$
+\end_inset
+
+Da die Struktur der erzeugten Bäume entscheidend für die TED ist wäre eine
+ einheitliche Vereinfachung hilfreich.
+ In sympy werden entsprechende Ausdrücke immer gleich ausgewertet, selbst
+ bei unterschiedlicher Schreibweise.
+ [xx]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Nicht-vereinfachte Ausdrücke bieten der GP mehr Optionen zum verbessern,
+ um möglichst einfache Bäume zu erhalten sollte aber Komplexe Äste bieten
+ der GP zwar viele Möglichkeiten einen Term zu verbessern, Either parts
+ of a complete tree gets reduced to the most basic mathematical form possible.
  Not all trees should be saved in their basic form, as they might have branches
  with potential for further changes.
  On the other side, we want simple trees and generally the most basic solution.
@@ -4025,15 +4508,15 @@ A Tournament winner can enter the next generation including the following
 
 \begin_deeper
 \begin_layout Itemize
-6% No changes (xxx): Candidates entering the next generation without changes.
+No changes (xxx): Candidates entering the next generation without changes.
 \end_layout
 
 \begin_layout Itemize
-3% simplification
+simplification
 \end_layout
 
 \begin_layout Itemize
-1% Pareto
+Pareto
 \end_layout
 
 \begin_layout Itemize
@@ -4134,13 +4617,13 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="10" columns="3">
+<lyxtabular version="3" rows="16" columns="3">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4149,7 +4632,7 @@ Evolution
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4158,7 +4641,7 @@ Options
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4169,7 +4652,7 @@ Ratio
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4178,7 +4661,7 @@ Reproduction
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4187,18 +4670,27 @@ Reproduction
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-6%
+
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4207,7 +4699,27 @@ Reproduction
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.06
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4216,85 +4728,56 @@ random branch simplification
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-3%
+0.03
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+Olymp
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-from pareto candidates
+(from pareto candidates)
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Point Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Point
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
+0.01
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Branch Mutation
+Mutation
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4303,7 +4786,7 @@ Branch Mutation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4314,7 +4797,161 @@ Branch Mutation
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+point
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (nodes, full)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (nodes, grow)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Filter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (7, 1, 12, 3)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Filter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (7, 1, 12, 3)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Crossover
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4323,16 +4960,7 @@ Branch Mutation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4343,7 +4971,16 @@ Branch Mutation
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Crossover
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4352,78 +4989,98 @@ Branch Mutation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
+0.30
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+Random
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+(4.5, 3, 5, 1)
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
+0.05
+\end_layout
 
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(10, 1, None, 5)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.15
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(10, 1, None, 5)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.15
 \end_layout
 
 \end_inset
@@ -4440,7 +5097,8 @@ Branch Mutation
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-asd
+The division of the evolution on a generation.
+ These were the same for all runs.
 \end_layout
 
 \end_inset
@@ -4546,7 +5204,7 @@ Menge aus mathematisch relevanten Konstanten
 \end_layout
 
 \end_deeper
-\begin_layout Paragraph
+\begin_layout Subsubsection
 Fix nodes
 \end_layout
 
@@ -4630,7 +5288,7 @@ A tree with fixed nodes (blue) remains untouched by a branch mutation
 
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsubsection
 Explainable GP Framework, layer0 mutations
 \end_layout
 
@@ -4691,7 +5349,7 @@ Pseudocode for getting first layer of modifiable nodes
 
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsubsection
 Type consistancy, evaluation safety, closure
 \end_layout
 
@@ -4699,7 +5357,7 @@ Type consistancy, evaluation safety, closure
 all functions must create working trees
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsubsection
 gp factors
 \end_layout
 
@@ -4720,7 +5378,7 @@ small function set
 small complexity as second optimisation
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsubsection
 sympify
 \end_layout
 

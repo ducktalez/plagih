@@ -2110,10 +2110,6 @@ Evolution in tree based genetic programming, filter operator and branch
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Das Framework zeichnet sich, unter anderem, durch folgende häufig verwendeten
  Prinzipien aus:
 \end_layout
@@ -2127,13 +2123,13 @@ status open
 \begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="31" columns="6">
-<features tabularvalignment="middle">
-<column alignment="left" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
+<features islongtable="true" longtabularalignment="center">
+<column alignment="left" valignment="top" width="12cm">
+<column alignment="center" valignment="top" width="0pt">
+<column alignment="center" valignment="top" width="0pt">
+<column alignment="center" valignment="top" width="0pt">
+<column alignment="center" valignment="top" width="0pt">
+<column alignment="center" valignment="top" width="0pt">
 <row>
 <cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
@@ -2157,7 +2153,7 @@ common
 \begin_inset Text
 
 \begin_layout Plain Layout
-conveniance
+nice
 \end_layout
 
 \end_inset
@@ -2166,7 +2162,7 @@ conveniance
 \begin_inset Text
 
 \begin_layout Plain Layout
-simple expressions
+simple expr
 \end_layout
 
 \end_inset
@@ -2175,7 +2171,7 @@ simple expressions
 \begin_inset Text
 
 \begin_layout Plain Layout
-GP novelty
+novelty
 \end_layout
 
 \end_inset
@@ -2184,7 +2180,7 @@ GP novelty
 \begin_inset Text
 
 \begin_layout Plain Layout
-familiarity based
+familiarity
 \end_layout
 
 \end_inset
@@ -2359,7 +2355,7 @@ x
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2415,7 +2411,7 @@ Tensorflow enhanced Evaluation
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3703,7 +3699,7 @@ Regression measures (MAE, MSE, RMSE)
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5102,21 +5098,53 @@ Regression zur Startlösung (relative Regression)
 \end_layout
 
 \begin_layout Standard
-Relative Kernels sind eine Erweiterung der bekannten Kernel.
- Der Regressionsfehler ist die Summe der Abweichungsdistanzen zur Optimallösung.
- Relative Kernels erweitern dieses Distanzmaß um eine Gewichtung/Bestrafung
- der Distanz je nach Entfernung zur Optimallösung.
- 
+Relative Kernels sind eine Erweiterung der bekannten Kernel und soll stark
+ abweichendes Verhalten von der origin-Lösung verhindern.
+ Kandidaten können vor allem in sensiblen Bereichen von großem Interesse
+ sein, da so eine vorsichtigere Veränderung gefördert wird - lieber wird
+ eine Änderung nicht durchgeführt, als ein Risiko einzugehen.
 \end_layout
 
 \begin_layout Standard
-Sichere Kandidaten können vor allem in sensiblen Bereichen von großem Interesse
- sein, da sie vorsichtiger agieren.
- Lieber wird eine Änderung nicht durchgeführt, als ein Risiko einzugehen.
+Zur Regression auf den Daten wird dafür zusätzlich noch die Abweichung zur
+ origin Lösung betrachtet.
+ Dadurch ergeben sich vier Veränderungsbereiche, die betrachtet werden können:
 \end_layout
 
 \begin_layout Standard
-Eine mögliche Strukturierung der Abweichung könnte vier Bereiche umfassen:
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/dummy/MA_relative_kernel_dummy.png
+	lyxscale 50
+	width 80text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Conceivable relevant areas for penalizing changes in a relative regression
+ to an optimum, relative to a known solution.
+ [xxx]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Enumerate
@@ -5313,54 +5341,40 @@ Familiarity becomes a reference pptogram not only through structural similarity,
  but also through more similar behaviour.
 \end_layout
 
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/dummy/MA_relative_kernel_dummy.png
-	lyxscale 50
-	width 80text%
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Conceivable relevant areas for penalizing changes in a relative regression
- to an optimum, relative to a known solution.
- [xxx]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
 Sample selection
 \end_layout
 
 \begin_layout Standard
+The data used for the regression is the essence of the surrogate model.
+ Depending on how they are chosen, the result can vary greatly and be directed
+ towards specific goals.
+ For our benchmarks, the data were selected as follows:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 Die für die Regression verwendeten Daten sind das Wesen des Surrogatmodells.
  Je nachdem, wie sie gewählt wurden, kann sich das Ergebnis stark verändern
  und auf bestimmte Ziele gerichtet werden.
  Für unsere Benchmarks wurden die Daten folgendermaßen ausgewählt:
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="5">
 <features tabularvalignment="middle">
@@ -5788,6 +5802,23 @@ Training size
 </cell>
 </row>
 </lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Data of the benchmarks in comparison
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 

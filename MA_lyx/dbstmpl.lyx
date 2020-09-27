@@ -4321,6 +4321,20 @@ Aufteilung der Operatoren in ihre Aufgabenbereiche.
 Evolutionary process
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+all functions must create working trees: Type consistancy, evaluation safety,
+ closure
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Itemize
 Tournament selection
 \begin_inset Newline newline
@@ -4463,10 +4477,6 @@ Da die Struktur der erzeugten Bäume entscheidend für die TED ist wäre eine
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -5136,32 +5146,116 @@ Die olymp-reproduktion umfasst insbesondere auch die Möglichkeit für den
 \end_layout
 
 \begin_layout Itemize
-filtering
+Filtering
+\begin_inset Newline newline
+\end_inset
+
+Ein guter Kandidat kann oft verbessert werden indem seine Werte angepasst
+ werden.
+ Dabei ist sowohl das Filtern eines einzelnen Blattes als auch der Blätter
+ eines Knoten möglich.
+ Für die Läufe dieser Arbeit wurde dafür ein Gauss-filter mit einer Standardabwe
+ichung von 0.1 angewandt.
+\begin_inset Newline newline
+\end_inset
+
+Zusätzlich zu Variablen wurde für das IB 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Industrial-benchmark"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ ein Filteroperator für den Index von Konstanten implementiert.
+ Der Index einer Variablen in Daten bedeutet üblicherweise den Zeitpunkt
+ zu dem sie beobachtet wurde.
+ Gerade bei vielen Indizes sollten diese optimiert ausgewählt werden.
+ 
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+The calculation of the index was not an optional part of the GP.
 \end_layout
 
-\begin_deeper
-\begin_layout Itemize
-komplette branches oder einzelne Knoten
+\end_inset
+
+ , der Index kann außerdem beim Filterprozess als natürliche Zahl gefiltert
+ werden (
+\begin_inset Formula $t_{\text{new}}=\mathcal{N}(t,1)$
+\end_inset
+
+).
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+obs_list = delete(obs_list, max_age)
 \end_layout
 
-\begin_layout Itemize
-Bei Observationen mit Zeitlicher Komponente: Optionale Filterung des Zeitpunktes
+\begin_layout Plain Layout
+
+x = len(obs_list)
 \end_layout
 
-\end_deeper
-\begin_layout Itemize
-Schrittweise Erhöhung der erlaubten Baumgröße
+\begin_layout Plain Layout
+
+fairness_bonus = np.log(x) + 1  # raising the opportunity of historic data
+ just a little
+\end_layout
+
+\begin_layout Plain Layout
+
+p = np.geomspace(1 + fairness_bonus, x + fairness_bonus, num=x)[::-1]  #
+ reverse the geometric series     
+\end_layout
+
+\begin_layout Plain Layout
+
+p = p / np.sum(p)  # the sum must be equal to 1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Distribution for selecting observations.
+ Young observations are preferred.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
 Wahl der Konstanten per Zufall aus mehreren Möglichkeiten.
-\begin_inset Newline newline
-\end_inset
-
-Der Wert 0 wurde ausgeschlossen, da abgesehen von der Auswahl des output
- vektors die 0 als neutrales Element keinen echten Mehrwert für mathematische
- Formeln darstellt, der nicht einfacher auf anderem Weg erreicht werden
- könnte.
+ 
 \end_layout
 
 \begin_deeper
@@ -5317,15 +5411,28 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
 get all modifiable nodes
 \end_layout
 
 \begin_layout Plain Layout
+
 choose random node
 \end_layout
 
 \begin_layout Plain Layout
+
 mutate this node
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Plain Layout
@@ -5347,14 +5454,6 @@ Pseudocode for getting first layer of modifiable nodes
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-Type consistancy, evaluation safety, closure
-\end_layout
-
-\begin_layout Standard
-all functions must create working trees
 \end_layout
 
 \begin_layout Subsubsection
@@ -5464,15 +5563,15 @@ nt schlechter als die auf der echten Systemdynamik trainierten Versionen.
 As Daniel Hein has found out in 
 \begin_inset CommandInset citation
 LatexCommand cite
+after "p. 125"
 key "daniel_hein_doktorarbeit"
 literal "true"
 
 \end_inset
 
-[xxx p.
- 125], policies that have been trained on substitute models (for example
- also by regression on data) are almost always significantly worse than
- the versions trained on real system dynamics.
+, policies that have been trained on substitute models (for example also
+ by regression on data) are almost always significantly worse than the versions
+ trained on real system dynamics.
  
 \end_layout
 
@@ -5505,9 +5604,11 @@ Real evaluation still possible / Hybrid approach
 \begin_inset Newline newline
 \end_inset
 
-A not yet tested approach includes a hybrid approach that evaluates a special
- selection of outstanding offline candidates on the real dataset.
- [xxx the developer IS the hybrid approach]
+A not yet tested approach includes a hybrid approach that automatically
+ evaluates a special selection of outstanding offline candidates on the
+ real dataset.
+ At the moment it is up to the developer to perform these tests.
+ 
 \end_layout
 
 \begin_layout Paragraph
@@ -5671,21 +5772,93 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename tikz/regression_cost/done/regression_kernel_cost.pdf
+	filename tikz/regression_cost/01_regular.pdf
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename tikz/regression_cost/done/regression_kernel_cost.pdf
+	filename tikz/regression_cost/02_boarders.pdf
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/03_rounding.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/04_discrete.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/05_onlyFalse.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/06_fourAreas.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/07_onlyGoodExploration.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/08_noExploration.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/09_littleExploration.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/10_MSE.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/11_MSE_boarders.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Regression kernels [xxx ca.
+Regression kernels [xx ca.
  6 kernels?]
 \end_layout
 
@@ -5777,9 +5950,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/dummy/MA_relative_kernel_dummy.png
-	lyxscale 50
-	width 80text%
+	filename img/inkscape/regression_kernel_relative_outline.pdf
 
 \end_inset
 
@@ -8818,7 +8989,14 @@ Fast moving car vs slowly moving generate different amount of data per area.
 \end_layout
 
 \begin_layout Section
-Industrial benchmark
+Industrial benchmark 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Industrial-benchmark"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard

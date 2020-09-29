@@ -677,9 +677,9 @@ class ExplainableGP(object):
                                ['*', 2], ['/', 1],
                                ['Square', 0.75], ['**', 0.25],
                                ['abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
-                               ['sqrt', 0.1],
+                               ['sqrt', 0.25],
                                # ['log', 0.1], ['log1p', 0.1],  # sfeh
-                               ['sin', 0.1],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
+                               ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
                                ['tanh', 0.2],
                                ['Andb', 1], ['Orb', 1], ['Notb', 0.5],  # ['Xor', 1],
                                ['==', 1], ['!=', 0.5],

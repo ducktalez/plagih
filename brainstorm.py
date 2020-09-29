@@ -1,3 +1,9 @@
+"""
+# todo
+find . -name "*.tex" -exec pdflatex {} \;
+find . -name "*.pdf" -exec pdftoppm {} {} -png \;
+"""
+
 from multiprocessing import Pool
 
 

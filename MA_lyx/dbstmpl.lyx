@@ -90,6 +90,7 @@ theorems-ams-bytype
 \shortcut idx
 \color #008000
 \end_index
+\footskip 12mm
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
@@ -252,6 +253,28 @@ NN Neural Network
 
 \begin_layout Plain Layout
 TED Tree Edit Distance
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+xx toc style rote boxen?
 \end_layout
 
 \end_inset
@@ -1418,32 +1441,6 @@ The approach is based on the point of view of a developer who has dealt
  that it works just as well as the black box, but still stays close enough
  to the expert's program so that the developer can detect the necessary
  changes.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-Der Ansatz geht vom Standpunkt eines Entwicklers aus, der sich mit einem
- RL-Problem eingehend beschäftigt hat und bereits ein Programm zur Lösung
- des Problems geschrieben hat.
- Obwohl das Programm bereits sehr ausgereift ist, gibt es eine parallele
- RL-Lösung, die besser funktioniert als das Programm des Experten.
- Diese Lösung wird als Black Box betrachtet und kann daher nicht erklärt
- werden.
- Das Programm des Experten soll nun mit genetischer Programmierung so modifizier
-t werden, dass es genauso gut funktioniert wie die Blackbox, aber immer
- noch nahe genug am Expertenprogramm bleibt, damit der Entwickler die notwendige
-n Änderungen erkennen kann.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -1482,10 +1479,6 @@ Improving a known solution with familiarity based Genetic Programming
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Three components are required:
 \end_layout
 
@@ -1505,6 +1498,12 @@ A relatable scheme which an expert created with the hope to represent some
  Image recognition, for example, is a case that may seem simple, but is
  still far too complex to be written down as a heuristic.
  
+\begin_inset Newline newline
+\end_inset
+
+The use of this approach only makes sense if the black box solution can
+ be expected to provide a meaningful improvement.
+ For very extensive problems it is possible that no solution will be found.
 \end_layout
 
 \begin_layout Enumerate
@@ -1518,6 +1517,10 @@ A solution that outperforms the known approach which has to be explained.
 
 \begin_layout Enumerate
 Familiar candidates from GP
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset Newline newline
 \end_inset
 
@@ -1550,7 +1553,9 @@ Genetische Programmierung (GP) ist ein evolutionärer maschineller Lernansatz,
  zu verbessern.
  Die in diesem Framework implementierte GP hält sich an die unter anderem
  von Koza formulierten Vorgaben.
- 
+\end_layout
+
+\begin_layout Standard
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
@@ -1590,6 +1595,14 @@ status open
 \begin_layout Section
 Messen von Erklärbarkeit, Measuring explainability, explainability features
  for languages
+\end_layout
+
+\begin_layout Standard
+In this part we discuss possibilities to make measurable explanations.
+ As a result, the Tree Edit Distance (TED) is introduced as a measure of
+ familiarity that can be used in GP.
+ Furthermore, limitations and possible improvements are discussed.
+ 
 \end_layout
 
 \begin_layout Paragraph
@@ -1655,9 +1668,9 @@ GP complexity
 
 \begin_layout Standard
 Komplexitätsmaße werden auf viele Arten eingesetzt.
- Die Baumtiefe stellt beispielsweise eine praktische Lösung dar um zu komplexe
- Ausdrücke und somit overfitting zu vermeiden, die Anzahl der Knoten steigt
- aber mit der Tiefe exponentiell an.
+ Die Baumtiefe ist eine praktische Lösung um zu komplexe Ausdrücke und somit
+ overfitting zu vermeiden, die Anzahl der Knoten steigt aber mit der Tiefe
+ exponentiell an.
  Um intertretierbarkeit zu gewährleisten werden deshalb üblicherweise die
  Anzahl der Knoten gezählt.
  Zusätzlich können bestimmte Operatoren, die als besonders komplex gelten
@@ -1748,27 +1761,6 @@ Not fundamentally limiting the pareto GP
 
 \begin_layout Subsection
 Tree Edit Distance (TED)
-\end_layout
-
-\begin_layout Standard
-In this part the Tree Edit Distance (TED) is introduced as a measure of
- familiarity that can be used in GP.
- Furthermore, limitations and possible improvements are discussed.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-In diesem Teil wird die Tree Edit Distance (TED) als in der GP verwendbares
- Maß für Vertrautheit vorgestellt.
- Außerdem werden Limitierungen und mögliche Verbesserungen diskutiert.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -1863,9 +1855,8 @@ Weighting TED
 \begin_layout Standard
 Weighting functions is very practical for an expert as he can add his own
  preferences for functions to the measurement.
- [xxx reference] This is enabled by not only computing the distance itself
- but also analysing the required mapping of performed edits to change the
- origin tree to the found solution.
+ [xxx reference] This can be implemented by not only computing the distance
+ itself but also analysing the required mapping of performed edits.
  This option is very personalised and thus was not evaluated specifically
  for this thesis.
  It also leaves open questions about how weightings should affect the respective
@@ -1876,6 +1867,11 @@ Weighting functions is very practical for an expert as he can add his own
 \begin_layout Itemize
 The absolute complexity of the origin is chosen as initial complexity, if
  nodes are removed or changed a part of the weighting is subtracted
+\end_layout
+
+\begin_layout Itemize
+A separate parsimony measurement (possibly as a new dimension of the Pareto
+ front)
 \end_layout
 
 \begin_layout Standard
@@ -1934,39 +1930,12 @@ Verwendung unvollständiger Strukturen als origin (z.
 \end_layout
 
 \begin_layout Itemize
-verwendung mehrerer bekannter origins in einem Lauf, wobei beispielsweise
+Verwendung mehrerer bekannter origins in einem Lauf, wobei beispielsweise
  die kleinste oder mittlere TED verwendet wird.
  So könnten auch mehrere verständliche Ansätze auf ihre Erweiterbarkeit
  direkt verglichen werden oder mehrere Teillösungen separat eingebracht
  werden.
  
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/sarsa_100_decision_plot.png
-	lyxscale 50
-	scale 40
-
-\end_inset
-
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "SARSA-plot-fragments"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Section
@@ -2433,7 +2402,7 @@ Tensorflow enhanced Evaluation
 \begin_inset Text
 
 \begin_layout Plain Layout
-paretofront
+Pareto front
 \end_layout
 
 \end_inset
@@ -3839,7 +3808,7 @@ origin-relative regression kernel
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx
+Implemented key features of the GP framework
 \end_layout
 
 \end_inset
@@ -3893,10 +3862,6 @@ Eine starke typisierung der Bäume erfordert eine explizite Umwandlung von
  implementiert, welches immer zwei passende Knoten in Bäumen findet
 \end_layout
 
-\end_inset
-
-
-\begin_inset Newline newline
 \end_inset
 
 
@@ -3973,7 +3938,7 @@ Selecting matching nodes for the crossover evolution.
 \end_layout
 
 \begin_layout Itemize
-paretofront, pareto optimisation
+Pareto front, pareto optimisation
 \end_layout
 
 \begin_layout Itemize
@@ -4300,227 +4265,6 @@ all functions must create working trees: Type consistancy, evaluation safety,
 
 \end_layout
 
-\begin_layout Itemize
-Tournament selection
-\begin_inset Newline newline
-\end_inset
-
-Die tournament selection ist die gängigste Form der Selektion bei genetischer
- Programmierung.
- Um lokale optima zu vermeiden wurde die tournament-size auf den niedrigst
- möglichen Wert von 3 gesetzt.
- Anwender können außerdem die Turniergröße für ausgewählte Evolutionen anpassen.
- Bei Filter-evolutionen kann beispielsweise die Turniergröße erhöht werden
- um dieses Fine-tuning gezielt nur an sehr guten Bäumen durchzuführen.
-\end_layout
-
-\begin_layout Itemize
-Random tree branch building (node based)
-\begin_inset Newline newline
-\end_inset
-
-Sowohl bei der Branch mutation als auch beim erzeugen neuer Bäume müssen
- zufällige Bäume aufgebaut werden.
- Üblicherweise wird dafür eine zufällige Baumtiefe ausgewählt, bis zu der
- ein Ast rekursiv erzeugt wird.
- Die ist aber ein großes Problem für die layerwise-mutation, siehe [xx weil
- die Baumtiefe bei großer Tiefe exponentiell steigt und somit oft ].
- Deshalb wurde ein Knotenbasierter Algorithmus entwickelt, der Äste im Full-
- und Grow modus bis zu einer gewissen Anzahl von Knoten aufbaut.
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Baumgröße (depth-based and nodecount-based build size definition)
-\end_layout
-
-\begin_layout Itemize
-Baumstruktur: full/grow
-\begin_inset Newline newline
-\end_inset
-
-Die Baumethode ist ein wichtiger Faktor, da sie die Struktur der Bäume bestimmt
- und die möglichen Ausdrücke maßgeblich beeinflusst.
- [xx Beispiel]
-\begin_inset Newline newline
-\end_inset
-
-Im full-modus wird ein neuer Ast solang wie möglich auf jeder Ebene mit
- Operatoren aufgebaut.
- Dadurch entstehen sehr komplexe Bäume.
- Im grow-modus kann bei jedem Knoten auch zufällig ein Terminal-knoten entstehen
- (50% Wahrscheinlichkeit).
- [xxx zeige den Unterschied, dass a+1*2 nicht untereinander erzeugt werden
- kann, kommutativgesetz, Algorithmus]
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/inkscape/full_vs_grow_example.pdf
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-A full tree generates complex expressions 
-\begin_inset Formula $(a-3)*\frac{b}{2}$
-\end_inset
-
- 
-\begin_inset Newline newline
-\end_inset
-
-A grow tree has a lower branching factor and produces more encapsulated
- expressions 
-\begin_inset Formula $(a-\frac{b}{2})*3$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Allgemeine mathematische Vereinfachung
-\begin_inset Newline newline
-\end_inset
-
-Die mathematischen Ausdrücke in Bäumen oder Ästen zu vereinfachen ist nicht
- neu und ist bei Ästen möglich, deren Ausdruck auch einfacher hingeschrieben
- werden kann.
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/inkscape/sympy_reduction_example.pdf
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Selbst vereinfachte Ausdrücke können verschiedene Schreibweisen haben.
- 
-\begin_inset Formula $(a+a)\cdot2=\begin{cases}
-a\cdot4\\
-4\cdot a
-\end{cases}$
-\end_inset
-
-Da die Struktur der erzeugten Bäume entscheidend für die TED ist wäre eine
- einheitliche Vereinfachung hilfreich.
- In sympy werden entsprechende Ausdrücke immer gleich ausgewertet, selbst
- bei unterschiedlicher Schreibweise.
- [xx]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-sympify
-\begin_inset Newline newline
-\end_inset
-
-One of the most important ways to simplify trees is to simplify the content
- they represent as a mathematical expression.
- The simplification process of a formula is very complex 
-\begin_inset Newline newline
-\end_inset
-
-There were a few things to keep in mind:
-\begin_inset Newline newline
-\end_inset
-
-Fix-nodes must not be affected.
- If 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Expressions should always be reduced in the same way if possible.
- Due to the commutative law, for example, the expression 
-\begin_inset Formula $2+a\cdot2$
-\end_inset
-
- is already simplified.
- However, it can also be arranged differently, for example as 
-\begin_inset Formula $2\cdot a+2$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Itemize
-Reduced expressions must not contain any mathematical illogical bits.
- With the abundance of mathematical simplifications that exist, if all simplific
-ations are allowed, many special cases arise.
- These often cannot be evaluated, but even then they are often very unfit
- and in addition often not explainable.
-\end_layout
-
-\begin_layout Itemize
-nan - zoo - inf - complex numbers
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-Nicht-vereinfachte Ausdrücke bieten der GP mehr Optionen zum verbessern,
- um möglichst einfache Bäume zu erhalten sollte aber Komplexe Äste bieten
- der GP zwar viele Möglichkeiten einen Term zu verbessern, Either parts
- of a complete tree gets reduced to the most basic mathematical form possible.
- Not all trees should be saved in their basic form, as they might have branches
- with potential for further changes.
- On the other side, we want simple trees and generally the most basic solution.
-\end_layout
-
-\begin_layout Itemize
-Vereinfachung der Ausdrücke nach mathematischen Regeln (sympy).
- Ganze Bäume oder zufällige Äste werden mithilfe von Sympify [xxx] reduziert
- und über einen als neuer Ast aufgebaut.
- Neue Pareto-einträge werden immer versucht, vereinfacht abgespeichert zu
- werden.
- Ausdrücke werden dabei auch in derselben Ordnung abgespeichert, was die
- Verwendung der TED vereinfacht: 
-\begin_inset Formula $1+a\longrightarrow a+1$
-\end_inset
-
-
-\end_layout
-
-\end_deeper
 \begin_layout Standard
 \begin_inset Float table
 wide false
@@ -5047,23 +4791,243 @@ The division of the evolution on a generation.
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Tournament selection
+\begin_inset Newline newline
+\end_inset
+
+Die tournament selection ist die gängigste Form der Selektion bei genetischer
+ Programmierung.
+ Um lokale optima zu vermeiden wurde die tournament-size auf den niedrigst
+ möglichen Wert von 3 gesetzt.
+ Anwender können außerdem die Turniergröße für ausgewählte Evolutionen anpassen.
+ Bei Filter-evolutionen kann beispielsweise die Turniergröße erhöht werden
+ um dieses Fine-tuning gezielt nur an sehr guten Bäumen durchzuführen.
+\end_layout
+
+\begin_layout Itemize
+Random tree branch building (node based)
+\begin_inset Newline newline
+\end_inset
+
+Sowohl bei der Branch mutation als auch beim erzeugen neuer Bäume müssen
+ zufällige Bäume aufgebaut werden.
+ Üblicherweise wird dafür eine zufällige Baumtiefe ausgewählt, bis zu der
+ ein Ast rekursiv erzeugt wird.
+ Die ist aber ein großes Problem für die layerwise-mutation, siehe [xx weil
+ die Baumtiefe bei großer Tiefe exponentiell steigt und somit oft ].
+ Deshalb wurde ein Knotenbasierter Algorithmus entwickelt, der Äste im Full-
+ und Grow modus bis zu einer gewissen Anzahl von Knoten aufbaut.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Baumgröße (depth-based and nodecount-based build size definition)
+\end_layout
+
+\begin_layout Itemize
+Baumstruktur: full/grow
+\begin_inset Newline newline
+\end_inset
+
+Die Baumethode ist ein wichtiger Faktor, da sie die Struktur der Bäume bestimmt
+ und die möglichen Ausdrücke maßgeblich beeinflusst.
+ [xx Beispiel]
+\begin_inset Newline newline
+\end_inset
+
+Im full-modus wird ein neuer Ast solang wie möglich auf jeder Ebene mit
+ Operatoren aufgebaut.
+ Dadurch entstehen sehr komplexe Bäume.
+ Im grow-modus kann bei jedem Knoten auch zufällig ein Terminal-knoten entstehen
+ (50% Wahrscheinlichkeit).
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
 \begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/full_vs_grow_example.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A full tree generates complex expressions 
+\begin_inset Formula $(a-3)*\frac{b}{2}$
+\end_inset
+
+ 
+\begin_inset Newline newline
+\end_inset
+
+A grow tree has a lower branching factor and produces more encapsulated
+ expressions 
+\begin_inset Formula $(a-\frac{b}{2})*3$
+\end_inset
+
 
 \end_layout
 
 \end_inset
 
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Allgemeine mathematische Vereinfachung
+\begin_inset Newline newline
+\end_inset
+
+Die mathematischen Ausdrücke in Bäumen oder Ästen zu vereinfachen ist nicht
+ neu und ist bei Ästen möglich, deren Ausdruck auch einfacher hingeschrieben
+ werden kann.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/sympy_reduction_example.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Selbst vereinfachte Ausdrücke können verschiedene Schreibweisen haben.
+ 
+\begin_inset Formula $(a+a)\cdot2=\begin{cases}
+a\cdot4\\
+4\cdot a
+\end{cases}$
+\end_inset
+
+Da die Struktur der erzeugten Bäume entscheidend für die TED ist wäre eine
+ einheitliche Vereinfachung hilfreich.
+ In sympy werden entsprechende Ausdrücke immer gleich ausgewertet, selbst
+ bei unterschiedlicher Schreibweise.
+ [xx]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+sympify
+\begin_inset Newline newline
+\end_inset
+
+One of the most important ways to simplify trees is to simplify the content
+ they represent as a mathematical expression.
+ The simplification process of a formula is very complex 
+\begin_inset Newline newline
+\end_inset
+
+There were a few things to keep in mind:
+\begin_inset Newline newline
+\end_inset
+
+Fix-nodes must not be affected.
+ If 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Expressions should always be reduced in the same way if possible.
+ Due to the commutative law, for example, the expression 
+\begin_inset Formula $2+a\cdot2$
+\end_inset
+
+ is already simplified.
+ However, it can also be arranged differently, for example as 
+\begin_inset Formula $2\cdot a+2$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Reduced expressions must not contain any mathematical illogical bits.
+ With the abundance of mathematical simplifications that exist, if all simplific
+ations are allowed, many special cases arise.
+ These often cannot be evaluated, but even then they are often very unfit
+ and in addition often not explainable.
+\end_layout
+
+\begin_layout Itemize
+nan - zoo - inf - complex numbers
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Nicht-vereinfachte Ausdrücke bieten der GP mehr Optionen zum verbessern,
+ um möglichst einfache Bäume zu erhalten sollte aber Komplexe Äste bieten
+ der GP zwar viele Möglichkeiten einen Term zu verbessern, Either parts
+ of a complete tree gets reduced to the most basic mathematical form possible.
+ Not all trees should be saved in their basic form, as they might have branches
+ with potential for further changes.
+ On the other side, we want simple trees and generally the most basic solution.
+\end_layout
+
+\begin_layout Itemize
+Vereinfachung der Ausdrücke nach mathematischen Regeln (sympy).
+ Ganze Bäume oder zufällige Äste werden mithilfe von Sympify [xxx] reduziert
+ und über einen als neuer Ast aufgebaut.
+ Neue Pareto-einträge werden immer versucht, vereinfacht abgespeichert zu
+ werden.
+ Ausdrücke werden dabei auch in derselben Ordnung abgespeichert, was die
+ Verwendung der TED vereinfacht: 
+\begin_inset Formula $1+a\longrightarrow a+1$
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
 Um die erzeugten Programme aus dem Prozess der genetischen Programmierung
  heraus möglichst einfach zu halten wurden folgende Features implementiert:
 \end_layout
 
 \begin_layout Itemize
-Olymp-reproduction
+Olymp-reproduction (Pareto reproduction)
 \begin_inset Newline newline
 \end_inset
 
-Ähnlich den griechischen Göttern, die auf die Erde kamen um sich fortzupflanzen
- wurde auch den pareto-kandidaten die Möglichkeit gegeben, sich zu reproduzieren.
+Ähnlich den griechischen Göttern, die auf die Erde kamen um sich fortzupflanzen,
+ wurde auch den pareto-kandidaten die Möglichkeit gegeben, sich in die aktuelle
+ Population unterzumischen.
  Durch Zufall könnten bereits gefundene Lösungen und deren Gene komplett
  verloren gehen.
  Um bereits gefundene Lösungen deshalb nicht dauerhaft zu verlieren, sollen
@@ -5081,8 +5045,8 @@ Filtering
 \begin_inset Newline newline
 \end_inset
 
-Ein guter Kandidat kann oft verbessert werden indem seine Werte angepasst
- werden.
+Die Konstanten eines Baumes (feste Zahlenwerte) werden mit einem Gauss-filter
+ verändert.
  Dabei ist sowohl das Filtern eines einzelnen Blattes als auch der Blätter
  eines Knoten möglich.
  Für die Läufe dieser Arbeit wurde dafür ein Gauss-filter mit einer Standardabwe
@@ -5222,13 +5186,9 @@ Gaussverteilung natürlicher Zahlen (
 )
 \end_layout
 
-\begin_layout Itemize
-Menge aus mathematisch relevanten Konstanten
-\end_layout
-
 \end_deeper
 \begin_layout Subsubsection
-Fix nodes
+Fixed nodes
 \end_layout
 
 \begin_layout Standard
@@ -5246,12 +5206,6 @@ Um den GP Prozess noch stärker an die Präferenzen des Entwicklers zu binden
  an dieser Stelle sicher ist, können sinnlose Versuche des GP-Prozesses,
  an diesen Stellen zu optimieren als Performance und Sicherheitsgründen
  unterbunden werden.
-\end_layout
-
-\begin_layout Standard
-This significantly limits the genetic programming on the logical parts it
- can improve.
- xxx
 \end_layout
 
 \begin_layout Standard
@@ -5309,9 +5263,9 @@ Explainable GP Framework, layer0 mutations
 \end_layout
 
 \begin_layout Standard
-Die Möglichkeit, fixe Knoten zu implementieren, erfordert einige Anpassungen
- an die Operatoren der GP, da alle Bäume denselben Knotenkern benötigen.
- Die Änderungen umfassen:
+The possibility to implement fixed nodes requires some adjustments to the
+ operators of GP, because all trees need the same node core.
+ The changes include:
 \end_layout
 
 \begin_layout Itemize
@@ -5489,6 +5443,7 @@ rundungsfunktion statt <0.5
 
 \begin_layout Plain Layout
 distanznamen d_L1, d_bounded, ...
+ L1 L2 formeln
 \end_layout
 
 \end_inset
@@ -5503,6 +5458,7 @@ Anpassung an den (diskreten) Aktionsraum
 \begin_layout Standard
 Non-discrete results cannot be interpreted in the real model, which forces
  us to assign the result to the next possible action in the action space.
+ 
 \end_layout
 
 \begin_layout Paragraph
@@ -5531,16 +5487,6 @@ Dadurch kann das Optimierungsverfahren dazu, dass die Kandidaten darauf
  ungenau bei den restlichen zu sein.
  Die Idee wurde deshalb verworfen.
  
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-L1 L2 formeln
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Paragraph
@@ -5715,23 +5661,242 @@ A conceivable solution would be to use a constantly increasing weighting
 \end_layout
 
 \begin_layout Paragraph
-Regression zur Startlösung (relative Regression)
+Including Regression zur Startlösung (origin Regression)
 \end_layout
 
 \begin_layout Standard
-Relative Kernels sind eine Erweiterung der bekannten Kernel und soll stark
- abweichendes Verhalten von der origin-Lösung verhindern.
- Kandidaten können vor allem in sensiblen Bereichen von großem Interesse
- sein, da so eine vorsichtigere Veränderung gefördert wird - lieber wird
- eine Änderung nicht durchgeführt, als ein Risiko einzugehen.
+Origin Kernels sollen ihre klassische Version (hier die Regression) um eine
+ Abweichung von der Origin Lösung erweitern, um stark abweichendes Verhalten
+ zu verhindern.
 \end_layout
 
 \begin_layout Standard
-Zur Regression auf den Daten wird dafür zusätzlich noch die Abweichung zur
- origin Lösung betrachtet.
- Dadurch ergeben sich vier Veränderungsbereiche, die betrachtet werden können:
+Die Idee dabei ist, dass bei gleichem Regressionsfehler die Kandidaten bevorzugt
+ werden sollten, die das Verhalten der Origin Lösung in geringerem Ausmaß
+ ändern.
+ Folgende Eigenschaften können dabei von Interesse sein:
 \end_layout
 
+\begin_layout Itemize
+Versionen
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Regression am Ziel (unterscheidet nicht zwischen Verhaltensunterschied zur
+ Startlösung)
+\end_layout
+
+\begin_layout Itemize
+Regression am Start (unterscheidet nicht zwischen sicheren Bereichen und
+ unsicheren Bereichen)
+\end_layout
+
+\begin_layout Itemize
+Regression kombiniert (Verschiebt die Regression, funktioniert nicht, MSE
+ geht nicht)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Schützenswerte Bereiche
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+erste Fehlentscheidungen.
+ Wichtig sind oft die Entscheidungen, die Zeitlich gesehen am Anfang einer
+ Fehlentwicklung gehen.
+ aka Wenn der Unterschied zur Entscheidung des goal Agenten anfängt, größer
+ zu werden (sliding window, analyse 5 vorherige, 5 nachfolgende werte? nur
+ avg? ...)
+\end_layout
+
+\begin_layout Itemize
+Kleine Unterschiede.
+ Hier sollte eine Abweichung eine relativ kleine Verbesserung an anderer
+ Stelle ausgleichen.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+außerdem
+\end_layout
+
+\begin_layout Itemize
+Änderungen sollen vor allem in den Bereichen durchgeführt werden, in denen
+ sich Origin und Blackbox unterscheiden.
+ Für jeden Datenpunkt sollte deshalb nicht nur die Distanz zur Ziellösung
+ eine Rolle spielen sondern auch, wie gut die Origin Lösung an dieser Stelle
+ bereits war.
+ Dadurch werden Änderungen an Bereichen, in denen die Origin bereits nah
+ an der Ziellösung war zusätzlich bestraft und dadurch stärker geschützt.
+\end_layout
+
+\begin_layout Itemize
+In Bereichen mit großen Abweichungen sollte den Kandidaten auch eine stärkere
+ Abweichung zustehen.
+ Punkte sollten deshalb einzeln betrachtet werden und nicht in einer separaten
+ Regression zur origin untergehen.
+\end_layout
+
+\begin_layout Itemize
+Eine Abweichung von der Startlösung aus in die falsche Richtung sollte stark
+ verhindert werden
+\end_layout
+
+\begin_layout Itemize
+Eine extreme Abweichung sollte bestraft werden
+\end_layout
+
+\begin_layout Itemize
+Bereiche, in denen Start und Ziellösung weit auseinanderliegen sollten Änderunge
+n an der Origin leichter zulassen.
+ xxx
+\end_layout
+
+\begin_layout Paragraph
+Beispiel 1: Eier Kochzeit
+\end_layout
+
+\begin_layout Standard
+Nehmen wir an, wir kochen sichere Eier für 10 Minuten und ein Ziel Kochprofi
+ für 5 Minuten.
+ Die Kandidaten 3 Minuten und 7 Minuten hätten beide einen Regressionsfehler
+ von 2 Minuten.
+ 7 Minuten wäre aber der sicherere Ansatz, da der Unterschied zur Startlösung
+ weitaus geringer ist.
+\end_layout
+
+\begin_layout Standard
+Beim Genotyp wird durch das Komplexitätsmaß darauf geachtet, dass die Änderungen
+ nicht zu umfangreich sind.
+ Beim Phänotyp ergibt sich durch die Verwendung von 
+\end_layout
+
+\begin_layout Itemize
+Für Bereicht, in denen die Origin Lösung bereits richtig lag, sollte nicht
+ verändert werden.
+\end_layout
+
+\begin_layout Itemize
+Bei gleichem Regressionsfehler sollte
+\end_layout
+
+\begin_layout Standard
+Da die Origin Lösung stellt nicht nur eine vertraute Heuristik dar, sie
+ gilt oft auch als sicherer Weg.
+ Die Phänotypen eines Kandidaten können sich, bei selbem Umfang der Genotypmutat
+ionen, stark unterscheiden.
+ 
+\end_layout
+
+\begin_layout Standard
+ie in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:relative_kernel_path"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ zu sehen sind Pfad 1 und 2 gleich weit von der Ziellösung entfernt, Pfad
+ 1 weicht aber weniger stark von der origin ab.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/kernel_hill_3options.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Starting from the origin (orange) and a target solution (green) there are
+ several path candidates.
+ It can be of great interest to distance oneself as little as possible from
+ the start solution.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:relative_kernel_path"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+Für das Kernel wurde in vier Bereiche unterschieden:
+\end_layout
+
+\begin_layout Enumerate
+Sichere Verbesserung.
+ Der Punkt liegt zwischen Basis und Ziel.
+ Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
+ nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
+\end_layout
+
+\begin_layout Enumerate
+Unsichere Verbesserung.
+ Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
+ von der bekannten policy nötig.
+ Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
+ es auch bevorzugt werden.
+ Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
+ Form der möglichen Bestrafung.
+\end_layout
+
+\begin_layout Enumerate
+Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
+ hat und so vom normalen Kernel bereits verhindert werden sollte.
+ Ein volatiler Agent kann jedoch durch eine starke Verbesserung an anderer
+ Stelle diesen Makel ausgleichen.
+ In der Regression wäre der Agent zu bevorzugen, der weniger volatil ist.
+ Auch diese können in Zwei Bereiche unterteils werden:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Sichere Verschlechterung.
+ Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
+ war eindeutig falsch, ohne Chance auf Verbesserung.
+ In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
+ dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
+ auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
+ an einder anderen Stelle in Kauf genommen.
+\end_layout
+
+\begin_layout Enumerate
+Unsichere Verschlechterung.
+ Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
+ über das Ziel hinausgeschossen.
+ Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
+ die größte Unsicherheit.
+ Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
+\end_layout
+
+\end_deeper
 \begin_layout Standard
 \begin_inset Float figure
 wide false
@@ -5766,76 +5931,12 @@ Conceivable relevant areas for penalizing changes in a relative regression
 
 \end_layout
 
-\begin_layout Enumerate
-Sichere Verbesserung.
- Der Punkt liegt zwischen Basis und Ziel.
- Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
- nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
- 
-\end_layout
-
-\begin_layout Enumerate
-unsichere Verbesserung.
- Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
- von der bekannten pllicy nötig.
- Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
- es auch bevorzugt werden.
- Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
- Form der möglichen Bestrafung.
-\end_layout
-
-\begin_layout Enumerate
-Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
- hat.
- Die bekannte policy wäre zu bevorzugen.
- Diese sollten vermieden werden und sollten entsprechend bestraft werden.
- 
-\begin_inset Newline newline
-\end_inset
-
-Auch diese können in Zwei Bereiche unterteils werden:
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sichere Verschlechterung.
- Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
- war eindeutig falsch, ohne Chance auf Verbesserung.
- In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
- dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
- auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
- an einder anderen Stelle in Kauf genommen.
-\end_layout
-
-\begin_layout Enumerate
-Unsichere Verschlechterung.
- Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
- über das Ziel hinausgeschossen.
- Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
- die größte Unsicherheit.
- Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
-\end_layout
-
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Idee Bild: Überlegung 
-\begin_inset Quotes eld
-\end_inset
-
- ich koche meine Eier für 2 min.
- empfolhen sind 6.
- sind 4 min oder 8 min die bessere Alternative?
+xxx Es ist schwer zu erkennen, wann eine Abweichung von der Originallösung
+ nötig ist.
+ xxx
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\end_deeper
 \begin_layout Standard
 Diese Bereiche könnten je nach Belieben einen zusätzlichen mit konstanten
  oder sinkenden zusätzlichen Steigung gewertet werden.
@@ -5858,16 +5959,6 @@ Eine solche Änderung sollte aber besser durch gezielte Ansatzpunkt für die
  Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
  in denen optimiert werden darf.
  Auch wäre eine teilweise Übernahme durch die gp denkbar.
- 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-GAN-Beziehung zwischen GP-Prozess und nn?
-\end_layout
-
-\end_inset
-
  Ein weiterer Lösungsansatz wäre, die Daten der Regression im Vorhinein
  clustern und je nach Erreichen durch die Originalpolicy zu bewerten.
 \end_layout
@@ -6622,6 +6713,12 @@ This chapter presents the benchmarks against which the approach has been
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="7" columns="3">
 <features tabularvalignment="middle">
@@ -6832,6 +6929,23 @@ partially
 </cell>
 </row>
 </lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The used benchmarks in comparison
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -8656,6 +8770,7 @@ Das IB simuliert dafür einen Controler, für den ein Agent drei kontinuierliche
 \end_inset
 
  gesetzt.
+ Für das IB gibt es keine bekannten vom Menschen geschriebene Heuristiken.
  
 \end_layout
 
@@ -8694,7 +8809,7 @@ status open
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8703,7 +8818,7 @@ status open
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8712,7 +8827,7 @@ setpoint
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8721,7 +8836,7 @@ velocity
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8730,7 +8845,7 @@ gain
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8739,7 +8854,7 @@ shift
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8748,7 +8863,7 @@ fatigue
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8757,7 +8872,7 @@ consumption
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8768,16 +8883,16 @@ reward
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-acronym
+Acronym
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8786,7 +8901,7 @@ p
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8795,7 +8910,7 @@ v
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8804,7 +8919,7 @@ g
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8813,7 +8928,7 @@ h
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8822,7 +8937,7 @@ f
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8831,7 +8946,7 @@ c
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8842,7 +8957,7 @@ r
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8851,7 +8966,7 @@ Description
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8860,7 +8975,7 @@ external driver
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8869,7 +8984,7 @@ external driver
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8878,7 +8993,7 @@ external driver
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8887,16 +9002,7 @@ external driver
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-for reward
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8905,7 +9011,16 @@ for reward
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+for reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8916,16 +9031,16 @@ for reward
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-adjustable (action)
+Adjustable action?
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8934,7 +9049,7 @@ adjustable (action)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8946,7 +9061,7 @@ adjustable (action)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8958,7 +9073,7 @@ adjustable (action)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8970,7 +9085,7 @@ adjustable (action)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8979,7 +9094,7 @@ adjustable (action)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8988,7 +9103,7 @@ adjustable (action)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -8999,7 +9114,7 @@ adjustable (action)
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9008,7 +9123,7 @@ min/max value
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9020,7 +9135,7 @@ min/max value
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9032,7 +9147,7 @@ min/max value
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9044,7 +9159,7 @@ min/max value
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9056,7 +9171,7 @@ min/max value
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9068,7 +9183,7 @@ min/max value
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9080,7 +9195,7 @@ min/max value
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9091,7 +9206,7 @@ min/max value
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9100,7 +9215,7 @@ data mean
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9109,7 +9224,7 @@ data mean
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9118,7 +9233,7 @@ data mean
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9127,7 +9242,7 @@ data mean
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9136,7 +9251,7 @@ data mean
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9145,7 +9260,7 @@ data mean
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9154,7 +9269,7 @@ data mean
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9165,7 +9280,7 @@ data mean
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9174,7 +9289,7 @@ data deviation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9183,7 +9298,7 @@ data deviation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9192,7 +9307,7 @@ data deviation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9201,7 +9316,7 @@ data deviation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9210,7 +9325,7 @@ data deviation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9219,7 +9334,7 @@ data deviation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9228,7 +9343,7 @@ data deviation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9239,7 +9354,7 @@ data deviation
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9248,7 +9363,7 @@ past time steps
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9257,7 +9372,7 @@ past time steps
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9266,7 +9381,7 @@ past time steps
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9275,7 +9390,7 @@ past time steps
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9284,7 +9399,7 @@ past time steps
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9293,7 +9408,7 @@ past time steps
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9302,7 +9417,7 @@ past time steps
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -9366,7 +9481,7 @@ literal "false"
 
 \end_inset
 
-
+ ???
 \end_layout
 
 \end_inset
@@ -9392,7 +9507,11 @@ Black box: PSONN
 
 \begin_layout Standard
 Als Black box wurde ein particle swarm optimisation algorithmus with neural
- networks (PSONN) mit einem errechneten
+ networks (PSONN) mit einem errechneten IB reward von 
+\begin_inset Formula $5353$
+\end_inset
+
+ ausgewählt.
 \begin_inset Foot
 status open
 
@@ -9419,15 +9538,7 @@ literal "false"
 
 \end_inset
 
- IB reward von 
-\begin_inset Formula $5353$
-\end_inset
 
- ausgewählt.
- Dieser Ansatz ist ähnlich komplex wie der eines neuronalen Netzes, jedoch
- kann es hier zu einem noch [xxx sparse] Lösungsraum kommen.
- Das kann, kombiniert mit der Komplex der Benchmarks, die eh schon außerordentli
-ch hoch ist, zu hoher Varianz im Suchraum führen.
 \end_layout
 
 \begin_layout Subsection
@@ -9435,8 +9546,7 @@ Origins
 \end_layout
 
 \begin_layout Standard
-Für das IB gibt es keine bekannten Lösungsstrategien.
- Eine Lösung, die dennoch relativ gut funktioniert, ist alle Werte auf 50
+Eine Lösung, die dennoch relativ gut funktioniert, ist alle Werte auf 50
  zu stellen.
  Eine weitere implementierte Lösung verfolgte außerdem einen Ansatz, dem
  GP Prozess durch Verwendung nützlicher Werte einen guten Anhaltspunkt zu
@@ -9553,25 +9663,6 @@ options "plain"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-newpage
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -9592,9 +9683,30 @@ literal "true"
 \end_inset
 
 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/sarsa_100_decision_plot.png
+	lyxscale 50
+	scale 40
+
+\end_inset
+
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "SARSA-plot-fragments"
+
+\end_inset
+
+
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+
 \begin_inset Note Comment
 status open
 

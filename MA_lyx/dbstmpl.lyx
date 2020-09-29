@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -34,6 +34,11 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -54,8 +59,6 @@ theorems-ams-bytype
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -85,7 +88,6 @@ theorems-ams-bytype
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -95,10 +97,7 @@ theorems-ams-bytype
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -297,7 +296,6 @@ t Learning (RL) policies using Genetic Programming (GP).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "false"
 
 \end_inset
 
@@ -376,7 +374,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -412,7 +409,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -505,7 +501,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -625,7 +620,6 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -655,7 +649,7 @@ Especially from a scientific point of view, it is of great interest not
 
 \end_layout
 
-\begin_layout Chapter
+\begin_layout Section
 Erklärbare künstliche Intelligenz
 \end_layout
 
@@ -736,7 +730,6 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -746,7 +739,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "false"
 
 \end_inset
 
@@ -761,7 +753,7 @@ These basic skills are comparable for all people.
 ally valuable way.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Puzzle example
 \end_layout
 
@@ -850,7 +842,6 @@ iert, dass es zwischenmenschlich keiner Erklärung mehr bedarf.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -860,7 +851,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "false"
 
 \end_inset
 
@@ -1183,7 +1173,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c"
-literal "false"
 
 \end_inset
 
@@ -1191,7 +1180,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -1283,7 +1271,6 @@ Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "false"
 
 \end_inset
 
@@ -1375,7 +1362,7 @@ Although it is the most complex function with 3 input parameters, it creates
 \end_layout
 
 \begin_layout Chapter
-Familiarity based Genetic Programming
+Outline of applied Methods
 \end_layout
 
 \begin_layout Standard
@@ -1441,6 +1428,9 @@ The approach is based on the point of view of a developer who has dealt
  that it works just as well as the black box, but still stays close enough
  to the expert's program so that the developer can detect the necessary
  changes.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -1483,7 +1473,7 @@ Three components are required:
 \end_layout
 
 \begin_layout Enumerate
-Experts reference solution
+Origin: Der Startpunkt stellt die Referenzlösung eines Experten dar
 \begin_inset Newline newline
 \end_inset
 
@@ -1498,46 +1488,23 @@ A relatable scheme which an expert created with the hope to represent some
  Image recognition, for example, is a case that may seem simple, but is
  still far too complex to be written down as a heuristic.
  
-\begin_inset Newline newline
-\end_inset
-
-The use of this approach only makes sense if the black box solution can
- be expected to provide a meaningful improvement.
- For very extensive problems it is possible that no solution will be found.
 \end_layout
 
 \begin_layout Enumerate
-Black box RL solution
+Familiarity measure for GP candidates GP
+\end_layout
+
+\begin_layout Enumerate
+Black box RL data
 \begin_inset Newline newline
 \end_inset
 
 A solution that outperforms the known approach which has to be explained.
- 
-\end_layout
-
-\begin_layout Enumerate
-Familiar candidates from GP
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-A genetic programming framework has to improve the origin code to the level
- of the ML solution while letting the developer understand the changes and
- where the most substantial improvements can be made.
-\end_layout
-
-\begin_layout Paragraph
-Applicability of the approach
-\end_layout
-
-\begin_layout Standard
-Die Verwendung dieses Ansatzes ist nur dann sinnvoll, wenn die neue Lösung
- eine sinnvolle Verbesserung erwarten lässt.
- Für sehr umfangreiche Probleme kann es sein, dass keine Lösung gefunden
- wird.
+ The use of this approach only makes sense if the black box solution can
+ be expected to provide a meaningful improvement.
+ For very extensive problems it is possible that no solution will be found.
+ [xxx nicht pflicht, geht ja sonst auch...
+ auswahl: sicher, gutes Training, regression vs live training]
 \end_layout
 
 \begin_layout Section
@@ -1551,7 +1518,11 @@ Genetische Programmierung (GP) ist ein evolutionärer maschineller Lernansatz,
  generiert, die über Generationen hinweg selektiert, mutiert und gekreuzt
  werden, sodass die besten Gene sich kombinieren um die Kandidaten stets
  zu verbessern.
- Die in diesem Framework implementierte GP hält sich an die unter anderem
+ 
+\end_layout
+
+\begin_layout Standard
+Die in diesem Framework implementierte GP hält sich an die unter anderem
  von Koza formulierten Vorgaben.
 \end_layout
 
@@ -1559,7 +1530,6 @@ Genetische Programmierung (GP) ist ein evolutionärer maschineller Lernansatz,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "false"
 
 \end_inset
 
@@ -1783,7 +1753,6 @@ The TED is a well-known problem from theoretical computer science.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -1798,7 +1767,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -1938,8 +1906,8 @@ Verwendung mehrerer bekannter origins in einem Lauf, wobei beispielsweise
  
 \end_layout
 
-\begin_layout Section
-Genetic Programming with Familiarity
+\begin_layout Chapter
+Familiarity based Genetic Programming
 \end_layout
 
 \begin_layout Standard
@@ -1975,7 +1943,6 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "false"
 
 \end_inset
 
@@ -1987,7 +1954,6 @@ literal "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "false"
 
 \end_inset
 
@@ -5058,9 +5024,6 @@ Zusätzlich zu Variablen wurde für das IB
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sec:Industrial-benchmark"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5357,7 +5320,6 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -5796,9 +5758,6 @@ ie in
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:relative_kernel_path"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7269,7 +7228,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -7341,9 +7299,6 @@ Da der Zustandsraum des Mountaincar Problems zweidimensional ist, lässt
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sarsa75_problem_decision_plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7422,7 +7377,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -7446,7 +7400,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -7464,9 +7417,6 @@ literal "false"
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "par:simple,-maximum-momentum"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7586,9 +7536,6 @@ The leaderboard only includes how fast the training was and not how secure
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sarsa75_problem_decision_plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7598,9 +7545,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "img:MTC-heuristic-vs-sarsa-reward"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7672,9 +7616,6 @@ Further training did not lead to further improvements.
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sarsa1000-plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -8083,9 +8024,6 @@ Die Implementierung ist als if-Anweisung ziemlich kurz und kann mit 6 Knoten
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "MC-first_action"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -8093,9 +8031,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "table:MC_agents_rewards"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -8435,7 +8370,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -8749,7 +8683,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -9477,7 +9410,6 @@ IB compared to Mountain Car and other benchmarks
 LatexCommand cite
 after "p. 2"
 key "industrialBenchmark"
-literal "false"
 
 \end_inset
 
@@ -9520,7 +9452,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "false"
 
 \end_inset
 
@@ -9672,7 +9603,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -9971,7 +9901,6 @@ modifiable nodes erweitern.
 \begin_inset CommandInset href
 LatexCommand href
 target "https://en.wikipedia.org/wiki/Genetic_improvement_(computer_science)"
-literal "false"
 
 \end_inset
 

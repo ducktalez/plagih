@@ -199,7 +199,7 @@ def main():  # argv sys.argv[1:]
     print('Program ending')
     if prepared_run:
         if 'IB' in prepared_run and prepared_run[-2:] == '_0':
-            combined_lists(prepared_run[:-2], 40, 40, local_yamls=True, mp_cpu_cores_max=args.mp_cpu_cores_max)
+            combined_lists(prepared_run[:-2], 40, 40, local_yamls=True, mp_cpu_MAX=args.mp_cpu_cores_max)
     sys.exit()
 
 

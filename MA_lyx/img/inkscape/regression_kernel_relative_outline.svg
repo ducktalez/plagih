@@ -13,7 +13,10 @@
    version="1.1"
    id="svg4251"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
-   sodipodi:docname="regression_kernel_relative_outline.svg">
+   sodipodi:docname="regression_kernel_relative_outline.svg"
+   inkscape:export-filename="C:\Users\Rapid\PycharmProjects\plagih\MA_lyx\img\inkscape\regression_kernel_relative_outline.png"
+   inkscape:export-xdpi="250"
+   inkscape:export-ydpi="250">
   <defs
      id="defs4245">
     <inkscape:path-effect
@@ -108,7 +111,7 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.9308474"
+     inkscape:zoom="1.8820214"
      inkscape:cx="223.58848"
      inkscape:cy="103.26389"
      inkscape:document-units="mm"
@@ -128,7 +131,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -326,7 +329,7 @@
          id="tspan5142"
          x="10.414252"
          y="43.575424"
-         style="stroke-width:0.264583"></tspan><tspan
+         style="stroke-width:0.264583" /><tspan
          sodipodi:role="line"
          x="10.414252"
          y="56.80455"

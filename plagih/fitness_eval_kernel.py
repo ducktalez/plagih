@@ -27,141 +27,6 @@ class GPKernel:
         pass
 
 
-class ClassificationKernel(GPKernel):
-
-    def __init__(self, *args):
-        pass
-
-    def tf_classify_labels_map(self, result, env_vars):
-
-        """
-        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
-        the quantity of true class labels provided in the samples-csv.
-        Outputs an array of tuples containing the predicted labels based upon the result and corresponding boolean condition triggered.
-
-        For comparison, the original (pre-TensorFlow) cod follows:
-
-            skew = (self.uniques_num / 2) - 1 # '-1' keeps a binary classification splitting over the
-            if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
-            elif solution == self.uniques_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
-            elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
-            else: fitness = 0 # no class match
-        sfeh remove
-
-        """
-        uniques_num = env_vars.eval_action.uniques
-        skew = (uniques_num / 2) - 1
-        label_rules = {uniques_num - 1: (
-            tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}
-
-        for class_label in range(uniques_num - 2, 0, -1):
-            cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
-            label_rules[class_label] = tf.cond(cond, lambda: (
-                tf.constant(class_label), tf.constant(f' <= {class_label - skew}')), lambda: label_rules[class_label + 1])
-
-        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(f' <= {0 - skew}')), lambda: label_rules[1])
-
-        return pred_label
-
-    def fitness_compare(self, fitness1, fitness2):
-        if fitness2 is None:
-            return True
-        else:
-            return fitness1 > fitness2
-
-    def best_fitness_function(self, *args, **kwargs):
-        return max(*args, **kwargs)
-
-    def tf_wrap_result(self, *args):
-        pass
-
-    def tf_get_pairwise_fitness(self, solution, kernel_result, eval_action):
-        """
-        Calculates the kernel-specific fitness for the solution.
-        - classification: dummy
-        """
-
-        skew = (eval_action.uniques / 2) - 1
-
-        rule1 = tf.logical_and(
-            tf.equal(solution, 0),
-            tf.less_equal(kernel_result, 0 - skew))
-
-        rule2 = tf.logical_and(
-            tf.equal(solution, eval_action.uniques - 1),
-            tf.greater(kernel_result, solution - 1 - skew))
-
-        rule3 = tf.logical_and(
-            tf.less(solution - 1 - skew, kernel_result),
-            tf.less_equal(kernel_result, solution - skew))
-
-        pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
-        return pairwise_fitness
-
-
-class MatchKernel(GPKernel):
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
-    def fitness_compare(self, fitness1, fitness2):
-        if fitness2 is None:
-            return True
-        else:
-            return fitness1 > fitness2
-
-    def best_fitness_function(self, *args, **kwargs):
-        return max(*args, **kwargs)
-
-    def tf_get_pairwise_fitness(self, solution, kernel_result):
-        """
-        Calculates the kernel-specific fitness for the solution.
-        - classification: dummy
-        """
-        """
-        This is used for demonstration purposes only.
-        """
-        # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
-        rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
-        pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
-
-        return pairwise_fitness
-
-    def eval_tf(self):
-        pass
-        # if self.get_predicted_labels:
-        #     predicted_labels = tf.map_fn(self.tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
-        # else:
-        #     predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
-        #  # , 'predicted_labels': predicted_labels    # predicted_labels
-
-    # def conclusion_text(self, result, fitness_control_best):
-    #     """
-    #
-    #     """
-    #     elif self.kernel == 'regression':
-    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
-    #         result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
-    #         result_str += ('\n Mean Squared Error: {}'.format(mse))
-    #
-    #     result_str = ''
-    #
-    #     if self.kernel == 'classification':
-    #         result_str += f'\n\n Classification fitness score: {fitness_control_best}'
-    #         result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
-    #         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
-    #
-    #     elif self.kernel == 'regression bounded':
-    #
-    #     elif self.kernel == 'match':
-    #         result_str += f"\n\n Matching fitness score: {result['fitness']}"
-    #
-    #     else:  # 'regression discrete':
-    #         result_str = 'No summary provided for this kernel'
-    #
-    #     return result_str
-
-
 class RegressionKernel(GPKernel):
 
     def best_fitness_function(self, *args, **kwargs):
@@ -300,6 +165,141 @@ class RegressionKernel(GPKernel):
         """
         mse = skm.mean_squared_error(result['agent_result'], result['solution'])
         return f"\n\n Regression bounded fitness score: {result['fitness']}\n Mean Squared Error: {mse}"
+
+
+class ClassificationKernel(GPKernel):
+
+    def __init__(self, *args):
+        pass
+
+    def tf_classify_labels_map(self, result, env_vars):
+
+        """
+        For the CLASSIFY kernel, creates a TensorFlow (TF) sub-graph defined as a sequence of boolean conditions based upon
+        the quantity of true class labels provided in the samples-csv.
+        Outputs an array of tuples containing the predicted labels based upon the result and corresponding boolean condition triggered.
+
+        For comparison, the original (pre-TensorFlow) cod follows:
+
+            skew = (self.uniques_num / 2) - 1 # '-1' keeps a binary classification splitting over the
+            if solution == 0 and result <= 0 - skew; fitness = 1: # check for first class (the left-most bin)
+            elif solution == self.uniques_num - 1 and result > solution - 1 - skew; fitness = 1: # check for last class (the right-most bin)
+            elif solution - 1 - skew < result <= solution - skew; fitness = 1: # check for class bins between first and last
+            else: fitness = 0 # no class match
+        sfeh remove
+
+        """
+        uniques_num = env_vars.eval_action.uniques
+        skew = (uniques_num / 2) - 1
+        label_rules = {uniques_num - 1: (
+            tf.constant(uniques_num - 1), tf.constant(f' > {uniques_num - 2 - skew}'))}
+
+        for class_label in range(uniques_num - 2, 0, -1):
+            cond = (class_label - 1 - skew < result) & (result <= class_label - skew)
+            label_rules[class_label] = tf.cond(cond, lambda: (
+                tf.constant(class_label), tf.constant(f' <= {class_label - skew}')), lambda: label_rules[class_label + 1])
+
+        pred_label = tf.cond(result <= 0 - skew, lambda: (tf.constant(0), tf.constant(f' <= {0 - skew}')), lambda: label_rules[1])
+
+        return pred_label
+
+    def fitness_compare(self, fitness1, fitness2):
+        if fitness2 is None:
+            return True
+        else:
+            return fitness1 > fitness2
+
+    def best_fitness_function(self, *args, **kwargs):
+        return max(*args, **kwargs)
+
+    def tf_wrap_result(self, *args):
+        pass
+
+    def tf_get_pairwise_fitness(self, solution, kernel_result, eval_action):
+        """
+        Calculates the kernel-specific fitness for the solution.
+        - classification: dummy
+        """
+
+        skew = (eval_action.uniques / 2) - 1
+
+        rule1 = tf.logical_and(
+            tf.equal(solution, 0),
+            tf.less_equal(kernel_result, 0 - skew))
+
+        rule2 = tf.logical_and(
+            tf.equal(solution, eval_action.uniques - 1),
+            tf.greater(kernel_result, solution - 1 - skew))
+
+        rule3 = tf.logical_and(
+            tf.less(solution - 1 - skew, kernel_result),
+            tf.less_equal(kernel_result, solution - skew))
+
+        pairwise_fitness = tf.dtypes.cast(tf.logical_or(tf.logical_or(rule1, rule2), rule3), tf.int32)
+        return pairwise_fitness
+
+
+class MatchKernel(GPKernel):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def fitness_compare(self, fitness1, fitness2):
+        if fitness2 is None:
+            return True
+        else:
+            return fitness1 > fitness2
+
+    def best_fitness_function(self, *args, **kwargs):
+        return max(*args, **kwargs)
+
+    def tf_get_pairwise_fitness(self, solution, kernel_result):
+        """
+        Calculates the kernel-specific fitness for the solution.
+        - classification: dummy
+        """
+        """
+        This is used for demonstration purposes only.
+        """
+        # pairwise_fitness = tf.dtypes.cast(tf.equal(solution, result), tf.int32) # breaks due to floating points
+        rtol, atol = 1e-05, 1e-08  # fixes above issue by checking if a float c1 lies within a range of values
+        pairwise_fitness = tf.dtypes.cast(tf.less_equal(tf.abs(solution - kernel_result), atol + rtol * tf.abs(kernel_result)), tf.int32)
+
+        return pairwise_fitness
+
+    def eval_tf(self):
+        pass
+        # if self.get_predicted_labels:
+        #     predicted_labels = tf.map_fn(self.tf_classify_labels_map, kernel_result, dtype=(tf.int32, tf.string), swap_memory=True)
+        # else:
+        #     predicted_labels = tf.no_op()  # a placeholder, applies only to CLASSIFY kernel
+        #  # , 'predicted_labels': predicted_labels    # predicted_labels
+
+    # def conclusion_text(self, result, fitness_control_best):
+    #     """
+    #
+    #     """
+    #     elif self.kernel == 'regression':
+    #         mse = skm.mean_squared_error(result['agent_result'], result['solution_goal'])
+    #         result_str += ('\n\n Regression fitness score: {}'.format(result['fitness']))
+    #         result_str += ('\n Mean Squared Error: {}'.format(mse))
+    #
+    #     result_str = ''
+    #
+    #     if self.kernel == 'classification':
+    #         result_str += f'\n\n Classification fitness score: {fitness_control_best}'
+    #         result_str += ('\n\n Precision-Recall report:\n {}'.format(skm.classification_report(result['solution_goal'], result['predicted_labels'][0])))
+    #         result_str += ('\n Confusion matrix:\n {}'.format(skm.confusion_matrix(result['solution_goal'], result['predicted_labels'][0])))
+    #
+    #     elif self.kernel == 'regression bounded':
+    #
+    #     elif self.kernel == 'match':
+    #         result_str += f"\n\n Matching fitness score: {result['fitness']}"
+    #
+    #     else:  # 'regression discrete':
+    #         result_str = 'No summary provided for this kernel'
+    #
+    #     return result_str
 
 
 def ast_convert_from_expr(expr, tensors=None, build=None):

@@ -23,8 +23,11 @@ funny_limits = (-15000, -4000)
 
 
 def mp_evall(arow):
+    """
+    Use mp (multiprocessing) to evaluate parallelized
+    """
     parsims = arow['parsims']
-    fitness_sum = arow['fitness_sum']
+    regress_sum = arow['regress_sum']
     parsim_sum = arow['parsim_sum']
     codes = arow['codes']
     lut_hash = f"{arow['codes']}"
@@ -34,7 +37,7 @@ def mp_evall(arow):
         experiment_safe = eval_combined_agents(codes, complete=False)
         experiment_r50 = eval_combined_agents(codes, randomize=50)
         experiment_safe_r50 = eval_combined_agents(codes, complete=False, randomize=50)
-        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {fitness_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe} \tall_r50: {experiment_r50} \tsafe_r50: {experiment_safe_r50}')
+        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe} \tall_r50: {experiment_r50} \tsafe_r50: {experiment_safe_r50}')
         return [lut_hash, experiment, experiment_safe, experiment_r50, experiment_safe_r50]
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
@@ -42,7 +45,7 @@ def mp_evall(arow):
         return None  # [lut_hash, None, None]
 
 
-def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max):
+def eval_and_lut(best_guess, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max):
     """
     Evaluating with real IB
     """
@@ -56,7 +59,7 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_c
         lut = {}
 
     open_combinations = []
-    for arow in combined_all:
+    for arow in best_guess:
         try:
             if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_max_sum and all(x<=parsim_max_single for x in arow['parsims']):
                 open_combinations.append(arow)
@@ -78,7 +81,7 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_c
             _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
 
     combined_all_cpy = []
-    for ii, arow in enumerate(combined_all[:]):
+    for ii, arow in enumerate(best_guess[:]):
         if arow is not None:
             hashy = f"{arow['codes']}"
             try:
@@ -91,83 +94,87 @@ def eval_and_lut(combined_all, parsim_max_sum, parsim_max_single, lut_file, mp_c
             except:
                 pass
 
-        # combined_best2[measr]['experiment'] = experiment
-        # combined_best2[measr]['experiment_safe'] = experiment_safe
-        #         fitness_sum = arow['fitness_sum']
-        #         parsim_sum = arow['parsim_sum']
-        #         lut_hash = f"{parsim_sum}_{parsims}_{fitness_sum}"
-        #
-        #         if parsim_sum <= parsim_max_sum:
-        #             if lut_hash in lut:
-        #                 experiment, experiment_safe = lut[lut_hash]
-    return combined_all
+    return best_guess
 
 
-def plot_best_guess(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_max_sum, parsim_max_single, mp_cpu_cores_max):
+def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
     """
-    plot best (plot)
+    plot best guess
     """
+    best_regrerr = [min([row for row in combined_all_p[p]], key=lambda x: x['regress_sum']) for p in parsims]
+    best_regrerr_dict = eval_and_lut(best_regrerr, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX)
 
-    best_guess = [min([row for row in combined_all_p[p]], key=lambda x: x['fitness_sum']) for p in parsims]
-    best_guess_dict = eval_and_lut(best_guess, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max)
+    """
+    print the combined runs that belong together
+    """
+    yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])
 
     with Path.open(lut_file, 'r') as file:
         lut = yaml.load(file, Loader=yaml.FullLoader)
-    lut = lut or {}  # was none after loading empty file <.<
+    lut = lut or {}  # was None after loading empty file, crashed <.<
 
+    """
+    Check if the value is in the lut file
+    """
     open_combinations = []
-    for arow in best_guess_dict:
-        if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_max_sum and all(x <= parsim_max_single for x in arow['parsims']):
+    for arow in best_regrerr_dict:
+        if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_MAX and all(x <= parsim_1MAX for x in arow['parsims']):
             open_combinations.append(arow)
 
+    """
+    Initialize parallel evaluation
+    """
     mp.Process()
-    mp_cores = min(mp.cpu_count(), mp_cpu_cores_max)
+    mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
     print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
     with mp.Pool(mp_cores) as p:
         mp_result = p.map(mp_evall, open_combinations)
-
     mp_result_dict = {a: [b, c, d, e] for a, b, c, d, e in mp_result}  # [lut_hash, experiment, experiment_safe, experiment_r50, experiment_safe_r50]
 
+    """
+    LUT file not required anymore, I guess
+    """
     if len(mp_result_dict) > 0:
         lut.update(mp_result_dict)
-        print(f'Saving the updated lut file.')  # {not_evaled}')
+        print(f'Saving the updated lut file.')
         with Path.open(lut_file, 'w') as file:
             _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
 
-    combined_all_cpy = []
-    for ii, arow in enumerate(best_guess_dict[:]):
-        if arow is not None:
-            hashy = f"{arow['codes']}"
-            try:
-                b, c, d, e = lut.get(hashy)
-                arow['experiment'] = b
-                arow['experiment_safe'] = c
-                arow['experiment_r50'] = d
-                arow['experiment_safe_r50'] = e
-                combined_all_cpy.append(arow)
-            except:
-                pass
+    # combined_all_cpy = []
+    # for ii, arow in enumerate(best_regrerr_dict[:]):
+    #     if arow is not None:
+    #         hashy = f"{arow['codes']}"
+    #         try:
+    #             b, c, d, e = lut.get(hashy)
+    #             arow['experiment'] = b
+    #             arow['experiment_safe'] = c
+    #             arow['experiment_r50'] = d
+    #             arow['experiment_safe_r50'] = e
+    #             combined_all_cpy.append(arow)
+    #         except:
+    #             pass
 
     """
     okay
     """
-
-    tmp = [min([row for row in combined_all_p[p]], key=lambda x: x['fitness_sum']) for p in parsims]
+    tmp = [min([row for row in combined_all_p[p]], key=lambda x: x['regress_sum']) for p in parsims]
     tmp.sort(key=lambda x: x['parsim_sum'])
     res_all = [tmp[0]]
     cnt = [0]
     best = tmp[0]
+
+    """
+    ignore if we assume worse examples by regress_sum
+    """
     for p in parsims:
-        # ax2.tick_params(axis='y', labelcolor=color)
         prows = [row for row in combined_all_p[p]]
-        best_row = min(prows, key=lambda x: x['fitness_sum'])
-        if best_row['fitness_sum'] < best['fitness_sum']:
+        best_row = min(prows, key=lambda x: x['regress_sum'])
+        if best_row['regress_sum'] < best['regress_sum']:
             res_all.append(best_row)
             cnt.append(len(prows))
         else:
             print(f'Not a better entry at {p}')
 
-    # res_all = max([x for x in res1], key=lambda l: l[measr])
     xx = [x['parsim_sum'] for x in res_all]
     y_all = [y['experiment'] for y in res_all]
     y_safe = [y['experiment_safe'] for y in res_all]
@@ -329,13 +336,13 @@ def plot_scatter_some():
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=False, mp_cpu_cores_max=16):
-    combine_paretos(run_name)  # e.g. 'IB_MSE_s3m'
+def combined_lists(run_name, parsim_MAX, parsim_1MAX, local_yamls=False, mp_cpu_MAX=16):
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
     (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
     """
+    merge_paretos(run_name)  # e.g. 'IB_MSE_s3m'
     root_dir_eval = dir_slurm / f'{run_name}'
     if not Path.is_dir(root_dir_eval):
         Path.mkdir(root_dir_eval)
@@ -361,8 +368,8 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
     combined_all_less = []
     for row in iter_combinations:
         parsim_sum = float(sum([x[0] for x in row]))
-        if parsim_sum <= parsim_max_sum and all(x[0] <= parsim_max_single for x in row):
-            fitness_sum = float(sum([x[1] for x in row]))
+        if parsim_sum <= parsim_MAX and all(x[0] <= parsim_1MAX for x in row):
+            regress_sum = float(sum([x[1] for x in row]))
             parsims = [float(row[0][0]), float(row[1][0]), float(row[2][0])]
             codes = [x[3] for x in row]
             combined_all_less.append({'parsim_sum': parsim_sum,
@@ -372,7 +379,7 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
                                       'experiment_safe_r50': None,
                                       'parsims': parsims,
                                       'codes': codes,
-                                      'fitness_sum': fitness_sum})
+                                      'regress_sum': regress_sum})
 
     combined_all_less.sort(key=lambda x: x['parsim_sum'])
 
@@ -394,17 +401,19 @@ def combined_lists(run_name, parsim_max_sum, parsim_max_single, local_yamls=Fals
     """
     the main plotting procedures
     """
-    parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))  # if x['parsim_sum']
-    plot_best_guess(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_max_sum, parsim_max_single, mp_cpu_cores_max)
+    parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))
+    plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX)
     # plot_per_action(root_dir_eval, run_name, parsims, combined_all_p)
     # plot_actual_best(root_dir_eval, run_name, parsims, combined_all_p)
 
 
-def combine_paretos(run_name):
-    # loaded_runs = {}
+def merge_paretos(run_name):
+    """
+    load each IB run and add its pareto front to a merged plot
+    """
 
     with plt.rc_context():
-        fig, ax = plt.subplots(ncols=1)  # , figsize=(9, 9)
+        fig, ax = plt.subplots(ncols=1)  # , figsize=(9, 9)  # todo opening warning (RuntimeWarning: More than 20 figures have been opened... through the pyplot interface) maybe it doesnt close
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):
             lfile = dir_slurm / run_name / f'{run_name}_{ii}'  #
@@ -414,11 +423,7 @@ def combine_paretos(run_name):
                 # loaded_runs[ii] = pareto
             tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
             xx, yy = np.array(tuples).T
-
-            # ax.step(xx, yy, linestyle='dashed', marker='.', label=f'action {ii}', where='post')
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
-            # ax.step(xx, yy, linestyle='None', marker='.', label=f'action {ii}', where='post')
-            # ax.plot(xx, yy, linestyle='dashed', marker='.', label=f'action {ii}')
 
         ax.set_xlabel('complexity')
         ax.set_ylabel('regression error')
@@ -451,7 +456,7 @@ def main():
                 if x.name[:2] == 'IB':
                     print(f'\nEvaluating {x.name}')
                     try:
-                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_cores_max=args.mp_cpu_cores_max)
+                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_MAX=args.mp_cpu_cores_max)
                     except Exception as ex:
                         print(f'Failed evaluation for {x.name}. ignoring. Reason: {ex}')
                         # sfeh except only the one fail that is required?
@@ -459,7 +464,7 @@ def main():
                     print(f'\nSkipping {x.name}')
 
     else:
-        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_cores_max=args.mp_cpu_cores_max)
+        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_MAX=args.mp_cpu_cores_max)
     return
 
 

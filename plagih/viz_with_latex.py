@@ -5,7 +5,7 @@ from plagih.plagih_tree import *
 import re
 
 
-def latex_treeviz_full_document(tikz_forest_list):
+def latex_treeviz_full_document(tikz_forest_list, doc_border=',border=5pt'):
     """
     Creating Latex standalone document of forest trees.
     Possible \documentclass options:
@@ -15,9 +15,9 @@ def latex_treeviz_full_document(tikz_forest_list):
     sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
-    forest_trees = ' '.join(tikz_forest_list)  # sfeh todo there was a \n does this work now? color used variables (allow colormap?)
+    forest_trees = ' '.join(tikz_forest_list)  # sfeh there was a \n does this work now? color used variables (allow colormap?)
 
-    latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{standalone}' \
+    latex_doc_forest = f'\\documentclass[varwidth=\\maxdimen,convert{doc_border}]{{standalone}}' \
                        '\n\\usepackage{forest}' \
                        '\n\\usepackage{amsmath}' \
                        '\n\\begin{document}' \
@@ -28,7 +28,7 @@ def latex_treeviz_full_document(tikz_forest_list):
 
 def tree_viz_get_nel(tree):
     """
-    Deprecated.
+    Not in use.
     Returns nodes, edges and labels to visualize a tree with NetworkX or pygraphviz. Similar to deap gp visualisation.
     Deprecated? -> Used for NetworkX- which is not used as pygrapviz could not be installed on windows. Latex is used now.
     E. g. the tree with labels [+, 1, 2]
@@ -252,7 +252,6 @@ def tree_get_expr_latextight(tree, node_id=root_id):
 def latex_get_tighttree(tree):
     """
     reduce expressions of large trees
-
     """
 
     node_dict = dict()  # key: node_id, value: number of nodes to paste into the viz-node

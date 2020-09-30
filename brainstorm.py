@@ -1,7 +1,9 @@
 """
 # todo
-find . -name "*.tex" -exec pdflatex {} \;
-find . -name "*.pdf" -exec pdftoppm {} {} -png \;
+#!/usr/bin/env bash
+pdflatex agents_trees.tex
+find . -name "visualisation/*.tex" -exec pdflatex {} \;
+find . -name "visualisation/*.pdf" -exec pdftoppm {} {} -png \;
 """
 
 from multiprocessing import Pool

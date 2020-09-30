@@ -13,7 +13,10 @@
    version="1.1"
    id="svg8"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
-   sodipodi:docname="fix_nodes_mutation.svg">
+   sodipodi:docname="fix_nodes_mutation.svg"
+   inkscape:export-filename="C:\Users\Rapid\PycharmProjects\plagih\MA_lyx\img\inkscape\fix_nodes_mutation.png"
+   inkscape:export-xdpi="250"
+   inkscape:export-ydpi="250">
   <defs
      id="defs2">
     <marker
@@ -115,7 +118,7 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.8396706"
+     inkscape:zoom="1.7931502"
      inkscape:cx="168.18968"
      inkscape:cy="65.053141"
      inkscape:document-units="mm"
@@ -136,7 +139,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

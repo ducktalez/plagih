@@ -27,28 +27,9 @@ def label_get_arity(node_label):
 
 def xtype_equi_outcome(a_xtype, b_xtype):
     """
-    Dummy. Returns, whether two xtypes are equal
+    Dummy. Returns, whether two xtypes have the same outcome
     """
-    if a_xtype[-2:] == b_xtype[-2:]:
-        equal = True
-    else:
-        equal = False
-    return equal
-
-
-def xtype_get_converters(xtype):
-    """
-    convert b-to-a dummy
-    """
-    # 'lf left is boolean, give a converter to my type'
-
-    if '2b' in xtype:
-        return 'Ftob', 'Btof'
-    if '2f' in xtype:
-        return 'Btof', 'Ftob'
-    else:
-        print('e', 'Wrong data_csv_path type? Should be 2b or 2f, but is {}'.format(xtype))
-        raise
+    return a_xtype[-2:] == b_xtype[-2:]
 
 
 def random_choose_tempobs(obs_list, max_hist=10):

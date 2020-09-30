@@ -841,16 +841,14 @@ class ExplainableGP(object):
             #     latex_row1.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
 
             # save every tree-visualisation in subfolder
-            # create folder
             path_subfolder_tex = folder_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
             # create full document including just one tree (file must have a nice name)
-            subtex1 = latex_treeviz_full_document([forest_viz])
+            subtex1 = latex_treeviz_full_document([forest_viz], doc_border='')
             with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_{fitness:.2f}.tex', 'w') as file:
                 file.write(subtex1)
-            subtex2 = latex_treeviz_full_document([forest_viz_tight])
+            subtex2 = latex_treeviz_full_document([forest_viz_tight], doc_border='')
             with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_{fitness:.2f}_tight.tex', 'w') as file:
-                file.write(subtex2)
-            #   filename? -> <run_name>_<complexity>[_tight].tex
+                file.write(subtex2)  # filename? -> <run_name>_<complexity>[_tight].tex
 
         latex_full_doc = latex_treeviz_full_document(latex_row1)
 
@@ -914,7 +912,8 @@ class ExplainableGP(object):
 
     def file_pareto_listcode(self):
         """
-
+        save python code for Industril Benchmark runs
+        delete sometime
         """
 
         # pycode_agent = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
@@ -933,16 +932,6 @@ class ExplainableGP(object):
             printez('ff', f'IB pycode-list: {path.as_posix()}', print_type=self.print_type)  # sfeh always the same print structure... just pass the path?
 
         return
-
-    def origin_tree_get(self):
-        """
-        Safely return an origin_meta tree
-        """
-        if self.origin_cooltree is not None:
-            origin_cooltree = copy.deepcopy(self.origin_cooltree)
-        else:
-            origin_cooltree = None
-        return origin_cooltree
 
     def treelut_tree_add(self, cooltree: CoolTree):
         """
@@ -1037,7 +1026,8 @@ class ExplainableGP(object):
 
     def helper_evolve_params_branch(self, call_params):
         """
-
+        The call parameters in the evolution file need to be adjusted
+        delete if possible
         """
         build_spec = call_params.get('build_spec')
 
@@ -1063,7 +1053,7 @@ class ExplainableGP(object):
 
     def pop_random(self, call_params, from_origin=False):
         """
-        Creates random trees
+        Creates random trees for the population
         """
 
         build_spec, size_mode, mean_min_max_var, full_or_grow = self.helper_evolve_params_branch(call_params)
@@ -1649,7 +1639,6 @@ class ExplainableGP(object):
 
 def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
     """
-
     # branch_nodes, branch_depth, tree_depth, tree_nodes
     """
     mean, size_min, size_max, size_variance = mean_min_max_var

@@ -13,7 +13,10 @@
    version="1.1"
    id="svg8"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
-   sodipodi:docname="TED_operators.svg">
+   sodipodi:docname="TED_operators.svg"
+   inkscape:export-filename="C:\Users\Rapid\PycharmProjects\plagih\MA_lyx\img\inkscape\TED_operators.png"
+   inkscape:export-xdpi="250"
+   inkscape:export-ydpi="250">
   <defs
      id="defs2">
     <marker
@@ -130,9 +133,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.6691837"
-     inkscape:cx="233.38446"
-     inkscape:cy="147.92233"
+     inkscape:zoom="1.2679487"
+     inkscape:cx="105.2716"
+     inkscape:cy="164.54008"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -151,7 +154,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -515,7 +518,7 @@
          y="92.459557"
          style="font-size:3.88056px;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke-width:0.264583">0</tspan></text>
     <path
-       style="opacity:1;fill:#d40000;fill-opacity:0.6;stroke:#d40000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.2,1.2;stroke-dashoffset:0;stroke-opacity:0.6"
+       style="opacity:1;fill:#d40000;fill-opacity:0.6;stroke:#d40000;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.26499999,0.79499996;stroke-dashoffset:0;stroke-opacity:0.6"
        d="m 83.240208,82.03701 -1.125785,4.12739 -0.361557,1.32555 z"
        id="path1150-5"
        sodipodi:nodetypes="cccc" />
@@ -701,7 +704,7 @@
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0" />
     <path
-       style="opacity:1;fill:#d40000;fill-opacity:0.6;stroke:#d40000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.2,1.2;stroke-dashoffset:0;stroke-opacity:0.6"
+       style="opacity:1;fill:#d40000;fill-opacity:0.6;stroke:#d40000;stroke-width:0.265;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.265,0.53;stroke-dashoffset:0;stroke-opacity:0.6"
        d="m 87.971054,82.0408 1.29011,4.14622 0.41433,1.33161 z"
        id="path1150-5-0"
        sodipodi:nodetypes="cccc" />
@@ -781,5 +784,38 @@
        id="path1053"
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:3.88056px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="39.361961"
+       y="61.364342"
+       id="text2535"><tspan
+         sodipodi:role="line"
+         id="tspan2533"
+         x="39.361961"
+         y="61.364342"
+         style="stroke-width:0.264583">TED=1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.88056px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="80.991699"
+       y="59.903648"
+       id="text2539"><tspan
+         sodipodi:role="line"
+         id="tspan2537"
+         x="80.991699"
+         y="59.903648"
+         style="stroke-width:0.264583">TED=3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.88056px;line-height:1.25;font-family:sans-serif;stroke-width:0.264583"
+       x="113.75294"
+       y="60.11232"
+       id="text2543"><tspan
+         sodipodi:role="line"
+         id="tspan2541"
+         x="113.75294"
+         y="60.11232"
+         style="stroke-width:0.264583">TED=3</tspan></text>
   </g>
 </svg>

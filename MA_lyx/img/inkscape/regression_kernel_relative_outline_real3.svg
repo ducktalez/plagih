@@ -14,7 +14,10 @@
    version="1.1"
    id="svg4251"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
-   sodipodi:docname="regression_kernel_relative_outline_real3.svg">
+   sodipodi:docname="regression_kernel_relative_outline_real3.svg"
+   inkscape:export-filename="C:\Users\Rapid\PycharmProjects\plagih\MA_lyx\img\inkscape\regression_kernel_relative_outline_real3.png"
+   inkscape:export-xdpi="250"
+   inkscape:export-ydpi="250">
   <defs
      id="defs4245">
     <inkscape:path-effect
@@ -477,17 +480,17 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.3093916"
+     inkscape:zoom="2.2509932"
      inkscape:cx="154.15699"
      inkscape:cy="171.13169"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
      showgrid="false"
-     inkscape:window-width="1902"
-     inkscape:window-height="1000"
-     inkscape:window-x="1"
-     inkscape:window-y="1"
+     inkscape:window-width="1920"
+     inkscape:window-height="1018"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata4248">
@@ -497,7 +500,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

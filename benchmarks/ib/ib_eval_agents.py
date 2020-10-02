@@ -85,7 +85,7 @@ def eval_agents():
 
 class AgentMerger(Ib_Agent):
     """
-    Daniel Hein's best agent for complexity 21
+
     """
 
     def __init__(self, name, a0, a1, a2):

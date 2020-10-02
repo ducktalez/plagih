@@ -112,11 +112,11 @@ def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', splits=12
 
 def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=None, ticks=None, vmin=None, vmax=None, nan_style=None, no_colorbar=False):
     # generating plot
-    fig, ax = plt.subplots()
     if vmin and vmax:
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
     else:
         norm = None
+    fig, ax = plt.subplots()
     c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
     ax.set_xlabel('position')
     ax.set_ylabel('velocity')
@@ -139,8 +139,6 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
     width = xmax - xmin
     height = ymax - ymin
 
-    # create the patch and place it in the back of countourf (zorder!)
-
     p = patches.Rectangle(xy, width, height, fill=None, zorder=0.5)  # "zorder=-10" -> nan_style
 
     if nan_style:
@@ -149,7 +147,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         p.fill = True
         p.set_hatch(nan_style[1])
         p.set_edgecolor(nan_style[2])
-        plt.rcParams['hatch.linewidth'] = nan_style[3]
+        fig.rcParams['hatch.linewidth'] = nan_style[3]  # todo fig was plt
     else:
         # p.fill = False
         # p.set_color()  # default 'white' is okay
@@ -165,8 +163,8 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
     folder = Path(folder)
     if not Path.is_dir(folder):
         Path.mkdir(folder)
-    plt.savefig(Path(folder) / f'{name}.png', dpi=300)
-    plt.savefig(Path(folder) / f'{name}.pdf')
+    fig.savefig(Path(folder) / f'{name}.png', dpi=300)  # todo this was both plt
+    fig.savefig(Path(folder) / f'{name}.pdf')
     # try:
     #     tikzplotlib.save('TEST.tex'.format(name))
     # except Exception as ex:
@@ -279,20 +277,21 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
     return
 
 
-def eval_agent_list(agent_list, goal_agent, n=40, folder=Path('img/')):
+def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
     """
     Automatically evalueate gp-agents (difference plot, decision plot, performance)
+
     """
-    if not Path.is_dir(folder):
-        Path.mkdir(folder)
+    if not Path.is_dir(dir_save):
+        Path.mkdir(dir_save)
 
     agent_performance = []
     _, _, sarsa_dummy = mtc_heatmap_helper(goal_agent, 256, n, dummy=1)
 
     for name, agent in agent_list:
         print('Evaluating agent: {}'.format(name))
-        mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
-        mtc_plot_differences(agent, goal_agent, dummy_result=sarsa_dummy, boarders=1, name='diff-{}'.format(name), folder=folder, abs_diff=False)
+        mtc_plot_decisions_space(agent, name=name, folder=dir_save, dummy=True)
+        mtc_plot_differences(agent, goal_agent, dummy_result=sarsa_dummy, boarders=1, name=f'diff-{name}', folder=dir_save, abs_diff=False)
         avg_reward, fails, _ = mtc_play(agent, n=n)
         agent_performance.append([name, avg_reward, fails])
 
@@ -301,9 +300,72 @@ def eval_agent_list(agent_list, goal_agent, n=40, folder=Path('img/')):
 
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
-    plt.savefig(folder / 'agent_perf.png', dpi=300)
+    plt.savefig(dir_save / 'agent_perf.png', dpi=300)
     # plt.savefig(folder / 'agent_perf.svg')
 
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
-    with (folder / 'summary.txt').open('w') as file:
+    with (dir_save / 'summary.txt').open('w') as file:
+        file.write(summary_text)
+
+
+def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
+    """
+    asd
+    """
+
+    class DummyMcAgent:
+
+        def __init__(self, pycode):
+            self.mcAction = pycode
+
+        def decide(self, input):
+            cartPos, cartVel = input
+            try:
+                mc_actn = eval(self.mcAction)
+            except:
+                mc_actn = eval(self.mcAction)  # todo
+            return int(round(max(0, min(2, mc_actn))))
+
+    _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
+
+    """
+    Just create the subfolder
+    """
+    dir_save = root_dir / 'sfehs_eval'
+    if not Path.is_dir(dir_save):
+        Path.mkdir(dir_save)
+
+    """
+    load pareto front from old run
+    """
+    with Path.open(root_dir / 'backup/backup.p', 'rb') as file:
+        gp_backup_data = pickle.load(file)
+    gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
+
+    agent_performance = []
+    for (parsim, fitness, cooltree) in pareto:
+        agent_name = f'{prepared_run}_{parsim:.0f}'
+        pycode = cooltree.get_pycode()
+        mcAgent = DummyMcAgent(pycode)
+        try:
+            avg_reward, fails, _ = mtc_play(mcAgent, n=n)
+            agent_performance.append([agent_name, avg_reward, fails])
+            mtc_plot_decisions_space(mcAgent, name=agent_name, folder=dir_save, dummy=True)
+            mtc_plot_differences(mcAgent, sarsa_agent, dummy_result=sarsa_dummy, boarders=1, name=f'{agent_name}-diff', folder=dir_save, abs_diff=False)
+        except:
+            pass
+
+    with plt.rc_context(rc={}):
+        fig, ax = plt.subplots()
+        fig.tight_layout()
+        y = [x[1] for x in agent_performance]
+        x = list(range(len(agent_performance)))
+        ax.bar(x, y)
+
+        fig.savefig(dir_save / f'dumbrepared.png', dpi=300)
+
+    # plt.savefig(folder / 'agent_perf.svg')
+
+    summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
+    with (dir_save / 'summary.txt').open('w') as file:
         file.write(summary_text)

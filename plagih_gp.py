@@ -6,6 +6,9 @@ This extra file was added to have a file in the root directory that can be start
 from plagih.plagih_gp_base_class_xai import *
 from plagih.plagih_data import *
 from benchmarks.ib.combined_runs import *
+from benchmarks.mc.agents.quick_eval import *
+from pathlib import Path
+import sys
 
 import argparse
 
@@ -200,6 +203,26 @@ def main():  # argv sys.argv[1:]
     if prepared_run:
         if 'IB' in prepared_run and prepared_run[-2:] == '_0':
             combined_lists(prepared_run[:-2], 40, 40, local_yamls=True, mp_cpu_MAX=args.mp_cpu_cores_max)
+        if 'MTC' in prepared_run:
+
+            """
+            real evaluation
+            decision plot
+            spiral plot
+            """
+            dir_benchmarks = Path(__file__).parent.absolute() / 'benchmarks/'
+
+            if 'MTC200' in prepared_run:
+                with Path.open(Path(dir_benchmarks / 'mc/agents/sarsa_agent_200.p'), 'rb') as file:
+                    sarsa_agent = pickle.load(file)
+            elif 'MTC75' in prepared_run:
+                with Path.open(Path(dir_benchmarks / 'mc/agents/sarsa_agent_75.p'), 'rb') as file:
+                    sarsa_agent = pickle.load(file)
+            else:
+                raise
+
+            auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100)
+
     sys.exit()
 
 

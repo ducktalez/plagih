@@ -100,8 +100,9 @@ def thesis_decision_plots_dummied():
     mtc_plot_decisions_space(sarsa_agent_200, name='dummy-sarsa_agent_200', dummy=True)
 
 
-thesis_decision_plots_dummied()
-thesis_decision_plots_fullspace()
+if __name__ == "__main__":
+    thesis_decision_plots_dummied()
+    thesis_decision_plots_fullspace()
 
 # print('results:', mtc_play(Good_Expert(), n=100))
 # print('results:', mtc_play(sarsa_agent_75, n=100))

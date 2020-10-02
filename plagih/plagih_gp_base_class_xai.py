@@ -898,10 +898,37 @@ class ExplainableGP(object):
         all_agents = '\n\n'.join(all_agents)
         agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
         all_more_info = ', '.join(all_more_info)
-        pyc_complete = f"import math; import numpy as np\n\n" \
+
+        """
+        dude sfeh
+        sfeh for fully executable code
+        bad code
+        """
+        if 'MTC75' in self.conf.name:
+            srsaagnt = 75
+        elif 'MTC200' in self.conf.name:
+            srsaagnt = 200
+        else:
+            raise
+
+        pyc_complete = f"import math; import numpy as np\n" \
+            "import sys\n" \
+            "from pathlib import Path\n" \
+            "sys.path.append(str(Path(Path.cwd() / '../../../'))\n" \
+            "from benchmarks.MC.agents.quick_eval import *\n" \
+            "from pathlib import Path\n" \
+            "folder = Path.cwd() / 'custom_files'\n" \
+            "from benchmarks.MC.agents.mtc_agent_sarsa import * \n" \
+            f"with Path.open(Path(Path.cwd() / '../../../benchmarks/MC/agents/sarsa_agent_{srsaagnt}.p'), 'rb') as file:\n" \
+            "\tsarsa_agent = pickle.load(file)\n" \
+            "\n" \
             f"{all_agents}\n" \
             f"all_agents_more = [{all_more_info}]\n" \
-            f"agent_tuples = [{agent_tuples}]\n"
+            f"agent_tuples = [{agent_tuples}]\n" \
+            f"\n\n" \
+            "if __name__ == '__main__':\n" \
+            "\tprint('executing!')\n" \
+            "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
 
         pth = file_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
         with Path.open(pth, 'w') as file:
@@ -912,7 +939,7 @@ class ExplainableGP(object):
 
     def file_pareto_listcode(self):
         """
-        save python code for Industril Benchmark runs
+        save python code for Industrial Benchmark runs
         delete sometime
         """
 

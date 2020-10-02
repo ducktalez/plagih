@@ -116,60 +116,61 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
     else:
         norm = None
-    fig, ax = plt.subplots()
-    c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
-    ax.set_xlabel('position')
-    ax.set_ylabel('velocity')
+    with plt.rc_context(rc={}):
+        fig, ax = plt.subplots()
+        c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
+        ax.set_xlabel('position')
+        ax.set_ylabel('velocity')
 
-    if no_colorbar:
-        boundaries = np.array([0, 1])  # don't know why, but makes the bar disappear somehow
+        if no_colorbar:
+            boundaries = np.array([0, 1])  # don't know why, but makes the bar disappear somehow
 
-    if dummy:
-        mask_nan = np.ma.masked_where(result == np.nan, result)
-        ax.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
-        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
+        if dummy:
+            mask_nan = np.ma.masked_where(result == np.nan, result)
+            ax.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
+            fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
 
-    else:
-        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # insert empty colorbar, plot is stretched otherwise
+        else:
+            fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # insert empty colorbar, plot is stretched otherwise
 
-    # get data you will need to create a "nan_style patch" to your plot
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
-    xy = (xmin, ymin)
-    width = xmax - xmin
-    height = ymax - ymin
+        # get data you will need to create a "nan_style patch" to your plot
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        xy = (xmin, ymin)
+        width = xmax - xmin
+        height = ymax - ymin
 
-    p = patches.Rectangle(xy, width, height, fill=None, zorder=0.5)  # "zorder=-10" -> nan_style
+        p = patches.Rectangle(xy, width, height, fill=None, zorder=0.5)  # "zorder=-10" -> nan_style
 
-    if nan_style:
-        ax.set_facecolor(nan_style[0])
-        p.set_color(nan_style[0])
-        p.fill = True
-        p.set_hatch(nan_style[1])
-        p.set_edgecolor(nan_style[2])
-        fig.rcParams['hatch.linewidth'] = nan_style[3]  # todo fig was plt
-    else:
-        # p.fill = False
-        # p.set_color()  # default 'white' is okay
-        # ax.set_facecolor('xkcd:light grey')
-        p.set_color('xkcd:dark grey')
-        p.fill = True
-        p.set_hatch('//')
-        # p.set_edgecolor('xkcd:dark grey')
-        # plt.rcParams['hatch.linewidth'] = 0.2
-    ax.add_patch(p)
+        if nan_style:
+            ax.set_facecolor(nan_style[0])
+            p.set_color(nan_style[0])
+            p.fill = True
+            p.set_hatch(nan_style[1])
+            p.set_edgecolor(nan_style[2])
+            fig.rcParams['hatch.linewidth'] = nan_style[3]  # todo fig was plt
+        else:
+            # p.fill = False
+            # p.set_color()  # default 'white' is okay
+            # ax.set_facecolor('xkcd:light grey')
+            p.set_color('xkcd:dark grey')
+            p.fill = True
+            p.set_hatch('//')
+            # p.set_edgecolor('xkcd:dark grey')
+            # plt.rcParams['hatch.linewidth'] = 0.2
+        ax.add_patch(p)
 
-    # saving as png
-    folder = Path(folder)
-    if not Path.is_dir(folder):
-        Path.mkdir(folder)
-    fig.savefig(Path(folder) / f'{name}.png', dpi=300)  # todo this was both plt
-    fig.savefig(Path(folder) / f'{name}.pdf')
-    # try:
-    #     tikzplotlib.save('TEST.tex'.format(name))
-    # except Exception as ex:
-    #     print('tikzplotlib save failed for mtc decision plots, exception: {}'.format(ex))
-    plt.close()
+        # saving as png
+        folder = Path(folder)
+        if not Path.is_dir(folder):
+            Path.mkdir(folder)
+        fig.savefig(Path(folder) / f'{name}.png', dpi=300)  # todo this was both plt
+        fig.savefig(Path(folder) / f'{name}.pdf')
+        # try:
+        #     tikzplotlib.save('TEST.tex'.format(name))
+        # except Exception as ex:
+        #     print('tikzplotlib save failed for mtc decision plots, exception: {}'.format(ex))
+        # plt.close()  # not required anymore
 
 
 def mtc_play(agent, render=False, n=1):
@@ -351,7 +352,7 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             avg_reward, fails, _ = mtc_play(mcAgent, n=n)
             agent_performance.append([agent_name, avg_reward, fails])
             mtc_plot_decisions_space(mcAgent, name=agent_name, folder=dir_save, dummy=True)
-            mtc_plot_differences(mcAgent, sarsa_agent, dummy_result=sarsa_dummy, boarders=1, name=f'{agent_name}-diff', folder=dir_save, abs_diff=False)
+            mtc_plot_differences(mcAgent, sarsa_agent, dummy_result=sarsa_dummy, boarders=1, name=f'diff-{agent_name}', folder=dir_save, abs_diff=False)  # diff at start for diashow
         except:
             pass
 

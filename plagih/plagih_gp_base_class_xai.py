@@ -20,8 +20,7 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 
 class FileLocations:
-    plots = 'plots/'
-    histograms = 'histograms/'
+
     backup_p = 'backup/backup.p'
     trees_tex = 'agents_trees.tex'
     trees_sub_tex = 'visualisation/'
@@ -782,7 +781,7 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
-        path_hist = folder_make_dir(self.root_dir / self.paths.histograms)
+        path_hist = folder_make_dir(self.root_dir / 'histograms/')
 
         for (parsim, fitness, cooltree) in self.pareto:
 
@@ -844,10 +843,10 @@ class ExplainableGP(object):
             path_subfolder_tex = folder_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
             # create full document including just one tree (file must have a nice name)
             subtex1 = latex_treeviz_full_document([forest_viz], doc_border='')
-            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_{fitness:.2f}.tex', 'w') as file:
+            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}.tex', 'w') as file:  # _{fitness:.2f}
                 file.write(subtex1)
             subtex2 = latex_treeviz_full_document([forest_viz_tight], doc_border='')
-            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_{fitness:.2f}_tight.tex', 'w') as file:
+            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_tight.tex', 'w') as file:  # _{fitness:.2f}
                 file.write(subtex2)  # filename? -> <run_name>_<complexity>[_tight].tex
 
         latex_full_doc = latex_treeviz_full_document(latex_row1)
@@ -1516,12 +1515,12 @@ class ExplainableGP(object):
                 fig.savefig(path, dpi=300)
                 self.printpl('f', f"paretofront (png): {path.as_posix()}")
 
-                path_plot = folder_make_dir(self.root_dir / self.paths.plots)
-                fig.savefig(path_plot / f'paretofront {run_name}.svg')
-                self.printpl('f', f"paretofront (svg): {path_plot.as_posix()}")
+                path_plot = folder_make_dir(self.root_dir / 'plots/')
+                fig.savefig(path_plot / f'paretofront {run_name}.pdf')
+                self.printpl('f', f"paretofront (pdf): {path_plot.as_posix()}")
             except PermissionError as permerr:
                 print_e(f'Could not save plot: {permerr}')  # sfeh for everything?
-        # plt.close()  # Stackoverflow said that this is too much, plt.clf() should be better, but does not seem to work
+
         return
 
     def plot_evolve_performance(self):

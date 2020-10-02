@@ -288,6 +288,50 @@ Intro / Motivation
 status open
 
 \begin_layout Plain Layout
+Artificial neural networks are computer systems that are strongly oriented
+ towards the biological brain.
+ An input layer receives all important information and an output layer evaluates
+ all possible actions - the best one is then taken.
+ Between the two layers there can be any number of hidden layers.
+ Their task is to divide the problem between the input layer and the output
+ layer and to identify subproblems.
+ The training process will be started with a random parameterization and
+ the decisions will be very bad at the beginning.
+ If a wrong decision is made, the neurons from output to input adjust their
+ values so that the next time the right decision is made.
+\end_layout
+
+\begin_layout Plain Layout
+A neuron is modeled as follows (see Neuron).
+ For a group of neurons from the previous layer (often all neurons) the
+ signals are received and weighted.
+ Together with a bias, which is added by the neuron itself, a sum is formed.
+ To prevent unnaturally large values in neurons, the sum is added to an
+ activation function that calculates the final activation of the neuron.
+ Common activation functions include ReLu and Sigmoid.
+ The result is then passed on to the neurons of the next layer.
+\end_layout
+
+\begin_layout Plain Layout
+The complexity of such a network depends on the number of layers, the number
+ of nodes per layer and the type of interconnection between layers.
+ A possible network to solve Mountain Car could be for example an input
+ layer with two neurons and an output layer with three neurons, as well
+ as three hidden layers with 24, 48 and 24 layers each.
+ Full connectivity between the layers is not unusual, resulting in the following
+ number of connections:
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 Ein guter Erklärungsprozess hat folgende Voraussetzungen:
 \end_layout
 
@@ -766,7 +810,7 @@ Sprache als Mittel
 \begin_layout Standard
 Als Ausgangspunkt muss eine verständliche (touringvollständige) Sprache
  genutzt werden.
- Die SChnittstelle zwischen Mensch und Maschine sind Programmiersprachen
+ Die Schnittstelle zwischen Mensch und Maschine sind Programmiersprachen
  und mathematische Gleichungen.
 \end_layout
 
@@ -775,29 +819,19 @@ Neural Networks
 \end_layout
 
 \begin_layout Standard
-Neuronale Netze sind verallgemeinerte, sehr umfangreiche Gleichungssysteme,
- die über automatisierte statistische Verfahren und zufälliger Exploration
- die eigenen Parameter in einem Trainingsprozess anpassen können.
- Diese Gleichungen beinhalten oft mehrere tausend Variablen 
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-[xx]
-\end_layout
-
-\end_inset
-
-, verknüpft mit unintuitiven Aktivierungsfunktionen wie die ReLu-Funktion
- 
+Neural networks are generalized, very extensive systems of equations, which
+ can adapt their own parameters in a two-complex training process by means
+ of automated statistical procedures and random exploration.These equations
+ often contain several thousand variables, combined with unintuitive activation
+ functions such as the ReLu function 
 \begin_inset Formula $ReLu(x)=\max(0,x)$
 \end_inset
 
- oder der Sigmoid-Funktion 
+ or the sigmoid function 
 \begin_inset Formula $sig(t)=\frac{1}{1+e^{-t}}$
 \end_inset
 
- , weshalb sie für den Menschen nicht interpretierbar sind.
+ , which is why they are not interpretable by humans.
  
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -806,16 +840,6 @@ reference "fig:relu-sigmoid"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-Genetische Programmierung erzeugt weitaus übersichtlichere Formeln, die
- aus einer weitaus geringeren Anzahl an Operatoren besteht und somit für
- den Menschen interpretierbar ist.
- Oft stellen diese aber vor allem mathematische Formeln dar, die das Problem
- nicht in Unterprobleme unterteilen sondern dieses als gesamtes lösen.
- [xxx ] Dennoch sind die so erzeugten Ausdrücke als touringvollständigen
- Programmiersprache gut nutzbar.
 \end_layout
 
 \begin_layout Standard
@@ -863,81 +887,21 @@ name "fig:relu-sigmoid"
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsection
+GP
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-Artificial neural networks are computer systems that are strongly oriented
- towards the biological brain.
- An input layer receives all important information and an output layer evaluates
- all possible actions - the best one is then taken.
- Between the two layers there can be any number of hidden layers.
- Their task is to divide the problem between the input layer and the output
- layer and to identify subproblems.
- The training process will be started with a random parameterization and
- the decisions will be very bad at the beginning.
- If a wrong decision is made, the neurons from output to input adjust their
- values so that the next time the right decision is made.
-\end_layout
-
-\begin_layout Plain Layout
-A neuron is modeled as follows (see Neuron).
- For a group of neurons from the previous layer (often all neurons) the
- signals are received and weighted.
- Together with a bias, which is added by the neuron itself, a sum is formed.
- To prevent unnaturally large values in neurons, the sum is added to an
- activation function that calculates the final activation of the neuron.
- Common activation functions include ReLu and Sigmoid.
- The result is then passed on to the neurons of the next layer.
-\end_layout
-
-\begin_layout Plain Layout
-The complexity of such a network depends on the number of layers, the number
- of nodes per layer and the type of interconnection between layers.
- A possible network to solve Mountain Car could be for example an input
- layer with two neurons and an output layer with three neurons, as well
- as three hidden layers with 24, 48 and 24 layers each.
- Full connectivity between the layers is not unusual, resulting in the following
- number of connections:
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Formula $2\cdot\#\text{input}\cdot24\cdot48\cdot24\cdot3\cdot\text{\#output}=165888$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-the system thus consists of n 
-\begin_inset Formula $165888$
-\end_inset
-
- variables.
-\end_layout
-
-\end_inset
-
-
+Genetische Programmierung erzeugt weitaus übersichtlichere Formeln, die
+ aus einer weitaus geringeren Anzahl an Operatoren besteht und somit für
+ den Menschen interpretierbar ist.
+ Oft stellen diese aber vor allem mathematische Formeln dar, die das Problem
+ nicht in Unterprobleme unterteilen sondern dieses als gesamtes lösen.
 \end_layout
 
 \begin_layout Subsubsection
@@ -946,7 +910,7 @@ Coding style, faktoren im Sprachgebrauch (Programmiersprachen) ausmachen
 
 \begin_layout Standard
 Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
- Baum, oftmals werden diese nach den Präferenzen des Entwicklers gewichtet.
+ Baum, oftmals werden diese nach den Präferenzen des Entwicklers gewichtet
  
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -956,6 +920,7 @@ literal "true"
 
 \end_inset
 
+.
  Die maximale Tiefe eines Baumes wird zwar auch oft verwendet, diese dient
  aber eher dem Zweck, zu komplexe Teilbäume zu vermeiden und das Problem
  des overfitting der Daten zu reduzieren.
@@ -1122,6 +1087,11 @@ Improving a known solution with familiarity based Genetic Programming
 
 \end_inset
 
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 Three components are required:
 \end_layout
 
@@ -1160,8 +1130,67 @@ A solution that outperforms the known approach which has to be explained.
  auswahl: sicher, gutes Training, regression vs live training]
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/neural_networks/graph_sigmoid.pdf
+	lyxscale 50
+	height 35mm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/neural_networks/graph_relu.pdf
+	lyxscale 47
+	height 35mm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The ReLu and Sigmoid function are popular activation functions for neurons
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:relu-sigmoid-1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Reinforcement Learning
+\end_layout
+
+\begin_layout Standard
+xxx
 \end_layout
 
 \begin_layout Section
@@ -3018,7 +3047,6 @@ Die vermutlich verständlichste Lösung ist immer in die Richtung zu beschleunig
 \begin_layout Standard
 Die Implementierung erfolgt als if-Anweisung und kann somit mit 6 Knoten
  dargestellt werden.
- 
 \end_layout
 
 \begin_layout Standard
@@ -3091,11 +3119,8 @@ Simple, two actions, <
 \end_layout
 
 \begin_layout Standard
-The best version of the simplest agent is used as the starting program.
-\end_layout
-
-\begin_layout Standard
-The computational tree consists of 6 nodes, all of which can be modified.
+The best version of the simplest agent is used as the starting program where
+ the computational tree consists of 6 nodes, all of which can be modified.
  
 \end_layout
 
@@ -3363,95 +3388,10 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-if
-\end_layout
-
-\begin_layout Plain Layout
-
-  min(-0.09(position+0.25)^2+0.03, 0.3(position+0.09)^4-0.008)
-\end_layout
-
-\begin_layout Plain Layout
-
-  <= velocity <=
-\end_layout
-
-\begin_layout Plain Layout
-
-  (-0.07(position+0.38)^{2}+0.07)
-\end_layout
-
-\begin_layout Plain Layout
-
-then
-\end_layout
-
-\begin_layout Plain Layout
-
-  push right
-\end_layout
-
-\begin_layout Plain Layout
-
-else
-\end_layout
-
-\begin_layout Plain Layout
-
-  push left
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Close-form preset polixy by Xiao
-\end_layout
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "code:MC-agent:preset_policy"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
+\begin_inset Formula 
+\[
+min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)
+\]
 
 \end_inset
 

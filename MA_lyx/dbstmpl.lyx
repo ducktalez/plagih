@@ -7194,43 +7194,6 @@ Industrial Benchmark runs
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Results : randomly -6809.4 (safe: -6632.6) 
-\end_layout
-
-\begin_layout Plain Layout
-Results : nothing -6077.8 (safe: -6068.8) 
-\end_layout
-
-\begin_layout Plain Layout
-Results : Daniel_21 -5278.1 (safe: -5573.3) 
-\end_layout
-
-\begin_layout Plain Layout
-Results : Daniel_27 -5268.1 (safe: -5548.0)
-\end_layout
-
-\begin_layout Plain Layout
-Results : Daniel_29 -5232.4 (safe: -5542.0) 
-\end_layout
-
-\begin_layout Plain Layout
-Results : 505050 -8273.8 (safe: -8321.5) 
-\end_layout
-
-\begin_layout Plain Layout
-Results : Agent Udluft -5905.2 (safe: -6193.2) 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Tabular
 <lyxtabular version="3" rows="10" columns="3">
 <features tabularvalignment="middle">

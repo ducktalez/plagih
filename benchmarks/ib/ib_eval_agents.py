@@ -67,20 +67,22 @@ def eval_agents():
 
     # agents = [Agent_Daniel_Best()]
     agents = [
-        # # Agent_random(),
-        # Agent_nothing(),
+        Agent_random(),
+        Agent_nothing(),
         Agent_daniel_21(),
         Agent_daniel_27(),
         Agent_Daniel_29_Best(),
-        # Agent_Udluft(),
-        # Agent_sim1(),
+        Agent_505050(),
+        Agent_Udluft(),
+        Agent_sim1(),
         Agent_Test()
     ]
 
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        sum = eval_agent(agent, randomize=0)  # todo randomize 50 or 0?
-        print(f'Results: {agent.name} {sum}')
+        sum_all = eval_agent(agent, randomize=0)
+        sum_safe = eval_agent(agent, safe_eval=True, randomize=0)  # todo randomize 50 or 0?
+        print(f'Results : {agent.name} \t{sum_all:5.1f} \t (safe: {sum_safe:5.1f})')
 
 
 class AgentMerger(Ib_Agent):
@@ -124,13 +126,13 @@ def eval_combined_agents(codes, complete=True, randomize=0):
     return eval_agent(dummy_agent, randomize=randomize)
 
 
-def eval_agent(agent, randomize=0):
+def eval_agent(agent, safe_eval=False, randomize=0):
     """
     Results: Daniel_21 -5263 (5651)
     Results: Daniel_27 -5275 (5628)
     Results: Daniel_29 -5270 (5611)
-
     """
+
     discount_factor = 0.97
     T = 100  # time_horizon
     discount_len = -100
@@ -152,6 +154,8 @@ def eval_agent(agent, randomize=0):
         for t in range(T):
             normal_state = envstate_normalize(env.state)
             at = agent.decide(normal_state)
+            if safe_eval:
+                at[2] = 0
             env.step(at)  # also returns markovStates, if needed
             reward = env.visibleState()[-1]
             sums_p.append(reward)

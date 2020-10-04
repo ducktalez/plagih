@@ -3,12 +3,29 @@ import numpy as np
 import collections
 
 
-class Agent_nothing():
+class Ib_Agent:
+
+    def __init__(self):
+        self.state_history = collections.deque(maxlen=30)
+
+    def get_h(self, name, steps):
+
+        def get_max_history(index, history_list):
+            if index >= len(history_list):
+                return history_list[-1]  # return last value
+            else:
+                return history_list[index]
+
+        return get_max_history(steps, self.state_history)[name]
+
+
+class Agent_nothing(Ib_Agent):
     """
     ...does nothing, kind of.
     """
     def __init__(self):
-        self.state_history = collections.deque()
+        # self.state_history = collections.deque()
+        self.name = 'nothing'
         super().__init__()
 
     def decide(self, state):
@@ -24,41 +41,19 @@ class Agent_nothing():
         return at
 
 
-class Agent_random():
+class Agent_random(Ib_Agent):
     """
     ...does nothing, kind of.
     """
     def __init__(self):
-        self.state_history = collections.deque()
-        self.name = 'random'
+        # self.state_history = collections.deque()
+        self.name = 'randomly'
         super().__init__()
 
     def decide(self, state):
         self.state_history.appendleft(state)
-
-#        if len(self.state_history) > 10:
-#            self.state_history.pop()
-
-        # at = np.array([50-env.state['v'], 50-env.state['g'], 50-env.state['h']])
         at = 2 * np.random.rand(3) - 1
         return at
-
-
-class Ib_Agent:
-
-    def __init__(self):
-        self.state_history = collections.deque(maxlen=30)
-
-    def get_h(self, name, steps):
-
-        def get_max_history(index, history_list):
-            if index >= len(history_list):
-                # print('Not enough history for index {}, len list: {}'.format(index, len(history_list)))
-                return history_list[-1]  # return last value
-            else:
-                return history_list[index]
-
-        return get_max_history(steps, self.state_history)[name]
 
 
 # class Ib_Agent_Single:
@@ -161,9 +156,9 @@ class Agent_Test(Ib_Agent):
 #            self.state_history.pop()
 
         at = np.array([0, 0, 0], dtype=np.float32)
-        at[0] = -self.get_h('g', 5) - 1.8  # 27
-        at[1] = 0.41 * self.get_h('f', 1) + self.get_h('f', 4) - 0.59 * self.get_h('p', 0) + 0.77  # -13.8*Consumption_30
-        at[2] = -4.05 * self.get_h('h', 3) - self.get_h('h', 4) + 2.26 * self.get_h('p', 0) + 0.90  # 27
+        at[0] = 0
+        at[1] = 0
+        at[2] = 0
         return at
 
 
@@ -197,7 +192,7 @@ class Agent_sim1(Ib_Agent):
     """
     def __init__(self):
         self.state_history = collections.deque()
-        self.name = 'Agent Test'
+        self.name = 'Agent aim1'
         super().__init__()
 
     def decide(self, state):
@@ -215,26 +210,30 @@ class Agent_sim1(Ib_Agent):
         return at
 
 
-class Agent_Test(Ib_Agent):
+class Agent_505050(Ib_Agent):
     """
     'p', 'v', 'g', 'h', 'f', 'c'
     SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 RewardTotal_0 Consumption_0
+    Results : randomly 	-6809.4 	 (safe: -6632.6)
+    Results : nothing 	-6077.8 	 (safe: -6068.8)
+    Results : Daniel_21 	-5278.1 	 (safe: -5573.3)
+    Results : Daniel_27 	-5268.1 	 (safe: -5548.0)
+    Results : Daniel_29 	-5232.4 	 (safe: -5542.0)
+    Results : 505050 	-8273.8 	 (safe: -8321.5)
+    Results : Agent Udluft 	-5905.2 	 (safe: -6193.2)
     """
     def __init__(self):
         self.state_history = collections.deque()
-        self.name = 'Agent Test'
+        self.name = '505050'
         super().__init__()
 
     def decide(self, state):
         self.state_history.appendleft(state)
 
-#        if len(self.state_history) > 10:
-#            self.state_history.pop()
-
         SetPoint = self.get_h('p', 0)
 
         at = np.array([0, 0, 0], dtype=np.float32)
-        at[0] = self.get_h('v', 0) - self.get_h('v', 5) * self.get_h('f', 0)
-        at[1] = self.get_h('g', 0) - 0.1*(self.get_h('g', 5)) - self.get_h('c', 0)
-        at[2] = self.get_h('h', 0) - self.get_h('h', 5) - self.get_h('g', 0)
+        at[0] = 1.25 * (self.get_h('v', 0) * -12.31)
+        at[1] = -0.53 * (self.get_h('g', 0) * -29.91)
+        at[2] = 0.55 * (self.get_h('h', 0) * -29.22)
         return at

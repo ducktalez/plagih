@@ -68,21 +68,23 @@ def eval_agents():
     # agents = [Agent_Daniel_Best()]
     agents = [
         Agent_random(),
-        Agent_nothing(),
-        Agent_daniel_21(),
-        Agent_daniel_27(),
+        # Agent_nothing(),
+        # Agent_daniel_21(),
+        # Agent_daniel_27(),
         Agent_Daniel_29_Best(),
-        Agent_505050(),
-        Agent_Udluft(),
-        Agent_sim1(),
-        Agent_Test()
+        # Agent_505050(),
+        # Agent_Udluft(),
+        # Agent_sim1(),
+        # Agent_Test()
     ]
 
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
         sum_all = eval_agent(agent, randomize=0)
         sum_safe = eval_agent(agent, safe_eval=True, randomize=0)  # todo randomize 50 or 0?
-        print(f'Results : {agent.name} \t{sum_all:5.1f} \t (safe: {sum_safe:5.1f})')
+        sum_allr50 = eval_agent(agent, randomize=50, repeat_avg=10)
+        sum_safer50 = eval_agent(agent, safe_eval=True, randomize=50, repeat_avg=10)
+        print(f'Results : {agent.name} \t{sum_all:5.1f} \t (safe: {sum_safe:5.1f}) \t(r50: all: {sum_allr50:4.1f} \tsafe: {sum_safer50:4.1f})')
 
 
 class AgentMerger(Ib_Agent):
@@ -113,7 +115,7 @@ class AgentMerger(Ib_Agent):
         return at
 
 
-def eval_combined_agents(codes, complete=True, randomize=0):
+def eval_combined_agents(codes, complete=True, randomize=0, repeat_avg=1):
 
     if complete:
         a0, a1, a2 = codes
@@ -123,10 +125,10 @@ def eval_combined_agents(codes, complete=True, randomize=0):
 
     dummy_agent = AgentMerger('Herbert', a0, a1, a2)
 
-    return eval_agent(dummy_agent, randomize=randomize)
+    return eval_agent(dummy_agent, randomize=randomize, repeat_avg=repeat_avg)
 
 
-def eval_agent(agent, safe_eval=False, randomize=0):
+def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
     """
     Results: Daniel_21 -5263 (5651)
     Results: Daniel_27 -5275 (5628)
@@ -142,26 +144,26 @@ def eval_agent(agent, safe_eval=False, randomize=0):
 
     # for p in [30, 60, 10, 30, 70, 90, 30, 50, 20, 60]:
     # for p in [30, 60, 10, 30, 70, 90, 30, 50, 20, 60, 10, 50, 100, 90, 50, 20, 90, 50, 30, 50, 40, 100, 30, 30, 80, 80, 20, 70, 10, 70, 40, 10, 70, 60, 70, 40, 100, 30, 40, 50, 10, 40, 20, 30, 20, 80, 20, 70, 10, 30, 80, 10, 30, 30, 70, 40, 40, 30, 10, 40, 80, 100, 70, 60, 50, 10, 30, 40, 100, 90, 60, 60, 60, 30, 70, 30, 70, 30, 10, 60, 80, 20, 50, 100, 90, 80, 50, 70, 40, 90, 100, 50, 10, 100, 50, 60, 100, 70, 60, 100]:
+    for rr in range(repeat_avg):
+        for p in range(10, 101, 10):
 
-    for p in range(10, 101, 10):
+            env = IDS(p=p)
+            for num in range(randomize):  # get a more bad state
+                at = 2 * np.random.rand(3) - 1  # "random"-function from og ib
+                env.step(at)  # also returns markovStates, if needed
 
-        env = IDS(p=p)
-        for num in range(randomize):  # get a more bad state
-            at = 2 * np.random.rand(3) - 1  # "random"-function from og ib
-            env.step(at)  # also returns markovStates, if needed
+            sums_p = []
+            for t in range(T):
+                normal_state = envstate_normalize(env.state)
+                at = agent.decide(normal_state)
+                if safe_eval:
+                    at[2] = 0
+                env.step(at)  # also returns markovStates, if needed
+                reward = env.visibleState()[-1]
+                sums_p.append(reward)
 
-        sums_p = []
-        for t in range(T):
-            normal_state = envstate_normalize(env.state)
-            at = agent.decide(normal_state)
-            if safe_eval:
-                at[2] = 0
-            env.step(at)  # also returns markovStates, if needed
-            reward = env.visibleState()[-1]
-            sums_p.append(reward)
-
-        cumcum_discounted = list(accumulate(sums_p[discount_len:][::-1], lambda x_last, x: (x + (discount_factor * x_last))))
-        sum_discounted_p.append(cumcum_discounted[-1])
+            cumcum_discounted = list(accumulate(sums_p[discount_len:][::-1], lambda x_last, x: (x + (discount_factor * x_last))))
+            sum_discounted_p.append(cumcum_discounted[-1])
 
     return float(np.average(sum_discounted_p))
 

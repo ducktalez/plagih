@@ -33,55 +33,58 @@ def mp_evall(arow):
     lut_hash = f"{arow['codes']}"
 
     try:
-        experiment = eval_combined_agents(codes)
-        experiment_safe = eval_combined_agents(codes, complete=False)
-        experiment_r50 = eval_combined_agents(codes, randomize=50)
-        experiment_safe_r50 = eval_combined_agents(codes, complete=False, randomize=50)
-        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. \t({parsims})\tcomplete: {experiment} \tsafe: {experiment_safe} \tall_r50: {experiment_r50} \tsafe_r50: {experiment_safe_r50}')
-        return [lut_hash, experiment, experiment_safe, experiment_r50, experiment_safe_r50]
+        ibx = eval_combined_agents(codes)
+        ibx_safe = eval_combined_agents(codes, complete=False)
+        ibx_r50 = eval_combined_agents(codes, randomize=50, repeat_avg=10)
+        ibx_safe_r50 = eval_combined_agents(codes, complete=False, randomize=50, repeat_avg=10)
+        print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. \t({parsims})\tcomplete: {ibx:0.1f} \tsafe: {ibx_safe:0.1f} \tall_r50: {ibx_r50:0.1f} \tsafe_r50: {ibx_safe_r50:0.1f}')
+        return [lut_hash, ibx, ibx_safe, ibx_r50, ibx_safe_r50]
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
         print(f'WARNING: arow {arow}')
         return None  # [lut_hash, None, None]
 
 
-def eval_and_lut(best_guess, parsim_max_sum, parsim_max_single, lut_file, mp_cpu_cores_max):
+def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
     """
     Evaluating with real IB
     """
 
     try:
-        # with Path.open(lut_file, 'rb') as file:
         with Path.open(lut_file, 'r') as file:
             lut = yaml.load(file, Loader=yaml.FullLoader)
         lut = lut or {}  # was none after loading empty file <.<
     except:
         lut = {}
 
+    """
+    Check if the value is in the lut file
+    """
     open_combinations = []
-    for arow in best_guess:
+    for arow in eval_list:
         try:
-            if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_max_sum and all(x<=parsim_max_single for x in arow['parsims']):
+            if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_MAX and all(x <= parsim_1MAX for x in arow['parsims']):
                 open_combinations.append(arow)
         except:
             print('Fuk')
 
     mp.Process()
-    mp_cores = min(mp.cpu_count(), mp_cpu_cores_max)
+    mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
     print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
     with mp.Pool(mp_cores) as p:
         mp_result = p.map(mp_evall, open_combinations)
 
     mp_result_dict = {a: [b, c, d, e] for a, b, c, d, e in mp_result}  # [lut_hash, experiment, experiment_safe, experiment_r50, experiment_safe_r50]
+    lut.update(mp_result_dict)
 
     if len(mp_result_dict) > 0:
-        lut.update(mp_result_dict)
-        print(f'Saving the updated lut file.')  # {not_evaled}')
+        print(f'Saving the updated lut file.')
         with Path.open(lut_file, 'w') as file:
             _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
 
     combined_all_cpy = []
-    for ii, arow in enumerate(best_guess[:]):
+
+    for arow in eval_list[:]:
         if arow is not None:
             hashy = f"{arow['codes']}"
             try:
@@ -94,7 +97,9 @@ def eval_and_lut(best_guess, parsim_max_sum, parsim_max_single, lut_file, mp_cpu
             except:
                 pass
 
-    return best_guess
+    # for arow in eval_list:
+
+    return combined_all_cpy
 
 
 def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
@@ -107,61 +112,16 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     """
     print the combined runs that belong together
     """
-    yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])
-
-    with Path.open(lut_file, 'r') as file:
-        lut = yaml.load(file, Loader=yaml.FullLoader)
-    lut = lut or {}  # was None after loading empty file, crashed <.<
-
-    """
-    Check if the value is in the lut file
-    """
-    open_combinations = []
-    for arow in best_regrerr_dict:
-        if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_MAX and all(x <= parsim_1MAX for x in arow['parsims']):
-            open_combinations.append(arow)
-
-    """
-    Initialize parallel evaluation
-    """
-    mp.Process()
-    mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
-    print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
-    with mp.Pool(mp_cores) as p:
-        mp_result = p.map(mp_evall, open_combinations)
-    mp_result_dict = {a: [b, c, d, e] for a, b, c, d, e in mp_result}  # [lut_hash, experiment, experiment_safe, experiment_r50, experiment_safe_r50]
-
-    """
-    LUT file not required anymore, I guess
-    """
-    if len(mp_result_dict) > 0:
-        lut.update(mp_result_dict)
-        print(f'Saving the updated lut file.')
-        with Path.open(lut_file, 'w') as file:
-            _ = yaml.dump(lut, file, default_flow_style=False, sort_keys=False)
-
-    # combined_all_cpy = []
-    # for ii, arow in enumerate(best_regrerr_dict[:]):
-    #     if arow is not None:
-    #         hashy = f"{arow['codes']}"
-    #         try:
-    #             b, c, d, e = lut.get(hashy)
-    #             arow['experiment'] = b
-    #             arow['experiment_safe'] = c
-    #             arow['experiment_r50'] = d
-    #             arow['experiment_safe_r50'] = e
-    #             combined_all_cpy.append(arow)
-    #         except:
-    #             pass
+    # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # todo delete this?
 
     """
     okay
+    best_regrerr_dict
     """
-    tmp = [min([row for row in combined_all_p[p]], key=lambda x: x['regress_sum']) for p in parsims]
-    tmp.sort(key=lambda x: x['parsim_sum'])
-    res_all = [tmp[0]]
+    best_regrerr_dict.sort(key=lambda x: x['parsim_sum'])
+    res_all = [best_regrerr_dict[0]]
     cnt = [0]
-    best = tmp[0]
+    best = best_regrerr_dict[0]
 
     """
     ignore if we assume worse examples by regress_sum
@@ -183,7 +143,6 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
-        # ax.set_title(f'{run_name} (best regression sum)')
         ax.set_xlabel('complexity')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
@@ -195,23 +154,24 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name} regression_sum.png', dpi=300)
+        fig.savefig(root_dir_eval / f'{run_name}-regression_sum.png', dpi=300)
+        plt.close()
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
-        # ax.set_title(f'{run_name} (best regression sum)')
         ax.set_xlabel('complexity')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
-        ax.plot(xx, y_all_r50, label='all actions, randomized(50)', marker='.', color='r')
-        ax.plot(xx, y_safe_r50, label='low risk, randomized(50)', marker='.', color='b')
+        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='r')
+        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='.', color='b')
         ax2 = ax.twinx()
         ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
         ax2.tick_params(axis='y', labelcolor='tab:gray')
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name} regression_sum_r50.png', dpi=300)
+        fig.savefig(root_dir_eval / f'{run_name}-regression_sum_r50.png', dpi=300)
+        plt.close()
 
 
 def plot_per_action(root_dir_eval, run_name, parsims, combined_all_p):
@@ -403,15 +363,12 @@ def combined_lists(run_name, parsim_MAX, parsim_1MAX, local_yamls=False, mp_cpu_
     """
     parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))
     plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX)
-    # plot_per_action(root_dir_eval, run_name, parsims, combined_all_p)
-    # plot_actual_best(root_dir_eval, run_name, parsims, combined_all_p)
 
 
 def merge_paretos(run_name):
     """
     load each IB run and add its pareto front to a merged plot
     """
-
     with plt.rc_context():
         fig, ax = plt.subplots(ncols=1)  # , figsize=(9, 9)  # todo opening warning (RuntimeWarning: More than 20 figures have been opened... through the pyplot interface) maybe it doesnt close
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
@@ -429,7 +386,8 @@ def merge_paretos(run_name):
         ax.set_ylabel('regression error')
         ax.legend(loc='upper right')
         fig.tight_layout()
-        fig.savefig(dir_slurm / run_name / f'{run_name}_pareto_combined', dpi=300)
+        fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined', dpi=300)
+        plt.close()
 
     print('combined runs: merged pareto entries into one plot!')
 

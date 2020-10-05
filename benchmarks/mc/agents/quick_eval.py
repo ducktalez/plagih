@@ -166,11 +166,6 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
             Path.mkdir(folder)
         fig.savefig(Path(folder) / f'{name}.png', dpi=300)  # todo this was both plt
         fig.savefig(Path(folder) / f'{name}.pdf')
-        # try:
-        #     tikzplotlib.save('TEST.tex'.format(name))
-        # except Exception as ex:
-        #     print('tikzplotlib save failed for mtc decision plots, exception: {}'.format(ex))
-        # plt.close()  # not required anymore
 
 
 def mtc_play(agent, render=False, n=1):

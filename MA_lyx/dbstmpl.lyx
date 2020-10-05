@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -26,15 +26,11 @@
 \global\bearbeiter{Simon Fehrer}
 \global\betreuer{Dr. Steffen Udluft, Dr. Michel Tokic, Dr. Daniel Hein}
 \global\aufgabensteller{Prof. Volker Tresp}
-\global\abgabetermin{29.02.2019}
+\global\abgabetermin{29.10.2019}
 \global\ort{Munich}
 \global\fach{Computer Science}
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -56,6 +52,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -85,6 +83,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -94,7 +93,10 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -174,6 +176,9 @@ ing to the thinking structure of a developer.
  measure, which reflects the number of changes to the reference program.
  For the implementation a regression on offline data of the benchmarks was
  performed.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -199,9 +204,6 @@ es Programm mithilfe von pareto genetischer Programmierung mit möglichst
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Note
 status open
 
@@ -217,9 +219,6 @@ Großer Dank richtet sich vor allem an meine Betreuer bei Siemens, Michel
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Note
 status open
 
@@ -409,6 +408,7 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -477,6 +477,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -508,6 +509,7 @@ t Learning (RL) policies using Genetic Programming (GP).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -553,6 +555,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -584,6 +587,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -707,6 +711,7 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -716,6 +721,7 @@ key "one_pixel_attack"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -908,6 +914,7 @@ Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1043,6 +1050,7 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1110,6 +1118,7 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -1121,6 +1130,7 @@ key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -1177,6 +1187,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1324,6 +1335,7 @@ The TED is a well-known problem from theoretical computer science and will
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -1337,6 +1349,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -1720,6 +1733,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -2071,6 +2085,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -2094,6 +2109,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -3024,6 +3040,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -3181,6 +3198,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -3908,6 +3926,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -4882,16 +4901,8 @@ daten
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Ein Kandidat gilt als paretoeffizient im Sinne der Verbesserung, wenn all
- seine 
-\end_layout
-
-\begin_layout Standard
-Pareto-efficient candidates are of great interest for several reasons:
+ seine Pareto-efficient candidates are of great interest for several reasons:
 \end_layout
 
 \begin_layout Itemize
@@ -5578,7 +5589,7 @@ https://github.com/ducktalez/plagih
 
 \end_inset
 
-
+ xxx das gibts gar ned
 \end_layout
 
 \end_inset
@@ -5595,6 +5606,7 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -6711,7 +6723,8 @@ te Formeln, beispielsweise wegen des Kommutativgesetzes als nicht-äquivalent
 
 \begin_layout Standard
 One of the most important ways to simplify trees is to simplify the content
- they represent as a mathematical expression.xxx
+ they represent as a mathematical expression.
+ xxx
 \end_layout
 
 \begin_layout Itemize
@@ -7379,7 +7392,7 @@ xx 29
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7388,7 +7401,7 @@ xx 29
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7397,7 +7410,7 @@ xx 29
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7466,7 +7479,7 @@ xx 29
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7475,7 +7488,7 @@ xx 29
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7484,7 +7497,7 @@ xx 29
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7581,7 +7594,42 @@ The results schow extraordinary well performance in reward, robustness and
 \end_layout
 
 \begin_layout Standard
-asd
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50_pareto_combined.png
+	lyxscale 12
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50 regression_sum.png
+	lyxscale 12
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+xxx
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
@@ -7671,6 +7719,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 

@@ -131,7 +131,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-no_files', action='store_true', help='Not used yet. Create no files. a sfeh wasd-dummy, that stops the program from writing any files whatsoever. Just to be sure.')
     parser.add_argument('-tf_device_log', '-tf_log', action='store_true', help='Logs (A LOT of) tensorflow evaluation feedback. (I recently used this to check if the GPU is actually used)')
     parser.add_argument('-force_new_run', action='store_true')
-    parser.add_argument('-print_all', '-debug', action='store_true')
+    parser.add_argument('-print_all', '-debug', '-verbose', action='store_true', help='Print all debug prints (very verbose and helps debugging)')
     parser.add_argument('-pop_kill', action='store_true', help="Force 'killing' the whole population, creating a new generation from scratch, but keeping the paretofront."
                                                                                               " Like a reboot, keeps local optima.")
     parser.add_argument('-testrun', action='store_true', help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')

@@ -805,7 +805,7 @@ class ExplainableGP(object):
                 ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
                 fig.tight_layout()
                 fig.savefig(path_hist / f'acthist_{parsim}.png', dpi=300)
-                # fig.savefig(path_hist / f'acthist_{parsim}.svg')
+                plt.close('all')
 
         self.printpl('ff', f'Histograms: {path_hist.as_posix()}')
 
@@ -824,29 +824,26 @@ class ExplainableGP(object):
             cooltree.set_fix_nodes(self.origin_cooltree)
             cooltree.meta.last_evolution = 'texify'
             tree = cooltree.get_oldtree()
-            latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n\n')
 
-            forest_viz = latex_tree_get_forest(tree, tight_viz=False)
-            latex_row1.append(forest_viz)
+            forest_viz = latex_tree_get_forest(tree, tight_viz=0)
             if parsim < 14:
                 input_single_tex[parsim] = forest_viz
 
-            latex_row1.append('Tight layout:')
-            # try:
-            forest_viz_tight = latex_tree_get_forest(tree)
-            latex_row1.append(forest_viz_tight + '\n')
-            # except Exception as tvex:
-            #     print_e(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
-            #     latex_row1.append(f'forest_viz_tight could not be created. {tree_get_labellist(tree)}\nReason: {tvex}')
+            forest_viz_tight = latex_tree_get_forest(tree, tight_viz=1)
+            # forest_viz_tight2 = latex_tree_get_forest(tree, tight_viz=2)  # todo
+            # todo text for observations? cartVel
+
+            latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'
+                              f'{forest_viz} tight: {forest_viz_tight}\n')
 
             # save every tree-visualisation in subfolder
             path_subfolder_tex = folder_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
             # create full document including just one tree (file must have a nice name)
             subtex1 = latex_treeviz_full_document([forest_viz], doc_border='')
-            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}.tex', 'w') as file:  # _{fitness:.2f}
+            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}.tex', 'w') as file:
                 file.write(subtex1)
             subtex2 = latex_treeviz_full_document([forest_viz_tight], doc_border='')
-            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_tight.tex', 'w') as file:  # _{fitness:.2f}
+            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_tight.tex', 'w') as file:
                 file.write(subtex2)  # filename? -> <run_name>_<complexity>[_tight].tex
 
         latex_full_doc = latex_treeviz_full_document(latex_row1)
@@ -1476,7 +1473,6 @@ class ExplainableGP(object):
             fig.tight_layout()
             path = self.root_dir / f'monitoring-{self.conf.name}.png'
             fig.savefig(path, dpi=300)
-            # fig.savefig(self.root_dir / f'monitoring.svg')
             self.printpl('f', f"monitoring: {path.as_posix()}")
 
     def plot_paretofront(self):
@@ -1504,10 +1500,8 @@ class ExplainableGP(object):
             ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
 
             ax.legend(loc='lower left')
-            # ax.set_title('Pareto front')
             ax.set_xlabel('complexity')
             ax.set_ylabel('regression error')
-            # ax.set_ylim(ymin=0, ymax=50)  # sfeh
 
             fig.tight_layout()
             try:
@@ -1546,7 +1540,6 @@ class ExplainableGP(object):
                 path = self.root_dir / f'monitoring_evolutions.png'
                 fig.savefig(path, dpi=300)
                 self.printpl('f', f"monitoring_evolutions.png: {path.as_posix()}")
-                # fig.savefig(self.root_dir / f'monitoring.svg')
 
         except Exception as ex:
             print_e(f'plot_evolution_analysis failed because of: {ex}')

@@ -1405,6 +1405,69 @@ name "fig:TED_explain_operators"
 
 \end_layout
 
+\begin_layout Paragraph
+differential learning
+\end_layout
+
+\begin_layout Standard
+While testing the mountain car approach, an interesting occurrence was discovere
+d.
+ The better the original structure we had was, the better...
+ An interesting concept is the performance and robustness achieved while
+ learning different approaches.
+ The concept of differential learning [xxx source] is also known in sport
+ science.
+ Learning to solve a situation completely different but with the same goal
+ lets you combine the best of both worlds.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+Problems with mountain car experiments
+\end_layout
+
+\begin_layout Itemize
+Change of sign
+\end_layout
+
+\begin_layout Itemize
+change of sign at weird spots
+\end_layout
+
+\begin_layout Itemize
+Parameter range (should they be normalized?)
+\end_layout
+
+\begin_layout Itemize
+Not enough samples for small improvements?
+\end_layout
+
+\begin_layout Itemize
+Unstable sarsa?
+\end_layout
+
+\begin_layout Itemize
+Outlier can be found easier
+\end_layout
+
+\begin_layout Itemize
+Difference 2-1 and 0-1 is the same, although completely different actions
+\end_layout
+
+\begin_layout Itemize
+Fast moving car vs slowly moving generate different amount of data per area.
+ coarse data can be fit better than dense data.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 Benchmarks
 \end_layout
@@ -7139,74 +7202,43 @@ Mountain Car
 Analysis xxx
 \end_layout
 
-\begin_layout Paragraph
-differential learning
-\end_layout
-
-\begin_layout Standard
-While testing the mountain car approach, an interesting occurrence was discovere
-d.
- The better the original structure we had was, the better...
- An interesting concept is the performance and robustness achieved while
- learning different approaches.
- The concept of differential learning [xxx source] is also known in sport
- science.
- Learning to solve a situation completely different but with the same goal
- lets you combine the best of both worlds.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Problems with mountain car experiments
-\end_layout
-
-\begin_layout Itemize
-Change of sign
-\end_layout
-
-\begin_layout Itemize
-change of sign at weird spots
-\end_layout
-
-\begin_layout Itemize
-Parameter range (should they be normalized?)
-\end_layout
-
-\begin_layout Itemize
-Not enough samples for small improvements?
-\end_layout
-
-\begin_layout Itemize
-Unstable sarsa?
-\end_layout
-
-\begin_layout Itemize
-Outlier can be found easier
-\end_layout
-
-\begin_layout Itemize
-Difference 2-1 and 0-1 is the same, although completely different actions
-\end_layout
-
-\begin_layout Itemize
-Fast moving car vs slowly moving generate different amount of data per area.
- coarse data can be fit better than dense data.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
 Industrial Benchmark runs
 \end_layout
 
 \begin_layout Standard
+Die IB runs wurden unter folgenden Aspekten begutachtet:
+\end_layout
+
+\begin_layout Itemize
+XAI
+\end_layout
+
+\begin_layout Itemize
+performance
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+performance safe
+\end_layout
+
+\begin_layout Itemize
+performance nach randomize
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Daniel
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="10" columns="3">
 <features tabularvalignment="middle">
@@ -7508,6 +7540,23 @@ xx 29
 </cell>
 </row>
 </lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+IB Resultate im Vergleich
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 

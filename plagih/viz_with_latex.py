@@ -176,30 +176,50 @@ def latex_tighttree_get_brackets(tree, node_id=root_id):
 
     Labeling edges: , edge label = {node[midway, font =\\scriptsize]{If...}}
     """
-    extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
         label += (latex_tighttree_get_brackets(tree, child_id))
-    else:
-        bracket_string = f'[{label}]'
+    bracket_string = f'[{label}]'
 
     return bracket_string
 
 
-def latex_tree_get_forest(tree, tight_viz=True):
+def latex_tighttree2_get_brackets(tree, node_id=root_id):
+    """
+    todo can this be done with the one above?
+    """
+    formatify = [latex_tighttree2_get_brackets(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
+
+    label = tree_node_get_label(tree, node_id)
+    try:
+        bracket_string = op[label]['latex1'].format(*formatify)
+        return bracket_string
+    except KeyError:
+        return f'{{{label}}}'
+
+
+def latex_tree_get_forest(tree, tight_viz=0):
     """
     whole procedure from tree to forest core
+    tight_viz:
+        0: display every node
+        1: clever tight-visualisation where possible
+        2: one single mathematical expression
     """
 
     tree = tree.copy()
 
-    if tight_viz:
+    if tight_viz == 0:
+        bracket_tree = latex_brackettree(tree)
+    elif tight_viz == 1:
         tree_tight = latex_get_tighttree(tree)
         bracket_tree = latex_tighttree_get_brackets(tree_tight)
+    elif tight_viz == 2:
+        bracket_tree = latex_tighttree2_get_brackets(tree)
     else:
-        bracket_tree = latex_brackettree(tree)
+        raise Exception(f'Wrong call, tight_viz was {tight_viz}')
 
     # latex predefined colors:
     # black, blue, brown, cyan, darkgray, gray, green, lightgray, lime, magenta, olive, orange, pink, purple, red, teal, violet, white, yellow.
@@ -251,7 +271,7 @@ def tree_get_expr_latextight(tree, node_id=root_id):
 
 def latex_get_tighttree(tree):
     """
-    reduce expressions of large trees
+    reduce expressions of large trees where it makes sense (according to me)
     """
 
     node_dict = dict()  # key: node_id, value: number of nodes to paste into the viz-node

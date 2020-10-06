@@ -1,10 +1,8 @@
-from pathlib import Path
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import matplotlib.pyplot  as plt
 
-samples_all = Path('gp_files/samples_raw.csv')
+samples_all = Path('gp_files/samples_raw.csv')  # Path('benchmarks/ib/gp_files/samples_raw.csv')
 samples_prepared = Path('gp_files/samples_prepared.csv')
 
 

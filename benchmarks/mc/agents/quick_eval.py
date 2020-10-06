@@ -12,8 +12,6 @@ import numpy as np
 import gym
 import pickle
 
-# import tikzplotlib
-
 
 def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
     """
@@ -166,6 +164,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
             Path.mkdir(folder)
         fig.savefig(Path(folder) / f'{name}.png', dpi=300)  # todo this was both plt
         fig.savefig(Path(folder) / f'{name}.pdf')
+        plt.close('all')
 
 
 def mtc_play(agent, render=False, n=1):
@@ -220,7 +219,6 @@ def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path(
     plt.ylim(-200, -80)
 
     plt.savefig(folder / f'{name}.png', dpi=300)
-    # plt.savefig(folder / f'{name}.svg')
 
 
 def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_splits=256, name='diff', folder='img/',
@@ -297,7 +295,6 @@ def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
     plt.savefig(dir_save / 'agent_perf.png', dpi=300)
-    # plt.savefig(folder / 'agent_perf.svg')
 
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
     with (dir_save / 'summary.txt').open('w') as file:
@@ -319,7 +316,7 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             try:
                 mc_actn = eval(self.mcAction)
             except:
-                mc_actn = eval(self.mcAction)  # todo
+                raise  # todo
             return int(round(max(0, min(2, mc_actn))))
 
     _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
@@ -341,6 +338,7 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
     agent_performance = []
     for (parsim, fitness, cooltree) in pareto:
         agent_name = f'{prepared_run}_{parsim:.0f}'
+        print(f'Evaluating MC Agent: {agent_name}')
         pycode = cooltree.get_pycode()
         mcAgent = DummyMcAgent(pycode)
         try:
@@ -349,7 +347,7 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             mtc_plot_decisions_space(mcAgent, name=agent_name, folder=dir_save, dummy=True)
             mtc_plot_differences(mcAgent, sarsa_agent, dummy_result=sarsa_dummy, boarders=1, name=f'diff-{agent_name}', folder=dir_save, abs_diff=False)  # diff at start for diashow
         except:
-            pass
+            agent_performance.append([agent_name, None, None])
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
@@ -359,8 +357,6 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
         ax.bar(x, y)
 
         fig.savefig(dir_save / f'dumbrepared.png', dpi=300)
-
-    # plt.savefig(folder / 'agent_perf.svg')
 
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
     with (dir_save / 'summary.txt').open('w') as file:

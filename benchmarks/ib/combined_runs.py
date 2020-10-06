@@ -63,10 +63,14 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
     open_combinations = []
     for arow in eval_list:
         try:
-            if f"{arow['codes']}" not in lut and arow['parsim_sum'] <= parsim_MAX and all(x <= parsim_1MAX for x in arow['parsims']):
-                open_combinations.append(arow)
+            tmp = lut[f"{arow['codes']}"]
+            if tmp[0] and tmp[1] and tmp[2] and tmp[3]:
+                pass
+            else:
+                raise Exception('Need to append this, not all 4 required values are contained')
         except:
-            print('Fuk')
+            if arow['parsim_sum'] <= parsim_MAX and all(x <= parsim_1MAX for x in arow['parsims']):
+                open_combinations.append(arow)
 
     mp.Process()
     mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
@@ -105,6 +109,7 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
 def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
     """
     plot best guess
+    todo test RMSE?
     """
     best_regrerr = [min([row for row in combined_all_p[p]], key=lambda x: x['regress_sum']) for p in parsims]
     best_regrerr_dict = eval_and_lut(best_regrerr, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX)
@@ -112,6 +117,9 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     """
     print the combined runs that belong together
     """
+    relevant_agents = [list(set(xx)) for xx in zip(*[x['parsims'] for x in best_regrerr_dict])]  # delete if not required by sfeh
+
+    yaml_dump(root_dir_eval / 'best_regrerr.yaml', [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']] for x in best_regrerr_dict])  # todo delete this?
     # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # todo delete this?
 
     """
@@ -143,11 +151,11 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
-        ax.set_xlabel('complexity')
+        ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
         ax.plot(xx, y_all, label='all actions', marker='.', color='r')
-        ax.plot(xx, y_safe, label='low risk', marker='.', color='b')
+        ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
         ax2 = ax.twinx()
         ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
         ax2.tick_params(axis='y', labelcolor='tab:gray')
@@ -155,15 +163,15 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         ax2.legend(loc='lower left')
         fig.tight_layout()
         fig.savefig(root_dir_eval / f'{run_name}-regression_sum.png', dpi=300)
-        plt.close()
+        plt.close('all')
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
-        ax.set_xlabel('complexity')
+        ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
-        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='r')
-        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='.', color='b')
+        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='orangered')
+        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='orangered', linestyle='dotted')
         ax2 = ax.twinx()
         ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
         ax2.tick_params(axis='y', labelcolor='tab:gray')
@@ -171,7 +179,28 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         ax2.legend(loc='lower left')
         fig.tight_layout()
         fig.savefig(root_dir_eval / f'{run_name}-regression_sum_r50.png', dpi=300)
-        plt.close()
+        plt.close('all')
+
+    """
+    The two plots above in one plot
+    """
+    with plt.rc_context(rc={}):
+        fig, ax = plt.subplots()
+        ax.set_xlabel('Pareto complexity sum')
+        ax.set_ylabel('reward')
+        ax.set_ylim(funny_limits)
+        ax.plot(xx, y_all, label='all actions', marker='.', color='r')
+        ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
+        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
+        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
+        ax2 = ax.twinx()
+        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
+        ax2.tick_params(axis='y', labelcolor='tab:gray')
+        ax.legend(loc='lower right')
+        ax2.legend(loc='lower left')
+        fig.tight_layout()
+        fig.savefig(root_dir_eval / f'{run_name}-regression_all.png', dpi=300)
+        plt.close('all')
 
 
 def plot_per_action(root_dir_eval, run_name, parsims, combined_all_p):
@@ -201,8 +230,7 @@ def plot_per_action(root_dir_eval, run_name, parsims, combined_all_p):
     #     ax.plot(xx, exp_safe, label='low risk', marker='.', color='b')
     #     ax.legend(loc='lower left')
     #     plt.savefig(root_dir_eval / f'act_{a}-plot.png', dpi=150)
-    #     # plt.savefig(root_dir_eval / f'act_{a}-plot-{measr}.svg')
-    #     plt.close()
+    #     plt.close('all')
 
 
 def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
@@ -238,7 +266,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
         fig.tight_layout()
-        ax.set_xlabel('complexity')
+        ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
         # # only if one entry per parsimony
@@ -248,21 +276,19 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
         # ax.set_title(f'{run_name} (best)')
         fig.tight_layout()
         fig.savefig(root_dir_eval / f'{run_name} (best).png', dpi=300)
-        # plt.savefig(root_dir_eval / f'best-real-expermiments.svg')
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
         fig.tight_layout()
-        ax.set_xlabel('complexity')
+        ax.set_xlabel('Pareto complexity sum')  # summe der komplexitäten der paretofront
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
         # # only if one entry per parsimony
-        ax.plot(xx, y_all_r50, label='all actions, randomized(50)', marker='.', color='r', )
-        ax.plot(xx, y_safe_r50, label='low risk, randomized(50)', marker='.', color='c')
+        ax.plot(xx, y_all_r50, label='all actions, randomized', marker='.', color='r', )
+        ax.plot(xx, y_safe_r50, label='low risk, randomized', marker='.', color='c')
         ax.legend(loc='lower left')
         fig.tight_layout()
         fig.savefig(root_dir_eval / f'{run_name} (best)_r50.png', dpi=300)
-        # plt.savefig(root_dir_eval / f'best-real-expermiments.svg')
 
 
 def plot_scatter_some():
@@ -286,7 +312,7 @@ def plot_scatter_some():
     # ax.scatter(x, y_all, label='all actions', marker='.', color='r')
     # ax.scatter(x, y_safe, label='low risk', marker='.', color='b')
     # plt.savefig(root_dir_eval / f'{measr}-scatter.png')
-    # plt.close()
+    # plt.close('all')
     #
     # for dim in range(3):
     #     plot_all = analyse_all[measr]
@@ -387,7 +413,7 @@ def merge_paretos(run_name):
         ax.legend(loc='upper right')
         fig.tight_layout()
         fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined', dpi=300)
-        plt.close()
+        plt.close('all')  # plt.close('all') todo
 
     print('combined runs: merged pareto entries into one plot!')
 

@@ -49,7 +49,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     'abs': {'fun_class': 'Abs', 'fun_label': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': 'abs', 'latexF': '|{}|',
             'sym_reduce': None, 'sym_str': 'abs({})', 'pycode': 'abs({})'},
     'sign': {'fun_class': 'Sign', 'fun_label': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'sign', 'tf': tf.sign, 'opgroup': [], 'latex1': 'sign', 'latexF': 'sign({})',
-             'sym_reduce': None, 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},
+             'sym_reduce': 'sign(real())', 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},
     'Round': {'fun_class': 'Round', 'fun_label': 'Round', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'round', 'tf': tf.round, 'opgroup': [], 'latex1': 'round', 'latexF': 'round({})',
               'sym_reduce': None, 'sym_str': 'Round({})', 'pycode': 'round({})'},
 

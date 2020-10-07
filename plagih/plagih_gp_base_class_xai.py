@@ -1474,6 +1474,7 @@ class ExplainableGP(object):
             path = self.root_dir / f'monitoring-{self.conf.name}.png'
             fig.savefig(path, dpi=300)
             self.printpl('f', f"monitoring: {path.as_posix()}")
+            plt.close('all')
 
     def plot_paretofront(self):
         """

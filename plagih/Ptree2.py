@@ -242,10 +242,24 @@ class CoolCore:
         else:
             raise Exception(f'Complexity measurement not available: {parsimony_distance}')
 
+    def check_powerlimit(self):
+        """
+        todo
+        large powers need forever to evaluate in sympy in some cases.
+        opened issue by sfeh: https://github.com/sympy/sympy/issues/20225
+
+            from sympy import sympify
+            a = sympify('sign(((a * b) ** 2))')           # time: <1s
+            b = sympify('sign(((a * b) ** 200))')         # time: ~10s
+            c = sympify('sign(((a * b) ** 400))')         # time: >120s
+
+        """
+        return
+
     def check_all(self):
         if self.arity != len(self.childs):
             raise
-
+        self.check_powerlimit()  # todo
         return True
 
     def get_expr_raw(self, reduceable=None):

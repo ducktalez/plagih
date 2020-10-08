@@ -690,6 +690,38 @@ def invent_label_list_depth(xtype_root, depth_goal, choose_obs, obs_krazy, choos
     return result_label_list, result_arity_list, result_xtype_list
 
 
+def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
+    """
+    # branch_nodes, branch_depth, tree_depth, tree_nodes
+    """
+    mean, size_min, size_max, size_variance = mean_min_max_var
+    if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
+        relative_size = 0
+    else:
+        if tree and node_id:
+            pass
+        else:
+            raise Exception('No tree or node is given for computing the relative size')
+
+        if size_mode == 'tree_depth':
+            tree_size = tree_get_depth(tree)
+            node_size = tree_node_get_depth(tree, node_id)
+        elif size_mode == 'tree_nodes':
+            tree_size = tree_get_size(tree)
+            node_size = len(tree_node_get_branch(tree, node_id))
+        else:
+            raise Exception('Sizemode not known?')
+
+        relative_size = tree_size - node_size
+
+    build_size = int(random.normalvariate(mean, size_variance))
+    if size_max is not None:
+        build_size = min(size_max - relative_size, build_size)
+    build_size = max(size_min, build_size)
+
+    return int(build_size)
+
+
 def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, obs_krazy, choose_oparray2, choose_distributions, float_decimals, full_or_grow='grow'):
     """
     build a random function (as label list)

@@ -511,16 +511,16 @@ class ExplainableGP(object):
 
                     label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow)
 
-                    if label_list:
-                        c_core = Core_From_Labels(label_list, arity_list, xtype_list)
-                        core_insert = c_core.get_uninstanced_core()
-                        branch_nodes_ids = tree_node_get_branch(new_tree, old_node, karoo=True)
-                        new_tree = tree_insert_subtree(new_tree, core_insert, branch_nodes_ids, karoo=True)
-                        new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
-                    else:
-                        new_tree = None
+                    c_core = Core_From_Labels(label_list, arity_list, xtype_list)
+                    core_insert = c_core.get_uninstanced_core()
+                    branch_nodes_ids = tree_node_get_branch(new_tree, old_node, karoo=True)
+                    new_tree = tree_insert_subtree(new_tree, core_insert, branch_nodes_ids, karoo=True)
+                    new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+                    # else:
+                    #     new_tree = None
 
                     new_cooltree = cooltree_from_oldtree(new_tree)
+
                     new_cooltree.meta.last_evolution = tag
                     self.pop_append(new_cooltree)
 
@@ -1655,35 +1655,3 @@ class ExplainableGP(object):
             time_now = time.strftime("%H:%M", time.localtime())
             print(f'{time_now}. {text}')
         return
-
-
-def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
-    """
-    # branch_nodes, branch_depth, tree_depth, tree_nodes
-    """
-    mean, size_min, size_max, size_variance = mean_min_max_var
-    if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':
-        relative_size = 0
-    else:
-        if tree and node_id:
-            pass
-        else:
-            raise Exception('No tree or node is given for computing the relative size')
-
-        if size_mode == 'tree_depth':
-            tree_size = tree_get_depth(tree)
-            node_size = tree_node_get_depth(tree, node_id)
-        elif size_mode == 'tree_nodes':
-            tree_size = tree_get_size(tree)
-            node_size = len(tree_node_get_branch(tree, node_id))
-        else:
-            raise Exception('Sizemode not known?')
-
-        relative_size = tree_size - node_size
-
-    build_size = int(random.normalvariate(mean, size_variance))
-    if size_max is not None:
-        build_size = min(size_max - relative_size, build_size)
-    build_size = max(size_min, build_size)
-
-    return int(build_size)

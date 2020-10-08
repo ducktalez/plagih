@@ -170,8 +170,8 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
-        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='orangered')
-        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='orangered', linestyle='dotted')
+        ax.plot(xx, y_all_r50, label='all actions (randomized start)', marker='.', color='orangered')
+        ax.plot(xx, y_safe_r50, label='low risk (randomized start)', marker='None', color='orangered', linestyle='dotted')
         ax2 = ax.twinx()
         ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
         ax2.tick_params(axis='y', labelcolor='tab:gray')

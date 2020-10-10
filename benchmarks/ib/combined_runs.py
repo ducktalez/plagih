@@ -162,7 +162,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name}-regression_sum.png', dpi=300)
+        fig.savefig(root_dir_eval / f'{run_name}-regression_sum.pdf')  # dpi=300
         plt.close('all')
 
     with plt.rc_context(rc={}):
@@ -178,7 +178,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name}-regression_sum_r50.png', dpi=300)
+        fig.savefig(root_dir_eval / f'{run_name}-regression_sum_r50.pdf')
         plt.close('all')
 
     """
@@ -199,7 +199,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name}-regression_all.png', dpi=300)
+        fig.savefig(root_dir_eval / f'{run_name}-regression_all.pdf')
         plt.close('all')
 
 
@@ -275,7 +275,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
         ax.legend(loc='lower left')
         # ax.set_title(f'{run_name} (best)')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name} (best).png', dpi=300)
+        fig.savefig(root_dir_eval / f'{run_name} (best).pdf')
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
@@ -288,7 +288,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
         ax.plot(xx, y_safe_r50, label='low risk, randomized', marker='.', color='c')
         ax.legend(loc='lower left')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name} (best)_r50.png', dpi=300)
+        fig.savefig(root_dir_eval / f'{run_name} (best)_r50.pdf')
 
 
 def plot_scatter_some():

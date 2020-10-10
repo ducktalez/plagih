@@ -804,7 +804,7 @@ class ExplainableGP(object):
                 ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
                 ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
                 fig.tight_layout()
-                fig.savefig(path_hist / f'acthist_{parsim}.png', dpi=300)
+                fig.savefig(path_hist / f'acthist_{parsim}.pdf')
                 plt.close('all')
 
         self.printpl('ff', f'Histograms: {path_hist.as_posix()}')
@@ -1471,7 +1471,7 @@ class ExplainableGP(object):
             axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generations')
             axs0.set_title(f'monitoring gp generations {self.conf.name}')  # sfeh
             fig.tight_layout()
-            path = self.root_dir / f'monitoring-{self.conf.name}.png'
+            path = self.root_dir / f'monitoring-{self.conf.name}.pdf'
             fig.savefig(path, dpi=300)
             self.printpl('f', f"monitoring: {path.as_posix()}")
             plt.close('all')
@@ -1506,9 +1506,6 @@ class ExplainableGP(object):
 
             fig.tight_layout()
             try:
-                path = self.root_dir / f'paretofront {run_name}.png'
-                fig.savefig(path, dpi=300)
-                self.printpl('f', f"paretofront (png): {path.as_posix()}")
 
                 path_plot = folder_make_dir(self.root_dir / 'plots/')
                 fig.savefig(path_plot / f'paretofront {run_name}.pdf')
@@ -1538,9 +1535,9 @@ class ExplainableGP(object):
                     # axs[2].set_ylim(ymin=0), axs[2].legend(loc='lower left')
 
                 plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
-                path = self.root_dir / f'monitoring_evolutions.png'
+                path = self.root_dir / f'monitoring_evolutions.pdf'
                 fig.savefig(path, dpi=300)
-                self.printpl('f', f"monitoring_evolutions.png: {path.as_posix()}")
+                self.printpl('f', f"monitoring_evolutions (pdf): {path.as_posix()}")
 
         except Exception as ex:
             print_e(f'plot_evolution_analysis failed because of: {ex}')

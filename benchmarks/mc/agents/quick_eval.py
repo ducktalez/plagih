@@ -346,13 +346,13 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             mtc_plot_decisions_space(mcAgent, name=agent_name, folder=dir_save, dummy=True)
             mtc_plot_differences(mcAgent, sarsa_agent, dummy_result=sarsa_dummy, boarders=1, name=f'diff-{agent_name}', folder=dir_save, abs_diff=False)  # diff at start for diashow
         except:
-            agent_performance.append([agent_name, None, None])
+            agent_performance.append([agent_name, 0, 0])
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
         fig.tight_layout()
+        x = [pfc[0] for pfc in pareto]
         y = [x[1] for x in agent_performance]
-        x = list(range(len(agent_performance)))
         ax.bar(x, y)
 
         fig.savefig(dir_save / f'dumbrepared.pdf')

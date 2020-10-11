@@ -274,5 +274,6 @@ if __name__ == "__main__":
     expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
     expr = 'Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))'
     expr = 'sign(((a * b) ** 10))'  # takes too long
+    expr = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
     print(plagih_sympify(expr))
     print('DONE testing sympify')

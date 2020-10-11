@@ -1,4 +1,5 @@
 import os
+import re
 
 from plagih.plagih_data import observation_get_family_and_time
 from plagih.plagih_sympy_extras import plagih_sympify
@@ -1240,9 +1241,8 @@ def expr_sympify(expr_raw):
     except Exception as ex:
         raise Exception(f'sympify_1: {expr_raw} reason: ({ex})')
 
-    for fail_reason in ['zoo', 'inf', '*I', 'nan']:
-        if fail_reason in expr_sym:
-            raise Exception(f'sympifail: {fail_reason}')
+    if re.search('(zoo|inf|nan|\*I[^f])', expr_sym):  # ['zoo', 'inf', '*I', 'nan'], ignoring *Ifte though
+        raise Exception(f'Failed for expr: {expr_sym}')
 
     return expr_sym
 
@@ -1250,7 +1250,6 @@ def expr_sympify(expr_raw):
 def tree_branch_get_label_list(tree, node_ids, karoo=False):
     """
     This method prepares a stand-alone Tree as a copy of the given node_ids.
-
     """
     if karoo:
         tree = tree_convert_karoo_to_plagih(tree)

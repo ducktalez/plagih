@@ -829,7 +829,6 @@ class ExplainableGP(object):
             2: one single mathematical expression
         """
         latex_row1 = []
-        input_single_tex = {}
 
         for (parsim, fitness, cooltree) in self.pareto:
 
@@ -851,9 +850,9 @@ class ExplainableGP(object):
             # tree = tree.copy()
 
             textree_0 = forest_wrap(latex_brackettree(tree))
-            textree_tight = latex_get_tighttree(tree)
+            textree_tight = latex_tree_semitight(tree)
             textree_1 = forest_wrap(latex_brackettree_tight(textree_tight))
-            textree_2 = forest_wrap(f'[${tree_get_expr_latextight(tree)}$]')
+            textree_2 = forest_wrap(f'[${latex_tight_node(tree)}$]')
 
             latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'
                               f'{textree_0} tight: {textree_1} tight2: {textree_2}\n')

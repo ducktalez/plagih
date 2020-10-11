@@ -324,7 +324,7 @@ def plot_scatter_some():
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(run_name, parsim_MAX, parsim_1MAX, local_yamls=False, mp_cpu_MAX=16):
+def combined_lists(run_name, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
@@ -390,7 +390,7 @@ def combined_lists(run_name, parsim_MAX, parsim_1MAX, local_yamls=False, mp_cpu_
     the main plotting procedures
     """
     parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))
-    plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX)
+    plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, cpu_cores)
 
 
 def merge_paretos(run_name):
@@ -419,7 +419,7 @@ def merge_paretos(run_name):
         fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined.pdf')
         plt.close('all')
 
-    print('combined runs: merged pareto entries into one plot!')
+    print('IB combined runs: merged pareto entries into one plot!')
 
 
 def main():
@@ -444,7 +444,7 @@ def main():
                 if x.name[:2] == 'IB':
                     print(f'\nEvaluating {x.name}')
                     try:
-                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_MAX=args.mp_cpu_cores_max)
+                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
                     except Exception as ex:
                         print(f'Failed evaluation for {x.name}. ignoring. Reason: {ex}')
                         # sfeh except only the one fail that is required?
@@ -452,7 +452,7 @@ def main():
                     print(f'\nSkipping {x.name}')
 
     else:
-        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, mp_cpu_MAX=args.mp_cpu_cores_max)
+        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
     return
 
 

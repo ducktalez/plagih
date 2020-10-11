@@ -195,14 +195,14 @@ def tex_label_beautify_end(label):
     return label
 
 
-def tree_get_expr_latextight(tree, node_id=root_id):
+def latex_tight_node(tree, node_id=root_id):
     """
     Fit the tree in one latex expression (aka a single node)
     """
     label = tree_node_get_label(tree, node_id)
 
     if tree_node_get_arity(tree, node_id) > 0:
-        child_tex_list = [tree_get_expr_latextight(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
+        child_tex_list = [latex_tight_node(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
         label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
     else:
         if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
@@ -218,7 +218,7 @@ def tree_get_expr_latextight(tree, node_id=root_id):
     return label
 
 
-def latex_get_tighttree(tree):
+def latex_tree_semitight(tree):
     """
     reduce expressions of large trees where it makes sense (according to me)
     """
@@ -268,13 +268,10 @@ def latex_get_tighttree(tree):
                 label = tree_node_get_label(tree, node_id)
                 label = label_bracket_beautification(label)
             elif node_dict[node_id] > 1:  # complete expression node
-                # expr_raw = tree_get_expr_raw(tree, node_id)
-                # label = expr_sympify(expr_raw)
-                label = tree_get_expr_latextight(tree, node_id=node_id)
+                label = latex_tight_node(tree, node_id=node_id)
                 # label = helper_format_brackets(label)
                 label = f'{{${label}$}}'
                 arity = 0
-                # label = re.sub('_', '{\\\\textunderscore}', label)   # sfeh workaround
             else:
                 raise
 

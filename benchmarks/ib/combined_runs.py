@@ -411,6 +411,8 @@ def merge_paretos(run_name):
         ax.set_xlabel('complexity')
         ax.set_ylabel('regression error')
         ax.legend(loc='upper right')
+        ax.set_xlim(0, None)
+        ax.set_ylim(0, None)  # 1.05  # top * 1.05 for better style
         fig.tight_layout()
         fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined.pdf')
         plt.close('all')  # plt.close('all') todo

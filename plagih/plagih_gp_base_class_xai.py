@@ -830,7 +830,7 @@ class ExplainableGP(object):
                 input_single_tex[parsim] = forest_viz
 
             forest_viz_tight = latex_tree_get_forest(tree, tight_viz=1)
-            # forest_viz_tight2 = latex_tree_get_forest(tree, tight_viz=2)  # todo
+            forest_viz_tight2 = latex_tree_get_forest(tree, tight_viz=2)  # todo
             # todo text for observations? cartVel
 
             latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'

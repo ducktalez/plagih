@@ -190,12 +190,12 @@ def latex_tighttree2_get_brackets(tree, node_id=root_id):
     """
     todo can this be done with the one above?
     """
-    formatify = [latex_tighttree2_get_brackets(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
+    formatify = [latex_tighttree2_get_brackets(tree, node_id=cc) for cc in tree_node_get_childs(tree, node_id)]
 
     label = tree_node_get_label(tree, node_id)
     try:
         bracket_string = op[label]['latex1'].format(*formatify)
-        return bracket_string
+        return f'{{{bracket_string}}}'
     except KeyError:
         return f'{{{label}}}'
 
@@ -323,7 +323,7 @@ def latex_get_tighttree(tree):
                 # label = expr_sympify(expr_raw)
                 label = tree_get_expr_latextight(tree, node_id=node_id)
                 # label = helper_format_brackets(label)
-                label = '{$' + label + '$}'
+                label = f'{{${label}$}}'
                 arity = 0
                 # label = re.sub('_', '{\\\\textunderscore}', label)   # sfeh workaround
             else:

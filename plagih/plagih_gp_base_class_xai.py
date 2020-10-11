@@ -25,7 +25,6 @@ class FileLocations:
     trees_tex = 'agents_trees.tex'
     trees_sub_tex = 'visualisation/'
     folder_pycode = ''
-    folder_tex = 'texfiles'
     file_pareto = 'paretofront.yaml'
     info_config_yaml = 'used_config.yaml'
 
@@ -804,7 +803,7 @@ class ExplainableGP(object):
             pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
             with plt.rc_context(rc={}):
-                fig, ax = plt.subplots()
+                fig, ax = plt.subplots(figsize=pyplot_size)
                 ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
                 ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
                 fig.tight_layout()
@@ -855,7 +854,7 @@ class ExplainableGP(object):
             textree_2 = forest_wrap(f'[${latex_tight_node(tree)}$]')
 
             latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'
-                              f'{textree_0} tight: {textree_1} tight2: {textree_2}\n')
+                              f'{textree_0} tight: {textree_1} tight2: {textree_2}\n\n\n')
 
             """
             save every tree-visualisation in subfolder
@@ -1514,8 +1513,11 @@ class ExplainableGP(object):
             return
 
         run_name = self.conf.name
+
         with plt.rc_context(rc={}):
-            fig, ax = plt.subplots()
+            # fig, ax = plt.subplots(figsize=pyplot_size)
+            fig, ax = plt.subplots(figsize=pyplot_size)  # , figsize=(9, 9)
+            # plt.figure()  # todo
             right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
             ax.set_xlim(min(min(xx), 0), right)
             ax.set_ylim(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05)  # 1.05  # top * 1.05 for better style
@@ -1535,6 +1537,7 @@ class ExplainableGP(object):
 
                 path_plot = folder_make_dir(self.root_dir / 'plots/')
                 fig.savefig(path_plot / f'paretofront {run_name}.pdf')
+                fig.savefig(path_plot / f'paretofront {run_name}.png', dpi=300)
                 self.printpl('f', f"paretofront (pdf): {path_plot.as_posix()}")
             except PermissionError as permerr:
                 print_e(f'Could not save plot: {permerr}')  # sfeh for everything?

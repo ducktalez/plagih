@@ -117,7 +117,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     """
     print the combined runs that belong together
     """
-    relevant_agents = [list(set(xx)) for xx in zip(*[x['parsims'] for x in best_regrerr_dict])]  # delete if not required by sfeh
+    # relevant_agents = [list(set(xx)) for xx in zip(*[x['parsims'] for x in best_regrerr_dict])]  # delete if not required by sfeh
 
     yaml_dump(root_dir_eval / 'best_regrerr.yaml',
               [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']]
@@ -152,7 +152,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
 
     with plt.rc_context(rc={}):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=pyplot_size)
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
@@ -168,7 +168,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         plt.close('all')
 
     with plt.rc_context(rc={}):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=pyplot_size)
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
@@ -187,7 +187,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     The two plots above in one plot
     """
     with plt.rc_context(rc={}):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=pyplot_size)
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
         ax.set_ylim(funny_limits)
@@ -222,7 +222,7 @@ def plot_per_action(root_dir_eval, run_name, parsims, combined_all_p):
     #         exp.append(np.mean([row['experiment'] for row in rows]))
     #         exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
     #
-    #     fig, ax = plt.subplots()
+    #     fig, ax = plt.subplots(figsize=pyplot_size)
     #     ax.set_title(f'action {a}, ({run_name})')
     #     ax.set_xlabel('complexity')
     #     ax.set_ylabel('reward')
@@ -266,7 +266,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
     y_safe_r50 = [y['experiment_safe_r50'] for y in res_safe_r50]
 
     with plt.rc_context(rc={}):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
@@ -280,7 +280,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
         fig.savefig(root_dir_eval / f'{run_name} (best).pdf')
 
     with plt.rc_context(rc={}):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
         ax.set_xlabel('Pareto complexity sum')  # summe der komplexitäten der paretofront
         ax.set_ylabel('reward')
@@ -306,7 +306,7 @@ def plot_scatter_some():
     #
     # plt.tight_layout()
     #     fig.tight_layout()#
-    # fig, ax = plt.subplots()
+    # fig, ax = plt.subplots(figsize=pyplot_size)
     # ax.set_title(f'IB eval {run_name} ({measr})')
     # ax.set_xlabel('complexity')
     # ax.set_ylabel('reward')
@@ -398,7 +398,7 @@ def merge_paretos(run_name):
     load each IB run and add its pareto front to a merged plot
     """
     with plt.rc_context():
-        fig, ax = plt.subplots(ncols=1)
+        fig, ax = plt.subplots(figsize=pyplot_size, ncols=1)
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):
             lfile = dir_slurm / run_name / f'{run_name}_{ii}'  #

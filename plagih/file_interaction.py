@@ -4,6 +4,7 @@ import yaml
 from pathlib import Path
 
 T_num_lines = 15  # sfeh this var is not found otherwise
+pyplot_size = (4.4, 3.3)  # default: (6.4, 4.8) S: (4, 3)  xxl: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 
 
 def folder_make_dir(path):
@@ -55,7 +56,7 @@ def yaml_load(yaml_path):
     .yaml-file loader (saves two lines that I had to look up all the time)
     """
     with Path.open(yaml_path, 'r') as file:
-        loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)
+        loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)  # yaml.safe_load sfeh?
     return loaded_yaml
 
 

@@ -12,6 +12,7 @@ import numpy as np
 import gym
 import pickle
 # import multiprocessing as mp
+from plagih.file_interaction import *
 
 
 def mtc_plot_decisions_space(agent, folder='img/', name='space_test', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
@@ -116,7 +117,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
     else:
         norm = None
     with plt.rc_context(rc={}):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=pyplot_size)
         c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
         ax.set_xlabel('position')
         ax.set_ylabel('velocity')
@@ -347,16 +348,16 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False)  # diff at start for diashow
         except Exception as ex:
             print(f'MTC eval failed because of: {ex}')
-            # agent_performance.append([agent_name, parsim, 0, 0])
+            agent_performance.append([agent_name, parsim, 0, 0])
 
     with plt.rc_context(rc={}):
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
         x = [x[1] for x in agent_performance]
         y = [x[2] for x in agent_performance]
         ax.bar(x, y)
         fig.savefig(dir_save / f'evaled_overview.pdf')
 
-    summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
+    summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance])
     with (dir_save / 'summary.txt').open('w') as file:
         file.write(summary_text)

@@ -1,5 +1,4 @@
 """
-# todo
 #!/usr/bin/env bash
 pdflatex agents_trees.tex
 find . -name "visualisation/*.tex" -exec pdflatex {} \;

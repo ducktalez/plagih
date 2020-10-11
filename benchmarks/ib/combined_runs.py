@@ -396,7 +396,7 @@ def merge_paretos(run_name):
     load each IB run and add its pareto front to a merged plot
     """
     with plt.rc_context():
-        fig, ax = plt.subplots(ncols=1)  # , figsize=(9, 9)  # todo opening warning (RuntimeWarning: More than 20 figures have been opened... through the pyplot interface) maybe it doesnt close
+        fig, ax = plt.subplots(ncols=1)
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):
             lfile = dir_slurm / run_name / f'{run_name}_{ii}'  #
@@ -415,7 +415,7 @@ def merge_paretos(run_name):
         ax.set_ylim(0, None)  # 1.05  # top * 1.05 for better style
         fig.tight_layout()
         fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined.pdf')
-        plt.close('all')  # plt.close('all') todo
+        plt.close('all')
 
     print('combined runs: merged pareto entries into one plot!')
 

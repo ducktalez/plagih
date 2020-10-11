@@ -46,8 +46,8 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
            # sfeh latexf requires some testing...
            'sym_reduce': '({} ** {})', 'sym_str': '({} ** Round({}))', 'pycode': '({}**round({}))'},
 
-    'abs': {'fun_class': 'Abs', 'fun_label': 'abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': 'abs', 'latexF': '|{}|',
-            'sym_reduce': None, 'sym_str': 'abs({})', 'pycode': 'abs({})'},
+    'Abs': {'fun_class': 'Abs', 'fun_label': 'Abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': 'abs', 'latexF': '|{}|',
+            'sym_reduce': None, 'sym_str': 'Abs({})', 'pycode': 'abs({})'},
     'sign': {'fun_class': 'Sign', 'fun_label': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'sign', 'tf': tf.sign, 'opgroup': [], 'latex1': 'sign', 'latexF': 'sign({})',
              'sym_reduce': 'sign(real())', 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},
     'Round': {'fun_class': 'Round', 'fun_label': 'Round', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'round', 'tf': tf.round, 'opgroup': [], 'latex1': 'round', 'latexF': 'round({})',
@@ -137,7 +137,8 @@ op = {
     ast.Div: op_what['/'],
     '**': op_what['**'],
     ast.Pow: op_what['**'],
-    'abs': op_what['abs'],
+    'abs': op_what['Abs'],  # delete this
+    'Abs': op_what['Abs'],
     'sign': op_what['sign'],
     'Square': op_what['Square'],
     'sqrt': op_what['sqrt'],
@@ -231,9 +232,9 @@ op_test = {
 
 
 def make_classes():
-    print('import os\nimport tensorflow as tf\nimport ast\nimport math\nfrom plagih.plagih_data import *\n\n')
-    print('class Plabel:')
-    print('    pass\n')
+    class_str = 'import os\nimport tensorflow as tf\nimport ast\nimport math\nfrom plagih.plagih_data import *\n\n' \
+                'class Plabel:\n' \
+                '    pass\n'
     for key, v in op_what.items():
         # print(key, v)
         # key = '>='
@@ -242,32 +243,28 @@ def make_classes():
         #
         # for inh in inhalt:
         #     print(f'print("self.{inh} = {{v[{}]}})"')
-        print('')
         classname = v['fun_class']
-        if classname == 'SKIP':
-            continue
-        # todo (irrelevant, but must not be forgotten) sym special case
-        print(f"class {classname}(Plabel):\n")
-
-        print(f"    fun_label = '{v['fun_label']}'")
-        print(f"    arity = {v['arity']}")
-        print(f"    xtype = '{v['xtype']}'")
-        print(f"    c_weight = {v['c-weight']}")
-        # vtf = inspect.getsource(v['tf'])
-        # vtf = re.sub(".*tf': ", "", str(vtf))
-        # vtf = re.sub(",.*': ", "", vtf)
-        print(f"    tf = tf.{v['tf_name']}")
         latex1 = v['latex1']
         latex1 = latex1.replace('\\', '\\\\')
-        print(f"    latex1 = '{latex1}'")
         latexF = v['latexF']
         latexF = latexF.replace('\\', '\\\\')
-        print(f"    latexF = '{latexF}'")
-        print(f"    sym_str = '{v['sym_str']}'")
         pycc = v['pycode']
-        print(f"    pycode = '{pycc}'")
+        # todo (irrelevant, but must not be forgotten) sym special case
+        if classname == 'SKIP':
+            continue
+        else:
+            class_str += (f"class {classname}(Plabel):\n"
+                          f"    fun_label = '{v['fun_label']}'\n"
+                          f"    arity = {v['arity']}\n"
+                          f"    xtype = '{v['xtype']}'\n"
+                          f"    c_weight = {v['c-weight']}\n"
+                          f"    tf = tf.{v['tf_name']}\n"
+                          f"    latex1 = '{latex1}'\n"
+                          f"    latexF = '{latexF}'\n"
+                          f"    sym_str = '{v['sym_str']}'\n"
+                          f"    pycode = '{pycc}'\n\n")
 
-        print('')
+        print(class_str)
 
 
 if __name__ == "__main__":

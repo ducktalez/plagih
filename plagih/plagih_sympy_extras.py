@@ -233,20 +233,7 @@ class Round(Function):
         return eval(self, a)
 
 
-# attention: exactly same capitals/letters! (gets replaced)
-local_sympy_dict = {'Ifte': Ifte,
-                    'Mini': Mini,
-                    'Maxi': Maxi,
-                    'Andb': Andb,
-                    'Orb': Orb,
-                    'Notb': Notb,
-                    'Square': Square,
-                    'Usub': Usub,
-                    'usub': Usub,  # sfeh delete this
-                    'Round': Round}
-
-
-def plagih_sympify(function_string):
+def plagih_sympify(function_string, eval_locals=None):
     """
     Sympy bug #1:
     It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139
@@ -257,7 +244,22 @@ def plagih_sympify(function_string):
     throws an exception.
     -> Try-except block for this case
     """
+
+    # attention: exactly same capitals/letters! (gets replaced)
+    local_sympy_dict = {'Ifte': Ifte,
+                        'Mini': Mini,
+                        'Maxi': Maxi,
+                        'Andb': Andb,
+                        'Orb': Orb,
+                        'Notb': Notb,
+                        'Square': Square,
+                        'Usub': Usub,
+                        'usub': Usub,  # sfeh delete this
+                        'Round': Round}
+    local_sympy_dict.update(eval_locals or {})
+
     try:
+        # return sympify(sympify(function_string, locals=local_sympy_dict))
         return sympify(sympify(function_string, locals=local_sympy_dict))
     except Exception as ex:
         # raise
@@ -267,13 +269,22 @@ def plagih_sympify(function_string):
 
 if __name__ == "__main__":
     print('Running sympify example')
-    exprs = ['Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))',
+    exprs = ['Square((Mini(-2.176629, Shift_2) - Abs(Fatigue_5)))',
              'Round(-123.333334234) + Round(Shift_2)',
              '1 < Maxi(2, Ifte(1 < a, 1, 1))']
 
     expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
-    expr = 'Maxi(2.202197, (abs(cartVel) - sqrt(cartVel)))'
-    expr = 'sign(((a * b) ** 10))'  # takes too long
-    expr = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
-    print(plagih_sympify(expr))
-    print('DONE testing sympify')
+    expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
+    # expr = 'sign(((a * b) ** 10))'  # takes too long
+    # expr = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
+    obs = {'cartVel': 0.5, 'cartPos': -0.8}
+
+    sympex = plagih_sympify(expr, eval_locals=obs)
+
+    # print(plagih_sympify(expr))
+    print(sympex)
+
+"""
+sfeh
+Lastly, it is recommended that you not use I, E, S, N, C, O, or Q 
+"""

@@ -170,7 +170,7 @@ def latex_brackettree(tree, node_id=root_id):
     return bracket_string
 
 
-def latex_tighttree_get_brackets(tree, node_id=root_id):
+def latex_brackettree_tight(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
 
@@ -180,17 +180,17 @@ def latex_tighttree_get_brackets(tree, node_id=root_id):
 
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
-        label += (latex_tighttree_get_brackets(tree, child_id))
+        label += (latex_brackettree_tight(tree, child_id))
     bracket_string = f'[{label}]'
 
     return bracket_string
 
 
-def latex_tighttree2_get_brackets(tree, node_id=root_id):
+def latex_brackettree_tight2(tree, node_id=root_id):
     """
     todo can this be done with the one above?
     """
-    formatify = [latex_tighttree2_get_brackets(tree, node_id=cc) for cc in tree_node_get_childs(tree, node_id)]
+    formatify = [latex_brackettree_tight2(tree, node_id=cc) for cc in tree_node_get_childs(tree, node_id)]
 
     label = tree_node_get_label(tree, node_id)
     try:
@@ -198,43 +198,6 @@ def latex_tighttree2_get_brackets(tree, node_id=root_id):
         return f'{{{bracket_string}}}'
     except KeyError:
         return f'{{{label}}}'
-
-
-def latex_tree_get_forest(tree, tight_viz=0):
-    """
-    whole procedure from tree to forest core
-    tight_viz:
-        0: display every node
-        1: clever tight-visualisation where possible
-        2: one single mathematical expression
-    """
-
-    tree = tree.copy()
-
-    if tight_viz == 0:
-        bracket_tree = latex_brackettree(tree)
-    elif tight_viz == 1:
-        tree_tight = latex_get_tighttree(tree)
-        bracket_tree = latex_tighttree_get_brackets(tree_tight)
-    elif tight_viz == 2:
-        bracket_tree = latex_tighttree2_get_brackets(tree)
-    else:
-        raise Exception(f'Wrong call, tight_viz was {tight_viz}')
-
-    # latex predefined colors:
-    # black, blue, brown, cyan, darkgray, gray, green, lightgray, lime, magenta, olive, orange, pink, purple, red, teal, violet, white, yellow.
-    forest_complete = f'\n\\begin{{forest}}' \
-                      f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
-                      f'\n  terminal/.style={{rectangle,}},' \
-                      f'\n  fixnode/.style={{fill=blue!60,}},' \
-                      f'\n  observation/.style={{rectangle,}},' \
-                      f'\n  variable/.style={{rectangle,}},' \
-                      f'\n  nodeinsert/.style={{fill=green!50,}},' \
-                      f'\n  nodechanged/.style={{fill=orange!50,}},' \
-                      f'\n {bracket_tree}' \
-                      f'\n\\end{{forest}}\n'
-
-    return forest_complete
 
 
 def tex_label_beautify_end(label):

@@ -257,11 +257,20 @@ class ExplainableGP(object):
         a_helping_dict = {'self.monitor_evol': self.monitor_evol,
                           'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh save complete config?    # sfeh i dont think we need the config
         run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitor_df, a_helping_dict  # sfeh use this later, a_helping_dict
-
         path_backup = file_make_dir(self.root_dir / self.paths.backup_p)
         with Path.open(path_backup, 'wb') as file:
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
             self.printpl('f', f'Backup: {path_backup.as_posix()}')
+
+        run_backup_dict = {'self.gen_id': self.gen_id,
+                           'self.pareto': self.pareto,
+                           'self.pop_base': self.pop_base,
+                           'self.monitor_df': self.monitor_df,
+                           'a_helping_dict': a_helping_dict}
+
+        path_backupyyy = file_make_dir(self.root_dir / 'backup/backup.yaml')  # todo
+        yaml_dump(path_backupyyy, run_backup_dict, print_type=self.print_type)
+        self.printpl('f', f'Backup: {path_backupyyy.as_posix()}')
 
         return
 
@@ -391,14 +400,15 @@ class ExplainableGP(object):
                 self.mp_cpu_cores_max = 1  # sfeh wasd
                 if self.mp_cpu_cores_max >= 2:
                     pass
-                    # mp.Process()  # sfeh maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
-                    #
-                    # print(f'Trying to make parallel new population: {mp.cpu_count()}')
-                    # with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
-                    #
-                    #     evolve_list = [[tag, evolve_specs] for tag, evolve_specs in self.evolve_loop.items()]
-                    #     results = p.map(self.gen_next_population_mp_parallel_ugly_name_lol, evolve_list)
-                    # time_evolve = time.perf_counter()
+                    # sfeh asd
+                    mp.Process()  # sfeh maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
+
+                    print(f'Trying to make parallel new population: {mp.cpu_count()}')
+                    with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
+
+                        evolve_list = [[tag, evolve_specs] for tag, evolve_specs in self.evolve_loop.items()]
+                        results = p.map(self.the_fun, evolve_list)
+                    time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
                     pass
@@ -417,11 +427,6 @@ class ExplainableGP(object):
         self.run_backup_save()
 
         return
-
-    def gen_create_random(self, amount):
-        """
-        Add an amount of random trees to the population
-        """
 
     def gen_create_initial(self):
         """
@@ -675,7 +680,7 @@ class ExplainableGP(object):
                                ['-', 1], ['Usub', 1],
                                ['*', 2], ['/', 1],
                                ['Square', 0.75], ['**', 0.25],
-                               ['abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
+                               ['Abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
                                ['sqrt', 0.25],
                                # ['log', 0.1], ['log1p', 0.1],  # sfeh
                                ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
@@ -816,49 +821,72 @@ class ExplainableGP(object):
         - fill tree meta-data, just in case we want to visualise anything of it
         - create latex-forest representation
         """
+
+        """
+        whole procedure from tree to forest core
+        tight_viz:
+            0: display every node
+            1: clever tight-visualisation where possible
+            2: one single mathematical expression
+        """
         latex_row1 = []
         input_single_tex = {}
 
         for (parsim, fitness, cooltree) in self.pareto:
 
             cooltree.set_fix_nodes(self.origin_cooltree)
-            cooltree.meta.last_evolution = 'texify'
+            # cooltree.meta.last_evolution = 'texify'
             tree = cooltree.get_oldtree()
 
-            forest_viz = latex_tree_get_forest(tree, tight_viz=0)
-            if parsim < 14:
-                input_single_tex[parsim] = forest_viz
+            forest_wrap = lambda x: f'\n\\begin{{forest}}' \
+                f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
+                f'\n  terminal/.style={{rectangle,}},' \
+                f'\n  fixnode/.style={{fill=blue!60,}},' \
+                f'\n  observation/.style={{rectangle,}},' \
+                f'\n  variable/.style={{rectangle,}},' \
+                f'\n  nodeinsert/.style={{fill=green!50,}},' \
+                f'\n  nodechanged/.style={{fill=orange!50,}},' \
+                f'\n {x}' \
+                f'\n\\end{{forest}}\n'
 
-            forest_viz_tight = latex_tree_get_forest(tree, tight_viz=1)
-            forest_viz_tight2 = latex_tree_get_forest(tree, tight_viz=2)  # todo
-            # todo text for observations? cartVel
+            # tree = tree.copy()
+
+            textree_0 = forest_wrap(latex_brackettree(tree))
+            textree_tight = latex_get_tighttree(tree)
+            textree_1 = forest_wrap(latex_brackettree_tight(textree_tight))
+            textree_2 = forest_wrap(latex_brackettree_tight2(tree))
 
             latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'
-                              f'{forest_viz} tight: {forest_viz_tight}\n')
+                              f'{textree_0} tight: {textree_1} tight2: {textree_2}\n')
 
-            # save every tree-visualisation in subfolder
+            """
+            save every tree-visualisation in subfolder
+            """
             path_subfolder_tex = folder_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
             # create full document including just one tree (file must have a nice name)
-            subtex1 = latex_treeviz_full_document([forest_viz], doc_border='')
+            subtex0 = latex_treeviz_full_document([textree_0], doc_border='')
             with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}.tex', 'w') as file:
-                file.write(subtex1)
-            subtex2 = latex_treeviz_full_document([forest_viz_tight], doc_border='')
+                file.write(subtex0)
+            subtex1 = latex_treeviz_full_document([textree_1], doc_border='')
             with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_tight.tex', 'w') as file:
-                file.write(subtex2)  # filename? -> <run_name>_<complexity>[_tight].tex
+                file.write(subtex1)
+            subtex2 = latex_treeviz_full_document([textree_2], doc_border='')
+            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_tight2.tex', 'w') as file:
+                file.write(subtex2)
 
         latex_full_doc = latex_treeviz_full_document(latex_row1)
 
         path_trees_tex = file_make_dir(self.root_dir / self.paths.trees_tex)
-
         with Path.open(path_trees_tex, 'w') as file:
             file.write(latex_full_doc)
+            self.printpl('ff', f'Latex-trees: {path_trees_tex.as_posix()}')
 
-        path_folder_tex = folder_make_dir(self.root_dir / self.paths.folder_tex)
-        for parsim, forest_tree in input_single_tex.items():
-            with Path.open(path_folder_tex / f'{self.conf.name}-parsim{parsim}.tex', 'w') as file:
-                file.write(forest_tree)
-
-        self.printpl('ff', f'Latex-trees: {path_trees_tex.as_posix()}')
+            # if parsim < 14:  # adhoc lösung
+            #     input_single_tex[parsim] = textree_0
+        # path_folder_tex = folder_make_dir(self.root_dir / self.paths.folder_tex)
+        # for parsim, forest_tree in input_single_tex.items():
+        #     with Path.open(path_folder_tex / f'{self.conf.name}-parsim{parsim}.tex', 'w') as file:
+        #         file.write(forest_tree)
 
         return
 

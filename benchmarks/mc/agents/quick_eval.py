@@ -13,7 +13,7 @@ import gym
 import pickle
 
 
-def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
+def mtc_plot_decisions_space(agent, folder='img/', name='space_test', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
     """
     plotting the decision space
     """
@@ -146,14 +146,12 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
             p.fill = True
             p.set_hatch(nan_style[1])
             p.set_edgecolor(nan_style[2])
-            fig.rcParams['hatch.linewidth'] = nan_style[3]  # todo fig was plt
+            fig.rcParams['hatch.linewidth'] = nan_style[3]
         else:
-            # p.fill = False
-            # p.set_color()  # default 'white' is okay
-            # ax.set_facecolor('xkcd:light grey')
             p.set_color('xkcd:dark grey')
             p.fill = True
             p.set_hatch('//')
+            # ax.set_facecolor('xkcd:light grey')
             # p.set_edgecolor('xkcd:dark grey')
             # plt.rcParams['hatch.linewidth'] = 0.2
         ax.add_patch(p)
@@ -342,20 +340,21 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
         mcAgent = DummyMcAgent(pycode)
         try:
             avg_reward, fails, _ = mtc_play(mcAgent, n=n)
-            agent_performance.append([agent_name, avg_reward, fails])
-            mtc_plot_decisions_space(mcAgent, name=agent_name, folder=dir_save, dummy=True)
-            mtc_plot_differences(mcAgent, sarsa_agent, dummy_result=sarsa_dummy, boarders=1, name=f'diff-{agent_name}', folder=dir_save, abs_diff=False)  # diff at start for diashow
+            agent_performance.append([agent_name, parsim, avg_reward, fails])
+            mtc_plot_decisions_space(mcAgent, folder=dir_save, name=agent_name, dummy=True)
+            mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False)  # diff at start for diashow
         except:
-            agent_performance.append([agent_name, 0, 0])
+            pass
+            # agent_performance.append([agent_name, parsim, 0, 0])
 
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
         fig.tight_layout()
-        x = [pfc[0] for pfc in pareto]
-        y = [x[1] for x in agent_performance]
-        ax.bar(x, y)
+        x = [x[1] for x in agent_performance]
+        y = [x[2] for x in agent_performance]
+        ax.plot(x, y)
 
-        fig.savefig(dir_save / f'dumbrepared.pdf')
+        fig.savefig(dir_save / f'evaled_overview.pdf')
 
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
     with (dir_save / 'summary.txt').open('w') as file:

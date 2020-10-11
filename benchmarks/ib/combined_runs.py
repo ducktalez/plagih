@@ -412,7 +412,7 @@ def merge_paretos(run_name):
         ax.set_ylabel('regression error')
         ax.legend(loc='upper right')
         fig.tight_layout()
-        fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined', dpi=300)
+        fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined.pdf')
         plt.close('all')  # plt.close('all') todo
 
     print('combined runs: merged pareto entries into one plot!')

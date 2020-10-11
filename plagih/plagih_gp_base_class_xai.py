@@ -262,15 +262,14 @@ class ExplainableGP(object):
             pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
             self.printpl('f', f'Backup: {path_backup.as_posix()}')
 
-        run_backup_dict = {'self.gen_id': self.gen_id,
-                           'self.pareto': self.pareto,
-                           'self.pop_base': self.pop_base,
-                           'self.monitor_df': self.monitor_df,
-                           'a_helping_dict': a_helping_dict}
-
-        path_backupyyy = file_make_dir(self.root_dir / 'backup/backup.yaml')  # todo
-        yaml_dump(path_backupyyy, run_backup_dict, print_type=self.print_type)
-        self.printpl('f', f'Backup: {path_backupyyy.as_posix()}')
+        # run_backup_dict = {'self.gen_id': self.gen_id,
+        #                    'self.pareto': self.pareto,
+        #                    'self.pop_base': self.pop_base,
+        #                    'self.monitor_df': self.monitor_df,
+        #                    'a_helping_dict': a_helping_dict}
+        #
+        # path_backupyyy = file_make_dir(self.root_dir / 'backup/backup.yaml')
+        # yaml_dump(path_backupyyy, run_backup_dict, print_type=self.print_type)
 
         return
 
@@ -854,7 +853,7 @@ class ExplainableGP(object):
             textree_0 = forest_wrap(latex_brackettree(tree))
             textree_tight = latex_get_tighttree(tree)
             textree_1 = forest_wrap(latex_brackettree_tight(textree_tight))
-            textree_2 = forest_wrap(latex_brackettree_tight2(tree))
+            textree_2 = forest_wrap(f'[${tree_get_expr_latextight(tree)}$]')
 
             latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'
                               f'{textree_0} tight: {textree_1} tight2: {textree_2}\n')

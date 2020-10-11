@@ -186,20 +186,6 @@ def latex_brackettree_tight(tree, node_id=root_id):
     return bracket_string
 
 
-def latex_brackettree_tight2(tree, node_id=root_id):
-    """
-    todo can this be done with the one above?
-    """
-    formatify = [latex_brackettree_tight2(tree, node_id=cc) for cc in tree_node_get_childs(tree, node_id)]
-
-    label = tree_node_get_label(tree, node_id)
-    try:
-        bracket_string = op[label]['latex1'].format(*formatify)
-        return f'{{{bracket_string}}}'
-    except KeyError:
-        return f'{{{label}}}'
-
-
 def tex_label_beautify_end(label):
 
     if label in op:
@@ -211,7 +197,7 @@ def tex_label_beautify_end(label):
 
 def tree_get_expr_latextight(tree, node_id=root_id):
     """
-
+    Fit the tree in one latex expression (aka a single node)
     """
     label = tree_node_get_label(tree, node_id)
 

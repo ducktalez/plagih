@@ -11,6 +11,7 @@ import matplotlib.colors as colors
 import numpy as np
 import gym
 import pickle
+# import multiprocessing as mp
 
 
 def mtc_plot_decisions_space(agent, folder='img/', name='space_test', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
@@ -196,9 +197,10 @@ def mtc_play(agent, render=False, n=1):
     return reward_average, fail_sum, list_episode_rewards
 
 
-def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path('img/'), n=100, color='b'):
+def mtc_plot_episode_performance(agent, name='episode performance', folder=Path('img/'), n=100, color='b'):
     """
     plot the performance of all tested episodes (e.g. for showing outliers)
+    delete this?
     """
     if not Path.is_dir(folder):
         Path.mkdir(folder)
@@ -313,7 +315,7 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             try:
                 mc_actn = eval(self.mcAction)
             except:
-                raise  # todo
+                raise  # sfeh
             return int(round(max(0, min(2, mc_actn))))
 
     _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
@@ -343,8 +345,8 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             agent_performance.append([agent_name, parsim, avg_reward, fails])
             mtc_plot_decisions_space(mcAgent, folder=dir_save, name=agent_name, dummy=True)
             mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False)  # diff at start for diashow
-        except:
-            pass
+        except Exception as ex:
+            print(f'MTC eval failed because of: {ex}')
             # agent_performance.append([agent_name, parsim, 0, 0])
 
     with plt.rc_context(rc={}):
@@ -352,8 +354,7 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
         fig.tight_layout()
         x = [x[1] for x in agent_performance]
         y = [x[2] for x in agent_performance]
-        ax.plot(x, y)
-
+        ax.bar(x, y)
         fig.savefig(dir_save / f'evaled_overview.pdf')
 
     summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])

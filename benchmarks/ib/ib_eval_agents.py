@@ -81,7 +81,7 @@ def eval_agents():
     # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
         sum_all = eval_agent(agent, randomize=0)
-        sum_safe = eval_agent(agent, safe_eval=True, randomize=0)  # todo randomize 50 or 0?
+        sum_safe = eval_agent(agent, safe_eval=True, randomize=0)
         sum_allr50 = eval_agent(agent, randomize=50, repeat_avg=10)
         sum_safer50 = eval_agent(agent, safe_eval=True, randomize=50, repeat_avg=10)
         print(f'Results : {agent.name} \t{sum_all:5.1f} \t (safe: {sum_safe:5.1f}) \t(r50: all: {sum_allr50:4.1f} \tsafe: {sum_safer50:4.1f})')

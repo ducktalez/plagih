@@ -119,8 +119,10 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     """
     relevant_agents = [list(set(xx)) for xx in zip(*[x['parsims'] for x in best_regrerr_dict])]  # delete if not required by sfeh
 
-    yaml_dump(root_dir_eval / 'best_regrerr.yaml', [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']] for x in best_regrerr_dict])  # todo delete this?
-    # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # todo delete this?
+    yaml_dump(root_dir_eval / 'best_regrerr.yaml',
+              [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']]
+               for x in best_regrerr_dict])  # sfeh delete this?
+    # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
 
     """
     okay

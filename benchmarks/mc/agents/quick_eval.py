@@ -116,7 +116,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
     else:
         norm = None
-    with plt.rc_context(rc={}):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
         ax.set_xlabel('position')
@@ -163,6 +163,8 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         if not Path.is_dir(folder):
             Path.mkdir(folder)
         fig.savefig(Path(folder) / f'{name}.pdf')
+        plt.tight_layout()
+        fig.savefig(Path(folder) / f'{name}-plttight.pdf')  # todo todotodo delete this
         plt.close('all')
 
 
@@ -350,7 +352,7 @@ def auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100):
             print(f'MTC eval failed because of: {ex}')
             agent_performance.append([agent_name, parsim, 0, 0])
 
-    with plt.rc_context(rc={}):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
         x = [x[1] for x in agent_performance]

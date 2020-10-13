@@ -151,7 +151,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     y_all_r50 = [y['experiment_r50'] for y in res_all]
     y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
 
-    with plt.rc_context(rc={}):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
@@ -167,7 +167,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
         fig.savefig(root_dir_eval / f'{run_name}-regression_sum.pdf')  # dpi=300
         plt.close('all')
 
-    with plt.rc_context(rc={}):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
@@ -186,7 +186,7 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     """
     The two plots above in one plot
     """
-    with plt.rc_context(rc={}):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         ax.set_xlabel('Pareto complexity sum')
         ax.set_ylabel('reward')
@@ -265,7 +265,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
     res_safe_r50.sort(key=lambda x: x['parsim_sum'])
     y_safe_r50 = [y['experiment_safe_r50'] for y in res_safe_r50]
 
-    with plt.rc_context(rc={}):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
         ax.set_xlabel('Pareto complexity sum')
@@ -279,7 +279,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
         fig.tight_layout()
         fig.savefig(root_dir_eval / f'{run_name} (best).pdf')
 
-    with plt.rc_context(rc={}):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
         ax.set_xlabel('Pareto complexity sum')  # summe der komplexitäten der paretofront
@@ -398,7 +398,7 @@ def merge_paretos(run_name):
     load each IB run and add its pareto front to a merged plot
     """
     with plt.rc_context():
-        fig, ax = plt.subplots(figsize=pyplot_size, ncols=1)
+        fig, ax = plt.subplots()
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):
             lfile = dir_slurm / run_name / f'{run_name}_{ii}'  #

@@ -802,7 +802,7 @@ class ExplainableGP(object):
             used_observations = cooltree.get_observation_list()
             pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
-            with plt.rc_context(rc={}):
+            with plt.rc_context(rc=pyplot_rc_tex):
                 fig, ax = plt.subplots(figsize=pyplot_size)
                 ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
                 ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
@@ -851,7 +851,7 @@ class ExplainableGP(object):
             textree_0 = forest_wrap(latex_brackettree(tree))
             textree_tight = latex_tree_semitight(tree)
             textree_1 = forest_wrap(latex_brackettree_tight(textree_tight))
-            textree_2 = forest_wrap(f'[${latex_tight_node(tree)}$]')
+            textree_2 = f'${latex_tight_node(tree)}$'
 
             latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'
                               f'{textree_0} tight: {textree_1} tight2: {textree_2}\n\n\n')
@@ -861,14 +861,18 @@ class ExplainableGP(object):
             """
             path_subfolder_tex = folder_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
             # create full document including just one tree (file must have a nice name)
-            subtex0 = latex_treeviz_full_document([textree_0], doc_border='')
-            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}.tex', 'w') as file:
-                file.write(subtex0)
-            subtex1 = latex_treeviz_full_document([textree_1], doc_border='')
-            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_tight.tex', 'w') as file:
-                file.write(subtex1)
-            subtex2 = latex_treeviz_full_document([textree_2], doc_border='')
-            with Path.open(path_subfolder_tex / f'{self.conf.name}_{parsim:.0f}_tight2.tex', 'w') as file:
+            # subtex0 = latex_treeviz_full_document([textree_0], doc_border='')
+            # with Path.open(path_subfolder_tex / f'{parsim:02d}_full.tex', 'w') as file:
+            #     file.write(subtex0)
+            #
+            # subtex1 = latex_treeviz_full_document([textree_1], doc_border='')
+            # with Path.open(path_subfolder_tex / f'{parsim:02d}_full_tight.tex', 'w') as file:
+            #     file.write(subtex1)
+
+            with Path.open(path_subfolder_tex / f'{parsim:02d}_input.tex', 'w') as file:
+                file.write(textree_2)
+            subtex2 = forest_wrap(f'[{textree_2}]')
+            with Path.open(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', 'w') as file:
                 file.write(subtex2)
 
         latex_full_doc = latex_treeviz_full_document(latex_row1)
@@ -1513,14 +1517,12 @@ class ExplainableGP(object):
             return
 
         run_name = self.conf.name
+        run_name = str(run_name).replace('_', '-')  # todo workaround for latex version
 
-        with plt.rc_context(rc={}):
+        with plt.rc_context(rc=pyplot_rc_tex):
             # fig, ax = plt.subplots(figsize=pyplot_size)
             fig, ax = plt.subplots(figsize=pyplot_size)  # , figsize=(9, 9)
-            # plt.figure()  # todo
             right = max(max(xx), self.conf.parsimony_max) * 1.05  # sfeh check this out 1.05  # if set_right:
-            ax.set_xlim(min(min(xx), 0), right)
-            ax.set_ylim(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05)  # 1.05  # top * 1.05 for better style
 
             # beyond_lines:  # adding a point to the edges to imply that there are no more values (pareto-plot)
             xx = np.concatenate([[xx[0]], xx, [right + 1]])
@@ -1529,15 +1531,16 @@ class ExplainableGP(object):
             ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
 
             ax.legend(loc='lower left')
-            ax.set_xlabel('complexity')
-            ax.set_ylabel('regression error')
+            # ax.set_xlim(min(min(xx), 0), right)
+            # ax.set_ylim(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05)  # 1.05  # top * 1.05 for better style
 
-            fig.tight_layout()
+            ax.set(xlabel='complexity', ylabel='regression error', xlim=(min(min(xx), 0), right), ylim=(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05))
+
             try:
-
+                fig.tight_layout()  # todo
                 path_plot = folder_make_dir(self.root_dir / 'plots/')
-                fig.savefig(path_plot / f'paretofront {run_name}.pdf')
-                fig.savefig(path_plot / f'paretofront {run_name}.png', dpi=300)
+                fig.savefig(path_plot / f'paretofront-{run_name}.pdf', backend='pgf')
+                fig.savefig(path_plot / f'paretofront-{run_name}.png', dpi=300)
                 self.printpl('f', f"paretofront (pdf): {path_plot.as_posix()}")
             except PermissionError as permerr:
                 print_e(f'Could not save plot: {permerr}')  # sfeh for everything?
@@ -1551,7 +1554,7 @@ class ExplainableGP(object):
         sfeh: this should be saved within the trees. Everything else is a waste of memory!
         """
         try:
-            with plt.rc_context(rc={}):
+            with plt.rc_context(rc=pyplot_rc_tex):
                 fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(16, 9), sharex='all')  # , gridspec_kw={'height_ratios': [1,1,1]}
                 fig.tight_layout()
                 for tag in self.evolve_tags:

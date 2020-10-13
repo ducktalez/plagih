@@ -4,7 +4,93 @@ import yaml
 from pathlib import Path
 
 T_num_lines = 15  # sfeh this var is not found otherwise
-pyplot_size = (4.4, 3.3)  # default: (6.4, 4.8) S: (4, 3)  xxl: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
+
+pyplot_size = (4, 3)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
+pyplot_rc_tex = {'figure.autolayout': True,
+                 'text.usetex': True,
+                 'backend': 'pgf',
+                 'figure.figsize': pyplot_size,
+                 # 'font.size': 11,
+                 # 'lines.linewidth': 1,
+                 # 'lines.markersize': 3,
+                 # 'xtick.labelsize': 8,
+                 # 'ytick.labelsize': 8,
+                 # 'axes.xmargin': 0,
+                 # 'axes.ymargin': 0
+                 }
+
+pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
+rc_pyplot_size = {'figure.figsize': pyplot_size}
+# ['text.latex.preamble'=r"\usepackage{lmodern}"]
+
+pyplot_rc_options = {'font.family': 'serif',
+                     'font.serif': ['Times', 'Palatino', 'New Century Schoolbook', 'Bookman', 'Computer Modern Roman'],
+                     'font.sans-serif': ['Helvetica', 'Avant Garde', 'Computer Modern Sans serif'],
+                     'font.cursive': ['Zapf Chancery'],
+                     'font.monospace': ['Courier', 'Computer Modern Typewriter']}
+more_optionsasd = {'savefig.dpi': 300, }
+"""
+For further options see:
+https://matplotlib.org/3.3.2/tutorials/introductory/customizing.html#customizing-with-matplotlibrc-files
+https://matplotlib.org/3.1.0/api/matplotlib_configuration_api.html#matplotlib.RcParams
+"""
+# 'backend': 'pgf', 'font.family':'serif',
+# pyplot_rc_options2 = {
+#     'axes.titlesize': 24,
+#     'axes.labelsize': 20,
+#     'lines.linewidth': 3,
+#     'lines.markersize': 10,
+#     'xtick.labelsize': 16,
+#     'ytick.labelsize': 16,
+# }
+# pyplot_rc_options_smallsize = {
+#     'axes.titlesize': 12,
+#     'axes.labelsize': 10,
+#     'lines.linewidth': 1,
+#     'lines.markersize': 3,
+#     'xtick.labelsize': 8,
+#     'ytick.labelsize': 8,
+#     'figure.subplot.left': 0.15,
+#     'figure.subplot.bottom': 0.16,
+#     'figure.subplot.right': 0.99,
+#     'figure.subplot.top': 0.97,
+# }
+
+"""
+from matplotlib import rc
+rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+## for Palatino and other serif fonts use:
+#rc('font',**{'family':'serif','serif':['Palatino']})
+rc('text', usetex=True)
+"""
+"""
+# sfeh tests
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Data for plotting
+t = np.arange(0.0, 2.0, 0.2)
+s = 1 + np.sin(2 * np.pi * t)
+
+rc_params = {'text.usetex': True, 'figure.figsize': (2.8, 2.1),
+    'axes.titlesize': 11,
+    'axes.labelsize': 8,
+    'lines.linewidth': 1,
+    'lines.markersize': 2,
+    'xtick.labelsize': 8,
+    'ytick.labelsize': 8,}
+with plt.rc_context(rc=rc_params):
+    fig, ax = plt.subplots()
+    
+    fig.tight_layout()
+    plt.tight_layout()
+    ax.plot(t, s, marker='x')
+    ax.set(ylabel='voltage (mV)', title='About as simple as it gets, folks')
+    fig.savefig(f"test-{str(rc_params.values())}.pdf")
+    plt.show()
+
+"""
 
 
 def folder_make_dir(path):

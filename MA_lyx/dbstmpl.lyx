@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -31,6 +31,11 @@
 \global\fach{Computer Science}
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -52,8 +57,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -92,7 +95,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -102,10 +104,7 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -436,7 +435,6 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -505,7 +503,6 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -537,7 +534,6 @@ t Learning (RL) policies using Genetic Programming (GP).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -583,7 +579,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -615,7 +610,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -739,7 +733,6 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -749,7 +742,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -942,7 +934,6 @@ Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1078,7 +1069,6 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1146,7 +1136,6 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -1158,7 +1147,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -1215,7 +1203,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1363,7 +1350,6 @@ The TED is a well-known problem from theoretical computer science and will
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -1377,7 +1363,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -1824,7 +1809,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -2176,7 +2160,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -2200,7 +2183,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -3131,7 +3113,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -3289,7 +3270,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4017,7 +3997,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -5697,7 +5676,6 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -7231,7 +7209,20 @@ Scratch
 \end_layout
 
 \begin_layout Standard
-Die klassischen GP-Lösungen 
+xxx nach oben damit?
+\end_layout
+
+\begin_layout Standard
+Als Referenzlauf wurde ein zufälliger GP Lauf ohne Referenzbaum gewählt.
+ Der Regressionsfehler konnte auf ein extrem niedriges Niveau von xxx gebracht
+ werden und auch bei der realen Auswertung konnten die Paretokandidaten
+ eine gute Performance erzielen.
+ Vor allem bei höherer Komplexität werden konstant gute Werte erzielt, die
+ die Performance des Referenzansatzes sogar teilweise übertreffen konnten.
+ Im Gegensatz dazu sind die Formeln kaum erklärbar.
+ Ein wesentlicher Faktor der Paretokandidaten ist das potentieren, oft mit
+ sehr hohen Werten, was bei keinem menschlich überlegten Ansatz von bedeutung
+ war.
 \end_layout
 
 \begin_layout Standard
@@ -7730,7 +7721,61 @@ xxx
 \end_layout
 
 \begin_layout Subsection
+Maximum Momentum
+\end_layout
+
+\begin_layout Standard
+Die einfachste Expertenpolicy holt maximal Schwung und verzichtet dabei
+ auf Aktion 1, nicht zu beschleunigen.
+ Der Regressionsfehler kann somit nicht Null werden und ist in dieser Hinsicht
+ anderen Läufen unterlegen.
+ Der Regressionsfehler sinkt somit nur auf xxx.
+ Die Performance war jedoch sogar auf demselben Niveau wie bei anderen Ansätzen
+ - der einschränkende Ansatz ist somit verhaltenstechnisch besser nachvollziehba
+r und muss dennoch keine Performance einbüßen.
+\end_layout
+
+\begin_layout Subsection
+Maximum Momentum - uneingeschränkt
+\end_layout
+
+\begin_layout Standard
+In dieser Policy wurde Aktion Null in einem Zusätzlichen if-Fall erlaubt.
+ Entsprechend ist der Regressionsfehler hier niedriger als bei seinem eingeschrä
+nkten Verwandten.
+ Vor allem bei Sarsa75, wo sehr oft diese Aktion gewählt wird, macht sich
+ diese Möglichkeit in den Kandidaten schon sehr früh bemerkbar.
+ Gerade bei diesem Beispiel ist die ...
+\end_layout
+
+\begin_layout Subsection
+Preset policy
+\end_layout
+
+\begin_layout Standard
+Die Preset policy stellt einen Kandidaten dar, bei dem die TED sehr robust
+ ist.
+ Deshalb ist von großem Interesse, wie sich große und kleine Änderungen
+ an der policy auf die echte Fitness auswirken.
+\end_layout
+
+\begin_layout Standard
+Die Performance ist bereits zu beginn außerordentlich gut - einigeLäufe
+ sind hier bereits besser als die Sarsa-policy.
+ Der Regressionsfehler kann somit nicht viel weiter reduziert werden.
+\end_layout
+
+\begin_layout Subsection
 Analysis xxx
+\end_layout
+
+\begin_layout Standard
+Selbst das eigentlich sehr schwer lösbare Problem um die erste beschleunigung
+ konnte gelöst werden.
+\end_layout
+
+\begin_layout Standard
+Robuste Blackbox ist wichtig
 \end_layout
 
 \begin_layout Section
@@ -8125,10 +8170,6 @@ Scratch GP Results
 \end_layout
 
 \begin_layout Standard
-The scratch results
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -8428,9 +8469,6 @@ a
 \begin_inset Text
 
 \begin_layout Plain Layout
-\begin_inset Formula $\ensuremath{{{{{0.314}\cdot{\text{Consumption}_{2}}}-{\text{Shift}_{9}}}+{{0.779}\cdot{{{\text{-Gain}_{3}}+{\text{Gain}_{9}}}+{if({{\text{-Shift}_{8}}<{\text{Consumption}_{5}}}then{\text{Shift}_{7}}else{if({{0.975}\leq{\text{Fatigue}_{3}}}then{\text{Shift}_{9}}else{\text{Shift}_{4}})})}}}}}$
-\end_inset
-
 
 \end_layout
 
@@ -8579,6 +8617,45 @@ Das IB zeigte außerordentlich gute Performance für ein Benchmark, das schwer
  Dies könnte aber auch daran liegen, dass ich bei weitem kein Experte bin.
 \end_layout
 
+\begin_layout Paragraph
+Limitations
+\end_layout
+
+\begin_layout Standard
+Das IB zeigt seh gut, wie komplexe Kontroler den Einsatz von gelegentlicher
+ Auswertung der Fitness erfordern, da der Regressionsfehler sonst zu schlecht
+ abschneidet.
+ Auch kann ein GP-Agent, der auf einem Datensatz mit normales GP erzeugt
+ wurde nicht als Ausgangspunkt für Verbesserungen dienen, da er im Optimalfall
+ bereits zu gut ist, als dass Verbesserungen noch viel ändern.
+\end_layout
+
+\begin_layout Standard
+Das IB zeigt außerdem, dass ein sparser Zustandsraum, für den es viele gute,
+ einzelne Wege gibt, nur schwer für diesen Ansatz eignet, weil über die
+ Performance von Mittelwegen keine Aussage getroffen werden kann (im Gegensatz
+ zum MC, wo es eine logische beste Lösung gibt).
+\end_layout
+
+\begin_layout Standard
+Setzt sich ein Kandidat aus mehreren Teillösungen zusammen, so ist besser
+ erkennbar, ab welchem Punkt sich ein testen der Kandidaten lohnt.
+\end_layout
+
+\begin_layout Standard
+xxx ib zufallsläufe - werden die Zustände in der Vergangenheit gespeichert??
+\end_layout
+
+\begin_layout Section
+Results
+\end_layout
+
+\begin_layout Standard
+Einfache Benchmarks sind mit diesem Ansatz gut lösbar und können Kandidaten
+ erzeugen, die sowohl sehr gut interpretierbar sind als auch gute Performance
+ liefern.
+\end_layout
+
 \begin_layout Chapter
 Conclusion
 \end_layout
@@ -8647,7 +8724,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 

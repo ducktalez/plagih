@@ -1,15 +1,17 @@
 # coding=utf-8
-import argparse
-import os
 import sys
-sys.path.append('../../')
-from benchmarks.ib.ib_eval_agents import *
 from pathlib import Path
+sys.path.append('../../')
+sys.path.append('../../../')
+import os
+import argparse
+from benchmarks.ib.ib_eval_agents import *
 import itertools
+from plagih.plagih_gp_base_class_xai import *
 import yaml
 import multiprocessing as mp
+import pickle
 import time
-from plagih.plagih_gp_base_class_xai import *
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -106,7 +108,7 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
     return combined_all_cpy
 
 
-def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
+def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
     """
     plot best guess
     todo test RMSE?
@@ -151,58 +153,58 @@ def plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_f
     y_all_r50 = [y['experiment_r50'] for y in res_all]
     y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
 
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots(figsize=pyplot_size)
-        ax.set_xlabel('Pareto complexity sum')
-        ax.set_ylabel('reward')
-        ax.set_ylim(funny_limits)
-        ax.plot(xx, y_all, label='all actions', marker='.', color='r')
-        ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
-        ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
-        ax2.tick_params(axis='y', labelcolor='tab:gray')
-        ax.legend(loc='lower right')
-        ax2.legend(loc='lower left')
-        fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name}-regression_sum.pdf')  # dpi=300
-        plt.close('all')
-
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots(figsize=pyplot_size)
-        ax.set_xlabel('Pareto complexity sum')
-        ax.set_ylabel('reward')
-        ax.set_ylim(funny_limits)
-        ax.plot(xx, y_all_r50, label='all actions (randomized start)', marker='.', color='orangered')
-        ax.plot(xx, y_safe_r50, label='low risk (randomized start)', marker='None', color='orangered', linestyle='dotted')
-        ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
-        ax2.tick_params(axis='y', labelcolor='tab:gray')
-        ax.legend(loc='lower right')
-        ax2.legend(loc='lower left')
-        fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name}-regression_sum_r50.pdf')
-        plt.close('all')
+    # with plt.rc_context(rc=pyplot_rc_tex):
+    #     fig, ax = plt.subplots(figsize=pyplot_size)
+    #     ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
+    #     ax.plot(xx, y_all, label='all actions', marker='.', color='r')
+    #     ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
+    #
+    #     ax2 = ax.twinx()
+    #     ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
+    #     ax2.tick_params(axis='y', labelcolor='tab:gray')
+    #
+    #     ax.legend(loc='lower right')
+    #     ax2.legend(loc='lower left')
+    #
+    #     fig.savefig(root_dir_eval / f'regression_sum.pdf')  # dpi=300
+    #     plt.close('all')
+    #
+    # with plt.rc_context(rc=pyplot_rc_tex):
+    #     fig, ax = plt.subplots(figsize=pyplot_size)
+    #     ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
+    #     ax.plot(xx, y_all_r50, label='all actions (randomized start)', marker='.', color='orangered')
+    #     ax.plot(xx, y_safe_r50, label='low risk (randomized start)', marker='None', color='orangered', linestyle='dotted')
+    #     ax2 = ax.twinx()
+    #     ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
+    #     ax2.tick_params(axis='y', labelcolor='tab:gray')
+    #
+    #     ax.legend(loc='lower right')
+    #     ax2.legend(loc='lower left')
+    #
+    #     fig.savefig(root_dir_eval / f'regression_sum_r50.pdf')
+    #     plt.close('all')
 
     """
     The two plots above in one plot
     """
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
-        ax.set_xlabel('Pareto complexity sum')
-        ax.set_ylabel('reward')
-        ax.set_ylim(funny_limits)
+        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
         ax.plot(xx, y_all, label='all actions', marker='.', color='r')
         ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
         ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
         ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
         ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
+        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.', legend_loc='best')  # linestyle='None'
         ax2.tick_params(axis='y', labelcolor='tab:gray')
+
         ax.legend(loc='lower right')
         ax2.legend(loc='lower left')
-        fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name}-regression_all.pdf')
+
+        path_regrallplot = root_dir_eval / f'regression_all.pdf'
+        fig.savefig(path_regrallplot)
         plt.close('all')
+    return res_all, path_regrallplot
 
 
 def plot_per_action(root_dir_eval, run_name, parsims, combined_all_p):
@@ -268,16 +270,13 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
-        ax.set_xlabel('Pareto complexity sum')
-        ax.set_ylabel('reward')
-        ax.set_ylim(funny_limits)
+        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
         # # only if one entry per parsimony
         ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
         ax.plot(xx, y_safe, label='low risk', marker='.', color='c')
         ax.legend(loc='lower left')
-        # ax.set_title(f'{run_name} (best)')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name} (best).pdf')
+        fig.savefig(root_dir_eval / f'(best).pdf')
 
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
@@ -290,7 +289,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
         ax.plot(xx, y_safe_r50, label='low risk, randomized', marker='.', color='c')
         ax.legend(loc='lower left')
         fig.tight_layout()
-        fig.savefig(root_dir_eval / f'{run_name} (best)_r50.pdf')
+        fig.savefig(root_dir_eval / f'(best)_r50.pdf')
 
 
 def plot_scatter_some():
@@ -307,7 +306,6 @@ def plot_scatter_some():
     # plt.tight_layout()
     #     fig.tight_layout()#
     # fig, ax = plt.subplots(figsize=pyplot_size)
-    # ax.set_title(f'IB eval {run_name} ({measr})')
     # ax.set_xlabel('complexity')
     # ax.set_ylabel('reward')
     # # only if one entry per parsimony
@@ -324,16 +322,22 @@ def plot_scatter_some():
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(run_name, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
+def combined_lists(path_ibrun, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
     (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
     """
-    merge_paretos(run_name)  # e.g. 'IB_MSE_s3m'
-    root_dir_eval = dir_slurm / f'{run_name}'
-    if not Path.is_dir(root_dir_eval):
-        Path.mkdir(root_dir_eval)
+    run_name = path_ibrun.name
+    run_name_core = run_name[:-2]
+    path_paretocombined = merge_paretos(run_name_core)  # e.g. 'IB_MSE_s3m'
+    path_run = dir_slurm / run_name
+    try:
+        root_dir_eval = path_make_dir(path_run)
+    except Exception as ex:
+        # sfeh this sucks, IB eval doesnt find it
+        folder = path_run if len(path_run.suffix) == 0 else path_run.parent
+        folder.mkdir(parents=True, exist_ok=True)
 
     if local_yamls:
         lut_file = dir_slurm / run_name / 'lutfile.yaml'
@@ -390,10 +394,11 @@ def combined_lists(run_name, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cor
     the main plotting procedures
     """
     parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))
-    plot_best_prediction(root_dir_eval, run_name, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, cpu_cores)
+    res_all, path_regrallplot = plot_best_prediction(path_ibrun, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, cpu_cores)
+    return res_all, path_regrallplot, path_paretocombined
 
 
-def merge_paretos(run_name):
+def merge_paretos(run_name_core):
     """
     load each IB run and add its pareto front to a merged plot
     """
@@ -401,11 +406,20 @@ def merge_paretos(run_name):
         fig, ax = plt.subplots()
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):
-            lfile = dir_slurm / run_name / f'{run_name}_{ii}'  #
-            with Path.open(lfile / 'backup/backup.p', 'rb') as file:
-                gp_backup_data = pickle.load(file)
-                gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
-                # loaded_runs[ii] = pareto
+            path_combackup = dir_slurm / run_name_core / f'{run_name_core}_{ii}/backup/backup.p'
+            try:
+                gp_backup_data = pickle_load(path_combackup)
+            except Exception:
+                # sfeh this sucks, IB eval doesnt find it
+                print(f'sfeh: {path_combackup}')
+                print(f'tests: {path_combackup.parent}')
+                print(f'tests: {path_combackup.is_file()}')
+                print(f'tests: {path_combackup.is_dir()}')
+                with Path.open(path_combackup, 'rb') as file:
+                    gp_backup_data = pickle.load(file)
+
+            gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
+
             tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
             xx, yy = np.array(tuples).T
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
@@ -416,10 +430,12 @@ def merge_paretos(run_name):
         ax.set_xlim(0, None)
         ax.set_ylim(0, None)  # 1.05  # top * 1.05 for better style
         fig.tight_layout()
-        fig.savefig(dir_slurm / run_name / f'{run_name}-pareto_combined.pdf')
+        path_paretocombined = dir_slurm / run_name_core / f'pareto_combined.pdf'
+        fig.savefig(path_paretocombined)
         plt.close('all')
 
     print('IB combined runs: merged pareto entries into one plot!')
+    return path_paretocombined
 
 
 def main():

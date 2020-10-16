@@ -27,7 +27,7 @@ class Obs:
         self.tf_type = tf.float32
         self.xtype = '2f'
 
-        obs_family, obs_index = observation_get_family_and_time(name, none_return=None)
+        obs_family, obs_index, prelabel = observation_get_family_and_time(name, none_return=None)
         self.family = obs_family
         self.obs_index = obs_index  # is None when no index but 0 when
 
@@ -203,15 +203,19 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
 
 def observation_get_family_and_time(name, re_pattern='_\\d+$', none_return=None):
     """
-
+    When an observation is known, return the family, the time and the SIGN!!
     """
 
     core_label = re.split(re_pattern, name)[0]
-
+    if core_label[0] == '-':
+        core_label = core_label[1::]
+        prelabel = '-'
+    else:
+        prelabel = ''
     try:
         re_search = re.search(re_pattern, name)  # re_search => ['_12']
         temp_diff = re_search[0].replace('_', '')  # (only) solution found (at [0]), e.g. '_14'. only keep the digits
         temp_diff = int(temp_diff)
     except Exception:
-        temp_diff = none_return  # there is only the latest version
-    return core_label, temp_diff
+        temp_diff = none_return
+    return core_label, temp_diff, prelabel

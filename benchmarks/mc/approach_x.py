@@ -25,7 +25,6 @@ def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_a
     plt.show()
 
     plt.close('all')
-
     return
 
 

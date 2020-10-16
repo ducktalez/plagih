@@ -9,6 +9,9 @@ import time
 import math
 import matplotlib.pyplot as plt
 import multiprocessing as mp
+
+from benchmarks.ib.combined_runs import *
+from benchmarks.mc.agents.quick_eval import auto_evaluate_run_end
 from plagih.file_interaction import *
 from plagih.viz_with_latex import *
 from plagih.plagih_config import *
@@ -22,11 +25,8 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 class FileLocations:
 
     backup_p = 'backup/backup.p'
-    trees_tex = 'agents_trees.tex'
     trees_sub_tex = 'visualisation/'
     folder_pycode = ''
-    file_pareto = 'paretofront.yaml'
-    info_config_yaml = 'used_config.yaml'
 
     # Files that can can (in theory) be used to prepare a runable folder. maybe deprecated now, sfeh.
     use_distributions_file = 'run_files/distributions_file.yaml'
@@ -42,9 +42,18 @@ class FileLocations:
         # sfeh check stuff?
 
 
+class ParetoFront:
+    """
+    sfeh
+    """
+    def __init__(self):
+        pass
+        # self.entries = []
+
+
 class ExplainableGP(object):
     """
-
+    sfeh
     """
 
     def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None):
@@ -256,10 +265,7 @@ class ExplainableGP(object):
         a_helping_dict = {'self.monitor_evol': self.monitor_evol,
                           'gens_since_last_pareto': self.gens_since_last_pareto}  # sfeh save complete config?    # sfeh i dont think we need the config
         run_backup_data = self.gen_id, self.pareto, self.pop_base, self.monitor_df, a_helping_dict  # sfeh use this later, a_helping_dict
-        path_backup = file_make_dir(self.root_dir / self.paths.backup_p)
-        with Path.open(path_backup, 'wb') as file:
-            pickle.dump(run_backup_data, file, protocol=pickle.HIGHEST_PROTOCOL)
-            self.printpl('f', f'Backup: {path_backup.as_posix()}')
+        pickle_dump(self.root_dir / self.paths.backup_p, run_backup_data)
 
         # run_backup_dict = {'self.gen_id': self.gen_id,
         #                    'self.pareto': self.pareto,
@@ -267,7 +273,7 @@ class ExplainableGP(object):
         #                    'self.monitor_df': self.monitor_df,
         #                    'a_helping_dict': a_helping_dict}
         #
-        # path_backupyyy = file_make_dir(self.root_dir / 'backup/backup.yaml')
+        # path_backupyyy = path_make_dir(self.root_dir / 'backup/backup.yaml')
         # yaml_dump(path_backupyyy, run_backup_dict, print_type=self.print_type)
 
         return
@@ -377,8 +383,7 @@ class ExplainableGP(object):
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
             self.printpl('i', f'Adding new generations, gen_max was {printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}. New max gen: {self.conf.gen_max}')
 
-        filename = file_make_dir(self.root_dir / self.paths.info_config_yaml)
-        yaml_dump(filename, self.conf, print_type=self.print_type)
+        yaml_dump(self.root_dir / 'used_config.yaml', self.conf, print_type=self.print_type)
 
         self.gens_since_last_pareto = 0
 
@@ -587,32 +592,24 @@ class ExplainableGP(object):
         Save all the pareto efficient candidates to file
         sfeh save as yaml?
         """
-
-        path_pareto = file_make_dir(self.root_dir / self.paths.file_pareto)
-        with Path.open(path_pareto, 'w') as file:
-            for (parsim, fitness, cooltree) in self.pareto:
-                file.write(f'\nParsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{cooltree.meta.expr_raw}')
+        pareto_yaml = [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{cooltree.meta.expr_raw}' for (parsim, fitness, cooltree) in self.pareto]
+        yaml_dump(self.root_dir / 'paretofront.yaml', pareto_yaml, print_type=self.print_type)
 
         return
 
-    def file_population_base_karoo(self, pop_name):
+    def file_population(self, pop_name):
         """
         Save population_* to disk.
         """
-        file_path = file_make_dir(self.root_dir / f'info/population_{pop_name}.txt')
-        with Path.open(file_path, 'w', newline='') as txt_file:  # instead of w+, this was once a. but, pop_new file gets too big over time.
+        txt_file = f'Plagih GP by Simon Fehrer, inspired by Kai Staats Karoo-gp. Generation: {self.gen_id}\n'
+        for ii, cooltree in enumerate(self.pop_base):
+            txt_file += f'\nTree meta: {cooltree.meta}\nas string: {cooltree}\nFormatted in layers:\n{cooltree.pretty_format()}\n'
 
-            txt_file.write(f'Plagih GP by Simon Fehrer, inspired by Kai Staats Karoo-gp. Generation: {self.gen_id}\n')
-
-            for ii, cooltree in enumerate(self.pop_base):
-                txt_file.write(f'\nTree meta: {cooltree.meta}')
-                txt_file.write(f'\nas string: {cooltree}')
-                csv_formatted_tree = cooltree.pretty_format()
-                txt_file.write(f'\nFormatted in layers:\n{csv_formatted_tree}\n')  # writerows only for csv
+        file_dump(self.root_dir / f'info/population_{pop_name}.txt', txt_file)
 
         return
 
-    def analyse_pareto(self):
+    def analyse_pareto(self, cpu_cores=16):
         """
         Giving all the results
         # sfeh discussion: This is only relevant at the end. (aka not in persidical analysis)
@@ -620,22 +617,100 @@ class ExplainableGP(object):
         # e.g. pareto entries, that do not exist at the end leave files behind
         """
         self.printpl('i', f'Analysing the pareto candidates of your run!')
+
+        # sfeh
+        # class ParetoEntry(object):
+        #     def __init__(self):
+        #         self.histogram = None
+        #         self.latex = None
+        #         self.yamltext = None
+        #         self.realcode = None
+        #         self.texforest_bracket = {0: None, 1: None, 2: None}  # 0=fulltree, 1=tighttree, 2=oneliner
+
         # if self.conf.period['gen_analysis']:
         #     if self.gen_id % int(self.conf.period['gen_analysis']) == 0:
         #         self.analyse_pareto()
 
         # self.pareto_sort()  # is pareto not sorted?  sfeh working? check if sorted.
+        # self.file_population('last')
 
-        self.file_pareto_txt()
-        # self.file_population_base_karoo('last')
-        self.file_pareto_histograms()
-        self.file_pareto_latex()
+        latex_row1 = []
+        path_hist = path_make_dir(self.root_dir / 'histograms/')
+        pareto_agents = pd.DataFrame()
+
+        for (parsim, fitness, cooltree) in self.pareto:
+            # self.file_pareto_txt()  # sfeh
+
+            histpath = self.plot_agent_histogram(parsim, fitness, cooltree, path_hist)
+
+            texvis = self.file_pareto_latex(parsim, fitness, cooltree)
+            forestree0, forestree1, texpression_2, forestree2 = texvis
+
+            pareto_agents[parsim] = {'parsim': parsim,
+                                     'fitness': fitness,
+                                     'cooltree': cooltree,
+                                     'histpath': histpath,
+                                     'forestree0': forestree0, 'forestree1': forestree1, 'texpression_2': texpression_2, 'forestree2': forestree2,  # 'texvis': texvis,
+                                     'histogram': histpath,
+                                     }
+            # finaline = [f'{parsim} & {fitness} & {cooltree} % {}{}{}{}', 'regression error', 'real fitness', 'forestree0', 'forestree1', 'texpression_2', 'forestree2']
+
+        latex_full_doc = latex_treeviz_full_document(latex_row1)
+        file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex
+
+        dir_benchmarks = Path(__file__).parent.absolute() / '../benchmarks/'
+
         if 'MTC' in self.conf.name:
             self.file_pareto_pycode()
+            """
+            real evaluation
+            decision plot
+            spiral plot
+            """
+
+            if 'MTC200' in self.conf.name:
+                sarsa_agent = pickle_load(dir_benchmarks / 'mc/agents/sarsa_agent_200.p')
+            elif 'MTC75' in self.conf.name:
+                sarsa_agent = pickle_load(dir_benchmarks / 'mc/agents/sarsa_agent_75.p')
+            else:
+                raise
+            agent_performance, _ = auto_evaluate_run_end(self.root_dir, sarsa_agent, n=100)
+            # [agent_name, parsim, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff]
+            for x in agent_performance:
+                _, pp, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
+                extra_line = {'reward average': avg_reward,
+                              'fails': fails,
+                              'spiralplot': path_mcmeshplot,
+                              'spiralplot diff': path_mcmeshplot_diff}
+                pareto_agents.loc[pp].update(extra_line)
+
         elif 'IB' in self.conf.name:
             self.file_pareto_listcode()
+            if self.conf.name[-2:] == '_0':
+                path_ibrun = dir_benchmarks / f'slurm_runs/{self.conf.name[:-2]}/{self.conf.name}/'
+                res_all, path_regrallplot, path_paretocombined = combined_lists(path_ibrun, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
+                pareto_agents_combined = pd.DataFrame()
+                for x in res_all.items():
+                    ppsum = x['parsim_sum']
+                    extra_line = {'parsims': x['parsims'],
+                                  'experiment': x['experiment'],
+                                  'experiment_safe': x['experiment_safe'],
+                                  'experiment_r50': x['experiment_r50'],
+                                  'experiment_safe_r50': x['experiment_safe_r50']}
+                    pareto_agents_combined.loc[ppsum].update(extra_line)
+
+                    # todo todotodo another paretofront file
+                # xx = [x['parsim_sum'] for x in res_all]
+                # y_all = [y['experiment'] for y in res_all]
+                # y_safe = [y['experiment_safe'] for y in res_all]
+                # y_all_r50 = [y['experiment_r50'] for y in res_all]
+                # y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
+                textodo = pareto_agents.to_latex()
+
         else:
             print_warning('w', f'This should actually never happen right now. name: {self.conf.name}')
+
+        textodo2 = pareto_agents.to_latex()
 
         return
 
@@ -772,7 +847,7 @@ class ExplainableGP(object):
 
         return choose_distributions
 
-    def file_pareto_histograms(self):
+    def plot_agent_histogram(self, parsim, fitness, cooltree, path_hist):
         """
         Make histograms for all pareto-efficient candidates
         sfeh: based on training data- maybe use test data...
@@ -784,35 +859,25 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
-        path_hist = folder_make_dir(self.root_dir / 'histograms/')
+        # def plot_agent_histogram()
 
-        for (parsim, fitness, cooltree) in self.pareto:
+        action_bins = self.kernel.histogram_bins(self.env_vars.eval_action.minmax)
+        expr_sym = cooltree.get_expr_sym()
+        used_observations = cooltree.get_observation_list()
+        pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
 
-            act_min, act_max = self.env_vars.eval_action.minmax
-            act_range = act_max - act_min
-            if self.kernel.discrete:  # [0, 1, 2] -> 2
-                action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
-            else:
-                num_bins = 16 + 1  # +1 is extra bin for 0
-                breite = 0.5 * (act_range * 2) / num_bins
-                action_bins = np.linspace(-(breite + act_range), + (breite + act_range), num_bins + 1)  # sfeh 10 bins?
+        with plt.rc_context(rc=pyplot_rc_tex):
+            fig, ax = plt.subplots()
+            ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
+            ax.set(ylim=(0, len(self.data_train)), ylabel='Frequency', xlabel='Deviation')
+            histpath = path_hist / f'acthist_{parsim}.pdf'
+            fig.savefig(histpath)
+            plt.close('all')
+        # self.printpl('ff', f'Histogram: {histpath.as_posix()}')
 
-            expr_sym = cooltree.get_expr_sym()
+        return histpath
 
-            used_observations = cooltree.get_observation_list()
-            pairwise_diff = self.kernel.eval_tf(expr_sym, used_observations)['pairwise_diff']
-
-            with plt.rc_context(rc=pyplot_rc_tex):
-                fig, ax = plt.subplots(figsize=pyplot_size)
-                ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
-                ax.set_ylim(0, len(self.data_train)), ax.set_ylabel('Frequency'), ax.set_xlabel('Deviation')
-                fig.tight_layout()
-                fig.savefig(path_hist / f'acthist_{parsim}.pdf')
-                plt.close('all')
-
-        self.printpl('ff', f'Histograms: {path_hist.as_posix()}')
-
-    def file_pareto_latex(self):
+    def file_pareto_latex(self, parsim, fitness, cooltree):
         """
         Generates latex-file with the computational tree structure of all pareto agents
         - build tree from expression
@@ -827,69 +892,38 @@ class ExplainableGP(object):
             1: clever tight-visualisation where possible
             2: one single mathematical expression
         """
-        latex_row1 = []
 
-        for (parsim, fitness, cooltree) in self.pareto:
+        cooltree.set_fix_nodes(self.origin_cooltree)
+        # cooltree.meta.last_evolution = 'texify'
+        tree = cooltree.get_oldtree()
 
-            cooltree.set_fix_nodes(self.origin_cooltree)
-            # cooltree.meta.last_evolution = 'texify'
-            tree = cooltree.get_oldtree()
+        plforest = lambda x: f'\\plforest{{{x}}}\n'
 
-            forest_wrap = lambda x: f'\n\\begin{{forest}}' \
-                f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
-                f'\n  terminal/.style={{rectangle,}},' \
-                f'\n  fixnode/.style={{fill=blue!60,}},' \
-                f'\n  observation/.style={{rectangle,}},' \
-                f'\n  variable/.style={{rectangle,}},' \
-                f'\n  nodeinsert/.style={{fill=green!50,}},' \
-                f'\n  nodechanged/.style={{fill=orange!50,}},' \
-                f'\n {x}' \
-                f'\n\\end{{forest}}\n'
+        forestree0 = plforest(latex_brackettree(tree))
+        forestree1 = plforest(latex_brackettree_tight(latex_tree_semitight(tree)))
+        texpression_2 = f'${latex_tight_node(tree)}$'
+        forestree2 = plforest(f'[{texpression_2}]')
 
-            # tree = tree.copy()
+        """
+        save every tree-visualisation in subfolder
+        """
+        path_subfolder_tex = path_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
+        # create full document including just one tree (file must have a nice name)
 
-            textree_0 = forest_wrap(latex_brackettree(tree))
-            textree_tight = latex_tree_semitight(tree)
-            textree_1 = forest_wrap(latex_brackettree_tight(textree_tight))
-            textree_2 = f'${latex_tight_node(tree)}$'
+        """
+        The following lines delete this
+        """
+        full_tex0 = latex_treeviz_full_document([forestree0], doc_border='')
+        full_tex1 = latex_treeviz_full_document([forestree1], doc_border='')
+        # todo sfeh
+        # file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', full_tex0, print_type=self.print_type)
+        # file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', full_tex1, print_type=self.print_type)
+        #
+        # file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', texpression_2, print_type=self.print_type)
+        # file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', forestree2, verbose='ff', print_type=self.print_type)
+        # f'{parsim} with mean Regression Error {fitness}:\n {forestree0} tight: {forestree1} tight2: {texpression_2}\n\n\n'
 
-            latex_row1.append(f'Pareto entry at parsimony {parsim} with mean Regression Error {fitness}:\n'
-                              f'{textree_0} tight: {textree_1} tight2: {textree_2}\n\n\n')
-
-            """
-            save every tree-visualisation in subfolder
-            """
-            path_subfolder_tex = folder_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
-            # create full document including just one tree (file must have a nice name)
-            # subtex0 = latex_treeviz_full_document([textree_0], doc_border='')
-            # with Path.open(path_subfolder_tex / f'{parsim:02d}_full.tex', 'w') as file:
-            #     file.write(subtex0)
-            #
-            # subtex1 = latex_treeviz_full_document([textree_1], doc_border='')
-            # with Path.open(path_subfolder_tex / f'{parsim:02d}_full_tight.tex', 'w') as file:
-            #     file.write(subtex1)
-
-            with Path.open(path_subfolder_tex / f'{parsim:02d}_input.tex', 'w') as file:
-                file.write(textree_2)
-            subtex2 = forest_wrap(f'[{textree_2}]')
-            with Path.open(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', 'w') as file:
-                file.write(subtex2)
-
-        latex_full_doc = latex_treeviz_full_document(latex_row1)
-
-        path_trees_tex = file_make_dir(self.root_dir / self.paths.trees_tex)
-        with Path.open(path_trees_tex, 'w') as file:
-            file.write(latex_full_doc)
-            self.printpl('ff', f'Latex-trees: {path_trees_tex.as_posix()}')
-
-            # if parsim < 14:  # adhoc lösung
-            #     input_single_tex[parsim] = textree_0
-        # path_folder_tex = folder_make_dir(self.root_dir / self.paths.folder_tex)
-        # for parsim, forest_tree in input_single_tex.items():
-        #     with Path.open(path_folder_tex / f'{self.conf.name}-parsim{parsim}.tex', 'w') as file:
-        #         file.write(forest_tree)
-
-        return
+        return forestree0, forestree1, texpression_2, forestree2
 
     def file_pareto_pycode(self):
         """
@@ -955,7 +989,7 @@ class ExplainableGP(object):
             "\tprint('executing!')\n" \
             "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
 
-        pth = file_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
+        pth = path_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
         with Path.open(pth, 'w') as file:
             file.write(pyc_complete)
             self.printpl('ff', f'Pycode: {pth.as_posix()}')
@@ -978,7 +1012,8 @@ class ExplainableGP(object):
             agent_as_python = cooltree.get_pycode()
             pygents_list.append([parsim, float(fitness), agent_name, agent_as_python])
 
-        path = file_make_dir(self.root_dir / 'pycode_list.yaml')
+        yaml_dump(self.root_dir / 'pycode_list.yaml', pygents_list, print_type=self.print_type)
+        path = path_make_dir(self.root_dir / 'pycode_list.yaml')
         with Path.open(path, 'w') as file:
             _ = yaml.dump(pygents_list, file)  # , default_flow_style=False, sort_keys=False)
             printez('ff', f'IB pycode-list: {path.as_posix()}', print_type=self.print_type)  # sfeh always the same print structure... just pass the path?
@@ -1386,7 +1421,7 @@ class ExplainableGP(object):
 
         used_observations = origin_cooltree.get_observation_list()
         tf_origin_results = self.kernel.eval_tf(expr_sym, used_observations)
-        fitness_train = round(float(tf_origin_results['mean_error']), self.conf.float_decimals)  # fitness currently IS the mean error
+        fitness_train = round(tf_origin_results['mean_error'], self.conf.float_decimals)  # fitness currently IS the mean error
         if self.kernel.exploration_risk:
             self.kernel.origin_results = tf_origin_results['results_kernel']  # after getting the origin-results, these informations can be updated
 
@@ -1415,7 +1450,7 @@ class ExplainableGP(object):
             raise Exception(f'eval:{evalex}')
 
         used_observations = cooltree.get_observation_list()
-        fitness_train = round(float(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True)), self.conf.float_decimals)
+        fitness_train = round(self.kernel.eval_tf(expr_sym, used_observations, only_fitness=True), self.conf.float_decimals)
 
         """
         Returns bool value if we can use the calculated fitness
@@ -1530,22 +1565,25 @@ class ExplainableGP(object):
 
             ax.step(xx, yy, linestyle='dashed', marker='.', label=f'{run_name}', where='post')
 
-            ax.legend(loc='lower left')
-            # ax.set_xlim(min(min(xx), 0), right)
-            # ax.set_ylim(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05)  # 1.05  # top * 1.05 for better style
+            # ax.legend(loc='lower left')
 
-            ax.set(xlabel='complexity', ylabel='regression error', xlim=(min(min(xx), 0), right), ylim=(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05))
+            ax.set(xlabel='complexity', ylabel='regression error',
+                   xlim=(min(min(xx), 0), right),
+                   ylim=(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05))
 
             try:
                 fig.tight_layout()  # todo
-                path_plot = folder_make_dir(self.root_dir / 'plots/')
-                fig.savefig(path_plot / f'paretofront-{run_name}.pdf', backend='pgf')
-                fig.savefig(path_plot / f'paretofront-{run_name}.png', dpi=300)
+                path_plot = path_make_dir(self.root_dir / 'plots/')
+                fig.savefig(path_plot / f'paretofront.pdf', backend='pgf')  # run_name?
+                fig.savefig(path_plot / f'paretofront.png', dpi=300)
                 self.printpl('f', f"paretofront (pdf): {path_plot.as_posix()}")
             except PermissionError as permerr:
                 print_e(f'Could not save plot: {permerr}')  # sfeh for everything?
 
         return
+
+    def real_evaluation(self):
+        pass
 
     def plot_evolve_performance(self):
         """

@@ -75,6 +75,18 @@ class RegressionKernel(GPKernel):
 
         return wrap
 
+    def histogram_bins(self, action_minmax):
+        act_min, act_max = action_minmax
+        act_range = act_max - act_min
+        if self.discrete:  # [0, 1, 2] -> 2
+            # sfehfun make kernel histogram function?
+            action_bins = np.linspace(-0.5 - act_range, 0.5 + act_range, 2 * act_range + 1 + 1)  # for +-0.5 and 0
+        else:
+            num_bins = 16 + 1  # +1 is extra bin for 0
+            breite = 0.5 * (act_range * 2) / num_bins
+            action_bins = np.linspace(-(breite + act_range), + (breite + act_range), num_bins + 1)  # sfeh 10 bins?
+        return action_bins
+
     def eval_tf(self, expr_sym, used_observations, only_fitness=False):
         """
         Evaluates an expression using TensorFlow (TF)
@@ -155,7 +167,7 @@ class RegressionKernel(GPKernel):
                 tf_results = sess.run({'pairwise_diff': pairwise_diff, 'results_kernel': results_kernel, 'regression_errors': regression_errors, 'mean_error': mean_error, 'penalize_exploration': penalize_exploration})
                 # sfeh attention: the dict above returns np-type results, not real floats
         if only_fitness:  # reduced evaluation, only mean_error is returned... (may save memory as only one value gets returned)
-            return tf_results['mean_error']
+            return float(tf_results['mean_error'])
         else:
             return tf_results
 

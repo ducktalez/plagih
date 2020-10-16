@@ -300,14 +300,12 @@ class CoolCore:
                                 'f': 'Fatigue',
                                 'c': 'Consumption'}
                 ib_sfeh_rev = {v: k for k, v in ib_sfeh_dict.items()}
-                is_negative = self.label[0] == '-'
-                use_label = self.label[1:] if is_negative else self.label
-                obs_family, obs_time = observation_get_family_and_time(use_label, none_return=None)
+                obs_family, obs_time, prelabel = observation_get_family_and_time(self.label, none_return=None)
                 if obs_time is None:
                     pass
                 else:
                     geth_name = ib_sfeh_rev[obs_family]
-                    return f"{'-' if is_negative else ''}self.get_h('{geth_name}', {obs_time})"
+                    return f"{prelabel or ''}self.get_h('{geth_name}', {obs_time})"
 
             return f'{self.label}'
         else:
@@ -457,6 +455,9 @@ class CoolTree:
     #     self.meta.expr_raw = expr_raw
     #     self.meta.expr_sym = expr_sym
     #     # set flags if done?
+
+    # def write_histogram(self):
+
 
     def set_fix_nodes(self, origin_tree: 'CoolTree'):
         """

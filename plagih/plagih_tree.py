@@ -941,38 +941,39 @@ def tree_get_expr_raw(tree, node_id=root_id):
     elif arity == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
         return 'Ifte(({}), ({}), ({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))
 
-
-def tree_get_pycode(tree, node_id=root_id):
-    """
-    returns python (inline-) code from a tree
-    """
-    node_id = int(node_id)
-    arity = tree_node_get_arity(tree, node_id)
-    label = tree_node_get_label(tree, node_id)
-
-    if arity == 0:
-        if terminal_label_is_observation(label):
-            ib_sfeh_dict = {'p': 'SetPoint',
-                            'v': 'Velocity',
-                            'g': 'Gain',
-                            'h': 'Shift',
-                            'f': 'Fatigue',
-                            'c': 'Consumption'}
-            ib_sfeh_rev = {v: k for k, v in ib_sfeh_dict.items()}
-            obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
-            if obs_time is None:
-                pass
-            else:
-                geth_name = ib_sfeh_rev[obs_family]
-                return f"self.get_h('{geth_name}', {obs_time})"
-
-        return f'{label}'
-    else:
-        childs = tree_node_get_childs(tree, node_id)
-        results = []
-        for child in childs:
-            results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
-        return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
+#
+# def tree_get_pycode(tree, node_id=root_id):
+#     """
+#     NOT USED?
+#     returns python (inline-) code from a tree
+#     """
+#     node_id = int(node_id)
+#     arity = tree_node_get_arity(tree, node_id)
+#     label = tree_node_get_label(tree, node_id)
+#
+#     if arity == 0:
+#         if terminal_label_is_observation(label):
+#             ib_sfeh_dict = {'p': 'SetPoint',
+#                             'v': 'Velocity',
+#                             'g': 'Gain',
+#                             'h': 'Shift',
+#                             'f': 'Fatigue',
+#                             'c': 'Consumption'}
+#             ib_sfeh_rev = {v: k for k, v in ib_sfeh_dict.items()}
+#             obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
+#             if obs_time is None:
+#                 pass
+#             else:
+#                 geth_name = ib_sfeh_rev[obs_family]
+#                 return f"self.get_h('{geth_name}', {obs_time})"
+#
+#         return f'{label}'
+#     else:
+#         childs = tree_node_get_childs(tree, node_id)
+#         results = []
+#         for child in childs:
+#             results.append(tree_get_pycode(tree, node_id=child))  # = tree_node_get_label(tree, int(child))
+#         return op[label]['pycode'](*results)  # abs -> lambda a: 'abs({})'.formadt(a) (result1)
 
 
 def tree_raw_depth_prefix(tree, node_id):

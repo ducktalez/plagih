@@ -17,9 +17,20 @@ def latex_treeviz_full_document(tikz_forest_list, doc_border=',border=5pt'):
 
     forest_trees = ' '.join(tikz_forest_list)  # sfeh there was a \n does this work now? color used variables (allow colormap?)
 
+    latex_newcommand_forest = '\\newcommand{\\plforest}[1]{{\\begin{forest}   ' \
+                       'for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   ' \
+                       'terminal/.style={rectangle,},   ' \
+                       'fixnode/.style={fill=blue!60,},   ' \
+                       'observation/.style={rectangle,},   ' \
+                       'variable/.style={rectangle,},   ' \
+                       'nodeinsert/.style={fill=green!50,},   ' \
+                       'nodechanged/.style={fill=orange!50,}, #1 ' \
+                       '\end{forest}}}' \
+
     latex_doc_forest = f'\\documentclass[varwidth=\\maxdimen,convert{doc_border}]{{standalone}}' \
                        '\n\\usepackage{forest}' \
-                       '\n\\usepackage{amsmath}' \
+                       '\n\\usepackage{amsmath}\n' \
+                       f'{latex_newcommand_forest}' \
                        '\n\\begin{document}' \
                        f'\n{forest_trees}' \
                        '\n\\end{document}'
@@ -121,9 +132,9 @@ def label_bracket_beautification(label):
     if label in op:  #
         label = f"${op[label]['latex1']}$"
     elif terminal_label_is_observation(label):  # node is a terminal - either observation or variable
-        obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
+        obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
         if obs_time is not None:
-            label = f"{obs_family}$_{{{obs_time}}}$"
+            label = f"{prelabel}{obs_family}$_{{{obs_time}}}$"
     else:
         label = f"${label_tex_replace_digits(label)}$"
     return label
@@ -206,11 +217,11 @@ def latex_tight_node(tree, node_id=root_id):
         label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
     else:
         if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
-            obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
+            obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
             if obs_time is not None:
-                label = f"{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
+                label = f"{prelabel}{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
             else:
-                label = f"{{\\text{{{obs_family}}}}}"  # workaround
+                label = f"{prelabel}{{\\text{{{obs_family}}}}}"  # workaround
         else:
             label = f"{{{label_tex_replace_digits(label)}}}"
         return label

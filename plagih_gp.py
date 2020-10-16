@@ -3,6 +3,7 @@ This starts the whole genetic programming.
 This extra file was added to have a file in the root directory that can be started.
 """
 
+from plagih.file_interaction import *
 from plagih.plagih_gp_base_class_xai import *
 from plagih.plagih_data import *
 from benchmarks.ib.combined_runs import *
@@ -190,7 +191,7 @@ def main():  # argv sys.argv[1:]
     gp.file_analysis_plots()
 
     if args.analyse or not args.less_files:
-        gp.analyse_pareto()
+        gp.analyse_pareto(cpu_cores=args.mp_cpu_cores_max)
     else:
         print_blue('You actively decided not to use analyse out run.\n'
                    'This option was created for distributed cluster evaluation on slurm. The files\n'
@@ -200,28 +201,6 @@ def main():  # argv sys.argv[1:]
                    '4. Computation (Already happened, although not lately ;~D)')
 
     print('Program ending')
-    if prepared_run:
-        if 'IB' in prepared_run and prepared_run[-2:] == '_0':
-            combined_lists(prepared_run[:-2], 40, 40, local_yamls=True, cpu_cores=args.mp_cpu_cores_max)
-        if 'MTC' in prepared_run:
-
-            """
-            real evaluation
-            decision plot
-            spiral plot
-            """
-            dir_benchmarks = Path(__file__).parent.absolute() / 'benchmarks/'
-
-            if 'MTC200' in prepared_run:
-                with Path.open(Path(dir_benchmarks / 'mc/agents/sarsa_agent_200.p'), 'rb') as file:
-                    sarsa_agent = pickle.load(file)
-            elif 'MTC75' in prepared_run:
-                with Path.open(Path(dir_benchmarks / 'mc/agents/sarsa_agent_75.p'), 'rb') as file:
-                    sarsa_agent = pickle.load(file)
-            else:
-                raise
-
-            auto_evaluate_run_end(root_dir, prepared_run, sarsa_agent, n=100)
 
     sys.exit()
 

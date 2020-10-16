@@ -1,11 +1,9 @@
 import pickle
+from pathlib import Path
 from plagih.printing import *
 import yaml
-from pathlib import Path
 
-T_num_lines = 15  # sfeh this var is not found otherwise
-
-pyplot_size = (4, 3)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
+pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 pyplot_rc_tex = {'figure.autolayout': True,
                  'text.usetex': True,
                  'backend': 'pgf',
@@ -19,7 +17,6 @@ pyplot_rc_tex = {'figure.autolayout': True,
                  # 'axes.ymargin': 0
                  }
 
-pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
 rc_pyplot_size = {'figure.figsize': pyplot_size}
 # ['text.latex.preamble'=r"\usepackage{lmodern}"]
 
@@ -93,32 +90,59 @@ with plt.rc_context(rc=rc_params):
 """
 
 
-def folder_make_dir(path):
+def path_make_dir(p: Path):
     """
-    Checks if the folders for the specified path exist and creates them otherwise.
-    Apparently, this procedure is used often.
+    sfehfun
     """
-    if not Path.is_dir(path):
-        Path.mkdir(path)
-    return path
-
-
-def file_make_dir(file_path):
-    """
-    Creates the folder only knowing the file.
-    paff/tuuu/fyle.txe  ->  *mkdir* paff/tuuu/
-    """
-    p = Path(file_path)
-    if not p.parent.is_dir():
-        p.parent.mkdir(parents=True)
+    folder = p if len(p.suffix) == 0 else p.parent
+    folder.mkdir(parents=True, exist_ok=True)
     return p
 
 
-def pickle_load(path):
-    """
-    loads a data_csv_path file that was already split with the csv reader
+def file_dump(path, data, verbose='SKIPsfeh', print_type=None):
+    path_make_dir(path)
+    with Path.open(path, 'w') as file:
+        file.write(data)
+        printez(verbose, f'Wrote: {path.as_posix()}', print_type=print_type)
+
+
+# def folder_make_dir(path):
+#     """
+#     Checks if the folders for the specified path exist and creates them otherwise.
+#     Apparently, this procedure is used often.
+#     """
+#     if not Path.is_dir(path):
+#         Path.mkdir(path)
+#     return path
+#
+#
+# def file_make_dir(file_path):
+#     """
+#     Creates the folder only knowing the file.
+#     paff/tuuu/fyle.txe  ->  *mkdir* paff/tuuu/
+#     """
+#     p = Path(file_path)
+#     if not p.parent.is_dir():
+#         p.parent.mkdir(parents=True)
+#     return p
+
+
+def pickle_dump(path, data, print_type=None):
     """
 
+    """
+    path = path_make_dir(path)
+
+    with Path.open(path, 'wb') as file:
+        pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    printez('f', f'Backup: {path.as_posix()}', print_type=print_type)
+
+
+def pickle_load(path: Path):
+    """
+    loads a pickle file (usually .p or .pkl)
+    """
     with Path.open(path, 'rb') as file:
         pickle_data = pickle.load(file)
 
@@ -130,7 +154,7 @@ def pickle_load(path):
 #     saves prepared plagih data to pickle file
 #     """
 #
-#     path = file_make_dir(path)
+#     path = path_make_dir(path)
 #     with Path.open(path, 'wb') as file:
 #         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 #         printez('f', f'{path.as_posix()}', print_type=print_type)
@@ -151,7 +175,7 @@ def yaml_dump(path, data, print_type=None):
     saves prepared plagih data to pickle file
     """
 
-    path = file_make_dir(path)
+    path = path_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
         printez('ff', f'{path.as_posix()}', print_type=print_type)

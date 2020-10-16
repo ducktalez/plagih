@@ -2,7 +2,9 @@
 import sys
 from pathlib import Path
 sys.path.append('../../')
-sys.path.append('../../../')
+sys.path.append('../../plagih/')
+
+sys.path.insert(1, '/.././benchnmarks/ib/')
 import os
 import argparse
 from benchmarks.ib.ib_eval_agents import *
@@ -120,10 +122,17 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
     print the combined runs that belong together
     """
     # relevant_agents = [list(set(xx)) for xx in zip(*[x['parsims'] for x in best_regrerr_dict])]  # delete if not required by sfeh
-
-    yaml_dump(root_dir_eval / 'best_regrerr.yaml',
-              [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']]
-               for x in best_regrerr_dict])  # sfeh delete this?
+    bestregr_data = [[' '.join(f'{xx:0.0f}' for xx in x['parsims']), x['experiment'], x['experiment_safe'], x['experiment_r50'], x['experiment_safe_r50']]
+                     for x in best_regrerr_dict]
+    try:
+        yaml_dump(root_dir_eval / 'best_regrerr.yaml', bestregr_data)  # sfeh delete this?
+    except:
+        # sfeh FFS this FUCKING includes
+        p = (root_dir_eval / 'best_regrerr.yaml')
+        path = p if len(p.suffix) == 0 else p.parent
+        path.mkdir(parents=True, exist_ok=True)
+        with Path.open(path, 'w') as file:
+            _ = yaml.dump(bestregr_data, file, default_flow_style=False, sort_keys=False)
     # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
 
     """
@@ -328,9 +337,8 @@ def combined_lists(path_ibrun, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_c
     Three runs have to be combined from their raw code.
     (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
     """
-    run_name = path_ibrun.name
-    run_name_core = run_name[:-2]
-    path_paretocombined = merge_paretos(run_name_core)  # e.g. 'IB_MSE_s3m'
+    run_name = path_ibrun.name[:-2]
+    path_paretocombined = merge_paretos(run_name)  # e.g. 'IB_MSE_s3m'
     path_run = dir_slurm / run_name
     try:
         root_dir_eval = path_make_dir(path_run)
@@ -424,11 +432,8 @@ def merge_paretos(run_name_core):
             xx, yy = np.array(tuples).T
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
 
-        ax.set_xlabel('complexity')
-        ax.set_ylabel('regression error')
+        ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, None), ylim=(0, None))  # 1.05  # top * 1.05 for better style
         ax.legend(loc='upper right')
-        ax.set_xlim(0, None)
-        ax.set_ylim(0, None)  # 1.05  # top * 1.05 for better style
         fig.tight_layout()
         path_paretocombined = dir_slurm / run_name_core / f'pareto_combined.pdf'
         fig.savefig(path_paretocombined)

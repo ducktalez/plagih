@@ -1046,7 +1046,13 @@ Reinforcement Learning
 \end_layout
 
 \begin_layout Standard
-xxx
+Reinforcement Learning (RL) stellt einen Teil des ML dar, bei dem ein Agent
+ ohne Vorkenntnisse eine Strategie erlernt um den erwarteten Reward in einer
+ Umgebung zu maximieren.
+ Die Umwelt ist dabei als Markov-Entscheidungsproblem formuliert, bei dem
+ der Agent seinen aktuellen Zustand S kennt und aus einer Menge von verfügbaren
+ Optionen wählen kann um eiunen Folgezustand S+1 zu erreichen.
+ [xxx]
 \end_layout
 
 \begin_layout Section
@@ -5695,16 +5701,13 @@ literal "true"
 
 \end_inset
 
- Da KarooGP keinen if-operator bereitstellt und es auch nicht start typisiert
- ist waren massive strukturelle Änderungen nötig, sodass das entstandene
- Framework eine Neuentwicklung darstellt.
+ Als Startpunkt diente KarooGP, da dieses Framework aber keinen if-operator
+ bereitstellt und es auch nicht start typisiert ist waren massive strukturelle
+ Änderungen nötig, sodass das entstandene Framework eine Neuentwicklung
+ darstellt.
  Durch Verwendung rekursiver Baumstrukturen konnte der Speedup von Karoo
  sogar noch erhöht werden.
- 
-\end_layout
-
-\begin_layout Standard
-[xx hier war es noch schneller - claim, Daniel Hein Hilfe?, Koza erwähnen
+ [xx hier war es noch schneller - claim, Daniel Hein Hilfe?, Koza erwähnen
  - ein buch genug?]
 \end_layout
 
@@ -5746,6 +5749,11 @@ Evolution in tree based genetic programming, filter operator and branch
 
 \begin_layout Section
 Strukturelle Eigenschaften
+\end_layout
+
+\begin_layout Standard
+Um die Ergebnisse der GP möglichst erklärbar zu machen ist es vor allem
+ wichtig, die TED möglichst aussagekräftig zu halten.
 \end_layout
 
 \begin_layout Subsection
@@ -6600,10 +6608,14 @@ The division of the evolution on a generation.
 \end_layout
 
 \begin_layout Paragraph
+\begin_inset Note Note
+status open
+
+\begin_layout Paragraph
 Tournament selection
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Die tournament selection ist die gängigste Form der Selektion bei genetischer
  Programmierung.
  Um lokale optima zu vermeiden wurde die tournament-size auf den niedrigst
@@ -6612,17 +6624,23 @@ Die tournament selection ist die gängigste Form der Selektion bei genetischer
  bereits herausragenden Bäumen anzuwenden.
 \end_layout
 
-\begin_layout Subsubsection
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Random tree branch building (node based)
 \end_layout
 
 \begin_layout Standard
-Sowohl bei der Branch mutation als auch beim erzeugen neuer Bäume müssen
- zufällige Bäume aufgebaut werden.
+Sowohl bei der Branch mutation als auch beim erzeugen neuer Bäume werden
+ zufällige Bäume generiert.
  Üblicherweise wird dafür eine zufällige Baumtiefe ausgewählt, bis zu der
  ein Ast rekursiv erzeugt wird.
- Die ist aber ein großes Problem für die layerwise-mutation, siehe [xx weil
- die Baumtiefe bei großer Tiefe exponentiell steigt und somit oft ].
+ Die ist allerdings ein Problem für die layerwise-mutation, wenn mehrere
+ Äste gleichzeitig aufgebaut werden müssen, siehe [xx weil die Baumtiefe
+ bei großer Tiefe exponentiell steigt und somit oft ].
  Deshalb wurde ein Knotenbasierter Algorithmus entwickelt, der Äste im Full-
  und Grow modus bis zu einer gewissen Anzahl von Knoten aufbaut.
 \end_layout
@@ -6723,7 +6741,7 @@ or do they?
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Baumstruktur: full/grow
 \end_layout
 
@@ -6783,7 +6801,7 @@ A grow tree has a lower branching factor and produces more encapsulated
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Allgemeine mathematische Vereinfachung
 \end_layout
 
@@ -6793,67 +6811,21 @@ Die mathematischen Ausdrücke in Bäumen oder Ästen zu vereinfachen ist dann
  werden kann.
  Es ist eine gängige Methode um performante Bäume kompakter darzustellen
  ohne sich auf einen zufälligen Mutationsprozess verlassen zu müssen.
- Für die TED sind Vereinfachungen leider nicht trivial verwendbar, da Vereinfach
-te Formeln, beispielsweise wegen des Kommutativgesetzes als nicht-äquivalent
+ Für die TED sind Vereinfachungen nicht trivial verwendbar, da Vereinfachte
+ Formeln, beispielsweise wegen des Kommutativgesetzes als nicht-äquivalent
  gewertet werden.
  
 \begin_inset Formula $(a+b)=(b+a)$
 \end_inset
 
- sind zwar äquivalent.
- In sympy werden entsprechende Ausdrücke immer gleich ausgewertet, selbst
- bei unterschiedlicher Schreibweise.
+ ist zwar äquivalent, die TED der Formeln ist aber 2.
+ Sympy [xx] stellt dabei ein mächtiges mathematisches Werkzeug dar, welches
+ Ausdrücke immer auf die gleiche Weise reduziert.
  [xx]
-\end_layout
-
-\begin_layout Standard
-One of the most important ways to simplify trees is to simplify the content
- they represent as a mathematical expression.
- xxx
 \end_layout
 
 \begin_layout Itemize
 Fix-nodes must not be affected.
-\end_layout
-
-\begin_layout Itemize
-Expressions should always be reduced in the same way if possible.
- Due to the commutative law, for example, the expression 
-\begin_inset Formula $2+a\cdot2$
-\end_inset
-
- is already simplified.
- However, it can also be arranged differently, for example as 
-\begin_inset Formula $2\cdot a+2$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Itemize
-Reduced expressions must not contain any mathematical illogical bits.
- With the abundance of mathematical simplifications that exist, if all simplific
-ations are allowed, many special cases arise.
- These often cannot be evaluated, but even then they are often very unfit
- and in addition often not explainable.
-\end_layout
-
-\begin_layout Itemize
-nan - zoo - inf - complex numbers
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-Nicht-vereinfachte Ausdrücke bieten der GP mehr Optionen zum verbessern,
- um möglichst einfache Bäume zu erhalten sollte aber Komplexe Äste bieten
- der GP zwar viele Möglichkeiten einen Term zu verbessern, Either parts
- of a complete tree gets reduced to the most basic mathematical form possible.
- Not all trees should be saved in their basic form, as they might have branches
- with potential for further changes.
- On the other side, we want simple trees and generally the most basic solution.
 \end_layout
 
 \begin_layout Itemize
@@ -6870,7 +6842,7 @@ Vereinfachung der Ausdrücke nach mathematischen Regeln (sympy).
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Olymp-reproduction (Pareto reproduction)
 \end_layout
 
@@ -6890,7 +6862,7 @@ Die olymp-reproduktion umfasst insbesondere auch die Möglichkeit für den
  origin tree sich zu reproduzieren.
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Filter mutation
 \end_layout
 
@@ -6903,9 +6875,9 @@ reference "sec:Industrial-benchmark"
 \end_inset
 
  ein Filteroperator für den Index von Konstanten implementiert.
- Der Index einer Variablen in Daten bedeutet üblicherweise den Zeitpunkt
- zu dem sie beobachtet wurde.
- Gerade bei vielen Indizes sollten diese optimiert ausgewählt werden.
+ Vor allem bei nicht komplett überschaubaren Markov-zuständen werden dabei
+ vergangene Werte berücksichtigt, weshalb der Zeitpunkt der Observation
+ einen weiteren unübluichen Faktor darstellt.
  
 \begin_inset Foot
 status open
@@ -6916,8 +6888,7 @@ The calculation of the index was not an optional part of the GP.
 
 \end_inset
 
- , der Index kann außerdem beim Filterprozess als natürliche Zahl gefiltert
- werden (
+ Dieser wurde beim Filterprozess als natürliche Zahl gefiltert (
 \begin_inset Formula $t_{\text{new}}=\mathcal{N}(t,1)$
 \end_inset
 
@@ -7000,31 +6971,13 @@ name "subsec:Fixed-nodes"
 \end_layout
 
 \begin_layout Standard
-Um dem Entwickler auch explizit die Möglichkeit zu geben, Teile seiner Heuristik
- zu schützen wurden fixe Knoten eingeführt die von der genetischen Programmierun
-g nicht verändert werden dürfen.
- 
-\end_layout
-
-\begin_layout Standard
-Um den GP Prozess noch stärker an die Präferenzen des Entwicklers zu binden
- wurden dafür fixe Knoten definiert, die vom GP-prozess nicht verändert
- werden dürfen.
+Zusätzlich zur TED wurde, um den GP Prozess noch stärker an die Präferenzen
+ des Entwicklers zu binden, fixe Knoten definiert, die vom GP-prozess nicht
+ verändert werden dürfen.
  Vor allem, wenn sich der Entwickler der Richtigkeit seiner Abstraktion
  an dieser Stelle sicher ist, können sinnlose Versuche des GP-Prozesses,
  an diesen Stellen zu optimieren als Performance und Sicherheitsgründen
  unterbunden werden.
-\end_layout
-
-\begin_layout Standard
-An example for a tree used in the mountain car problem can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "img:tree_modifiable_nodes_modified"
-
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Standard
@@ -7063,14 +7016,6 @@ A tree with fixed nodes (blue) remains untouched by a branch mutation
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Subsubsection
-Fixed nodes layer0 mutations
-\end_layout
-
-\begin_layout Standard
 The possibility to implement fixed nodes requires some adjustments to the
  operators of GP, because all trees need the same node core.
  The changes include:
@@ -7078,10 +7023,6 @@ The possibility to implement fixed nodes requires some adjustments to the
 
 \begin_layout Itemize
 Mutating mofifiably nodes only
-\end_layout
-
-\begin_layout Itemize
-layer-wise crossover
 \end_layout
 
 \begin_layout Itemize
@@ -7142,6 +7083,66 @@ Useful features? xx
 
 \begin_layout Subsection
 Visualisation
+\end_layout
+
+\begin_layout Standard
+Die Visualisierung erfolgte mithilfe von Latex.
+ Das Forest-Paket löst dabei das Problem der Knotenanordnung, welche vor
+ allem bei großen Bäumen möglichst Platzsparend erfolgen sollte.
+ [xx] 
+\end_layout
+
+\begin_layout Standard
+Außerdem wurden tight-trees erstellt, bei denen Äste mit einfachen mathematische
+n Formeln (die keine fixen Knoten betreffen) als einzelnen Knoten darstellen.
+ Dadurch wird sowohl die Struktur des Baumes erhalten ohne diesen durch
+ einfache mathematische Formeln aufzublasen.
+ Knoten werden dann zusammengefasst, wenn sie nicht fix sind und wenn ihr
+ Ausdruck nicht die folgenden Operatoren enthält: [xx min, max, if-then-else,
+ >, equal, ...] [xx Bild]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/tighttree_example/full_04.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/tighttree_example/full-04_tight.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
@@ -7327,64 +7328,6 @@ status open
 
 \begin_layout Plain Layout
 Parsimony 3
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/plots/paretofront MTC200_MSE_scratch - 0.png
-	lyxscale 20
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/plots/paretofront MTC200_MSE_scratch - 1.png
-	lyxscale 18
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/plots/paretofront MTC200_MSE_scratch - 2.png
-	lyxscale 16
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/plots/paretofront MTC200_MSE_scratch - 3.png
-	lyxscale 12
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-test xxx 3
 \end_layout
 
 \end_inset

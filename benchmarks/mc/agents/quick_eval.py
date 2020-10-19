@@ -314,23 +314,16 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
             return int(round(max(0, min(2, mc_actn))))
 
 
-
     try:
         sarsa_dummy, bur_lut = pickle_load(root_dir / 'backup/mcevalbackup.p')  #  sarsa_dummy  (results, result_dummy)   (result, dummy)
 
     #  = backup_results1
-    except :
+    except Exception:
         bur_lut = {}
         _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
 
-    """
-    Just create the subfolder
-    """
     dir_save = path_make_dir(root_dir / 'sfehs_eval')
 
-    """
-    load pareto front from old run
-    """
     gp_backup_data = pickle_load(root_dir / 'backup/backup.p')
     gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
 

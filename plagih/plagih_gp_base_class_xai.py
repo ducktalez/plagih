@@ -9,6 +9,7 @@ import time
 import math
 import matplotlib.pyplot as plt
 import multiprocessing as mp
+import matplotlib.ticker as ticker
 
 from benchmarks.ib.combined_runs import *
 from benchmarks.mc.agents.quick_eval import auto_evaluate_run_end
@@ -636,7 +637,7 @@ class ExplainableGP(object):
 
         latex_row1 = []
         path_hist = path_make_dir(self.root_dir / 'histograms/')
-        pareto_agents = pd.DataFrame()
+        pareto_agents = {}
 
         for (parsim, fitness, cooltree) in self.pareto:
             # self.file_pareto_txt()  # sfeh
@@ -658,7 +659,7 @@ class ExplainableGP(object):
         latex_full_doc = latex_treeviz_full_document(latex_row1)
         file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex
 
-        dir_benchmarks = Path(__file__).parent.absolute() / '../benchmarks/'
+        dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
 
         if 'MTC' in self.conf.name:
             self.file_pareto_pycode()
@@ -682,35 +683,66 @@ class ExplainableGP(object):
                               'fails': fails,
                               'spiralplot': path_mcmeshplot,
                               'spiralplot diff': path_mcmeshplot_diff}
-                pareto_agents.loc[pp].update(extra_line)
+                pareto_agents[pp].update(extra_line)
+            path_run = self.root_dir
+
+            textodo2 = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
+            for x in pareto_agents.values():
+                lul2 = [str(xx) for xx in x.values()]
+                asd = ' & '.join(lul2)
+                textodo2 += asd + '\n'  # todo pareto_agents.to_latex()
+            file_dump(path_run / 'mc_result.txt', textodo2)
 
         elif 'IB' in self.conf.name:
             self.file_pareto_listcode()
-            if self.conf.name[-2:] == '_0':
-                path_ibrun = dir_benchmarks / f'slurm_runs/{self.conf.name[:-2]}/{self.conf.name}/'
-                res_all, path_regrallplot, path_paretocombined = combined_lists(path_ibrun, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
-                pareto_agents_combined = pd.DataFrame()
-                for x in res_all.items():
-                    ppsum = x['parsim_sum']
-                    extra_line = {'parsims': x['parsims'],
-                                  'experiment': x['experiment'],
-                                  'experiment_safe': x['experiment_safe'],
-                                  'experiment_r50': x['experiment_r50'],
-                                  'experiment_safe_r50': x['experiment_safe_r50']}
-                    pareto_agents_combined.loc[ppsum].update(extra_line)
 
-                    # todo todotodo another paretofront file
-                # xx = [x['parsim_sum'] for x in res_all]
-                # y_all = [y['experiment'] for y in res_all]
-                # y_safe = [y['experiment_safe'] for y in res_all]
-                # y_all_r50 = [y['experiment_r50'] for y in res_all]
-                # y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
-                textodo = pareto_agents.to_latex()
+            tex_combined = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
+            if self.conf.name[-2:] == '_0':
+                # path_run = dir_benchmarks / f'slurm_runs/{self.conf.name[:-2]}/{self.conf.name}/'
+                path_run = self.root_dir.parent
+                res_all = combined_lists(self.root_dir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
+
+                xx = [x['parsim_sum'] for x in res_all]
+                y_all = [y['experiment'] for y in res_all]
+                y_safe = [y['experiment_safe'] for y in res_all]
+                y_all_r50 = [y['experiment_r50'] for y in res_all]
+                y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
+
+                cnt = [y['cnt'] for y in res_all]
+
+                # tex_combined += ' & '.join([xx, cnt, y_all, y_safe, y_all_r50, y_safe_r50])
+                for resx in res_all:
+                    tex_combined = '\n'.join([' & '.join([y['parsim_sum'], y['experiment'], y['experiment_safe'], y['experiment_r50'], y['experiment_safe_r50'], y['cnt']]) for y in resx])
+                    # tex_combined += xtra_row) + '\n'  # [xx, cnt, y_all, y_safe, y_all_r50, y_safe_r50]
+
+                file_dump(self.root_dir.parent / 'huehue_combined.tex', tex_combined)
+
+                with plt.rc_context(rc=pyplot_rc_tex):
+                    fig, ax = plt.subplots()
+                    ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
+                    ax.plot(xx, y_all, label='all actions', marker='.', color='r')
+                    ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
+                    ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
+                    ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
+                    ax.xaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
+
+                    axx = ax.twinx()
+                    axx.plot(xx, cnt, color='tab:gray', label='regression error', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+                    axx.tick_params(axis='y', labelcolor='tab:gray')
+
+                    ax2 = ax.twinx()
+                    ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+                    ax2.tick_params(axis='y', labelcolor='tab:gray')
+
+                    ax.legend(loc='lower right')
+                    ax2.legend(loc='lower left')
+
+                    path_regrallplot = path_run / f'regression_all-TEST.pdf'
+                    fig.savefig(path_regrallplot)
+                    plt.close('all')
 
         else:
-            print_warning('w', f'This should actually never happen right now. name: {self.conf.name}')
-
-        textodo2 = pareto_agents.to_latex()
+            raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
 
         return
 

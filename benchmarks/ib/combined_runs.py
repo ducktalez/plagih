@@ -128,10 +128,8 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
         yaml_dump(root_dir_eval / 'best_regrerr.yaml', bestregr_data)  # sfeh delete this?
     except:
         # sfeh FFS this FUCKING includes
-        p = (root_dir_eval / 'best_regrerr.yaml')
-        path = p if len(p.suffix) == 0 else p.parent
-        path.mkdir(parents=True, exist_ok=True)
-        with Path.open(path, 'w') as file:
+
+        with Path.open(root_dir_eval / 'best_regrerr.yaml', 'w') as file:
             _ = yaml.dump(bestregr_data, file, default_flow_style=False, sort_keys=False)
     # yaml_dump(root_dir_eval / 'best_regrerr.yaml', [' '.join(str(xx) for xx in x['parsims']) for x in best_regrerr_dict])  # sfeh delete this?
 
@@ -140,7 +138,9 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
     best_regrerr_dict
     """
     best_regrerr_dict.sort(key=lambda x: x['parsim_sum'])
+    best_regrerr_dict[0]['cnt'] = 1  # sfeh
     res_all = [best_regrerr_dict[0]]
+
     cnt = [0]
     best = best_regrerr_dict[0]
 
@@ -151,8 +151,9 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
         prows = [row for row in combined_all_p[p]]
         best_row = min(prows, key=lambda x: x['regress_sum'])
         if best_row['regress_sum'] < best['regress_sum']:
-            res_all.append(best_row)
             cnt.append(len(prows))
+            best_row['cnt'] = len(prows)
+            res_all.append(best_row)
         else:
             print(f'Not a better entry at {p}')
 
@@ -162,58 +163,36 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
     y_all_r50 = [y['experiment_r50'] for y in res_all]
     y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
 
-    # with plt.rc_context(rc=pyplot_rc_tex):
-    #     fig, ax = plt.subplots(figsize=pyplot_size)
-    #     ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
-    #     ax.plot(xx, y_all, label='all actions', marker='.', color='r')
-    #     ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
-    #
-    #     ax2 = ax.twinx()
-    #     ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
-    #     ax2.tick_params(axis='y', labelcolor='tab:gray')
-    #
-    #     ax.legend(loc='lower right')
-    #     ax2.legend(loc='lower left')
-    #
-    #     fig.savefig(root_dir_eval / f'regression_sum.pdf')  # dpi=300
-    #     plt.close('all')
-    #
-    # with plt.rc_context(rc=pyplot_rc_tex):
-    #     fig, ax = plt.subplots(figsize=pyplot_size)
-    #     ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
-    #     ax.plot(xx, y_all_r50, label='all actions (randomized start)', marker='.', color='orangered')
-    #     ax.plot(xx, y_safe_r50, label='low risk (randomized start)', marker='None', color='orangered', linestyle='dotted')
-    #     ax2 = ax.twinx()
-    #     ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'
-    #     ax2.tick_params(axis='y', labelcolor='tab:gray')
-    #
-    #     ax.legend(loc='lower right')
-    #     ax2.legend(loc='lower left')
-    #
-    #     fig.savefig(root_dir_eval / f'regression_sum_r50.pdf')
-    #     plt.close('all')
-
     """
     The two plots above in one plot
     """
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots(figsize=pyplot_size)
-        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
-        ax.plot(xx, y_all, label='all actions', marker='.', color='r')
-        ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
-        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
-        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
-        ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.', legend_loc='best')  # linestyle='None'
-        ax2.tick_params(axis='y', labelcolor='tab:gray')
+    pyplot_size = (3.6, 2.7)
+    pyplot_rc_tex = {'figure.autolayout': True,
+                     'text.usetex': True,
+                     'backend': 'pgf',
+                     'figure.figsize': pyplot_size,
+                     }
 
-        ax.legend(loc='lower right')
-        ax2.legend(loc='lower left')
+    # todo todotodo
+    # with plt.rc_context(rc=pyplot_rc_tex):
+    #     fig, ax = plt.subplots()
+    #     ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
+    #     ax.plot(xx, y_all, label='all actions', marker='.', color='r')
+    #     ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
+    #     ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
+    #     ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
+    #     ax2 = ax.twinx()
+    #     ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+    #     ax2.tick_params(axis='y', labelcolor='tab:gray')
+    #
+    #     ax.legend(loc='lower right')
+    #     ax2.legend(loc='lower left')
+    #
+    #     path_regrallplot = root_dir_eval / f'regression_all.pdf'
+    #     fig.savefig(path_regrallplot)
+    #     plt.close('all')
 
-        path_regrallplot = root_dir_eval / f'regression_all.pdf'
-        fig.savefig(path_regrallplot)
-        plt.close('all')
-    return res_all, path_regrallplot
+    return res_all
 
 
 def plot_per_action(root_dir_eval, run_name, parsims, combined_all_p):
@@ -331,30 +310,30 @@ def plot_scatter_some():
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(path_ibrun, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
+def combined_lists(path_run_parent, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
     (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
     """
-    run_name = path_ibrun.name[:-2]
-    path_paretocombined = merge_paretos(run_name)  # e.g. 'IB_MSE_s3m'
-    path_run = dir_slurm / run_name
-    try:
-        root_dir_eval = path_make_dir(path_run)
-    except Exception as ex:
-        # sfeh this sucks, IB eval doesnt find it
-        folder = path_run if len(path_run.suffix) == 0 else path_run.parent
-        folder.mkdir(parents=True, exist_ok=True)
+    run_name = path_run_parent.name
+    # merge_paretos(run_name)  # e.g. 'IB_MSE_s3m' # todo
+    # path_run_parent = path_run_parent.parent
+    # try:
+    #     root_dir_eval = path_make_dir(path_run_parent)
+    # except Exception as ex:
+    #     # sfeh this sucks, IB eval doesnt find it
+    #     folder = path_run if len(path_run.suffix) == 0 else path_run.parent
+    #     folder.mkdir(parents=True, exist_ok=True)
 
     if local_yamls:
-        lut_file = dir_slurm / run_name / 'lutfile.yaml'
+        lut_file = path_run_parent / 'lutfile.yaml'
     else:
         lut_file = Path(os.path.dirname(os.path.realpath(__file__))) / 'lutfile.yaml'
 
     agents = []
     for act in ['0', '1', '2']:
-        lfile = dir_slurm / run_name / f'{run_name}_{act}/pycode_list.yaml'
+        lfile = path_run_parent / f'{run_name}_{act}/pycode_list.yaml'
         print(f'combining runs. Trying to load yaml file at: {lfile}')
         try:
             with Path.open(lfile, 'r') as file:
@@ -402,8 +381,9 @@ def combined_lists(path_ibrun, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_c
     the main plotting procedures
     """
     parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))
-    res_all, path_regrallplot = plot_best_prediction(path_ibrun, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, cpu_cores)
-    return res_all, path_regrallplot, path_paretocombined
+    res_all = plot_best_prediction(path_run_parent, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, cpu_cores)
+
+    return res_all
 
 
 def merge_paretos(run_name_core):
@@ -440,7 +420,7 @@ def merge_paretos(run_name_core):
         plt.close('all')
 
     print('IB combined runs: merged pareto entries into one plot!')
-    return path_paretocombined
+    return
 
 
 def main():

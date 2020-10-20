@@ -1052,7 +1052,7 @@ Reinforcement Learning (RL) stellt einen Teil des ML dar, bei dem ein Agent
  Die Umwelt ist dabei als Markov-Entscheidungsproblem formuliert, bei dem
  der Agent seinen aktuellen Zustand S kennt und aus einer Menge von verfügbaren
  Optionen wählen kann um eiunen Folgezustand S+1 zu erreichen.
- [xxx]
+ [xxx] 
 \end_layout
 
 \begin_layout Section

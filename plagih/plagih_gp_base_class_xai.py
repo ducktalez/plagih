@@ -635,7 +635,7 @@ class ExplainableGP(object):
         # self.pareto_sort()  # is pareto not sorted?  sfeh working? check if sorted.
         # self.file_population('last')
 
-        latex_row1 = []
+        dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
         path_hist = path_make_dir(self.root_dir / 'histograms/')
         pareto_agents = {}
 
@@ -656,10 +656,8 @@ class ExplainableGP(object):
                                      }
             # finaline = [f'{parsim} & {fitness} & {cooltree} % {}{}{}{}', 'regression error', 'real fitness', 'forestree0', 'forestree1', 'texpression_2', 'forestree2']
 
-        latex_full_doc = latex_treeviz_full_document(latex_row1)
-        file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex
-
-        dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
+        # latex_full_doc = latex_treeviz_full_document(latex_row1)
+        # file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex  # todo todotodo
 
         if 'MTC' in self.conf.name:
             self.file_pareto_pycode()
@@ -668,7 +666,6 @@ class ExplainableGP(object):
             decision plot
             spiral plot
             """
-
             if 'MTC200' in self.conf.name:
                 sarsa_agent = pickle_load(dir_benchmarks / 'mc/agents/sarsa_agent_200.p')
             elif 'MTC75' in self.conf.name:
@@ -684,23 +681,33 @@ class ExplainableGP(object):
                               'spiralplot': path_mcmeshplot,
                               'spiralplot diff': path_mcmeshplot_diff}
                 pareto_agents[pp].update(extra_line)
-            path_run = self.root_dir
-
-            textodo2 = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
-            for x in pareto_agents.values():
-                lul2 = [str(xx) for xx in x.values()]
-                asd = ' & '.join(lul2)
-                textodo2 += asd + '\n'  # todo pareto_agents.to_latex()
-            file_dump(path_run / 'mc_result.txt', textodo2)
 
         elif 'IB' in self.conf.name:
             self.file_pareto_listcode()
 
             tex_combined = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
             if self.conf.name[-2:] == '_0':
-                # path_run = dir_benchmarks / f'slurm_runs/{self.conf.name[:-2]}/{self.conf.name}/'
-                path_run = self.root_dir.parent
-                res_all = combined_lists(self.root_dir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
+                """
+                - complexity_sum, [complexities], regression_sum, [regression_errors], real_sum, [formulas]
+                - plot with pareto candidates
+                """
+
+                # path_main_run = dir_benchmarks / f'slurm_runs/{self.conf.name[:-2]}/{self.conf.name}/'
+                path_main_run = self.root_dir.parent
+                run_main_name = self.root_dir.parent.name
+                """
+                res_all: ordered list
+                    {'parsim_sum': parsim_sum,
+                      'experiment': None,
+                      'experiment_safe': None,
+                      'experiment_r50': None,
+                      'experiment_safe_r50': None,
+                      'parsims': parsims,
+                      'codes': codes,
+                      'regress_sum': regress_sum,
+                      'regress_vals': regress_vals}
+                """
+                res_all = combined_lists(path_main_run, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
 
                 xx = [x['parsim_sum'] for x in res_all]
                 y_all = [y['experiment'] for y in res_all]
@@ -711,11 +718,37 @@ class ExplainableGP(object):
                 cnt = [y['cnt'] for y in res_all]
 
                 # tex_combined += ' & '.join([xx, cnt, y_all, y_safe, y_all_r50, y_safe_r50])
-                for resx in res_all:
-                    tex_combined = '\n'.join([' & '.join([y['parsim_sum'], y['experiment'], y['experiment_safe'], y['experiment_r50'], y['experiment_safe_r50'], y['cnt']]) for y in resx])
-                    # tex_combined += xtra_row) + '\n'  # [xx, cnt, y_all, y_safe, y_all_r50, y_safe_r50]
+                for y in res_all:
+                    parsims = y['parsims']
 
-                file_dump(self.root_dir.parent / 'huehue_combined.tex', tex_combined)
+                    try:
+                        # \input{C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_scratch/IB_MSE_scratch_2/visualisation/01_input.tex}\tabularnewline
+                        # {pars_ii:02d}
+                        input_agentex = lambda run_ii: f"\\input{{{run_main_name}_{run_ii}/visualisation/{int(parsims[run_ii]):02d}_input_forest.tex}}"
+                        oneplot_input = f"{{{input_agentex(0)}{input_agentex(1)}{input_agentex(2)}}}"
+
+                    except:
+                        raise
+
+                    tex_line = [int(y['parsim_sum']),
+                                [int(x) for x in y['parsims']],
+                                f"{y['regress_sum']:0.3f}",
+                                f"{[f'{x:0.3f}' for x in y['regress_vals']]}",
+                                f"{y['experiment']:0.3f}",
+                                f"{y['experiment_safe']:0.3f}",
+                                f"{y['experiment_r50']:0.3f}",
+                                f"{y['experiment_safe_r50']:0.3f}",
+                                y['cnt'],
+                                oneplot_input]
+                    tex_combined += f"{' & '.join([str(x) for x in tex_line])}\\tabularnewline\n"
+
+                tex_combined = f"\\begin{{tabular}}{{llllllllll}}" \
+                    f"{tex_combined}" \
+                    f"\\end{{tabular}}\n"
+
+                tex_combined = latex_treeviz_full_document([tex_combined])
+
+                file_dump(self.root_dir.parent / 'combined_overview.tex', tex_combined)
 
                 with plt.rc_context(rc=pyplot_rc_tex):
                     fig, ax = plt.subplots()
@@ -737,12 +770,18 @@ class ExplainableGP(object):
                     ax.legend(loc='lower right')
                     ax2.legend(loc='lower left')
 
-                    path_regrallplot = path_run / f'regression_all-TEST.pdf'
+                    path_regrallplot = path_main_run / f'regression_all-TEST.pdf'
                     fig.savefig(path_regrallplot)
                     plt.close('all')
 
         else:
             raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
+
+        full_analysis = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
+        for x in pareto_agents.values():
+            full_analysis += f"{' & '.join([str(xx) for xx in x.values()])}\\\\\n"  # todo pareto_agents.to_latex()
+        latex_full_doc = latex_treeviz_full_document(full_analysis)
+        file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex  # todo todotodo
 
         return
 

@@ -258,8 +258,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
         fig.tight_layout()
-        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
-        # # only if one entry per parsimony
+        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)  # # only if one entry per parsimony
         ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
         ax.plot(xx, y_safe, label='low risk', marker='.', color='c')
         ax.legend(loc='lower left')
@@ -268,11 +267,7 @@ def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
 
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots(figsize=pyplot_size)
-        fig.tight_layout()
-        ax.set_xlabel('Pareto complexity sum')  # summe der komplexitäten der paretofront
-        ax.set_ylabel('reward')
-        ax.set_ylim(funny_limits)
-        # # only if one entry per parsimony
+        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
         ax.plot(xx, y_all_r50, label='all actions, randomized', marker='.', color='r', )
         ax.plot(xx, y_safe_r50, label='low risk, randomized', marker='.', color='c')
         ax.legend(loc='lower left')
@@ -310,30 +305,23 @@ def plot_scatter_some():
     #     y_safe = [y[2] for y in plot_all]
 
 
-def combined_lists(path_run_parent, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
+def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
     """
     Make the combined evaluation of industrial benchmark runs.
     Three runs have to be combined from their raw code.
     (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
     """
-    run_name = path_run_parent.name
-    # merge_paretos(run_name)  # e.g. 'IB_MSE_s3m' # todo
-    # path_run_parent = path_run_parent.parent
-    # try:
-    #     root_dir_eval = path_make_dir(path_run_parent)
-    # except Exception as ex:
-    #     # sfeh this sucks, IB eval doesnt find it
-    #     folder = path_run if len(path_run.suffix) == 0 else path_run.parent
-    #     folder.mkdir(parents=True, exist_ok=True)
+    main_name = path_main.name
+    merge_paretos(main_name)  # e.g. 'IB_MSE_s3m' # todo
 
     if local_yamls:
-        lut_file = path_run_parent / 'lutfile.yaml'
+        lut_file = path_main / 'lutfile.yaml'
     else:
         lut_file = Path(os.path.dirname(os.path.realpath(__file__))) / 'lutfile.yaml'
 
     agents = []
     for act in ['0', '1', '2']:
-        lfile = path_run_parent / f'{run_name}_{act}/pycode_list.yaml'
+        lfile = path_main / f'{main_name}_{act}/pycode_list.yaml'
         print(f'combining runs. Trying to load yaml file at: {lfile}')
         try:
             with Path.open(lfile, 'r') as file:
@@ -349,17 +337,19 @@ def combined_lists(path_run_parent, parsim_MAX, parsim_1MAX, local_yamls=False, 
         parsim_sum = float(sum([x[0] for x in row]))
         if parsim_sum <= parsim_MAX and all(x[0] <= parsim_1MAX for x in row):
             regress_sum = float(sum([x[1] for x in row]))
+            regress_vals = [float(x[1]) for x in row]
             parsims = [float(row[0][0]), float(row[1][0]), float(row[2][0])]
             codes = [x[3] for x in row]
             combined_all_less.append({'parsim_sum': parsim_sum,
+                                      'parsims': parsims,
                                       'experiment': None,
                                       'experiment_safe': None,
                                       'experiment_r50': None,
                                       'experiment_safe_r50': None,
-                                      'parsims': parsims,
                                       'codes': codes,
-                                      'regress_sum': regress_sum})
-
+                                      'regress_sum': regress_sum,
+                                      'regress_vals': regress_vals})
+            # complete line: todo:
     combined_all_less.sort(key=lambda x: x['parsim_sum'])
 
     combined_all_p = {}
@@ -377,11 +367,11 @@ def combined_lists(path_run_parent, parsim_MAX, parsim_1MAX, local_yamls=False, 
             except Exception as ex:
                 combined_all_a[a][px] = [row]
 
+    parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))
     """
     the main plotting procedures
     """
-    parsims = sorted(list(set([x['parsim_sum'] for x in combined_all_less])))
-    res_all = plot_best_prediction(path_run_parent, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, cpu_cores)
+    res_all = plot_best_prediction(path_main, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, cpu_cores)
 
     return res_all
 
@@ -399,10 +389,6 @@ def merge_paretos(run_name_core):
                 gp_backup_data = pickle_load(path_combackup)
             except Exception:
                 # sfeh this sucks, IB eval doesnt find it
-                print(f'sfeh: {path_combackup}')
-                print(f'tests: {path_combackup.parent}')
-                print(f'tests: {path_combackup.is_file()}')
-                print(f'tests: {path_combackup.is_dir()}')
                 with Path.open(path_combackup, 'rb') as file:
                     gp_backup_data = pickle.load(file)
 
@@ -414,7 +400,7 @@ def merge_paretos(run_name_core):
 
         ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, None), ylim=(0, None))  # 1.05  # top * 1.05 for better style
         ax.legend(loc='upper right')
-        fig.tight_layout()
+
         path_paretocombined = dir_slurm / run_name_core / f'pareto_combined.pdf'
         fig.savefig(path_paretocombined)
         plt.close('all')
@@ -440,17 +426,17 @@ def main():
 
     if args.auto:
         rootdirstar = dir_slurm.glob('*')
-        for x in rootdirstar:
-            if x.is_dir():
-                if x.name[:2] == 'IB':
-                    print(f'\nEvaluating {x.name}')
+        for runfolders in rootdirstar:
+            if runfolders.is_dir():
+                if runfolders.name[:2] == 'IB':
+                    print(f'\nEvaluating {runfolders.name}')
                     try:
-                        combined_lists(x.name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
+                        combined_lists(runfolders, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
                     except Exception as ex:
-                        print(f'Failed evaluation for {x.name}. ignoring. Reason: {ex}')
+                        print(f'Failed evaluation for {runfolders.name}. ignoring. Reason: {ex}')
                         # sfeh except only the one fail that is required?
                 else:
-                    print(f'\nSkipping {x.name}')
+                    print(f'\nSkipping {runfolders.name}')
 
     else:
         combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)

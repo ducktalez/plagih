@@ -39,4 +39,3 @@ with plt.rc_context(rc=rc_params):
     fig.savefig(f"test-{str(rc_params.values())}.pdf", backend='pgf')
     fig.savefig(f"test-{str(rc_params.values())}.png", dpi=100)
     plt.show()
-

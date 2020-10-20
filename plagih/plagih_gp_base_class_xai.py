@@ -656,9 +656,6 @@ class ExplainableGP(object):
                                      }
             # finaline = [f'{parsim} & {fitness} & {cooltree} % {}{}{}{}', 'regression error', 'real fitness', 'forestree0', 'forestree1', 'texpression_2', 'forestree2']
 
-        # latex_full_doc = latex_treeviz_full_document(latex_row1)
-        # file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex  # todo todotodo
-
         if 'MTC' in self.conf.name:
             self.file_pareto_pycode()
             """
@@ -730,14 +727,14 @@ class ExplainableGP(object):
                     except:
                         raise
 
-                    tex_line = [int(y['parsim_sum']),
-                                [int(x) for x in y['parsims']],
+                    tex_line = [f"{int(y['parsim_sum'])}",
+                                ' '.join([f'{int(x)}' for x in y['parsims']]),
                                 f"{y['regress_sum']:0.3f}",
-                                f"{[f'{x:0.3f}' for x in y['regress_vals']]}",
-                                f"{y['experiment']:0.3f}",
-                                f"{y['experiment_safe']:0.3f}",
-                                f"{y['experiment_r50']:0.3f}",
-                                f"{y['experiment_safe_r50']:0.3f}",
+                                ' '.join([f'{x:0.2f}' for x in y['regress_vals']]),
+                                f"{y['experiment']:0.0f}",
+                                f"{y['experiment_safe']:0.0f}",
+                                f"{y['experiment_r50']:0.0f}",
+                                f"{y['experiment_safe_r50']:0.0f}",
                                 y['cnt'],
                                 oneplot_input]
                     tex_combined += f"{' & '.join([str(x) for x in tex_line])}\\tabularnewline\n"
@@ -779,9 +776,9 @@ class ExplainableGP(object):
 
         full_analysis = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
         for x in pareto_agents.values():
-            full_analysis += f"{' & '.join([str(xx) for xx in x.values()])}\\\\\n"  # todo pareto_agents.to_latex()
+            full_analysis += f"{' & '.join([str(xx) for xx in x.values()])}\\\\\n"
         latex_full_doc = latex_treeviz_full_document(full_analysis)
-        file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex  # todo todotodo
+        file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex
 
         return
 
@@ -986,13 +983,13 @@ class ExplainableGP(object):
         """
         full_tex0 = latex_treeviz_full_document([forestree0], doc_border='')
         full_tex1 = latex_treeviz_full_document([forestree1], doc_border='')
-        # todo sfeh
-        # file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', full_tex0, print_type=self.print_type)
-        # file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', full_tex1, print_type=self.print_type)
-        #
-        # file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', texpression_2, print_type=self.print_type)
-        # file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', forestree2, verbose='ff', print_type=self.print_type)
-        # f'{parsim} with mean Regression Error {fitness}:\n {forestree0} tight: {forestree1} tight2: {texpression_2}\n\n\n'
+
+        file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', full_tex0, print_type=self.print_type)
+        file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', full_tex1, print_type=self.print_type)
+
+        file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', texpression_2, print_type=self.print_type)
+        file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', forestree2, verbose='ff', print_type=self.print_type)
+        f'{parsim} with mean Regression Error {fitness}:\n {forestree0} tight: {forestree1} tight2: {texpression_2}\n\n\n'
 
         return forestree0, forestree1, texpression_2, forestree2
 
@@ -1643,10 +1640,9 @@ class ExplainableGP(object):
                    ylim=(min(min(yy), 0), (max(yy) - min(min(yy), 0)) * 1.05))
 
             try:
-                fig.tight_layout()  # todo
                 path_plot = path_make_dir(self.root_dir / 'plots/')
                 fig.savefig(path_plot / f'paretofront.pdf', backend='pgf')  # run_name?
-                fig.savefig(path_plot / f'paretofront.png', dpi=300)
+                # fig.savefig(path_plot / f'paretofront.png', dpi=300)
                 self.printpl('f', f"paretofront (pdf): {path_plot.as_posix()}")
             except PermissionError as permerr:
                 print_e(f'Could not save plot: {permerr}')  # sfeh for everything?

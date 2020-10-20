@@ -173,24 +173,23 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
                      'figure.figsize': pyplot_size,
                      }
 
-    # todo todotodo
-    # with plt.rc_context(rc=pyplot_rc_tex):
-    #     fig, ax = plt.subplots()
-    #     ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
-    #     ax.plot(xx, y_all, label='all actions', marker='.', color='r')
-    #     ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
-    #     ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
-    #     ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
-    #     ax2 = ax.twinx()
-    #     ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
-    #     ax2.tick_params(axis='y', labelcolor='tab:gray')
-    #
-    #     ax.legend(loc='lower right')
-    #     ax2.legend(loc='lower left')
-    #
-    #     path_regrallplot = root_dir_eval / f'regression_all.pdf'
-    #     fig.savefig(path_regrallplot)
-    #     plt.close('all')
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
+        ax.plot(xx, y_all, label='all actions', marker='.', color='r')
+        ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
+        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
+        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
+        ax2 = ax.twinx()
+        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+        ax2.tick_params(axis='y', labelcolor='tab:gray')
+
+        ax.legend(loc='lower right')
+        ax2.legend(loc='lower left')
+
+        path_regrallplot = root_dir_eval / f'regression_all.pdf'
+        fig.savefig(path_regrallplot)
+        plt.close('all')
 
     return res_all
 

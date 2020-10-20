@@ -368,9 +368,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         ax2.step(x, y, linestyle='None', marker='x', color='g', )
         ax2.invert_yaxis()
         # ax2.tick_params(axis='y', labelcolor='tab:gray')
-        """
-        todo 0 & 0.384733 & -119.41 & \input{C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_simple_fix/visualisation/00_input_forest.tex}\tabularnewline
-        """
+
         path_mc_overview = dir_save / f'evaled_overview.pdf'
         fig.savefig(path_mc_overview)
 

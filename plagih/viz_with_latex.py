@@ -5,7 +5,7 @@ from plagih.plagih_tree import *
 import re
 
 
-def latex_treeviz_full_document(tikz_forest_list, doc_border=',border=5pt'):
+def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
     """
     Creating Latex standalone document of forest trees.
     Possible \documentclass options:
@@ -15,7 +15,10 @@ def latex_treeviz_full_document(tikz_forest_list, doc_border=',border=5pt'):
     sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
-    forest_trees = ' '.join(tikz_forest_list)  # sfeh there was a \n does this work now? color used variables (allow colormap?)
+    if isinstance(tex_input, list):
+        tex_body = ' '.join(tex_input)  # sfeh there was a \n does this work now? color used variables (allow colormap?)
+    else:
+        tex_body = tex_input
 
     latex_newcommand_forest = '\\newcommand{\\plforest}[1]{{\\begin{forest}   ' \
                        'for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   ' \
@@ -32,7 +35,7 @@ def latex_treeviz_full_document(tikz_forest_list, doc_border=',border=5pt'):
                        '\n\\usepackage{amsmath}\n' \
                        f'{latex_newcommand_forest}' \
                        '\n\\begin{document}' \
-                       f'\n{forest_trees}' \
+                       f'\n{tex_body}' \
                        '\n\\end{document}'
     return latex_doc_forest
 

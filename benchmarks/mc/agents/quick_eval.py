@@ -336,17 +336,18 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         mcAgent = DummyMcAgent(pycode)
         try:
             bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
-            if avg_reward is None or fails is None:
+            if avg_reward is None:  # or fails is None:
                 avg_reward, fails, _ = mtc_play(mcAgent, n=n)
 
             # todo todotodo sfeh
-            bur1, path_mcmeshplot = mtc_plot_decisions_space(mcAgent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
-            bur2, path_mcmeshplot_diff = mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
-            bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
+            # bur1, path_mcmeshplot = mtc_plot_decisions_space(mcAgent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
+            # bur2, path_mcmeshplot_diff = mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+            # bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
+            path_mcmeshplot, path_mcmeshplot_diff = 'sfehs-eval-todo-pdf', 'sfehs-eval-todo-pdf'  # todo delete this line
             agent_performance[parsim] = [agent_name, parsim, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff]
         except Exception as ex:
             print(f'MTC eval failed because of: {ex}')
-            agent_performance[parsim] = [agent_name, parsim, 0, 0, None, None]
+            agent_performance[parsim] = [agent_name, parsim, np.nan, np.nan, None, None]
 
     pickle_dump(root_dir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
 
@@ -372,8 +373,9 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         path_mc_overview = dir_save / f'evaled_overview.pdf'
         fig.savefig(path_mc_overview)
 
-    summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance])
-    with (dir_save / 'summary.txt').open('w') as file:
-        file.write(summary_text)
+    # summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance])
+    # file_dump(dir_save / 'summary.txt', summary_text)
+    # with (dir_save / 'summary.txt').open('w') as file:
+    #     file.write(summary_text)
 
     return agent_performance, path_mc_overview

@@ -103,7 +103,7 @@ def file_dump(path, data, verbose='SKIPsfeh', print_type=None):
     path_make_dir(path)
     with Path.open(path, 'w') as file:
         file.write(data)
-        printez(verbose, f'Wrote: {path.as_posix()}', print_type=print_type)
+        printez(verbose, f'{path.as_posix()}', print_type=print_type)
 
 
 # def folder_make_dir(path):

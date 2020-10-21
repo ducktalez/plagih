@@ -642,7 +642,9 @@ class ExplainableGP(object):
         for (parsim, fitness, cooltree) in self.pareto:
             # self.file_pareto_txt()  # sfeh
 
-            histpath = self.plot_agent_histogram(parsim, fitness, cooltree, path_hist)
+            # todo todotodo histpath
+            histpath = None
+            # histpath = self.plot_agent_histogram(parsim, fitness, cooltree, path_hist)
 
             texvis = self.file_pareto_latex(parsim, fitness, cooltree)
             forestree0, forestree1, texpression_2, forestree2 = texvis
@@ -650,48 +652,75 @@ class ExplainableGP(object):
             pareto_agents[parsim] = {'parsim': parsim,
                                      'fitness': fitness,
                                      'cooltree': cooltree,
-                                     'histpath': histpath,
                                      'forestree0': forestree0, 'forestree1': forestree1, 'texpression_2': texpression_2, 'forestree2': forestree2,  # 'texvis': texvis,
                                      'histogram': histpath,
                                      }
             # finaline = [f'{parsim} & {fitness} & {cooltree} % {}{}{}{}', 'regression error', 'real fitness', 'forestree0', 'forestree1', 'texpression_2', 'forestree2']
 
+        tex_include_pdf = lambda x: f"\\includegraphics{{{str(x).replace('.pdf', '')}}}"
+        tex_tabuline = lambda x: f"{' & '.join(x)}\\tabularnewline\n"
+
         if 'MTC' in self.conf.name:
+            """
+            complexity, regr. error, real evaluation, decision plot, spiral plot, diff-plot
+            """
             self.file_pareto_pycode()
-            """
-            real evaluation
-            decision plot
-            spiral plot
-            """
-            if 'MTC200' in self.conf.name:
-                sarsa_agent = pickle_load(dir_benchmarks / 'mc/agents/sarsa_agent_200.p')
-            elif 'MTC75' in self.conf.name:
-                sarsa_agent = pickle_load(dir_benchmarks / 'mc/agents/sarsa_agent_75.p')
-            else:
-                raise
+            sarsa_agent_steps = 200 if 'MTC200' in self.conf.name else 75 if 'MTC75' in self.conf.name else 'NO_MC_AGENT'
+            sarsa_agent = pickle_load(dir_benchmarks / f'mc/agents/sarsa_agent_{sarsa_agent_steps}.p')
+
             agent_performance, _ = auto_evaluate_run_end(self.root_dir, sarsa_agent, n=100)
-            # [agent_name, parsim, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff]
-            for x in agent_performance:
+            df_mtc = pd.DataFrame(columns=['complexity', 'regr. error', 'avg. reward', 'fails', 'expression'])
+            tex_lines = []
+
+            for pp, x in agent_performance.items():
                 _, pp, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
-                extra_line = {'reward average': avg_reward,
-                              'fails': fails,
-                              'spiralplot': path_mcmeshplot,
-                              'spiralplot diff': path_mcmeshplot_diff}
-                pareto_agents[pp].update(extra_line)
+                # pareto_agents[pp].update({})
+                tex_line = [f"{int(pp)}",
+                            f"{pareto_agents[pp]['fitness']}",
+                            f"{avg_reward:0.1f}",
+                            f'{fails}',
+                            f"{pareto_agents[pp]['forestree2']}"]
+                tex_line_large = [tex_include_pdf(f'sfehs_eval/{pp}'),  # path_mcmeshplot
+                                  tex_include_pdf(f'sfehs_eval/diff-{pp}'),  # path_mcmeshplot_diff),
+                                  'sfeh decision plot',
+                                  tex_include_pdf(f'histograms/acthist_{pp}')]
+
+                df_mtc.loc[pp] = tex_line
+
+                tex_lines += [tex_line + tex_line_large]
+
+            todo = df_mtc.to_latex(escape=False)  # escape, why? -> no \textbackslash
+            file_dump(self.root_dir / f'df_mtc.tex', todo, print_type=self.print_type)  # agents_trees.tex
+
+            paste = ''.join([tex_tabuline(x[:5]) for x in tex_lines])
+            tex_analysis = "\\begin{tabular}{llllllllll}\n \\hline\n" \
+                           "complexity & regr. error & avg. reward & fails & expression & decision plot & spiral plot & spiral difference-plot & histogram \\tabularnewline \\hline\n" \
+                           f"{paste}" \
+                           "\\hline\n\\end{tabular}\n\n"
+            tex_analysis = latex_treeviz_full_document([tex_analysis])  # sfeh
+            file_dump(self.root_dir / f'analysis_overview.tex', tex_analysis, print_type=self.print_type)  # agents_trees.tex
+
+            paste2 = ''.join([tex_tabuline(x[:]) for x in tex_lines])
+            tex_analysis = "\\begin{tabular}{llllllllll}\n \\hline\n" \
+                           "complexity & regr. error & avg. reward & fails & expression & decision plot & spiral plot & spiral difference-plot & histogram \\tabularnewline \\hline\n" \
+                           f"{paste2}" \
+                           "\\hline\n\\end{tabular}\n\n"
+            tex_analysis = latex_treeviz_full_document([tex_analysis])  # sfeh
+            file_dump(self.root_dir / f'analysis_overview_plus.tex', tex_analysis, print_type=self.print_type)  # agents_trees.tex
 
         elif 'IB' in self.conf.name:
             self.file_pareto_listcode()
 
-            tex_combined = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
             if self.conf.name[-2:] == '_0':
                 """
                 - complexity_sum, [complexities], regression_sum, [regression_errors], real_sum, [formulas]
                 - plot with pareto candidates
                 """
+                tex_combined = "\\begin{tabular}{llllllllll}\n" \
+                               "\\hline \n" \
+                               "\\multicolumn{2}{c}{complexity} & \\multicolumn{2}{c}{regression error} & \\multicolumn{4}{c}{Real evaluation} & expression \\tabularnewline\n" \
+                               "sum &  & sum &  & & (safe) & (random) & (random, safe)  \\tabularnewline \\hline\n"
 
-                # path_main_run = dir_benchmarks / f'slurm_runs/{self.conf.name[:-2]}/{self.conf.name}/'
-                path_main_run = self.root_dir.parent
-                run_main_name = self.root_dir.parent.name
                 """
                 res_all: ordered list
                     {'parsim_sum': parsim_sum,
@@ -704,7 +733,7 @@ class ExplainableGP(object):
                       'regress_sum': regress_sum,
                       'regress_vals': regress_vals}
                 """
-                res_all = combined_lists(path_main_run, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
+                res_all = combined_lists(self.root_dir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
 
                 xx = [x['parsim_sum'] for x in res_all]
                 y_all = [y['experiment'] for y in res_all]
@@ -721,8 +750,8 @@ class ExplainableGP(object):
                     try:
                         # \input{C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_scratch/IB_MSE_scratch_2/visualisation/01_input.tex}\tabularnewline
                         # {pars_ii:02d}
-                        input_agentex = lambda run_ii: f"\\input{{{run_main_name}_{run_ii}/visualisation/{int(parsims[run_ii]):02d}_input_forest.tex}}"
-                        oneplot_input = f"{{{input_agentex(0)}{input_agentex(1)}{input_agentex(2)}}}"
+                        input_agentex = lambda run_ii: f"\\input{{{self.root_dir.parent.name}_{run_ii}/visualisation/{int(parsims[run_ii]):02d}_input_forest.tex}}"
+                        oneplot_input = f"\\shortstack[l]{{{input_agentex(0)}\\\\{input_agentex(1)}\\\\{input_agentex(2)}}}"
 
                     except:
                         raise
@@ -735,16 +764,12 @@ class ExplainableGP(object):
                                 f"{y['experiment_safe']:0.0f}",
                                 f"{y['experiment_r50']:0.0f}",
                                 f"{y['experiment_safe_r50']:0.0f}",
-                                y['cnt'],
+                                f"{y['cnt']}",
                                 oneplot_input]
-                    tex_combined += f"{' & '.join([str(x) for x in tex_line])}\\tabularnewline\n"
+                    tex_combined += f"{' & '.join(tex_line)}\\tabularnewline \\hline \n"
 
-                tex_combined = f"\\begin{{tabular}}{{llllllllll}}" \
-                    f"{tex_combined}" \
-                    f"\\end{{tabular}}\n"
-
+                tex_combined += f"\\hline\n\\end{{tabular}}\n\n"
                 tex_combined = latex_treeviz_full_document([tex_combined])
-
                 file_dump(self.root_dir.parent / 'combined_overview.tex', tex_combined)
 
                 with plt.rc_context(rc=pyplot_rc_tex):
@@ -767,18 +792,11 @@ class ExplainableGP(object):
                     ax.legend(loc='lower right')
                     ax2.legend(loc='lower left')
 
-                    path_regrallplot = path_main_run / f'regression_all-TEST.pdf'
-                    fig.savefig(path_regrallplot)
+                    fig.savefig(self.root_dir.parent / f'regression_all-TEST.pdf')
                     plt.close('all')
 
         else:
             raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
-
-        full_analysis = '\n'  # '\n'.join([' & '.join(str(x.())) for x in pareto_agents.keys()]) + '\n'
-        for x in pareto_agents.values():
-            full_analysis += f"{' & '.join([str(xx) for xx in x.values()])}\\\\\n"
-        latex_full_doc = latex_treeviz_full_document(full_analysis)
-        file_dump(self.root_dir / 'full_analysis.tex', latex_full_doc, print_type=self.print_type)  # agents_trees.tex
 
         return
 
@@ -981,15 +999,16 @@ class ExplainableGP(object):
         """
         The following lines delete this
         """
-        full_tex0 = latex_treeviz_full_document([forestree0], doc_border='')
-        full_tex1 = latex_treeviz_full_document([forestree1], doc_border='')
-
-        file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', full_tex0, print_type=self.print_type)
-        file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', full_tex1, print_type=self.print_type)
-
-        file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', texpression_2, print_type=self.print_type)
-        file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', forestree2, verbose='ff', print_type=self.print_type)
-        f'{parsim} with mean Regression Error {fitness}:\n {forestree0} tight: {forestree1} tight2: {texpression_2}\n\n\n'
+        # todo todotodo
+        # full_tex0 = latex_treeviz_full_document([forestree0], doc_border='')
+        # full_tex1 = latex_treeviz_full_document([forestree1], doc_border='')
+        #
+        # file_dump(path_subfolder_tex / f'full_{parsim:02d}.tex', full_tex0, print_type=self.print_type)
+        # file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', full_tex1, print_type=self.print_type)
+        #
+        # file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', texpression_2, print_type=self.print_type)
+        # file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', forestree2, verbose='ff', print_type=self.print_type)
+        # f'{parsim} with mean Regression Error {fitness}:\n {forestree0} tight: {forestree1} tight2: {texpression_2}\n\n\n'
 
         return forestree0, forestree1, texpression_2, forestree2
 

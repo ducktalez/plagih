@@ -24,7 +24,7 @@ def load_prepared_run(conf, prepared_run):
     path_origin_tree = None
     action_name = None
     root_dir = pathify(f'slurm_runs/{prepared_run[:-2]}/{prepared_run}')
-    conf.gen_max = 4000
+    conf.gen_max = 5000
 
     if 'IB' in prepared_run:
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
@@ -72,7 +72,9 @@ def load_prepared_run(conf, prepared_run):
                    'simple_fix': 'mc/gp_files/tree_simple_fix.csv',
                    'simple': 'mc/gp_files/tree_simple.csv',
                    'simplePlus_fix': 'mc/gp_files/tree_simplePlus_fix.csv',
-                   'simplePlus': 'mc/gp_files/tree_simplePlus.csv'}
+                   'simplePlus': 'mc/gp_files/tree_simplePlus.csv',
+                   'simonBest': 'mc/gp_files/tree(simonBest).csv',
+                   'simonBad': 'mc/gp_files/tree(simonBest)_bad.csv'}
         for k, v in ori_trs.items():
             if k in prepared_run:
                 print(f'AUTOLOAD: Using origin: {v}')

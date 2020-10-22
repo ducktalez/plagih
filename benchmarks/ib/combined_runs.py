@@ -1,22 +1,22 @@
 # coding=utf-8
 import sys
 from pathlib import Path
-sys.path.append('../../')
-sys.path.append('../../plagih/')
-
-sys.path.insert(1, '/.././benchnmarks/ib/')
-import os
 import argparse
-from benchmarks.ib.ib_eval_agents import *
+from benchmarks.ib.ib_eval_agents import eval_combined_agents
+# from benchmarks.ib.ib_eval_agents import *
 import itertools
+
+sys.path.append('../../')
+# sys.path.append('../../plagih/')
+sys.path.insert(1, '../benchnmarks/ib/')
+import os
 from plagih.plagih_gp_base_class_xai import *
 import yaml
 import multiprocessing as mp
 import pickle
-import time
-
 import numpy as np
 import matplotlib.pyplot as plt
+from plagih.file_interaction import *
 
 dir_slurm = Path(os.path.dirname(os.path.realpath(__file__))) / f'../slurm_runs/'
 # lut_file = root_dir_eval / 'lutfile.yaml'
@@ -113,7 +113,7 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
 def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsim_MAX, parsim_1MAX, mp_cpu_MAX):
     """
     plot best guess
-    todo test RMSE?
+    sfeh test RMSE?
     """
     best_regrerr = [min([row for row in combined_all_p[p]], key=lambda x: x['regress_sum']) for p in parsims]
     best_regrerr_dict = eval_and_lut(best_regrerr, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX)
@@ -157,151 +157,44 @@ def plot_best_prediction(root_dir_eval, parsims, combined_all_p, lut_file, parsi
         else:
             print(f'Not a better entry at {p}')
 
-    xx = [x['parsim_sum'] for x in res_all]
-    y_all = [y['experiment'] for y in res_all]
-    y_safe = [y['experiment_safe'] for y in res_all]
-    y_all_r50 = [y['experiment_r50'] for y in res_all]
-    y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
-
-    """
-    The two plots above in one plot
-    """
-    pyplot_size = (3.6, 2.7)
-    pyplot_rc_tex = {'figure.autolayout': True,
-                     'text.usetex': True,
-                     'backend': 'pgf',
-                     'figure.figsize': pyplot_size,
-                     }
-
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots()
-        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
-        ax.plot(xx, y_all, label='all actions', marker='.', color='r')
-        ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
-        ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
-        ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
-        ax2 = ax.twinx()
-        ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
-        ax2.tick_params(axis='y', labelcolor='tab:gray')
-
-        ax.legend(loc='lower right')
-        ax2.legend(loc='lower left')
-
-        path_regrallplot = root_dir_eval / f'regression_all.pdf'
-        fig.savefig(path_regrallplot)
-        plt.close('all')
-
-    return res_all
-
-
-def plot_per_action(root_dir_eval, run_name, parsims, combined_all_p):
-    """
-    Plotting the performance of each action
-    """
-    pass
-    # for a, parsim_dict in enumerate(combined_all_a):
-    #     xx = []
-    #     exp = []
-    #     exp_safe = []
-    #     # res_all = [min(row, key=lambda x: x['f_squared']) for p, row in parsim_dict.items()]  # nah
-    #     # for p, row in parsim_dict.items():
-    #     #     res_all[p] =
-    #     for p, rows in parsim_dict.items():
-    #         xx.append(p)
-    #         exp.append(np.mean([row['experiment'] for row in rows]))
-    #         exp_safe.append(np.mean([row['experiment_safe'] for row in rows]))
+    # xx = [x['parsim_sum'] for x in res_all]
+    # y_all = [y['experiment'] for y in res_all]
+    # y_safe = [y['experiment_safe'] for y in res_all]
+    # y_all_r50 = [y['experiment_r50'] for y in res_all]
+    # y_safe_r50 = [y['experiment_safe_r50'] for y in res_all]
     #
-    #     fig, ax = plt.subplots(figsize=pyplot_size)
-    #     ax.set_title(f'action {a}, ({run_name})')
-    #     ax.set_xlabel('complexity')
-    #     ax.set_ylabel('reward')
-    #     ax.set_ylim(funny_limits)
-    #     # # only if one entry per parsimony
-    #     ax.plot(xx, exp, label='all actions', marker='.', color='r', )
-    #     ax.plot(xx, exp_safe, label='low risk', marker='.', color='b')
-    #     ax.legend(loc='lower left')
-    #     plt.savefig(root_dir_eval / f'act_{a}-plot.png', dpi=150)
+    # """
+    # The two plots above in one plot
+    # """
+    # pyplot_size = (3.6, 2.7)
+    # pyplot_rc_tex = {'figure.autolayout': True,
+    #                  'text.usetex': True,
+    #                  'backend': 'pgf',
+    #                  'figure.figsize': pyplot_size,
+    #                  }
+    #
+    # with plt.rc_context(rc=pyplot_rc_tex):
+    #     fig, ax = plt.subplots()
+    #     ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
+    #
+    #     plt.yticks(IB_XTICKS[0], IB_XTICKS[1])
+    #
+    #     ax.plot(xx, y_all, label='all actions', marker='.', color='r')
+    #     ax.plot(xx, y_safe, label='low risk', marker='None', color='r', linestyle='dotted')
+    #     ax.plot(xx, y_all_r50, label='all actions (randomized)', marker='.', color='b')
+    #     ax.plot(xx, y_safe_r50, label='low risk (randomized)', marker='None', color='b', linestyle='dotted')
+    #     ax2 = ax.twinx()
+    #     ax2.plot(xx, cnt, color='tab:gray', label='Possible combinations', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+    #     ax2.tick_params(axis='y', labelcolor='tab:gray')
+    #
+    #     ax.legend(loc='lower right')
+    #     ax2.legend(loc='lower left')
+    #
+    #     path_regrallplot = root_dir_eval / f'regression_all.pdf'
+    #     fig.savefig(path_regrallplot)
     #     plt.close('all')
 
-
-def plot_actual_best(root_dir_eval, run_name, parsims, combined_all):
-    """
-    Plotting the best candidates per parsimony
-    """
-    parsim_dict = combined_all
-    # try:
-    res_all = [max([row for row in parsim_dict[p]], key=lambda x: x['experiment']) for p in parsims]
-    # except:
-    #     for p in parsims:
-    #         print(f'at parsim {p}')
-    #         for row in parsim_dict[p]:
-    #             print(row)
-    #     raise
-
-    res_all.sort(key=lambda x: x['parsim_sum'])
-    xx = [x['parsim_sum'] for x in res_all]
-    y_all = [y['experiment'] for y in res_all]
-
-    res_safe = [max([row for row in parsim_dict[p]], key=lambda x: x['experiment_safe']) for p in parsims]
-    res_safe.sort(key=lambda x: x['parsim_sum'])
-    y_safe = [y['experiment_safe'] for y in res_safe]
-
-    res_r50 = [max([row for row in parsim_dict[p]], key=lambda x: x['experiment_r50']) for p in parsims]
-    res_r50.sort(key=lambda x: x['parsim_sum'])
-    y_all_r50 = [y['experiment_r50'] for y in res_r50]
-
-    res_safe_r50 = [max([row for row in parsim_dict[p]], key=lambda x: x['experiment_safe_r50']) for p in parsims]
-    res_safe_r50.sort(key=lambda x: x['parsim_sum'])
-    y_safe_r50 = [y['experiment_safe_r50'] for y in res_safe_r50]
-
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots(figsize=pyplot_size)
-        fig.tight_layout()
-        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)  # # only if one entry per parsimony
-        ax.plot(xx, y_all, label='all actions', marker='.', color='r', )
-        ax.plot(xx, y_safe, label='low risk', marker='.', color='c')
-        ax.legend(loc='lower left')
-        fig.tight_layout()
-        fig.savefig(root_dir_eval / f'(best).pdf')
-
-    with plt.rc_context(rc=pyplot_rc_tex):
-        fig, ax = plt.subplots(figsize=pyplot_size)
-        ax.set(xlabel='Pareto complexity sum', ylabel='reward', ylim=funny_limits)
-        ax.plot(xx, y_all_r50, label='all actions, randomized', marker='.', color='r', )
-        ax.plot(xx, y_safe_r50, label='low risk, randomized', marker='.', color='c')
-        ax.legend(loc='lower left')
-        fig.tight_layout()
-        fig.savefig(root_dir_eval / f'(best)_r50.pdf')
-
-
-def plot_scatter_some():
-    # """
-    # plot all (scatter)
-    # """
-    pass
-    # plot_all = combined_all
-    # plot_all.sort(key=lambda x: x[0])
-    # x = [x[0] for x in plot_all]
-    # y_all = [y[1] for y in plot_all]
-    # y_safe = [y[2] for y in plot_all]
-    #
-    # plt.tight_layout()
-    #     fig.tight_layout()#
-    # fig, ax = plt.subplots(figsize=pyplot_size)
-    # ax.set_xlabel('complexity')
-    # ax.set_ylabel('reward')
-    # # only if one entry per parsimony
-    # ax.scatter(x, y_all, label='all actions', marker='.', color='r')
-    # ax.scatter(x, y_safe, label='low risk', marker='.', color='b')
-    # plt.savefig(root_dir_eval / f'{measr}-scatter.png')
-    # plt.close('all')
-    #
-    # for dim in range(3):
-    #     plot_all = analyse_all[measr]
-    #     plot_all.sort(key=lambda x: x[0])
-    #     x = [x[0] for x in plot_all]
-    #     y_all = [y[1] for y in plot_all]
-    #     y_safe = [y[2] for y in plot_all]
+    return res_all
 
 
 def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_cores=16):
@@ -311,7 +204,7 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
     (I now found a much better way by loading from the backup file, but I am lazy x~~~D)
     """
     main_name = path_main.name
-    merge_paretos(main_name)  # e.g. 'IB_MSE_s3m' # todo
+    merge_paretos(path_main)
 
     if local_yamls:
         lut_file = path_main / 'lutfile.yaml'
@@ -348,7 +241,6 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
                                       'codes': codes,
                                       'regress_sum': regress_sum,
                                       'regress_vals': regress_vals})
-            # complete line: todo:
     combined_all_less.sort(key=lambda x: x['parsim_sum'])
 
     combined_all_p = {}
@@ -375,21 +267,20 @@ def combined_lists(path_main, parsim_MAX, parsim_1MAX, local_yamls=False, cpu_co
     return res_all
 
 
-def merge_paretos(run_name_core):
+def merge_paretos(path_main):
     """
     load each IB run and add its pareto front to a merged plot
     """
-    with plt.rc_context():
+    with plt.rc_context(pyplot_rc_tex):
         fig, ax = plt.subplots()
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):
-            path_combackup = dir_slurm / run_name_core / f'{run_name_core}_{ii}/backup/backup.p'
-            try:
-                gp_backup_data = pickle_load(path_combackup)
-            except Exception:
-                # sfeh this sucks, IB eval doesnt find it
-                with Path.open(path_combackup, 'rb') as file:
-                    gp_backup_data = pickle.load(file)
+            path_combackup = path_main / f'{path_main.name}_{ii}/backup/backup.p'
+            gp_backup_data = pickle_load(path_combackup)
+            # except Exception:
+            #     # sfeh this sucks, IB eval doesnt find it
+            #     with Path.open(path_combackup, 'rb') as file:
+            #         gp_backup_data = pickle.load(file)
 
             gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
 
@@ -398,9 +289,9 @@ def merge_paretos(run_name_core):
             ax.step(xx, yy, linestyle='dotted', marker='.', label=f'action {ii}', where='post')
 
         ax.set(xlabel='complexity', ylabel='regression error', xlim=(0, None), ylim=(0, None))  # 1.05  # top * 1.05 for better style
-        ax.legend(loc='upper right')
+        ax.legend(loc='lower left')
 
-        path_paretocombined = dir_slurm / run_name_core / f'pareto_combined.pdf'
+        path_paretocombined = path_main / f'pareto_combined.pdf'
         fig.savefig(path_paretocombined)
         plt.close('all')
 

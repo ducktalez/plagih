@@ -649,10 +649,139 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_75.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-asd xxx 
+Ein neuronales Netz (Sarsa-75, Sarsa-200[xx label]) erstellt sehr komplexe
+ Policies die dadurch auch sehr anpassungsfähig sind und filigrane Unterscheidun
+gen treffen können.
+ Dadurch sind in vielen Bereichen patches mit volatilen Entscheidungsänderungen
+ sehbar, deren Umfang und Auswirkung oft nicht erkennbar sind.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-Good_Expert.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-SimpleAgent.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Menschlich geschriebene Programme (if-blöcke, max momentum [xx label]) unterteil
+en das Problem oft mit if-Anweisungen.
+ Diese sind hier als quadratische Blöcke erkennbar.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_simple_fix/sfehs_eval/space-17.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+In der GP werden oft mathematische Formeln gefunden (xiao ul-bound, gp improveme
+nt [xx]).
+ Grenzen sind im Gegensatz zu den Neuropolicies klarer definiert.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Verschiedene Lösungsansätze für das Mountain car problem im Vergleich.
+ 
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:NNvsGPvsFGPvsHuman_intro"
@@ -666,6 +795,14 @@ name "fig:NNvsGPvsFGPvsHuman_intro"
 
 
 \end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
 
 \begin_layout Plain Layout
 
@@ -1052,7 +1189,7 @@ Reinforcement Learning (RL) stellt einen Teil des ML dar, bei dem ein Agent
  Die Umwelt ist dabei als Markov-Entscheidungsproblem formuliert, bei dem
  der Agent seinen aktuellen Zustand S kennt und aus einer Menge von verfügbaren
  Optionen wählen kann um eiunen Folgezustand S+1 zu erreichen.
- [xxx] 
+ [xx] 
 \end_layout
 
 \begin_layout Section
@@ -1178,19 +1315,24 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
 status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_simple/plots/paretofront-MTC200-MSE-simple.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/plots/paretofront-MTC200-MSE-simple.pdf
 	height 5cm
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
@@ -1200,6 +1342,10 @@ GP candidates aligned on the Pareto front.
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -1281,16 +1427,38 @@ Dennoch entstehen mithilfe dieser Komplexitätsmaße meist mathematische Formel
  Oft verfolgen die Kandidaten einer Paretofront dabei zusätzlich komplett
  verschiedene Ansätze, weshalb es für einen Entwickler sehr umständlich
  ist, alle Kandidaten zu reverse-engineeren.
- [xxx Beispiel Lösung 
-\begin_inset Quotes eld
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Eine durch GP gefundene Lösung ohne Einschränkung.
+ 
+\end_layout
+
 \end_inset
 
-sinus
-\begin_inset Quotes erd
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
 \end_inset
 
- für MTC vs.
- if then else]
+
 \end_layout
 
 \begin_layout Paragraph
@@ -1438,16 +1606,17 @@ differential learning
 \end_layout
 
 \begin_layout Standard
-While testing the mountain car approach, an interesting occurrence was discovere
-d.
- The better the original structure we had was, the better...
- An interesting concept is the performance and robustness achieved while
- learning different approaches.
- The concept of differential learning [xxx source] is also known in sport
- science.
- Learning to solve a situation completely different but with the same goal
- lets you combine the best of both worlds.
- 
+Differentielles Lernen ist ein Konzept aus der Sportwissenschaft, wo der
+ Trainingsprozess statt wiederholung eines Ansatzes auf die Anwendung mehrerer
+ Trainingsansätze baut.
+ Obwohl beim ML das Wiederholen eines Trainingsansatzes weitaus weniger
+ limitiert ist kann dennoch eine Wechselwirkung zwischen den drei Lernansätzen
+ (NN, Menschlicher Code und GP) gefunden werden.
+ Der menschliche Code stellt als Erzeugnis eines kreativen Entwicklungsprozesses
+ eine intuitive, erklärbare Lösung dar.
+ Sowohl NN als auch die GP produzieren hingegen policies, die frei von menschlic
+hem bias sind und oft Aspekte behandeln, an die der Mensch nicht denkt.
+ [xx]
 \end_layout
 
 \begin_layout Standard
@@ -1498,20 +1667,6 @@ Fast moving car vs slowly moving generate different amount of data per area.
 
 \begin_layout Chapter
 Benchmarks
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-xxx if no older values, take the oldest record possible.
- daniel had old records!
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -2237,20 +2392,21 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
-	lyxscale 37
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename img/MTC/dummy_plots/dummy-sarsa_agent_75.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_75.pdf
 	height 5cm
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset CommandInset label
 LatexCommand label
 name "sarsa75_problem_decision_plots"
@@ -2291,7 +2447,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10-average.jpg
-	lyxscale 20
+	lyxscale 50
 	height 5cm
 
 \end_inset
@@ -2299,12 +2455,12 @@ status open
 
 \begin_inset Graphics
 	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10.jpg
-	lyxscale 20
+	lyxscale 50
 	height 5cm
 
 \end_inset
 
-
+[xxx]
 \begin_inset CommandInset label
 LatexCommand label
 name "img:MTC-heuristic-vs-sarsa-reward"
@@ -2379,16 +2535,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_200.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename img/MTC/dummy_plots/dummy-sarsa_agent_200.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_200.pdf
 	height 5cm
 
 \end_inset
@@ -2435,16 +2589,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_1000.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_1000.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-sarsa_agent_10000.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_10000.pdf
 	height 5cm
 
 \end_inset
@@ -2463,12 +2615,68 @@ name "sarsa1000-plots"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-1000 episodes (left) still show a pattern, while 10000 episodes leave chaos.
+1000 episodes (left) still show a pattern, while 10000 episodes leave chaotic
+ behaviour.
 \end_layout
 
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_1000.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_10000.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+xxx
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_1000.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_10000.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+xxx
 \end_layout
 
 \end_inset
@@ -2509,13 +2717,28 @@ Force pushing in any direction (excluding action 1)
 \end_layout
 
 \begin_layout Standard
-[xxx diagramm -103.41, -98.68, -106.78, -109.31, -119.41, -129.62, -102.61]
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
+\begin_inset Float figure
 wide false
 sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
@@ -2771,11 +2994,49 @@ Preset Policy
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/mc_reward_compared.pdf
+	height 66mm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-MC Agents in comparison.
- 
+asdasd xx 
 \begin_inset CommandInset label
 LatexCommand label
 name "table:MC_agents_rewards"
@@ -2787,6 +3048,10 @@ name "table:MC_agents_rewards"
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -2839,8 +3104,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-SimpleAgent.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/decisions-SimpleAgent.pdf
 	height 5cm
 
 \end_inset
@@ -2940,33 +3204,7 @@ filename "tikz/MTC_trees/test_simple_v1.tex"
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-SimpleAgent.png
-	lyxscale 20
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/decision_plots/diff-MTC200_tree_simple0.png
-	lyxscale 20
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/MTC200_tree_simple0.png
-	lyxscale 20
-	height 5cm
-
-\end_inset
-
-
+[xxx images]
 \end_layout
 
 \begin_layout Plain Layout
@@ -3176,16 +3414,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetAgent.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-XiaoPresetNoLowerbound.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetNoLowerbound.pdf
 	height 5cm
 
 \end_inset
@@ -3238,8 +3474,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/decision_plots/decisions-Good_Expert.png
-	lyxscale 20
+	filename ../benchmarks/mc/agents/img/decisions-Good_Expert.pdf
 	height 5cm
 
 \end_inset
@@ -4088,8 +4323,6 @@ status open
 \align center
 \begin_inset Graphics
 	filename img/inkscape/concept.svg
-	lyxscale 20
-	scale 50
 
 \end_inset
 
@@ -7226,10 +7459,6 @@ Scratch
 \end_layout
 
 \begin_layout Standard
-xxx nach oben damit?
-\end_layout
-
-\begin_layout Standard
 Als Referenzlauf wurde ein zufälliger GP Lauf ohne Referenzbaum gewählt.
  Der Regressionsfehler konnte auf ein extrem niedriges Niveau von xxx gebracht
  werden und auch bei der realen Auswertung konnten die Paretokandidaten
@@ -7250,16 +7479,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/plots/paretofront-MTC200-MSE-scratch.pdf
-	lyxscale 50
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/plots/paretofront.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/evaled_overview.pdf
 	height 5cm
 
 \end_inset
@@ -7289,16 +7516,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/MTC200_MSE_scratch_3.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-MTC200_MSE_scratch_3.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-3.pdf
 	height 5cm
 
 \end_inset
@@ -7308,15 +7533,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/histograms/acthist_3.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/histograms/acthist_3.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/MTC200_MSE_scratch_3.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex
 
 \end_inset
 
@@ -7421,7 +7645,7 @@ Tree
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/MTC200_MSE_scratch_3.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex
 
 \end_inset
 
@@ -7444,7 +7668,7 @@ asd
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/MTC200_MSE_scratch_3_tight2.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03_tight.tex
 
 \end_inset
 
@@ -8136,16 +8360,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_scratch/IB_MSE_scratch-pareto_combined.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/IB_MSE_scratch/pareto_combined.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_scratch/IB_MSE_scratch-regression_all.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/IB_MSE_scratch/regression_all.pdf
 	height 5cm
 
 \end_inset
@@ -8165,340 +8387,6 @@ Results without any origin
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="4">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-compl.
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Regr
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fitness
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-formula
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_scratch/IB_MSE_scratch_2/visualisation/01_input.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_scratch/IB_MSE_scratch_2/visualisation/02_input.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_scratch/IB_MSE_scratch_2/visualisation/03_input.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-Die gefundenen Lösungen sind durchaus 
 \end_layout
 
 \begin_layout Subsection
@@ -8531,16 +8419,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50-pareto_combined.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50-pareto_combined.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50-regression_all.pdf
-	lyxscale 50
+	filename ../benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50-regression_all.pdf
 
 \end_inset
 

@@ -11,7 +11,7 @@ class GpConfig:
         """
         SFEH NEVER try to save paths here. switching between systems is worse than HitlerAIDS
         """
-        self.pl_version = 0.97  # must only update if vital changes were made, version important when loading old run
+        self.pl_version = 0.997  # must only update if vital changes were made, version important when loading old run
         self.name = args.prepared_run or None  # sfeh
 
         try:
@@ -35,7 +35,7 @@ class GpConfig:
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_max = conf.get('parsimony_max', 35)
-        self.period = conf.get('period', {'gen_plots': 10, 'gen_save': 10})  # sfeh 10 or 5 for debugging, something higher for actual runs
+        self.period = conf.get('period', {'gen_plots': 25, 'gen_save': 25})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
         self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 

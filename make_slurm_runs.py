@@ -8,9 +8,10 @@ print('Make sure that this file is executed on top level')
 
 # a_velocity,a_gain,a_shift
 run_starts = [
-    # 'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
-    # 'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
-    # 'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_tanh_s3m_1', 'IB_RMSE_explun01_tanh_s3m_2',
+    'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
+    'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
+    'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_tanh_s3m_1', 'IB_RMSE_explun01_tanh_s3m_2',
+
     'IB_MSE_s3m_0', 'IB_MSE_s3m_1', 'IB_MSE_s3m_2',
     'IB_MSE_tanh_s3m_0', 'IB_MSE_tanh_s3m_1', 'IB_MSE_tanh_s3m_2',
     'IB_MSE_explun01_tanh_s3m_0', 'IB_MSE_explun01_tanh_s3m_1', 'IB_MSE_explun01_tanh_s3m_2',
@@ -58,26 +59,31 @@ run_starts = [
     # 'MTC200_MAE_tanh_simple_fix',
     # 'MTC200_MAE_explun01_tanh_simple_fix',
     # 'MTC200_RMSE_explun01_tanh_simple_fix',
-    #
+
     'MTC200_MAE_scratch',
     'MTC200_MAE_gpFriendly',
+    'MTC200_MAE_gpfriendly_fix',
     'MTC200_MAE_preset',
     'MTC200_MAE_simple',
     'MTC200_MAE_simple_fix',
     'MTC200_MAE_simplePlus_fix',
     'MTC200_MAE_simplePlus',
+    'MTC200_MAE_simonBest',
+    'MTC200_MAE_simonBad',
 
     'MTC200_MSE_scratch',
     'MTC200_MSE_gpFriendly',
+    'MTC200_MSE_gpfriendly_fix',
     'MTC200_MSE_preset',
     'MTC200_MSE_simple',
     'MTC200_MSE_simple_fix',
     'MTC200_MSE_simplePlus_fix',
     'MTC200_MSE_simplePlus',
+    'MTC200_MSE_simonBest',
+    'MTC200_MSE_simonBad',
     #
     # 'MTC200_MAE_explun01_simple',
     # 'MTC200_MAE_explun01_gpfriendly_fix',
-    # 'MTC200_MAE_gpfriendly_fix',
     # 'MTC200_MAE_explun01_preset_fix',
     #
     # # """
@@ -86,6 +92,7 @@ run_starts = [
     'MTC75_MAE_scratch',
     'MTC75_MAE_simple',
     'MTC75_MAE_simple_fix',
+    'MTC75_MAE_gpFriendly',
 
     'MTC75_MSE_scratch',
     'MTC75_MSE_simple',

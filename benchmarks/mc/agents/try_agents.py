@@ -35,32 +35,6 @@ mountain_agents = [('simple', SimpleAgent()),
                    ('SimonTesting', SimonsTesting())]
 
 
-class Test_Agent:
-    """
-    Ifte(Nand((cartVel == 0), Nand((-0.6 <= cartPos), (cartPos <= -0.4))), Ifte(True, 2, 0), Ifte(False, Ifte((cartVel < 0), 0, 2), Ifte((cartVel < 0), 0, 2)))
-    """
-    def decide(self, input):
-        cartPos, cartVel = input
-
-        # startposition
-        if cartVel == 0 and -0.6 <= cartPos <= -0.4:  # the starting state
-            if True:
-                return 2
-            else:
-                return 0
-        else:
-            if False:
-                if cartVel < 0:
-                    return 0
-                else:
-                    return 2
-            else:
-                if cartVel < 0:
-                    return 0
-                else:
-                    return 2
-
-
 # eval_agent_list([('lelel_MTC_simple13', MTC_simple13())])
 
 # mtc_plot_differences(MTC_simple13(), sarsa_agent_75, name='lelel_MTC_simple13 vs sarsa', abs_diff=False, agent_a_dummy=True, cmap='bwr', nan_style=('xkcd:light grey', '///', 'xkcd:dark grey', 0.2))
@@ -78,29 +52,60 @@ class Test_Agent:
 
 # eval_agent_list([('simyo', MTC_simple13())], goal_agent=sarsa_agent_75)
 
+
+def makeonelatexplothere():
+    """
+    Creates one single plot for the master thesis with the mountaincar results
+    """
+    names = ['Sarsa 75', 'Sarsa 200', 'Sarsa 1000', 'Sarsa 10000', 'Momentum', 'Momentum (ge)', 'Preset Policy']
+    mc_steps = [103.41, 98.68, 106.78, 109.31, 119.41, 129.62, 102.61]
+    mc_reward = [-103.41, -98.68, -106.78, -109.31, -119.41, -129.62, -102.61]
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        fig.figsize = plplot_size_up
+        x = np.arange(len(names))
+        width = 0.8
+        rects = ax.bar(x, mc_steps, color='b', width=width)
+        ax.set(ylabel='average steps', ylim=(90, 140))
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate(f'{height}',
+                        xy=(rect.get_x() + width/2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+        ax.set_xticks(x)
+        ax.set_xticklabels(names, rotation=60, fontsize=11)
+        fig.savefig(f'img/mc_reward_compared.pdf')
+        plt.close('all')
+
+
 def thesis_decision_plots_fullspace():
     # sarsa agents
-    mtc_plot_decisions_space(sarsa_agent_75, name='decisions-sarsa_agent_75')
-    mtc_plot_decisions_space(sarsa_agent_200, name='decisions-sarsa_agent_200')
-    mtc_plot_decisions_space(sarsa_agent_1000, name='decisions-sarsa_agent_1000')
-    mtc_plot_decisions_space(sarsa_agent_10000, name='decisions-sarsa_agent_10000')
+    mtc_plot_decisions_space(sarsa_agent_75, folder=Path.cwd() / 'img', name='decisions-sarsa_agent_75')
+    mtc_plot_decisions_space(sarsa_agent_200, folder=Path.cwd() / 'img', name='decisions-sarsa_agent_200')
+    mtc_plot_decisions_space(sarsa_agent_1000, folder=Path.cwd() / 'img', name='decisions-sarsa_agent_1000')
+    mtc_plot_decisions_space(sarsa_agent_10000, folder=Path.cwd() / 'img', name='decisions-sarsa_agent_10000')
 
-    mtc_plot_decisions_space(SimpleAgent(), name='decisions-SimpleAgent')
-    mtc_plot_decisions_space(PlagihAgent_A(), name='decisions-PlagihAgent_A')
-    mtc_plot_decisions_space(XiaoPresetAgent(), name='decisions-XiaoPresetAgent')
-    mtc_plot_decisions_space(XiaoPresetNoLowerbound(), name='decisions-XiaoPresetNoLowerbound')
-    mtc_plot_decisions_space(AgentV1p40(), name='decisions-AgentV1p40')
-    mtc_plot_decisions_space(Good_Expert(), name='decisions-Good_Expert')
+    mtc_plot_decisions_space(SimpleAgent(), folder=Path.cwd() / 'img', name='decisions-SimpleAgent')
+    mtc_plot_decisions_space(PlagihAgent_A(), folder=Path.cwd() / 'img', name='decisions-PlagihAgent_A')
+    mtc_plot_decisions_space(XiaoPresetAgent(), folder=Path.cwd() / 'img', name='decisions-XiaoPresetAgent')
+    mtc_plot_decisions_space(XiaoPresetNoLowerbound(), folder=Path.cwd() / 'img', name='decisions-XiaoPresetNoLowerbound')
+    mtc_plot_decisions_space(AgentV1p40(), folder=Path.cwd() / 'img', name='decisions-AgentV1p40')
+    mtc_plot_decisions_space(Good_Expert(), folder=Path.cwd() / 'img', name='decisions-Good_Expert')
 
-    mtc_plot_decisions_space(TestCombined(), name='decisions-Combined_AgentV1p40')
+    mtc_plot_decisions_space(TestCombined(), folder=Path.cwd() / 'img', name='decisions-Combined_AgentV1p40')
 
 
 def thesis_decision_plots_dummied():
-    mtc_plot_decisions_space(sarsa_agent_75, name='dummy-sarsa_agent_75', dummy=True)
-    mtc_plot_decisions_space(sarsa_agent_200, name='dummy-sarsa_agent_200', dummy=True)
+    mtc_plot_decisions_space(sarsa_agent_75, folder=Path.cwd() / 'img', name='dummy-sarsa_agent_75', dummy=True)
+    mtc_plot_decisions_space(sarsa_agent_200, folder=Path.cwd() / 'img', name='dummy-sarsa_agent_200', dummy=True)
 
 
 if __name__ == "__main__":
+    makeonelatexplothere()
     thesis_decision_plots_dummied()
     thesis_decision_plots_fullspace()
 

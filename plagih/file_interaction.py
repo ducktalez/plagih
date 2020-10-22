@@ -3,16 +3,26 @@ from pathlib import Path
 from plagih.printing import *
 import yaml
 
+
+MTC_XTICKS = ((-0.06, -0.03, 0, 0.03, 0.06), ('$-.06$', '$-.03$', '$0$', '$.03$',  '$.06$'))  # , color='k', size=8
+MTC_YTICKS = ((-1.2, -0.8, -0.4, 0, 0.4), (r'$-1.2$', r'$-0.8$', r'$-0.4$', r'$0.0$', r'$0.4$'))
+
+IB_YICKS = ((-14000, -12000, -10000, -8000, -6000, -4000), ('$-14$', '$-12$', '$-10$', '$-8$', '$-6$', '$-4$'))
+
 pyplot_size = (3.6, 2.7)  # default: (6.4, 4.8) S: (4, 3)  XXL: (16, 9)  M: (4.8, 3.6) (4.4, 3.3)
+plplot_size_up = (3.6, 3.6)
 pyplot_rc_tex = {'figure.autolayout': True,
                  'text.usetex': True,
                  'backend': 'pgf',
                  'figure.figsize': pyplot_size,
-                 # 'font.size': 11,
+                 'axes.labelpad': 0.5,  # padding axis-ticks to axis title
+                 'xtick.labelsize': 8, 'xtick.major.size': 1.5, 'xtick.major.pad': 1.5,
+                 'ytick.labelsize': 8,  'ytick.major.size': 1.5, 'ytick.major.pad': 1.5,
+                 # 'savefig.pad_inches': 0,
+                 'font.size': 10,
+                 'legend.fontsize': 9,
                  # 'lines.linewidth': 1,
                  # 'lines.markersize': 3,
-                 # 'xtick.labelsize': 8,
-                 # 'ytick.labelsize': 8,
                  # 'axes.xmargin': 0,
                  # 'axes.ymargin': 0
                  }
@@ -20,12 +30,12 @@ pyplot_rc_tex = {'figure.autolayout': True,
 rc_pyplot_size = {'figure.figsize': pyplot_size}
 # ['text.latex.preamble'=r"\usepackage{lmodern}"]
 
-pyplot_rc_options = {'font.family': 'serif',
-                     'font.serif': ['Times', 'Palatino', 'New Century Schoolbook', 'Bookman', 'Computer Modern Roman'],
-                     'font.sans-serif': ['Helvetica', 'Avant Garde', 'Computer Modern Sans serif'],
-                     'font.cursive': ['Zapf Chancery'],
-                     'font.monospace': ['Courier', 'Computer Modern Typewriter']}
-more_optionsasd = {'savefig.dpi': 300, }
+# pyplot_rc_options = {'font.family': 'serif',
+#                      'font.serif': ['Times', 'Palatino', 'New Century Schoolbook', 'Bookman', 'Computer Modern Roman'],
+#                      'font.sans-serif': ['Helvetica', 'Avant Garde', 'Computer Modern Sans serif'],
+#                      'font.cursive': ['Zapf Chancery'],
+#                      'font.monospace': ['Courier', 'Computer Modern Typewriter']}
+# more_optionsasd = {'savefig.dpi': 300, }
 """
 For further options see:
 https://matplotlib.org/3.3.2/tutorials/introductory/customizing.html#customizing-with-matplotlibrc-files

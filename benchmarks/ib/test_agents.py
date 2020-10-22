@@ -8,6 +8,12 @@ class Ib_Agent:
     def __init__(self):
         self.state_history = collections.deque(maxlen=30)
 
+    def only_save_history(self, env_state):
+        """
+        When random start, use this function to save the last states
+        """
+        self.state_history.appendleft(env_state)
+
     def get_h(self, name, steps):
 
         def get_max_history(index, history_list):

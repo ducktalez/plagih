@@ -89,7 +89,7 @@ def eval_agents():
 
 class AgentMerger(Ib_Agent):
     """
-
+    # todo if no older values, take the oldest record possible. daniel had old records!
     """
 
     def __init__(self, name, a0, a1, a2):
@@ -149,6 +149,8 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
 
             env = IDS(p=p)
             for num in range(randomize):  # get a more bad state
+                normal_state = envstate_normalize(env.state)
+                agent.only_save_history(normal_state)
                 at = 2 * np.random.rand(3) - 1  # "random"-function from og ib
                 env.step(at)  # also returns markovStates, if needed
 

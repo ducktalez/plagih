@@ -382,7 +382,8 @@ class ExplainableGP(object):
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
             self.printpl('i', f'Adding new generations, gen_max was {printdummy}, current gen {self.gen_id}. gen_additionally: {gen_additionally}. New max gen: {self.conf.gen_max}')
 
-        yaml_dump(self.root_dir / 'used_config.yaml', self.conf, print_type=self.print_type)
+        # sfeh
+        # yaml_dump(self.root_dir / 'used_config.yaml', self.conf, print_type=self.print_type)
 
         self.gens_since_last_pareto = 0
 

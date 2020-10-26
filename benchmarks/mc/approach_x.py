@@ -11,7 +11,7 @@ def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_a
     plt.ylabel('Sampled Reward')
     plt.title('Sampled Reward vs Episodes')
     plt.ylim(-200, -50)
-    plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}.pdf', dpi=300)
+    plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}.pdf')
     plt.show()
 
     plt.plot(reward_sample_interval * (np.arange(len(episode_rewards1)) + 1), rewards1_avg, label=str(approach))
@@ -21,7 +21,7 @@ def plot_approach(episodes, reward_sample_interval, episode_rewards1, rewards1_a
     plt.ylabel('Average Reward')
     plt.title('Average Reward vs Episodes')
     plt.ylim(-200, -50)
-    plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}-average.pdf', dpi=300)
+    plt.savefig(f'MTC-{approach}-{episodes}-{reward_sample_interval}-average.pdf')
     plt.show()
 
     plt.close('all')
@@ -35,11 +35,10 @@ def mtc_approach_start(approach):
 
     reward_sample_interval = 10
     episodes = 1000
-    episodes_ez = episodes
 
     # episode_rewards2, rewards2_avg = sarsa_start_training(env, episodes_sarsa, rewardSample_interval, train=True, render=False)
 
-    episode_rewards1, rewards1_avg = improved_v1(env, episodes_ez, reward_sample_interval)
+    episode_rewards1, rewards1_avg = plot_approach(episodes, reward_sample_interval)
 
     env.close()
 

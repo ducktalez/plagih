@@ -9,6 +9,8 @@
 \usepackage{dbstmpl}
 \usepackage{forest}
 \usepackage{tikz}
+\usepackage{array}
+\usepackage{longtable}
 \usetikzlibrary{matrix,chains,positioning,decorations.pathreplacing,arrows}
 
 \renewcommand{\thesubsection}{\alph{subsection})}
@@ -62,7 +64,7 @@ algorithm2e
 \output_sync 0
 \bibtex_command default
 \index_command default
-\paperfontsize 12
+\paperfontsize 11
 \spacing single
 \use_hyperref true
 \pdf_bookmarks true
@@ -2436,9 +2438,10 @@ Sarsa-75 performance on MC.
 \end_inset
 
 
-\end_layout
+\begin_inset Note Note
+status open
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -2460,7 +2463,7 @@ status open
 
 \end_inset
 
-[xxx]
+[xx]
 \begin_inset CommandInset label
 LatexCommand label
 name "img:MTC-heuristic-vs-sarsa-reward"
@@ -2473,6 +2476,11 @@ name "img:MTC-heuristic-vs-sarsa-reward"
 \begin_layout Plain Layout
 Sarsa-75 implementation learns to outperform the heuristic on average, but
  with outliers.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -7539,8 +7547,9 @@ status open
 \end_inset
 
 
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
 
 \end_inset
 
@@ -7552,6 +7561,153 @@ status open
 
 \begin_layout Plain Layout
 Parsimony 3
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-3.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/histograms/acthist_3.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+xxxx test
 \end_layout
 
 \end_inset
@@ -7644,8 +7800,9 @@ Tree
 \begin_inset Text
 
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
 
 \end_inset
 
@@ -7667,8 +7824,9 @@ asd
 \begin_inset Text
 
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03_tight.tex
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03_tight.tex"
 
 \end_inset
 
@@ -7910,7 +8068,96 @@ Maximum Momentum
 \begin_layout Standard
 Die einfachste Expertenpolicy holt maximal Schwung und verzichtet dabei
  auf Aktion 1, nicht zu beschleunigen.
- Der Regressionsfehler kann somit nicht Null werden und ist in dieser Hinsicht
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Der Regressionsfehler kann somit nicht Null werden und ist in dieser Hinsicht
  anderen Läufen unterlegen.
  Der Regressionsfehler sinkt somit nur auf xxx.
  Die Performance war jedoch sogar auf demselben Niveau wie bei anderen Ansätzen

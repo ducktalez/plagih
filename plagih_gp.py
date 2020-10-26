@@ -161,6 +161,7 @@ def main():  # argv sys.argv[1:]
             root_dir = None
 
     root_dir = args.root_dir or root_dir  # plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
+    path_make_dir(root_dir)
 
     """
     Starting the actual run

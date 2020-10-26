@@ -344,10 +344,11 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
             if avg_reward is None:  # or fails is None:
                 avg_reward, fails, _ = mtc_play(mcAgent, n=n)
 
-            bur1, path_mcmeshplot = mtc_plot_decisions_space(mcAgent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
-            bur2, path_mcmeshplot_diff = mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
-            mtc_plot_decisions_space(mcAgent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
-            bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
+            # todo todotodo
+            # bur1, path_mcmeshplot = mtc_plot_decisions_space(mcAgent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
+            # bur2, path_mcmeshplot_diff = mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+            # mtc_plot_decisions_space(mcAgent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
+            # bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
             agent_performance[parsim] = [agent_name, parsim, avg_reward, fails, None, None]
         except Exception as ex:
             print(f'MTC eval failed because of: {ex}')

@@ -30,13 +30,15 @@ def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
                        'nodechanged/.style={fill=orange!50,}, #1 ' \
                        '\end{forest}}}' \
 
-    latex_doc_forest = f'\\documentclass[varwidth=\\maxdimen,convert{doc_border}]{{standalone}}' \
-                       '\n\\usepackage{forest}' \
-                       '\n\\usepackage{amsmath}\n' \
-                       f'{latex_newcommand_forest}' \
-                       '\n\\begin{document}' \
-                       f'\n{tex_body}' \
-                       '\n\\end{document}'
+    latex_doc_forest = f'\\documentclass[varwidth=\\maxdimen,convert{doc_border}]{{standalone}}\n' \
+                       '\\usepackage{forest}\n' \
+                       '\\usepackage{array}\n' \
+                       '\\usepackage{longtable}\n' \
+                       '\\usepackage{amsmath}\n' \
+                       f'{latex_newcommand_forest}\n' \
+                       '\\begin{document}\n' \
+                       f'{tex_body}\n' \
+                       '\\end{document}'
     return latex_doc_forest
 
 

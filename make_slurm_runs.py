@@ -55,48 +55,48 @@ run_starts = [
     # """
     # MC200 (SARSA-Agent after 200 training steps)
     # """
-    # 'MTC200_MAE_explun01_simple_fix',
-    # 'MTC200_MAE_tanh_simple_fix',
-    # 'MTC200_MAE_explun01_tanh_simple_fix',
-    # 'MTC200_RMSE_explun01_tanh_simple_fix',
+    # 'MTC200_MAE_explun01_simpleFix',
+    # 'MTC200_MAE_tanh_simpleFix',
+    # 'MTC200_MAE_explun01_tanh_simpleFix',
+    # 'MTC200_RMSE_explun01_tanh_simpleFix',
 
     'MTC200_MAE_scratch',
     'MTC200_MAE_gpFriendly',
-    'MTC200_MAE_gpfriendly_fix',
+    'MTC200_MAE_gpfriendlyFix',
     'MTC200_MAE_preset',
     'MTC200_MAE_simple',
-    'MTC200_MAE_simple_fix',
-    'MTC200_MAE_simplePlus_fix',
+    'MTC200_MAE_simpleFix',
     'MTC200_MAE_simplePlus',
+    'MTC200_MAE_simplePlusFix',
     'MTC200_MAE_simonBest',
     'MTC200_MAE_simonBad',
 
     'MTC200_MSE_scratch',
     'MTC200_MSE_gpFriendly',
-    'MTC200_MSE_gpfriendly_fix',
+    'MTC200_MSE_gpfriendlyFix',
     'MTC200_MSE_preset',
     'MTC200_MSE_simple',
-    'MTC200_MSE_simple_fix',
-    'MTC200_MSE_simplePlus_fix',
+    'MTC200_MSE_simpleFix',
+    'MTC200_MSE_simplePlusFix',
     'MTC200_MSE_simplePlus',
     'MTC200_MSE_simonBest',
     'MTC200_MSE_simonBad',
     #
     # 'MTC200_MAE_explun01_simple',
-    # 'MTC200_MAE_explun01_gpfriendly_fix',
-    # 'MTC200_MAE_explun01_preset_fix',
+    # 'MTC200_MAE_explun01_gpfriendlyFix',
+    # 'MTC200_MAE_explun01_presetFix',
     #
     # # """
     # # MC75 (SARSA-Agent after 75 training steps)
     # # """
     'MTC75_MAE_scratch',
     'MTC75_MAE_simple',
-    'MTC75_MAE_simple_fix',
+    'MTC75_MAE_simpleFix',
     'MTC75_MAE_gpFriendly',
 
     'MTC75_MSE_scratch',
     'MTC75_MSE_simple',
-    'MTC75_MSE_simple_fix',
+    'MTC75_MSE_simpleFix',
 ]
 
 complete_params = []

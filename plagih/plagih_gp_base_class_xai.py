@@ -609,7 +609,7 @@ class ExplainableGP(object):
 
         return
 
-    def analyse_pareto(self, cpu_cores=16):
+    def analyse_pareto(self, cpu_cores=16, regrerr_minmax=None):
         """
         Giving all the results
         # sfeh discussion: This is only relevant at the end. (aka not in persidical analysis)
@@ -779,17 +779,18 @@ class ExplainableGP(object):
                     ax.legend(loc='lower right')
                     plt.yticks(IB_YICKS[0], IB_YICKS[1])
 
-                    # sfeh todo
+                    # sfeh asdasd
                     # axx = ax.twinx()
                     # axx.plot(xx, cnt, color='tab:gray', label='regression error', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
                     # axx.tick_params(axis='y', labelcolor='tab:gray')
                     # # axx.plot(xx, y['regression_sum'])
 
-                    ax2 = ax.twinx()
-                    ax2.plot(xx, cnt, color='tab:gray', label='combos', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
-                    # ax2.set(ylabel='possible combinations', color='tab:gray')
-                    ax2.tick_params(axis='y', labelcolor='tab:gray')
-                    ax2.legend(loc='lower left')
+                    # sfeh asdasd this is removed
+                    # ax2 = ax.twinx()
+                    # ax2.plot(xx, cnt, color='tab:gray', label='combos', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
+                    # # ax2.set(ylabel='possible combinations', color='tab:gray')
+                    # ax2.tick_params(axis='y', labelcolor='tab:gray')
+                    # ax2.legend(loc='lower left')
 
                     fig.savefig(self.root_dir.parent / f'regression_all.pdf')
                     plt.close('all')
@@ -1445,10 +1446,6 @@ class ExplainableGP(object):
 
         return copy.deepcopy(tourn_winner)
 
-    # +++++++++++++++++++++++++++++++++++++++++++++
-    #   Work with trees                           +
-    # +++++++++++++++++++++++++++++++++++++++++++++
-
     def load_origin_tree(self, path_origin_tree, label_list=None, modify_list=None):
         """
         The origin tree (which was already loaded) gets activated for its use in the GP-process
@@ -1618,7 +1615,7 @@ class ExplainableGP(object):
             axs0.set_title(f'monitoring gp generations {self.conf.name}')  # sfeh
             fig.tight_layout()
             path = self.root_dir / f'monitoring.pdf'  # -{self.conf.name}
-            fig.savefig(path, dpi=300)
+            fig.savefig(path)
             self.printpl('f', f"monitoring: {path.as_posix()}")
             plt.close('all')
 
@@ -1634,7 +1631,7 @@ class ExplainableGP(object):
             return
 
         run_name = self.conf.name
-        run_name = str(run_name).replace('_', '-')  # todo workaround for latex version
+        run_name = str(run_name).replace('_', '-')  # sfeh asd workaround for latex version
 
         with plt.rc_context(rc=pyplot_rc_tex):
             fig, ax = plt.subplots()
@@ -1683,7 +1680,7 @@ class ExplainableGP(object):
 
                 plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
                 path = self.root_dir / f'monitoring_evolutions.pdf'
-                fig.savefig(path, dpi=300)
+                fig.savefig(path)
                 self.printpl('f', f"monitoring_evolutions (pdf): {path.as_posix()}")
 
         except Exception as ex:

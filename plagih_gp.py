@@ -18,15 +18,26 @@ import argparse
 
 
 def load_prepared_run(conf, prepared_run):
+
     def pathify(x):
-        return Path(__file__).parent.absolute() / 'benchmarks/' / x
+        if x is None:
+            return None
+        else:
+            return Path(__file__).parent.absolute() / 'benchmarks/' / x
 
     path_origin_tree = None
     action_name = None
     root_dir = pathify(f'slurm_runs/{prepared_run[:-2]}/{prepared_run}')
     conf.gen_max = 5000
 
-    if 'IB' in prepared_run:
+    name_splits = prepared_run.split('_')
+
+    """
+    ['IB', 'RMSE', 'explun01', 'tanh', 's3m', '1']
+    ['MTC75', 'MSE', 'simple']
+    """
+
+    if 'IB' == prepared_run[:2]:
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
         kernel_name = 'regression bounded'
         ori_trs = {'50_0': 'ib/gp_files//ib_tree_50s_0.csv',
@@ -46,7 +57,8 @@ def load_prepared_run(conf, prepared_run):
                    'sim2_2': 'ib/gp_files/ib_sim2_2.csv',
                    's3m_0': 'ib/gp_files/ib_s3m_0.csv',
                    's3m_1': 'ib/gp_files/ib_s3m_1.csv',
-                   's3m_2': 'ib/gp_files/ib_s3m_2.csv'}
+                   's3m_2': 'ib/gp_files/ib_s3m_2.csv',
+                   'scratch': None}
         for k, v in ori_trs.items():
             if k in prepared_run:
                 print(f'AUTOLOAD: Using origin: {v}')
@@ -60,6 +72,8 @@ def load_prepared_run(conf, prepared_run):
                 print(f'AUTOLOAD: Using action: {v}')
                 action_name = v
 
+        regrerr_minmax = (0, 3)
+
     elif 'MTC' in prepared_run:
         kernel_name = 'regression bounded discrete'
 
@@ -69,16 +83,16 @@ def load_prepared_run(conf, prepared_run):
 
         ori_trs = {'gpFriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
                    'preset': 'mc/gp_files/tree_preset_fix.csv',
-                   'simple_fix': 'mc/gp_files/tree_simple_fix.csv',
+                   'simpleFix': 'mc/gp_files/tree_simple_fix.csv',
                    'simple': 'mc/gp_files/tree_simple.csv',
-                   'simplePlus_fix': 'mc/gp_files/tree_simplePlus_fix.csv',
                    'simplePlus': 'mc/gp_files/tree_simplePlus.csv',
+                   'simplePlusFix': 'mc/gp_files/tree_simplePlus_fix.csv',
                    'simonBest': 'mc/gp_files/tree(simonBest).csv',
-                   'simonBad': 'mc/gp_files/tree(simonBest)_bad.csv'}
-        for k, v in ori_trs.items():
-            if k in prepared_run:
-                print(f'AUTOLOAD: Using origin: {v}')
-                path_origin_tree = pathify(v)
+                   'simonBad': 'mc/gp_files/tree(simonBest)_bad.csv',
+                   'scratch': None}
+
+        path_origin_tree = pathify(ori_trs[name_splits[-1]])
+        regrerr_minmax = (0, 1)
     else:
         raise
 
@@ -100,7 +114,7 @@ def load_prepared_run(conf, prepared_run):
     conf.action_name = action_name
     conf.name = prepared_run
 
-    return conf, root_dir, path_data_csv, path_origin_tree
+    return conf, root_dir, path_data_csv, path_origin_tree, regrerr_minmax
 
 
 def main():  # argv sys.argv[1:]
@@ -139,6 +153,7 @@ def main():  # argv sys.argv[1:]
                                                                                               " Like a reboot, keeps local optima.")
     parser.add_argument('-testrun', action='store_true', help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
     parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated if certain code should be executed. Now used to fix Linux/Windows paths-bug.')
+    parser.add_argument('-regrerr_minmax', nargs=2, type=int, help='sfeh default? regression error min and max for visualisation')
 
     args = parser.parse_args()
 
@@ -151,7 +166,7 @@ def main():  # argv sys.argv[1:]
     # self.name = args.name or self.root_dir.resolve().name  # sfeh name? probably there are better names
 
     if prepared_run:
-        conf, root_dir, path_data_csv, path_origin_tree = load_prepared_run(conf, prepared_run)
+        conf, root_dir, path_data_csv, path_origin_tree, regrerr_minmax = load_prepared_run(conf, prepared_run)
     else:
         path_data_csv = args.data_csv
         path_origin_tree = args.origin_tree
@@ -159,6 +174,7 @@ def main():  # argv sys.argv[1:]
             root_dir = args.load_config.parent
         except:
             root_dir = None
+        regrerr_minmax = (0, 2)
 
     root_dir = args.root_dir or root_dir  # plagih_root = Path(os.path.dirname(os.path.realpath(__file__)))
     path_make_dir(root_dir)

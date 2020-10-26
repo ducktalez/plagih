@@ -173,7 +173,7 @@ class CoolCore:
         # tree = evolve_node_arity_fix(tree)  # fix all node arities
         #
         # return tree
-        raise Exception('Sfeh needs to do this')  # todo only relevant when blind crossover? check during build process?
+        raise Exception('Sfeh needs to do this')  # sfeh asdasd only relevant when blind crossover? check during build process?
 
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """

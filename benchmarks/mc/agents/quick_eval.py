@@ -363,18 +363,19 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         y = agentperflist[2]
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
         xx, yy = np.array(tuples).T
-        ax.step(xx, yy, linestyle='dotted', marker='.', label='real performance', where='post')
+        ax.step(xx, yy, linestyle='dotted', marker='.', where='post')
+        ax.set(xlabel='complexity', ylabel='regression error', ylim=(0, 2))
 
         ax2 = ax.twinx()
-        ax2.step(x, y, linestyle='None', marker='x', color='g', label='regression error')
+        ax2.step(x, y, linestyle='None', marker='x', color='g', label='reward')
         ax2.invert_yaxis()
         # ax2.tick_params(axis='y', labelcolor='tab:gray')
 
         fig.savefig(dir_save / f'evaled_overview.pdf')
 
-    # summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance])
-    # file_dump(dir_save / 'summary.txt', summary_text)
-    # with (dir_save / 'summary.txt').open('w') as file:
-    #     file.write(summary_text)
+    summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance])
+    file_dump(dir_save / 'summary.txt', summary_text)
+    with (dir_save / 'summary.txt').open('w') as file:
+        file.write(summary_text)
 
     return agent_performance

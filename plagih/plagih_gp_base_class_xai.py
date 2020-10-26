@@ -1071,10 +1071,10 @@ class ExplainableGP(object):
             "\tprint('executing!')\n" \
             "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
 
-        pth = path_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
-        with Path.open(pth, 'w') as file:
-            file.write(pyc_complete)
-            self.printpl('ff', f'Pycode: {pth.as_posix()}')
+        # pth = path_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
+        # with Path.open(pth, 'w') as file:
+        #     file.write(pyc_complete)
+        #     self.printpl('ff', f'Pycode: {pth.as_posix()}')
 
         return
 

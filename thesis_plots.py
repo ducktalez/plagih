@@ -61,7 +61,9 @@ def thesisplot_tempdiff():
         fig, ax = plt.subplots()
         ax.plot(xx, pp)
         ax.plot(xx2, pp2)
-        fig.savefig(Path.cwd() / 'MA_lyx/img/pyplots_custom/distribution_obs_time.pdf')
+        ax.set(xlabel='timesteps', ylabel='probability')
+        savepath = path_make_dir(Path.cwd() / 'MA_lyx/img/pyplots_custom/distribution_obs_time.pdf')
+        fig.savefig(savepath)
         plt.show()
         plt.close('all')
 

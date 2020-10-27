@@ -82,7 +82,8 @@ def load_prepared_run(conf, prepared_run):
         path_data_csv = pathify(f'mc/gp_files/samples{num_samples}.csv')
 
         ori_trs = {'gpFriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
-                   'preset': 'mc/gp_files/tree_preset_fix.csv',
+                   'preset': 'mc/gp_files/tree_preset.csv',
+                   'presetFix': 'mc/gp_files/tree_preset_fix.csv',
                    'simpleFix': 'mc/gp_files/tree_simple_fix.csv',
                    'simple': 'mc/gp_files/tree_simple.csv',
                    'simplePlus': 'mc/gp_files/tree_simplePlus.csv',

@@ -258,7 +258,7 @@ class CoolCore:
             return f'{self.label}'
         else:
             my_expr = op[self.label]['sym_str']
-            child_expr_list = [child.get_expr_raw(reduceable=reduceable) for child in self.childs]
+            child_expr_list = [child.get_expr_raw(reduceable=reduceable, obs_names=obs_names) for child in self.childs]
             if reduceable:
                 my_expr = op[self.label]['sym_reduce'] or my_expr
                 symloc = sympy_symbol_defaults(obs_names)

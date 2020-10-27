@@ -697,12 +697,11 @@ class ExplainableGP(object):
                            "dist & error & reward & expression \\tabularnewline \\hline\n" \
                            f"{x}" \
                            "\\hline\n\\end{tabular}\n\n"
-            tex_longtable = lambda x: "\\begin{table}\n" \
-                                    "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
+            tex_longtable = lambda x: "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
                                     "\\hline\n" \
                                     "dist & error & reward & expression \\tabularnewline \\hline\n" \
                                     f"{x}" \
-                                    "\\hline\n\\end{longtable}\n\\end{table}\n"
+                                    "\\hline\n\\end{longtable}\n"
 
             # & decision plot & spiral plot & spiral difference-plot & histogram
 
@@ -762,12 +761,11 @@ class ExplainableGP(object):
                                f"{combined_lines}" \
                                f"\\hline\n\\end{{tabular}}\n\n"
 
-                combined_input = "\\begin{table}\n" \
-                                 "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
+                combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
                                  "dist & error & reward & expression \\tabularnewline \\hline\n" \
                                  f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
                                  f"{combined_lines}" \
-                                 "\\hline\n\\end{longtable}\n\\end{table}\n"
+                                 "\\hline\n\\end{longtable}\n"
                 combined_overview = latex_treeviz_full_document(combined_overview)
                 file_dump(self.root_dir.parent / 'combined_overview.tex', combined_overview)
                 file_dump(self.root_dir.parent / 'combined_input.tex', combined_input)

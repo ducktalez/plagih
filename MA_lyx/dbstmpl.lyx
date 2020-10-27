@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -37,10 +37,6 @@
 
 \newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -51,7 +47,7 @@ algorithm2e
 \language english
 \language_package default
 \inputencoding utf8
-\fontencoding global
+\fontencoding default
 \font_roman "default" "default"
 \font_sans "default" "default"
 \font_typewriter "default" "default"
@@ -62,6 +58,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -100,6 +98,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -109,7 +108,10 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -294,25 +296,6 @@ Intro / Motivation
 \end_layout
 
 \begin_layout Standard
-lel 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-the
-\backslash
-textwidth
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -439,6 +422,7 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -507,6 +491,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -538,6 +523,7 @@ t Learning (RL) policies using Genetic Programming (GP).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -583,6 +569,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -614,6 +601,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -874,6 +862,7 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -883,6 +872,7 @@ key "one_pixel_attack"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -1075,6 +1065,7 @@ Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1216,6 +1207,7 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1283,6 +1275,7 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -1294,6 +1287,7 @@ key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -1350,6 +1344,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1519,6 +1514,7 @@ The TED is a well-known problem from theoretical computer science and will
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -1532,6 +1528,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -1965,6 +1962,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -2306,6 +2304,146 @@ reference "sarsa75_problem_decision_plots"
 \end_layout
 
 \begin_layout Subsection
+Observation-Action-Space Plots
+\end_layout
+
+\begin_layout Standard
+Der Zustands- und Aktionsraum ist klein genug um die komplette Policy eines
+ Agenten als zweidimensionales Diagram darzustellen.
+\end_layout
+
+\begin_layout Standard
+Der gesamte Zustandsraum wird entlang seiner Dimensionen in je 256 Bereiche
+ unterteils, für die die jeweils berechnete Aktion eingefärbt wird.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "wrap:mc-obs-act-plot-space"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ Dadurch ist sehr gut erkennbar, welche Strategie zur Lösung verfolgt wird.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-space"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Einige Zustände werden effektiv aber nie erreicht, weshalb darüber hinaus
+ noch eine Verhaltensabhängige Version erstellt wurde, die bei 100 Testläufen
+ die nicht erreichten Zustände grau einfärbt.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-snail"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Eine dritte Version untersucht bei ebenfalls 100 Läufen die ABweichungen
+ zur Referenzpolicy.
+ Dafür wurde für den Bereich, in dem die entsprechende Sarsa-policy Daten
+ erzeugt die Unterschiede Untersucht.
+ In diesem Fall wäre eine komplett weiße Schnecke hervorragend, da dann
+ die Unterschiede minimal wären.
+ In diesen Plots sieht man unter anderem, wo die Agenten Probleme haben.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-space-diff"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Probleme? 
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Subsection
 Black box with SARSA and Tiling
 \end_layout
 
@@ -2316,6 +2454,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -2339,6 +2478,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -2970,7 +3110,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-asdasd xx 
+The most important MC agents in direct comparison.
+ 
 \begin_inset CommandInset label
 LatexCommand label
 name "table:MC_agents_rewards"
@@ -3017,12 +3158,27 @@ Die Implementierung erfolgt als if-Anweisung und kann somit mit 6 Knoten
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
 status open
 
 \begin_layout Plain Layout
-verfahren um die Bereiche zu erkennen, in denen ein Agent mit Fehlentscheidungen
- den Zustand zu stark beeinflusst (das ist wohl zu schwer zu erkennen)
+\begin_inset Graphics
+	filename img/MTC/tree_simple.pdf
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mtc_simple_tree"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -3038,24 +3194,15 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-SimpleAgent.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
 	height 5cm
 
 \end_inset
 
-[xxx Schnecke]
-\end_layout
 
-\begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/tree_simple.pdf
-
-\end_inset
-
-[xxx fix nodes]
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mtc_simple_tree"
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
+	height 5cm
 
 \end_inset
 
@@ -3066,7 +3213,7 @@ name "img:mtc_simple_tree"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Computational tree of the simplest program [xxx doubled image]
+Computational tree of the simplest program [xx doubled image]
 \end_layout
 
 \end_inset
@@ -3126,21 +3273,6 @@ else:
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "tikz/MTC_trees/test_simple_v1.tex"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-[xxx images]
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
@@ -3172,7 +3304,7 @@ Real solution, optimal solution and expert abstraction
 \end_layout
 
 \begin_layout Plain Layout
-As we will see and discuss in [xxx ref], the first decision is most relevant
+As we will see and discuss in [xx ref], the first decision is most relevant
  for the optimal solution.
  The starting velocity is always 0, but depending on the starting position,
  you have to take three or four turns to reach the goal.
@@ -3236,7 +3368,7 @@ samples, which is about
 \end_layout
 
 \begin_layout Plain Layout
-[xxx insert picture of the tree and/or the sarsa choices]
+[xx insert picture of the tree and/or the sarsa choices]
 \end_layout
 
 \begin_layout Plain Layout
@@ -3302,6 +3434,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -3332,10 +3465,6 @@ Thus two essential improvements could be found here.
  for the MC experiment.
  In the second case, a small change has led to an enormous improvement.
  This improvement is even better than the Sarsa-75 policy in the real experiment.
-\end_layout
-
-\begin_layout Standard
-xxx
 \end_layout
 
 \begin_layout Standard
@@ -3394,7 +3523,17 @@ Human, if-then-else based
 \begin_layout Standard
 Diese Lösung stellt eine von Menschenhand geschriebene Heuristik dar, welche
  die Umkehrpunkt mithilfe von if-Anweisungen umsetzt.
- Wie in [xxx preset] zu sehen sind diese als eckige Blöcke sichtbar.
+ Wie in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "mc:simonsBest-plot-space"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ zu sehen sind diese als eckige Blöcke sichtbar.
  
 \end_layout
 
@@ -3418,7 +3557,15 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The if statements are recognizable as square blocks
+The if statements are recognizable as square blocks.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "mc:simonsBest-plot-space"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -3456,6 +3603,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4183,6 +4331,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -4320,7 +4469,7 @@ A solution that outperforms the known approach which has to be explained.
  The use of this approach only makes sense if the black box solution can
  be expected to provide a meaningful improvement.
  For very extensive problems it is possible that no solution will be found.
- [xxx nicht pflicht, geht ja sonst auch...
+ [xx nicht pflicht, geht ja sonst auch...
  auswahl: sicher, gutes Training, regression vs live training]
 \end_layout
 
@@ -4826,7 +4975,7 @@ Here, a second measure, which aims to produce moderate values, was mixed
  This slowed down the training process extremely, furthermore, the most
  effective solution was not a formula that only generates moderate values,
  but the use of the min and max function.
- [xxx]
+ [xx kein baum gefunden, warum auch]
 \begin_inset Newline newline
 \end_inset
 
@@ -5088,6 +5237,10 @@ Unsichere Verschlechterung.
 
 \end_deeper
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -5108,7 +5261,12 @@ status open
 \begin_layout Plain Layout
 Conceivable relevant areas for penalizing changes in a relative regression
  to an optimum, relative to a known solution.
- [xxx]
+ [xx]
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -5896,7 +6054,7 @@ https://github.com/ducktalez/plagih
 
 \end_inset
 
- xxx das gibts gar ned
+ xx (currently not available for the public)
 \end_layout
 
 \end_inset
@@ -5913,6 +6071,7 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -7179,10 +7338,6 @@ width "50col%"
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/pyplots_custom/distribution_obs_time.pdf
 
@@ -7192,15 +7347,13 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx plot
+Auswahl des Zeitpunktes einer Observation um einen Baum zu bauen.
+ Jüngere Werte werden aufgrund ihrer höheren, vermuteten Relevanz nach der
+ beschriebenen Verteilung etwas häufiger ausgewählt.
 \end_layout
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -7939,10 +8092,6 @@ Maximum Momentum
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset Wrap figure
 lines 0
 placement o
@@ -7975,25 +8124,20 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_simpleFix/visualisation/full_00.te
 
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 Diese einfache und effiziente Expertenpolicy holt maximal Schwung indem
  es immer in die aktuelle Richtung beschleunigt.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
 status open
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Box Frameless
@@ -8022,10 +8166,6 @@ filename "../benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_fore
 \end_inset
 
 
-\end_layout
-
-\begin_layout Plain Layout
-xxx
 \end_layout
 
 \end_inset
@@ -8060,10 +8200,6 @@ filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.te
 
 \end_layout
 
-\begin_layout Plain Layout
-xxx
-\end_layout
-
 \end_inset
 
 
@@ -8075,11 +8211,6 @@ xxx
 \begin_layout Plain Layout
 Verschiedene Versionen derselben Heuristik bieten dem GP-Prozess unterschiedlich
 e Möglichkeiten der Verbesserung.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -8563,10 +8694,6 @@ Nothing
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset Float table
 wide false
 sideways false
@@ -8587,11 +8714,6 @@ filename "../benchmarks/slurm_runs/IB_MSE_scratch/combined_input.tex"
 
 \begin_layout Plain Layout
 asd xxx
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -8689,15 +8811,6 @@ status open
 \end_inset
 
 
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -8706,11 +8819,12 @@ xxx
 \end_layout
 
 \begin_layout Subsubsection
-Simons Try
+Simons Best
 \end_layout
 
 \begin_layout Standard
-asd
+Diese Heuristik wurde unter durch ausprobieren erzeugt.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -8827,6 +8941,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 

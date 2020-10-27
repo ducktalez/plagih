@@ -338,16 +338,16 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         agent_name = f'{parsim:.0f}'
         print(f'Evaluating MC Agent: {parsim:.0f}')
         pycode = cooltree.get_pycode()
-        mcAgent = DummyMcAgent(pycode)
+        mc_gent = DummyMcAgent(pycode)
         try:
             bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
             if avg_reward is None:  # or fails is None:
-                avg_reward, fails, _ = mtc_play(mcAgent, n=n)
+                avg_reward, fails, _ = mtc_play(mc_gent, n=n)
 
             # sfehsfeh save  time comment this
-            bur1, path_mcmeshplot = mtc_plot_decisions_space(mcAgent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
-            bur2, path_mcmeshplot_diff = mtc_plot_differences(mcAgent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
-            mtc_plot_decisions_space(mcAgent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
+            bur1, path_mcmeshplot = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
+            bur2, path_mcmeshplot_diff = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+            mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
             bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
             agent_performance[parsim] = [parsim, fitness, avg_reward, fails, None, None]
         except Exception as ex:

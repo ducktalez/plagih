@@ -59,7 +59,7 @@ run_starts = [
     'MTC200_MAE_simplePlus',
     'MTC200_MAE_simplePlusFix',
     'MTC200_MAE_simonBest',
-    'MTC200_MAE_simonBad',
+    # 'MTC200_MAE_simonBad',
 
     'MTC200_MSE_scratch',
     'MTC200_MSE_simple',
@@ -70,7 +70,7 @@ run_starts = [
     'MTC200_MSE_preset',
     'MTC200_MSE_simplePlus',
     'MTC200_MSE_simonBest',
-    'MTC200_MSE_simonBad',
+    # 'MTC200_MSE_simonBad',
     #
     # 'MTC200_MAE_explun01_simple',
     # 'MTC200_MAE_explun01_gpFriendlyFix',

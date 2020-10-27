@@ -14,7 +14,21 @@ from plagih.file_interaction import *
 from benchmarks.mc.agents.try_agents import *
 
 
-def makeonelatexplothere():
+def autolabel_xx(ax, rects, width):
+    """
+    sfeh maybee
+    """
+    for rect in rects:
+        height = rect.get_height()
+        ax.annotate(f'{height}',
+                    xy=(rect.get_x() + width / 2, height),
+                    xytext=(0, 3),
+                    textcoords="offset points",
+                    ha='center', va='bottom')
+    return ax, rects, width
+
+
+def thesis_plot_mc_comparisson():
     """
     Creates one single plot for the master thesis with the mountaincar results
     """
@@ -29,18 +43,68 @@ def makeonelatexplothere():
         width = 0.8
         rects = ax.bar(x, mc_steps, color='b', width=width)
         ax.set(ylabel='average steps', ylim=(90, 140))
-        for rect in rects:
-            height = rect.get_height()
-            ax.annotate(f'{height}',
-                        xy=(rect.get_x() + width/2, height),
-                        xytext=(0, 3),
-                        textcoords="offset points",
-                        ha='center', va='bottom')
+
+        def autolabel(rects):
+            for rect in rects:
+                height = rect.get_height()
+                ax.annotate(f'{height}',
+                            xy=(rect.get_x() + width/2, height),
+                            xytext=(0, 3),
+                            textcoords="offset points",
+                            ha='center', va='bottom')
+
+        autolabel(rects)
 
         ax.set_xticks(x)
         ax.set_xticklabels(names, rotation=60, fontsize=11)
         savepath = path_make_dir(Path.cwd() / f'benchmarks/MC/agents/img/mc_reward_compared.pdf')
         fig.savefig(savepath)
+        plt.close('all')
+
+
+def thesis_plot_ib_comparisson():
+    """
+    # sfeh adasd
+    """
+    tuples = {'Random': [6809, 6632],
+              'Nothing': [6077, 6068],
+              'Hein-21': [5278, 5573],
+              'Hein-27': [5268, 5548],
+              'Hein-29': [5232, 5542],
+              '50-50-50': [8273, 8321]}
+
+    def autolabel(rects):
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate(f'{height}',
+                        xy=(rect.get_x() + width / 2, height),
+                        xytext=(0, 3),
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+    names = tuples.keys()
+    reward = [x[0] for x in tuples.values()]
+    reward_safe = [x[1] for x in tuples.values()]
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        fig.figsize = plplot_size_up
+        x = np.arange(len(names))
+        width = 0.8/2
+        rects1 = ax.bar(x-width/2, reward, color='b', width=width, label='regular')
+        rects2 = ax.bar(x+width/2, reward_safe, color='g', width=width, label='safe')
+
+        # rects1 = ax.bar(x - width / 2, men_means, width, label='Men')
+        # rects2 = ax.bar(x + width / 2, women_means, width, label='Women')
+        ax.set(ylabel='reward', ylim=(-15000, -4000))
+
+        autolabel(rects1)
+        autolabel(rects2)
+
+        ax.set_xticks(x)
+        ax.set_xticklabels(names, rotation=60, fontsize=11)
+        savepath = path_make_dir(Path.cwd() / f'MA_lyx/img/IB/ib_reward_compared.pdf')
+        fig.savefig(savepath)  # sfeh asd
         plt.close('all')
 
 
@@ -90,6 +154,8 @@ def thesis_decision_plots_fullspace(folder=Path.cwd() / 'benchmarks/mc/agents/im
 
 if __name__ == "__main__":
     thesisplot_tempdiff()
+    thesis_plot_ib_comparisson()
+    thesis_plot_mc_comparisson()
     print('SFEH COMMENTED! asd')
-    # makeonelatexplothere()
+    # thesis_plot_mc_comparisson()
     # thesis_decision_plots_dummied()

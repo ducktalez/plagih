@@ -77,7 +77,7 @@ mountain_agents = [('simple', SimpleAgent()),
 
 if __name__ == "__main__":
     print('Use thesis_plots.py instead!')
-    # # makeonelatexplothere()
+    # # thesis_plot_mc_comparisson()
     # thesis_decision_plots_dummied()
     # thesis_decision_plots_fullspace()
 

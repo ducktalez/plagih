@@ -24,7 +24,6 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 
 class FileLocations:
-
     backup_p = 'backup/backup.p'
     trees_sub_tex = 'visualisation/'
     folder_pycode = ''
@@ -47,6 +46,7 @@ class ParetoFront:
     """
     sfeh
     """
+
     def __init__(self):
         pass
         # self.entries = []
@@ -609,7 +609,7 @@ class ExplainableGP(object):
 
         return
 
-    def analyse_pareto(self, cpu_cores=16, regrerr_minmax=None):
+    def analyse_pareto(self, cpu_cores=16):
         """
         Giving all the results
         # sfeh discussion: This is only relevant at the end. (aka not in persidical analysis)
@@ -643,10 +643,10 @@ class ExplainableGP(object):
 
             # sfeh path necessary?
             # histpath = None
-            histpath = self.plot_agent_histogram(parsim, fitness, cooltree, path_hist)
+            histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)
 
-            texvis = self.file_pareto_latex(parsim, fitness, cooltree)
-            forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = texvis
+            tex_vis = self.file_pareto_latex(parsim, cooltree)
+            forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = tex_vis
 
             pareto_agents[parsim] = {'parsim': parsim,
                                      'fitness': fitness,
@@ -690,18 +690,15 @@ class ExplainableGP(object):
 
                 tex_lines += [tex_line + tex_line_large]
 
-            # sfeh = df_mtc.to_latex(escape=False)  # escape, why? -> no \textbackslash
-            # file_dump(self.root_dir / f'df_mtc.tex', sfeh, print_type=self.print_type)  # agents_trees.tex
-
             tex_tabular = lambda x: "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
-                           "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                           f"{x}" \
-                           "\\hline\n\\end{tabular}\n\n"
-            tex_longtable = lambda x: "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
-                                    "\\hline\n" \
                                     "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                                    f"{x}" \
-                                    "\\hline\n\\end{longtable}\n"
+                f"{x}" \
+                                    "\\hline\n\\end{tabular}\n\n"
+            tex_longtable = lambda x: "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
+                                      "\\hline\n" \
+                                      "dist & error & reward & expression \\tabularnewline \\hline\n" \
+                f"{x}" \
+                                      "\\hline\n\\end{longtable}\n"
 
             # & decision plot & spiral plot & spiral difference-plot & histogram
 
@@ -723,7 +720,7 @@ class ExplainableGP(object):
                 - plot with pareto candidates
                 """
                 # "\\multicolumn{2}{c}{complexity} & \\multicolumn{2}{c}{regression error} & \\multicolumn{4}{c}{IB reward} & combinations & expression \\tabularnewline\n" \
-                combined_lines = ''
+                tex_line_input, tex_line_overview = '', ''
 
                 res_all = combined_lists(self.root_dir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
 
@@ -737,34 +734,36 @@ class ExplainableGP(object):
                 for y in res_all:
                     parsims = y['parsims']
 
-                    input_agentex = lambda run_ii: f"\\input{{{self.root_dir.parent.name}_{run_ii}/visualisation/{int(parsims[run_ii]):02d}_input.tex}}"  # _forest
-                    oneplot_input = tex_stacklist([input_agentex(x) for x in [0, 1, 2]])
+                    input_agentex = lambda run_ii, prepth: f"\\input{{{prepth}{self.root_dir.parent.name}_{run_ii}/visualisation/{int(parsims[run_ii]):02d}_input.tex}}"  # _forest
 
-                    tex_line = [f"{int(y['parsim_sum'])}",
-                                f"{y['regress_sum']:0.3f}",
-                                f"{y['experiment']:0.0f}",
-                                tex_stacklist([f'{int(x)}' for x in y['parsims']]),
-                                oneplot_input]
+                    tex_line_overview += tex_tabuline([f"{int(y['parsim_sum'])}",
+                                                       f"{y['regress_sum']:0.3f}",
+                                                       f"{y['experiment']:0.0f}",
+                                                       tex_stacklist([f'{int(x)}' for x in y['parsims']]),
+                                                       tex_stacklist([input_agentex(x, '') for x in [0, 1, 2]])])
 
-                                # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
-                                # f"{y['cnt']}",
-                                # f"{y['experiment_safe']:0.0f}",
-                                # f"{y['experiment_r50']:0.0f}",
-                                # f"{y['experiment_safe_r50']:0.0f}",
+                    tex_line_input += tex_tabuline([f"{int(y['parsim_sum'])}",
+                                                    f"{y['regress_sum']:0.3f}",
+                                                    f"{y['experiment']:0.0f}",
+                                                    tex_stacklist([f'{int(x)}' for x in y['parsims']]),
+                                                    tex_stacklist([input_agentex(x, f'../benchmarks/slurm_runs/{self.root_dir.parent.name}/') for x in [0, 1, 2]])])
 
-                    # combined_overview += f"{' & '.join(tex_line)}\\tabularnewline \\hline \n"
-                    combined_lines += tex_tabuline(tex_line)
+                    # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
+                    # f"{y['cnt']}",
+                    # f"{y['experiment_safe']:0.0f}",
+                    # f"{y['experiment_r50']:0.0f}",
+                    # f"{y['experiment_safe_r50']:0.0f}",
 
                 combined_overview = "\\begin{tabular}{llllllllll}\n" \
-                               "\\hline \n" \
-                               f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
-                               f"{combined_lines}" \
-                               f"\\hline\n\\end{{tabular}}\n\n"
+                                    "\\hline \n" \
+                    f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
+                    f"{tex_line_overview}" \
+                    f"\\hline\n\\end{{tabular}}\n\n"
 
                 combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
                                  "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                                 f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
-                                 f"{combined_lines}" \
+                                f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
+                                f"{tex_line_input}" \
                                  "\\hline\n\\end{longtable}\n"
                 combined_overview = latex_treeviz_full_document(combined_overview)
                 file_dump(self.root_dir.parent / 'combined_overview.tex', combined_overview)
@@ -845,7 +844,7 @@ class ExplainableGP(object):
                                # ['log', 0.1], ['log1p', 0.1],  # sfeh
                                ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
                                ['tanh', 0.2],
-                               ['Andb', 1], ['Orb', 1], ['Notb', 0.5],  ['Xor', 1],
+                               ['Andb', 1], ['Orb', 1], ['Notb', 0.5], ['Xor', 1],
                                ['==', 1], ['!=', 0.5],
                                ['<', 0.5], ['<=', 0.5], ['>', 0.1], ['>=', 0.1],
                                ['Ifte', 2],
@@ -892,8 +891,6 @@ class ExplainableGP(object):
             xtype = op_info['xtype']
             arity = op_info['arity']
 
-            # choose_oparray[xtype_index(xtype)][arity].append(ops_tupel)
-
             choose_oparray2[xtype][None].append(ops_tupel)
             choose_oparray2[xtype][arity].append(ops_tupel)
             choose_oparray2[xtype[-2:]][None].append(ops_tupel)
@@ -934,7 +931,7 @@ class ExplainableGP(object):
 
         return choose_distributions
 
-    def plot_agent_histogram(self, parsim, fitness, cooltree, path_hist):
+    def plot_agent_histogram(self, parsim, cooltree, path_hist):
         """
         Make histograms for all pareto-efficient candidates
         sfeh: based on training data- maybe use test data...
@@ -960,11 +957,10 @@ class ExplainableGP(object):
             histpath = path_hist / f'acthist_{parsim}.pdf'
             fig.savefig(histpath)
             plt.close('all')
-        # self.printpl('ff', f'Histogram: {histpath.as_posix()}')
 
         return histpath
 
-    def file_pareto_latex(self, parsim, fitness, cooltree):
+    def file_pareto_latex(self, parsim, cooltree):
         """
         Generates latex-file with the computational tree structure of all pareto agents
         - build tree from expression
@@ -1054,24 +1050,24 @@ class ExplainableGP(object):
         else:
             raise
 
-        pyc_complete = f"import math; import numpy as np\n" \
-            "import sys\n" \
-            "from pathlib import Path\n" \
-            "sys.path.append(str(Path(Path.cwd() / '../../../'))\n" \
-            "from benchmarks.MC.agents.quick_eval import *\n" \
-            "from pathlib import Path\n" \
-            "folder = Path.cwd() / 'custom_files'\n" \
-            "from benchmarks.MC.agents.mtc_agent_sarsa import * \n" \
-            f"with Path.open(Path(Path.cwd() / '../../../benchmarks/MC/agents/sarsa_agent_{srsaagnt}.p'), 'rb') as file:\n" \
-            "\tsarsa_agent = pickle.load(file)\n" \
-            "\n" \
-            f"{all_agents}\n" \
-            f"all_agents_more = [{all_more_info}]\n" \
-            f"agent_tuples = [{agent_tuples}]\n" \
-            f"\n\n" \
-            "if __name__ == '__main__':\n" \
-            "\tprint('executing!')\n" \
-            "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
+        # pyc_complete = f"import math; import numpy as np\n" \
+        #     "import sys\n" \
+        #     "from pathlib import Path\n" \
+        #     "sys.path.append(str(Path(Path.cwd() / '../../../'))\n" \
+        #     "from benchmarks.MC.agents.quick_eval import *\n" \
+        #     "from pathlib import Path\n" \
+        #     "folder = Path.cwd() / 'custom_files'\n" \
+        #     "from benchmarks.MC.agents.mtc_agent_sarsa import * \n" \
+        #     f"with Path.open(Path(Path.cwd() / '../../../benchmarks/MC/agents/sarsa_agent_{srsaagnt}.p'), 'rb') as file:\n" \
+        #     "\tsarsa_agent = pickle.load(file)\n" \
+        #     "\n" \
+        #     f"{all_agents}\n" \
+        #     f"all_agents_more = [{all_more_info}]\n" \
+        #     f"agent_tuples = [{agent_tuples}]\n" \
+        #     f"\n\n" \
+        #     "if __name__ == '__main__':\n" \
+        #     "\tprint('executing!')\n" \
+        #     "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
 
         # pth = path_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
         # with Path.open(pth, 'w') as file:
@@ -1769,10 +1765,12 @@ class ExplainableGP(object):
         """
         show plots if necessary
         """
-        if self.gen_id % int(self.conf.period.get('gen_plots', 1)) == 0:
+        save_gen = int(self.conf.period.get('gen_save', 1))
+        plot_gen = int(self.conf.period.get('gen_plots', 1))
+        if self.gen_id >= plot_gen and self.gen_id % plot_gen == 0:
             self.file_analysis_plots()
 
-        if self.gen_id % int(self.conf.period.get('gen_save', 1)) == 0:
+        if self.gen_id >= save_gen and self.gen_id % save_gen == 0 or self.gen_id == 10:  # sfeh extra save at 10 for early feedback while testing
             self.run_backup_save()
         return
 

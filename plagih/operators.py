@@ -43,21 +43,17 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
           'sym_reduce': None, 'sym_str': '({} / {})',
           'pycode': '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'},
     '**': {'fun_class': 'Power', 'fun_label': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'pow', 'tf': tf.pow, 'opgroup': [], 'latex1': '{{x}}^{{y}}', 'latexF': '{}^{}',
-           # sfeh latexf requires some testing...
            'sym_reduce': '({} ** {})', 'sym_str': '({} ** Round({}))', 'pycode': '({}**round({}))'},
-
     'Abs': {'fun_class': 'Abs', 'fun_label': 'Abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': 'abs', 'latexF': '|{}|',
             'sym_reduce': None, 'sym_str': 'Abs({})', 'pycode': 'abs({})'},
     'sign': {'fun_class': 'Sign', 'fun_label': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'sign', 'tf': tf.sign, 'opgroup': [], 'latex1': 'sign', 'latexF': 'sign({})',
-             'sym_reduce': 'sign(real())', 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},
+             'sym_reduce': 'sign(re({}))', 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},
     'Round': {'fun_class': 'Round', 'fun_label': 'Round', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'round', 'tf': tf.round, 'opgroup': [], 'latex1': 'round', 'latexF': 'round({})',
               'sym_reduce': None, 'sym_str': 'Round({})', 'pycode': 'round({})'},
-
     'Square': {'fun_class': 'Square', 'fun_label': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'square', 'tf': tf.square, 'opgroup': [], 'latex1': 'x^2', 'latexF': '{}^2',
                'sym_reduce': None, 'sym_str': 'Square({})', 'pycode': '({})**2'},
     'sqrt': {'fun_class': 'Sqrt', 'fun_label': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'sqrt', 'tf': tf.sqrt, 'opgroup': [], 'latex1': '\\sqrt{x}', 'latexF': '\\sqrt{}',
              'sym_reduce': None, 'sym_str': 'sqrt({})', 'pycode': 'math.sqrt({})'},
-
     'log': {'fun_class': 'Log', 'fun_label': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log', 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '\\log()', 'latexF': '\\log{}',
             'sym_reduce': None, 'sym_str': 'log({})', 'pycode': 'math.log({})'},  # sfeh log/ln?
     'log1p': {'fun_class': 'Log1p', 'fun_label': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log1p', 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '\\log(1+x)',

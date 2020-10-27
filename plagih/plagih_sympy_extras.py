@@ -49,7 +49,7 @@ Useful information:
     is_MatMul = False
 """
 
-from sympy import Function, sympify
+from sympy import Function, sympify, symbols
 # from sympy.core.numbers import ComplexInfinity
 
 
@@ -233,6 +233,34 @@ class Round(Function):
         return eval(self, a)
 
 
+class SignX(Function):
+    """
+    """
+    nargs = 1
+    is_Function = True
+    is_real = True
+
+    @classmethod
+    def eval(cls, a):
+        if a.is_number:  # sympify(a) evaluates first... but i guess it is evaluated already
+            return round(a)  # see
+        else:
+            return
+
+    def _sympy_(self, a):
+        return eval(self, a)
+
+
+def sympy_symbol_defaults(name_list):
+    """
+    workaround.
+    sympy expressions like 'sign(((cartPos * cartVel) ** 151))' take forever.
+    ignoring complex numbers with this trick (use this as locals)
+    """
+    symloc = {str(x): symbols(str(x), real=True, imaginary=False) for x in name_list}
+    return symloc
+
+
 def plagih_sympify(function_string, eval_locals=None):
     """
     Sympy bug #1:
@@ -275,9 +303,15 @@ if __name__ == "__main__":
 
     expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
     expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
+    expr = '-Consumption_0*sign(re(asdW**2)) - 0.004073'
     # expr = 'sign(((a * b) ** 10))'  # takes too long
     # expr = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
     obs = {'cartVel': 0.5, 'cartPos': -0.8}
+    # obs = ['cartPos', 'cartVel']
+    # symloc = {x: sympy.symbols(x, real=True, imaginary=False) for x in obs}
+    # sympy_symbol_dict = {'a': sympy.symbols('a', real=True, imaginary=False),
+    #                      'b': sympy.symbols('b', real=True, imaginary=False)}
+    # sympify('sign(((cartPos * cartVel) ** 151))', symloc)
 
     sympex = plagih_sympify(expr, eval_locals=obs)
 

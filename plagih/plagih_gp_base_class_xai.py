@@ -485,7 +485,7 @@ class ExplainableGP(object):
                     cooltree = self.pop_selection_tournament(tourn_size)
                     if call_params.get('sympify_tree'):
                         try:
-                            cooltree.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=False)
+                            cooltree.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=False)
                             cooltree.meta.last_evolution = tag
                         except Exception as ex:
                             print_warning('www', f'Evolve reproduce failed: {ex}', print_type=self.print_type)
@@ -523,7 +523,7 @@ class ExplainableGP(object):
                     core_insert = c_core.get_uninstanced_core()
                     branch_nodes_ids = tree_node_get_branch(new_tree, old_node, karoo=True)
                     new_tree = tree_insert_subtree(new_tree, core_insert, branch_nodes_ids, karoo=True)
-                    new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+                    new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
                     # else:
                     #     new_tree = None
 
@@ -672,7 +672,7 @@ class ExplainableGP(object):
             tex_lines = []
 
             for pp, x in agent_performance.items():
-                _, pp, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
+                pp, fitness, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
                 # pareto_agents[pp].update({})
                 tex_line = [f"{int(pp)}",
                             f"{pareto_agents[pp]['fitness']:.2f}",
@@ -702,7 +702,7 @@ class ExplainableGP(object):
                                     "\\hline\n" \
                                     "dist & error & reward & expression \\tabularnewline \\hline\n" \
                                     f"{x}" \
-                                    "\\hline\n\\end{longtable}\n\end{table}\n"
+                                    "\\hline\n\\end{longtable}\n\\end{table}\n"
 
             # & decision plot & spiral plot & spiral difference-plot & histogram
 
@@ -731,7 +731,7 @@ class ExplainableGP(object):
                                  "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
                                  "dist & error & reward & expression \\tabularnewline \\hline\n" \
                                  f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
-                                 "\\hline\n\\end{longtable}\n\end{table}\n"
+                                 "\\hline\n\\end{longtable}\n\\end{table}\n"
 
                 res_all = combined_lists(self.root_dir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
 
@@ -767,7 +767,6 @@ class ExplainableGP(object):
                 tex_combined = latex_treeviz_full_document(tex_combined)
                 file_dump(self.root_dir.parent / 'combined_overview.tex', tex_combined)
                 file_dump(self.root_dir.parent / 'combined_input.tex', tex_combined)
-                # os.system(f"pdflatex {self.root_dir.parent / 'combined_overview.tex'}")  # sfeh todo
 
                 with plt.rc_context(rc=pyplot_rc_tex):
                     fig, ax = plt.subplots()
@@ -1182,13 +1181,13 @@ class ExplainableGP(object):
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
             label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
-                                                                         self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
+                                                                         self.env_vars.choose_obs, self.choose_oparray2,
                                                                          self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
 
         elif 'nodes' in size_mode:
 
             label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
-                                                                         self.env_vars.choose_obs, self.env_vars.obs_krazy, self.choose_oparray2,
+                                                                         self.env_vars.choose_obs, self.choose_oparray2,
                                                                          self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
         else:
             raise Exception('Known full_or_grow was not found for building random trees.')
@@ -1303,10 +1302,10 @@ class ExplainableGP(object):
         right_core = Core_From_Labels(right_labels, right_aritys, right_xtypes).get_uninstanced_core()
 
         left_offspring = tree_insert_subtree(left_tree, right_core, left_ids, karoo=True)
-        left_offspring = tree_prune_depth(left_offspring, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+        left_offspring = tree_prune_depth(left_offspring, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
 
         right_offspring = tree_insert_subtree(right_tree, left_core, right_ids, karoo=True)
-        right_offspring = tree_prune_depth(right_offspring, self.conf.tree_depth_max, self.env_vars.obs_krazy, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
+        right_offspring = tree_prune_depth(right_offspring, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
 
         left_offspring = cooltree_from_oldtree(left_offspring)
         right_offspring = cooltree_from_oldtree(right_offspring)
@@ -1325,7 +1324,7 @@ class ExplainableGP(object):
         cooltree_sym = copy.deepcopy(cooltree)
         try:
             self.printpl('aaa', 'Trying to simplify for pareto entry.')  # simplify the tree and save in pareto once again
-            cooltree_sym.evolve_reduce(obs_krazy=self.env_vars.obs_krazy, completely=True)
+            cooltree_sym.evolve_reduce(obs_infos=self.env_vars.obs_infos, completely=True)
             parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony < cooltree.meta.parsimony:
                 self.printpl('aa', 'Successfully reduced pareto tree!')
@@ -1417,7 +1416,7 @@ class ExplainableGP(object):
             try:
                 fitness_train = self.tree_eval_fitness_train(cooltree)
             except Exception as evalex:
-                print_warning('wwww', f'Exception while evaluating: {evalex}', print_type=self.print_type)
+                print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {cooltree}.', print_type=self.print_type)
                 return
 
         expr_raw = cooltree.get_expr_raw()
@@ -1488,7 +1487,7 @@ class ExplainableGP(object):
         # return label_list, modify_list
 
         try:
-            origin_cooltree = cooltree_from_labellist(label_list, self.env_vars.obs_krazy, modify_list=modify_list)
+            origin_cooltree = cooltree_from_labellist(label_list, modify_list=modify_list)
             expr_sym = origin_cooltree.get_expr_sym()
         except Exception as sympex:
             raise Exception(f'Loaded origin_tree already failed because of: {sympex}')

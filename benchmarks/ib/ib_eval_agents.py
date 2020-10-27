@@ -43,7 +43,7 @@ def envstate_normalize(env_state, to_daniel=True):
     SetPoint_0 Velocity_0 Gain_0 Shift_0 Fatigue_0 Consumption_0
     """
 
-    IB_norm_dict = {
+    ib_norm_dict = {
         'p': [55.0, 28.72],
         'v': [48.75, 12.31],
         'g': [50.53, 29.91],
@@ -53,12 +53,12 @@ def envstate_normalize(env_state, to_daniel=True):
 
     if to_daniel:
         norm_values = {}
-        for k, val in IB_norm_dict.items():
+        for k, val in ib_norm_dict.items():
             norm_values[k] = (env_state[k] - val[0]) / val[1]
         return norm_values
     else:
         real_values = {}
-        for k, val in IB_norm_dict.items():
+        for k, val in ib_norm_dict.items():
             real_values[k] = (env_state[k] * val[1]) + val[0]
         return real_values
 
@@ -89,7 +89,7 @@ def eval_agents():
 
 class AgentMerger(Ib_Agent):
     """
-    # todo if no older values, take the oldest record possible. daniel had old records!
+    # sfeh if no older values, take the oldest record possible. daniel had old records!
     """
 
     def __init__(self, name, a0, a1, a2):
@@ -136,7 +136,7 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
     """
 
     discount_factor = 0.97
-    T = 100  # time_horizon
+    t = 100  # time_horizon
     discount_len = -100
     sum_discounted_p = []
     # setpoint_range = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -155,7 +155,7 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
                 env.step(at)  # also returns markovStates, if needed
 
             sums_p = []
-            for t in range(T):
+            for t in range(t):
                 normal_state = envstate_normalize(env.state)
                 at = agent.decide(normal_state)
                 if safe_eval:
@@ -170,22 +170,22 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
     return float(np.average(sum_discounted_p))
 
 
-def agent_create_samples_csv(T=10000):
+def agent_create_samples_csv(t=10000):
 
     history_t = 5
-    csv_data = np.zeros((T, 6 * history_t + 3))
+    csv_data = np.zeros((t, 6 * history_t + 3))
 
-    data = np.zeros(T)
+    data = np.zeros(t)
 
     agent = Agent_Daniel_29_Best()
     env = IDS()  # p=100 in examples!
 
-    for t in range(T):
+    for t in range(t):
         env_state = envstate_normalize(env.state)
 
         for ii in range(history_t):
             for enum_x, state_x in enumerate(env_state.values()):
-                if t + ii < T:
+                if t + ii < t:
                     csv_data[t+ii][enum_x * history_t + ii] = state_x
 
         # state_debug.append(list(env_state.values()))

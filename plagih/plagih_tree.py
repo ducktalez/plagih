@@ -159,21 +159,21 @@ def TEST_karoo_tree_from_labellist(label_list, obs_krazy, modify_list=None, arit
     returns: tree, from label_list (newest version)
     """
 
-    xtype_list = xtypes_from_labels(label_list, obs_krazy)
+    xtype_list = xtypes_from_labels(label_list)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
     tree = p_tree.get_uninstanced_tree()
 
     return tree
 
 
-def karoo_tree_from_expr(expr, obs_krazy):
+def karoo_tree_from_expr(expr):
     """
     DELETE later sfeh
     Generate tree from a raw or sympified expression
     # label_list = workaround_remove_tilde_operator(label_list)
     """
     label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, obs_krazy)
+    xtype_list = xtypes_from_labels(label_list)
     p_tree = Ptree_karoo(label_list, xtype_list, modify_list=None)
     tree = p_tree.get_uninstanced_tree()
     return tree
@@ -623,7 +623,7 @@ def raise_if_empty(name, val):
         raise
 
 
-def invent_label_list_depth(xtype_root, depth_goal, choose_obs, obs_krazy, choose_oparray2, choose_distributions, float_decimals, min_depth=0, full_or_grow=None):
+def invent_label_list_depth(xtype_root, depth_goal, choose_obs, choose_oparray2, choose_distributions, float_decimals, min_depth=0, full_or_grow=None):
     """
     build a random, but within itself consistent label list
     Also, return the arities aswell (they are searched anyways)
@@ -666,7 +666,7 @@ def invent_label_list_depth(xtype_root, depth_goal, choose_obs, obs_krazy, choos
                 if label == 'Ifte':
                     next_xtype_list.extend(['2b', '2f', '2f'])
                 else:
-                    tmp_xtype = xtype_get_from_label(label, obs_krazy)
+                    tmp_xtype = xtype_get_from_label(label)
                     child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
                     for _ in range(0, arity):  # when arity==2, add 2 times
                         next_xtype_list.append(child_type)
@@ -723,7 +723,7 @@ def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, forc
     return int(build_size)
 
 
-def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, obs_krazy, choose_oparray2, choose_distributions, float_decimals, full_or_grow='grow'):
+def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, choose_oparray2, choose_distributions, float_decimals, full_or_grow='grow'):
     """
     build a random function (as label list)
     -> labels, arities: ['+', '1.23', '2.34'], [2, 0, 0]
@@ -789,7 +789,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, obs_krazy, choo
         for index in term_at:
             t_xtype = tbdo_xtypes[index]
             label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
-            label_xtype = xtype_get_from_label(label, obs_krazy)
+            label_xtype = xtype_get_from_label(label)
             tmp_label_list[index] = label
             tmp_arity_list[index] = arity
             tmp_xtype_list[index] = label_xtype
@@ -801,7 +801,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, obs_krazy, choo
             if label == 'Ifte':
                 tbdo_xtypes.extend(['2b', '2f', '2f'])
             else:
-                t_xtype = xtype_get_from_label(label, obs_krazy)
+                t_xtype = xtype_get_from_label(label)
                 child_type = t_xtype[:2][::-1]  # e. g. 'f2b' requires '2f' input
                 arity = tmp_arity_list[index]
                 tbdo_xtypes.extend([child_type] * arity)
@@ -814,7 +814,7 @@ def invent_label_list_nodes(t_xtype, goal_max_nodes, choose_obs, obs_krazy, choo
         # Fix the last leftover nodes
         for t_xtype in tbdo_xtypes:
             label, arity = choose_term(t_xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
-            label_xtype = xtype_get_from_label(label, obs_krazy)
+            label_xtype = xtype_get_from_label(label)
             result_label_list.append(label)
             result_arity_list.append(arity)
             result_xtype_list.append(label_xtype)
@@ -1386,7 +1386,7 @@ def tree_convert_plusnode(tree, add_or_sub, firstrow=1):
     return tree
 
 
-def core_from_expr(expr, obs_krazy):
+def core_from_expr(expr):
     """
     Creating a karoo tree from a raw expression
     """
@@ -1394,7 +1394,7 @@ def core_from_expr(expr, obs_krazy):
     label_list = ast_convert_from_expr(expr, build=True)
     # label_list = workaround_remove_tilde_operator(label_list)
     arity_list = [label_get_arity(label) for label in label_list]
-    xtype_list = xtypes_from_labels(label_list, obs_krazy)
+    xtype_list = xtypes_from_labels(label_list)
     core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
     return core
 
@@ -1594,14 +1594,14 @@ def evolve_node_renum(tree):
     return tree
 
 
-def treegp_reduce_branch(tree, node_id, env_vars, karoo=True):
+def treegp_reduce_branch(tree, node_id, karoo=True):
     """
     Reduce a branch of a tree with sympify
     """
     delete_ids = tree_node_get_branch(tree, node_id, karoo=karoo)
     expr_raw = tree_get_expr_raw(tree, node_id=node_id)
     expr_sym = expr_sympify(expr_raw)
-    core = core_from_expr(expr_sym, env_vars)
+    core = core_from_expr(expr_sym)
     tree_sym = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
     # tree_sym_tildefree = tree_remove_tilde(tree_sym)    # sfeh still needed?
     # if tree_sym_tildefree != tree_sym:
@@ -1681,14 +1681,14 @@ def tree_evolve_reduce(tree, env_vars, completely=True):
             for i in range(len(nodes_lv0)):
                 nodes_lv0 = tree_get_mutatable_layer(tree, 0)
                 node_id = nodes_lv0[i]
-                tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)
+                tree = treegp_reduce_branch(tree, node_id, karoo=True)
         else:
             node_ids = tree_get_mutatable_nodes(tree)
             func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
             if len(func_ids) > 0:
                 node_id = random.choice(node_ids)
                 try:
-                    tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)
+                    tree = treegp_reduce_branch(tree, node_id, karoo=True)
                 except Exception as ex:
                     print_e(f'This failed during reduce process: ex: {ex}\nTree labels:\n{tree_get_labellist(tree)}')
                     # tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)  # debug
@@ -1782,7 +1782,7 @@ def tree_check_rebuild(tree):
     return True
 
 
-def tree_check_node_label_info(tree, obs_krazy=None, karoo=True):
+def tree_check_node_label_info(tree, karoo=True):
     """
     A method to check if a tree is type consistant:
     - do the values in c1, c2, c3 link to its parent?
@@ -1888,7 +1888,7 @@ def label_constant_mutate(constant, term_type=float, float_decimals=6, filter_ty
     return constant
 
 
-def tree_prune_depth(tree, max_depth, obs_krazy, choose_obs, choose_distributions, float_decimals):
+def tree_prune_depth(tree, max_depth, choose_obs, choose_distributions, float_decimals):
     """
     reduces the depth of a Tree (in case it is too deep).
     Arguments required: tree, depth
@@ -1904,7 +1904,7 @@ def tree_prune_depth(tree, max_depth, obs_krazy, choose_obs, choose_distribution
         node_arity = tree_node_get_arity(tree, node_id)
         if node_depth == max_depth and node_arity > 0:  # replace this node with terminal
             label = tree_node_get_label(tree, node_id)
-            xtype = xtype_get_from_label(label, obs_krazy)
+            xtype = xtype_get_from_label(label)
             tree = tree_node_set_arity(tree, node_id, 0)
             new_term = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals)  # replace label
             tree = tree_node_set_label(tree, node_id, new_term)

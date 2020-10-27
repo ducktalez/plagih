@@ -83,7 +83,7 @@ class EnvVars:
     """
 
     def __init__(self):
-        self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float
+        # self.obs_krazy = {}  # lookup table with all observations - if an observation is not in here, it is a float # sfeh delete this
         self.obs_infos = {}
         self.eval_action: EvalAction = None
         self.choose_obs = {'f2': None,
@@ -164,7 +164,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
     obs_fams = [fam for fam in list(set(obs.family for obs in obs_list))]
     choose_obs_2f = []
     choose_obs_p = []
-    obs_info = {}
+    obs_infos = {}
     for fam in obs_fams:
         family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
         if len(family_meeting) > 1:
@@ -176,12 +176,12 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
                 obs_tmp.index_minmax = index_minmax
                 env_vars.obs_infos[obs_tmp.name] = obs_tmp
                 # obs_tmp.fun_filter_index = lambda: obs_tmp.filter_new_index()  # int(max(min(round(random.gauss(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
-                obs_info[obs_tmp.name] = obs_tmp
+                obs_infos[obs_tmp.name] = obs_tmp
         else:
             # LOL UMAD? only one family member (probably even more common)
             obs_tmp = family_meeting[0]
             # obs_tmp.fun_filter_index = lambda: None
-            obs_info[obs_tmp.name] = obs_tmp
+            obs_infos[obs_tmp.name] = obs_tmp
             choose_obs_2f.append(obs_tmp)
             choose_obs_p.append(1)
 
@@ -189,7 +189,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
                   '2b': None}
 
     env_vars.choose_obs = choose_obs
-    env_vars.obs_infos = obs_info
+    env_vars.obs_infos = obs_infos
 
     if eval_action:
         env_vars.eval_action = eval_action

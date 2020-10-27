@@ -95,12 +95,12 @@ def choose_operator(xtype, choose_oparray2, arity=None):
     return ops
 
 
-def xtypes_from_labels(label_list, obs_krazy=None):
-    xtype_list = [xtype_get_from_label(label, obs_krazy) for label in label_list]
+def xtypes_from_labels(label_list, obs_infos=None):
+    xtype_list = [xtype_get_from_label(label, obs_infos) for label in label_list]
     return xtype_list
 
 
-def xtype_get_from_label(label, obs_krazy=None):
+def xtype_get_from_label(label, obs_infos=None):
     """
     returns xtype for a label
     if you are not 100% sure that it is a function.
@@ -113,7 +113,7 @@ def xtype_get_from_label(label, obs_krazy=None):
     else:
         try:
             label = label[1:] if label[0] == '-' else label
-            xtype = obs_krazy[label]
+            xtype = obs_infos[label]['xtype']
         except:
             xtype = '2f'
 

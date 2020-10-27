@@ -1,6 +1,7 @@
 from collections import deque
 from plagih.plagih_tree import *
 from plagih.tree_distances.tree_edit_distance import apted_distance
+from plagih.plagih_sympy_extras import sympy_symbol_defaults
 
 
 class Plabel:
@@ -193,17 +194,17 @@ class CoolCore:
 
         return my_result + child_results
 
-    def reduce_me(self, obs_krazy):
-        # todo reduce me is obviously bullshit crapshit.
+    def reduce_me(self, obs_infos):
+        # sfeh asdasdasd reduce me is obviously bullshit crapshit.
         #  sympify works with this combination only very few times
         #  lets have a new idea.
-        expr_raw = self.get_expr_raw(reduceable=True)
+        expr_raw = self.get_expr_raw(reduceable=True, obs_names=obs_infos.keys())
         try:
             expr_sym = expr_sympify(expr_raw)
         except:
             raise Exception(f'Sympify failed. \n{expr_raw}')
 
-        new_core = coolcore_from_expr(expr_sym, obs_krazy)
+        new_core = coolcore_from_expr(expr_sym, obs_infos)
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
@@ -247,7 +248,11 @@ class CoolCore:
             raise
         return True
 
-    def get_expr_raw(self, reduceable=None):
+    def get_expr_raw(self, reduceable=None, obs_names=None):
+        """
+        :param reduceable:
+        :return:
+        """
         # if self.expr_raw is None:  # sfeh?
         if self.arity == 0:
             return f'{self.label}'
@@ -255,8 +260,10 @@ class CoolCore:
             my_expr = op[self.label]['sym_str']
             child_expr_list = [child.get_expr_raw(reduceable=reduceable) for child in self.childs]
             if reduceable:
-                my_expr_new = op[self.label]['sym_reduce']
-                my_expr = my_expr_new if my_expr_new is not None else my_expr
+                my_expr = op[self.label]['sym_reduce'] or my_expr
+                symloc = sympy_symbol_defaults(obs_names)
+                xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
+                return xxx
             return my_expr.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
 
     def node_insert_width(self, node, depth=0):
@@ -458,7 +465,6 @@ class CoolTree:
 
     # def write_histogram(self):
 
-
     def set_fix_nodes(self, origin_tree: 'CoolTree'):
         """
         Resetting the fix nodes from the cooltree.
@@ -590,7 +596,7 @@ class CoolTree:
 
         return self.core.get_nodes_at_depth(lvl_goal, only_mutable=only_mutable, get_closest_depth=get_closest_depth)
 
-    def evolve_reduce(self, obs_krazy=None, completely=True):
+    def evolve_reduce(self, obs_infos=None, completely=True):
         """
             Reducing a tree to its most basic form with sympify.
             (completely = False: reduce just one branch. if you wanted to have more complexity)
@@ -599,13 +605,13 @@ class CoolTree:
         if completely:  # reduce the complete tree
             coolcores_lv0 = self.get_nodes_at_depth(0, only_mutable=True)
             for coolc in coolcores_lv0:
-                coolc.reduce_me(obs_krazy)
+                coolc.reduce_me(obs_infos)
         else:
             cool_nodes = self.core.get_mutatable_nodes()
             cool_functions = [x for x in cool_nodes if x.arity > 0]
             if cool_functions:
                 chosen = random.choice(cool_functions)
-                chosen.reduce_me(obs_krazy)
+                chosen.reduce_me(obs_infos)
         if length_before < len(self):
             print_e(f'FFS Trees just become larger? {self.get_expr_raw()}')
         # self.meta.clear()
@@ -784,25 +790,25 @@ def coolcore_from_treenode(tree, node_id, is_fix=True):
     return pnode
 
 
-def cooltree_from_labellist(label_list, obs_krazy=None, modify_list=None):
-    xtype_list = xtypes_from_labels(label_list, obs_krazy=obs_krazy)
+def cooltree_from_labellist(label_list, modify_list=None):
+    xtype_list = xtypes_from_labels(label_list)
     tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
     cooltree = CoolTree(coolcore_from_oldtree(tree))
     return cooltree
 
 
-def coolcore_from_expr(expr, obs_krazy):
+def coolcore_from_expr(expr, obs_infos):
     label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, obs_krazy)
+    xtype_list = xtypes_from_labels(label_list, obs_infos)
     p_tree = Ptree_karoo(label_list, xtype_list)
     tree = p_tree.get_uninstanced_tree()
     coolcore = coolcore_from_oldtree(tree)
     return coolcore
 
 
-def cooltree_from_expr(expr, obs_krazy):
+def cooltree_from_expr(expr, obs_infos):
     label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, obs_krazy)
+    xtype_list = xtypes_from_labels(label_list, obs_infos)
     p_tree = Ptree_karoo(label_list, xtype_list)
     tree = p_tree.get_uninstanced_tree()
     coolcore = coolcore_from_oldtree(tree)

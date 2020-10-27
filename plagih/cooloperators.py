@@ -435,8 +435,6 @@ class Max(Plabel):
     pycode = 'max({}, {})'
 
 
-
-
 class Observation(Plabel):
 
     arity = 0

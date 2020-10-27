@@ -20,7 +20,7 @@ class GpConfig:
         except:
             conf = {}
 
-        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwggaaiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
+        self.print_type = 'wwwwaaaggggiiiff' if args.print_all else conf.get('print_type', 'wwwgggaaiiiff')  # (a)lert, (w)arning, (g)en, (i)nfo, (f)ile written
 
         # can be updated from everywhere
         self.pop_max = args.pop_max or int(conf.get('pop_max', 1000))  #: 1000,  # amount is never tested
@@ -35,7 +35,7 @@ class GpConfig:
         self.tree_depth_max = int(conf.get('tree_depth_max', 10))  #: 10,  # maximum Tree depth for entire run
         self.tourn_size = int(conf.get('tourn_size', 3))  #: 3,  # [7 per 100] number of trees selected for tournament
         self.parsimony_max = conf.get('parsimony_max', 35)
-        self.period = conf.get('period', {'gen_plots': 25, 'gen_save': 25})  # sfeh 10 or 5 for debugging, something higher for actual runs
+        self.period = conf.get('period', {'gen_plots': 50, 'gen_save': 50})  # sfeh 10 or 5 for debugging, something higher for actual runs
 
         self.float_decimals = conf.get('float_decimals', 6)  # makes the lut more practical - more hits are achieved. be careful with rounding to zero.  # sfeh check this
 

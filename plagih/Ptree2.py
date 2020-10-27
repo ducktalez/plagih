@@ -403,7 +403,10 @@ class CoolCore:
         if origin_coolcore.is_fix:
             self.is_fix = True
             for ii, cc in enumerate(self.childs):
-                cc.set_fix_nodes(origin_coolcore.childs[ii])
+                try:
+                    cc.set_fix_nodes(origin_coolcore.childs[ii])
+                except:
+                    cc.set_fix_nodes(origin_coolcore.childs[ii])  # todo todotodo
 
 
 class CoolTree:

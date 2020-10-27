@@ -225,9 +225,8 @@ status open
 Großer Dank richtet sich vor allem an meine Betreuer bei Siemens, Michel
  Tokic, Steffen Udluft und Daniel Hein, ohne deren großartige Unterstützung
  über den gesamten Zeitraum diese Arbeit nicht möglich gewesen wäre.
- Auch möchte ich [xxx Danksagung Volkmar Sterzing] Weiterer Dank gehört
- auch Andreas Lammers, der mir viele Denkanstöße zu dieser Arbeit geben
- konnte.
+ Auch möchte ich [xx Danksagung Volkmar Sterzing] Weiterer Dank gehört auch
+ Andreas Lammers, der mir viele Denkanstöße zu dieser Arbeit geben konnte.
 \end_layout
 
 \end_inset
@@ -751,7 +750,7 @@ status open
 
 
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_simple_fix/sfehs_eval/space-17.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-17.pdf
 	height 5cm
 
 \end_inset
@@ -2635,61 +2634,6 @@ name "sarsa1000-plots"
 \end_inset
 
 
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_1000.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_10000.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_1000.pdf
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_10000.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection
@@ -3123,7 +3067,6 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/tree_simple.pdf
-	lyxscale 50
 
 \end_inset
 
@@ -4331,6 +4274,7 @@ status open
 \align center
 \begin_inset Graphics
 	filename img/inkscape/concept.svg
+	width 100text%
 
 \end_inset
 
@@ -7506,7 +7450,7 @@ Im Gegensatz dazu sind die Formeln kaum nachvollziehbar.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
+\begin_inset Float table
 wide false
 sideways false
 status open
@@ -7829,7 +7773,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
-filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_8.tex"
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_08.tex"
 
 \end_inset
 
@@ -7845,7 +7789,7 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_8.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Bei 9 Knoten sinkt der Regressionsfehler auf 0.21, die Fitness verschlechtert
+Bei 8 Knoten sinkt der Regressionsfehler auf 0.21, die Fitness verschlechtert
  sich aber auf 140.5 Schritte.
 \end_layout
 
@@ -7978,11 +7922,57 @@ Maximum Momentum
 \end_layout
 
 \begin_layout Standard
-Die einfachste Expertenpolicy holt maximal Schwung und verzichtet dabei
- auf Aktion 1, nicht zu beschleunigen.
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_simpleFix/visualisation/full_00.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
+Diese einfache und effiziente Expertenpolicy holt maximal Schwung indem
+ es immer in die aktuelle Richtung beschleunigt.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -8010,11 +8000,15 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
-filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
+filename "../benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
+xxx
 \end_layout
 
 \end_inset
@@ -8041,11 +8035,16 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
-filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_simple_fix/visualisation/full_00.tex"
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.tex"
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
+xxx
 \end_layout
 
 \end_inset
@@ -8057,7 +8056,8 @@ filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-
+Verschiedene Versionen derselben Heuristik bieten dem GP-Prozess unterschiedlich
+e Möglichkeiten der Verbesserung.
 \end_layout
 
 \end_inset
@@ -8065,7 +8065,8 @@ filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE
 
 \end_layout
 
-\begin_layout Plain Layout
+\end_inset
+
 
 \end_layout
 
@@ -8075,12 +8076,19 @@ filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE
 \end_layout
 
 \begin_layout Standard
-Der Regressionsfehler kann somit nicht Null werden und ist in dieser Hinsicht
- anderen Läufen unterlegen.
- Der Regressionsfehler sinkt somit nur auf xxx.
- Die Performance war jedoch sogar auf demselben Niveau wie bei anderen Ansätzen
- - der einschränkende Ansatz ist somit verhaltenstechnisch besser nachvollziehba
-r und muss dennoch keine Performance einbüßen.
+Der Regressionsfehler kann bei Sarsa-200 bestenfalls auf 0.023 sinken, bei
+ Sarsa-75 auf 0.066.
+ 
+\end_layout
+
+\begin_layout Standard
+Mit einem Regressionsfehler von nur 0.05 ist das sogar noch niedriger als
+ bei der Scratch Version.
+ Dies stellt entgegen der Annahme keine Ausnahme dar - im Durchschnitt war
+ der Regressionsfehler halb so groß wie bei den Scratch-läufen.
+ Dieses Verhalten ist bereits mit der strukturierten Vorgabe des Experten
+ zu begründen.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -8091,7 +8099,7 @@ Maximum Momentum - uneingeschränkt
 In dieser Policy wurde Aktion Null in einem Zusätzlichen if-Fall erlaubt.
  Entsprechend ist der Regressionsfehler hier niedriger als bei seinem eingeschrä
 nkten Verwandten.
- Vor allem bei Sarsa75, wo sehr oft diese Aktion gewählt wird, macht sich
+ Vor allem bei Sarsa-75, wo sehr oft diese Aktion gewählt wird, macht sich
  diese Möglichkeit in den Kandidaten schon sehr früh bemerkbar.
  Gerade bei diesem Beispiel ist die ...
 \end_layout
@@ -8114,7 +8122,34 @@ Die Performance ist bereits zu beginn außerordentlich gut - einigeLäufe
 \end_layout
 
 \begin_layout Subsection
-Analysis xxx
+Analysis
+\end_layout
+
+\begin_layout Standard
+Die familiären Lösungen waren den Scratch-Lösungen in allen Punkten überlegen.
+ Sie waren nicht nur weitaus besser erklärbar, sie sind auch sicherer und
+ konnten bei das Ziel bei der Online Auswertung besser erreichen.
+ Selbst den Regressionsfehler konnten die Kandidaten besser reduzieren,
+ was bezüglich des reduzierten Freiheitsgrades eine große Überraschung ist.
+ Die außerordentliche Performance ist vermutlich mit dem optimierten Suchraum
+ zu erklären, der durch die Vorgabe des Experten auf einen effizienten und
+ kleineren Raum reduziert werden konnte.
+\end_layout
+
+\begin_layout Standard
+Die reale Fitness eines Agenten korrelliert oft nur gering mit seinem Regression
+sfehler, was Hein bereits in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Online-offline_regression"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ beschrieben hat.
+ xx
 \end_layout
 
 \begin_layout Standard
@@ -8495,30 +8530,64 @@ IB Resultate im Vergleich
 
 \end_layout
 
-\begin_layout Paragraph
-xxx Kombinationen
-\end_layout
-
-\begin_layout Standard
-Da verschiedene runs kombiniert werden
-\end_layout
-
 \begin_layout Subsection
 Origins
 \end_layout
 
 \begin_layout Standard
-Eine Lösung, die dennoch relativ gut funktioniert, ist alle Werte auf 50
- zu stellen.
- Eine weitere implementierte Lösung verfolgte außerdem einen Ansatz, dem
- GP Prozess durch Verwendung nützlicher Werte einen guten Anhaltspunkt zu
- bieten.
- 
+Die einfachste und dennoch erfolgreiche Heuristik 
+\begin_inset Quotes eld
+\end_inset
+
+Nothing
+\begin_inset Quotes erd
+\end_inset
+
+ ist einfach nichts zu ändern, wodurch ein durchschnittlicher Reward von
+ 6068 erzielt werden konnte.
+ Nach der normalisierung der Werte führte das zu folgenden origin-bäumen.
 \end_layout
 
 \begin_layout Standard
-Nach der normalisierung der Werte führte das zu folgenden origin-bäumen:
- [xxx]
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand include
+filename "../benchmarks/slurm_runs/IB_MSE_scratch/combined_input.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+asd xxx
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -8582,6 +8651,8 @@ The results schow extraordinary well performance in reward, robustness and
 
 \begin_layout Standard
 This agent just resets every value to the default of 50.
+ Der Ansatz ist dem nichts-tun sehr ähnlich, durch den Setpoint ändern sich
+ aber die Punkte zu denen die policy konvergiert.
 \end_layout
 
 \begin_layout Standard
@@ -8592,14 +8663,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50-pareto_combined.pdf
+	filename ../benchmarks/slurm_runs/IB_MSE_50/pareto_combined.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_50/IB_MSE_50-regression_all.pdf
+	filename ../benchmarks/slurm_runs/IB_MSE_50/regression_all.pdf
 
 \end_inset
 
@@ -8662,10 +8733,6 @@ Das IB zeigt außerdem, dass ein sparser Zustandsraum, für den es viele gute,
 \begin_layout Standard
 Setzt sich ein Kandidat aus mehreren Teillösungen zusammen, so ist besser
  erkennbar, ab welchem Punkt sich ein testen der Kandidaten lohnt.
-\end_layout
-
-\begin_layout Standard
-xxx ib zufallsläufe - werden die Zustände in der Vergangenheit gespeichert??
 \end_layout
 
 \begin_layout Section
@@ -8750,7 +8817,7 @@ literal "true"
 
 \end_inset
 
- Obwohl der Autopilot weniger Unfälle als der Mensch baut [xxx] muss diese
+ Obwohl der Autopilot weniger Unfälle als der Mensch baut [xx] muss diese
  Fehlentscheidung vor Gericht erklärt, und vermutlich auch gehaftet werden.
 \end_layout
 

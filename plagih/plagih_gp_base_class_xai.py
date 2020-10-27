@@ -724,14 +724,7 @@ class ExplainableGP(object):
                 - plot with pareto candidates
                 """
                 # "\\multicolumn{2}{c}{complexity} & \\multicolumn{2}{c}{regression error} & \\multicolumn{4}{c}{IB reward} & combinations & expression \\tabularnewline\n" \
-                tex_combined = "\\begin{tabular}{llllllllll}\n" \
-                               "\\hline \n" \
-                               f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n"
-                combined_input = "\\begin{table}\n" \
-                                 "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
-                                 "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                                 f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
-                                 "\\hline\n\\end{longtable}\n\\end{table}\n"
+                combined_lines = ''
 
                 res_all = combined_lists(self.root_dir.parent, 40, 40, local_yamls=True, cpu_cores=cpu_cores)  # sfeh use self.conf.mp_cpu_cores_max
 
@@ -760,13 +753,24 @@ class ExplainableGP(object):
                                 # f"{y['experiment_r50']:0.0f}",
                                 # f"{y['experiment_safe_r50']:0.0f}",
 
-                    # tex_combined += f"{' & '.join(tex_line)}\\tabularnewline \\hline \n"
-                    tex_combined += tex_tabuline(tex_line)
+                    # combined_overview += f"{' & '.join(tex_line)}\\tabularnewline \\hline \n"
+                    combined_lines += tex_tabuline(tex_line)
 
-                tex_combined += f"\\hline\n\\end{{tabular}}\n\n"
-                tex_combined = latex_treeviz_full_document(tex_combined)
-                file_dump(self.root_dir.parent / 'combined_overview.tex', tex_combined)
-                file_dump(self.root_dir.parent / 'combined_input.tex', tex_combined)
+                combined_overview = "\\begin{tabular}{llllllllll}\n" \
+                               "\\hline \n" \
+                               f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
+                               f"{combined_lines}" \
+                               f"\\hline\n\\end{{tabular}}\n\n"
+
+                combined_input = "\\begin{table}\n" \
+                                 "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
+                                 "dist & error & reward & expression \\tabularnewline \\hline\n" \
+                                 f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
+                                 f"{combined_lines}" \
+                                 "\\hline\n\\end{longtable}\n\\end{table}\n"
+                combined_overview = latex_treeviz_full_document(combined_overview)
+                file_dump(self.root_dir.parent / 'combined_overview.tex', combined_overview)
+                file_dump(self.root_dir.parent / 'combined_input.tex', combined_input)
 
                 with plt.rc_context(rc=pyplot_rc_tex):
                     fig, ax = plt.subplots()

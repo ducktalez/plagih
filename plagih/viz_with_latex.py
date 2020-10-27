@@ -221,6 +221,7 @@ def latex_tight_node(tree, node_id=root_id):
         child_tex_list = [latex_tight_node(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
         label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
     else:
+        # sfehsfeh family colored? tex color?
         if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
             obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
             if obs_time is not None:

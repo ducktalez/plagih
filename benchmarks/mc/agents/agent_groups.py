@@ -2,11 +2,7 @@ import numpy as np
 import math
 from pathlib import Path
 import pickle
-
-sarsa_file_75 = 'sarsa_agent_75.p'
-sarsa_file_200 = 'sarsa_agent_200.p'
-sarsa_file_1000 = 'sarsa_agent_1000.p'
-sarsa_file_10000 = 'sarsa_agent_10000.p'
+import os
 
 
 def safe_division(n, d):
@@ -266,17 +262,18 @@ class SARSALambdaAgent(SARSAAgent):
             self.z = np.zeros_like(self.z)
 
 
-def load_sarsas(root_path=''):
-    with Path.open(Path(root_path) / sarsa_file_75, 'rb') as file:
+def load_sarsas():
+    root_path = Path(os.path.dirname(os.path.realpath(__file__)))
+    with Path.open(Path(root_path) / 'sarsa_agent_75.p', 'rb') as file:
         sarsa_agent_75 = pickle.load(file)
 
-    with Path.open(Path(root_path) / sarsa_file_200, 'rb') as file:
+    with Path.open(Path(root_path) / 'sarsa_agent_200.p', 'rb') as file:
         sarsa_agent_200 = pickle.load(file)
 
-    with Path.open(Path(root_path) / sarsa_file_1000, 'rb') as file:
+    with Path.open(Path(root_path) / 'sarsa_agent_1000.p', 'rb') as file:
         sarsa_agent_1000 = pickle.load(file)
 
-    with Path.open(Path(root_path) / sarsa_file_10000, 'rb') as file:
+    with Path.open(Path(root_path) / 'sarsa_agent_10000.p', 'rb') as file:
         sarsa_agent_10000 = pickle.load(file)
 
     return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000

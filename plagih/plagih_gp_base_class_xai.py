@@ -663,7 +663,8 @@ class ExplainableGP(object):
             """
             complexity, regr. error, real evaluation, decision plot, spiral plot, diff-plot
             """
-            self.file_pareto_pycode()
+            # sfeh i guess not necessary anymore (?)
+            # self.file_pareto_pycode()
             sarsa_agent_steps = 200 if 'MTC200' in self.conf.name else 75 if 'MTC75' in self.conf.name else 'NO_MC_AGENT'
             sarsa_agent = pickle_load(dir_benchmarks / f'mc/agents/sarsa_agent_{sarsa_agent_steps}.p')
 
@@ -762,8 +763,8 @@ class ExplainableGP(object):
 
                 combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
                                  "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                                f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
-                                f"{tex_line_input}" \
+                    f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
+                    f"{tex_line_input}" \
                                  "\\hline\n\\end{longtable}\n"
                 combined_overview = latex_treeviz_full_document(combined_overview)
                 file_dump(self.root_dir.parent / 'combined_overview.tex', combined_overview)
@@ -799,31 +800,6 @@ class ExplainableGP(object):
             raise Exception(f'This should actually never happen right now. name: {self.conf.name}')
 
         return
-
-    def activate_dataset(self, path_data, action_name):
-        """
-        loading the data which the GP will be working on.
-        The .csv-file is prepared (loading correct data-type, splitting data, ...)
-        and saved as pickle-file for reloading runs.
-        This is especially important, as the split in training and test-data must be the same.
-
-        separate loading the prepared data into the main class.
-        Why like this? I needed to find a bug in the data_from_csv file and
-        did not want to start the whole stuff everytime
-
-            # self.data_train_panda, self.data_control_panda
-        """
-
-        if path_data.suffix == '.p':
-            data_prepared = pickle_load(path_data)
-        elif path_data.suffix == '.csv':
-            data_prepared = data_from_csv(path_data, action_name=action_name)
-        else:
-            raise FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
-
-        env_vars, data_train, data_control = data_prepared  # data_control is data_test
-
-        return env_vars, data_train, data_control
 
     def gp_load_oparray(self, path_operators=None):
         """
@@ -977,7 +953,6 @@ class ExplainableGP(object):
         """
 
         cooltree.set_fix_nodes(self.origin_cooltree)
-        # cooltree.meta.last_evolution = 'texify'
         tree = cooltree.get_oldtree()
 
         plforest = lambda x: f'\\plforest{{{x}}}\n'
@@ -1005,76 +980,76 @@ class ExplainableGP(object):
 
         return forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest
 
-    def file_pareto_pycode(self):
-        """
-        this auto-generation of real (executable) python files
-        is strongly customized for my experiments with Mountaincar and industrial benchmark
-
-        very useful: textwrap.indent
-        example: complete_function = textwrap.indent(f"def decide(self, input):\n"
-                                            f"{function_body}\n", '    ')  # aka tab (\t)
-        """
-
-        py_return = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
-
-        complete_function = f"    def decide(self, input):\n" \
-            f"        cartPos, cartVel = input\n" \
-            f"        action = {{}}\n" \
-            f"        return {py_return}\n"
-
-        all_agents = []
-        all_agent_names = []
-        all_more_info = []
-
-        for (parsim, fitness, cooltree) in self.pareto:
-            agent_name = f'{self.conf.name}_{parsim:.0f}'
-
-            agent_as_python = cooltree.get_pycode()
-            all_agents.append(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
-            all_agent_names.append(agent_name)
-            all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
-
-        all_agents = '\n\n'.join(all_agents)
-        agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
-        all_more_info = ', '.join(all_more_info)
-
-        """
-        dude sfeh
-        sfeh for fully executable code
-        bad code
-        """
-        if 'MTC75' in self.conf.name:
-            srsaagnt = 75
-        elif 'MTC200' in self.conf.name:
-            srsaagnt = 200
-        else:
-            raise
-
-        # pyc_complete = f"import math; import numpy as np\n" \
-        #     "import sys\n" \
-        #     "from pathlib import Path\n" \
-        #     "sys.path.append(str(Path(Path.cwd() / '../../../'))\n" \
-        #     "from benchmarks.MC.agents.quick_eval import *\n" \
-        #     "from pathlib import Path\n" \
-        #     "folder = Path.cwd() / 'custom_files'\n" \
-        #     "from benchmarks.MC.agents.mtc_agent_sarsa import * \n" \
-        #     f"with Path.open(Path(Path.cwd() / '../../../benchmarks/MC/agents/sarsa_agent_{srsaagnt}.p'), 'rb') as file:\n" \
-        #     "\tsarsa_agent = pickle.load(file)\n" \
-        #     "\n" \
-        #     f"{all_agents}\n" \
-        #     f"all_agents_more = [{all_more_info}]\n" \
-        #     f"agent_tuples = [{agent_tuples}]\n" \
-        #     f"\n\n" \
-        #     "if __name__ == '__main__':\n" \
-        #     "\tprint('executing!')\n" \
-        #     "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
-
-        # pth = path_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
-        # with Path.open(pth, 'w') as file:
-        #     file.write(pyc_complete)
-        #     self.printpl('ff', f'Pycode: {pth.as_posix()}')
-
-        return
+    # def file_pareto_pycode(self):
+    #     """
+    #     this auto-generation of real (executable) python files
+    #     is strongly customized for my experiments with Mountaincar and industrial benchmark
+    #
+    #     very useful: textwrap.indent
+    #     example: complete_function = textwrap.indent(f"def decide(self, input):\n"
+    #                                         f"{function_body}\n", '    ')  # aka tab (\t)
+    #     """
+    #     pass
+    #     # py_return = self.kernel.pycode_wrap_result(self.env_vars.eval_action.minmax).format('action')
+    #
+    #     # complete_function = f"    def decide(self, input):\n" \
+    #     #     f"        cartPos, cartVel = input\n" \
+    #     #     f"        action = {{}}\n" \
+    #     #     f"        return {py_return}\n"
+    #     #
+    #     # all_agents = []
+    #     # all_agent_names = []
+    #     # all_more_info = []
+    #     #
+    #     # for (parsim, fitness, cooltree) in self.pareto:
+    #     #     agent_name = f'{self.conf.name}_{parsim:.0f}'
+    #     #
+    #     #     agent_as_python = cooltree.get_pycode()
+    #     #     all_agents.append(f"class {agent_name}:\n{complete_function.format(agent_as_python)}")
+    #     #     all_agent_names.append(agent_name)
+    #     #     all_more_info.append(f"('{agent_name}', {agent_name}(), {parsim}, {fitness})")
+    #     #
+    #     # all_agents = '\n\n'.join(all_agents)
+    #     # agent_tuples = ', '.join([f"('{x}', {x}())" for x in all_agent_names])
+    #     # all_more_info = ', '.join(all_more_info)
+    #     #
+    #     # """
+    #     # dude sfeh
+    #     # sfeh for fully executable code
+    #     # bad code
+    #     # """
+    #     # if 'MTC75' in self.conf.name:
+    #     #     sarsa_agent = 75
+    #     # elif 'MTC200' in self.conf.name:
+    #     #     sarsa_agent = 200
+    #     # else:
+    #     #     raise
+    #
+    #     # pyc_complete = f"import math; import numpy as np\n" \
+    #     #     "import sys\n" \
+    #     #     "from pathlib import Path\n" \
+    #     #     "sys.path.append(str(Path(Path.cwd() / '../../../'))\n" \
+    #     #     "from benchmarks.MC.agents.quick_eval import *\n" \
+    #     #     "from pathlib import Path\n" \
+    #     #     "folder = Path.cwd() / 'custom_files'\n" \
+    #     #     "from benchmarks.MC.agents.mtc_agent_sarsa import * \n" \
+    #     #     f"with Path.open(Path(Path.cwd() / '../../../benchmarks/MC/agents/sarsa_agent_{sarsa_agent}.p'), 'rb') as file:\n" \
+    #     #     "\tsarsa_agent = pickle.load(file)\n" \
+    #     #     "\n" \
+    #     #     f"{all_agents}\n" \
+    #     #     f"all_agents_more = [{all_more_info}]\n" \
+    #     #     f"agent_tuples = [{agent_tuples}]\n" \
+    #     #     f"\n\n" \
+    #     #     "if __name__ == '__main__':\n" \
+    #     #     "\tprint('executing!')\n" \
+    #     #     "\teval_agent_list(agent_tuples, folder=folder, goal_agent=sarsa_agent)\n"
+    #
+    #     # pth = path_make_dir(self.root_dir / self.paths.folder_pycode / f"agents.py")
+    #     # with Path.open(pth, 'w') as file:
+    #     #     file.write(pyc_complete)
+    #     #     self.printpl('ff', f'Pycode: {pth.as_posix()}')
+    #
+    #     return
 
     def file_pareto_listcode(self):
         """
@@ -1422,7 +1397,7 @@ class ExplainableGP(object):
         try:
             cooltree.set_fix_nodes(self.origin_cooltree)
         except Exception as ex:
-            print(f'NOOOOOOPE, failed tree finish: {ex}\n{cooltree}')
+            print(f'Nope, failed tree finish: {ex}\n{cooltree}')
 
         cooltree.meta.fitness_train = fitness_train
         cooltree.meta.parsimony = parsimony
@@ -1576,7 +1551,7 @@ class ExplainableGP(object):
                 axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].max() or 1, 50))
             except Exception as ex:
                 try:
-                    print_e(f'damn setting ylim not worksening :s {ex}')
+                    print_e(f'damn setting ylim not working sfeh :s {ex}')
                     axs0_twin.set_ylim(ymin=0, ymax=max(self.monitor_df['gens_since_last_pareto'].notnull().max() or 1, 50))
                     # print(self.monitor_df['gens_since_last_pareto'].notnull().max())
                 except Exception as ex2:
@@ -1648,8 +1623,8 @@ class ExplainableGP(object):
                 fig.savefig(path_plot / f'paretofront.pdf')  # run_name?
                 # fig.savefig(path_plot / f'paretofront.png', dpi=300)
                 self.printpl('f', f"paretofront (pdf): {path_plot.as_posix()}")
-            except PermissionError as permerr:
-                print_e(f'Could not save plot: {permerr}')  # sfeh for everything?
+            except PermissionError as perm_error:
+                print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
 
         return
 
@@ -1795,3 +1770,29 @@ class ExplainableGP(object):
             time_now = time.strftime("%H:%M", time.localtime())
             print(f'{time_now}. {text}')
         return
+
+
+def activate_dataset(path_data, action_name):
+    """
+    loading the data which the GP will be working on.
+    The .csv-file is prepared (loading correct data-type, splitting data, ...)
+    and saved as pickle-file for reloading runs.
+    This is especially important, as the split in training and test-data must be the same.
+
+    separate loading the prepared data into the main class.
+    Why like this? I needed to find a bug in the data_from_csv file and
+    did not want to start the whole stuff everytime
+
+        # self.data_train_panda, self.data_control_panda
+    """
+
+    if path_data.suffix == '.p':
+        data_prepared = pickle_load(path_data)
+    elif path_data.suffix == '.csv':
+        data_prepared = data_from_csv(path_data, action_name=action_name)
+    else:
+        raise FileNotFoundError(f'No data provided? File must be a pickle (.p) or csv (.csv) file. Loaded file: {path_data}')
+
+    env_vars, data_train, data_control = data_prepared  # data_control is data_test
+
+    return env_vars, data_train, data_control

@@ -198,7 +198,7 @@ class CoolCore:
         # sfeh asdasdasd reduce me is obviously bullshit crapshit.
         #  sympify works with this combination only very few times
         #  lets have a new idea.
-        expr_raw = self.get_expr_raw(reduceable=True, obs_names=obs_infos.keys())
+        expr_raw = self.get_expr_raw(reducible=True, obs_names=obs_infos.keys())
         try:
             expr_sym = expr_sympify(expr_raw)
         except:
@@ -248,25 +248,24 @@ class CoolCore:
             raise
         return True
 
-    def get_expr_raw(self, reduceable=None, obs_names=None):
+    def get_expr_raw(self, reducible=None, obs_names=None):
         """
-        :param reduceable:
-        :return:
+        
         """
         # if self.expr_raw is None:  # sfeh?
         if self.arity == 0:
             return f'{self.label}'
         else:
             my_expr = op[self.label]['sym_str']
-            child_expr_list = [child.get_expr_raw(reduceable=reduceable, obs_names=obs_names) for child in self.childs]
-            if reduceable:
+            child_expr_list = [child.get_expr_raw(reducible=reducible, obs_names=obs_names) for child in self.childs]
+            if reducible:
                 my_expr = op[self.label]['sym_reduce'] or my_expr
                 symloc = sympy_symbol_defaults(obs_names)
                 xxx = plagih_sympify(my_expr.format(*child_expr_list), eval_locals=symloc)  # sfeh the xxx variable
                 return xxx
             return my_expr.format(*child_expr_list)  # f'cos({})'([33]) does not work. *list makes the list args :D
 
-    def node_insert_width(self, node, depth=0):
+    def node_insert_width(self, node):
         """
         adds a node to an unfinished tree
         """
@@ -528,7 +527,7 @@ class CoolTree:
         return True
 
     def get_expr_raw(self, symred=None):
-        expr_raw = self.core.get_expr_raw(reduceable=symred)
+        expr_raw = self.core.get_expr_raw(reducible=symred)
         return expr_raw
 
     def get_expr_sym(self):
@@ -536,18 +535,18 @@ class CoolTree:
         return expr_sympify(expr_raw)
 
     def get_expr(self, sympified=False, symred=None):
-        expr = self.core.get_expr_raw(reduceable=symred)
+        expr = self.core.get_expr_raw(reducible=symred)
         if sympified:
             expr = expr_sympify(expr)  # may cause exception
         return expr
 
-    def insert_branch(self, nodepath, coolbranch):
+    def insert_branch(self, node_path, coolbranch):
         self.core.complete = False
 
-        if len(nodepath) == 1:  # [1] -> set child 1
+        if len(node_path) == 1:  # [1] -> set child 1
             self.core = coolbranch
         else:
-            self.core = self.core.insert_branch(nodepath[1:], coolbranch)
+            self.core = self.core.insert_branch(node_path[1:], coolbranch)
         self.finalize_structure()
 
     def get_pycode(self):
@@ -611,7 +610,7 @@ class CoolTree:
             cool_functions = [x for x in cool_nodes if x.arity > 0]
             if cool_functions:
                 chosen = random.choice(cool_functions)
-                chosen.reduce_me(obs_infos)
+                chosen.reduce_me(obs_infos)  # sfeh chosen must be set again? or not? test it at least. probably working.
         if length_before < len(self):
             print_e(f'FFS Trees just become larger? {self.get_expr_raw()}')
         # self.meta.clear()
@@ -858,8 +857,8 @@ def some_quick_test():
 
     label_list = ['Ifte', '<', '0', '2', 'cartVel', '0']
     cooltree = cooltree_from_labellist(label_list, modify_list=[0, 1, 0, 0, 1, 1])
+    # cooltree = cooltree_from_labellist(label_list)
     label_list = ['Usub', 'asd']
-    cooltree = cooltree_from_labellist(label_list)
     print(cooltree)
     cooltree.evolve_reduce()
     print(cooltree)

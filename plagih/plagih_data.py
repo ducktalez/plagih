@@ -161,11 +161,11 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
     choosing random observations made easy
     """
     env_vars = EnvVars()
-    obs_fams = [fam for fam in list(set(obs.family for obs in obs_list))]
+    obs_families = [fam for fam in list(set(obs.family for obs in obs_list))]
     choose_obs_2f = []
     choose_obs_p = []
-    obs_infos = {}
-    for fam in obs_fams:
+    obs_info = {}
+    for fam in obs_families:
         family_meeting = sorted([x for x in obs_list if x.family == fam], key=lambda lulz: lulz.obs_index)
         if len(family_meeting) > 1:
             choose_obs_2f.extend([x for x in family_meeting])
@@ -176,12 +176,12 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
                 obs_tmp.index_minmax = index_minmax
                 env_vars.obs_infos[obs_tmp.name] = obs_tmp
                 # obs_tmp.fun_filter_index = lambda: obs_tmp.filter_new_index()  # int(max(min(round(random.gauss(obs_tmp.obs_index, 1)), index_minmax[1]), 0))
-                obs_infos[obs_tmp.name] = obs_tmp
+                obs_info[obs_tmp.name] = obs_tmp
         else:
             # LOL UMAD? only one family member (probably even more common)
             obs_tmp = family_meeting[0]
             # obs_tmp.fun_filter_index = lambda: None
-            obs_infos[obs_tmp.name] = obs_tmp
+            obs_info[obs_tmp.name] = obs_tmp
             choose_obs_2f.append(obs_tmp)
             choose_obs_p.append(1)
 
@@ -189,7 +189,7 @@ def data_from_csv(path_data_csv, action_name, test_size=0.2, delimiter=','):
                   '2b': None}
 
     env_vars.choose_obs = choose_obs
-    env_vars.obs_infos = obs_infos
+    env_vars.obs_infos = obs_info
 
     if eval_action:
         env_vars.eval_action = eval_action

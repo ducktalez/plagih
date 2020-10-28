@@ -245,7 +245,7 @@ def make_classes():
         latexF = v['latexF']
         latexF = latexF.replace('\\', '\\\\')
         pycc = v['pycode']
-        raise Exception('irrelevant, but must not be forgotten) sym special case')
+        # sfeh asdasd raise Exception('irrelevant, but must not be forgotten) sym special case')
 
         if classname == 'SKIP':
             continue

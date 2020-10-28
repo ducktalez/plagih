@@ -95,8 +95,10 @@ complete_params = []
 #     Set the working directory of the batch script to directory before it is executed. The path can be specified as full path or relative path to the directory where the command is executed.
 # sfeh --output=./benchmarks/slurm_runs/{run_name}/slurm-%j.out # not used anymore cause its shit
 # --exclusive (only you are allowed to work on the machine)
+# --cpus-per-task=8 is better, but everyone uses these engines
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
-    [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts])  # --cpus-per-task=8 is better, but everyone uses these engines
+    [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts]
+    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -lookup_run_folder slurm_runs2 $1 $2 $3 $4' for run_name in run_starts])
 
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

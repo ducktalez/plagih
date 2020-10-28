@@ -66,20 +66,21 @@ def thesis_plot_ib_comparisson():
     """
     # sfeh adasd
     """
-    tuples = {'Random': [6809, 6632],
-              'Nothing': [6077, 6068],
-              'Hein-21': [5278, 5573],
-              'Hein-27': [5268, 5548],
-              'Hein-29': [5232, 5542],
-              '50-50-50': [8273, 8321]}
+    tuples = {'Random': [-6809, -6632],
+              'Nothing': [-6077, -6068],
+              'Hein-21': [-5278, -5573],
+              'Hein-27': [-5268, -5548],
+              'Hein-29': [-5232, -5542],
+              '50-50-50': [-8273, -8321]}
 
-    def autolabel(rects):
+    def autolabel(rects, add_texty=0, textcolor='b'):
         for rect in rects:
             height = rect.get_height()
             ax.annotate(f'{height}',
                         xy=(rect.get_x() + width / 2, height),
-                        xytext=(0, 3),
+                        xytext=(0, -12+add_texty),
                         textcoords="offset points",
+                        color=textcolor,
                         ha='center', va='bottom')
 
     names = tuples.keys()
@@ -94,17 +95,20 @@ def thesis_plot_ib_comparisson():
         rects1 = ax.bar(x-width/2, reward, color='b', width=width, label='regular')
         rects2 = ax.bar(x+width/2, reward_safe, color='g', width=width, label='safe')
 
+        ax.legend(loc='lower left')
+        plt.yticks(IB_YICKS[0], IB_YICKS[1])
+
         # rects1 = ax.bar(x - width / 2, men_means, width, label='Men')
         # rects2 = ax.bar(x + width / 2, women_means, width, label='Women')
-        ax.set(ylabel='reward', ylim=(-15000, -4000))
+        ax.set(ylabel='reward [x1000]', ylim=(-15000, -4000))
 
-        autolabel(rects1)
-        autolabel(rects2)
+        autolabel(rects1, textcolor='b')
+        # autolabel(rects2, add_texty=-9)  # only main results
 
         ax.set_xticks(x)
         ax.set_xticklabels(names, rotation=60, fontsize=11)
         savepath = path_make_dir(Path.cwd() / f'MA_lyx/img/IB/ib_reward_compared.pdf')
-        fig.savefig(savepath)  # sfeh asd
+        fig.savefig(savepath)
         plt.close('all')
 
 
@@ -118,14 +122,21 @@ def thesisplot_tempdiff():
         p = p / np.sum(p)  # the sum must be equal to 1
         return np.arange(cnt), p
 
-    xx, pp = get_probs(30)
+     # = [get_probs(x) for x in [5, 10, 20, 30, 50]]
+    xx1, pp1 = get_probs(5)
     xx2, pp2 = get_probs(10)
+    xx3, pp3 = get_probs(20)
+    xx4, pp4 = get_probs(30)
+    xx5, pp5 = get_probs(50)
     # sfeh xxx make this more beautiful
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
-        ax.plot(xx, pp)
-        ax.plot(xx2, pp2)
-        ax.set(xlabel='timesteps', ylabel='probability')
+        ax.plot(xx1, pp1, linestyle='dotted', marker='.')
+        ax.plot(xx2, pp2, linestyle='dotted', marker='.')
+        ax.plot(xx3, pp3, linestyle='dotted', marker='.')
+        # ax.plot(xx4, pp4, linestyle='dotted', marker='.')
+        # ax.plot(xx5, pp5, linestyle='dotted', marker='.')
+        ax.set(xlabel='past timesteps', ylabel='probability')
         savepath = path_make_dir(Path.cwd() / 'MA_lyx/img/pyplots_custom/distribution_obs_time.pdf')
         fig.savefig(savepath)
         plt.show()
@@ -155,7 +166,7 @@ def thesis_decision_plots_fullspace(folder=Path.cwd() / 'benchmarks/mc/agents/im
 if __name__ == "__main__":
     thesisplot_tempdiff()
     thesis_plot_ib_comparisson()
-    thesis_plot_mc_comparisson()
+    # thesis_plot_mc_comparisson()
     print('SFEH COMMENTED! asd')
     # thesis_plot_mc_comparisson()
     # thesis_decision_plots_dummied()

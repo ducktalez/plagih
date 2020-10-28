@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -37,6 +37,11 @@
 
 \newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -58,8 +63,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -98,7 +101,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -108,10 +110,7 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -422,7 +421,6 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -491,7 +489,6 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -523,7 +520,6 @@ t Learning (RL) policies using Genetic Programming (GP).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -569,7 +565,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -601,7 +596,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -862,7 +856,6 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -872,7 +865,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -1065,7 +1057,6 @@ Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1207,7 +1198,6 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1275,7 +1265,6 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -1287,7 +1276,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -1344,7 +1332,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1514,7 +1501,6 @@ The TED is a well-known problem from theoretical computer science and will
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -1528,7 +1514,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -1962,7 +1947,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -2319,9 +2303,6 @@ Der gesamte Zustandsraum wird entlang seiner Dimensionen in je 256 Bereiche
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "wrap:mc-obs-act-plot-space"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -2450,15 +2431,15 @@ Black box with SARSA and Tiling
 \begin_layout Standard
 As a black box solution, the leader of the gym-leaderboards was chosen,
  which uses a SARSA approach with tiling and thus reaches the goal of a
- maximum of 110 steps after 75 training episodes 
+ maximum of 110 steps after 75 training episodes.
+ 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
-.
+
 \end_layout
 
 \begin_layout Standard
@@ -2478,7 +2459,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -2619,8 +2599,8 @@ Weaknesses with 75 episodes
 \end_layout
 
 \begin_layout Standard
-The leaderboard only includes how fast the training was and not how secure
- the approach is.
+Das Leaderboard bewertet leider nur, wie schnell das Ziel erreicht wird,
+ jedoch nicht, wie sicher die Ansätze sind.
  In the case of the Sarsa-75 approach, this manifests itself in a generally
  poor exploration, coupled with clearly bad decisions in some cases 
 \begin_inset CommandInset ref
@@ -2639,16 +2619,11 @@ reference "img:MTC-heuristic-vs-sarsa-reward"
 \end_inset
 
 , but represent a risk.
- Nevertheless, after 75 steps, the approach represents a very inexperienced
- agent, which is already evident from the leading of the mentioned leaderboards.
- Especially for sensitive areas, more emphasis would be placed on security.
- This can have an impact on the found candidates, which is why a version
- after 200 episodes of training was compared (Sarsa-200).
-\end_layout
-
-\begin_layout Standard
-Uncertainties still exist, but they play a much smaller role and the performance
- increases accordingly by almost 5 steps to 
+ Sarsa-75 represents a very inexperienced agent, while especially for sensitive
+ areas, more emphasis would be placed on security.
+ Derselbe Ansatz wurde deshalb für 200 Schritte trainiert und analysiert.
+ Uncertainties play a much smaller role and the performance increases accordingl
+y by almost 5 steps to 
 \begin_inset Formula $\approx-98.7$
 \end_inset
 
@@ -3434,7 +3409,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -3527,9 +3501,6 @@ Diese Lösung stellt eine von Menschenhand geschriebene Heuristik dar, welche
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "mc:simonsBest-plot-space"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3603,7 +3574,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4331,7 +4301,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -6071,7 +6040,6 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -8996,7 +8964,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 

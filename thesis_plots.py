@@ -122,7 +122,7 @@ def thesisplot_tempdiff():
         p = p / np.sum(p)  # the sum must be equal to 1
         return np.arange(cnt), p
 
-     # = [get_probs(x) for x in [5, 10, 20, 30, 50]]
+    # = [get_probs(x) for x in [5, 10, 20, 30, 50]]
     xx1, pp1 = get_probs(5)
     xx2, pp2 = get_probs(10)
     xx3, pp3 = get_probs(20)
@@ -139,7 +139,6 @@ def thesisplot_tempdiff():
         ax.set(xlabel='past timesteps', ylabel='probability')
         savepath = path_make_dir(Path.cwd() / 'MA_lyx/img/pyplots_custom/distribution_obs_time.pdf')
         fig.savefig(savepath)
-        plt.show()
         plt.close('all')
 
 

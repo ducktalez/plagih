@@ -955,12 +955,12 @@ class ExplainableGP(object):
         cooltree.set_fix_nodes(self.origin_cooltree)
         tree = cooltree.get_oldtree()
 
-        plforest = lambda x: f'\\plforest{{{x}}}\n'
+        pl_forest = lambda x: f'\\pl_forest{{{x}}}\n'
 
-        forest_tree_full = plforest(latex_brackettree(tree))
-        forest_tree_tight = plforest(latex_brackettree_tight(latex_tree_semitight(tree)))
+        forest_tree_full = pl_forest(latex_brackettree(tree))
+        forest_tree_tight = pl_forest(latex_brackettree_tight(latex_tree_semitight(tree)))
         tex_expr_raw = f'${latex_tight_node(tree)}$'
-        tex_expr_forest = plforest(f'[{tex_expr_raw}]')
+        tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
 
         """
         save every tree-visualisation in subfolder
@@ -1619,10 +1619,10 @@ class ExplainableGP(object):
                    ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 
             try:
-                path_plot = path_make_dir(self.root_dir / 'plots/')
-                fig.savefig(path_plot / f'paretofront.pdf')  # run_name?
+
+                fig.savefig(self.root_dir / f'paretofront.pdf')  # run_name?
                 # fig.savefig(path_plot / f'paretofront.png', dpi=300)
-                self.printpl('f', f"paretofront (pdf): {path_plot.as_posix()}")
+                self.printpl('f', f"paretofront (pdf): {self.root_dir / f'paretofront.pdf'}")
             except PermissionError as perm_error:
                 print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
 

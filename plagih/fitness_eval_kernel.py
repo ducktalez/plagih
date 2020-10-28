@@ -37,6 +37,12 @@ class RegressionKernel(GPKernel):
 
     def __init__(self, kernel_name, data_train, tf_config, tf_device, eval_action):
         self.np_best_fitness = np.min
+
+        # self.kernel_version_plot_yaxis = f"regression error"
+        # for option, plot_axis_string in {'discrete': ', discrete', 'bounded': ', bounded', 'tanhpenalize': ', penalize (tanh)'}.items():
+        #     if option in kernel_name:
+        #         self.kernel_version_plot_yaxis += plot_axis_string
+
         self.kname = kernel_name
         self.tf_config = tf_config
         self.tf_device = tf_device
@@ -114,6 +120,7 @@ class RegressionKernel(GPKernel):
         pairwise_diff = solution - results_kernel
 
         if self.MSE or self.RMSE:  # sfeh huber loss! mse, mae, rmse, huber, (log)
+            # sfeh remove the fucking RMSE?^^
             tf_error = tf.square
         else:
             tf_error = tf.abs
@@ -124,9 +131,9 @@ class RegressionKernel(GPKernel):
         if self.exploration_risk and self.origin_results is not None:
             # tf_error = tf.abs  # sfeh this is required (??)
             # (1 * tf.abs(pairwise_diff)) - # 1 * abs, as the other one is within the error. usually 2*  # sfeh not sure
+            exploration_korridor = tf.abs(solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
             exploration = (self.origin_results - results_kernel)  # the difference to the origin - which we want to "penalize" here
-            required_improvement = tf.abs(solution - self.origin_results)  # the complete range that is 'okay' to actually explore here.
-            explore_penalize = tf.maximum(required_improvement-exploration, 0)  # removes the above mentioned expected exploration from the penalize process
+            explore_penalize = tf.maximum(exploration_korridor-exploration, 0)  # removes the above mentioned expected exploration from the penalize process
             penalize_exploration = self.pen_explorate*(tf_error(explore_penalize))  # this should not be weighted as much as the regular expression (0 to 1).
             # Although, even more extreme penalisations are possible. Also, ideas about dummy pen (for no exploration, but no easy improvement) or values >1 for sticking to the origin policy
             # use factor before or after squaring the distance?

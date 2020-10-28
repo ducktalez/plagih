@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -38,10 +38,6 @@
 \newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -63,6 +59,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -101,6 +99,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -110,7 +109,10 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -421,6 +423,7 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -489,6 +492,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -520,6 +524,7 @@ t Learning (RL) policies using Genetic Programming (GP).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -565,6 +570,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -596,6 +602,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -856,6 +863,7 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -865,6 +873,7 @@ key "one_pixel_attack"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -1057,6 +1066,7 @@ Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1160,10 +1170,19 @@ Reinforcement Learning
 Reinforcement Learning (RL) stellt einen Teil des ML dar, bei dem ein Agent
  ohne Vorkenntnisse eine Strategie erlernt um den erwarteten Reward in einer
  Umgebung zu maximieren.
- Die Umwelt ist dabei als Markov-Entscheidungsproblem formuliert, bei dem
- der Agent seinen aktuellen Zustand S kennt und aus einer Menge von verfügbaren
- Optionen wählen kann um eiunen Folgezustand S+1 zu erreichen.
- [xx] 
+ Die Umwelt stellt dabei üblicherweise eine Markov-kette dar, eine stochastische
+ Form des Determinismus, bei dem der Agent von einem Zustand mit stochastischer
+ Wahrscheinlichkeit und derselben Aktion auch in denselben Folgezustand
+ kommt.
+ [xx das is vllt zu kurz] 
+\end_layout
+
+\begin_layout Standard
+Ein Agent muss sich die Strategie mit begrenzter Speicher- und Rechenleistung
+ finden und muss vor allem bei komplexen Zustandsräumen den Markovprozess
+ vereinfachen und durch eine sinnvolle Abwägung zwischen Exploration und
+ Exploitation möglichst effizient den bestmöglichen Lösungsweg suchen.
+ [xx tradeoff quelle] Aktuelle Ansätze nutzen dafür oft neuronale Netze.
 \end_layout
 
 \begin_layout Section
@@ -1178,73 +1197,50 @@ name "sec:Online-offline_regression"
 \end_layout
 
 \begin_layout Standard
-For all evolutionary processes in this thesis the regression error was calculate
-d, which measures the difference between the decisions of a candidate and
- the decisions of the black box.
- This was chosen as an alternative in order not to train on the real benchmark.
- This would produce better candidates, but has some disadvantages.
- Reasons for this decision and possible advantages and disadvantages are
- summarized in this section.
- 
-\end_layout
-
-\begin_layout Paragraph
-Real training advantages
+[xx Idee: Die Datenpunkte als zeitliche Komponente sehen? Eine neue policy
+ wird solang gesucht, bis der nächste Punkt getroffen wird (oder zumindest
+ bis auf ein Fehlerintervall angenähert wird?) (schlechte idee, regression
+ macht das in gewisser weise schon.)]
 \end_layout
 
 \begin_layout Standard
-As Daniel Hein has found out in 
+Man unterscheidet beim Training von KIs unter anderem zwischen Online- und
+ Offline Training.
+ Online Training bedeutet, dass der Agent live und in der realen Umgebung
+ lernt, beim offline training wird auf einem Surrogatmodell gelernt, beispielswe
+ise durch Regression auf einem Datensatz.
+ As Daniel Hein has found out in 
 \begin_inset CommandInset citation
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
-, policies that have been trained on substitute models (for example also
- by regression on data) are almost always significantly worse than the versions
- trained on real system dynamics.
- The advantages of a training process on offline data are:
-\end_layout
-
-\begin_layout Itemize
-Efficient computation due to parallelisation
-\end_layout
-
-\begin_layout Itemize
-No risks from wrong decisions
+, policies that have been trained offline are almost always significantly
+ worse than the versions trained on real system dynamics.
 \end_layout
 
 \begin_layout Standard
-A not yet tested approach includes a hybrid approach that automatically
- evaluates a special selection of outstanding offline candidates on the
- real dataset.
- At the moment it is up to the developer to perform these tests.
+However, offline training is an exploratory and very cost-effective alternative,
+ which is why it was also used for our learning process.
  
 \end_layout
 
 \begin_layout Standard
-Dies kann sowohl auf dem realen Modell (online learning) also auch auf einem
- Surrogatmodell oder Daten durchgeführt werden (offline Learning).
+For this, the regression error was calculated on a data set created by the
+ target solution, which is the sum of the differences of the individual
+ points.
+ The aim of the search process is to minimise the regression error.
  
-\end_layout
-
-\begin_layout Paragraph
-Regression Kernels, distance/cost function 
 \end_layout
 
 \begin_layout Standard
-The regression error results from a distance relation between the candidates
- results and the data set.
- 
-\begin_inset Formula $y\sim\hat{y}$
-\end_inset
-
-The cost function defines a regression kernel in how deviations are evaluated.
- Als Maß wurden dafür sowohl das L1 (mean average error, MAE) als auch L2
- (mean square error, MSE) und der root mean square error (RMSE) getestet.
- Der MSE lieferte bei der Performance in allen Fällen die Beste Lösung.
- 
+Both the mean average error (MAE) and the mean square error (MSE) were tested
+ as distance measures.
+ For the combination of several regression errors, the root mean square
+ error (RMSE) was additionally calculated.
 \end_layout
 
 \begin_layout Section
@@ -1265,6 +1261,7 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -1276,6 +1273,7 @@ key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -1295,7 +1293,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/plots/paretofront-MTC200-MSE-simple.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/paretofront.pdf
 	height 5cm
 
 \end_inset
@@ -1316,10 +1314,6 @@ GP candidates aligned on the Pareto front.
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -1332,6 +1326,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1501,6 +1496,7 @@ The TED is a well-known problem from theoretical computer science and will
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -1514,6 +1510,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -1947,6 +1944,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -2319,7 +2317,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
 	height 5cm
 
 \end_inset
@@ -2355,7 +2353,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.pdf
 	height 5cm
 
 \end_inset
@@ -2436,6 +2434,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -2459,6 +2458,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -3409,6 +3409,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -3574,6 +3575,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4301,6 +4303,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -4872,54 +4875,100 @@ Regression kernels [xx ca.
 
 \end_layout
 
-\begin_layout Paragraph
-Bedingte regression für diskreten Raum
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="6cm">
+<column alignment="center" valignment="top" width="8cm">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Kernel
 \end_layout
 
-\begin_layout Standard
-Hierfür wurde eine bedingte regression getestet, bei der kein Fehler entstehen
- soll, wenn die zugewiesene Aktion korrekt ist.
- Dieser Ansatz funktioniert nicht.
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Discard reason
 \end_layout
 
-\begin_layout Standard
-[xxx formel tdo]
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+[xx formel tdo]
 \end_layout
 
-\begin_layout Standard
-\begin_inset Formula 
-\[
-d_{asd}(x_{i},x_{j})=\sum\begin{cases}
-0 & d(x_{ik},x_{jk})<0.5\\
-d(x_{ik},x_{jk}) & \text{otherwise}
-\end{cases}
-\]
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
 
+Conditional discrete regression
+\begin_inset Quotes erd
 \end_inset
 
 
 \end_layout
 
-\begin_layout Standard
-Dadurch kann das Optimierungsverfahren dazu, dass die Kandidaten darauf
- trainiert werden, korrekte Ergebnisse nur sehr ungenau zu treffen und möglichst
- ungenau bei den restlichen zu sein.
- Die Idee wurde deshalb verworfen.
+\begin_layout Plain Layout
+\begin_inset Formula $d_{conditional}(x_{i},x_{j})=\sum\begin{cases}
+0 & d(x_{ik},x_{jk})<0.5\\
+d(x_{ik},x_{jk}) & \text{otherwise}
+\end{cases}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+If the results of the agents should be assigned to discrete action values,
+ a conditional regression was also tested, where no error should occur if
+ the assigned action is correct.
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Leads in the optimization process to correct results only very inaccurately
+ and to be as inaccurate as possible for the rest.
  
 \end_layout
 
-\begin_layout Paragraph
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
 Upper and lower bound
-\end_layout
+\begin_inset Quotes erd
+\end_inset
 
-\begin_layout Standard
-If the action area has a minimum and maximum value, results outside the
- action area are interpreted as belonging strongly to the limit value.
- If the limit value corresponds to the desired result, it is assigned to
- it accordingly, otherwise the error is calculated.
-\end_layout
 
-\begin_layout Standard
 \begin_inset Formula 
 \[
 d_{bounded}\begin{cases}
@@ -4930,12 +4979,34 @@ d_{bounded}\begin{cases}
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
+If the action area has a minimum and maximum value, results outside the
+ action area are interpreted as belonging strongly to the limit value.
+ If the limit value corresponds to the desired result, it is assigned to
+ it accordingly, otherwise the error is calculated.
+\end_layout
+
+\begin_layout Plain Layout
 The aim is to find a mathematical formula that produces moderate results
  and does not produce overfitted extreme values even in special cases.
- 
-\begin_inset Newline newline
-\end_inset
+\end_layout
 
+\begin_layout Plain Layout
+If the action area has a minimum and maximum value, results outside the
+ action area are interpreted as belonging strongly to the limit value.
+ If the limit value corresponds to the desired result, it is assigned to
+ it accordingly, otherwise the error is calculated.
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 Here, a second measure, which aims to produce moderate values, was mixed
  with the main measure, which should indicate the distance to the target
  solution.
@@ -4944,11 +5015,28 @@ Here, a second measure, which aims to produce moderate values, was mixed
  This slowed down the training process extremely, furthermore, the most
  effective solution was not a formula that only generates moderate values,
  but the use of the min and max function.
- [xx kein baum gefunden, warum auch]
-\begin_inset Newline newline
+\end_layout
+
+\begin_layout Plain Layout
+[xx kein baum gefunden, warum auch]
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -4971,68 +5059,181 @@ A conceivable solution would be to use a constantly increasing weighting
 
 \end_layout
 
+\begin_layout Subsection
+Phenotypic Analysis with Regression on the Origin Policy
+\end_layout
+
+\begin_layout Standard
+Bei den evolutionär gefundenen Kandidaten kann nicht nur ein genetischer
+ Unterschied mit der TED bestimmt werden, es ist auch möglich den Phänotypischen
+ Unterschied als Regressionsfehler zu berechnen.
+ Dadurch spielt nicht nur der Unterschied zur Ziellösung eine Rolle, sondern
+ auch, wie weit dafür von der Startlösung abgewichen werden musste.
+ Eine Möglichkeit der Umsetzung ist eine dritte Dimension auf der Paretofront.
+ Eine weitere Möglichkeit, die klassische Regression mit der relativen Regressio
+n zur Origin zu verbinden wird zusätzlich im folgenden dargestellt und getestet.
+\end_layout
+
 \begin_layout Paragraph
-Including Regression zur Startlösung (origin Regression)
+Motivation
 \end_layout
 
 \begin_layout Standard
-Origin Kernels sollen ihre klassische Version (hier die Regression) um eine
- Abweichung von der Origin Lösung erweitern, um stark abweichendes Verhalten
- zu verhindern.
+Ziel des kombinierten Regressionsfehlers ist immernoch, den Abstand zur
+ Ziellösung zu minimieren - dabei sollen lediglich die Lösungen bevorzugt
+ werden, die weniger Verhaltensänderung erfordern.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Beispiel 1: Eier Kochzeit
 \end_layout
 
 \begin_layout Standard
-Die Idee dabei ist, dass bei gleichem Regressionsfehler die Kandidaten bevorzugt
- werden sollten, die das Verhalten der Origin Lösung in geringerem Ausmaß
- ändern.
- Folgende Eigenschaften können dabei von Interesse sein:
+Nehmen wir an, wir kochen Eier für 10 Minuten und ein Ziel Kochprofi für
+ 5 Minuten.
+ Bei der Überlegung, ob wir unsere Eier nun 3 Minuten und 7 kochen sollen
+ wäre 7 min als Zwischenlösung zu bevorzugen, weil der Umfang der Änderungen
+ an unserem bereits bekannten Kochverhalten geringer ist.
+\end_layout
+
+\begin_layout Paragraph
+Überlegungen
 \end_layout
 
 \begin_layout Itemize
-Versionen
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Regression am Ziel (unterscheidet nicht zwischen Verhaltensunterschied zur
- Startlösung)
+Änderungen sollten vor allem in Richtung der Ziellösung erfolgen, sonst
+ sind sie offensichtlich unsicher.
+ 
 \end_layout
 
 \begin_layout Itemize
-Regression am Start (unterscheidet nicht zwischen sicheren Bereichen und
- unsicheren Bereichen)
+Korrekte Entscheidungen der Startlösung sollten nicht mehr geändert werden.
+ Änderungen sollten sich deshalb in dem Korridor um die Ziellösung, mit
+ dem Abstand zur Startlösung aufhalten.
+ Die Bestrafung sollte in Korrelation zur Größe des Korridors getroffen
+ werden.
 \end_layout
 
 \begin_layout Itemize
-Regression kombiniert (Verschiebt die Regression, funktioniert nicht, MSE
- geht nicht)
+(Der Bereich, in dem sich Unterschied zwischen Start und Ziellösung vergrößert
+ markiert oft einen entscheidenden deren Auswirkung sich oft erst später
+ bemerkbar macht.
+ Im Sinne der Regression wird dieser Bereich jedoch nicht besonders bewertet.
+ xx)
 \end_layout
 
-\end_deeper
-\begin_layout Itemize
-Schützenswerte Bereiche
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-erste Fehlentscheidungen.
- Wichtig sind oft die Entscheidungen, die Zeitlich gesehen am Anfang einer
- Fehlentwicklung gehen.
- aka Wenn der Unterschied zur Entscheidung des goal Agenten anfängt, größer
- zu werden (sliding window, analyse 5 vorherige, 5 nachfolgende werte? nur
- avg? ...)
-\end_layout
-
-\begin_layout Itemize
-Kleine Unterschiede.
- Hier sollte eine Abweichung eine relativ kleine Verbesserung an anderer
- Stelle ausgleichen.
-\end_layout
-
-\end_deeper
 \begin_layout Standard
-außerdem
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/kernel_hill_3options.pdf
+
+\end_inset
+
+
 \end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Starting from the origin (orange) and a target solution (green) there are
+ several path candidates.
+ Bei der klassischen Regression wird nur die Abweichung zur Ziellösung bewertet,
+ Pfad (1.) und Pfad (2.) wären hier gleich gut.
+ Pfad (1.) erreicht dies aber mit einer viel kleineren Änderung am Verhalten,
+ was aus Vertrauenssicht bevorzugt werden sollte.
+ Pfad (3.) liegt nicht nur schlechter, sie ist in diesem Bereich sogar schlechter
+ als die bekannte Lösung.
+ Bereiche in denen die Expertenlösung bereits nah an der Ziellösung ist
+ sollten nicht verändert werden.
+ Pfad (4.) weicht hier an einer Stelle ab, diebereits gut gelöst war und
+ macht deshalb keinen Sinn.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:relative_kernel_path"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Volatile Lösung vs.
+ konstante Lösung [xx ->MSE]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Verlassen bereits gelöster Bereiche, Exploration egal wo vs.
+ exploration in verbessenswerten Bereichen
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Folgende Regressionsformel wurde deshalb getestet, die die daraus entstehenden
+ 4 Bereiche unterschiedlich bewertet und umabhängig vom normalen Regressionsfehl
+er betrachtet werden kann.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\sum|(y-\mathring{y})|-(\mathring{y}-\hat{y})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In unserem Fall wurde er mit einem Faktor 
+\begin_inset Formula $\lambda=0.1$
+\end_inset
+
+multipliziert und zum normalen Regressionsfehler addiert.
+ [xx Fazit: Mischen ist nie gut]
+\end_layout
+
+\begin_layout Standard
+[xx Fragen lambda? y antihut oder y kreis?]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
 
 \begin_layout Itemize
 Änderungen sollen vor allem in den Bereichen durchgeführt werden, in denen
@@ -5066,95 +5267,7 @@ n an der Origin leichter zulassen.
  xxx
 \end_layout
 
-\begin_layout Paragraph
-Beispiel 1: Eier Kochzeit
-\end_layout
-
-\begin_layout Standard
-Nehmen wir an, wir kochen sichere Eier für 10 Minuten und ein Ziel Kochprofi
- für 5 Minuten.
- Die Kandidaten 3 Minuten und 7 Minuten hätten beide einen Regressionsfehler
- von 2 Minuten.
- 7 Minuten wäre aber der sicherere Ansatz, da der Unterschied zur Startlösung
- weitaus geringer ist.
-\end_layout
-
-\begin_layout Standard
-Beim Genotyp wird durch das Komplexitätsmaß darauf geachtet, dass die Änderungen
- nicht zu umfangreich sind.
- Beim Phänotyp ergibt sich durch die Verwendung von 
-\end_layout
-
-\begin_layout Itemize
-Für Bereicht, in denen die Origin Lösung bereits richtig lag, sollte nicht
- verändert werden.
-\end_layout
-
-\begin_layout Itemize
-Bei gleichem Regressionsfehler sollte
-\end_layout
-
-\begin_layout Standard
-Da die Origin Lösung stellt nicht nur eine vertraute Heuristik dar, sie
- gilt oft auch als sicherer Weg.
- Die Phänotypen eines Kandidaten können sich, bei selbem Umfang der Genotypmutat
-ionen, stark unterscheiden.
- 
-\end_layout
-
-\begin_layout Standard
-ie in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:relative_kernel_path"
-
-\end_inset
-
- zu sehen sind Pfad 1 und 2 gleich weit von der Ziellösung entfernt, Pfad
- 1 weicht aber weniger stark von der origin ab.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/inkscape/kernel_hill_3options.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Starting from the origin (orange) and a target solution (green) there are
- several path candidates.
- It can be of great interest to distance oneself as little as possible from
- the start solution.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:relative_kernel_path"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
 Für das Kernel wurde in vier Bereiche unterschieden:
 \end_layout
 
@@ -5205,6 +5318,11 @@ Unsichere Verschlechterung.
 \end_layout
 
 \end_deeper
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 \begin_inset Note Comment
 status open
@@ -5249,28 +5367,32 @@ Conceivable relevant areas for penalizing changes in a relative regression
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 xxx Es ist schwer zu erkennen, wann eine Abweichung von der Originallösung
  nötig ist.
  xxx
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Diese Bereiche könnten je nach Belieben einen zusätzlichen mit konstanten
  oder sinkenden zusätzlichen Steigung gewertet werden.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Auch eine weitere Dimension auf der Paretofront wäre denkbar, wo eine Regression
  zur bekannten policy durchgeführt wird.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Als sicherste Version könnten Bereiche auch mit Dummy-werten belegt werden,
  die eine Änderung über eine Grenze hinaus so stark bestrafen, dass eine
  solche Änderung nicht möglich ist.
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Eine solche Änderung sollte aber besser durch gezielte Ansatzpunkt für die
  GP erzielt werden.
  Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
@@ -5278,6 +5400,11 @@ Eine solche Änderung sollte aber besser durch gezielte Ansatzpunkt für die
  Auch wäre eine teilweise Übernahme durch die gp denkbar.
  Ein weiterer Lösungsansatz wäre, die Daten der Regression im Vorhinein
  clustern und je nach Erreichen durch die Originalpolicy zu bewerten.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -5328,6 +5455,10 @@ daten
 \end_inset
 
 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Formula 
 \[
 \forall_{i\in\text{data}_{\text{goal}}}\hat{y}_{\text{0}}^{^{(i)}}\leq\hat{y}_{\text{gp}}^{^{(i)}}\leq\hat{y}_{\text{goal}}^{^{(i)}}
@@ -5358,6 +5489,11 @@ Logic changes can be easily combined
 \begin_layout Itemize
 Familiarity becomes a reference pptogram not only through structural similarity,
  but also through more similar behaviour.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -6040,6 +6176,7 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -8736,7 +8873,7 @@ filename "../benchmarks/slurm_runs/IB_MSE_scratch/combined_input.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx this input is far too long
+xx this input is far too long
 \end_layout
 
 \end_inset
@@ -8964,6 +9101,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 

@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -38,6 +38,11 @@
 \newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -59,8 +64,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -99,7 +102,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -109,10 +111,7 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -423,7 +422,6 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -492,7 +490,6 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -524,7 +521,6 @@ t Learning (RL) policies using Genetic Programming (GP).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -570,7 +566,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -602,7 +597,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -863,7 +857,6 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -873,7 +866,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -1066,7 +1058,6 @@ Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1197,13 +1188,6 @@ name "sec:Online-offline_regression"
 \end_layout
 
 \begin_layout Standard
-[xx Idee: Die Datenpunkte als zeitliche Komponente sehen? Eine neue policy
- wird solang gesucht, bis der nächste Punkt getroffen wird (oder zumindest
- bis auf ein Fehlerintervall angenähert wird?) (schlechte idee, regression
- macht das in gewisser weise schon.)]
-\end_layout
-
-\begin_layout Standard
 Man unterscheidet beim Training von KIs unter anderem zwischen Online- und
  Offline Training.
  Online Training bedeutet, dass der Agent live und in der realen Umgebung
@@ -1214,7 +1198,6 @@ ise durch Regression auf einem Datensatz.
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1261,7 +1244,6 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -1273,7 +1255,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -1316,17 +1297,12 @@ GP candidates aligned on the Pareto front.
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Strongly Typed Genetic Programming (STGP) is another extension of GP, where
  an explicit transformation of truth values into numbers and vice versa
  is required 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1342,26 +1318,91 @@ literal "true"
 \end_layout
 
 \begin_layout Paragraph
-asd closure
+Erzeugen zufälliger Bäume und Äste
 \end_layout
 
 \begin_layout Standard
-Closure with squaring? that's a problem.
- infinity.
- imaginary numbers.
-\end_layout
+Bäume werden aus einer Menge von Operatoren, Observationen und Konstanten
+ aufgebaut.
+ Ausgehend von der Wurzel werden solange Operatoren zusammengefügt, bis
+ die Zieltiefe erreicht wird.
+\begin_inset Newline newline
+\end_inset
 
-\begin_layout Paragraph
-asd
+Bei stark typisierter GP, wo zwischen boolschen und numerischen Werten unterschi
+eden werden muss, wird
+\begin_inset Newline newline
+\end_inset
+
+Unterschieden wird dabei zwischen der Full- und der Grow-methode.
+ 
+\begin_inset Newline newline
+\end_inset
+
+Im full-modus wird ein neuer Ast bis zur Zieltiefe auf jeder Ebene mit Operatore
+n aufgefüllt, wodurch die Ausdrücke sehr komplex werden können.
+ Dies wird im grow-modus dadurch verhindert, dass hier bei jedem Knoten
+ auch zufällig ein Terminal-knoten entstehen kann.
+ Beide Ansätze können wichtige Komponenten erzeugen, weshalb beide half
+ ramped verwendet wurden.
+ [xx rewrite, half ramped?] 
 \end_layout
 
 \begin_layout Standard
-Die Konstanten eines Baumes (feste Zahlenwerte) werden mit einem Gauss-filter
- verändert.
- Dabei ist sowohl das Filtern eines einzelnen Blattes als auch der Blätter
- eines Knoten möglich.
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/full_vs_grow_example.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A full tree generates complex expressions 
+\begin_inset Formula $(a-3)*\frac{b}{2}$
+\end_inset
+
+ 
+\begin_inset Newline newline
+\end_inset
+
+A grow tree has a lower branching factor and produces more encapsulated
+ expressions 
+\begin_inset Formula $(a-\frac{b}{2})*3$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+Um eine möglichst nützliche Menge an Konstanten zu erhalten werden diese
+ per Zufall aus 100 Variablen des Datensatzes, gaussverteilten ganzen Zahlen
+ und gaussverteilten Fließkommazahlen gewählt.
+ 
+\begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
+\end_inset
+
+ xx Mithilfe der Evolutionsmutation der Gaussfilter werden die Konstanten
+ der besten Bäume zusätzlich verändert, um fein zu tunen.
  Für die Läufe dieser Arbeit wurde dafür ein Gauss-filter mit einer Standardabwe
 ichung von 0.1 angewandt.
+ (
+\begin_inset Formula $X\sim\mathcal{N}(x,0.1)$
+\end_inset
+
+xx)
 \end_layout
 
 \begin_layout Paragraph
@@ -1401,10 +1442,6 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
@@ -1414,10 +1451,6 @@ Eine durch GP gefundene Lösung ohne Einschränkung.
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -1431,8 +1464,9 @@ asd
 \end_layout
 
 \begin_layout Itemize
-Wahl der Konstanten per Zufall aus mehreren Möglichkeiten.
- 
+Die Konstanten werden per Zufall aus mehreren Verteilungen gewähl oder aus
+ Zufallswerten aus dem Datensatz.
+ Auch ganze Zahlen werden generiert
 \end_layout
 
 \begin_deeper
@@ -1451,10 +1485,6 @@ status open
 
 \begin_layout Itemize
 asd 
-\begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -1496,7 +1526,6 @@ The TED is a well-known problem from theoretical computer science and will
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -1510,7 +1539,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -1585,48 +1613,6 @@ hem bias sind und oft Aspekte behandeln, an die der Mensch nicht denkt.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Problems with mountain car experiments
-\end_layout
-
-\begin_layout Itemize
-Change of sign
-\end_layout
-
-\begin_layout Itemize
-change of sign at weird spots
-\end_layout
-
-\begin_layout Itemize
-Parameter range (should they be normalized?)
-\end_layout
-
-\begin_layout Itemize
-Not enough samples for small improvements?
-\end_layout
-
-\begin_layout Itemize
-Unstable sarsa?
-\end_layout
-
-\begin_layout Itemize
-Outlier can be found easier
-\end_layout
-
-\begin_layout Itemize
-Difference 2-1 and 0-1 is the same, although completely different actions
-\end_layout
-
-\begin_layout Itemize
-Fast moving car vs slowly moving generate different amount of data per area.
- coarse data can be fit better than dense data.
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -1944,7 +1930,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -2419,7 +2404,40 @@ Probleme?
 \end_layout
 
 \begin_layout Standard
-xxx
+Problems with mountain car experiments
+\end_layout
+
+\begin_layout Itemize
+Change of sign
+\end_layout
+
+\begin_layout Itemize
+change of sign at weird spots
+\end_layout
+
+\begin_layout Itemize
+Parameter range (should they be normalized?)
+\end_layout
+
+\begin_layout Itemize
+Not enough samples for small improvements?
+\end_layout
+
+\begin_layout Itemize
+Unstable sarsa?
+\end_layout
+
+\begin_layout Itemize
+Outlier can be found easier
+\end_layout
+
+\begin_layout Itemize
+Difference 2-1 and 0-1 is the same, although completely different actions
+\end_layout
+
+\begin_layout Itemize
+Fast moving car vs slowly moving generate different amount of data per area.
+ coarse data can be fit better than dense data.
 \end_layout
 
 \begin_layout Subsection
@@ -2434,7 +2452,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -2458,7 +2475,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -3409,7 +3425,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -3575,7 +3590,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4303,7 +4317,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -5371,7 +5384,7 @@ Conceivable relevant areas for penalizing changes in a relative regression
 status open
 
 \begin_layout Plain Layout
-xxx Es ist schwer zu erkennen, wann eine Abweichung von der Originallösung
+xx Es ist schwer zu erkennen, wann eine Abweichung von der Originallösung
  nötig ist.
  xxx
 \end_layout
@@ -6176,7 +6189,6 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -7113,11 +7125,7 @@ Random tree branch building (node based)
 \end_layout
 
 \begin_layout Standard
-Sowohl bei der Branch mutation als auch beim erzeugen neuer Bäume werden
- zufällige Bäume generiert.
- Üblicherweise wird dafür eine zufällige Baumtiefe ausgewählt, bis zu der
- ein Ast rekursiv erzeugt wird.
- Die ist allerdings ein Problem für die layerwise-mutation, wenn mehrere
+Die ist allerdings ein Problem für die layerwise-mutation, wenn mehrere
  Äste gleichzeitig aufgebaut werden müssen, siehe [xx weil die Baumtiefe
  bei großer Tiefe exponentiell steigt und somit oft ].
  Deshalb wurde ein Knotenbasierter Algorithmus entwickelt, der Äste im Full-
@@ -7217,66 +7225,6 @@ or do they?
 \end_layout
 
 \begin_layout Standard
-
-\end_layout
-
-\begin_layout Subsection
-Baumstruktur: full/grow
-\end_layout
-
-\begin_layout Standard
-Die Baumethode ist ein wichtiger Faktor, da sie die Struktur der Bäume bestimmt
- und die möglichen Ausdrücke maßgeblich beeinflusst.
- [xx Beispiel]
-\begin_inset Newline newline
-\end_inset
-
-Im full-modus wird ein neuer Ast solang wie möglich auf jeder Ebene mit
- Operatoren aufgebaut.
- Dadurch entstehen sehr komplexe Bäume.
- Im grow-modus kann bei jedem Knoten auch zufällig ein Terminal-knoten entstehen
- (50% Wahrscheinlichkeit).
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/inkscape/full_vs_grow_example.pdf
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-A full tree generates complex expressions 
-\begin_inset Formula $(a-3)*\frac{b}{2}$
-\end_inset
-
- 
-\begin_inset Newline newline
-\end_inset
-
-A grow tree has a lower branching factor and produces more encapsulated
- expressions 
-\begin_inset Formula $(a-\frac{b}{2})*3$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -9101,7 +9049,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 

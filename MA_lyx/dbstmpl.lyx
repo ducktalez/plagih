@@ -515,6 +515,42 @@ In this thesis, familiarity is introduced as a concept for creating explainable
 \end_layout
 
 \begin_layout Standard
+- Problem: Bisher können Lösungen nur mit blackbox Antätzen generiert werden.
+ Kein Vertrauen
+\end_layout
+
+\begin_layout Standard
+- Erklärbarkeit jetzt wichtig im Bereich RL
+\end_layout
+
+\begin_layout Standard
+Deshalb rückt die Erklärbarkeit der Lösungen immer mehr in den Fokus der
+ Forschung.
+ 
+\end_layout
+
+\begin_layout Standard
+- Erklärbarkeit durch Vertrautheit
+\end_layout
+
+\begin_layout Standard
+In the field of AI, Genetic Programming (GP) is a possibility to create
+ interpretable policies.
+ This is an evolutionary approach in the field of machine learning, with
+ which programs can be written automatically over generations and with the
+ help of selection and random changes.
+ 
+\end_layout
+
+\begin_layout Standard
+Als vertrautrbar gilt dabei eine von einem Domain Experten geschriebene
+ Heuristik die er erklären kann.
+ Als vertraut gilt die Lösung eines Domain Experten zu einem bestimmten
+ RL Problem.
+ 
+\end_layout
+
+\begin_layout Standard
 RL is an important part of machine learning (ML), where an agent without
  prior knowledge has to learn a strategy in an environment from which he
  receives an external reward.
@@ -525,6 +561,10 @@ RL is an important part of machine learning (ML), where an agent without
  performance at the expense of loss of control is often not an option, since
  even rarely occurring wrong decisions could have fatal consequences.
  
+\end_layout
+
+\begin_layout Paragraph
+Deepmind's Alpha Go
 \end_layout
 
 \begin_layout Standard
@@ -580,84 +620,6 @@ nt; for the industry, which can also be prosecuted in court for undesirable
  developments, the development of explainable policies is therefore of great
  importance.
  
-\end_layout
-
-\begin_layout Paragraph
-asd
-\end_layout
-
-\begin_layout Standard
-Deshalb rückt die Erklärbarkeit der Lösungen immer mehr in den Fokus der
- Forschung.
- 
-\end_layout
-
-\begin_layout Standard
-Fehlendes Vertrauen
-\end_layout
-
-\begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-In the field of AI, Genetic Programming (GP) is a possibility to create
- interpretable policies.
- This is an evolutionary approach in the field of machine learning, with
- which programs can be written automatically over generations and with the
- help of selection and random changes.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-This work therefore introduces familiarity as a measure of complexity.
- Instead of classical measures of complexity like the count of operators
- and terminals of a formula, instead the count of needed modifications of
- a heuristic, which is formulated by an expert, is chosen.
- This heuristic is improved while keeping its basic structure as good as
- possible.
- 
-\end_layout
-
-\begin_layout Plain Layout
-This familiarity measure is calculated using the Tree Edit Distance (TED).
- 
-\end_layout
-
-\begin_layout Plain Layout
-Verschiedene Lösungsansätze für das Mountain car problem im Vergleich.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:NNvsGPvsFGPvsHuman_intro"
-
-\end_inset
-
- [xx verschoben]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Erklärbare künstliche Intelligenz
-\end_layout
-
-\begin_layout Subsubsection
-Sprache als Mittel
-\end_layout
-
-\begin_layout Standard
-Als Ausgangspunkt muss eine verständliche (touringvollständige) Sprache
- genutzt werden.
- Die Schnittstelle zwischen Mensch und Maschine sind Programmiersprachen
- und mathematische Gleichungen.
 \end_layout
 
 \begin_layout Subparagraph
@@ -909,7 +871,11 @@ Ein neuronales Netz erstellt sehr komplexe Policies die dadurch auch sehr
 \end_layout
 
 \begin_layout Section
-Explainability
+Erklärbare künstliche Intelligenz
+\end_layout
+
+\begin_layout Subsubsection
+Sprache als Mittel
 \end_layout
 
 \begin_layout Standard
@@ -1169,14 +1135,9 @@ literal "true"
  
 \end_layout
 
-\begin_layout Subsection
-GP
-\end_layout
-
 \begin_layout Standard
-Die GP erzeugt Kandidaten übertreffen die mit Bias behafteten menschlichen
- Lösungen oft, unterscheiden sich aber auch strukturell durch ihren Aufbau
- als komplexe mathematische Formel.
+xx Im Gegensatz aber auch strukturell durch ihren Aufbau als komplexe mathematis
+che Formel.
  [xxx Beispiel].
  
 \end_layout
@@ -1402,14 +1363,14 @@ Generation of random trees and branches
 \end_layout
 
 \begin_layout Standard
-Um zufällige Bäume zu erzeugen wird eine zufällige Tiefe gewählt, bis zu
- der mit zufälligen Operatoren aufgebaut wird.
- Die grow Methode full füllt dabei bis zur Zielebene immer mit Operatoren
- auf, bei der Grow methode können auch per Zufall (50%) Terminalknoten entstehen.
- Bäume, die mit der full-methode gebaut haben bei selber Tiefe nicht nur
- mehr Knoten als Bäume der Grow-methode, der branching faktor ist auch weitaus
- größer was zu einer frühen Kombination der Blattknoten zu komplexen Ausdrücken
- führt die nur mit Grow-bäumen nicht erzeugt werden können.
+To create random trees, a random depth is chosen, up to which the trees
+ are built up with random operators.
+ The grow method full always fills up with operators up to the target level,
+ the grow method can also create terminal nodes by random (50%).
+ Trees, which were built with the full-method, not only have more nodes
+ than trees of the grow-method, but the branching factor is also much bigger
+ which leads to an early combination of leaf nodes to complex expressions,
+ which can only not be created with grow-trees.
  
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -1476,22 +1437,22 @@ name "fig:grow-vs-full-method"
 
 \end_inset
 
-Die Knoten werden per Zufall aus verschiedenen Verteilungen gewählt.
+The nodes are randomly selected from different distributions.
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-Um eine möglichst nützliche Menge an Konstanten zu erhalten werden diese
- per Zufall aus 100 Variablen des Datensatzes, gaussverteilten ganzen Zahlen
- und gaussverteilten Fließkommazahlen gewählt.
+To obtain the most useful set of constants possible, these are chosen at
+ random from 100 variables of the data set, Gaussian-distributed integers
+ and Gaussian-distributed floating point values.
  
 \begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
 \end_inset
 
- xx Mithilfe der Evolutionsmutation der Gaussfilter werden die Konstanten
- der besten Bäume zusätzlich verändert, um fein zu tunen.
- Für die Läufe dieser Arbeit wurde dafür ein Gauss-filter mit einer Standardabwe
-ichung von 0.1 angewandt.
+ With the help of the evolutionary mutation of the Gaussian filters, the
+ constants of the best trees are additionally modified to fine-tune.
+ For the runs of this work, a Gaussian filter with a standard deviation
+ of 0.1 was applied.
  (
 \begin_inset Formula $X\sim\mathcal{N}(x,0.1)$
 \end_inset
@@ -2100,8 +2061,8 @@ MC observation- and actionspace.
 \end_layout
 
 \begin_layout Standard
-Für die optimale Lösungsstrategie müssen außerdem noch folgende Zwischenziele
- betrachtet werden:
+For the optimal solution strategy, the following intermediate objectives
+ must also be considered:
 \end_layout
 
 \begin_layout Itemize
@@ -2168,13 +2129,13 @@ Observation-Action-Space Plots
 \end_layout
 
 \begin_layout Standard
-Der Zustands- und Aktionsraum ist klein genug um die komplette Policy eines
- Agenten als zweidimensionales Diagram darzustellen.
+The state and action space is small enough to display the complete policy
+ of an agent as a two-dimensional diagram.
 \end_layout
 
 \begin_layout Standard
-Der gesamte Zustandsraum wird entlang seiner Dimensionen in je 256 Bereiche
- unterteils, für die die jeweils berechnete Aktion eingefärbt wird.
+The entire state space is subdivided along its dimensions into 256 areas,
+ for each of which the calculated action is coloured.
  
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -2182,7 +2143,7 @@ reference "wrap:mc-obs-act-plot-space"
 
 \end_inset
 
- Dadurch ist sehr gut erkennbar, welche Strategie zur Lösung verfolgt wird.
+ This makes it very clear what strategy is being pursued to find a solution.
 \end_layout
 
 \begin_layout Standard
@@ -2216,9 +2177,9 @@ name "wrap:mc-obs-act-plot-space"
 \end_layout
 
 \begin_layout Standard
-Einige Zustände werden effektiv aber nie erreicht, weshalb darüber hinaus
- noch eine Verhaltensabhängige Version erstellt wurde, die bei 100 Testläufen
- die nicht erreichten Zustände grau einfärbt.
+Some states are effectively but never reached, which is why a behaviour-dependen
+t version was also created, which, after 100 test runs, colours the states
+ not reached grey.
 \end_layout
 
 \begin_layout Standard
@@ -2252,13 +2213,13 @@ name "wrap:mc-obs-act-plot-snail"
 \end_layout
 
 \begin_layout Standard
-Eine dritte Version untersucht bei ebenfalls 100 Läufen die ABweichungen
- zur Referenzpolicy.
- Dafür wurde für den Bereich, in dem die entsprechende Sarsa-policy Daten
- erzeugt die Unterschiede Untersucht.
- In diesem Fall wäre eine komplett weiße Schnecke hervorragend, da dann
- die Unterschiede minimal wären.
- In diesen Plots sieht man unter anderem, wo die Agenten Probleme haben.
+A third version also examines the deviations from the reference policy in
+ 100 runs.
+ For this purpose, the differences were examined for the area in which the
+ corresponding Sarsa policy generates data.
+ In this case a completely white snail would be excellent, as the differences
+ would then be minimal.
+ In these plots you can see where the agents have problems.
  
 \end_layout
 
@@ -2469,8 +2430,8 @@ Weaknesses with 75 episodes
 \end_layout
 
 \begin_layout Standard
-Das Leaderboard bewertet leider nur, wie schnell das Ziel erreicht wird,
- jedoch nicht, wie sicher die Ansätze sind.
+Unfortunately, the Leaderboard only evaluates how quickly the goal is achieved,
+ but not how secure the approaches are.
  In the case of the Sarsa-75 approach, this manifests itself in a generally
  poor exploration, coupled with clearly bad decisions in some cases 
 \begin_inset CommandInset ref
@@ -2624,15 +2585,15 @@ GP-friendly by trying to give the GP process interfaces for Innovations
 \end_layout
 
 \begin_layout Standard
-Außerdem wurde, je nach Möglichkeit die folgenden Verbesserungen getestet:
+The following improvements were also tested, where possible:
 \end_layout
 
 \begin_layout Itemize
-Markieren eines zentralen Struktur mit fixen Knoten
+Select a central structure with fixed nodes
 \end_layout
 
 \begin_layout Itemize
-Force pushing in any direction (excluding action 1)
+In jede Richtung drängen (ausgenommen Aktion 1)
 \end_layout
 
 \begin_layout Standard
@@ -3175,17 +3136,8 @@ Human, if-then-else based
 \end_layout
 
 \begin_layout Standard
-Diese Lösung stellt eine von Menschenhand geschriebene Heuristik dar, welche
- die Umkehrpunkt mithilfe von if-Anweisungen umsetzt.
- Wie in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "mc:simonsBest-plot-space"
-
-\end_inset
-
- zu sehen sind diese als eckige Blöcke sichtbar.
- 
+This solution is a man-made heuristic that implements the reversal point
+ using if statements.
 \end_layout
 
 \begin_layout Standard
@@ -3262,20 +3214,14 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-Das IB simuliert dafür einen Controler, für den ein Agent drei kontinuierliche
- Aktionen setzen kann, sodass innerhalb eines time horizon T der Reward
- 
-\begin_inset Formula $R$
-\end_inset
-
- maximiert wird.
- Der Markov-zustand hat die möglichen Werte  mit einer Beschränkung von
- 
+The IB simulates a controller for which an agent can set three continuous
+ actions to maximise the Reward R within a time horizon T.
+ The Markov state has set the possible values with a limit of 
 \begin_inset Formula $a_{v,g,s}\in[-1;1]$
 \end_inset
 
- gesetzt.
- Für das IB gibt es keine bekannten vom Menschen geschriebene Heuristiken.
+ .
+ There are no known human written heuristics for the IB.
  
 \end_layout
 
@@ -3947,20 +3893,21 @@ Alle IB features im Überblick.
 
 \end_inset
 
-Von den drei Aktionen hat die letzte dabei eine besondere Rolle, da mit
- ihr ein großes Risiko verbunden ist.
- Durch Abweichungen vom Normalwert kann die Performance zwar verbessert
- werden, jedoch führt eine Abweichung in einen falschen Bereich zu hohen
- Strafen.
- Bei der Analyse wurde deshalb immer zusätzlich noch eine sichere Version
- ausgewertet, die Aktion 2 nicht setzt.
+Of the three actions, the last one has a special role to play because of
+ the high risk involved.
+ Deviations from the normal value can improve performance, but a deviation
+ into the wrong range leads to high penalties.
+ For this reason, the analysis always included a secure version that does
+ not set Action 2.
 \end_layout
 
 \begin_layout Standard
-Stochastische Benchmarks sind stellen als häufiger Anwendungsbereich und
- als große Herausforderung für RL ein besonders großes Interesse für die
- Instustrie dar.
- In wet chicken [xx]
+Stochastic benchmarks are a frequent field of application and a great challenge
+ for RL and therefore of great interest to the industry.
+\end_layout
+
+\begin_layout Standard
+In wet chicken [xx]
 \end_layout
 
 \begin_layout Subsection
@@ -4582,13 +4529,11 @@ name "subsec:Fixed-nodes"
 \end_layout
 
 \begin_layout Standard
-Zusätzlich zur TED wurde, um den GP Prozess noch stärker an die Präferenzen
- des Entwicklers zu binden, fixe Knoten definiert, die vom GP-prozess nicht
- verändert werden dürfen.
- Vor allem, wenn sich der Entwickler der Richtigkeit seiner Abstraktion
- an dieser Stelle sicher ist, können sinnlose Versuche des GP-Prozesses,
- an diesen Stellen zu optimieren als Performance und Sicherheitsgründen
- unterbunden werden.
+In addition to the TED, fixed nodes have been defined to bind the GP process
+ even more closely to the preferences of the developer.
+ Especially if the developer is sure of the correctness of his abstraction
+ at this point, pointless attempts of the GP process to optimise at these
+ points can be prevented as performance and security reasons.
 \end_layout
 
 \begin_layout Standard
@@ -4635,8 +4580,8 @@ Regression Error
 \end_layout
 
 \begin_layout Standard
-Im folgenden werden Möglichkeiten beschrieben um den Regressionsfehler für
- die Benchmarks zu verwenden und für vertraute GP zu verbessern.
+The following describes ways to use the regression error for the benchmarks
+ and improve it for familiar GP.
 \end_layout
 
 \begin_layout Standard
@@ -4674,10 +4619,6 @@ literal "true"
  sub-problems and abstract them logically, while machine solutions often
  find only a formula consisting of few elements.
  
-\end_layout
-
-\begin_layout Standard
-xxx
 \end_layout
 
 \begin_layout Subsection
@@ -4804,9 +4745,8 @@ Anpassung an den Aktionsraum (bounded)
 \end_layout
 
 \begin_layout Standard
-In den verwendeten Benchmarks gibt es sowohl eine Obergrenze als auch eine
- Untergrenze.
- Werte außerhalb dieses Intervalls werden dem nächsten passenden Wert zugeordnet.
+There is both an upper and a lower limit in the benchmarks used.
+ Values outside this interval are assigned to the next appropriate value.
 \end_layout
 
 \begin_layout Standard
@@ -4943,13 +4883,13 @@ Upper and lower bound
 \end_layout
 
 \begin_layout Standard
-Die Intuition bei dieser Zuweisung ist dabei, dass Werte, die größer oder
- kleiner der Maximalwerte als extrem starke Tendenz zu einer bestimmten
- Entscheidung zu werten sind.
- Die Ergebnisse 20 oder 1.6 würden beide Aktion 2 zugeordnet werden, 20 hätte
- dabei aber die weitaus stärkere Tendenz.
- Bei einer Fehlentscheidung, beispielsweise bei 0.4 und -20 wird diese auch
- nicht gewertet.
+The intuition in this allocation is that values greater or smaller than
+ the maximum values are to be seen as an extremely strong tendency towards
+ a particular decision.
+ Results 20 or 1.6 would both be assigned to Action 2, but 20 would have
+ the far stronger tendency.
+ If a wrong decision is made, for example 0.4 and -20, it will not be scored
+ either.
 \end_layout
 
 \begin_layout Standard
@@ -4966,16 +4906,15 @@ Regression ohne Beschränkung?
 \end_layout
 
 \begin_layout Standard
-Ein Nachteil der automatischen Begrenzung ist, dass Extrem große Werte im
- Genotyp und Phänotyp auftreten können.
- Die explizite Beschränkung ist dennoch wichtig, da sonst ein zentraler
- Aspekt des GP Prozesses dafür genutzt wird um diese Schranke implizit in
- jedem Kandidaten zu implementieren.
- Dies äußerte sich beispielsweise in Kandidaten mit fünfstelligen Exponenten,
- deren Werte nicht für den Menschen nachvollziehbar sind und ebenso für
- klassisches Overfitting stehen.
- Das Risiko, dass bei unbekannten Observationen grobe Fehlentscheidungen
- getroffen werden ist sehr hoch.
+A disadvantage of the automatic limitation is that extremely high values
+ in genotype and phenotype can occur.
+ The explicit restriction is nevertheless important, because otherwise a
+ central aspect of the GP process is used to implicitly implement this barrier
+ in each candidate.
+ This is expressed for example in candidates with five-digit exponents,
+ whose values are not comprehensible for humans and also stand for classical
+ overfitting.
+ The risk of making gross mistakes in unknown observations is very high.
 \end_layout
 
 \begin_layout Standard
@@ -5191,9 +5130,8 @@ Conditional discrete regression (enable tiny improvements)
 \end_layout
 
 \begin_layout Standard
-Dieses Kernel wurde getestet, um bei falsch getroffenen Entscheidungen knappe
- Fehlentscheidungen zu bevorzugen und somit eine Konvergenz zu einem Optimum
- zu ermöglichen.
+This kernel has been tested to give preference to scarce wrong decisions
+ in case of wrong decisions, thus allowing convergence towards an optimum.
  If the limit value corresponds to the desired result, it is assigned to
  it accordingly, otherwise the error is calculated.
  If the limit value corresponds to the desired result, it is assigned to
@@ -5258,10 +5196,10 @@ d(x_{ik},x_{jk}) & \text{otherwise}
 \end_layout
 
 \begin_layout Standard
-Obwohl ein solches Vorgehen intuitiv erscheint führt es in der GP Optimierung
- dazu, korrekt gefundene Ergebnisse nur sehr vage getroffen werden und stattdess
-en nur der Fehler für die Fehlentscheidungen optimiert wird.
- Der Regressionsfehler verliert somit seine Funktion als Distanzmaß.
+Although such a procedure seems to be intuitive, in GP optimisation it leads
+ to the fact that correctly found results are only very vaguely met and
+ instead only the error is optimised for the wrong decisions.
+ The regression error thus loses its function as a distance measure.
 \end_layout
 
 \begin_layout Standard
@@ -5280,8 +5218,9 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Dieser Kandidat erschummelt sich einen niedrigen Fehler xxx trickser anderer
- Ordner?
+This candidate cheats himself a low error by concentrating on minimising
+ wrong decisions.
+ 
 \end_layout
 
 \end_inset
@@ -5292,6 +5231,10 @@ Dieser Kandidat erschummelt sich einen niedrigen Fehler xxx trickser anderer
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+xxx trickser anderer Ordner?
 \end_layout
 
 \begin_layout Standard
@@ -5303,14 +5246,14 @@ Phenotypic Analysis with Regression on the Origin Policy
 \end_layout
 
 \begin_layout Standard
-Bei den evolutionär gefundenen Kandidaten kann nicht nur ein genetischer
- Unterschied mit der TED bestimmt werden, es ist auch möglich den Phänotypischen
- Unterschied als Regressionsfehler zu berechnen.
- Dadurch spielt nicht nur der Unterschied zur Ziellösung eine Rolle, sondern
- auch, wie weit dafür von der Startlösung abgewichen werden musste.
- Eine Möglichkeit der Umsetzung ist eine dritte Dimension auf der Paretofront.
- Eine weitere Möglichkeit, die klassische Regression mit der relativen Regressio
-n zur Origin zu verbinden wird zusätzlich im folgenden dargestellt und getestet.
+In the evolutionary found candidates not only a genetic difference can be
+ determined with the TED, it is also possible to calculate the phenotypic
+ difference as regression error.
+ This means that not only the difference to the target solution plays a
+ role, but also how far from the starting solution it was necessary to deviate.
+ One possibility of implementation is a third dimension on the Pareto front.
+ Another way of combining classical regression with relative regression
+ to Origin is also shown and tested below.
 \end_layout
 
 \begin_layout Paragraph
@@ -5318,9 +5261,9 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-Ziel des kombinierten Regressionsfehlers ist immernoch, den Abstand zur
- Ziellösung zu minimieren - dabei sollen lediglich die Lösungen bevorzugt
- werden, die weniger Verhaltensänderung erfordern.
+The goal of the combined regression error is still to minimise the distance
+ to the target solution - only those solutions that require less behavioural
+ change should be preferred.
  
 \end_layout
 
@@ -5329,11 +5272,11 @@ Beispiel 1: Eier Kochzeit
 \end_layout
 
 \begin_layout Standard
-Nehmen wir an, wir kochen Eier für 10 Minuten und ein Ziel Kochprofi für
- 5 Minuten.
- Bei der Überlegung, ob wir unsere Eier nun 3 Minuten und 7 kochen sollen
- wäre 7 min als Zwischenlösung zu bevorzugen, weil der Umfang der Änderungen
- an unserem bereits bekannten Kochverhalten geringer ist.
+Let's say we cook eggs for 10 minutes and a target cooking professional
+ for 5 minutes.
+ When considering whether we should cook our eggs for 3 minutes and 7, 7
+ minutes would be preferable as an interim solution, because the extent
+ of the changes to our already known cooking behaviour is less.
 \end_layout
 
 \begin_layout Paragraph
@@ -5341,8 +5284,8 @@ Nehmen wir an, wir kochen Eier für 10 Minuten und ein Ziel Kochprofi für
 \end_layout
 
 \begin_layout Itemize
-Änderungen sollten vor allem in Richtung der Ziellösung erfolgen, sonst
- sind sie offensichtlich unsicher.
+Changes should be made primarily in the direction of the target solution,
+ otherwise they are obviously uncertain.
  
 \end_layout
 
@@ -5383,16 +5326,16 @@ status open
 \begin_layout Plain Layout
 Starting from the origin (orange) and a target solution (green) there are
  several path candidates.
- Bei der klassischen Regression wird nur die Abweichung zur Ziellösung bewertet,
- Pfad (1.) und Pfad (2.) wären hier gleich gut.
- Pfad (1.) erreicht dies aber mit einer viel kleineren Änderung am Verhalten,
- was aus Vertrauenssicht bevorzugt werden sollte.
- Pfad (3.) liegt nicht nur schlechter, sie ist in diesem Bereich sogar schlechter
- als die bekannte Lösung.
- Bereiche in denen die Expertenlösung bereits nah an der Ziellösung ist
- sollten nicht verändert werden.
- Pfad (4.) weicht hier an einer Stelle ab, diebereits gut gelöst war und
- macht deshalb keinen Sinn.
+ In classical regression, only the deviation from the target solution is
+ evaluated; path (1.) and path (2.) would be equally good here.
+ Path (1.) achieves this, however, with a much smaller change in behaviour,
+ which should be preferred from a confidence perspective.
+ Path (3.) is not only worse, it is even worse in this area than the known
+ solution.
+ Areas where the expert solution is already close to the target solution
+ should not be changed.
+ Path (4.) deviates here at a point which was already well solved and therefore
+ makes no sense.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -5412,8 +5355,8 @@ name "fig:relative_kernel_path"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Verlassen bereits gelöster Bereiche, Exploration egal wo vs.
- exploration in verbessenswerten Bereichen
+Leaving already solved areas, exploration no matter where vs.
+ exploration in areas worth improving
 \end_layout
 
 \end_inset
@@ -5427,9 +5370,9 @@ Verlassen bereits gelöster Bereiche, Exploration egal wo vs.
 \end_layout
 
 \begin_layout Standard
-Folgende Regressionsformel wurde deshalb getestet, die die daraus entstehenden
- 4 Bereiche unterschiedlich bewertet und umabhängig vom normalen Regressionsfehl
-er betrachtet werden kann.
+The following regression formula was therefore tested, which evaluates the
+ resulting 4 areas differently and can be considered umdependent on the
+ normal regression error.
  
 \end_layout
 
@@ -5445,12 +5388,15 @@ er betrachtet werden kann.
 \end_layout
 
 \begin_layout Standard
-In unserem Fall wurde er mit einem Faktor 
+In our case it was multiplied by a factor of 
 \begin_inset Formula $\lambda=0.1$
 \end_inset
 
-multipliziert und zum normalen Regressionsfehler addiert.
- [xx Fazit: Mischen ist nie gut]
+ and added to the normal regression error.
+\end_layout
+
+\begin_layout Standard
+[xx Fazit: Mischen ist nie gut]
 \end_layout
 
 \begin_layout Standard
@@ -5478,8 +5424,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Gewichtung der Abweichung als Kombination des normalen Regressionsfehlers
- mit dem Phänotypischen Fehler.
+Weighting of the deviation as a combination of the normal regression error
+ with the phenotypic error.
 \end_layout
 
 \end_inset
@@ -5534,7 +5480,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Die Lösung muss sich innerhalb des Verbesserungsintervalls aufhalten.
+The solution must be within the improvement interval.
 \end_layout
 
 \end_inset
@@ -5576,7 +5522,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Offensichtliche Verschlechterungen werden ausgeschlossen.
+Obvious deteriorations are excluded.
 \end_layout
 
 \end_inset
@@ -5593,10 +5539,10 @@ Offensichtliche Verschlechterungen werden ausgeschlossen.
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Extreme Versionen eines kombinierten Regressionskernel.
- Als sicherste Version könnten Bereiche mit Dummy-werten belegt werden,
- die eine Änderung über eine Grenze hinaus so stark bestrafen, dass sie
- quasi nicht eintreten kann.
+Extreme versions of a combined regression kernel.
+ As the most secure version, areas could be assigned dummy values that punish
+ a change beyond a limit so severely that it is virtually impossible for
+ it to occur.
 \end_layout
 
 \end_inset
@@ -5618,13 +5564,12 @@ Resultat
 \end_layout
 
 \begin_layout Standard
-Das mischen des klassischen Regressionsfehlers mit dem Hpänotypfehler auf
- diese Weise stellt einen zu starken Eingriff in dieses Distanzmaß dar.
- Eine Paretofront mit drei Dimensionen (die Regressionsfehler korrellieren
- miteinander) oder eine schwächere Gewichtung sehen zwar vielversprechend
- aus, sind aber kein zentraler Aspekt dieser Arbeit und wurden deshalb nicht
- weiter ausgewertet.
- [xxx Zukunftsmusik]
+Mixing the classical regression error with the phenotype error in this way
+ represents too much interference with this distance measure.
+ A Pareto front with three dimensions (the regression errors correlate with
+ each other) or a weaker weighting looks promising, but is not a central
+ aspect of this work and was therefore not further evaluated.
+ [xxx dreams of the future]
 \end_layout
 
 \begin_layout Standard
@@ -6218,20 +6163,19 @@ Training size
 \end_layout
 
 \begin_layout Standard
-Durch die online generierung der Daten wird automatisch eine implizite Selektion
- der relevanten Zustände durchgeführt.
- Eine explizite Selektion oder erweierung der Daten durch den Anwender ist
- nicht möglich, da ohne Verständnis für das Problem keine Bewertung der
- Daten möglich ist ohne das Resultat maßgeblich zu beeinflussen.
- Vergleichsweise schlechte Läufe können beispielsweise einen sehr schweren
- aber gut gelösten Sonderfall darstellen oder aber auch stark vom Zufall
- beeinflusst worden sein.
- Denkbar ist auch, Daten für noch unbekannte Bereiche auszuwerten, was Observati
-onskombinationen mit einschließen könnte, die gar nicht entstehen können.
- Obwohl die Erweiterungen vor allem auf die Unterschiede zum Expertenprogramm
- abzielen sollte auch hier keine Selektion betrieben werden, da die bereitsricht
-ig getroffenen Daten einen wichtigen Teil für die Phänotypische Ähnlichkeit
- zur Origin darstellen.
+By generating the data online, an implicit selection of the relevant states
+ is automatically carried out.
+ An explicit selection or extension of the data by the user is not possible,
+ because without an understanding of the problem no evaluation of the data
+ is possible without influencing the result significantly.
+ Comparatively poor runs can, for example, represent a very serious but
+ well solved special case or may have been strongly influenced by chance.
+ It is also conceivable to evaluate data for still unknown areas, which
+ could include observation combinations that could not occur at all.
+ Although the extensions are mainly aimed at the differences to the expert
+ programme, no selection should be made here either, since the data already
+ correctly made represent an important part of the phenotypic similarity
+ to the Origin.
  xx
 \end_layout
 
@@ -6264,11 +6208,11 @@ https://github.com/ducktalez/plagih
 \end_layout
 
 \begin_layout Standard
-Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
- zu klassischen GP-Methoden im wesentlichen GP auf einem origin Baum ermöglicht,
- der von einem Experten als Referenz geladen werden.
- Entwickelt wurde es von Simon Fehrer unter Berücksichtigung der bekannten
- Prinzipien der GP.
+For this work a GP suite in the language python was developed, which allows
+ to classical GP methods essentially GP on an origin tree, which can be
+ loaded by an expert as reference.
+ It was developed by Simon Fehrer, taking into account the well-known principles
+ of GP.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
@@ -6276,12 +6220,14 @@ literal "true"
 
 \end_inset
 
- Als Startpunkt diente KarooGP, da dieses Framework aber keinen if-operator
- bereitstellt und es auch nicht start typisiert ist waren massive strukturelle
- Änderungen nötig, sodass das entstandene Framework eine Neuentwicklung
- darstellt.
- Durch Verwendung rekursiver Baumstrukturen konnte der Speedup von Karoo
- sogar noch erhöht werden.
+ 
+\end_layout
+
+\begin_layout Standard
+KarooGP served as a starting point, but since this framework does not provide
+ an if-operator and is not typed start, massive structural changes were
+ necessary, so the resulting framework is a new development.
+ By using recursive tree structures the speedup of Karoo could even be increased.
  [xx hier war es noch schneller - claim, Daniel Hein Hilfe?, Koza erwähnen
  - ein buch genug?]
 \end_layout
@@ -6327,8 +6273,8 @@ Strukturelle Eigenschaften
 \end_layout
 
 \begin_layout Standard
-Um die Ergebnisse der GP möglichst erklärbar zu machen ist es vor allem
- wichtig, die TED möglichst aussagekräftig zu halten.
+To make the results of the GP as explainable as possible, it is above all
+ important to keep the TED as meaningful as possible.
 \end_layout
 
 \begin_layout Subsection
@@ -6336,16 +6282,16 @@ Reduced operator set
 \end_layout
 
 \begin_layout Standard
-Viele Operatoren sind innerhalb ihrer Funktion mit Geschwisteroperatoren
- ersetzbar.
- Betroffen sind hiervon beispielsweise diese Gruppen:
+Many operators can be replaced within their function with sibling operators.
 \begin_inset Newline newline
 \end_inset
 
 
-\begin_inset Float table
-wide false
-sideways false
+\begin_inset Wrap table
+lines 0
+placement o
+overhang 0col%
+width "50col%"
 status open
 
 \begin_layout Plain Layout
@@ -6624,12 +6570,12 @@ Aufteilung der Operatoren in ihre Aufgabenbereiche.
 
 \end_layout
 
-\begin_layout Plain Layout
+\end_inset
+
 
 \end_layout
 
-\end_inset
-
+\begin_layout Standard
 
 \end_layout
 
@@ -7295,21 +7241,24 @@ Allgemeine mathematische Vereinfachung
 \end_layout
 
 \begin_layout Standard
-Die mathematischen Ausdrücke in Bäumen oder Ästen zu vereinfachen ist dann
- möglich, wenn sein Ausdruck auch als weniger komplexe Version hingeschrieben
- werden kann.
- Es ist eine gängige Methode um performante Bäume kompakter darzustellen
- ohne sich auf einen zufälligen Mutationsprozess verlassen zu müssen.
- Für die TED sind Vereinfachungen nicht trivial verwendbar, da Vereinfachte
- Formeln, beispielsweise wegen des Kommutativgesetzes als nicht-äquivalent
- gewertet werden.
+Simplifying the mathematical expressions in trees or branches is possible
+ if its expression can be written as a less complex version.
+ It is a common method to make performant trees more compact without relying
+ on a random mutation process.
+ For TED simplifications are not trivial to use, because simplified formulas
+ are not considered equivalent, for example because of the commutative law.
  
 \begin_inset Formula $(a+b)=(b+a)$
 \end_inset
 
- ist zwar äquivalent, die TED der Formeln ist aber 2.
- Sympy [xx] stellt dabei ein mächtiges mathematisches Werkzeug dar, welches
- Ausdrücke immer auf die gleiche Weise reduziert.
+ is equivalent, but the TED of the formulas is 2.
+\end_layout
+
+\begin_layout Standard
+Sympy [xx] is a powerful mathematical tool, which reduces expressions always
+ in the same way.
+ stellt dabei ein mächtiges mathematisches Werkzeug dar, welches Ausdrücke
+ immer auf die gleiche Weise reduziert.
  [xx]
 \end_layout
 
@@ -7336,19 +7285,18 @@ Olymp-reproduction (Pareto reproduction)
 \end_layout
 
 \begin_layout Standard
-Ähnlich den griechischen Göttern, die auf die Erde kamen um sich fortzupflanzen,
- wurde auch den pareto-kandidaten die Möglichkeit gegeben, sich in die aktuelle
- Population unterzumischen.
- Durch Zufall könnten bereits gefundene Lösungen und deren Gene komplett
- verloren gehen.
- Um bereits gefundene Lösungen deshalb nicht dauerhaft zu verlieren, sollen
- die Gene der besten Kandidaten als sehr kleiner Strom für backups der best-ofs
- der Vergangenheit sorgen.
+Similar to the Greek gods who came to earth to reproduce, the pareto candidates
+ were also given the opportunity to intermingle with the current population.
+ By chance, solutions already found and their genes could be completely
+ lost.
+ In order not to lose already found solutions permanently, the genes of
+ the best candidates are to provide a very small current for backups of
+ the best-ofs of the past.
 \begin_inset Newline newline
 \end_inset
 
-Die olymp-reproduktion umfasst insbesondere auch die Möglichkeit für den
- origin tree sich zu reproduzieren.
+The olymp reproduction includes in particular the possibility for the origin
+ tree to reproduce itself.
 \end_layout
 
 \begin_layout Subsection
@@ -7736,7 +7684,7 @@ Histograms
 xx
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Recursive tree structure and meta information
 \end_layout
 
@@ -7757,10 +7705,9 @@ Scratch
 \end_layout
 
 \begin_layout Standard
-Als Referenzlauf wurde ein zufälliger GP Lauf ohne Referenzbaum gewählt.
- Sowohl der Regressionsfehler als auch der durchschnittliche Reward waren
- dabei außerordentlich gut.
- Die komplexesten Kandidaten konnten sogar die Sarsa-200 policy unterbieten.
+A random GP run without reference tree was selected as the reference run.
+ Both the regression error and the average reward were exceptionally good.
+ The most complex candidates were even able to undercut the Sarsa-200 policy.
 \end_layout
 
 \begin_layout Standard
@@ -7787,11 +7734,10 @@ status open
 \end_layout
 
 \begin_layout Standard
-Im Gegensatz dazu sind die Formeln kaum nachvollziehbar.
- Hier wurde oft mit sehr hohen Werten potentiert potentieren, oft mit sehr
- hohen Werten, was bei keinem menschlich überlegten Ansatz von bedeutung
- war.
- Auch die Sinusfunktion wurde verwendet.
+In contrast, the formulas are hardly comprehensible.
+ Here, potentizing was often done with very high values, often with very
+ high values, which was not significant in any humanly considered approach.
+ The sinus function was also used.
  
 \end_layout
 
@@ -7815,7 +7761,7 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/analysis_input.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Die Paretokandidaten im Vergleich xx
+Die Paretokandidaten im Vergleich xxx
 \end_layout
 
 \end_inset
@@ -7923,8 +7869,7 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_02.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Hier wird der Agent mit maximaler Beschleunigung durch einen kürzeren Ausdruck
- erreicht.
+Here the agent is reached with maximum acceleration by a shorter printout.
 \end_layout
 
 \end_inset
@@ -8450,14 +8395,14 @@ Analysis
 \end_layout
 
 \begin_layout Standard
-Die familiären Lösungen waren den Scratch-Lösungen in allen Punkten überlegen.
- Sie waren nicht nur weitaus besser erklärbar, sie sind auch sicherer und
- konnten bei das Ziel bei der Online Auswertung besser erreichen.
- Selbst den Regressionsfehler konnten die Kandidaten besser reduzieren,
- was bezüglich des reduzierten Freiheitsgrades eine große Überraschung ist.
- Die außerordentliche Performance ist vermutlich mit dem optimierten Suchraum
- zu erklären, der durch die Vorgabe des Experten auf einen effizienten und
- kleineren Raum reduziert werden konnte.
+The familiar solutions were superior to the scratch solutions in all respects.
+ Not only were they much easier to explain, they were also more secure and
+ were able to achieve the goal more easily in the online evaluation.
+ The candidates were even able to reduce the regression error better, which
+ is a big surprise in view of the reduced degree of freedom.
+ The extraordinary performance can probably be explained by the optimised
+ search space, which could be reduced to an efficient and smaller space
+ by the expert's specification.
 \end_layout
 
 \begin_layout Standard

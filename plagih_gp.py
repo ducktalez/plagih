@@ -17,7 +17,7 @@ import argparse
 # warnings.filterwarnings('error')
 
 
-def load_prepared_run(conf, prepared_run, lookup_run_folder):
+def load_prepared_run(conf, prepared_run, slurm_runs_folder):
 
     def pathify(x):
         if x is None:
@@ -27,7 +27,6 @@ def load_prepared_run(conf, prepared_run, lookup_run_folder):
 
     path_origin_tree = None
     action_name = None
-    root_dir = pathify(f'{lookup_run_folder}/{prepared_run[:-2]}/{prepared_run}')
     conf.gen_max = 5000
 
     name_splits = prepared_run.split('_')
@@ -38,6 +37,7 @@ def load_prepared_run(conf, prepared_run, lookup_run_folder):
     """
 
     if 'IB' == prepared_run[:2]:
+        root_dir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
         kernel_name = 'regression bounded'
         ori_trs = {'50_0': 'ib/gp_files//ib_tree_50s_0.csv',
@@ -75,7 +75,7 @@ def load_prepared_run(conf, prepared_run, lookup_run_folder):
     elif 'MTC' in prepared_run:
         kernel_name = 'regression bounded discrete'
 
-        root_dir = pathify(f'slurm_runs/{prepared_run}')
+        root_dir = pathify(f'{slurm_runs_folder}/{prepared_run}')
         num_samples = '200' if 'MTC200' in prepared_run else '75'
         path_data_csv = pathify(f'mc/gp_files/samples{num_samples}.csv')
 
@@ -152,7 +152,7 @@ def main():  # argv sys.argv[1:]
                                                                                               " Like a reboot, keeps local optima.")
     parser.add_argument('-testrun', action='store_true', help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
     parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated if certain code should be executed. Now used to fix Linux/Windows paths-bug.')
-    parser.add_argument('-lookup_run_folder', type=str, default='slurm_runs', help='sfeh for fore than one version of the same run')
+    parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs', help='sfeh for fore than one version of the same run')
 
     args = parser.parse_args()
 
@@ -165,7 +165,7 @@ def main():  # argv sys.argv[1:]
     # self.name = args.name or self.root_dir.resolve().name  # sfeh name? probably there are better names
 
     if prepared_run:
-        conf, root_dir, path_data_csv, path_origin_tree = load_prepared_run(conf, prepared_run, args.lookup_run_folder)
+        conf, root_dir, path_data_csv, path_origin_tree = load_prepared_run(conf, prepared_run, args.slurm_runs_folder)
     else:
         path_data_csv = args.data_csv
         path_origin_tree = args.origin_tree

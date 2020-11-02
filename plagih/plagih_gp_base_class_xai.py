@@ -747,7 +747,7 @@ class ExplainableGP(object):
                                                     f"{y['regress_sum']:0.3f}",
                                                     f"{y['experiment']:0.0f}",
                                                     tex_stacklist([f'{int(x)}' for x in y['parsims']]),
-                                                    tex_stacklist([input_agentex(x, f'../benchmarks/slurm_runs/{self.root_dir.parent.name}/') for x in [0, 1, 2]])])
+                                                    tex_stacklist([input_agentex(x, self.root_dir.parent) for x in [0, 1, 2]])])
 
                     # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
                     # f"{y['cnt']}",

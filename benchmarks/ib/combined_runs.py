@@ -18,9 +18,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from plagih.file_interaction import *
 
-dir_slurm = Path(os.path.dirname(os.path.realpath(__file__))) / f'../slurm_runs/'
-# lut_file = root_dir_eval / 'lutfile.yaml'
-# dir_slurm = Path.cwd() / f'../slurm_runs/'
 
 # def get_combined_runs(agents, parsim_max_sum, parsim_max_single):
 funny_limits = (-15000, -4000)
@@ -315,7 +312,9 @@ def main():
     parsim_max_single = args.parsim_max_single
 
     if args.auto:
-        rootdirstar = dir_slurm.glob('*')
+        slurm1 = list(Path('benchmarks/slurm_runs/').glob('*'))
+        slurm2 = list(Path('benchmarks/slurm_runs2/').glob('*'))
+        rootdirstar = slurm1 + slurm2
         for runfolders in rootdirstar:
             if runfolders.is_dir():
                 if runfolders.name[:2] == 'IB':

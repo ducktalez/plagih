@@ -392,7 +392,7 @@ class ExplainableGP(object):
 
             if self.gen_id == 0:
                 self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
-                self.gen_create_initial()
+                self.gen_create_initial()  # sfeh stattdessen einfach checken, ob die letzte population leer ist und info/warnung: neue generation?
             else:
 
                 # You can avoid this situation by calling multiprocessing.Process before you load your huge data.
@@ -674,7 +674,7 @@ class ExplainableGP(object):
 
             for pp, x in agent_performance.items():
                 pp, fitness, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
-                # pareto_agents[pp].update({})
+
                 tex_line = [f"{int(pp)}",
                             f"{pareto_agents[pp]['fitness']:.2f}",
                             f"{avg_reward:0.1f}",
@@ -1619,7 +1619,6 @@ class ExplainableGP(object):
                    ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 
             try:
-
                 fig.savefig(self.root_dir / f'paretofront.pdf')  # run_name?
                 # fig.savefig(path_plot / f'paretofront.png', dpi=300)
                 self.printpl('f', f"paretofront (pdf): {self.root_dir / f'paretofront.pdf'}")
@@ -1767,8 +1766,8 @@ class ExplainableGP(object):
         """
         if message_type in self.print_type:
             # time_passed = time.perf_counter() - self.time_start
-            time_now = time.strftime("%H:%M", time.localtime())
-            print(f'{time_now}. {text}')
+            time_now = time.strftime("%d.%m %H:%M", time.localtime())
+            print(f'[{time_now}] {text}')
         return
 
 

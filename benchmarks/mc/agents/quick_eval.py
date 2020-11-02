@@ -157,6 +157,9 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
 
         ax.add_patch(p)
 
+        # path_mcmeshplot = path_make_dir(folder / f'{name}.png')
+        # fig.savefig(path_mcmeshplot)
+        # todo todotodo
         path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
         fig.savefig(path_mcmeshplot)
         print(f'saved {path_mcmeshplot}')
@@ -275,7 +278,6 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
 def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
     """
     Automatically evalueate gp-agents (difference plot, decision plot, performance)
-
     """
     if not Path.is_dir(dir_save):
         Path.mkdir(dir_save)
@@ -369,6 +371,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         ax2 = ax.twinx()
         ax2.step(x, y, linestyle='None', marker='x', color='g', label='reward')
         ax2.invert_yaxis()
+        ax2.set(ylim=(95, 200))
         # ax2.tick_params(axis='y', labelcolor='tab:gray')
 
         fig.savefig(dir_save / f'evaled_overview.pdf')

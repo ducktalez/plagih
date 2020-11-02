@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -39,10 +39,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -64,6 +60,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -102,6 +100,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -111,7 +110,10 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -422,6 +424,7 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -429,20 +432,14 @@ key "AIINDEX2019"
 \end_layout
 
 \begin_layout Itemize
-[xx reicht die Architektur des Menschen?]
-\end_layout
-
-\begin_layout Itemize
 Das Trainieren von Agenten ist sehr aufwändig, weshalb das Modell meist
  in seiner Komplexität beschränkt wird.
  Experimente, die extrem komplexe Modelle trainierten zeigten dabei großen
  Erfolg.
- Im Jahr 2012 [xx Building High-level FeaturesUsing Large Scale Unsupervised
+ Im Jahr 2012 [xx Building High-level Features Using Large Scale Unsupervised
  Learning] wurde ein NN ohne Anweisungen, aus zufälligen Youtube Frames,
  trainiert, Bilder zu erkennen und erlernte dabei unter anderem Gesichter
  mit einer höheren Erfolgsquote zu erkennen als alle bisherigen Ansätze.
- Der Trainingsprozess dauerte aufgrund der Komplexität aber [xx viele nodes
- und kostete 4m $].
 \end_layout
 
 \begin_layout Itemize
@@ -455,9 +452,9 @@ Die effizientere Methode ist, den Agenten zu einem Fachidioten zu machen,
  zu testen.
  ennoch müssen sie als black box angesehen werden, denen immer ein Restrisiko
  innewohnt.
- [xx] Ihnen können deshalb Fehler unterlaufen können, die ein menschliches
- Pendant aufgrund seiner Lebenserfahrung und daraus entstandener allgemeinen
- Intelligenz nicht machen würde.
+ Ihnen können deshalb Fehler unterlaufen können, die ein menschliches Pendant
+ aufgrund seiner Lebenserfahrung und daraus entstandener allgemeinen Intelligenz
+ nicht machen würde.
  
 \end_layout
 
@@ -490,6 +487,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -511,19 +509,15 @@ Especially from a scientific point of view, it is of great interest not
 \end_layout
 
 \begin_layout Standard
-In this thesis, familiarity is introduced as a concept for creating Reinforcemen
-t Learning (RL) policies using Genetic Programming (GP).
- RL is an important part of machine learning (ML), where an agent without
+In this thesis, familiarity is introduced as a concept for creating explainable
+ Reinforcement Learning (RL) policies using Genetic Programming (GP).
+ 
+\end_layout
+
+\begin_layout Standard
+RL is an important part of machine learning (ML), where an agent without
  prior knowledge has to learn a strategy in an environment from which he
  receives an external reward.
- This area has become very popular due to the development of superhuman
- strategies, for example for the game Go.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AlphaGo_paper"
-
-\end_inset
-
  The learning process is often made possible by the use of extremely complex
  data structures such as neural networks (NN), which must be regarded as
  black boxes.
@@ -566,6 +560,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -584,7 +579,29 @@ Solving this problem was a big problem for the Deepmind team, as it would
 nt; for the industry, which can also be prosecuted in court for undesirable
  developments, the development of explainable policies is therefore of great
  importance.
- In the field of AI, Genetic Programming (GP) is a possibility to create
+ 
+\end_layout
+
+\begin_layout Paragraph
+asd
+\end_layout
+
+\begin_layout Standard
+Deshalb rückt die Erklärbarkeit der Lösungen immer mehr in den Fokus der
+ Forschung.
+ 
+\end_layout
+
+\begin_layout Standard
+Fehlendes Vertrauen
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+In the field of AI, Genetic Programming (GP) is a possibility to create
  interpretable policies.
  This is an evolutionary approach in the field of machine learning, with
  which programs can be written automatically over generations and with the
@@ -593,21 +610,11 @@ nt; for the industry, which can also be prosecuted in court for undesirable
 \end_layout
 
 \begin_layout Standard
-In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Hein_Udluft_Runkler_interpretable_gp"
+\begin_inset Note Comment
+status open
 
-\end_inset
-
- it is shown, for example, how policies can be created for highly complex
- industrial applications.
- These are far less complex than the systems of equations of a neural network,
- but are nevertheless often difficult for humans to comprehend.
- This is often due to the fact that experts often break down problems into
- sub-problems and abstract them logically, while machine solutions often
- find only a formula consisting of few elements.
- This work therefore introduces familiarity as a measure of complexity.
+\begin_layout Plain Layout
+This work therefore introduces familiarity as a measure of complexity.
  Instead of classical measures of complexity like the count of operators
  and terminals of a formula, instead the count of needed modifications of
  a heuristic, which is formulated by an expert, is chosen.
@@ -616,146 +623,10 @@ key "Hein_Udluft_Runkler_interpretable_gp"
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 This familiarity measure is calculated using the Tree Edit Distance (TED).
+ 
 \end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_75.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Ein neuronales Netz (Sarsa-75, Sarsa-200[xx label]) erstellt sehr komplexe
- Policies die dadurch auch sehr anpassungsfähig sind und filigrane Unterscheidun
-gen treffen können.
- Dadurch sind in vielen Bereichen patches mit volatilen Entscheidungsänderungen
- sehbar, deren Umfang und Auswirkung oft nicht erkennbar sind.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-Good_Expert.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-SimpleAgent.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Menschlich geschriebene Programme (if-blöcke, max momentum [xx label]) unterteil
-en das Problem oft mit if-Anweisungen.
- Diese sind hier als quadratische Blöcke erkennbar.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-17.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-In der GP werden oft mathematische Formeln gefunden (xiao ul-bound, gp improveme
-nt [xx]).
- Grenzen sind im Gegensatz zu den Neuropolicies klarer definiert.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Verschiedene Lösungsansätze für das Mountain car problem im Vergleich.
@@ -766,24 +637,7 @@ name "fig:NNvsGPvsFGPvsHuman_intro"
 
 \end_inset
 
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-
+ [xx verschoben]
 \end_layout
 
 \end_inset
@@ -793,156 +647,6 @@ status open
 
 \begin_layout Section
 Erklärbare künstliche Intelligenz
-\end_layout
-
-\begin_layout Standard
-This section describes what explainability is and why it is an important
- safety factor for learned strategies.
- Furthermore, familiarity-based GP is proposed as a proven tool.
-\end_layout
-
-\begin_layout Subsection
-Why was familiarity chosen?
-\end_layout
-
-\begin_layout Standard
-Intelligence means the ability to develop strategies to solve a problem.
- Most RL-problems are too complex to test solution strategies for all cases.
- Man relies on explanations to trust models, whereas ML largely dispenses
- with explanations.
- In order to understand why familiarity is an important concept for explainabili
-ty, the following will be explained.
-\end_layout
-
-\begin_layout Subsubsection
-Definition Explanability
-\end_layout
-
-\begin_layout Standard
-An explanation is the formulation of knowledge as a language, whose content
- makes a causal logic causes understandable for humans.
-\end_layout
-
-\begin_layout Standard
-Humans can usually explain learned strategies because causality already
- plays an important role in the learning process.
- The learning process is decisive and differs fundamentally in some points
- from strategies of AI.
- 
-\end_layout
-
-\begin_layout Subsubsection
-How does a human being learn strategies that can be explained?
-\end_layout
-
-\begin_layout Standard
-Humans have protective mechanisms at their disposal, which have developed
- through the evolutionary process of humans and accompany every learning
- process.
- Among other things, it enables us to recognize and avoid dangers, which
- requires caution and the recognition of causal relationships.
- We can therefore be sure that our entire pattern of action excludes life-threat
-ening damage for us.
-\end_layout
-
-\begin_layout Standard
-In addition to these basic instincts, humans have also learned a wide range
- of other skills that enable a rapid learning process.
- A well-known example of such a mastered ability is the recognition of shapes
- and faces, which man perfected as a baby to such an extent that interpersonal
- explanations are no longer necessary.
- Artificial image recognition currently still requires human assistance
- such as the implementation of filters.
- Nevertheless the One pixel attack 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "one_pixel_attack"
-
-\end_inset
-
- showed how error-prone image recognition can be.
- More general approaches promise extraordinary performance, as could be
- shown in 2012 with 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "sparse_unsupervised_learning_youtube_image_recognition"
-
-\end_inset
-
-, but the costs are too high for a more general application.
- These basic skills are comparable for all people.
- Thus, the human being is not only able to extract causal logic from a model,
- but due to the similar thought processes it is possible for him to put
- himself in another person's shoes and to convey this information in a pedagogic
-ally valuable way.
-\end_layout
-
-\begin_layout Paragraph
-Puzzle example
-\end_layout
-
-\begin_layout Standard
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- Most people know how to recognize colors, that you first have to turn puzzle
- pieces to the colored side and that you should use the picture on the box
- as a reference point.
- A popular tip for beginners is therefore that you should start with the
- edge of the puzzle.
-\end_layout
-
-\begin_layout Standard
-This is helpful, because the learning process in humans usually consists
- of the composition of many comprehensibly strung together steps.
-\end_layout
-
-\begin_layout Paragraph
-Formen der Erklärungen
-\end_layout
-
-\begin_layout Standard
-Die Zwischenziele, die ein Mensch zur Erlernung einer Fähigkeit durcherlebt,
- ist meist nicht vergleichbar mit den Lernmechanismen von neuronalen Netzen
- oder genetischer Programmierung.
- 
-\end_layout
-
-\begin_layout Standard
-Ein RL Agent hat somit nur eine funktionierende Strategie, die auf kein
- Paradigma oder Anhaltspunkt verweisen kann, der einem Menschen etwas erklären
- könnte.
- Dem Gleichungssystem kann somit keine Kausalität vorausgesetzt werden.
- 
-\end_layout
-
-\begin_layout Paragraph
-Ergebnisanalyse
-\end_layout
-
-\begin_layout Standard
-Dennoch funktionieren die gefundenen Lösungen, weshalb man versuchen kann,
- die Logik in kausale Zusammenhänge zu abstrahieren.
- 
-\end_layout
-
-\begin_layout Standard
-Ein non-verbaler Lernprozess ist meist nur in Form von ausführlicher Beobachtung
- des Verhaltens durch den Menschen möglich.
- Ein Experte schaut sich dafür Spiele des Agenten an und versucht zu erkennen,
- wo die wichtigsten Strategischen unterschiede sind, damit er diese Erklären
- kann.
- Bei AlphaGo konnten so beispielsweise allgemein gültige Strategien gefunden
- werden, die bisher noch unbekannt waren.
- [xx] Obwohl dieses Verfahren aufwändig ist, hat es doch den entscheidenden
- Vorteil, dass das bereits erlernte nicht verworfen werden muss, sondern
- sogar noch einen sinnvollen Kern liefert.
- Der Teil, der über einen Lern- und Verständnisprozess in das eigene Modell
- integriert werden muss ist somit weitaus geringer.
-\end_layout
-
-\begin_layout Standard
-Die Aufgabe des in dieser Arbeit vorgestellten Ansatz ist es grundsätzlich,
- diesen Prozess weitesgehend zu automatisieren.
 \end_layout
 
 \begin_layout Subsubsection
@@ -956,16 +660,66 @@ Als Ausgangspunkt muss eine verständliche (touringvollständige) Sprache
  und mathematische Gleichungen.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subparagraph
+
+\end_layout
+
+\begin_layout Chapter
+Outline of applied Methods
+\end_layout
+
+\begin_layout Standard
+In diesem Abschnitt werden die wichtigsten Aspekte der künstlichen Intelligenz
+ beschrieben.
+ Diese werden besonders im Angesicht ihrer Erklärbarkeit (XAI) betrachtet.
+\end_layout
+
+\begin_layout Section
+Reinforcement Learning
+\end_layout
+
+\begin_layout Standard
+Reinforcement Learning (RL) stellt einen Teil des ML dar, bei dem ein Agent
+ ohne Vorkenntnisse eine Strategie erlernt um den erwarteten Reward in einer
+ Umgebung zu maximieren.
+ Die Umwelt stellt dabei üblicherweise eine Markov-kette dar, eine stochastische
+ Form des Determinismus, bei dem der Agent von einem Zustand mit stochastischer
+ Wahrscheinlichkeit und derselben Aktion auch in denselben Folgezustand
+ kommt.
+ [xx das is vllt zu kurz] 
+\end_layout
+
+\begin_layout Standard
+Ein Agent muss sich die Strategie mit begrenzter Speicher- und Rechenleistung
+ finden und muss vor allem bei komplexen Zustandsräumen den Markovprozess
+ vereinfachen und durch eine sinnvolle Abwägung zwischen Exploration und
+ Exploitation möglichst effizient den bestmöglichen Lösungsweg suchen.
+ [xx tradeoff quelle] Aktuelle Ansätze nutzen dafür oft neuronale Netze.
+\end_layout
+
+\begin_layout Standard
+xxx This area has become very popular due to the development of superhuman
+ strategies, for example for the game Go.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AlphaGo_paper"
+literal "true"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Section
 Neural Networks
 \end_layout
 
 \begin_layout Standard
 Neural networks are generalized, very extensive systems of equations, which
  can adapt their own parameters in a two-complex training process by means
- of automated statistical procedures and random exploration.These equations
- often contain several thousand variables, combined with unintuitive activation
- functions such as the ReLu function 
+ of automated statistical procedures and random exploration.
+ These equations often contain several thousand variables, combined with
+ unintuitive activation functions such as the ReLu function 
 \begin_inset Formula $ReLu(x)=\max(0,x)$
 \end_inset
 
@@ -1034,146 +788,305 @@ name "fig:relu-sigmoid"
 
 \end_layout
 
-\begin_layout Subsection
-GP
+\begin_layout Standard
+Die Anfangsparametrisierung sowie die Exploration stützen sich vor allem
+ auf den Zufall
 \end_layout
 
 \begin_layout Standard
-Genetische Programmierung erzeugt weitaus übersichtlichere Formeln, die
- aus einer weitaus geringeren Anzahl an Operatoren besteht und somit für
- den Menschen interpretierbar ist.
- Oft stellen diese aber vor allem mathematische Formeln dar, die das Problem
- nicht in Unterprobleme unterteilen sondern dieses als gesamtes lösen.
-\end_layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
 
-\begin_layout Subsubsection
-Coding style, faktoren im Sprachgebrauch (Programmiersprachen) ausmachen
-\end_layout
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "50col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
 
-\begin_layout Standard
-Aktuelle Komplexitätsmaße umfassen meist die Anzahl der Knoten in einem
- Baum, oftmals werden diese nach den Präferenzen des Entwicklers gewichtet
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-after "p.119"
-key "daniel_hein_doktorarbeit"
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_75.pdf
+	height 5cm
 
 \end_inset
 
-.
- Die maximale Tiefe eines Baumes wird zwar auch oft verwendet, diese dient
- aber eher dem Zweck, zu komplexe Teilbäume zu vermeiden und das Problem
- des overfitting der Daten zu reduzieren.
- Für einen erzeugten Kandidaten gibt es darüber hinaus weitere Faktoren,
- die die Erklärbarkeit beeinflussen können.
+
 \end_layout
 
-\begin_layout Subparagraph
-Divide and conquer
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-75
 \end_layout
 
-\begin_layout Standard
-Probleme sollten soweit es geht in Teilprobleme zerlegt werden.
- Dadurch wird die Komplexität des Problems aufgrund der möglichen Permutationen
- der Zustände reduziert.
- Würfelt man beispielsweise zwei sechsseitige Würfel, hat gibt es 
-\begin_inset Formula $6\cdot6=36$
 \end_inset
 
- Permutationsmöglichkeiten.
- Betrachtet man die Ergebnisse isoliert, sind es 
-\begin_inset Formula $6+6=12$
+
+\end_layout
+
 \end_inset
 
- Möglichkeiten.
- Formeln, die mit genetischer Programmierung gefunden werden, versuchen
- eine Formel für den gesamten Zustandsraum zu finden.
- Ein Abstraktion des Problems, beispielsweise durch if-Anweisungen, lässt
- dabei die Formel exponentiell größer werden, weshalb nur selten if-Anweisungen
- in gefundenen Formeln vorhanden sind.
-\end_layout
 
-\begin_layout Subparagraph
-if-operator
-\end_layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "50col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
 
-\begin_layout Standard
-Hierfür spielt der if-operator eine wichtige Rolle.
- 
-\end_layout
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
+	height 5cm
 
-\begin_layout Standard
-Although it is the most complex function with 3 input parameters, it creates
- more structure than all other operators because its child trees are not
- combined but can be considered separately.
- Nevertheless, the subtrees must have a relation to each other in order
- to harmonize together.
- This combination creates encapsulated programs in a clear way that humans
- can understand more easily.
- It is always to be welcomed when these are contained in programs, but this
- should not be artificially forced, as they are not useful at every point.
-\end_layout
+\end_inset
 
-\begin_layout Subparagraph
-Observationen sind nachvollziehbar (Einflussfaktoren)
-\end_layout
-
-\begin_layout Standard
-Observationen haben hier eine besondere Bedeutung, da die einzige Aufgabe
- des GP-Prozesses ist, ihre Werte auf ein Ergebnis zu reduzieren.
- Observationen, die nicht Teil der Lösung sind sind entweder irrelevant
- oder ihre Information kann ausreichend durch andere Observationen ersetzt
- werden.
- 
-\end_layout
-
-\begin_layout Standard
-The dimensionality of the problem could thus be limited without great risk.
- 
-\end_layout
-
-\begin_layout Standard
-The more isolated the variables are from each other, the less complex their
- interaction is.
-\end_layout
-
-\begin_layout Standard
-For example, if only one variable or a small subset of variables is in use
- within a sub-tree, the real dependence on variables may not be reduced,
- but the interaction can be recognized more precisely and it is not necessary
- to switch between the different functions of the variables.
-\end_layout
-
-\begin_layout Subparagraph
 
 \end_layout
 
-\begin_layout Chapter
-Outline of applied Methods
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-200
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Ein neuronales Netz erstellt sehr komplexe Policies die dadurch auch sehr
+ anpassungsfähig sind und filigrane Unterscheidungen treffen können.
+ Dadurch sind in vielen Bereichen patches mit volatilen Entscheidungsänderungen
+ sehbar, deren Umfang und Auswirkung oft nicht erkennbar sind.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
-Reinforcement Learning
+Explainability
 \end_layout
 
 \begin_layout Standard
-Reinforcement Learning (RL) stellt einen Teil des ML dar, bei dem ein Agent
- ohne Vorkenntnisse eine Strategie erlernt um den erwarteten Reward in einer
- Umgebung zu maximieren.
- Die Umwelt stellt dabei üblicherweise eine Markov-kette dar, eine stochastische
- Form des Determinismus, bei dem der Agent von einem Zustand mit stochastischer
- Wahrscheinlichkeit und derselben Aktion auch in denselben Folgezustand
- kommt.
- [xx das is vllt zu kurz] 
+Erklärbare künstliche Intelligenz beschäftigt sich mit dem Problem, Lösungsansät
+ze des AI die bisher als Blackbox betrachtet werden für den Menschen verstehbar
+ zu machen.
+ Im Angesicht dessen, dass selbst Programmierer oft ihren eigenen Code nach
+ einiger Zeit nicht mehr verstehen ist Erklärbarkeit deshalb eine sehr willkürli
+che Eigenschaft.
+ Folgende Definition einer Erklärung soll deshalb für diese Arbeit gelten:
+\end_layout
+
+\begin_layout Definition
+Explanability is the presentation of knowledge in a language so that it
+ can be understood by a person.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Explainability-definition"
+
+\end_inset
+
+ [xxx Definitionsverzeichnis]
+\end_layout
+
+\begin_layout Definition
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+An explanation is the formulation of logik in a language that is understandable
+ to a person.
+\end_layout
+
+\end_inset
+
+ 
 \end_layout
 
 \begin_layout Standard
-Ein Agent muss sich die Strategie mit begrenzter Speicher- und Rechenleistung
- finden und muss vor allem bei komplexen Zustandsräumen den Markovprozess
- vereinfachen und durch eine sinnvolle Abwägung zwischen Exploration und
- Exploitation möglichst effizient den bestmöglichen Lösungsweg suchen.
- [xx tradeoff quelle] Aktuelle Ansätze nutzen dafür oft neuronale Netze.
+Die Formulierung als Sprache ist essentiell, um Vertrauen zu entwickeln,
+ da ihre Aussagen überprüfbar sind.
+ Es schließt beispielsweise Lehrmethoden des Menschen a priori aus, die
+ beispielsweise allgemeine Intelligenz benötigen.
+ Will jemand wissen, was eine Katze ist, ist es leichter, ihm eine Katze
+ zu zeigen als sie ihm zu beschreiben.
+ 
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Subsection
+Human Learning.
+ How does a human being learn strategies that can be explained?
+\end_layout
+
+\begin_layout Standard
+Humans can usually explain learned strategies because causality already
+ plays an important role in the learning process.
+ The learning process is decisive and differs fundamentally in some points
+ from strategies of AI.
+ 
+\end_layout
+
+\begin_layout Standard
+Humans have protective mechanisms at their disposal, which have developed
+ through the evolutionary process of humans and accompany every learning
+ process.
+ Among other things, it enables us to recognize and avoid dangers, which
+ requires caution and the recognition of causal relationships.
+ We can therefore be sure that our entire pattern of action excludes life-threat
+ening damage for us.
+\end_layout
+
+\begin_layout Standard
+In addition to these basic instincts, humans have also learned a wide range
+ of other skills that enable a rapid learning process.
+ A well-known example of such a mastered ability is the recognition of shapes
+ and faces, which man perfected as a baby to such an extent that interpersonal
+ explanations are no longer necessary.
+ Artificial image recognition currently still requires human assistance
+ such as the implementation of filters.
+ Nevertheless the One pixel attack 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "one_pixel_attack"
+literal "true"
+
+\end_inset
+
+ showed how error-prone image recognition can be.
+ More general approaches promise extraordinary performance, as could be
+ shown in 2012 with 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
+
+\end_inset
+
+, but the costs are too high for a more general application.
+ These basic skills are comparable for all people.
+ Thus, the human being is not only able to extract causal logic from a model,
+ but due to the similar thought processes it is possible for him to put
+ himself in another person's shoes and to convey this information in a pedagogic
+ally valuable way.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Puzzle example
+\end_layout
+
+\begin_layout Standard
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ Most people know how to recognize colors, that you first have to turn puzzle
+ pieces to the colored side and that you should use the picture on the box
+ as a reference point.
+ A popular tip for beginners is therefore that you should start with the
+ edge of the puzzle.
+\end_layout
+
+\begin_layout Standard
+This is helpful, because the learning process in humans usually consists
+ of the composition of many comprehensibly strung together steps.
+\end_layout
+
+\begin_layout Subsubsection
+Formen der Erklärungen
+\end_layout
+
+\begin_layout Standard
+Die Zwischenziele, die ein Mensch zur Erlernung einer Fähigkeit durcherlebt,
+ ist meist nicht vergleichbar mit den Lernmechanismen von neuronalen Netzen
+ oder genetischer Programmierung.
+ 
+\end_layout
+
+\begin_layout Standard
+Ein RL Agent hat somit nur eine funktionierende Strategie, die auf kein
+ Paradigma oder Anhaltspunkt verweisen kann, der einem Menschen etwas erklären
+ könnte.
+ Dem Gleichungssystem kann somit keine Kausalität vorausgesetzt werden.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Ergebnisanalyse
+\end_layout
+
+\begin_layout Standard
+Dennoch funktionieren die gefundenen Lösungen, weshalb man versuchen kann,
+ die Logik in kausale Zusammenhänge zu abstrahieren.
+ 
+\end_layout
+
+\begin_layout Standard
+Ein non-verbaler Lernprozess ist meist nur in Form von ausführlicher Beobachtung
+ des Verhaltens durch den Menschen möglich.
+ Ein Experte schaut sich dafür Spiele des Agenten an und versucht zu erkennen,
+ wo die wichtigsten Strategischen unterschiede sind, damit er diese Erklären
+ kann.
+ Bei AlphaGo konnten so beispielsweise allgemein gültige Strategien gefunden
+ werden, die bisher noch unbekannt waren.
+ [xx] Obwohl dieses Verfahren aufwändig ist, hat es doch den entscheidenden
+ Vorteil, dass das bereits erlernte nicht verworfen werden muss, sondern
+ sogar noch einen sinnvollen Kern liefert.
+ Der Teil, der über einen Lern- und Verständnisprozess in das eigene Modell
+ integriert werden muss ist somit weitaus geringer.
+\end_layout
+
+\begin_layout Standard
+Die Aufgabe des in dieser Arbeit vorgestellten Ansatz ist es grundsätzlich,
+ diesen Prozess weitesgehend zu automatisieren.
 \end_layout
 
 \begin_layout Section
@@ -1198,6 +1111,7 @@ ise durch Regression auf einem Datensatz.
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1212,18 +1126,9 @@ However, offline training is an exploratory and very cost-effective alternative,
 \end_layout
 
 \begin_layout Standard
-For this, the regression error was calculated on a data set created by the
- target solution, which is the sum of the differences of the individual
- points.
- The aim of the search process is to minimise the regression error.
- 
-\end_layout
-
-\begin_layout Standard
-Both the mean average error (MAE) and the mean square error (MSE) were tested
- as distance measures.
- For the combination of several regression errors, the root mean square
- error (RMSE) was additionally calculated.
+Online training ist nur für die Entwicklung neuer Ansätze nötig.
+ Um eine bereits bekannte Black box Lösungen zu erklären ist auch ohne Kenntnis
+ über die Umgebung möglich
 \end_layout
 
 \begin_layout Section
@@ -1244,6 +1149,7 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -1255,13 +1161,186 @@ key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
 .
- Instead of storing only the best candidate, a Pareto Front is created,
- on which the fittest candidates for the respective complexity are located.
+ 
+\end_layout
+
+\begin_layout Subsection
+GP
+\end_layout
+
+\begin_layout Standard
+Die GP erzeugt Kandidaten übertreffen die mit Bias behafteten menschlichen
+ Lösungen oft, unterscheiden sich aber auch strukturell durch ihren Aufbau
+ als komplexe mathematische Formel.
+ [xxx Beispiel].
+ 
+\end_layout
+
+\begin_layout Paragraph
+Tournament Selection
+\end_layout
+
+\begin_layout Standard
+Die tournament selection ist die gängigste Form der Selektion bei genetischer
+ Programmierung.
+ Um lokale optima zu vermeiden wurde die tournament-size auf den niedrigst
+ möglichen Wert von 3 gesetzt.
+ Für Gaussmutationen wurde die Turniergröße erhöht um das Fein-tuning nur
+ bereits herausragenden Bäumen anzuwenden.
+\end_layout
+
+\begin_layout Subsubsection
+Divide and conquer
+\end_layout
+
+\begin_layout Standard
+Probleme sollten soweit es geht in Teilprobleme zerlegt werden.
+ Dadurch wird die Komplexität des Problems aufgrund der möglichen Permutationen
+ der Zustände reduziert.
+ Würfelt man beispielsweise zwei sechsseitige Würfel, hat gibt es 
+\begin_inset Formula $6\cdot6=36$
+\end_inset
+
+ Permutationsmöglichkeiten.
+ Betrachtet man die Ergebnisse isoliert, sind es 
+\begin_inset Formula $6+6=12$
+\end_inset
+
+ Möglichkeiten.
+ Formeln, die mit genetischer Programmierung gefunden werden, versuchen
+ eine Formel für den gesamten Zustandsraum zu finden.
+ Ein Abstraktion des Problems, beispielsweise durch if-Anweisungen, lässt
+ dabei die Formel exponentiell größer werden, weshalb nur selten if-Anweisungen
+ in gefundenen Formeln vorhanden sind.
+\end_layout
+
+\begin_layout Paragraph
+if-operator
+\end_layout
+
+\begin_layout Standard
+Beim Machine Learning gibt es zur Unterteilung viele Clusteringmethoden,
+ beim Menschen spielen im Gegensatz daui if-Unterscheidungen eine wichtige
+ Rolle.
+ 
+\end_layout
+
+\begin_layout Standard
+Although it is the most complex function with 3 input parameters, it creates
+ more structure than all other operators because its child trees are not
+ combined but can be considered separately.
+ Nevertheless, the subtrees must have a relation to each other in order
+ to harmonize together.
+ This combination creates encapsulated programs in a clear way that humans
+ can understand more easily.
+ It is always to be welcomed when these are contained in programs, but this
+ should not be artificially forced, as they are not useful at every point.
+\end_layout
+
+\begin_layout Paragraph
+Observationen sind nachvollziehbar (Einflussfaktoren)
+\end_layout
+
+\begin_layout Standard
+Observationen haben hier eine besondere Bedeutung, da die einzige Aufgabe
+ des GP-Prozesses ist, ihre Werte auf ein Ergebnis zu reduzieren.
+ Observationen, die nicht Teil der Lösung sind sind entweder irrelevant
+ oder ihre Information kann ausreichend durch andere Observationen ersetzt
+ werden.
+ 
+\end_layout
+
+\begin_layout Standard
+The dimensionality of the problem could thus be limited without great risk.
+ 
+\end_layout
+
+\begin_layout Standard
+The more isolated the variables are from each other, the less complex their
+ interaction is.
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Paragraph
+Baumkomplexität 
+\end_layout
+
+\begin_layout Plain Layout
+Der Suchraum für Kandidaten wird mit einer Komplexitätsgrenze eingeschränkt,
+ beispielsweise durch die Baumtiefe oder die Knotenzahl.
+ Die Baumtiefe eignet sich zum Erzeugen zufälliger Bäume und ist deshalb
+ ein verbreiteter Bestandteil von klassischen GP-Evolutionsimplementierungen,
+ ist als Maß für den Umfang eines Baumes aber zu ungenau.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Komplexitätsmaß?
+\end_layout
+
+\begin_layout Standard
+Der Suchraum der Bäume wird mithilfe der Baumtiefe und der Knotenzahl begrenzt.
+ Dadurch lässt sich Overvitting vermeiden, die Auswertung der Kandidaten
+ und der Evolutionsprozess ist schneller und die Knotenzahl lässt sich zusätzlic
+h noch gewichten und stellt so ein ein an die Präferenzen des Entwicklers
+ anpassbares Komplexitätsmaß dar.
+ Eine beliebte Gewichtung der Operatoren wird auch in dem kommerziellen
+ GP Tool DEAP verwendet.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p.119"
+key "daniel_hein_doktorarbeit"
+literal "true"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Paragraph
+Pareto GP Paretofront
+\end_layout
+
+\begin_layout Standard
+Instead of storing only the best candidate, a Pareto Front is created, on
+ which the fittest candidates for the respective complexity are located.
  This allows the user to select the desired ratio between fitness and complexity.
+\end_layout
+
+\begin_layout Standard
+Dafür werden die besten Kandidaten auf einer Pareto Front mit dem fittesten
+ Kandidaten abhängig von ihrer Komplexität.
+ Als Komplexität resultiert aus der Anzahl der Knoten eines Baumes, wobei
+ zusätzlich Operatoren, Variablen und Konstanten den Präferenzen entsprechend
+ gewichtet werden können um beispielsweise komplexe mathematische Operatoren
+ zu vermeiden.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -1274,7 +1353,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/paretofront.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/paretofront.pdf
 	height 5cm
 
 \end_inset
@@ -1303,6 +1382,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1318,33 +1398,35 @@ key "Strongly_typed_GP"
 \end_layout
 
 \begin_layout Paragraph
-Erzeugen zufälliger Bäume und Äste
+Generation of random trees and branches
 \end_layout
 
 \begin_layout Standard
-Bäume werden aus einer Menge von Operatoren, Observationen und Konstanten
- aufgebaut.
- Ausgehend von der Wurzel werden solange Operatoren zusammengefügt, bis
- die Zieltiefe erreicht wird.
-\begin_inset Newline newline
-\end_inset
-
-Bei stark typisierter GP, wo zwischen boolschen und numerischen Werten unterschi
-eden werden muss, wird
-\begin_inset Newline newline
-\end_inset
-
-Unterschieden wird dabei zwischen der Full- und der Grow-methode.
+Um zufällige Bäume zu erzeugen wird eine zufällige Tiefe gewählt, bis zu
+ der mit zufälligen Operatoren aufgebaut wird.
+ Die grow Methode full füllt dabei bis zur Zielebene immer mit Operatoren
+ auf, bei der Grow methode können auch per Zufall (50%) Terminalknoten entstehen.
+ Bäume, die mit der full-methode gebaut haben bei selber Tiefe nicht nur
+ mehr Knoten als Bäume der Grow-methode, der branching faktor ist auch weitaus
+ größer was zu einer frühen Kombination der Blattknoten zu komplexen Ausdrücken
+ führt die nur mit Grow-bäumen nicht erzeugt werden können.
  
-\begin_inset Newline newline
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:grow-vs-full-method"
+plural "false"
+caps "false"
+noprefix "false"
+
 \end_inset
 
-Im full-modus wird ein neuer Ast bis zur Zieltiefe auf jeder Ebene mit Operatore
-n aufgefüllt, wodurch die Ausdrücke sehr komplex werden können.
- Dies wird im grow-modus dadurch verhindert, dass hier bei jedem Knoten
- auch zufällig ein Terminal-knoten entstehen kann.
- Beide Ansätze können wichtige Komponenten erzeugen, weshalb beide half
- ramped verwendet wurden.
+ In Grow-Bäumen können Teilausdrücke dafür Länger isoliert betrachtet werden
+ was zu einem leichteren Verständnis führen kann.
+\end_layout
+
+\begin_layout Standard
+Beide Ansätze können wichtige Komponenten erzeugen, weshalb sie zu jeweils
+ 50% benutzt wurden (half ramped modus).
  [xx rewrite, half ramped?] 
 \end_layout
 
@@ -1377,6 +1459,13 @@ A grow tree has a lower branching factor and produces more encapsulated
 \begin_inset Formula $(a-\frac{b}{2})*3$
 \end_inset
 
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:grow-vs-full-method"
+
+\end_inset
+
 
 \end_layout
 
@@ -1387,6 +1476,11 @@ A grow tree has a lower branching factor and produces more encapsulated
 
 \end_inset
 
+Die Knoten werden per Zufall aus verschiedenen Verteilungen gewählt.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
 Um eine möglichst nützliche Menge an Konstanten zu erhalten werden diese
  per Zufall aus 100 Variablen des Datensatzes, gaussverteilten ganzen Zahlen
  und gaussverteilten Fließkommazahlen gewählt.
@@ -1405,211 +1499,9 @@ ichung von 0.1 angewandt.
 xx)
 \end_layout
 
-\begin_layout Paragraph
-asd
-\end_layout
-
-\begin_layout Standard
-Die gefundenen Kandidaten werden nicht nur nach ihrer Fitness sondern auch
- nach ihrer Komplexität beurteilt.
- Kompakte Lösungen sind sowohl leichter interpretierbar, overfitten die
- Daten seltener und sind im Evolutionsprozess schneller optimierbar.
- Dafür werden die besten Kandidaten auf einer Pareto Front mit dem fittesten
- Kandidaten abhängig von ihrer Komplexität.
- Als Komplexität resultiert aus der Anzahl der Knoten eines Baumes, wobei
- zusätzlich Operatoren, Variablen und Konstanten den Präferenzen entsprechend
- gewichtet werden können um beispielsweise komplexe mathematische Operatoren
- zu vermeiden.
- 
-\end_layout
-
-\begin_layout Paragraph
-asd
-\end_layout
-
-\begin_layout Standard
-Dennoch entstehen mithilfe dieser Komplexitätsmaße meist mathematische Formel
- die versuchen das Problem als Ganzes zu lösen statt es zu abstrahieren.
- Oft verfolgen die Kandidaten einer Paretofront dabei zusätzlich komplett
- verschiedene Ansätze, weshalb es für einen Entwickler sehr umständlich
- ist, alle Kandidaten zu reverse-engineeren.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Eine durch GP gefundene Lösung ohne Einschränkung.
- 
-\end_layout
-
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-asd
-\end_layout
-
-\begin_layout Itemize
-Die Konstanten werden per Zufall aus mehreren Verteilungen gewähl oder aus
- Zufallswerten aus dem Datensatz.
- Auch ganze Zahlen werden generiert
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Menge aus 100 Zufallswerten aus dem Datensatz
-\end_layout
-
-\begin_layout Itemize
-Gaussverteilungen rationaler Zahlen (
-\begin_inset Formula $\mathcal{N}(1,2)$
-\end_inset
-
-)
-\begin_inset Note Comment
-status open
-
-\begin_layout Itemize
-asd 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Gaussverteilung natürlicher Zahlen (
-\begin_inset Formula $\{1,2,...,10\}$
-\end_inset
-
-)
-\end_layout
-
-\end_deeper
-\begin_layout Section
-Tree Edit Distance (TED)
-\end_layout
-
-\begin_layout Standard
-The TED is a well-known problem from theoretical computer science and will
- play a crucial role in calculating familiarity.
- It deals with the question, how many elementary changes 
-\begin_inset Formula $\{\text{delete},\text{insert,\text{modify}\}}$
-\end_inset
-
- to a tree T are at least needed to create a tree T'.
- 
-\end_layout
-
-\begin_layout Quote
-“The tree-to-tree correction problem is to determine, for two labeled ordered
- trees and T', the distance from T to T' as measured by the minimum cost
- sequence of edit operations needed to transform T into T'.
- The edit operations investigated allow changing one node of a tree into
- another node, deleting one node from a tree, or inserting a node into a
- tree.” 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tedOldestPaper"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Thanks to numerous improvements made in the last years, the state of the
- art TED computation is robust and fast enough for evaluating numerous of
- GP trees 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tedAPTED1,tedAPTED2"
-
-\end_inset
-
-.
- For the experiments the TED was used in its simplest form described above
- due to keeping it simple.
- Nevertheless, there are some conspicuous features and possibilities for
- improvement that should be mentioned, for example the weighted TED or the
- explicit securing of the core structure by fixed nodes.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/TED_operators.pdf
-	lyxscale 60
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Possible TED changes on a tree: insert (green), delete (red), modify (yellow).
- If the position of a node in a branch changes, only the remaining changes
- are evaluated.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:TED_explain_operators"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-differential learning
-\end_layout
-
-\begin_layout Standard
-Differentielles Lernen ist ein Konzept aus der Sportwissenschaft, wo der
- Trainingsprozess statt wiederholung eines Ansatzes auf die Anwendung mehrerer
- Trainingsansätze baut.
- Obwohl beim ML das Wiederholen eines Trainingsansatzes weitaus weniger
- limitiert ist kann dennoch eine Wechselwirkung zwischen den drei Lernansätzen
- (NN, Menschlicher Code und GP) gefunden werden.
- Der menschliche Code stellt als Erzeugnis eines kreativen Entwicklungsprozesses
- eine intuitive, erklärbare Lösung dar.
- Sowohl NN als auch die GP produzieren hingegen policies, die frei von menschlic
-hem bias sind und oft Aspekte behandeln, an die der Mensch nicht denkt.
- [xx]
 \end_layout
 
 \begin_layout Standard
@@ -1930,6 +1822,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -2399,47 +2292,6 @@ name "wrap:mc-obs-act-plot-space-diff"
 
 \end_layout
 
-\begin_layout Paragraph
-Probleme? 
-\end_layout
-
-\begin_layout Standard
-Problems with mountain car experiments
-\end_layout
-
-\begin_layout Itemize
-Change of sign
-\end_layout
-
-\begin_layout Itemize
-change of sign at weird spots
-\end_layout
-
-\begin_layout Itemize
-Parameter range (should they be normalized?)
-\end_layout
-
-\begin_layout Itemize
-Not enough samples for small improvements?
-\end_layout
-
-\begin_layout Itemize
-Unstable sarsa?
-\end_layout
-
-\begin_layout Itemize
-Outlier can be found easier
-\end_layout
-
-\begin_layout Itemize
-Difference 2-1 and 0-1 is the same, although completely different actions
-\end_layout
-
-\begin_layout Itemize
-Fast moving car vs slowly moving generate different amount of data per area.
- coarse data can be fit better than dense data.
-\end_layout
-
 \begin_layout Subsection
 Black box with SARSA and Tiling
 \end_layout
@@ -2452,6 +2304,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -2475,6 +2328,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -3138,14 +2992,14 @@ name "par:simple,-maximum-momentum"
 \end_layout
 
 \begin_layout Standard
-Die vermutlich verständlichste Lösung ist immer in die Richtung zu beschleunigen
-, in die man sich bewegt.
- Dadurch wird der maximale Schwung geholt und das Ziel wird so immer erreicht.
+Probably the most understandable solution is always to accelerate in the
+ direction you are moving.
+ This way the maximum momentum is achieved and the goal is always reached.
 \end_layout
 
 \begin_layout Standard
-Die Implementierung erfolgt als if-Anweisung und kann somit mit 6 Knoten
- dargestellt werden.
+The implementation is done as if statement and can therefore be represented
+ with 6 nodes.
 \end_layout
 
 \begin_layout Standard
@@ -3214,206 +3068,15 @@ Computational tree of the simplest program [xx doubled image]
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Paragraph
-Simple, two actions, <
-\end_layout
-
-\begin_layout Standard
 The best version of the simplest agent is used as the starting program where
  the computational tree consists of 6 nodes, all of which can be modified.
  
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-if cartVel < 0:
-\end_layout
-
-\begin_layout Plain Layout
-
-  push left
-\end_layout
-
-\begin_layout Plain Layout
-
-else:
-\end_layout
-
-\begin_layout Plain Layout
-
-  push right
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Simple algorithm
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 As can be seen especially with the more complex solutions, the TED loses
  its effect after a certain size.
  Not pushing is often selected, especially in marginal areas.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Paragraph
-Real solution, optimal solution and expert abstraction
-\end_layout
-
-\begin_layout Plain Layout
-As we will see and discuss in [xx ref], the first decision is most relevant
- for the optimal solution.
- The starting velocity is always 0, but depending on the starting position,
- you have to take three or four turns to reach the goal.
- For this purpose, another expert policy has been implemented, which explicitly
- emphasizes this state.
-\end_layout
-
-\begin_layout Paragraph
-Sample data
-\end_layout
-
-\begin_layout Plain Layout
-The samples sample size of the data resulted from going through 15 complete
- runs of mountain car with the chosen SARSA-Approach.
- These runs were taken randomly and all observations and decisions were
- considered, resulting in about 
-\begin_inset Formula $2000$
-\end_inset
-
- samples.
- The data was then split into
-\begin_inset Formula $80\%$
-\end_inset
-
- training and 
-\begin_inset Formula $20\%$
-\end_inset
-
- test data to verify the results.
-\end_layout
-
-\begin_layout Paragraph
-Nicht beschleunigen
-\end_layout
-
-\begin_layout Plain Layout
-Action “no push”, even though it is possible,
-\end_layout
-
-\begin_layout Plain Layout
-One aspect of ignoring all information from the black box was to create
- a mountain car core solution that does not allow it to stand still whereas
- the black box solution considered option 
-\begin_inset Quotes eld
-\end_inset
-
-0
-\begin_inset Quotes erd
-\end_inset
-
- of not moving.
- This option was used in 
-\begin_inset Formula $134/2088$
-\end_inset
-
-samples, which is about 
-\begin_inset Formula $6.4\%$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-[xx insert picture of the tree and/or the sarsa choices]
-\end_layout
-
-\begin_layout Plain Layout
-This is already a relatively large, categorical difference to the expert,
- which raises many questions.
- Has this limitation perhaps already caused a gross error? Is the gp process
- affected by this? This question is indeed difficult to answer.
- Action “no push” is in fact hardly relevant for solving the problem, since
- a quick turn around by reversing the acceleration is more efficient than
- doing nothing.
- This limitation is in fact an area of core logic of the expert program
- that precedes the SARSA approach.
- However, if this decision has not been made as the conclusion of an analysis,
- action “no push” may need to be reconsidered.
- Thus, while this restriction is legitimate from a logical point of view,
- from a technical point of view it also causes problems in regression.
- Not only can the cases not be matched, because all actions are equally
- wrong, these data points have no influence and could be ignored.
- Considering that exactly these reversal areas are of great relevance, it
- is questionable how much this affects the result.
-\end_layout
-
-\begin_layout Plain Layout
-In order to explore the effects, an equivalent program was written, which
- could additionally select the option “no push”.
-\end_layout
-
-\begin_layout Plain Layout
-Main differences:
-\end_layout
-
-\begin_layout Itemize
-lower regression error
-\end_layout
-
-\begin_layout Itemize
-No fitness improvement
-\end_layout
-
-\begin_layout Itemize
-Less variance
-\end_layout
-
-\begin_layout Itemize
-More effort at the GP
-\end_layout
-
-\begin_layout Itemize
-more complex trees
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsubsection
@@ -3425,6 +3088,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -3590,6 +3254,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4317,6 +3982,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -4514,7 +4180,7 @@ name "fig:relu-sigmoid-1"
 \end_layout
 
 \begin_layout Section
-Complaxity Measure with the Tree Edit Distance
+Explainability with Familiarity
 \end_layout
 
 \begin_layout Standard
@@ -4523,6 +4189,19 @@ In this part we discuss possibilities to make measurable explanations.
  familiarity that can be used in GP.
  Furthermore, limitations and possible improvements are discussed.
  
+\end_layout
+
+\begin_layout Subsection
+Why was familiarity chosen? xxx
+\end_layout
+
+\begin_layout Standard
+Intelligence means the ability to develop strategies to solve a problem.
+ Most RL-problems are too complex to test solution strategies for all cases.
+ Man relies on explanations to trust models, whereas ML largely dispenses
+ with explanations.
+ In order to understand why familiarity is an important concept for explainabili
+ty, the following will be explained.
 \end_layout
 
 \begin_layout Paragraph
@@ -4586,6 +4265,218 @@ Univariate or low-dimansional multivariate formula which is based on a few
 
 \begin_layout Itemize
 Not fundamentally limiting the pareto GP
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "50col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-Good_Expert.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Complex if distinction
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "50col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-SimpleAgent.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Maximum Momentum
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Human written abstracts problems in programs often by if statements, which
+ are recognizable as square blocks.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Tree Edit Distance (TED)
+\end_layout
+
+\begin_layout Standard
+[xxx Zusammenhang der TED? Erst ]
+\end_layout
+
+\begin_layout Standard
+The tree edit distance (TED) is a well-known problem from theoretical computer
+ science and will play a crucial role in calculating familiarity.
+ It deals with the question, how many elementary changes 
+\begin_inset Formula $\{\text{delete},\text{insert,\text{modify}\}}$
+\end_inset
+
+ to a tree T are at least needed to create a tree T'.
+ 
+\end_layout
+
+\begin_layout Quote
+“The tree-to-tree correction problem is to determine, for two labeled ordered
+ trees and T', the distance from T to T' as measured by the minimum cost
+ sequence of edit operations needed to transform T into T'.
+ The edit operations investigated allow changing one node of a tree into
+ another node, deleting one node from a tree, or inserting a node into a
+ tree.” 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedOldestPaper"
+literal "true"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Thanks to numerous improvements made in the last years, the state of the
+ art TED computation is robust and fast enough for evaluating numerous of
+ GP trees 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedAPTED1,tedAPTED2"
+literal "true"
+
+\end_inset
+
+.
+ For the experiments the TED was used in its simplest form described above
+ due to keeping it simple.
+ Nevertheless, there are some conspicuous features and possibilities for
+ improvement that should be mentioned, for example the weighted TED or the
+ explicit securing of the core structure by fixed nodes.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/TED_operators.pdf
+	lyxscale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Possible TED changes on a tree: insert (green), delete (red), modify (yellow).
+ If the position of a node in a branch changes, only the remaining changes
+ are evaluated.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:TED_explain_operators"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
@@ -4743,41 +4634,61 @@ A tree with fixed nodes (blue) remains untouched by a branch mutation
 Regression Error
 \end_layout
 
-\begin_layout Paragraph
-Anpassung an den (diskreten) Aktionsraum
+\begin_layout Standard
+Im folgenden werden Möglichkeiten beschrieben um den Regressionsfehler für
+ die Benchmarks zu verwenden und für vertraute GP zu verbessern.
 \end_layout
 
 \begin_layout Standard
-Non-discrete results cannot be interpreted in the real model, which forces
- us to assign the result to the next possible action in the action space.
+xxx idee: Karoo hat nur MAE!!
+\end_layout
+
+\begin_layout Standard
+xxx idee sign(vel) vs if-then-else: if then else kann verbessert werden,
+ sign zwar auch, aber sieht halt kacke ausFor this, the regression error
+ was calculated on a data set created by the target solution, which is the
+ sum of the differences of the individual points.
+ The aim of the search process is to minimise the regression error.
  
 \end_layout
 
-\begin_layout Paragraph
-The following regression kernels were evaluated for their suitability.
+\begin_layout Standard
+For the combination of several regression errors, the root mean square error
+ (RMSE) was additionally calculated.
+\end_layout
+
+\begin_layout Standard
+xxx In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
+
+\end_inset
+
+ it is shown, for example, how policies can be created for highly complex
+ industrial applications.
+ These are far less complex than the systems of equations of a neural network,
+ but are nevertheless often difficult for humans to comprehend.
+ This is often due to the fact that experts often break down problems into
+ sub-problems and abstract them logically, while machine solutions often
+ find only a formula consisting of few elements.
  
 \end_layout
 
-\begin_layout Itemize
-maximum penalties.
- trying to reduce the large amount of 
+\begin_layout Standard
+xxx
 \end_layout
 
-\begin_layout Itemize
-simulate evaluation process by assigning values to action space.
- Every continuous result gets assigned to the closest action.
- The functions hiding behind this last step is kind of hidden.
- Small improvements can not be made easily, as it is only discovered when
- at least one point gets assigned correctly.
- 
+\begin_layout Subsection
+MAE vs MSE
 \end_layout
 
-\begin_layout Itemize
-only punish wrong decisions with regression 
-\end_layout
-
-\begin_layout Itemize
-simulate evaluation with a small regression penalty
+\begin_layout Standard
+Both the mean average error (MAE) and the mean square error (MSE) were tested
+ as distance measures.
+ Der MSE zeichnet sich vor allem dadurch aus, dass outlier stärker ins Gewicht
+ fallen, volatiles Verhalten im Phänotyp wird somit stark erschwert.
 \end_layout
 
 \begin_layout Standard
@@ -4787,19 +4698,407 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename tikz/regression_cost/01_regular.pdf
 
 \end_inset
 
 
-\begin_inset Graphics
-	filename tikz/regression_cost/02_boarders.pdf
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Mean average error (MAE)
+\end_layout
 
 \end_inset
 
 
 \end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/10_MSE.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Mean squared error (MSE) is synonymous to the root mean squared error (RMSE)
+ for one-dimensional measurements
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Anpassung an den Aktionsraum (bounded)
+\end_layout
+
+\begin_layout Standard
+In den verwendeten Benchmarks gibt es sowohl eine Obergrenze als auch eine
+ Untergrenze.
+ Werte außerhalb dieses Intervalls werden dem nächsten passenden Wert zugeordnet.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $a_{\text{bounded}}=\max(\min(a,A_{max}),A_{min})$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/12_MAE_bounded.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+MAE
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/11_MSE_boarders.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+MSE
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Regression Error after bounding to 
+\begin_inset Formula $[-1,+1]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Penalize bounded 
+\begin_inset Quotes eld
+\end_inset
+
+Upper and lower bound
+\begin_inset Quotes erd
+\end_inset
+
+ (moderate phenotype extreme cases)
+\end_layout
+
+\begin_layout Standard
+Die Intuition bei dieser Zuweisung ist dabei, dass Werte, die größer oder
+ kleiner der Maximalwerte als extrem starke Tendenz zu einer bestimmten
+ Entscheidung zu werten sind.
+ Die Ergebnisse 20 oder 1.6 würden beide Aktion 2 zugeordnet werden, 20 hätte
+ dabei aber die weitaus stärkere Tendenz.
+ Bei einer Fehlentscheidung, beispielsweise bei 0.4 und -20 wird diese auch
+ nicht gewertet.
+\end_layout
+
+\begin_layout Standard
+The aim is to find a mathematical formula that produces moderate results
+ and does not produce overfitted extreme values even in special cases.
+ If the action area has a minimum and maximum value, the intuition considering
+ results outside the action area are interpreted as belonging strongly to
+ the limit value.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Regression ohne Beschränkung?
+\end_layout
+
+\begin_layout Standard
+Ein Nachteil der automatischen Begrenzung ist, dass Extrem große Werte im
+ Genotyp und Phänotyp auftreten können.
+ Die explizite Beschränkung ist dennoch wichtig, da sonst ein zentraler
+ Aspekt des GP Prozesses dafür genutzt wird um diese Schranke implizit in
+ jedem Kandidaten zu implementieren.
+ Dies äußerte sich beispielsweise in Kandidaten mit fünfstelligen Exponenten,
+ deren Werte nicht für den Menschen nachvollziehbar sind und ebenso für
+ klassisches Overfitting stehen.
+ Das Risiko, dass bei unbekannten Observationen grobe Fehlentscheidungen
+ getroffen werden ist sehr hoch.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+d_{bounded}\begin{cases}
+0 & d(\min(\max(x_{ik},a_{\min}),a_{\max}),x_{jk})=0\\
+\min(d,\text{penalty}) & \text{otherwise}
+\end{cases}
+\]
+
+\end_inset
+
+Here, a second measure, which aims to produce moderate values, was mixed
+ with the main measure, which should indicate the distance to the target
+ solution.
+ The second measure automatically becomes the KO criterion for candidates,
+ single wrong points distort the regression error beyond recognition.
+ 
+\end_layout
+
+\begin_layout Standard
+This slowed down the training process extremely, furthermore, the most effective
+ solution was not a formula that only generates moderate values, but the
+ use of the min and max function.
+\end_layout
+
+\begin_layout Standard
+[xx kein baum gefunden, warum auch]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/13_bounded_penalized.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+asd
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Tanh penalize otherwise (moderate phenotype extreme cases)
+\end_layout
+
+\begin_layout Standard
+A conceivable solution would be to use a constantly increasing weighting
+ function, such as tanh or log, as a distance to the edge area, to greatly
+ reduce the influence of the values.
+ Allerdings muss auch hier akribisch aufgepasst werden, dass die Distanzfunktion
+ durch einen zu großen Zweitfaktor Zweckentfremdet wird, was zu einer kompletten
+ Fehlbewertung von Kandidaten führen würde.
+ Ist der Anteil der Kandidaten, die diese künstlich erzeugte Zweitbewertung
+ überwinden konnten nicht groß genug, ist der genetische Selektionsprozess
+ obsolet.
+ Der Anteil dieser Bestrafung auf den finalen Wert wird zu einem Fehlerfaktor
+ innerhalb der Regression, die ja bereits ein surrogate model ist.
+\end_layout
+
+\begin_layout Subsection
+Discrete, bounded (MC) Anpassung an den Aktionsraum (discrete)
+\end_layout
+
+\begin_layout Standard
+Ist der Aktionsraum nicht nur beschränkt sondern auch noch diskret werden
+ Ergebnisse gerundet.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $a_{discrete}=\lfloor a\rceil$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -4808,8 +5107,44 @@ status open
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Discrete bounded MAE
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
-	filename tikz/regression_cost/04_discrete.pdf
+	filename tikz/regression_cost/03-2_rounding_MSE.pdf
 
 \end_inset
 
@@ -4817,53 +5152,16 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/regression_cost/05_onlyFalse.pdf
+\begin_inset Caption Standard
 
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/06_fourAreas.pdf
+\begin_layout Plain Layout
+Discrete bounded MSE
+\end_layout
 
 \end_inset
 
 
 \end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/regression_cost/07_onlyGoodExploration.pdf
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/08_noExploration.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/regression_cost/09_littleExploration.pdf
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/10_MSE.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/regression_cost/11_MSE_boarders.pdf
 
 \end_inset
 
@@ -4888,58 +5186,68 @@ Regression kernels [xx ca.
 
 \end_layout
 
+\begin_layout Paragraph
+Conditional discrete regression (enable tiny improvements)
+\end_layout
+
 \begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
+Dieses Kernel wurde getestet, um bei falsch getroffenen Entscheidungen knappe
+ Fehlentscheidungen zu bevorzugen und somit eine Konvergenz zu einem Optimum
+ zu ermöglichen.
+ If the limit value corresponds to the desired result, it is assigned to
+ it accordingly, otherwise the error is calculated.
+ If the limit value corresponds to the desired result, it is assigned to
+ it accordingly, otherwise the error is calculated.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
 status open
 
 \begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="2">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="6cm">
-<column alignment="center" valignment="top" width="8cm">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Kernel
-\end_layout
+\begin_inset Graphics
+	filename tikz/regression_cost/05_onlyFalse.pdf
 
 \end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
 
-\begin_layout Plain Layout
-Discard reason
-\end_layout
+
+\begin_inset Graphics
+	filename tikz/regression_cost/04_discrete.pdf
 
 \end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
 
-\begin_layout Plain Layout
-[xx formel tdo]
-\end_layout
 
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
+\begin_inset Graphics
+	filename tikz/regression_cost/03_rounding.pdf
 
-Conditional discrete regression
-\begin_inset Quotes erd
 \end_inset
 
 
 \end_layout
 
 \begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Continuous and conditional MAE in discrete action space
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset Formula $d_{conditional}(x_{i},x_{j})=\sum\begin{cases}
 0 & d(x_{ik},x_{jk})<0.5\\
 d(x_{ik},x_{jk}) & \text{otherwise}
@@ -4949,95 +5257,32 @@ d(x_{ik},x_{jk}) & \text{otherwise}
 
 \end_layout
 
-\begin_layout Plain Layout
-If the results of the agents should be assigned to discrete action values,
- a conditional regression was also tested, where no error should occur if
- the assigned action is correct.
+\begin_layout Standard
+Obwohl ein solches Vorgehen intuitiv erscheint führt es in der GP Optimierung
+ dazu, korrekt gefundene Ergebnisse nur sehr vage getroffen werden und stattdess
+en nur der Fehler für die Fehlentscheidungen optimiert wird.
+ Der Regressionsfehler verliert somit seine Funktion als Distanzmaß.
 \end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
 
 \begin_layout Plain Layout
-Leads in the optimization process to correct results only very inaccurately
- and to be as inaccurate as possible for the rest.
- 
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-Upper and lower bound
-\begin_inset Quotes erd
-\end_inset
-
-
-\begin_inset Formula 
-\[
-d_{bounded}\begin{cases}
-0 & d(\min(\max(x_{ik},a_{\min}),a_{\max}),x_{jk})=0\\
-\min(d,\text{penalty}) & \text{otherwise}
-\end{cases}
-\]
+\begin_inset Graphics
+	filename img/tighttree_example/simple_trickser.pdf
 
 \end_inset
 
 
-\end_layout
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
-If the action area has a minimum and maximum value, results outside the
- action area are interpreted as belonging strongly to the limit value.
- If the limit value corresponds to the desired result, it is assigned to
- it accordingly, otherwise the error is calculated.
+Dieser Kandidat erschummelt sich einen niedrigen Fehler xxx trickser anderer
+ Ordner?
 \end_layout
-
-\begin_layout Plain Layout
-The aim is to find a mathematical formula that produces moderate results
- and does not produce overfitted extreme values even in special cases.
-\end_layout
-
-\begin_layout Plain Layout
-If the action area has a minimum and maximum value, results outside the
- action area are interpreted as belonging strongly to the limit value.
- If the limit value corresponds to the desired result, it is assigned to
- it accordingly, otherwise the error is calculated.
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Here, a second measure, which aims to produce moderate values, was mixed
- with the main measure, which should indicate the distance to the target
- solution.
- The second measure automatically becomes the KO criterion for candidates,
- single wrong points distort the regression error beyond recognition.
- This slowed down the training process extremely, furthermore, the most
- effective solution was not a formula that only generates moderate values,
- but the use of the min and max function.
-\end_layout
-
-\begin_layout Plain Layout
-[xx kein baum gefunden, warum auch]
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
 
 \end_inset
 
@@ -5050,25 +5295,6 @@ Here, a second measure, which aims to produce moderate values, was mixed
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-A conceivable solution would be to use a constantly increasing weighting
- function, such as tanh or log, as a distance to the edge area, to greatly
- reduce the influence of the values.
- Allerdings muss auch hier akribisch aufgepasst werden, dass die Distanzfunktion
- durch einen zu großen Zweitfaktor Zweckentfremdet wird, was zu einer kompletten
- Fehlbewertung von Kandidaten führen würde.
- Ist der Anteil der Kandidaten, die diese künstlich erzeugte Zweitbewertung
- überwinden konnten nicht groß genug, ist der genetische Selektionsprozess
- obsolet.
- Der Anteil dieser Bestrafung auf den finalen Wert wird zu einem Fehlerfaktor
- innerhalb der Regression, die ja bereits ein surrogate model ist.
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -5144,7 +5370,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/inkscape/kernel_hill_3options.pdf
+	filename img/inkscape/kernel_hill_4options.pdf
 
 \end_inset
 
@@ -5175,19 +5401,6 @@ name "fig:relative_kernel_path"
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Volatile Lösung vs.
- konstante Lösung [xx ->MSE]
 \end_layout
 
 \end_inset
@@ -5242,6 +5455,176 @@ multipliziert und zum normalen Regressionsfehler addiert.
 
 \begin_layout Standard
 [xx Fragen lambda? y antihut oder y kreis?]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/06-2_fourAreas_og.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Gewichtung der Abweichung als Kombination des normalen Regressionsfehlers
+ mit dem Phänotypischen Fehler.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/08_noExploration.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Die Lösung muss sich innerhalb des Verbesserungsintervalls aufhalten.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/07_onlyGoodExploration.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Offensichtliche Verschlechterungen werden ausgeschlossen.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Extreme Versionen eines kombinierten Regressionskernel.
+ Als sicherste Version könnten Bereiche mit Dummy-werten belegt werden,
+ die eine Änderung über eine Grenze hinaus so stark bestrafen, dass sie
+ quasi nicht eintreten kann.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+xxx must be bounded!
+\end_layout
+
+\begin_layout Paragraph
+Resultat
+\end_layout
+
+\begin_layout Standard
+Das mischen des klassischen Regressionsfehlers mit dem Hpänotypfehler auf
+ diese Weise stellt einen zu starken Eingriff in dieses Distanzmaß dar.
+ Eine Paretofront mit drei Dimensionen (die Regressionsfehler korrellieren
+ miteinander) oder eine schwächere Gewichtung sehen zwar vielversprechend
+ aus, sind aber kein zentraler Aspekt dieser Arbeit und wurden deshalb nicht
+ weiter ausgewertet.
+ [xxx Zukunftsmusik]
 \end_layout
 
 \begin_layout Standard
@@ -5337,107 +5720,6 @@ Unsichere Verschlechterung.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/inkscape/regression_kernel_relative_outline.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Conceivable relevant areas for penalizing changes in a relative regression
- to an optimum, relative to a known solution.
- [xx]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-xx Es ist schwer zu erkennen, wann eine Abweichung von der Originallösung
- nötig ist.
- xxx
-\end_layout
-
-\begin_layout Plain Layout
-Diese Bereiche könnten je nach Belieben einen zusätzlichen mit konstanten
- oder sinkenden zusätzlichen Steigung gewertet werden.
-\end_layout
-
-\begin_layout Plain Layout
-Auch eine weitere Dimension auf der Paretofront wäre denkbar, wo eine Regression
- zur bekannten policy durchgeführt wird.
-\end_layout
-
-\begin_layout Plain Layout
-Als sicherste Version könnten Bereiche auch mit Dummy-werten belegt werden,
- die eine Änderung über eine Grenze hinaus so stark bestrafen, dass eine
- solche Änderung nicht möglich ist.
-\end_layout
-
-\begin_layout Plain Layout
-Eine solche Änderung sollte aber besser durch gezielte Ansatzpunkt für die
- GP erzielt werden.
- Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
- in denen optimiert werden darf.
- Auch wäre eine teilweise Übernahme durch die gp denkbar.
- Ein weiterer Lösungsansatz wäre, die Daten der Regression im Vorhinein
- clustern und je nach Erreichen durch die Originalpolicy zu bewerten.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Auch denkbar wäre immer weiter Gruppen aus dem Datensatz hinzuzunehmen und
- solang ein Modell weiterzuentwickeln, bin eine Gewisse Fehlergrenze untersfhrit
-ten wurde.
-\end_layout
-
-\begin_layout Plain Layout
-Unterschiede in der regression könnenverschieden entstehen.
- Die Verteilung der Unterschiede ist dafür relevant! (nicht transitiv, symmetris
-ch)
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -5468,72 +5750,26 @@ daten
 \end_inset
 
 
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-\begin_inset Formula 
-\[
-\forall_{i\in\text{data}_{\text{goal}}}\hat{y}_{\text{0}}^{^{(i)}}\leq\hat{y}_{\text{gp}}^{^{(i)}}\leq\hat{y}_{\text{goal}}^{^{(i)}}
-\]
-
-\end_inset
-
-Ein Kandidat gilt als paretoeffizient im Sinne der Verbesserung, wenn all
- seine Pareto-efficient candidates are of great interest for several reasons:
 \end_layout
 
-\begin_layout Itemize
-Within the regression, there are no cases where anything would go wrong.
-\end_layout
-
-\begin_layout Itemize
-Changes in logic will most likely at least not lead to a deterioration
-\end_layout
-
-\begin_layout Itemize
-Logic changes comprise a new insight that can be viewed in isolation
-\end_layout
-
-\begin_layout Itemize
-Logic changes can be easily combined
-\end_layout
-
-\begin_layout Itemize
-Familiarity becomes a reference pptogram not only through structural similarity,
- but also through more similar behaviour.
-\end_layout
-
-\end_inset
-
+\begin_layout Standard
 
 \end_layout
 
 \begin_layout Section
-Sample selection
+Offline Daten
 \end_layout
 
 \begin_layout Standard
-The data used for the regression is the essence of the surrogate model.
- Depending on how they are chosen, the result can vary greatly and be directed
- towards specific goals.
- For our benchmarks, the data were selected as follows:
+Der Datensatz für das offline training besteht aus online unselektierten
+ Daten der Blackbox bei zufälligen Läufen.
+ Die Daten für die Regression setzen sich aus allen Beobachtungen und gewählten
+ Aktionen aus zufällig gewählten Läufen zusammen.
+ 
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Die für die Regression verwendeten Daten sind das Wesen des Surrogatmodells.
- Je nachdem, wie sie gewählt wurden, kann sich das Ergebnis stark verändern
- und auf bestimmte Ziele gerichtet werden.
- Für unsere Benchmarks wurden die Daten folgendermaßen ausgewählt:
-\end_layout
-
-\end_inset
-
-
+For our benchmarks, the data were selected as follows:
 \end_layout
 
 \begin_layout Standard
@@ -5976,182 +6212,29 @@ Training size
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Data of the benchmarks in comparison.
- The IB is more complex than MC in every area.
-\end_layout
-
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Selecting regression data?
 \end_layout
 
 \begin_layout Standard
-Die Daten für die Regression setzen sich aus allen Beobachtungen und gewählten
- Aktionen aus zufällig gewählten Läufen zusammen.
- Dabei sind mehrere Formen der Optimierung denkbar:
+Durch die online generierung der Daten wird automatisch eine implizite Selektion
+ der relevanten Zustände durchgeführt.
+ Eine explizite Selektion oder erweierung der Daten durch den Anwender ist
+ nicht möglich, da ohne Verständnis für das Problem keine Bewertung der
+ Daten möglich ist ohne das Resultat maßgeblich zu beeinflussen.
+ Vergleichsweise schlechte Läufe können beispielsweise einen sehr schweren
+ aber gut gelösten Sonderfall darstellen oder aber auch stark vom Zufall
+ beeinflusst worden sein.
+ Denkbar ist auch, Daten für noch unbekannte Bereiche auszuwerten, was Observati
+onskombinationen mit einschließen könnte, die gar nicht entstehen können.
+ Obwohl die Erweiterungen vor allem auf die Unterschiede zum Expertenprogramm
+ abzielen sollte auch hier keine Selektion betrieben werden, da die bereitsricht
+ig getroffenen Daten einen wichtigen Teil für die Phänotypische Ähnlichkeit
+ zur Origin darstellen.
+ xx
 \end_layout
 
-\begin_layout Itemize
-Datenselektion.
- Steht im Vordergrund, eine bessere Leistung zu erreichen (und nicht die
- black box zu erklären) können die gewählten samples selektiert werden.
- Dies sollte aber nur dann erfolgen, wenn man sich der guten Performance
- sicher ist.
- Nur samples aus den besten Läufen zu nehmen wäre ein fataler Trugschluss,
- weil diese oft die einfachsten sind.
- Von weitaus größerer Relevanz wären die Läufe, bei denen man sicher ist,
- dass sie vom RL Agent besser gelöst wurde.
- Diese Information sind in einer vom Zufall abhängigen Umgebung jedoch nicht
- bekannt.
- Deswegen ist eine Datenselektion nicht empfehlenswert.
- Die einzige Möglichkeit, die man hat, sind Fälle auszusortieren, die nachweisli
-ch zu Fehlentscheidungen führten.
-\begin_inset Newline newline
-\end_inset
-
-Bevorzugen von Datenpunkten, die besser erscheinen
-\begin_inset Newline newline
-\end_inset
-
-Welche Zustände wichtig sind ist oft nicht erkennbar, eine Selektion kann
- als zu starke menschliche Einmischung zu Fehlern führen.
-\end_layout
-
-\begin_layout Itemize
-Komplett möglicher Datenraum normalverteilt? Ist irrelevant, da viele Zustände
- oft nicht erreicht werden können.
- Anpassungen müssen oft filigran an bestimmten Bereichen ansetzen.
-\end_layout
-
-\begin_layout Itemize
-Beobachten, wann die ersten Unterschiede in der Entscheidung sind.
- Diese können der Anfang des Übels sein.
-\end_layout
-
-\begin_layout Itemize
-Nur die besten Läufe mit einbeziehen
-\begin_inset Newline newline
-\end_inset
-
-Auch dieser Ansatz kann leicht dazu führen, dass eine Verbesserung erzwungen
- wird, die sich zu sehr auf die Spezialfälle ausrichtet.
-\end_layout
-
-\begin_layout Itemize
-Clustern, welche Entscheidungen entscheident sind
-\end_layout
-
-\begin_layout Subsection
-Outlier problems
-\end_layout
-
-\begin_layout Standard
-Outliers in a dataset tend to attract the attention of the evolving process.
- 
-\end_layout
-
-\begin_layout Itemize
-Improvement, period.
- No matter how small or irrelevant an improvement is, it is an improvement.
- 
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-tournament selection: Trees with this gene survive over the ones without
- this gene.
- There is no complexity threshold holding these trees back.
- 
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Many ways to fit outliers.
- Outliers are characterized by being in a sparse space.
- The chance of overfitting is quite high though, fitting a weird pattern
- randomly on a sparse dataset has a high chance of 
-\end_layout
-
-\begin_layout Itemize
-Sparse data can easily be fit: Improvement can often be achieved with relatively
- few effort leaving the program core untouched.
- Using only a couple of elemental mathematical operations or an if-condition
- is often enough.
- On one hand, it supports capsulating the program into more parts, however,
- the programs tend to make weird overfitting of outliers instead of improving
- the program.
- The core logic needs to fit much more data samples correctly, requiring
- many nodes to achieve only minor improvements.
- Taking care of all of them requires a lot of fine tuning and structural
- changes.
- If an improvement is found, the changes are often fundamental.
- These improvements are harder to achieve, but the required changes often
- scale similar to the outliers improvements.
- As a result, the improvement per node is often quite similar.
-\end_layout
-
-\begin_layout Itemize
-Capsulated changes
-\end_layout
-
-\begin_layout Itemize
-overfitting occurs randomly and often.
- functions can “accidentally” fit a sample, improving the regression error
- by only a few.
-\end_layout
-
-\begin_layout Itemize
-Crossover dilemma: Quantity over quality: The evolutionary crossover likes
- to populate a generation with these “genes”
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-they do not cause a lot of feature interaction to the rest of the code.
- making an improvement to the partner likely, even if it is not fundamental.
- 
-\end_layout
-
-\begin_layout Itemize
-Small branches are more likely to be passed as a whole each time 
-\end_layout
-
-\begin_layout Itemize
-Many small changes can accumulate, leaving the 
-\end_layout
-
-\begin_layout Itemize
-Crossover does not have complexity measurement.
- Each node is selected with the same probability, doesn't matter if you
- weight 
-\begin_inset Formula $\arctan(x)$
-\end_inset
-
- thousand times higher than 
-\begin_inset Formula $-(x)$
-\end_inset
-
- .
-\end_layout
-
-\begin_layout Itemize
-You can not be sure if an outlier is actually important or not
-\end_layout
-
-\end_deeper
 \begin_layout Chapter
 Framework for Familiarity based Genetic Programming
 \end_layout
@@ -6189,6 +6272,7 @@ Für diese Arbeit wurde ein GP suite in der Sprache python entwickelt, welches
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -7098,28 +7182,6 @@ The division of the evolution on a generation.
 
 \end_layout
 
-\begin_layout Paragraph
-\begin_inset Note Note
-status open
-
-\begin_layout Paragraph
-Tournament selection
-\end_layout
-
-\begin_layout Plain Layout
-Die tournament selection ist die gängigste Form der Selektion bei genetischer
- Programmierung.
- Um lokale optima zu vermeiden wurde die tournament-size auf den niedrigst
- möglichen Wert von 3 gesetzt.
- Für Gaussmutationen wurde die Turniergröße erhöht um das Fein-tuning nur
- bereits herausragenden Bäumen anzuwenden.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsection
 Random tree branch building (node based)
 \end_layout
@@ -7430,7 +7492,7 @@ The possibility to implement fixed nodes requires some adjustments to the
 \end_layout
 
 \begin_layout Itemize
-Mutating mofifiably nodes only
+Mutating mofifiable nodes only
 \end_layout
 
 \begin_layout Itemize
@@ -7497,7 +7559,8 @@ Visualisation
 Die Visualisierung erfolgte mithilfe von Latex.
  Das Forest-Paket löst dabei das Problem der Knotenanordnung, welche vor
  allem bei großen Bäumen möglichst Platzsparend erfolgen sollte.
- [xx] 
+ [xx anordnung de Knoten? Eigene Baumerzeugung...
+ Node alignment and style xx] 
 \end_layout
 
 \begin_layout Standard
@@ -7507,18 +7570,35 @@ n Formeln (die keine fixen Knoten betreffen) als einzelnen Knoten darstellen.
  einfache mathematische Formeln aufzublasen.
  Knoten werden dann zusammengefasst, wenn sie nicht fix sind und wenn ihr
  Ausdruck nicht die folgenden Operatoren enthält: [xx min, max, if-then-else,
- >, equal, ...] [xx Bild]
+ >, equal, ...] 
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "25col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -7527,8 +7607,102 @@ status open
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Each node is shown
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "25col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/tighttree_example/full-04_tight.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Tight version with joined branch
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The same expression in the form of a tree with automatic arrangement of
+ the nodes.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.tex"
 
 \end_inset
 
@@ -7536,7 +7710,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-
+Dunkel gezeichnete Knoten des Baumes sind nicht veränderbar.
+ 
 \end_layout
 
 \end_inset
@@ -7551,26 +7726,6 @@ status open
 \end_inset
 
 
-\end_layout
-
-\begin_layout Paragraph
-Latex trees
-\end_layout
-
-\begin_layout Itemize
-Node alignment and style xx
-\end_layout
-
-\begin_layout Itemize
-Tight tree-visualisation xx
-\end_layout
-
-\begin_layout Paragraph
-Monitoring
-\end_layout
-
-\begin_layout Standard
-xx
 \end_layout
 
 \begin_layout Paragraph
@@ -7582,39 +7737,7 @@ xx
 \end_layout
 
 \begin_layout Subsection
-Backups
-\end_layout
-
-\begin_layout Standard
-xx
-\end_layout
-
-\begin_layout Subsection
-Python Code generation
-\end_layout
-
-\begin_layout Standard
-xx
-\end_layout
-
-\begin_layout Subsection
 Recursive tree structure and meta information
-\end_layout
-
-\begin_layout Standard
-xx
-\end_layout
-
-\begin_layout Subsection
-2f-2b strong typing
-\end_layout
-
-\begin_layout Standard
-xx
-\end_layout
-
-\begin_layout Subsection
-Loading from label list or expression
 \end_layout
 
 \begin_layout Standard
@@ -9031,6 +9154,21 @@ erung zwar nicht weit, aber doch in sämtlichen Punkten (Fitness, Robustheit,
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
+ in denen optimiert werden darf.
+ Auch wäre eine teilweise Übernahme durch die gp denkbar.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
 btprint "btPrintCited"
@@ -9049,11 +9187,250 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
  Obwohl der Autopilot weniger Unfälle als der Mensch baut [xx] muss diese
  Fehlentscheidung vor Gericht erklärt, und vermutlich auch gehaftet werden.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Subsection
+Outlier problems at MAE
+\end_layout
+
+\begin_layout Plain Layout
+Outliers in a dataset tend to attract the attention of the evolving process.
+\end_layout
+
+\begin_layout Itemize
+Improvement, period.
+ No matter how small or irrelevant an improvement is, it is an improvement.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+tournament selection: Trees with this gene survive over the ones without
+ this gene.
+ There is no complexity threshold holding these trees back.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Many ways to fit outliers.
+ Outliers are characterized by being in a sparse space.
+ The chance of overfitting is quite high though, fitting a weird pattern
+ randomly on a sparse dataset has a high chance of
+\end_layout
+
+\begin_layout Itemize
+Sparse data can easily be fit: Improvement can often be achieved with relatively
+ few effort leaving the program core untouched.
+ Using only a couple of elemental mathematical operations or an if-condition
+ is often enough.
+ On one hand, it supports capsulating the program into more parts, however,
+ the programs tend to make weird overfitting of outliers instead of improving
+ the program.
+ The core logic needs to fit much more data samples correctly, requiring
+ many nodes to achieve only minor improvements.
+ Taking care of all of them requires a lot of fine tuning and structural
+ changes.
+ If an improvement is found, the changes are often fundamental.
+ These improvements are harder to achieve, but the required changes often
+ scale similar to the outliers improvements.
+ As a result, the improvement per node is often quite similar.
+\end_layout
+
+\begin_layout Itemize
+overfitting occurs randomly and often.
+ functions can “accidentally” fit a sample, improving the regression error
+ by only a few.
+\end_layout
+
+\begin_layout Itemize
+Crossover dilemma: Quantity over quality: The evolutionary crossover likes
+ to populate a generation with these “genes”
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+they do not cause a lot of feature interaction to the rest of the code.
+ making an improvement to the partner likely, even if it is not fundamental.
+\end_layout
+
+\begin_layout Itemize
+Small branches are more likely to be passed as a whole each time
+\end_layout
+
+\begin_layout Itemize
+Many small changes can accumulate, leaving the
+\end_layout
+
+\begin_layout Itemize
+Crossover does not have complexity measurement.
+ Each node is selected with the same probability, doesn't matter if you
+ weight 
+\begin_inset Formula $\arctan(x)$
+\end_inset
+
+ thousand times higher than 
+\begin_inset Formula $-(x)$
+\end_inset
+
+ .
+\end_layout
+
+\begin_layout Itemize
+You can not be sure if an outlier is actually important or not
+\end_layout
+
+\end_deeper
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Paragraph
+Probleme?
+\end_layout
+
+\begin_layout Plain Layout
+Problems with mountain car experiments
+\end_layout
+
+\begin_layout Itemize
+Change of sign
+\end_layout
+
+\begin_layout Itemize
+change of sign at weird spots
+\end_layout
+
+\begin_layout Itemize
+Parameter range (should they be normalized?)
+\end_layout
+
+\begin_layout Itemize
+Not enough samples for small improvements?
+\end_layout
+
+\begin_layout Itemize
+Unstable sarsa?
+\end_layout
+
+\begin_layout Itemize
+Outlier can be found easier
+\end_layout
+
+\begin_layout Itemize
+Difference 2-1 and 0-1 is the same, although completely different actions
+\end_layout
+
+\begin_layout Itemize
+Fast moving car vs slowly moving generate different amount of data per area.
+ coarse data can be fit better than dense data.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+if cartVel < 0:
+\end_layout
+
+\begin_layout Plain Layout
+
+  push left
+\end_layout
+
+\begin_layout Plain Layout
+
+else:
+\end_layout
+
+\begin_layout Plain Layout
+
+  push right
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Simple algorithm
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Section
+differential learning
+\end_layout
+
+\begin_layout Plain Layout
+Differentielles Lernen ist ein Konzept aus der Sportwissenschaft, wo der
+ Trainingsprozess statt wiederholung eines Ansatzes auf die Anwendung mehrerer
+ Trainingsansätze baut.
+ Obwohl beim ML das Wiederholen eines Trainingsansatzes weitaus weniger
+ limitiert ist kann dennoch eine Wechselwirkung zwischen den drei Lernansätzen
+ (NN, Menschlicher Code und GP) gefunden werden.
+ Der menschliche Code stellt als Erzeugnis eines kreativen Entwicklungsprozesses
+ eine intuitive, erklärbare Lösung dar.
+ Sowohl NN als auch die GP produzieren hingegen policies, die frei von menschlic
+hem bias sind und oft Aspekte behandeln, an die der Mensch nicht denkt.
+ [xx]
 \end_layout
 
 \end_inset

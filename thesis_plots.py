@@ -128,7 +128,6 @@ def thesis_plot_ib_comparisson():
 #         # fig.savefig(savepath)
 #         # plt.close('all')
 
-
 def thesis_MC_comparisson():
     xx = np.linspace(-5, 5, 100)
     yy = np.abs(xx)

@@ -266,6 +266,10 @@ NN Neural Network
 TED Tree Edit Distance
 \end_layout
 
+\begin_layout Definition
+[xxx Definitionsverzeichnis]?
+\end_layout
+
 \end_inset
 
 
@@ -968,13 +972,13 @@ Sprache als Mittel
 \end_layout
 
 \begin_layout Standard
-Erklärbare künstliche Intelligenz beschäftigt sich mit dem Problem, Lösungsansät
-ze des AI die bisher als Blackbox betrachtet werden für den Menschen verstehbar
- zu machen.
- Im Angesicht dessen, dass selbst Programmierer oft ihren eigenen Code nach
- einiger Zeit nicht mehr verstehen ist Erklärbarkeit deshalb eine sehr willkürli
-che Eigenschaft.
- Folgende Definition einer Erklärung soll deshalb für diese Arbeit gelten:
+Explainable artificial intelligence deals with the problem of making AI
+ solutions, which have so far been regarded as black boxes, understandable
+ for humans.
+ In view of the fact that even programmers often do not understand their
+ own code after some time, explainability is a very arbitrary property.
+ The following definition of an explanation should therefore apply to this
+ work:
 \end_layout
 
 \begin_layout Definition
@@ -987,7 +991,7 @@ name "sec:Explainability-definition"
 
 \end_inset
 
- [xxx Definitionsverzeichnis]
+ 
 \end_layout
 
 \begin_layout Definition
@@ -1100,17 +1104,16 @@ Formen der Erklärungen
 \end_layout
 
 \begin_layout Standard
-Die Zwischenziele, die ein Mensch zur Erlernung einer Fähigkeit durcherlebt,
- ist meist nicht vergleichbar mit den Lernmechanismen von neuronalen Netzen
- oder genetischer Programmierung.
+The intermediate goals that a person goes through to learn an ability are
+ usually not comparable to the learning mechanisms of neural networks or
+ genetic programming.
  
 \end_layout
 
 \begin_layout Standard
-Ein RL Agent hat somit nur eine funktionierende Strategie, die auf kein
- Paradigma oder Anhaltspunkt verweisen kann, der einem Menschen etwas erklären
- könnte.
- Dem Gleichungssystem kann somit keine Kausalität vorausgesetzt werden.
+An RL Agent therefore only has a working strategy that cannot point to any
+ paradigm or clue that could explain anything to a person.
+ Thus, no causality can be assumed for the system of equations.
  
 \end_layout
 
@@ -1119,29 +1122,29 @@ Ergebnisanalyse
 \end_layout
 
 \begin_layout Standard
-Dennoch funktionieren die gefundenen Lösungen, weshalb man versuchen kann,
- die Logik in kausale Zusammenhänge zu abstrahieren.
+Nevertheless, the solutions found work, which is why one can try to abstract
+ the logic into causal relationships.
  
 \end_layout
 
 \begin_layout Standard
-Ein non-verbaler Lernprozess ist meist nur in Form von ausführlicher Beobachtung
- des Verhaltens durch den Menschen möglich.
- Ein Experte schaut sich dafür Spiele des Agenten an und versucht zu erkennen,
- wo die wichtigsten Strategischen unterschiede sind, damit er diese Erklären
- kann.
- Bei AlphaGo konnten so beispielsweise allgemein gültige Strategien gefunden
- werden, die bisher noch unbekannt waren.
- [xx] Obwohl dieses Verfahren aufwändig ist, hat es doch den entscheidenden
- Vorteil, dass das bereits erlernte nicht verworfen werden muss, sondern
- sogar noch einen sinnvollen Kern liefert.
- Der Teil, der über einen Lern- und Verständnisprozess in das eigene Modell
- integriert werden muss ist somit weitaus geringer.
+A non-verbal learning process is usually only possible in the form of detailed
+ observation of the behaviour by the person.
+ To do this, an expert watches games of the agent and tries to identify
+ where the most important strategic differences are so that he can explain
+ them.
+ With AlphaGo, for example, it has been possible to find generally valid
+ strategies that were previously unknown.
+ xx] Although this procedure is complex, it has the decisive advantage that
+ what has already been learned does not have to be discarded, but actually
+ provides a meaningful core.
+ The part that has to be integrated into the own model via a learning and
+ understanding process is therefore much less.
 \end_layout
 
 \begin_layout Standard
-Die Aufgabe des in dieser Arbeit vorgestellten Ansatz ist es grundsätzlich,
- diesen Prozess weitesgehend zu automatisieren.
+The task of the approach presented in this thesis is basically to automate
+ this process as far as possible.
 \end_layout
 
 \begin_layout Section
@@ -1156,11 +1159,10 @@ name "sec:Online-offline_regression"
 \end_layout
 
 \begin_layout Standard
-Man unterscheidet beim Training von KIs unter anderem zwischen Online- und
- Offline Training.
- Online Training bedeutet, dass der Agent live und in der realen Umgebung
- lernt, beim offline training wird auf einem Surrogatmodell gelernt, beispielswe
-ise durch Regression auf einem Datensatz.
+When training AIs, a distinction is made between online and offline training.
+ Online training means that the agent learns live and in the real environment,
+ offline training means that the agent learns on a surrogate model, for
+ example by regression on a data set.
  As Daniel Hein has found out in 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -1181,9 +1183,9 @@ However, offline training is an exploratory and very cost-effective alternative,
 \end_layout
 
 \begin_layout Standard
-Online training ist nur für die Entwicklung neuer Ansätze nötig.
- Um eine bereits bekannte Black box Lösungen zu erklären ist auch ohne Kenntnis
- über die Umgebung möglich
+Online training is only necessary for the development of new approaches.
+ To explain an already known black box solution is also possible without
+ knowledge of the environment.
 \end_layout
 
 \begin_layout Section
@@ -1249,24 +1251,24 @@ Divide and conquer
 \end_layout
 
 \begin_layout Standard
-Probleme sollten soweit es geht in Teilprobleme zerlegt werden.
- Dadurch wird die Komplexität des Problems aufgrund der möglichen Permutationen
- der Zustände reduziert.
- Würfelt man beispielsweise zwei sechsseitige Würfel, hat gibt es 
+Problems should be broken down into sub-problems as far as possible.
+ This reduces the complexity of the problem due to the possible permutations
+ of the states.
+ For example, if you throw two six-sided dice, there are 
 \begin_inset Formula $6\cdot6=36$
 \end_inset
 
- Permutationsmöglichkeiten.
- Betrachtet man die Ergebnisse isoliert, sind es 
+ possible permutations.
+ If the results are considered in isolation, there are 
 \begin_inset Formula $6+6=12$
 \end_inset
 
- Möglichkeiten.
- Formeln, die mit genetischer Programmierung gefunden werden, versuchen
- eine Formel für den gesamten Zustandsraum zu finden.
- Ein Abstraktion des Problems, beispielsweise durch if-Anweisungen, lässt
- dabei die Formel exponentiell größer werden, weshalb nur selten if-Anweisungen
- in gefundenen Formeln vorhanden sind.
+ possibilities.
+ Formulas that are found with genetic programming try to find a formula
+ for the whole state space.
+ An abstraction of the problem, e.g.
+ by if statements, makes the formula grow exponentially larger, which is
+ why only rarely if statements are present in formulas found.
 \end_layout
 
 \begin_layout Paragraph
@@ -1274,9 +1276,8 @@ if-operator
 \end_layout
 
 \begin_layout Standard
-Beim Machine Learning gibt es zur Unterteilung viele Clusteringmethoden,
- beim Menschen spielen im Gegensatz daui if-Unterscheidungen eine wichtige
- Rolle.
+In machine learning there are many clustering methods for subdivision; in
+ humans, in contrast to if distinctions play an important role.
  
 \end_layout
 
@@ -1297,11 +1298,10 @@ Observationen sind nachvollziehbar (Einflussfaktoren)
 \end_layout
 
 \begin_layout Standard
-Observationen haben hier eine besondere Bedeutung, da die einzige Aufgabe
- des GP-Prozesses ist, ihre Werte auf ein Ergebnis zu reduzieren.
- Observationen, die nicht Teil der Lösung sind sind entweder irrelevant
- oder ihre Information kann ausreichend durch andere Observationen ersetzt
- werden.
+Observations have a special meaning here, since the only task of the GP
+ process is to reduce their values to a result.
+ Observations that are not part of the solution are either irrelevant or
+ their information can be sufficiently replaced by other observations.
  
 \end_layout
 
@@ -1354,13 +1354,13 @@ Komplexitätsmaß?
 \end_layout
 
 \begin_layout Standard
-Der Suchraum der Bäume wird mithilfe der Baumtiefe und der Knotenzahl begrenzt.
- Dadurch lässt sich Overvitting vermeiden, die Auswertung der Kandidaten
- und der Evolutionsprozess ist schneller und die Knotenzahl lässt sich zusätzlic
-h noch gewichten und stellt so ein ein an die Präferenzen des Entwicklers
- anpassbares Komplexitätsmaß dar.
- Eine beliebte Gewichtung der Operatoren wird auch in dem kommerziellen
- GP Tool DEAP verwendet.
+The search space of the trees is limited by the tree depth and the number
+ of nodes.
+ This avoids overvitting, the evaluation of the candidates and the evolution
+ process is faster and the number of nodes can be additionally weighted,
+ thus providing a complexity measure that can be adapted to the preferences
+ of the developer.
+ A popular operator weighting is also used in the commercial GP tool DEAP.
  
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -4012,12 +4012,13 @@ Black box: PSONN
 \end_layout
 
 \begin_layout Standard
-Als Black box wurde ein particle swarm optimisation algorithmus with neural
- networks (PSONN) mit einem errechneten IB reward von 
+As black box a particle swarm optimisation algorithm with neural networks
+ (PSONN) with a calculated IB reward of 
 \begin_inset Formula $5353$
 \end_inset
 
- ausgewählt.
+ was chosen.
+ 
 \begin_inset Foot
 status open
 
@@ -4687,9 +4688,13 @@ xxx idee: Karoo hat nur MAE!!
 
 \begin_layout Standard
 xxx idee sign(vel) vs if-then-else: if then else kann verbessert werden,
- sign zwar auch, aber sieht halt kacke ausFor this, the regression error
- was calculated on a data set created by the target solution, which is the
- sum of the differences of the individual points.
+ sign zwar auch, aber sieht halt kacke aus
+\end_layout
+
+\begin_layout Standard
+For this, the regression error was calculated on a data set created by the
+ target solution, which is the sum of the differences of the individual
+ points.
  The aim of the search process is to minimise the regression error.
  
 \end_layout
@@ -5100,8 +5105,8 @@ Discrete, bounded (MC) Anpassung an den Aktionsraum (discrete)
 \end_layout
 
 \begin_layout Standard
-Ist der Aktionsraum nicht nur beschränkt sondern auch noch diskret werden
- Ergebnisse gerundet.
+If the room for action is not only limited but also discreet, results are
+ rounded.
 \end_layout
 
 \begin_layout Standard
@@ -5803,10 +5808,10 @@ Offline Daten
 \end_layout
 
 \begin_layout Standard
-Der Datensatz für das offline training besteht aus online unselektierten
- Daten der Blackbox bei zufälligen Läufen.
- Die Daten für die Regression setzen sich aus allen Beobachtungen und gewählten
- Aktionen aus zufällig gewählten Läufen zusammen.
+The data set for offline training consists of online unselected data from
+ the black box for random runs.
+ The data for the regression consists of all observations and selected actions
+ from randomly selected runs.
  
 \end_layout
 
@@ -6656,9 +6661,8 @@ num
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Aufteilung der Operatoren in ihre Aufgabenbereiche.
- Viele Aufgaben können mit einer Untergruppe an Operatoren ausreichend erzeugt
- werden.
+Division of operators into their areas of responsibility.
+ Many tasks can be created sufficiently with a subgroup of operators.
  [xx]
 \end_layout
 
@@ -7230,11 +7234,11 @@ Random tree branch building (node based)
 \end_layout
 
 \begin_layout Standard
-Die ist allerdings ein Problem für die layerwise-mutation, wenn mehrere
- Äste gleichzeitig aufgebaut werden müssen, siehe [xx weil die Baumtiefe
- bei großer Tiefe exponentiell steigt und somit oft ].
- Deshalb wurde ein Knotenbasierter Algorithmus entwickelt, der Äste im Full-
- und Grow modus bis zu einer gewissen Anzahl von Knoten aufbaut.
+However, this is a problem for the layerwise mutation, if several branches
+ have to be built up at the same time, see [xx because the tree depth increases
+ exponentially at great depth and therefore often ].
+ Therefore a node based algorithm was developed, which builds up branches
+ in full- and grow mode up to a certain number of nodes.
 \end_layout
 
 \begin_layout Standard
@@ -8373,10 +8377,6 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -8398,6 +8398,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
+preview true
 filename "../benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
 
 \end_inset

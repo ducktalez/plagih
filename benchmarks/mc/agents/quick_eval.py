@@ -49,8 +49,8 @@ def mtc_plot_decisions_space(agent, folder, name, cmap='bwr', dummy=False, n=100
 
     ticks = np.linspace(0, 2, 3)
     boundaries = np.linspace(-0.5, 2.5, 4)
-
-    return backup_results1, mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    return backup_results1
 
 
 def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
@@ -108,9 +108,12 @@ def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
 
 
 def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder=Path.cwd() / 'img/', splits=128, dummy=False, cmap='Greys', boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
+    """
 
+    """
     x_linspace, y_linspace, result = mtc_heatmap_helper(agent, splits, n, dummy=dummy)
-    return mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
+    return
 
 
 def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=None, ticks=None, vmin=None, vmax=None, nan_style=None, no_colorbar=False):
@@ -157,15 +160,15 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
 
         ax.add_patch(p)
 
-        # path_mcmeshplot = path_make_dir(folder / f'{name}.png')
-        # fig.savefig(path_mcmeshplot)
-        # todo todotodo
-        path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
+        path_mcmeshplot = path_make_dir(folder / f'{name}.png')
         fig.savefig(path_mcmeshplot)
+        # todo todotodo
+        # path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
+        # fig.savefig(path_mcmeshplot)
         print(f'saved {path_mcmeshplot}')
         plt.close('all')
 
-    return path_mcmeshplot
+    return
 
 
 def mtc_play(agent, render=False, n=1):
@@ -271,8 +274,9 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
         vmax = +2 * boarders
         ticks = np.linspace(-(2*boarders), 2*boarders, 1+min(4*boarders, 10))
         boundaries = np.linspace(-(0.5+2*boarders), 0.5+2*boarders, 2+min(4*boarders, 10))
+    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
 
-    return backup_results2, mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
+    return backup_results2
 
 
 def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
@@ -347,8 +351,8 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
                 avg_reward, fails, _ = mtc_play(mc_gent, n=n)
 
             # sfehsfeh save  time comment this
-            bur1, path_mcmeshplot = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
-            bur2, path_mcmeshplot_diff = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+            bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
+            bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
             mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
             bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
             agent_performance[parsim] = [parsim, fitness, avg_reward, fails, None, None]
@@ -376,9 +380,8 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
 
         fig.savefig(dir_save / f'evaled_overview.pdf')
 
-    summary_text = '\n'.join([f'Tree {x[0]} (regr. error {x[1]}) has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance.values()])
-    file_dump(dir_save / 'summary.txt', summary_text)
-    with (dir_save / 'summary.txt').open('w') as file:
-        file.write(summary_text)
+    # summary_text = '\n'.join([f'Tree {x[0]} (regr. error {x[1]}) has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance.values()])
+    # file_dump(dir_save / 'summary.txt', summary_text)
+    yaml_dump(dir_save / 'summary.yaml', agent_performance)
 
     return agent_performance

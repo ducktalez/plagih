@@ -631,9 +631,9 @@ Outline of applied Methods
 \end_layout
 
 \begin_layout Standard
-In diesem Abschnitt werden die wichtigsten Aspekte der künstlichen Intelligenz
- beschrieben.
- Diese werden besonders im Angesicht ihrer Erklärbarkeit (XAI) betrachtet.
+This section describes the main aspects of artificial intelligence.
+ These are considered particularly in the light of their explainability
+ (XAI).
 \end_layout
 
 \begin_layout Section
@@ -641,22 +641,20 @@ Reinforcement Learning
 \end_layout
 
 \begin_layout Standard
-Reinforcement Learning (RL) stellt einen Teil des ML dar, bei dem ein Agent
- ohne Vorkenntnisse eine Strategie erlernt um den erwarteten Reward in einer
- Umgebung zu maximieren.
- Die Umwelt stellt dabei üblicherweise eine Markov-kette dar, eine stochastische
- Form des Determinismus, bei dem der Agent von einem Zustand mit stochastischer
- Wahrscheinlichkeit und derselben Aktion auch in denselben Folgezustand
- kommt.
- [xx das is vllt zu kurz] 
+Reinforcement Learning (RL) is a part of ML where an agent without prior
+ knowledge learns a strategy to maximise the expected reward in an environment.
+ The environment usually represents a Markov chain, a stochastic form of
+ determinism in which the agent moves from a state with stochastic probability
+ and the same action to the same subsequent state.
 \end_layout
 
 \begin_layout Standard
-Ein Agent muss sich die Strategie mit begrenzter Speicher- und Rechenleistung
- finden und muss vor allem bei komplexen Zustandsräumen den Markovprozess
- vereinfachen und durch eine sinnvolle Abwägung zwischen Exploration und
- Exploitation möglichst effizient den bestmöglichen Lösungsweg suchen.
- [xx tradeoff quelle] Aktuelle Ansätze nutzen dafür oft neuronale Netze.
+An agent has to find a strategy with limited memory and computing power
+ and, especially in complex state spaces, has to simplify the Markov process
+ and find the best possible solution as efficiently as possible through
+ a sensible balance between exploration and exploitation.
+ [xx tradeoff source] Current approaches often use neural networks for this
+ purpose.
 \end_layout
 
 \begin_layout Standard
@@ -705,6 +703,97 @@ reference "fig:relu-sigmoid"
 wide false
 sideways false
 status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/neural_networks/graph_sigmoid.pdf
+	lyxscale 50
+	height 35mm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sigmoid
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49.99col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/neural_networks/graph_relu.pdf
+	lyxscale 47
+	height 35mm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+ReLu
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -769,7 +858,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "50col%"
+width "49.99col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -854,10 +943,10 @@ Sarsa-200
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Ein neuronales Netz erstellt sehr komplexe Policies die dadurch auch sehr
- anpassungsfähig sind und filigrane Unterscheidungen treffen können.
- Dadurch sind in vielen Bereichen patches mit volatilen Entscheidungsänderungen
- sehbar, deren Umfang und Auswirkung oft nicht erkennbar sind.
+A neural network creates very complex policies which are therefore very
+ adaptable and can make filigree distinctions.
+ Thus, patches with volatile decision changes are visible in many areas,
+ whose extent and effect are often not recognisable.
 \end_layout
 
 \end_inset
@@ -1463,6 +1552,14 @@ xx)
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Interpretable RL policies by Daniel Hein
+\end_layout
+
+\begin_layout Standard
+xxx
 \end_layout
 
 \begin_layout Standard
@@ -4228,7 +4325,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "50col%"
+width "49.99col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -7700,6 +7797,25 @@ Comparison & Discussion
 Mountain Car
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+xxx ALL runs in comparisson? (regression error and fitness)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Scratch
 \end_layout
@@ -7788,7 +7904,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "49.99col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -7893,7 +8009,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "49.99col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -7999,7 +8115,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "49.99col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -8108,7 +8224,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "49.99col%"
 special "none"
 height "1in"
 height_special "totalheight"

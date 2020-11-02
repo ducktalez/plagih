@@ -679,9 +679,9 @@ class ExplainableGP(object):
                             f"{pareto_agents[pp]['fitness']:.2f}",
                             f"{avg_reward:0.1f}",
                             f"{pareto_agents[pp]['tex_expr_raw']}"]
-                tex_line_large = [tex_include_pdf(f'sfehs_eval/{pp}'),  # path_mcmeshplot
-                                  tex_include_pdf(f'sfehs_eval/diff-{pp}'),  # path_mcmeshplot_diff),
-                                  tex_include_pdf(f'sfehs_eval/space-{pp}'),
+                tex_line_large = [tex_include_pdf(f'sfehs_eval/{pp}.png'),  # path_mcmeshplot
+                                  tex_include_pdf(f'sfehs_eval/diff-{pp}.png'),  # path_mcmeshplot_diff),
+                                  tex_include_pdf(f'sfehs_eval/space-{pp}.png'),  # todo
                                   tex_include_pdf(f'histograms/acthist_{pp}'),
                                   f"{pareto_agents[pp]['forest_tree_full']}",  # forest_tree_full, forest_tree_tight
                                   f"{pareto_agents[pp]['forest_tree_tight']}",
@@ -691,20 +691,21 @@ class ExplainableGP(object):
 
                 tex_lines += [tex_line + tex_line_large]
 
-            tex_tabular = lambda x: "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
-                                    "dist & error & reward & expression \\tabularnewline \\hline\n" \
+            tex_tabular = lambda x: \
+                "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
+                "dist & error & reward & expression \\tabularnewline \\hline\n" \
                 f"{x}" \
-                                    "\\hline\n\\end{tabular}\n\n"
-            tex_longtable = lambda x: "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
-                                      "\\hline\n" \
-                                      "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                f"{x}" \
-                                      "\\hline\n\\end{longtable}\n"
+                "\\hline\n\\end{tabular}\n\n"
 
             # & decision plot & spiral plot & spiral difference-plot & histogram
 
             paste = ''.join([tex_tabuline(x[:4]) for x in tex_lines])
-            file_dump(self.root_dir / f'analysis_input.tex', tex_longtable(paste), print_type=self.print_type)
+            paste = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
+                    "\\hline\n" \
+                    "dist & error & reward & expression \\tabularnewline \\hline\n" \
+                    f"{paste}" \
+                    "\\hline\n\\end{longtable}\n"
+            file_dump(self.root_dir / f'analysis_input.tex', paste, print_type=self.print_type)
 
             tex_analysis = latex_treeviz_full_document(tex_tabular(paste))  # sfeh
             file_dump(self.root_dir / f'analysis_overview.tex', tex_analysis, print_type=self.print_type)
@@ -955,7 +956,7 @@ class ExplainableGP(object):
         cooltree.set_fix_nodes(self.origin_cooltree)
         tree = cooltree.get_oldtree()
 
-        pl_forest = lambda x: f'\\pl_forest{{{x}}}\n'
+        pl_forest = lambda x: f'\\plforest{{{x}}}\n'
 
         forest_tree_full = pl_forest(latex_brackettree(tree))
         forest_tree_tight = pl_forest(latex_brackettree_tight(latex_tree_semitight(tree)))
@@ -1516,13 +1517,6 @@ class ExplainableGP(object):
 
         return fitness_train
 
-    # def plot_rc_default(self):
-    #     rc('font', weight='bold')    # bold fonts are easier to see
-    #     rc('tick', labelsize=15)     # tick labels bigger
-    #     rc('lines', lw=1, color='k') # thicker black lines
-    #     rc('grid', c='0.5', ls='-', lw=0.5)  # solid gray grid lines
-    #     rc('savefig', dpi=300)       # higher res outputs
-
     def plot_gen_performance(self):
         """
         All monitoring infos
@@ -1620,15 +1614,12 @@ class ExplainableGP(object):
 
             try:
                 fig.savefig(self.root_dir / f'paretofront.pdf')  # run_name?
-                # fig.savefig(path_plot / f'paretofront.png', dpi=300)
+                # fig.savefig(path_plot / f'paretofront.png')
                 self.printpl('f', f"paretofront (pdf): {self.root_dir / f'paretofront.pdf'}")
             except PermissionError as perm_error:
                 print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?
 
         return
-
-    def real_evaluation(self):
-        pass
 
     def plot_evolve_performance(self):
         """

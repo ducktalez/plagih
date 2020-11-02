@@ -129,6 +129,23 @@ def thesis_plot_ib_comparisson():
 #         # plt.close('all')
 
 
+def thesis_MC_comparisson():
+    xx = np.linspace(-5, 5, 100)
+    yy = np.abs(xx)
+    xxd = np.linspace(-5, 5, 10+1)
+    yyd = np.round(xx)
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        fig.figsize = plplot_size_up
+        ax.legend(loc='lower left')
+        ax.plot(xx, yy)
+
+        # savepath = path_make_dir(Path.cwd() / f'MA_lyx/img/IB/.pdf')
+        # fig.savefig(savepath)
+        # plt.close('all')
+
+
 def thesisplot_tempdiff():
     """
 

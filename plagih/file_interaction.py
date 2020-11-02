@@ -21,7 +21,7 @@ pyplot_rc_tex = {'figure.autolayout': True,
                  # 'savefig.pad_inches': 0,
                  'font.size': 10,
                  'legend.fontsize': 9,
-                 'savefig.dpi': 300,
+                 'savefig.dpi': 600,
                  # 'lines.linewidth': 1,
                  # 'lines.markersize': 3,
                  # 'axes.xmargin': 0,
@@ -36,7 +36,13 @@ rc_pyplot_size = {'figure.figsize': pyplot_size}
 #                      'font.sans-serif': ['Helvetica', 'Avant Garde', 'Computer Modern Sans serif'],
 #                      'font.cursive': ['Zapf Chancery'],
 #                      'font.monospace': ['Courier', 'Computer Modern Typewriter']}
-# more_optionsasd = {'savefig.dpi': 300, }
+
+# def plot_rc_default(self):
+#     rc('font', weight='bold')    # bold fonts are easier to see
+#     rc('tick', labelsize=15)     # tick labels bigger
+#     rc('lines', lw=1, color='k') # thicker black lines
+#     rc('grid', c='0.5', ls='-', lw=0.5)  # solid gray grid lines
+
 """
 For further options see:
 https://matplotlib.org/3.3.2/tutorials/introductory/customizing.html#customizing-with-matplotlibrc-files

@@ -23,6 +23,10 @@ import random
 np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before line-wrapping in order to view Trees
 
 
+# def mp_dummy(arg, **kwarg):
+#     return Nu.e2(arg, **kwarg)
+
+
 class FileLocations:
     backup_p = 'backup/backup.p'
     trees_sub_tex = 'visualisation/'

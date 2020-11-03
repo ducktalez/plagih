@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -39,6 +39,11 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -60,8 +65,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -100,7 +103,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -110,10 +112,7 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -297,54 +296,6 @@ xx toc style rote boxen?
 
 \end_layout
 
-\begin_layout Chapter
-Intro / Motivation
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Artificial neural networks are computer systems that are strongly oriented
- towards the biological brain.
- An input layer receives all important information and an output layer evaluates
- all possible actions - the best one is then taken.
- Between the two layers there can be any number of hidden layers.
- Their task is to divide the problem between the input layer and the output
- layer and to identify subproblems.
- The training process will be started with a random parameterization and
- the decisions will be very bad at the beginning.
- If a wrong decision is made, the neurons from output to input adjust their
- values so that the next time the right decision is made.
-\end_layout
-
-\begin_layout Plain Layout
-A neuron is modeled as follows (see Neuron).
- For a group of neurons from the previous layer (often all neurons) the
- signals are received and weighted.
- Together with a bias, which is added by the neuron itself, a sum is formed.
- To prevent unnaturally large values in neurons, the sum is added to an
- activation function that calculates the final activation of the neuron.
- Common activation functions include ReLu and Sigmoid.
- The result is then passed on to the neurons of the next layer.
-\end_layout
-
-\begin_layout Plain Layout
-The complexity of such a network depends on the number of layers, the number
- of nodes per layer and the type of interconnection between layers.
- A possible network to solve Mountain Car could be for example an input
- layer with two neurons and an output layer with three neurons, as well
- as three hidden layers with 24, 48 and 24 layers each.
- Full connectivity between the layers is not unusual, resulting in the following
- number of connections:
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 \begin_inset Note Comment
 status open
@@ -403,39 +354,6 @@ Etwas zu Erklären zu können ist somit die Fähigkeit, Informationen verständl
 \end_layout
 
 \begin_layout Itemize
-NN Logik
-\begin_inset Newline newline
-\end_inset
-
-Die Logik dieses Modells muss allerdings vom Entwickler, in Form der Architektur
- des ML-Ansatzes implementiert werden (Verwendung neuronaler Netze, Anzahl
- der hidden layer, topologie zwischen den Schichten, Aktivierungsfunktionen
- der Neuronen, Explorationsparameter, etc.).
- Ist die gewählte Architektur nicht für das Problem geeignet, so wird es
- auch nicht funktionieren.
-\begin_inset Newline newline
-\end_inset
-
-Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
- einen Hund dafür zu trainieren und keine Taube.
- Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
- umgekehrt funktioniert es nicht.
- Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
- uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
-\end_layout
-
-\begin_layout Itemize
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AIINDEX2019"
-literal "true"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
 Das Trainieren von Agenten ist sehr aufwändig, weshalb das Modell meist
  in seiner Komplexität beschränkt wird.
  Experimente, die extrem komplexe Modelle trainierten zeigten dabei großen
@@ -463,14 +381,6 @@ Die effizientere Methode ist, den Agenten zu einem Fachidioten zu machen,
 \end_layout
 
 \begin_layout Itemize
-Ein Durchbruch gelang dabei Deepmind bei den Spielen Schach und Go.
- Diese Spiele galten aufgrund des tief gehenden Verständnis für Positionen
- und der enorm hohen Möglichkeit an möglichen Zügen als dem Menschen vorbehalten.
- Beide Ansätze waren sowohl dem Menschen als auch den vom Menschen geschriebenen
- Heuristiken überlegen.
-\end_layout
-
-\begin_layout Itemize
 Youtube Bilderkennung, allgemeine Intelligenz zu teuer
 \begin_inset Newline newline
 \end_inset
@@ -491,7 +401,6 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -512,29 +421,69 @@ Especially from a scientific point of view, it is of great interest not
 
 \end_layout
 
+\begin_layout Chapter
+Intro / Motivation
+\end_layout
+
+\begin_layout Standard
+Im Bereich der KI steigt das Interesse an Ansätzen, die nicht nur gut funktionie
+ren sondern zusätzlich auch erklärbar sind.
+ Das große Problem ist dabei, die enorm Verständnislücke zwischen der komplexen
+ Lösung einer performanten Black box Lösung und dem bereits vorhandenen
+ Wissen eines Experten zu schließen.
+ 
+\end_layout
+
+\begin_layout Standard
+Der Ansatz diesesr Arbeit setzt dabei an der Verständnisseite des Experten
+ an, dessen Heuristik (vertraut, erklärbar) mithilfe von genetischer Programmier
+ung sukzessiv so erweitert wird, dass sich ihr Verhalten der Blackbox schrittwei
+se annähert und somit die Lücke zwischen bekannter Lösung und Blackbox schließt.
+ 
+\end_layout
+
+\begin_layout Standard
+- vor allem im bereich RL
+\end_layout
+
+\begin_layout Standard
+auf die Vor allem im Bereich des RL, wo ein Agent durch Interaktion in einer
+ Umgebung eine Strategie erlernt, obliegt es momentan noch Domain Experten
+ nach Strategien zu suchen um Fehlentscheidungen zu vermeiden.
+ 
+\end_layout
+
 \begin_layout Standard
 In this thesis, familiarity is introduced as a concept for creating explainable
  Reinforcement Learning (RL) policies using Genetic Programming (GP).
  
 \end_layout
 
-\begin_layout Standard
-- Problem: Bisher können Lösungen nur mit blackbox Antätzen generiert werden.
- Kein Vertrauen
+\begin_layout Paragraph
+=========
+\end_layout
+
+\begin_layout Paragraph
+Motivation
 \end_layout
 
 \begin_layout Standard
-- Erklärbarkeit jetzt wichtig im Bereich RL
+ML Ansätze leben vor allem davon, dass Kontrolle 
 \end_layout
 
 \begin_layout Standard
-Deshalb rückt die Erklärbarkeit der Lösungen immer mehr in den Fokus der
- Forschung.
+- xai immer cooler, siehe 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AIINDEX2019"
+
+\end_inset
+
  
 \end_layout
 
-\begin_layout Standard
-- Erklärbarkeit durch Vertrautheit
+\begin_layout Paragraph
+asd
 \end_layout
 
 \begin_layout Standard
@@ -554,21 +503,16 @@ Als vertrautrbar gilt dabei eine von einem Domain Experten geschriebene
  
 \end_layout
 
-\begin_layout Standard
-RL is an important part of machine learning (ML), where an agent without
- prior knowledge has to learn a strategy in an environment from which he
- receives an external reward.
- The learning process is often made possible by the use of extremely complex
- data structures such as neural networks (NN), which must be regarded as
- black boxes.
- Especially in sensitive areas such as industry, a tradeoff in favor of
- performance at the expense of loss of control is often not an option, since
- even rarely occurring wrong decisions could have fatal consequences.
- 
-\end_layout
-
 \begin_layout Paragraph
 Deepmind's Alpha Go
+\end_layout
+
+\begin_layout Itemize
+Ein Durchbruch gelang dabei Deepmind bei den Spielen Schach und Go.
+ Diese Spiele galten aufgrund des tief gehenden Verständnis für Positionen
+ und der enorm hohen Möglichkeit an möglichen Zügen als dem Menschen vorbehalten.
+ Beide Ansätze waren sowohl dem Menschen als auch den vom Menschen geschriebenen
+ Heuristiken überlegen.
 \end_layout
 
 \begin_layout Standard
@@ -604,7 +548,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -626,10 +569,6 @@ nt; for the industry, which can also be prosecuted in court for undesirable
  
 \end_layout
 
-\begin_layout Subparagraph
-
-\end_layout
-
 \begin_layout Chapter
 Outline of applied Methods
 \end_layout
@@ -642,6 +581,23 @@ This section describes the main aspects of artificial intelligence.
 
 \begin_layout Section
 Reinforcement Learning
+\end_layout
+
+\begin_layout Standard
+RL is an important part of machine learning (ML), where an agent without
+ prior knowledge has to learn a strategy in an environment from which he
+ receives an external reward.
+ The learning process is often made possible by the use of extremely complex
+ data structures such as neural networks (NN), which must be regarded as
+ black boxes.
+ Especially in sensitive areas such as industry, a tradeoff in favor of
+ performance at the expense of loss of control is often not an option, since
+ even rarely occurring wrong decisions could have fatal consequences.
+ 
+\end_layout
+
+\begin_layout Standard
+====
 \end_layout
 
 \begin_layout Standard
@@ -667,11 +623,40 @@ xxx This area has become very popular due to the development of superhuman
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
  
+\end_layout
+
+\begin_layout Subsubsection
+Ergebnisanalyse
+\end_layout
+
+\begin_layout Standard
+Nevertheless, the solutions found work, which is why one can try to abstract
+ the logic into causal relationships.
+ 
+\end_layout
+
+\begin_layout Standard
+A non-verbal learning process is usually only possible in the form of detailed
+ observation of the behaviour by the person.
+ To do this, an expert watches games of the agent and tries to identify
+ where the most important strategic differences are so that he can explain
+ them.
+ With AlphaGo, for example, it has been possible to find generally valid
+ strategies that were previously unknown.
+ xx] Although this procedure is complex, it has the decisive advantage that
+ what has already been learned does not have to be discarded, but actually
+ provides a meaningful core.
+ The part that has to be integrated into the own model via a learning and
+ understanding process is therefore much less.
+\end_layout
+
+\begin_layout Standard
+The task of the approach presented in this thesis is basically to automate
+ this process as far as possible.
 \end_layout
 
 \begin_layout Section
@@ -679,19 +664,89 @@ Neural Networks
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+An input layer receives all important information and an output layer evaluates
+ all possible actions - the best one is then taken.
+ Between the two layers there can be any number of hidden layers.
+ Their task is to divide the problem between the input layer and the output
+ layer and to identify subproblems.
+ The training process will be started with a random parameterization and
+ the decisions will be very bad at the beginning.
+ If a wrong decision is made, the neurons from output to input adjust their
+ values so that the next time the right decision is made.
+\end_layout
+
+\begin_layout Plain Layout
+A neuron is modeled as follows (see Neuron).
+ For a group of neurons from the previous layer (often all neurons) the
+ signals are received and weighted.
+ Together with a bias, which is added by the neuron itself, a sum is formed.
+ To prevent unnaturally large values in neurons, the sum is added to an
+ activation function that calculates the final activation of the neuron.
+ Common activation functions include ReLu and Sigmoid.
+ The result is then passed on to the neurons of the next layer.
+\end_layout
+
+\begin_layout Plain Layout
+The complexity of such a network depends on the number of layers, the number
+ of nodes per layer and the type of interconnection between layers.
+ A possible network to solve Mountain Car could be for example an input
+ layer with two neurons and an output layer with three neurons, as well
+ as three hidden layers with 24, 48 and 24 layers each.
+ Full connectivity between the layers is not unusual, resulting in the following
+ number of connections:
+\end_layout
+
+\begin_layout Plain Layout
+====
+\end_layout
+
+\begin_layout Itemize
+NN Logik
+\begin_inset Newline newline
+\end_inset
+
+Die Logik dieses Modells muss allerdings vom Entwickler, in Form der Architektur
+ des ML-Ansatzes implementiert werden (Verwendung neuronaler Netze, Anzahl
+ der hidden layer, topologie zwischen den Schichten, Aktivierungsfunktionen
+ der Neuronen, Explorationsparameter, etc.).
+ Ist die gewählte Architektur nicht für das Problem geeignet, so wird es
+ auch nicht funktionieren.
+\begin_inset Newline newline
+\end_inset
+
+Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
+ einen Hund dafür zu trainieren und keine Taube.
+ Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
+ umgekehrt funktioniert es nicht.
+ Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
+ uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Artificial neural networks are machine learning systems that are strongly
+ oriented towards the biological brain.
+\end_layout
+
+\begin_layout Standard
+Aus der Sicht der Erklärbarkeit ===
+\end_layout
+
+\begin_layout Standard
 Neural networks are generalized, very extensive systems of equations, which
  can adapt their own parameters in a two-complex training process by means
  of automated statistical procedures and random exploration.
  These equations often contain several thousand variables, combined with
- unintuitive activation functions such as the ReLu function 
-\begin_inset Formula $ReLu(x)=\max(0,x)$
-\end_inset
-
- or the sigmoid function 
-\begin_inset Formula $sig(t)=\frac{1}{1+e^{-t}}$
-\end_inset
-
- , which is why they are not interpretable by humans.
+ unintuitive activation functions such as the ReLu function or the sigmoid
+ function , which is why they are not interpretable by humans.
  
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -742,7 +797,11 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Sigmoid
+Sigmoid function, 
+\begin_inset Formula $sig(t)=\frac{1}{1+e^{-t}}$
+\end_inset
+
+ 
 \end_layout
 
 \end_inset
@@ -786,7 +845,11 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-ReLu
+ReLu function, 
+\begin_inset Formula $ReLu(x)=\max(0,x)$
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -822,7 +885,7 @@ ReLu
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The ReLu and Sigmoid function are popular activation functions for neurons
+The weighted sum of its inputs activate a neuron with its actiavtion function.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -841,6 +904,10 @@ name "fig:relu-sigmoid"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Paragraph
+Lernmethode: NN
 \end_layout
 
 \begin_layout Standard
@@ -967,7 +1034,7 @@ A neural network creates very complex policies which are therefore very
 Erklärbare künstliche Intelligenz
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Section
 Sprache als Mittel
 \end_layout
 
@@ -1009,7 +1076,7 @@ An explanation is the formulation of logik in a language that is understandable
 \end_layout
 
 \begin_layout Standard
-Die Formulierung als Sprache ist essentiell, um Vertrauen zu entwickeln,
+Die Formulierung als Sprache ist essentiell um Vertrauen zu entwickeln,
  da ihre Aussagen überprüfbar sind.
  Es schließt beispielsweise Lehrmethoden des Menschen a priori aus, die
  beispielsweise allgemeine Intelligenz benötigen.
@@ -1019,7 +1086,9 @@ Die Formulierung als Sprache ist essentiell, um Vertrauen zu entwickeln,
 \end_layout
 
 \begin_layout Standard
-xxx
+Wie gut eine Lösung erklärbar ist hängt dabei von dem Aufwand ab der nötig
+ ist, damit eine Person genügend Verständnis erlangt um dem Ansatz zu vertrauen.
+ Wie in xxx beschrieben wird hängt dies
 \end_layout
 
 \begin_layout Subsection
@@ -1028,7 +1097,7 @@ Human Learning.
 \end_layout
 
 \begin_layout Standard
-Humans can usually explain learned strategies because causality already
+Humans can (usually) explain learned strategies because causality already
  plays an important role in the learning process.
  The learning process is decisive and differs fundamentally in some points
  from strategies of AI.
@@ -1053,11 +1122,10 @@ In addition to these basic instincts, humans have also learned a wide range
  explanations are no longer necessary.
  Artificial image recognition currently still requires human assistance
  such as the implementation of filters.
- Nevertheless the One pixel attack 
+ xx besserer Übergang Nevertheless the One pixel attack 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -1067,7 +1135,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -1117,108 +1184,983 @@ An RL Agent therefore only has a working strategy that cannot point to any
  
 \end_layout
 
-\begin_layout Subsubsection
-Ergebnisanalyse
-\end_layout
-
-\begin_layout Standard
-Nevertheless, the solutions found work, which is why one can try to abstract
- the logic into causal relationships.
- 
-\end_layout
-
-\begin_layout Standard
-A non-verbal learning process is usually only possible in the form of detailed
- observation of the behaviour by the person.
- To do this, an expert watches games of the agent and tries to identify
- where the most important strategic differences are so that he can explain
- them.
- With AlphaGo, for example, it has been possible to find generally valid
- strategies that were previously unknown.
- xx] Although this procedure is complex, it has the decisive advantage that
- what has already been learned does not have to be discarded, but actually
- provides a meaningful core.
- The part that has to be integrated into the own model via a learning and
- understanding process is therefore much less.
-\end_layout
-
-\begin_layout Standard
-The task of the approach presented in this thesis is basically to automate
- this process as far as possible.
-\end_layout
-
-\begin_layout Section
-Regression and Online Training and Offline Training 
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:Online-offline_regression"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-When training AIs, a distinction is made between online and offline training.
- Online training means that the agent learns live and in the real environment,
- offline training means that the agent learns on a surrogate model, for
- example by regression on a data set.
- As Daniel Hein has found out in 
-\begin_inset CommandInset citation
-LatexCommand cite
-after "p. 125"
-key "daniel_hein_doktorarbeit"
-literal "true"
-
-\end_inset
-
-, policies that have been trained offline are almost always significantly
- worse than the versions trained on real system dynamics.
-\end_layout
-
-\begin_layout Standard
-However, offline training is an exploratory and very cost-effective alternative,
- which is why it was also used for our learning process.
- 
-\end_layout
-
-\begin_layout Standard
-Online training is only necessary for the development of new approaches.
- To explain an already known black box solution is also possible without
- knowledge of the environment.
-\end_layout
-
 \begin_layout Section
 Genetic Programming
 \end_layout
 
 \begin_layout Standard
+xxx without being influenced by human bias
+\end_layout
+
+\begin_layout Standard
 Genetic Programming (GP) is an evolutionary machine learning approach that
- automatically generates programs to solve a problem without being influenced
- by human bias.
- The programs are implemented as a programming tree whose genes are its
- nodes, which are generated from a given set of operators and terminals.
- A population usually consists of 100-10000 candidates, of which the best
- ones are selected with a tournament selection to pass their genes to the
- new generation.
- These genes can be mutated or crossed between candidates so that the best
+ automatically generates programs.
+ Dafür wird aus einer Menge an Observationen, Operatoren und Variablen eine
+ zufällige Population von Programmen erstellt und ausgewertet.
+ The programs are implemented as a programming trees whose genes are its
+ nodes.
+ xxx quelle Die besten Kandidaten werden in einem Selektionsprozess für
+ die nächste Generation ausgewählt.
+ Die Gene werden dabei durch Mutationen und Kreuzung verändert.
+ Über viele Generationen hinweg werden so die Gene und Programme optimiert.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="19" columns="5">
+<features islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top" width="3cm">
+<column alignment="center" valignment="top" width="3cm">
+<column alignment="center" valignment="top" width="5cm">
+<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="4cm">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Umgebung
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Planet Erde
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Industrial Benchmrak
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Population
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Species (7 Mrd.)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+list of Candidates (1000)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1000-5000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Individual/Candidate implementation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Lebewesen
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+computational tree
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Genotypen Genbausteine
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Chromosomes, DNS, Nukleotide
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branches, nodes, operators
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Lebenssinn
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Harvest energy
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+geringe Kosten
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+dopamine and seratonin
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+environment reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Phänotyp
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Aussehen, Eigenschaften
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Verhalten in der Umgebung
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Evolution
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Kombination von Genen
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Fortpflanzung
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Crossover
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Genmutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(gezielt)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Branch mutation, node mutation, filtermutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Für Gaussmutationen wurde die Turniergröße erhöht um das Fein-tuning nur
+ bereits herausragenden Bäumen anzuwenden.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Genetische Vielfalt
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+siehe Sozialwissenschaften
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+random generation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Generationen
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Selection process
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Tinder swipe to the right
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+tournament selection (aus 3-7 zufällig gewählten Kandidaten einer Population
+ wird der Beste gewählt)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Bewertung (online)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+kamelrechner.eu
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fitness / reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Bewertung (offline)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Eigenwert
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+regression error
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Beschränkt durch eine Quarantäne
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Yes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Yes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Beschränkungen
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Physikgesetze
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Baumtiefe, Knotenzahl
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+These genes can be mutated or crossed between candidates so that the best
  ones survive in an evolutionary way over generations 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
-.
- Candidates are assessed on the basis of their fitness, for which they are
+
+\end_layout
+
+\begin_layout Standard
+Candidates are assessed on the basis of their fitness, for which they are
  evaluated.
  The time-consuming evaluation process can be shortened 2-15 times by using
  Tensorflow and the resulting parallelization on the graphics card 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -1227,23 +2169,18 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-xx Im Gegensatz aber auch strukturell durch ihren Aufbau als komplexe mathematis
-che Formel.
- [xxx Beispiel].
- 
-\end_layout
-
-\begin_layout Paragraph
-Tournament Selection
+===
 \end_layout
 
 \begin_layout Standard
-Die tournament selection ist die gängigste Form der Selektion bei genetischer
- Programmierung.
- Um lokale optima zu vermeiden wurde die tournament-size auf den niedrigst
- möglichen Wert von 3 gesetzt.
- Für Gaussmutationen wurde die Turniergröße erhöht um das Fein-tuning nur
- bereits herausragenden Bäumen anzuwenden.
+Vorteile der gp (KEIN BIAS) aber kackformeln xxx 
+\end_layout
+
+\begin_layout Standard
+Im Gegensatz aber auch strukturell durch ihren Aufbau als komplexe mathematische
+ Formel.
+ [xxx Beispiel].
+ 
 \end_layout
 
 \begin_layout Subsubsection
@@ -1366,7 +2303,6 @@ The search space of the trees is limited by the tree depth and the number
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1432,7 +2368,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1464,9 +2399,6 @@ To create random trees, a random depth is chosen, up to which the trees
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:grow-vs-full-method"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -1555,6 +2487,46 @@ xx)
 \end_layout
 
 \begin_layout Section
+Regression and Online Training and Offline Training 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Online-offline_regression"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+When training AIs, a distinction is made between online and offline training.
+ Online training means that the agent learns live and in the real environment,
+ offline training means that the agent learns on a surrogate model, for
+ example by regression on a data set.
+ As Daniel Hein has found out in 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p. 125"
+key "daniel_hein_doktorarbeit"
+
+\end_inset
+
+, policies that have been trained offline are almost always significantly
+ worse than the versions trained on real system dynamics.
+\end_layout
+
+\begin_layout Standard
+However, offline training is an exploratory and very cost-effective alternative,
+ which is why it was also used for our learning process.
+ 
+\end_layout
+
+\begin_layout Standard
+Online training is only necessary for the development of new approaches.
+ To explain an already known black box solution is also possible without
+ knowledge of the environment.
+\end_layout
+
+\begin_layout Section
 Interpretable RL policies by Daniel Hein
 \end_layout
 
@@ -1581,9 +2553,11 @@ Both the Mountain car (MC) as well as the Industrial Benchmark (IB) were
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
 status open
 
 \begin_layout Plain Layout
@@ -1880,7 +2854,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -2362,7 +3335,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -2386,7 +3358,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -3146,7 +4117,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -3303,7 +4273,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4027,7 +4996,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -4454,7 +5422,6 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -4468,7 +5435,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -4709,7 +5675,6 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -6318,7 +7283,6 @@ For this work a GP suite in the language python was developed, which allows
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -9249,7 +10213,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 

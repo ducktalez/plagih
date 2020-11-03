@@ -48,12 +48,13 @@ import numpy as np
 import copy
 import random
 import time
+from multiprocessing import Manager
+import timeit
 
 
 class Nu:
 
-    def __init__(self, a, x):
-        self.a = a
+    def __init__(self, x):
         self.x = x
 
     def e1(self):
@@ -62,6 +63,9 @@ class Nu:
     def e2(self):
         for j in range(100):
             self.x += j
+
+    def __str__(self):
+        return self.x
 
 
 def mp_dummy(arg, **kwarg):
@@ -72,7 +76,7 @@ class Huehue(object):
 
     def __init__(self):
 
-        self.xlist = [Nu('a', 1), Nu('b', 2), Nu('c', 3), Nu('d', 4), Nu('e', 7), Nu('f', 8), Nu('g', 9), Nu('h', 11), Nu('i', 23)]
+        self.xlist = [Nu(x) for x in range(100)]
 
     def choose_one(self):
         x = random.choice(self.xlist)
@@ -86,41 +90,29 @@ class Huehue(object):
     def new_p(self, n=10, v=1):
         new = []
 
-        if v == 1:
-            for _ in range(n):
-                x = self.choose_one()
+        evolve_list = self.evolve_list(n)
+        if v == 2:
+            for x in evolve_list:
                 x.e2()
                 new.append(x)
+
+        elif v == 3:
+            for x in evolve_list:
+                x = mp_dummy(x)
+                new.append(x)
         else:
-            evolve_list = self.evolve_list(n)
-            if v == 2:
-                for x in evolve_list:
-                    x.e2()
-                    new.append(x)
+            mp.Process()
+            with mp.Pool(min(mp.cpu_count(), 8)) as p:
+                if v == 4:
+                    new = p.map_async(mp_dummy, evolve_list)
 
-            elif v == 3:
-                for x in evolve_list:
-                    x = mp_dummy(x)
-                    new.append(x)
-            else:
-                mp.Process()
-                with mp.Pool(min(mp.cpu_count(), 8)) as p:
-                    if v == 4:
-                        new = p.starmap_async(mp_dummy, evolve_list)
-
-                    elif v == 5:
-                        new = p.map_async(mp_dummy, evolve_list)
-
-                    elif v == 6:
-                        new = p.map_async(mp_dummy, evolve_list)
-
-                    else:
-                        raise
+                elif v == 5:
+                    manager = Manager()
+                    evolve_list = manager.list(evolve_list)
+                    new = p.map_async(self.mp_new_x, evolve_list)
+                else:
+                    raise
         self.xlist = new
-        # try:
-        #     print([[nu.a, nu.x] for nu in new[998:1000]])
-        # except:
-        #     pass
 
     def mp_dummy(self, arg, **kwarg):
         return Nu.e2(arg, kwarg)
@@ -130,25 +122,13 @@ class Huehue(object):
         return x
 
 
-# if __name__ == '__main__':
-#     # t = [time.perf_counter()]
-#     for v in [1, 2, 3, 4, 5]:
-#         hue = Huehue()
-#         t0 = time.perf_counter()
-#         hue.new_p(n=10000, v=v)
-#         t1 = time.perf_counter()
-#         print(f'{v} took: {t1- t0:.4f}')
-#
-#     # print(f'time : \nnew_a {t[2] - t[1]:.4f}\nnew_b {t[3] - t[2]:.4f}\nnew_c {t[4] - t[3]:.4f}\nall: {t}')
-
-from multiprocessing import Process, Queue
-
-def f(q):
-    q.put([42, None, 'hello'])
-
 if __name__ == '__main__':
-    q = Queue()
-    p = Process(target=f, args=(q,))
-    p.start()
-    print(q.get())    # prints "[42, None, 'hello']"
-    p.join()
+    n = 100000
+    manager = Manager()
+    # l = manager.list([i*i for i in range(n)])
+    for v in [2, 3, 4, 5]:
+        hue = Huehue()
+        t0 = time.perf_counter()
+        hue.new_p(n=1000, v=v)
+        t1 = time.perf_counter()
+        print(f'{v} took: {t1- t0:.4f}, length: {len(hue.xlist)}')

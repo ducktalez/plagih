@@ -79,7 +79,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
         num_samples = '200' if 'MTC200' in prepared_run else '75'
         path_data_csv = pathify(f'mc/gp_files/samples{num_samples}.csv')
 
-        ori_trs = {'gpFriendly': 'mc/gp_files/tree_gpFriendly_fix.csv',
+        ori_trs = {'gpFriendly': 'mc/gp_files/tree_gpFriendly.csv',
                    'gpFriendlyFix': 'mc/gp_files/tree_gpFriendly_fix.csv',
                    'preset': 'mc/gp_files/tree_preset.csv',
                    'presetFix': 'mc/gp_files/tree_preset_fix.csv',

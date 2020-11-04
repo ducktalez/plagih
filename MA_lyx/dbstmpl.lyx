@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -40,10 +40,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -65,6 +61,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -103,6 +101,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -112,7 +111,10 @@ algorithm2e
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -284,15 +286,6 @@ LatexCommand tableofcontents
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-xx toc style rote boxen?
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -401,6 +394,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -426,12 +420,11 @@ Intro / Motivation
 \end_layout
 
 \begin_layout Standard
-Im Bereich der KI steigt das Interesse an Ansätzen, die nicht nur gut funktionie
-ren sondern zusätzlich auch erklärbar sind.
- Das große Problem ist dabei, die enorm Verständnislücke zwischen der komplexen
- Lösung einer performanten Black box Lösung und dem bereits vorhandenen
- Wissen eines Experten zu schließen.
- 
+Im Bereich des RL gibt es großes Interesse an erklärbaren KI Lösungsansätzen.
+ Dafür muss eine unüberschaubar große Verständnislücke zwischen der komplexen
+ Blackbox un dem Wissen des Menschen geschlossen werden.
+ Wir stellen dafür das Konzept der Vertrautheit vor.
+ Vertraut gelten  
 \end_layout
 
 \begin_layout Standard
@@ -459,6 +452,41 @@ In this thesis, familiarity is introduced as a concept for creating explainable
  
 \end_layout
 
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/explainability_gap.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The explainability gap.
+ Soll eine Blackbox erklärt werden macht es Sinn auf bereits erklärbarem
+ Wissen aufzubauen.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Paragraph
 =========
 \end_layout
@@ -476,6 +504,7 @@ ML Ansätze leben vor allem davon, dass Kontrolle
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -548,6 +577,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -567,6 +597,18 @@ nt; for the industry, which can also be prosecuted in court for undesirable
  developments, the development of explainable policies is therefore of great
  importance.
  
+\end_layout
+
+\begin_layout Standard
+work:
+\end_layout
+
+\begin_layout Standard
+- (LRP)
+\end_layout
+
+\begin_layout Standard
+- keine ganzheitlichen Ansätze
 \end_layout
 
 \begin_layout Chapter
@@ -623,6 +665,7 @@ xxx This area has become very popular due to the development of superhuman
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -771,7 +814,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -819,7 +862,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -929,7 +972,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -972,7 +1015,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "50col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -1126,6 +1169,7 @@ In addition to these basic instincts, humans have also learned a wide range
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -1135,6 +1179,7 @@ key "one_pixel_attack"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -2147,6 +2192,7 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -2161,6 +2207,7 @@ Candidates are assessed on the basis of their fitness, for which they are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2303,6 +2350,7 @@ The search space of the trees is limited by the tree depth and the number
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2368,6 +2416,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -2507,6 +2556,7 @@ When training AIs, a distinction is made between online and offline training.
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2854,6 +2904,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -3195,135 +3246,6 @@ reference "sarsa75_problem_decision_plots"
 \end_layout
 
 \begin_layout Subsection
-Observation-Action-Space Plots
-\end_layout
-
-\begin_layout Standard
-The state and action space is small enough to display the complete policy
- of an agent as a two-dimensional diagram.
-\end_layout
-
-\begin_layout Standard
-The entire state space is subdivided along its dimensions into 256 areas,
- for each of which the calculated action is coloured.
- 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "wrap:mc-obs-act-plot-space"
-
-\end_inset
-
- This makes it very clear what strategy is being pursued to find a solution.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "wrap:mc-obs-act-plot-space"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Some states are effectively but never reached, which is why a behaviour-dependen
-t version was also created, which, after 100 test runs, colours the states
- not reached grey.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "wrap:mc-obs-act-plot-snail"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-A third version also examines the deviations from the reference policy in
- 100 runs.
- For this purpose, the differences were examined for the area in which the
- corresponding Sarsa policy generates data.
- In this case a completely white snail would be excellent, as the differences
- would then be minimal.
- In these plots you can see where the agents have problems.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "wrap:mc-obs-act-plot-space-diff"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
 Black box with SARSA and Tiling
 \end_layout
 
@@ -3335,6 +3257,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -3358,6 +3281,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -4117,6 +4041,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -4273,6 +4198,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4996,6 +4922,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -5294,7 +5221,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -5337,7 +5264,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "50col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -5422,6 +5349,7 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -5435,6 +5363,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -5675,6 +5604,7 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -5713,7 +5643,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -5755,7 +5685,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -5837,7 +5767,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -5879,7 +5809,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -6095,7 +6025,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -6137,7 +6067,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -6523,7 +6453,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -6565,7 +6495,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -7283,6 +7213,7 @@ For this work a GP suite in the language python was developed, which allows
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -8602,7 +8533,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "25col%"
+width "24col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -8644,7 +8575,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "25col%"
+width "24col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -8765,6 +8696,138 @@ Comparison & Discussion
 Mountain Car
 \end_layout
 
+\begin_layout Subsection
+Observation-Action-Space Plots
+\end_layout
+
+\begin_layout Standard
+The state and action space is small enough to display the complete policy
+ of an agent as a two-dimensional diagram.
+\end_layout
+
+\begin_layout Standard
+The entire state space is subdivided along its dimensions into 256 areas,
+ for each of which the calculated action is coloured.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "wrap:mc-obs-act-plot-space"
+
+\end_inset
+
+ This makes it very clear what strategy is being pursued to find a solution.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.png
+	lyxscale 10
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-space"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Some states are effectively but never reached, which is why a behaviour-dependen
+t version was also created, which, after 100 test runs, colours the states
+ not reached grey.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.png
+	lyxscale 10
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-snail"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A third version also examines the deviations from the reference policy in
+ 100 runs.
+ For this purpose, the differences were examined for the area in which the
+ corresponding Sarsa policy generates data.
+ In this case a completely white snail would be excellent, as the differences
+ would then be minimal.
+ In these plots you can see where the agents have problems.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.png
+	lyxscale 10
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-space-diff"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 \begin_inset Float figure
 wide false
@@ -8785,7 +8848,7 @@ xxx ALL runs in comparisson? (regression error and fitness)
 \end_layout
 
 \begin_layout Subsection
-Scratch
+Scratch GP Results
 \end_layout
 
 \begin_layout Standard
@@ -8872,7 +8935,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -8885,7 +8948,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/2.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/2.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -8895,7 +8959,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-2.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-2.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -8926,7 +8991,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-2.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-2.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -8953,7 +9019,7 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_02.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Here the agent is reached with maximum acceleration by a shorter printout.
+The agent is reached with maximum acceleration by a shorter printout.
 \end_layout
 
 \end_inset
@@ -8977,7 +9043,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -8990,7 +9056,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/2.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/2.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9000,7 +9067,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-2.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-2.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9031,7 +9099,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-2.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-2.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9058,8 +9127,7 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_02.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Hier wird der Agent mit maximaler Beschleunigung durch einen kürzeren Ausdruck
- erreicht.
+The agent is reached with maximum acceleration by a shorter printout.
 \end_layout
 
 \end_inset
@@ -9083,7 +9151,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -9096,7 +9164,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/8.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/8.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9106,7 +9175,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-8.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-8.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9137,7 +9207,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-8.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-8.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9164,8 +9235,8 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_08.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Bei 8 Knoten sinkt der Regressionsfehler auf 0.21, die Fitness verschlechtert
- sich aber auf 140.5 Schritte.
+At 8 nodes the regression error drops to 0.21, but fitness deteriorates to
+ 140.5 steps.
 \end_layout
 
 \end_inset
@@ -9192,7 +9263,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49.99col%"
+width "49col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -9205,7 +9276,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9215,7 +9287,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9246,7 +9319,8 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-25.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/diff-25.png
+	lyxscale 10
 	height 5cm
 
 \end_inset
@@ -9273,9 +9347,8 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_25.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Der beste Agent hat einen Sehr geringen Regressionsfehler von nur 0.09 und
- eine Fitness von 98.8, womit die Sarsa-200 policy fast komplett erreicht
- wird.
+The best agent has a very low regression error of only 0.09 and a fitness
+ of 98.8, which almost completely achieves the Sarsa-200 policy.
 \end_layout
 
 \end_inset
@@ -9411,8 +9484,8 @@ filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.te
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Verschiedene Versionen derselben Heuristik bieten dem GP-Prozess unterschiedlich
-e Möglichkeiten der Verbesserung.
+Different versions of the same heuristic offer the GP process different
+ possibilities for improvement.
 \end_layout
 
 \end_inset
@@ -9446,11 +9519,11 @@ Maximum Momentum - uneingeschränkt
 \end_layout
 
 \begin_layout Standard
-In dieser Policy wurde Aktion Null in einem Zusätzlichen if-Fall erlaubt.
- Entsprechend ist der Regressionsfehler hier niedriger als bei seinem eingeschrä
-nkten Verwandten.
- Vor allem bei Sarsa-75, wo sehr oft diese Aktion gewählt wird, macht sich
- diese Möglichkeit in den Kandidaten schon sehr früh bemerkbar.
+In this policy, action zero was allowed in an additional if-case.
+ Accordingly, the regression error here is lower than for its restricted
+ relative.
+ Especially with Sarsa-75, where this action is chosen very often, this
+ possibility becomes apparent in the candidates very early on.
  Gerade bei diesem Beispiel ist die ...
 \end_layout
 
@@ -9957,9 +10030,18 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand include
 filename "../benchmarks/slurm_runs/IB_MSE_scratch/combined_input.tex"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -10011,7 +10093,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Results without any origin
+Results without any origin.
 \end_layout
 
 \end_inset
@@ -10213,6 +10295,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 

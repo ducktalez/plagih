@@ -29,7 +29,6 @@ np.set_printoptions(linewidth=320)  # set the terminal to  320 characters before
 
 class FileLocations:
     backup_p = 'backup/backup.p'
-    trees_sub_tex = 'visualisation/'
     folder_pycode = ''
 
     # Files that can can (in theory) be used to prepare a runable folder. maybe deprecated now, sfeh.
@@ -714,6 +713,7 @@ class ExplainableGP(object):
             tex_analysis = latex_treeviz_full_document(tex_tabular(paste))  # sfeh
             file_dump(self.root_dir / f'analysis_overview.tex', tex_analysis, print_type=self.print_type)
             paste2 = ''.join([tex_tabuline(x[:]) for x in tex_lines])
+            paste2 = f'{self.conf.name}\n{tex_include_pdf(self.root_dir / "sfehs_eval/evaled_overview.pdf")}\n' + paste2
             tex_analysis = latex_treeviz_full_document(tex_tabular(paste2))  # sfeh
             file_dump(self.root_dir / f'analysis_overview_plus.tex', tex_analysis, print_type=self.print_type)
 
@@ -752,7 +752,7 @@ class ExplainableGP(object):
                                                     f"{y['regress_sum']:0.3f}",
                                                     f"{y['experiment']:0.0f}",
                                                     tex_stacklist([f'{int(x)}' for x in y['parsims']]),
-                                                    tex_stacklist([input_agentex(x, self.root_dir.parent) for x in [0, 1, 2]])])
+                                                    tex_stacklist([input_agentex(x, self.root_dir.parent.name) for x in [0, 1, 2]])])
 
                     # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
                     # f"{y['cnt']}",
@@ -970,7 +970,7 @@ class ExplainableGP(object):
         """
         save every tree-visualisation in subfolder
         """
-        path_subfolder_tex = path_make_dir(self.root_dir / self.paths.trees_sub_tex)  # sfeh running this in every tree seems unneccesary
+        path_subfolder_tex = path_make_dir(self.root_dir / 'visualisation')  # sfeh running this in every tree seems unneccesary
         # create full document including just one tree (file must have a nice name)
 
         """

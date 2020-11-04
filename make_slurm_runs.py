@@ -48,7 +48,7 @@ run_starts = [
 
     'MTC200_MAE_scratch',
     'MTC200_MAE_gpFriendly',
-    'MTC200_MAE_gpFriendlyFix',
+    # 'MTC200_MAE_gpFriendlyFix',
     'MTC200_MAE_preset',
     'MTC200_MAE_simple',
     'MTC200_MAE_simpleFix',
@@ -62,7 +62,7 @@ run_starts = [
     'MTC200_MSE_simpleFix',
     'MTC200_MSE_simplePlusFix',
     'MTC200_MSE_gpFriendly',
-    'MTC200_MSE_gpFriendlyFix',
+    # 'MTC200_MSE_gpFriendlyFix',
     'MTC200_MSE_preset',
     'MTC200_MSE_simplePlus',
     'MTC200_MSE_simonBest',

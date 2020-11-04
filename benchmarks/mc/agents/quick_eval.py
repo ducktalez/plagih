@@ -350,10 +350,10 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
             if avg_reward is None:  # or fails is None:
                 avg_reward, fails, _ = mtc_play(mc_gent, n=n)
 
-            # sfehsfeh save  time comment this
-            bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
-            bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
-            mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
+            # sfehsfeh save  time comment this todotodo todo
+            # bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
+            # bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+            # mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
             bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
             agent_performance[parsim] = [parsim, fitness, avg_reward, fails, None, None]
         except Exception as ex:
@@ -365,18 +365,17 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
         agentperflist = list(zip(*agent_performance.values()))
-        x = agentperflist[1]
+        x = agentperflist[0]
         y = agentperflist[2]
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
         xx, yy = np.array(tuples).T
         ax.step(xx, yy, linestyle='dotted', marker='.', where='post')
-        ax.set(xlabel='complexity', ylabel='regression error', ylim=(0, 2))
+        ax.set(xlabel='complexity', ylabel='regression error', ylim=(0, 1))
+        # ax.legend('upper right')
 
         ax2 = ax.twinx()
-        ax2.step(x, y, linestyle='None', marker='x', color='g', label='reward')
-        ax2.invert_yaxis()
-        ax2.set(ylim=(95, 200))
-        # ax2.tick_params(axis='y', labelcolor='tab:gray')
+        ax2.set(ylim=(-95, -200), xlim=(0, 35))
+        ax2.step(x, y, linestyle='None', marker='x', label='reward')
 
         fig.savefig(dir_save / f'evaled_overview.pdf')
 

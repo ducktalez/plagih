@@ -28,7 +28,7 @@ def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
                        'variable/.style={rectangle,},   ' \
                        'nodeinsert/.style={fill=green!50,},   ' \
                        'nodechanged/.style={fill=orange!50,}, #1 ' \
-                       '\end{forest}}}' \
+                       '\\end{forest}}}' \
 
     latex_doc_forest = f'\\documentclass[varwidth=\\maxdimen,convert{doc_border}]{{standalone}}\n' \
                        '\\usepackage{forest}\n' \
@@ -138,6 +138,8 @@ def label_bracket_beautification(label):
         label = f"${op[label]['latex1']}$"
     elif terminal_label_is_observation(label):  # node is a terminal - either observation or variable
         obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
+        obs_family = obs_family.replace('cartPos', 'pos')
+        obs_family = obs_family.replace('cartVel', 'vel')  # sfeh todo
         if obs_time is not None:
             label = f"{prelabel}{obs_family}$_{{{obs_time}}}$"
     else:

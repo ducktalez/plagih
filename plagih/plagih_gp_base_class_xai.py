@@ -678,27 +678,19 @@ class ExplainableGP(object):
             for pp, x in agent_performance.items():
                 pp, fitness, avg_reward, fails, path_mcmeshplot, path_mcmeshplot_diff = x
 
-                tex_line = [f"{int(pp)}",
-                            f"{pareto_agents[pp]['fitness']:.2f}",
-                            f"{avg_reward:0.1f}",
-                            f"{pareto_agents[pp]['tex_expr_raw']}"]
-                tex_line_large = [tex_include_pdf(f'sfehs_eval/{pp}.png'),  # path_mcmeshplot
+                tex_lines.append([f"{int(pp)}",
+                                  f"{pareto_agents[pp]['fitness']:.2f}",
+                                  f"{avg_reward:0.1f}",
+                                  f"{pareto_agents[pp]['tex_expr_raw']}",
+                                  f"{tex_include_pdf(f'sfehs_eval/{pp}.png')}",  # path_mcmeshplot
                                   tex_include_pdf(f'sfehs_eval/diff-{pp}.png'),  # path_mcmeshplot_diff),
                                   tex_include_pdf(f'sfehs_eval/space-{pp}.png'),  # todo
                                   tex_include_pdf(f'histograms/acthist_{pp}'),
                                   f"{pareto_agents[pp]['forest_tree_full']}",  # forest_tree_full, forest_tree_tight
                                   f"{pareto_agents[pp]['forest_tree_tight']}",
-                                  f'{fails}']
+                                  f'{fails}'])
 
                 # df_mtc.loc[pp] = tex_line
-
-                tex_lines += [tex_line + tex_line_large]
-
-            tex_tabular = lambda x: \
-                "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
-                "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                f"{x}" \
-                "\\hline\n\\end{tabular}\n\n"
 
             # & decision plot & spiral plot & spiral difference-plot & histogram
 
@@ -706,18 +698,20 @@ class ExplainableGP(object):
             paste = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
                     "\\hline\n" \
                     "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                    f"{paste}" \
+                f"{paste}" \
                     "\\hline\n\\end{longtable}\n"
             file_dump(self.root_dir / f'analysis_input.tex', paste, print_type=self.print_type)
+            file_dump(self.root_dir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.print_type)
 
-            tex_analysis = latex_treeviz_full_document(tex_tabular(paste))  # sfeh
-            file_dump(self.root_dir / f'analysis_overview.tex', tex_analysis, print_type=self.print_type)
-            paste2 = ''.join([tex_tabuline(x[:]) for x in tex_lines])
-            paste2 = f'{self.conf.name}\n{tex_include_pdf(self.root_dir / "sfehs_eval/evaled_overview.pdf")}\n' + paste2
-            tex_analysis = latex_treeviz_full_document(tex_tabular(paste2))  # sfeh
-            file_dump(self.root_dir / f'analysis_overview_plus.tex', tex_analysis, print_type=self.print_type)
+            paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
+            paste_full = "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
+                         "dist & error & reward & expression \\tabularnewline \\hline\n" \
+                f"{self.conf.name}\n{tex_include_pdf(self.root_dir / 'sfehs_eval/evaled_overview.pdf')}\n{paste_full}" \
+                         "\\hline\n\\end{tabular}\n\n"
+            file_dump(self.root_dir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
 
         elif 'IB' in self.conf.name:
+
             self.file_pareto_listcode()
 
             if self.conf.name[-2:] == '_0':
@@ -766,9 +760,9 @@ class ExplainableGP(object):
                     f"{tex_line_overview}" \
                     f"\\hline\n\\end{{tabular}}\n\n"
 
-                combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
+                combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
                                  "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                    f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])}" \
+                    f"{tex_tabuline(['dist', 'error', 'reward', 'Agent code'])}" \
                     f"{tex_line_input}" \
                                  "\\hline\n\\end{longtable}\n"
                 combined_overview = latex_treeviz_full_document(combined_overview)
@@ -964,7 +958,12 @@ class ExplainableGP(object):
 
         forest_tree_full = pl_forest(latex_brackettree(tree))
         forest_tree_tight = pl_forest(latex_brackettree_tight(latex_tree_semitight(tree)))
-        tex_expr_raw = f'${latex_tight_node(tree)}$'
+        # sfeh workaround todo
+        hohoho = latex_tight_node(tree)
+        hohoho = hohoho.replace('cartPos', 'pos')
+        hohoho = hohoho.replace('cartVel', 'vel')
+        tex_expr_raw = f'${hohoho}$'
+        print(f'HOIHOHOHOOHOHOHO {hohoho}')
         tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
 
         """

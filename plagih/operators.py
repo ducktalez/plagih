@@ -46,7 +46,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
            'sym_reduce': '({} ** {})', 'sym_str': '({} ** Round({}))', 'pycode': '({}**round({}))'},
     'Abs': {'fun_class': 'Abs', 'fun_label': 'Abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': '\\text{{abs}}', 'latexF': '|{}|',
             'sym_reduce': None, 'sym_str': 'Abs({})', 'pycode': 'abs({})'},
-    'sign': {'fun_class': 'Sign', 'fun_label': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'sign', 'tf': tf.sign, 'opgroup': [], 'latex1': '\\text{{sign}}', 'latexF': 'sign({})',
+    'sign': {'fun_class': 'Sign', 'fun_label': 'sign', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'sign', 'tf': tf.sign, 'opgroup': [], 'latex1': '\\text{{sign}}', 'latexF': ' \\text{{sign}}({})',
              'sym_reduce': 'sign(re({}))', 'sym_str': 'sign({})', 'pycode': 'np.sign({})'},
     'Round': {'fun_class': 'Round', 'fun_label': 'Round', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'round', 'tf': tf.round, 'opgroup': [], 'latex1': '\\text{{round}}', 'latexF': '\\lfloor{}\\rceil',
               'sym_reduce': None, 'sym_str': 'Round({})', 'pycode': 'round({})'},

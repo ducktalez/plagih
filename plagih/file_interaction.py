@@ -187,13 +187,13 @@ def yaml_load(yaml_path):
     return loaded_yaml
 
 
-def yaml_dump(path, data, print_type=None):
+def yaml_dump(path, data, print_type=None, default_flow_style=True):
     """
     saves prepared plagih data to pickle file
     """
 
     path = path_make_dir(path)
     with Path.open(path, 'w') as file:
-        _ = yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+        _ = yaml.dump(data, file, default_flow_style=default_flow_style, sort_keys=False)
         printez('ff', f'{path.as_posix()}', print_type=print_type)
     return

@@ -60,7 +60,7 @@ class ExplainableGP(object):
     sfeh
     """
 
-    def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None):
+    def __init__(self, conf: GpConfig, root_dir: Path, path_data, path_origin_tree, mp_cpu_cores_max=1, developer_fix=None, sfeh_no_crazyops=None):
         self.conf = conf
         self.root_dir = Path(root_dir)
         self.mp_cpu_cores_max = mp_cpu_cores_max  # sfeh
@@ -110,7 +110,7 @@ class ExplainableGP(object):
         load relevant stuff
         """
         self.choose_distributions = self.activate_distributions(path_distrib=None)  # asd sfeh path_distrib not None
-        self.choose_oparray2 = self.gp_load_oparray()  # path_operators sfeh this file from config version1
+        self.choose_oparray2 = self.gp_load_oparray(path_operators=None, sfeh_no_crazyops=sfeh_no_crazyops)  # path_operators sfeh this file from config version1
 
         """
         initialize some variables
@@ -648,8 +648,7 @@ class ExplainableGP(object):
             # histpath = None
             histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)
 
-            tex_vis = self.file_pareto_latex(parsim, cooltree)
-            forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = tex_vis
+            forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, cooltree)
 
             pareto_agents[parsim] = {'parsim': parsim,
                                      'fitness': fitness,
@@ -704,9 +703,10 @@ class ExplainableGP(object):
             file_dump(self.root_dir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.print_type)
 
             paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
-            paste_full = "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
+            paste_full = f"{str(self.conf.name).replace('_', '-')}\n" \
+                         "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
                          "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                f"{self.conf.name}\n{tex_include_pdf(self.root_dir / 'sfehs_eval/evaled_overview.pdf')}\n{paste_full}" \
+                f"{tex_include_pdf(self.root_dir / 'sfehs_eval/evaled_overview.pdf')}\n{paste_full}" \
                          "\\hline\n\\end{tabular}\n\n"
             file_dump(self.root_dir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
 
@@ -800,21 +800,38 @@ class ExplainableGP(object):
 
         return
 
-    def gp_load_oparray(self, path_operators=None):
+    def gp_load_oparray(self, path_operators=None, sfeh_no_crazyops=None):
         """
-
+        Offers the possibility for the user to load a .yaml-file of operators for the gp-process.
+        If no list is loaded, the list below is used.
+        The Operator must match its version in the 'op'-Array (alternatively search for op_what)
+        The second value in the tuple denotes the probability of choosing an operator
         """
 
         try:
-            operator_tuples = yaml_load(Path(path_operators))
+            operator_pool = yaml_load(Path(path_operators))
             # sfeh lel, 100% excepts as never loaded this
         except:
-            self.printpl('i', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_tuples.')
-            operator_tuples = [['+', 2],
+            self.printpl('i', 'Opt-in not specified: Operators-file does not exist. Creating one with a default list of mathematical operator_pool.')
+            # operator_pool = [('+', 2),
+            #                    ('-', 1), ('Usub', 1),
+            #                    ('*', 2), ('/', 1),
+            #                    ('Square', 0.75), ('**', 0.25),
+            #                    ('Abs', 0.5), ('sign', 0.5), ('Round', 0.5),  # sfeh stop chain of arity-1 op in buid method?
+            #                    ('sqrt', 0.25),
+            #                    # ('log', 0.1), ('log1p', 0.1),  # sfeh
+            #                    ('sin', 0.5),  # ('tan', 0.1), ('cos', 0.33), ('acos', 0.33), ('asin', 0.33), ('atan', 0.33),
+            #                    ('tanh', 0.2),
+            #                    ('Andb', 1), ('Orb', 1), ('Notb', 0.5), ('Xor', 1),
+            #                    ('==', 1), ('!=', 0.5),
+            #                    ('<', 0.5), ('<=', 0.5), ('>', 0.1), ('>=', 0.1),
+            #                    ('Ifte', 2),
+            #                    ('Mini', 1), ('Maxi', 1)]
+            operator_pool = [['+', 2],
                                ['-', 1], ['Usub', 1],
                                ['*', 2], ['/', 1],
                                ['Square', 0.75], ['**', 0.25],
-                               ['Abs', 0.4], ['sign', 0.1], ['Round', 0.1],  # sfeh stop chain of arity-1 op in buid method?
+                               ['Abs', 0.5], ['sign', 0.5], ['Round', 0.5],  # sfeh stop chain of arity-1 op in buid method?
                                ['sqrt', 0.25],
                                # ['log', 0.1], ['log1p', 0.1],  # sfeh
                                ['sin', 0.5],  # ['tan', 0.1], ['cos', 0.33], ['acos', 0.33], ['asin', 0.33], ['atan', 0.33],
@@ -825,11 +842,17 @@ class ExplainableGP(object):
                                ['Ifte', 2],
                                ['Mini', 1], ['Maxi', 1]]
 
+        operator_pool = {x[0]: x[1] for x in operator_pool}
+        if sfeh_no_crazyops:
+            del operator_pool['**']
+
+        yaml_dump(self.root_dir / 'backup/operators_used.yaml', operator_pool, default_flow_style=True)
+
         """
         Check, if the user-specified operators allow closure
         """
         # sfeh dunno if that works... 2f not in x
-        opxtypes = [op[oper]['xtype'] for oper, _ in operator_tuples]
+        opxtypes = [op[oper]['xtype'] for oper in operator_pool.keys()]
         has_2f = any(['2f' in x for x in opxtypes])
         has_2b = any(['2b' in x for x in opxtypes])
         has_f2b = any(['f2b' in x for x in opxtypes])
@@ -840,17 +863,17 @@ class ExplainableGP(object):
             raise Exception(f'Operators do not allow closure')
 
         """
-        Load all operator_tuples ready-to-use from a file
+        Load all operator_pool ready-to-use from a file
         """
         choose_oparray2 = {
-            # # all operator_tuples (not needed)
+            # # all operator_pool (not needed)
             # None: {0: [], 1: [], 2: [], 3: [], None: []},
 
-            # all operator_tuples with a certain xtype-result
+            # all operator_pool with a certain xtype-result
             '2f': {0: [], 1: [], 2: [], 3: [], None: []},
             '2b': {0: [], 1: [], 2: [], None: []},
 
-            # all operator_tuples for point mutation
+            # all operator_pool for point mutation
             'f2f': {1: [], 2: [], None: []},
             'f2b': {1: [], 2: [], None: []},
             'b2b': {1: [], 2: [], None: []},
@@ -858,9 +881,9 @@ class ExplainableGP(object):
             'b2f2f': {3: [], None: []}
         }
 
-        for ops_tupel in operator_tuples:
-            label = ops_tupel[0]
-            ops_tupel = (ops_tupel[0], float(ops_tupel[1]))
+        for label, probability in operator_pool.items():
+            # label = ops_tupel[0]
+            ops_tupel = (label, float(probability))
 
             op_info = op[label]
             xtype = op_info['xtype']
@@ -873,7 +896,7 @@ class ExplainableGP(object):
 
         for xtype, xrow in choose_oparray2.items():
             for arity in xrow.keys():
-                # from a list of tuples [[op, prob], [+, 1], ...] to two lists [operator_tuples] [probability]
+                # from a list of tuples [[op, prob], [+, 1], ...] to two lists [operator_pool] [probability]
                 operators_probabilities = list(zip(*choose_oparray2[xtype][arity]))
                 choose_oparray2[xtype][arity] = operators_probabilities
 

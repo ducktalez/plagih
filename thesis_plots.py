@@ -177,6 +177,7 @@ def thesisplot_tempdiff():
 
 def thesis_decision_plots_fullspace(folder=Path.cwd() / 'benchmarks/mc/agents/img'):
     # sarsa agents
+
     mtc_plot_decisions_space(sarsa_agent_75, folder=folder, name='decisions-sarsa_agent_75')
     mtc_plot_decisions_space(sarsa_agent_200, folder=folder, name='decisions-sarsa_agent_200')
     mtc_plot_decisions_space(sarsa_agent_1000, folder=folder, name='decisions-sarsa_agent_1000')
@@ -196,9 +197,12 @@ def thesis_decision_plots_fullspace(folder=Path.cwd() / 'benchmarks/mc/agents/im
 
 
 if __name__ == "__main__":
-    thesisplot_tempdiff()
-    thesis_plot_ib_comparisson()
-    # thesis_plot_mc_comparisson()
-    print('SFEH COMMENTED! asd')
-    # thesis_plot_mc_comparisson()
-    # thesis_decision_plots_dummied()
+    # thesisplot_tempdiff()
+    # thesis_plot_ib_comparisson()
+    # # thesis_plot_mc_comparisson()
+    # print('SFEH COMMENTED! asd')
+    # # thesis_plot_mc_comparisson()
+    # # thesis_decision_plots_dummied()
+
+    mtc_plot_decisions_space(FixAgentRe(), folder=Path.cwd(), name='decisions-FixAgentRe_DEL')
+    # todo

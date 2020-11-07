@@ -35,14 +35,14 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     'Usub': {'fun_class': 'Usub', 'fun_label': 'Usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf_name': 'negative', 'tf': tf.negative, 'opgroup': [], 'latex1': '-', 'latexF': '-{}',
              'sym_reduce': None, 'sym_str': '(-{})', 'pycode': '(-{})'},
     '*': {'fun_class': 'Multiply', 'fun_label': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'multiply', 'tf': tf.multiply, 'opgroup': ['aritygroup'], 'latex1': '\\cdot ',
-          'latexF': '{}\\cdot {}',
+          'latexF': '{} \\cdot {}',
           'sym_reduce': None, 'sym_str': '({} * {})', 'pycode': '({}*{})'},
     # Division: SAFE division by zero! -->tf.math.divide_no_nan -->pycode a/b --> div(a,b) !!pycode requires div_safe() implemented sfeh: is it okay to display this as '/'?
     '/': {'fun_class': 'Divide_no_nan', 'fun_label': '/', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'math.divide_no_nan', 'tf': tf.math.divide_no_nan, 'opgroup': [], 'latex1': '\\div ',
           'latexF': '\\frac{}{}',
           'sym_reduce': None, 'sym_str': '({} / {})',
           'pycode': '(lambda x, y: x/y if y!=0 else 0)(({}),({}))'},
-    '**': {'fun_class': 'Power', 'fun_label': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'pow', 'tf': tf.pow, 'opgroup': [], 'latex1': 'x^y', 'latexF': '{}^{}',
+    '**': {'fun_class': 'Power', 'fun_label': '**', 'arity': 2, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'pow', 'tf': tf.pow, 'opgroup': [], 'latex1': 'x^y', 'latexF': '{}^{{{}}}',
            'sym_reduce': '({} ** {})', 'sym_str': '({} ** Round({}))', 'pycode': '({}**round({}))'},
     'Abs': {'fun_class': 'Abs', 'fun_label': 'Abs', 'arity': 1, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'abs', 'tf': tf.abs, 'opgroup': [], 'latex1': '\\text{{abs}}', 'latexF': '|{}|',
             'sym_reduce': None, 'sym_str': 'Abs({})', 'pycode': 'abs({})'},
@@ -52,9 +52,9 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
               'sym_reduce': None, 'sym_str': 'Round({})', 'pycode': 'round({})'},
     'Square': {'fun_class': 'Square', 'fun_label': 'Square', 'arity': 1, 'xtype': 'f2f', 'c-weight': 2, 'tf_name': 'square', 'tf': tf.square, 'opgroup': [], 'latex1': 'x^2', 'latexF': '{}^2',
                'sym_reduce': None, 'sym_str': 'Square({})', 'pycode': '({})**2'},
-    'sqrt': {'fun_class': 'Sqrt', 'fun_label': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'sqrt', 'tf': tf.sqrt, 'opgroup': [], 'latex1': '\\sqrt{x}', 'latexF': '\\sqrt{}',
+    'sqrt': {'fun_class': 'Sqrt', 'fun_label': 'sqrt', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'sqrt', 'tf': tf.sqrt, 'opgroup': [], 'latex1': '\\sqrt{x}', 'latexF': '\\sqrt{{{}}}',
              'sym_reduce': None, 'sym_str': 'sqrt({})', 'pycode': 'math.sqrt({})'},
-    'log': {'fun_class': 'Log', 'fun_label': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log', 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '\\log()', 'latexF': '\\log{}',
+    'log': {'fun_class': 'Log', 'fun_label': 'log', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log', 'tf': tf.math.log, 'opgroup': ['logs'], 'latex1': '\\log()', 'latexF': '\\log({})^^',
             'sym_reduce': None, 'sym_str': 'log({})', 'pycode': 'math.log({})'},  # sfeh log/ln?
     'log1p': {'fun_class': 'Log1p', 'fun_label': 'log1p', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': 'math.log1p', 'tf': tf.math.log1p, 'opgroup': ['logs'], 'latex1': '\\log(1+x)',
               'latexF': '\\log(1+{})',
@@ -79,21 +79,21 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # 'b2b' Classical logical operators, evaluate from bool to bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
-    'Andb': {'fun_class': 'And', 'fun_label': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_and', 'tf': tf.logical_and, 'latex1': '\\and', 'latexF': '({}\\wedge{})',
+    'Andb': {'fun_class': 'And', 'fun_label': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_and', 'tf': tf.logical_and, 'latex1': '\\land', 'latexF': '{}\\wedge{}',
              'sym_reduce': None, 'sym_str': 'Andb({}, {})', 'pycode': '({} and {})'},
-    'Orb': {'fun_class': 'Or', 'fun_label': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_or', 'tf': tf.logical_or, 'latex1': '\\or', 'latexF': '({}\\vee{})',
+    'Orb': {'fun_class': 'Or', 'fun_label': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_or', 'tf': tf.logical_or, 'latex1': '\\lor', 'latexF': '{}\\vee{}',
             'sym_reduce': None, 'sym_str': 'Orb({}, {})', 'pycode': '({} or {})'},
-    'Xor': {'fun_class': 'Xor', 'fun_label': 'Xor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_xor', 'tf': tf.math.logical_xor, 'latex1': '\\oplus', 'latexF': '({}\\oplus{})',
+    'Xor': {'fun_class': 'Xor', 'fun_label': 'Xor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_xor', 'tf': tf.math.logical_xor, 'latex1': '\\oplus', 'latexF': '{}\\oplus{}',
             'sym_reduce': None, 'sym_str': 'Xor({}, {})', 'pycode': '({} ^ {})'},
     'Notb': {'fun_class': 'Not', 'fun_label': 'Notb', 'arity': 1, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_not', 'tf': tf.logical_not, 'latex1': '\\neg', 'latexF': '\\neg{}',
              'sym_reduce': None, 'sym_str': 'Notb({})', 'pycode': 'not({})'},  # not a
-    '|': {'fun_class': 'SKIP', 'fun_label': '|', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_or', 'tf': tf.logical_or, 'latex1': '\\lor', 'latexF': '({}\\vee{})',
+    '|': {'fun_class': 'SKIP', 'fun_label': '|', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_or', 'tf': tf.logical_or, 'latex1': '\\lor', 'latexF': '{}\\vee{}',
           'sym_reduce': None, 'sym_str': '({} | {})', 'pycode': '({} or {})'},
 
     # 'f2b' Classical comparative operators, evaluate from float to bool
-    '==': {'fun_class': 'Eq', 'fun_label': '==', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'equal', 'tf': tf.equal, 'latex1': '=', 'latexF': '({}={})',
+    '==': {'fun_class': 'Eq', 'fun_label': '==', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'equal', 'tf': tf.equal, 'latex1': '=', 'latexF': '{}={}',
            'sym_reduce': None, 'sym_str': '({} == {})', 'pycode': '({}=={})'},
-    '!=': {'fun_class': 'Neq', 'fun_label': '!=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'not_equal', 'tf': tf.not_equal, 'latex1': '\\neq', 'latexF': '({}\\neq{})',
+    '!=': {'fun_class': 'Neq', 'fun_label': '!=', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'not_equal', 'tf': tf.not_equal, 'latex1': '\\neq', 'latexF': '{}\\neq{}',
            'sym_reduce': None, 'sym_str': '({} != {})', 'pycode': '({}!={})'},
     '<': {'fun_class': 'Lt', 'fun_label': '<', 'arity': 2, 'xtype': 'f2b', 'c-weight': 1, 'tf_name': 'less', 'tf': tf.less, 'latex1': '<', 'latexF': '{}<{}',
           'sym_reduce': None, 'sym_str': '({} < {})', 'pycode': '({}<{})'},  # a < b

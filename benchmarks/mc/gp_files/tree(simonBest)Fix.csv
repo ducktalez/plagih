@@ -1,0 +1,3 @@
+
+label_list,Ifte,Orb,2,Ifte,<,Andb,Andb,0,Ifte,cartVel,1,<,<,<,Andb,<,0,2,cartVel,0.1,cartPos,-0.05,cartPos,0.02,>,<,cartPos,0,cartVel,-0.45,cartVel,-0.05
+node_modify,0,0,0,0,1,0,0,0,1,1,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1

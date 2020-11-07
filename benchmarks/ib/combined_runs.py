@@ -314,7 +314,8 @@ def main():
     if args.auto:
         slurm1 = list(Path('benchmarks/slurm_runs/').glob('*'))
         slurm2 = list(Path('benchmarks/slurm_runs2/').glob('*'))
-        rootdirstar = slurm1 + slurm2
+        slurm3 = list(Path('benchmarks/slurm_runs3_easy/').glob('*'))
+        rootdirstar = slurm1 + slurm2 + slurm3
         for runfolders in rootdirstar:
             if runfolders.is_dir():
                 if runfolders.name[:2] == 'IB':

@@ -83,11 +83,14 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
                    'gpFriendlyFix': 'mc/gp_files/tree_gpFriendly_fix.csv',
                    'preset': 'mc/gp_files/tree_preset.csv',
                    'presetFix': 'mc/gp_files/tree_preset_fix.csv',
+                   'xiao': 'mc/gp_files/tree_xiao.csv',
+                   'xiaoFix': 'mc/gp_files/tree_xiaoFix.csv',
                    'simple': 'mc/gp_files/tree_simple.csv',
                    'simpleFix': 'mc/gp_files/tree_simple_fix.csv',
                    'simplePlus': 'mc/gp_files/tree_simplePlus.csv',
                    'simplePlusFix': 'mc/gp_files/tree_simplePlus_fix.csv',
                    'simonBest': 'mc/gp_files/tree(simonBest).csv',
+                   'simonBestFix': 'mc/gp_files/tree(simonBest)Fix.csv',
                    'simonBad': 'mc/gp_files/tree(simonBest)_bad.csv',
                    'scratch': None}
 
@@ -136,7 +139,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-data_csv', '-samples_csv', '-data_prepared', '-samples_ready', '-samples', type=Path)
     parser.add_argument('-origin_tree', type=Path)
     parser.add_argument('-kernel_name', type=str, help='Kernel-name that will be analyzed to load the kernel. Currently only regression-versions.')
-    parser.add_argument('-pop_max', '-pop_size', type=int)
+    parser.add_argument('-pop_max', '-pop_size', type=int, help='Set maximum pop for this run (updates the config)')
     parser.add_argument('-gen_max', '-gen_size', type=int)
     parser.add_argument('-gen_additionally', '-gen_add', type=int)
     parser.add_argument('-mp_cpu_cores_max', type=int, default=4, help='Maximum amount of cores for parallelisation. Sfeh: set default to max cores? 4 is for my old ass pc. Sorry^^')
@@ -153,6 +156,7 @@ def main():  # argv sys.argv[1:]
     parser.add_argument('-testrun', action='store_true', help='SFEH (not used yet): Start a large test run. no origin (scratch) -> restart -> paretoentry as origin, new run -> restart -> analyse')
     parser.add_argument('-developer_fix', action='store_true', help='(Developer only) Flag that can be activated if certain code should be executed. Now used to fix Linux/Windows paths-bug.')
     parser.add_argument('-slurm_runs_folder', type=str, default='slurm_runs', help='sfeh for fore than one version of the same run')
+    parser.add_argument('-sfeh_no_crazyops', action='store_true')
 
     args = parser.parse_args()
 
@@ -180,7 +184,7 @@ def main():  # argv sys.argv[1:]
     """
     Starting the actual run
     """
-    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, args.mp_cpu_cores_max, developer_fix=args.developer_fix)
+    gp = ExplainableGP(conf, root_dir, path_data_csv, path_origin_tree, args.mp_cpu_cores_max, developer_fix=args.developer_fix, sfeh_no_crazyops=args.sfeh_no_crazyops)
 
     if args.analyse:
         if args.force_new_run:

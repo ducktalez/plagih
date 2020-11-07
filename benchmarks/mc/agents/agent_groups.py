@@ -107,7 +107,7 @@ class XiaoPresetAgent:
         lb = min(-0.09 * (pos + 0.25) ** 2 + 0.03,
                  0.3 * (pos + 0.9) ** 4 - 0.008)
         ub = -0.07 * (pos + 0.38) ** 2 + 0.07
-        if lb < vel < ub:
+        if lb <= vel <= ub:
             action = 2  # push right
         else:
             action = 0  # push left
@@ -115,7 +115,7 @@ class XiaoPresetAgent:
 
 
 class FixAgentRe:
-
+    '(2 if ((min(((-0.09*((cartPos+0.25)**round(2)))+0.03), ((0.3*((cartPos+0.9)**round(4)))-0.008))<=cartVel) and (cartVel<=((-0.07*((cartPos+0.38)**round(2)))+0.7))) else 0)'
     def decide(self, input):
         cartPos, cartVel = input
         action = 2 if ((cartVel <= (0.7 - (0.07 * ((cartPos + 0.38) * 2)))) and (min((0.03 - (0.09 * ((cartPos + 0.25) * 2))), ((0.3 * ((cartPos + 0.9) * 4)) - 0.008)) <= cartVel)) else 0

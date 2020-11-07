@@ -213,15 +213,22 @@ def tex_label_beautify_end(label):
     return label
 
 
-def latex_tight_node(tree, node_id=root_id):
+def latex_tight_node(tree, node_id=root_id, klammern=False):
     """
     Fit the tree in one latex expression (aka a single node)
     """
     label = tree_node_get_label(tree, node_id)
 
-    if tree_node_get_arity(tree, node_id) > 0:
-        child_tex_list = [latex_tight_node(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
+    if tree_node_get_arity(tree, node_id) > 1:
+        childs = tree_node_get_childs(tree, node_id)
+        child_tex_list = [latex_tight_node(tree, cc, klammern=True) for cc in childs]
+
+        # childs_max = max(tree_node_get_arity(tree, cc) for cc in childs)
+
         label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
+        if klammern:
+            label = f'({label})'
+
     else:
         # sfehsfeh family colored? tex color?
         if terminal_label_is_observation(label):  # node is a terminal - either observation or variable

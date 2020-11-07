@@ -4,6 +4,60 @@ print('Make sure that this file is executed on top level')
 
 # a_velocity,a_gain,a_shift
 run_starts = [
+
+    # """
+    # MC200 (SARSA-Agent after 200 training steps)
+    # """
+    # 'MTC200_MAE_explun01_simpleFix',
+    # 'MTC200_MAE_tanh_simpleFix',
+    # 'MTC200_MAE_explun01_tanh_simpleFix',
+    # 'MTC200_RMSE_explun01_tanh_simpleFix',
+
+    'MTC200_MAE_scratch',
+    'MTC200_MAE_gpFriendly',
+    # 'MTC200_MAE_gpFriendlyFix',
+    # 'MTC200_MAE_preset',
+    'MTC200_MAE_xiao',
+    'MTC200_MAE_simple',
+    'MTC200_MAE_simpleFix',
+    'MTC200_MAE_simplePlus',
+    'MTC200_MAE_simplePlusFix',
+    'MTC200_MAE_simonBest',
+    # 'MTC200_MAE_simonBad',
+
+    'MTC200_MSE_scratch',
+    'MTC200_MSE_simple',
+    'MTC200_MSE_simpleFix',
+    'MTC200_MSE_simplePlusFix',
+    'MTC200_MSE_gpFriendly',
+    # 'MTC200_MSE_gpFriendlyFix',
+    # 'MTC200_MSE_preset',
+    'MTC200_MSE_xiao',
+    'MTC200_MSE_xiaoFix',
+    'MTC200_MSE_simplePlus',
+    'MTC200_MSE_simonBest',
+    'MTC200_MSE_simonBestFix',
+    # 'MTC200_MSE_simonBad',
+    #
+    # 'MTC200_MAE_explun01_simple',
+    # 'MTC200_MAE_explun01_gpFriendlyFix',
+    # 'MTC200_MAE_explun01_presetFix',
+    #
+    # # """
+    # # MC75 (SARSA-Agent after 75 training steps)
+    # # """
+    'MTC75_MAE_scratch',
+    'MTC75_MAE_simple',
+    'MTC75_MAE_simpleFix',
+    'MTC75_MAE_gpFriendly',
+
+    'MTC75_MSE_scratch',
+    'MTC75_MSE_simple',
+    'MTC75_MSE_simpleFix',
+
+    # """
+    # IB
+    # """
     'IB_MAE_scratch_0', 'IB_MAE_scratch_1', 'IB_MAE_scratch_2',
     # 'IB_MAE_tanh_scratch_0', 'IB_MAE_tanh_scratch_1', 'IB_MAE_tanh_scratch_2',
     # 'IB_MAE_sim2_0', 'IB_MAE_sim2_1', 'IB_MAE_sim2_2',
@@ -38,51 +92,6 @@ run_starts = [
     # 'IB_MSE_tanh_sim2_0', 'IB_MSE_tanh_sim2_1', 'IB_MSE_tanh_sim2_2',
     # 'IB_MSE_explun01_tanh_sim2_0', 'IB_MSE_explun01_tanh_sim2_1', 'IB_MSE_explun01_tanh_sim2_2',
 
-    # """
-    # MC200 (SARSA-Agent after 200 training steps)
-    # """
-    # 'MTC200_MAE_explun01_simpleFix',
-    # 'MTC200_MAE_tanh_simpleFix',
-    # 'MTC200_MAE_explun01_tanh_simpleFix',
-    # 'MTC200_RMSE_explun01_tanh_simpleFix',
-
-    'MTC200_MAE_scratch',
-    'MTC200_MAE_gpFriendly',
-    # 'MTC200_MAE_gpFriendlyFix',
-    'MTC200_MAE_preset',
-    'MTC200_MAE_simple',
-    'MTC200_MAE_simpleFix',
-    'MTC200_MAE_simplePlus',
-    'MTC200_MAE_simplePlusFix',
-    'MTC200_MAE_simonBest',
-    # 'MTC200_MAE_simonBad',
-
-    'MTC200_MSE_scratch',
-    'MTC200_MSE_simple',
-    'MTC200_MSE_simpleFix',
-    'MTC200_MSE_simplePlusFix',
-    'MTC200_MSE_gpFriendly',
-    # 'MTC200_MSE_gpFriendlyFix',
-    'MTC200_MSE_preset',
-    'MTC200_MSE_simplePlus',
-    'MTC200_MSE_simonBest',
-    # 'MTC200_MSE_simonBad',
-    #
-    # 'MTC200_MAE_explun01_simple',
-    # 'MTC200_MAE_explun01_gpFriendlyFix',
-    # 'MTC200_MAE_explun01_presetFix',
-    #
-    # # """
-    # # MC75 (SARSA-Agent after 75 training steps)
-    # # """
-    'MTC75_MAE_scratch',
-    'MTC75_MAE_simple',
-    'MTC75_MAE_simpleFix',
-    'MTC75_MAE_gpFriendly',
-
-    'MTC75_MSE_scratch',
-    'MTC75_MSE_simple',
-    'MTC75_MSE_simpleFix',
 ]
 
 complete_params = []
@@ -94,7 +103,8 @@ complete_params = []
 # --cpus-per-task=8 is better, but everyone uses these engines
 sbatch_sh = "#!/usr/bin/env bash\n" + '\n'.join(
     [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} $1 $2 $3 $4' for run_name in run_starts]
-    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs2 $1 $2 $3 $4' for run_name in run_starts])
+    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs2 $1 $2 $3 $4' for run_name in run_starts]
+    + [f'sbatch --partition=All ./benchmarks/linux_start_slurm_run.sh {run_name} -slurm_runs_folder slurm_runs3_easy -sfeh_no_crazyops $1 $2 $3 $4' for run_name in run_starts])
 
 with Path.open(Path('start_all_slurm_sbatch_jobs.sh'), 'w') as sh_file:
     sh_file.write(sbatch_sh)

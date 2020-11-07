@@ -27,7 +27,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
 
     path_origin_tree = None
     action_name = None
-    conf.gen_max = 5000   # todotodo
+    conf.gen_max = 1000   # todo todotodo
 
     name_splits = prepared_run.split('_')
 

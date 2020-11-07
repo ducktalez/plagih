@@ -154,18 +154,6 @@ class Ptree_karoo():
         pass
 
 
-def TEST_karoo_tree_from_labellist(label_list, obs_krazy, modify_list=None, arity_list=None):
-    """
-    returns: tree, from label_list (newest version)
-    """
-
-    xtype_list = xtypes_from_labels(label_list)
-    p_tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list, arity_list=arity_list)
-    tree = p_tree.get_uninstanced_tree()
-
-    return tree
-
-
 def karoo_tree_from_expr(expr):
     """
     DELETE later sfeh

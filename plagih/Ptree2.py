@@ -21,12 +21,11 @@ class Plabel:
 
 class CoolCore:
     """
-    x = label_list = ['Ifte', '<', 0, 2, 'cartVel', 0]
-    label_list = ['+', 1, 'b']
-    x = Pnode('+', childs=[Pnode('1'), Pnode('2')])
+
     """
 
-    def __init__(self, label=None, is_fix=False, complete=False, arity=None, xtype=None, childs=None, depth=None, nodepath=None):
+    def __init__(self, label=None, is_fix=False, complete=False, arity=None, xtype=None, childs=None, depth=None,
+                 nodepath=None):
 
         xtype = xtype if xtype else xtype_get_from_label(label)
         arity = label_get_arity(label) if arity is None else arity
@@ -138,7 +137,9 @@ class CoolCore:
 
         """
         if self.depth < goal_depth:
-            return sum([child.get_nodes_at_depth(goal_depth, only_mutable=only_mutable, get_closest_depth=get_closest_depth) for child in self.childs], [])
+            return sum(
+                [child.get_nodes_at_depth(goal_depth, only_mutable=only_mutable, get_closest_depth=get_closest_depth)
+                 for child in self.childs], [])
         else:
             if only_mutable and self.is_fix:
                 return []
@@ -174,7 +175,8 @@ class CoolCore:
         # tree = evolve_node_arity_fix(tree)  # fix all node arities
         #
         # return tree
-        raise Exception('Sfeh needs to do this')  # sfeh asdasd only relevant when blind crossover? check during build process?
+        raise Exception(
+            'Sfeh needs to do this')  # sfeh asdasd only relevant when blind crossover? check during build process?
 
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
@@ -183,7 +185,9 @@ class CoolCore:
         """
         child_results = []
         if self.depth < goal_depth:
-            child_results = sum([child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for child in self.childs], [])
+            child_results = sum(
+                [child.get_nodes_to_depth(goal_depth, only_mutable=only_mutable, force_depth=get_closest_depth) for
+                 child in self.childs], [])
 
         if only_mutable and self.is_fix or \
                 get_closest_depth and self.depth != goal_depth:
@@ -208,7 +212,8 @@ class CoolCore:
         if len(new_core) < len(self):
             self.new_core(new_core)
         elif len(new_core) > len(self):
-            raise Exception(f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and Usub.
+            raise Exception(
+                f'Reduced core is even more complex than before  ({len(new_core)}, {len(self)}). expr_raw: {expr_raw}')  # \nold_core:{self}\nnew_core: {new_core} May happen with sympification and Usub.
             # example: Tree sympification did not work: Reduced core is even more complex than before. expr_raw: sign(Mini(((Velocity_2 * -0.790706) - sqrt(Gain_0)), (-0.569271 - Velocity_9)))
             # old_core:[sign, [Mini, [-, [*, Velocity_2, -0.790706], [sqrt, Gain_0]], [-, -0.569271, Velocity_9]]]
             # new_core: [sign, [Mini, [-, [Usub, [sqrt, Gain_0]], [*, 0.790706, Velocity_2]], [-, -Velocity_9, 0.569271]]]
@@ -409,6 +414,7 @@ class CoolTree:
     """
     sfeh tree age is the length of the hist list. crossover: use maximum
     """
+
     class PtreeMeta:
         def __init__(self, fitness_train=None):
             self.hash = None
@@ -490,7 +496,8 @@ class CoolTree:
 
     def pretty_format(self):
         layerlabellist = self.get_layer_labellist()
-        return '\n'.join([', '.join([str(lbl) for lbl in layer]) for layer in layerlabellist])  # lbl-needed, sometines those are float values
+        return '\n'.join([', '.join([str(lbl) for lbl in layer]) for layer in
+                          layerlabellist])  # lbl-needed, sometines those are float values
 
     # def workaround_normalize_exponentiation(self):
     #     self.core.workaround_normalize_exponentiation()
@@ -610,7 +617,8 @@ class CoolTree:
             cool_functions = [x for x in cool_nodes if x.arity > 0]
             if cool_functions:
                 chosen = random.choice(cool_functions)
-                chosen.reduce_me(obs_infos)  # sfeh chosen must be set again? or not? test it at least. probably working.
+                chosen.reduce_me(
+                    obs_infos)  # sfeh chosen must be set again? or not? test it at least. probably working.
         if length_before < len(self):
             print_e(f'FFS Trees just become larger? {self.get_expr_raw()}')
         # self.meta.clear()
@@ -747,21 +755,21 @@ class CoolTree:
 def coolcore_from_oldtree(tree, node_id=root_id):
     """
     utility function
-    karoo_tree to pnode version
+    karoo_tree to cooltree version
     """
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
     is_fix = False if tree_node_is_modifiable(tree, node_id) else True
-    pnode = CoolCore(label=label, arity=arity, xtype=xtype, is_fix=is_fix)
+    coolcore = CoolCore(label=label, arity=arity, xtype=xtype, is_fix=is_fix)
 
     childs = tree_node_get_childs(tree, node_id)  # [7, 8, 9]
     for child_id in childs:
         pchild = coolcore_from_oldtree(tree, node_id=child_id)
-        pnode.child_append(pchild)
+        coolcore.child_append(pchild)
 
     if node_id == root_id:
-        pnode.finalize()
+        coolcore.finalize()
 
-    return pnode
+    return coolcore
 
 
 def cooltree_from_oldtree(tree, node_id=root_id):
@@ -783,13 +791,10 @@ def cooltree_from_oldtree(tree, node_id=root_id):
     return cooltree
 
 
-def coolcore_from_treenode(tree, node_id, is_fix=True):
-    label = tree_node_get_label(tree, node_id)
-    pnode = CoolCore(label, is_fix=is_fix)
-    return pnode
-
-
 def cooltree_from_labellist(label_list, modify_list=None):
+    """
+    A lazysolution
+    """
     xtype_list = xtypes_from_labels(label_list)
     tree = Ptree_karoo(label_list, xtype_list, modify_list=modify_list).get_uninstanced_tree()
     cooltree = CoolTree(coolcore_from_oldtree(tree))
@@ -806,11 +811,7 @@ def coolcore_from_expr(expr, obs_infos):
 
 
 def cooltree_from_expr(expr, obs_infos):
-    label_list = ast_convert_from_expr(expr, build=True)
-    xtype_list = xtypes_from_labels(label_list, obs_infos)
-    p_tree = Ptree_karoo(label_list, xtype_list)
-    tree = p_tree.get_uninstanced_tree()
-    coolcore = coolcore_from_oldtree(tree)
+    coolcore = coolcore_from_expr(expr, obs_infos)
     cooltree = CoolTree(coolcore)
     return cooltree
 
@@ -872,4 +873,43 @@ class ObservationNode(CoolCore):
         self.name = name
 
 
-# some_quick_test()
+# def coolcore_from_brackets(coolbrackets):
+#     test = ['+', 1, ['-', [2, 3]]]
+# # some_quick_test()
+
+
+if __name__ == '__main__':
+
+    tree = ['Ifte',
+            ['Orb',
+             ['<', ['cartPos', -1]],
+             ['Andb',
+              ['<', ['cartPos', 0.1]],
+              ['<', ['cartVel', -0.05]]]], 2,
+            ['Ifte',
+             ['Andb',
+              ['Andb',
+               ['>', ['cartPos', -0.45]],
+               ['<', ['cartPos', -0.05]]],
+              ['<', ['cartVel', -0.5]]], 0,
+             ['Ifte',
+              ['<', ['cartVel', 0]], 0, 2]]]
+
+    trexpr = '(Ifte, (Orb, (cartPos < -1), (Andb, (cartPos < 0.1), (cartVel < -0.05))), 2, (Ifte, (Andb, (Andb, (cartPos > -0.45), (cartPos < -0.05)), (cartVel < -0.5)), 0, (Ifte, (cartVel < 0), 0, 2)))'
+    trexpr = '(Ifte, (cartVel < 0), 0, 2)'
+    trexpr = plagih_sympify(trexpr)
+    print(trexpr)
+
+    def funtest(pos, vel):
+        if pos < -1 or (pos < 0.1 and vel < -0.05):
+            return 2
+        else:
+            if (pos > -0.45 and pos < -0.05) and vel < 0.02:
+                return 0
+            else:
+                if vel < 0:
+                    return 0
+                else:
+                    return 2
+
+    some_quick_test()

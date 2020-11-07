@@ -162,7 +162,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
 
         path_mcmeshplot = path_make_dir(folder / f'{name}.png')
         fig.savefig(path_mcmeshplot)
-        # todo todotodo sfeh pdf only at the very end?
+        # todo sfeh pdf only at the very end?
         # path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
         # fig.savefig(path_mcmeshplot)
         print(f'saved {path_mcmeshplot}')
@@ -350,7 +350,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
             if avg_reward is None:  # or fails is None:
                 avg_reward, fails, _ = mtc_play(mc_gent, n=n)
 
-            # sfehsfeh save  time comment this todotodo todo
+            # # sfehsfeh save  time comment this todotodo todo
             bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
             bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
             mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)

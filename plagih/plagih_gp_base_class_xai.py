@@ -1507,7 +1507,7 @@ class ExplainableGP(object):
         origin_cooltree.meta.parsimony = 0
 
         self.pareto.append([0, fitness_train, origin_cooltree])  # the origin tree is the only candidate for now -> it is in the pareto front
-        self.print_g('gg', f'Loading origin tree, fitness {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
+        self.print_g('gg', f'Loading origin tree, regr. error {fitness_train}. Time: {time.perf_counter() - self.time_start:4.2f}s')
 
         return origin_cooltree  # self.origin_cooltree = copy.deepcopy(origin_cooltree)
 

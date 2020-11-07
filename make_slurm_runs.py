@@ -37,6 +37,7 @@ run_starts = [
     'MTC200_MSE_simplePlus',
     'MTC200_MSE_simonBest',
     'MTC200_MSE_simonBestFix',
+    'MTC200_MSE_simonBestFix2',
     # 'MTC200_MSE_simonBad',
     #
     # 'MTC200_MAE_explun01_simple',

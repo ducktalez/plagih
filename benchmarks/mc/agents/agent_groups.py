@@ -10,21 +10,43 @@ def safe_division(n, d):
 
 
 class Good_Expert:
+    # x = ['Ifte',
+    #      ['Orb',
+    #       ['<', ['cartPos', -1]],
+    #       ['Andb',
+    #        ['<', ['cartPos', 0.1]],
+    #        ['<', ['cartVel', -0.05]]]], 2,
+    #      ['Ifte',
+    #       ['Andb',
+    #        ['Andb',
+    #         ['>', ['cartPos', -0.45]],
+    #         ['<', ['cartPos', -0.05]]],
+    #        ['<', ['cartVel', -0.5]]], 0,
+    #       ['Ifte',
+    #        ['<', ['cartVel', 0]], 0, 2]]]
 
     def decide(self, observation):
-        pos, vel = observation
 
+        cartPos, cartVel = observation
+        xxx = (2 if ((cartPos < -1) or ((cartPos < 0.1) and (cartVel < -0.05))) else (
+            0 if ((cartVel < 0.02) and ((cartPos > -0.45) and (cartPos < -0.05))) else (0 if (cartVel < 0) else 2)))
+
+        pos, vel = observation
         if pos < -1 or (pos < 0.1 and vel < -0.05):
-            return 2
+            yyy = 2
         else:
             if (pos > -0.45 and pos < -0.05) and vel < 0.02:
-                return 0
-
-            if vel < 0:
-                return 0
+                yyy = 0
             else:
-                return 2
+                if vel < 0:
+                    yyy = 0
+                else:
+                    yyy = 2
+        # todo
+        if xxx != yyy:
+            raise Exception(f'oadsasdasdsad {xxx} {yyy}')
 
+        return yyy
 
 class SimonsTesting:
 
@@ -59,7 +81,8 @@ class AgentV1p40:
             sum1 = -observation1
         else:
             sum1 = math.sin(observation0 - 0.325)
-        if safe_division((-observation1 + math.sin(observation0 + 0.325)), observation1) < -observation0 * observation1 + 1.945:
+        if safe_division((-observation1 + math.sin(observation0 + 0.325)),
+                         observation1) < -observation0 * observation1 + 1.945:
             sum2 = 0.265
         else:
             sum2 = math.sin(observation0 - 0.295)
@@ -116,9 +139,12 @@ class XiaoPresetAgent:
 
 class FixAgentRe:
     '(2 if ((min(((-0.09*((cartPos+0.25)**round(2)))+0.03), ((0.3*((cartPos+0.9)**round(4)))-0.008))<=cartVel) and (cartVel<=((-0.07*((cartPos+0.38)**round(2)))+0.7))) else 0)'
+
     def decide(self, input):
         cartPos, cartVel = input
-        action = 2 if ((cartVel <= (0.7 - (0.07 * ((cartPos + 0.38) * 2)))) and (min((0.03 - (0.09 * ((cartPos + 0.25) * 2))), ((0.3 * ((cartPos + 0.9) * 4)) - 0.008)) <= cartVel)) else 0
+        action = 2 if ((cartVel <= (0.7 - (0.07 * ((cartPos + 0.38) * 2)))) and (
+                min((0.03 - (0.09 * ((cartPos + 0.25) * 2))),
+                    ((0.3 * ((cartPos + 0.9) * 4)) - 0.008)) <= cartVel)) else 0
         return max(0, min(2, int(round(action))))
 
 

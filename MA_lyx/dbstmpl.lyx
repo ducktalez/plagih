@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,6 +7,11 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -28,8 +33,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -68,7 +71,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -78,10 +80,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -351,7 +350,6 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -378,6 +376,43 @@ xxx korrekt zitieren
 
 \begin_layout Chapter
 Intro / Motivation
+\end_layout
+
+\begin_layout Standard
+Im Bereich des RL müssen AI Ansätze als Blackbox angesehen werden, weshalb
+ man ihnen nicht vertrauen kann.
+ Um dieses Vertrauen wieder herzustellen gibt es den Bereich der XAI, der
+ versucht, die Blackbox dem Menschen erklärbar zu machen.
+ 
+\end_layout
+
+\begin_layout Itemize
+Die Analyse der Blackbox ist im Angesicht ihrer Lesbarkeit und Komplexität
+ allerdings schwer zu erreichen.
+ 
+\end_layout
+
+\begin_layout Itemize
+Doch selbst, wenn die Blackbox interpretierbar gemacht werden kann ist ihre
+ Strategie oft viel zu komplex um verstanden zu werden.
+ 
+\end_layout
+
+\begin_layout Standard
+Um eine möglichst einfache Erklärung zu erhalten wird in dieser Arbeit untersuch
+t, was die strategie eine Neuropolicy von einer mensch geschriebenen Expertenpol
+icy unterscheidet.
+ Dieser optimierte Startpunkt für Erklärungen zu finden wird als Vertrautheit
+ bezeichnet.
+ Mithilfe von GP wird das Finden der Unterschiede automatisiert und als
+ Änderung an der Heuristik dargestellt.
+ Der Experte erkennt dadurch noch seinen eigenen Code und kann den Umfang
+ der Änderung, in Kombination mit ihrer Verbesserung, abwägen.
+ 
+\end_layout
+
+\begin_layout Standard
+Der Umfang der Änderungen wird mithilfe der TED ausgerechnet.
 \end_layout
 
 \begin_layout Standard
@@ -442,7 +477,7 @@ cape/image.pdf_tex
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-an insurmountable trench as a metaphor for the explainability gap - die
+An insurmountable trench as a metaphor for the explainability gap - die
  Experten stehen an der Spitze der Pyramide der menschlich erklärbaren Ansätze.
  Den Graben zur Neuropolicy zu überwinden sollte eine flache und nahe Stelle
  genutzt werden.
@@ -465,10 +500,6 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-- Im Bereich des RL...
-\end_layout
-
-\begin_layout Standard
 Fortschritte in AI, RL, ...
 \end_layout
 
@@ -477,54 +508,59 @@ GDPR der EU (DSGVO)
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-Machine learning Ansätze erzielen in immer mehr Bereichen übermenschliche
- Performance, da die Verwendeten Strukturen allerdings als Black Box akzeptiert
- werden und Entscheidungen nicht erklärt werden können, wird vor allem in
- sensiblen Bereichen immer noch auf vom Menschen geschriebene Heuristiken
- gesetzt.
- Mithilfe von genetischer Programmierung können zwar bereits interpretierbare
- Ergebnisse erzeugt werden, oft haben die Lösungen aber dennoch eine komplexe
- Struktur, nicht der Denkstruktur eines Entwicklers entspricht.
- Wir stellen deshalb einen neuartigen Ansatz vor, der ein von Mensch geschrieben
-es Programm mithilfe von pareto genetischer Programmierung mit möglichst
- wenig Änderungen erweitert um die Logik eines beliebigen Black Box Machine
- Learning Ansatz zu adaptieren.
- Dafür wurde als Distanzmaß die Tree Edit Distance implementiert, welche
- die Anzahl der Änderungen am Referenzprogramm wiedergibt.
- Für die Umsetzung wurde eine Regression auf offline-daten der Benchmarks
- durchgeführt.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Vertrauen in RL Lösungen (industrie, )
-\end_layout
-
-\begin_layout Paragraph
-Deepmind's Alpha Go
-\end_layout
-
-\begin_layout Itemize
-Ein Durchbruch gelang dabei Deepmind bei den Spielen Schach und Go.
- Diese Spiele galten aufgrund des tief gehenden Verständnis für Positionen
- und der enorm hohen Möglichkeit an möglichen Zügen als dem Menschen vorbehalten.
- Beide Ansätze waren sowohl dem Menschen als auch den vom Menschen geschriebenen
- Heuristiken überlegen.
+Intelligence means the ability to develop strategies to solve a problem.
 \end_layout
 
 \begin_layout Standard
-Even AlphaGo, as a prestige project of the RL, was subject to such an error
- of reasoning.
- As you can read in the documentation, this could only be discovered by
- chance by a human being.
+maschine möglichkeiten -> bessere Lösungen!
+\end_layout
+
+\begin_layout Paragraph
+M: tradeoff performance vs.
+ readability
+\end_layout
+
+\begin_layout Standard
+Je mehr Freiheiten man einer Maschine gibt, desto besser sind auch die Lösungen
+\end_layout
+
+\begin_layout Subsection
+Reinforcement Learning
+\end_layout
+
+\begin_layout Standard
+Reinforcement Learning (RL) is a part of ML where an agent without prior
+ knowledge learns a strategy to maximise the expected reward in an environment.
+ The environment usually represents a Markov chain, a stochastic form of
+ determinism in which the agent moves from a state with stochastic probability
+ and the same action to the same subsequent state.
+\end_layout
+
+\begin_layout Standard
+An agent has to find a strategy with limited memory and computing power
+ and, especially in complex state spaces, has to simplify the Markov process
+ and find the best possible solution as efficiently as possible through
+ a sensible balance between exploration and exploitation.
+ [xx tradeoff source] 
+\end_layout
+
+\begin_layout Paragraph
+M: Alpha Go
+\end_layout
+
+\begin_layout Standard
+This area has become very popular due to the development of superhuman strategie
+s, for example for the game Go.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AlphaGo_paper"
+
+\end_inset
+
+ Diese Spiele galten aufgrund des tief gehenden Verständnis für Positionen
+ und der enorm hohen Möglichkeit an möglichen Zügen als dem Menschen vorbehalten.
+ Trotz außerorddentlicher performance trauten die Entwickler AlphaGo nicht
+ vollständig und ließen den Prozess durch einen Menschen überwachen.
 \end_layout
 
 \begin_layout Quotation
@@ -553,7 +589,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -566,39 +601,158 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
-Solving this problem was a big problem for the Deepmind team, as it would
+Even AlphaGo, as a prestige project of the RL, supervised by a research
+ team, was subject to such an error of reasoning.
+ Solving this problem was a big problem for the Deepmind team, as it would
  require an extensive training process.
- The risk here was still relatively manageable in the form of public embarrassme
-nt; for the industry, which can also be prosecuted in court for undesirable
- developments, the development of explainable policies is therefore of great
- importance.
  
 \end_layout
 
-\begin_layout Section
-Human Learning, the reference for a transparent approach.
+\begin_layout Standard
+For applications in the industry, where small wrong decisions can often
+ lead to big damages which can also be prosecuted in court for undesirable
+ developments, the development of explainable policies is of great importance.
  
-\begin_inset Newline newline
-\end_inset
+\end_layout
 
-How does a human being learn strategies that can be explained?
+\begin_layout Subsection
+M: Trusting AI 
 \end_layout
 
 \begin_layout Standard
 Eine erlernte Strategie muss nicht nur außerordentlich gut sein, man sollte
- ihr auch vertrauen können - im Optimalfall sollte sie komplett erklärbar
- sein.
+ ihr auch vertrauen können.
+ Tests können diesen Prozess zwar unterstützen, RL Probleme sind aber zu
+ komplex um Strategien ausreichend testen zu können.
  
 \end_layout
 
-\begin_layout Paragraph
-Menschen lernen sicher
+\begin_layout Subsubsection
+Trusting the Learner
 \end_layout
 
 \begin_layout Standard
-The learning process is decisive and differs fundamentally in some points
- from strategies of AI.
- 
+Computer sind, im Gegensatz zum Menschen, auf zufällige Exploration angewiesen,
+ welche sowohl die Startparametrisierung sowie die Exploration beeinflussen.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_75.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-75
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-200
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A neural network creates very complex policies which are therefore very
+ adaptable and can make filigree distinctions.
+ Thus, patches with volatile decision changes are visible in many areas,
+ whose extent and effect are often not recognisable.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Biological intelligence
 \end_layout
 
 \begin_layout Standard
@@ -617,13 +771,16 @@ In addition to these basic instincts, humans have also learned a wide range
  A well-known example of such a mastered ability is the recognition of shapes
  and faces, which man perfected as a baby to such an extent that interpersonal
  explanations are no longer necessary.
- Artificial image recognition currently still requires human assistance
- such as the implementation of filters.
- xx besserer Übergang Nevertheless the One pixel attack 
+ 
+\end_layout
+
+\begin_layout Standard
+Artificial image recognition currently still requires human assistance such
+ as the implementation of filters.
+ Nevertheless the One pixel attack 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -633,7 +790,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -646,243 +802,23 @@ ally valuable way.
 \end_layout
 
 \begin_layout Paragraph
-Menschen können erklären, Sprache
+by understanding
+\end_layout
+
+\begin_layout Paragraph
+Umfang, Komplexität
 \end_layout
 
 \begin_layout Standard
-Humans can (usually) explain learned strategies because causality already
- plays an important role in the learning process.
+Die mathematischen Gleichungen durch die Ansätze wie beispielsweise NN beschrieb
+en werden bestehen aus zu vielen Variablen als dass der Mensch ihre Symbiose
+ überschauen könnte.
  
-\end_layout
-
-\begin_layout Standard
-The intermediate goals that a person goes through to learn an ability are
- usually not comparable to the learning mechanisms of neural networks or
- genetic programming.
- 
-\end_layout
-
-\begin_layout Standard
-An RL Agent therefore only has a working strategy that cannot point to any
- paradigm or clue that could explain anything to a person.
- Thus, no causality can be assumed for the system of equations.
- 
-\end_layout
-
-\begin_layout Standard
-Es gibt keine Möglichkeit, kein Protokoll, mit dem sich ein künstliches
- NN und ein menschliches NN abstimmen können.
 \end_layout
 
 \begin_layout Subparagraph
-Puzzle example
-\end_layout
-
-\begin_layout Standard
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- Most people know how to recognize colors, that you first have to turn puzzle
- pieces to the colored side and that you should use the picture on the box
- as a reference point.
- A popular tip for beginners is therefore that you should start with the
- edge of the puzzle.
-\end_layout
-
-\begin_layout Standard
-This is helpful, because the learning process in humans usually consists
- of the composition of many comprehensibly strung together steps.
-\end_layout
-
-\begin_layout Section
-Interpretable Controllers by Classical Control Theory
-\end_layout
-
-\begin_layout Standard
-Nevertheless, the solutions found work, which is why one can try to abstract
- the logic into causal relationships.
- 
-\end_layout
-
-\begin_layout Standard
-A non-verbal learning process is usually only possible in the form of detailed
- observation of the behaviour by the person.
- To do this, an expert watches games of the agent and tries to identify
- where the most important strategic differences are so that he can explain
- them.
- With AlphaGo, for example, it has been possible to find generally valid
- strategies that were previously unknown.
- xx] Although this procedure is complex, it has the decisive advantage that
- what has already been learned does not have to be discarded, but actually
- provides a meaningful core.
- The part that has to be integrated into the own model via a learning and
- understanding process is therefore much less.
-\end_layout
-
-\begin_layout Standard
-The task of the approach presented in this thesis is basically to automate
- this process as far as possible.
-\end_layout
-
-\begin_layout Section
-Erklärbare künstliche Intelligenz
-\end_layout
-
-\begin_layout Standard
-Intelligence means the ability to develop strategies to solve a problem.
- Je nachdem, welche Lernansätze man dabei verfolgt unterscheiden sich die
- Resultate stark in vielerlei Hinsicht.
-\end_layout
-
-\begin_layout Standard
-xxx secure learning vs.
- understanding vs.
- testing
-\end_layout
-
-\begin_layout Section
-Reinforcement Learning
-\end_layout
-
-\begin_layout Standard
-Reinforcement Learning (RL) is a part of ML where an agent without prior
- knowledge learns a strategy to maximise the expected reward in an environment.
- The environment usually represents a Markov chain, a stochastic form of
- determinism in which the agent moves from a state with stochastic probability
- and the same action to the same subsequent state.
-\end_layout
-
-\begin_layout Standard
-An agent has to find a strategy with limited memory and computing power
- and, especially in complex state spaces, has to simplify the Markov process
- and find the best possible solution as efficiently as possible through
- a sensible balance between exploration and exploitation.
- [xx tradeoff source] Current approaches often use neural networks for this
- purpose.
-\end_layout
-
-\begin_layout Standard
-xxx This area has become very popular due to the development of superhuman
- strategies, for example for the game Go.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AlphaGo_paper"
-literal "true"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Section
-Machine Learning ML Methods
-\end_layout
-
-\begin_layout Subsection
-Neural Networks
-\end_layout
-
-\begin_layout Standard
-The learning process is often made possible by the use of extremely complex
- data structures such as neural networks (NN), which must be regarded as
- black boxes.
- Especially in sensitive areas such as industry, a tradeoff in favor of
- performance at the expense of loss of control is often not an option, since
- even rarely occurring wrong decisions could have fatal consequences.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-An input layer receives all important information and an output layer evaluates
- all possible actions - the best one is then taken.
- Between the two layers there can be any number of hidden layers.
- Their task is to divide the problem between the input layer and the output
- layer and to identify subproblems.
- The training process will be started with a random parameterization and
- the decisions will be very bad at the beginning.
- If a wrong decision is made, the neurons from output to input adjust their
- values so that the next time the right decision is made.
-\end_layout
-
-\begin_layout Plain Layout
-A neuron is modeled as follows (see Neuron).
- For a group of neurons from the previous layer (often all neurons) the
- signals are received and weighted.
- Together with a bias, which is added by the neuron itself, a sum is formed.
- To prevent unnaturally large values in neurons, the sum is added to an
- activation function that calculates the final activation of the neuron.
- Common activation functions include ReLu and Sigmoid.
- The result is then passed on to the neurons of the next layer.
-\end_layout
-
-\begin_layout Plain Layout
-The complexity of such a network depends on the number of layers, the number
- of nodes per layer and the type of interconnection between layers.
- A possible network to solve Mountain Car could be for example an input
- layer with two neurons and an output layer with three neurons, as well
- as three hidden layers with 24, 48 and 24 layers each.
- Full connectivity between the layers is not unusual, resulting in the following
- number of connections:
-\end_layout
-
-\begin_layout Plain Layout
-====
-\end_layout
-
-\begin_layout Itemize
-NN Logik
-\begin_inset Newline newline
-\end_inset
-
-Die Logik dieses Modells muss allerdings vom Entwickler, in Form der Architektur
- des ML-Ansatzes implementiert werden (Verwendung neuronaler Netze, Anzahl
- der hidden layer, topologie zwischen den Schichten, Aktivierungsfunktionen
- der Neuronen, Explorationsparameter, etc.).
- Ist die gewählte Architektur nicht für das Problem geeignet, so wird es
- auch nicht funktionieren.
-\begin_inset Newline newline
-\end_inset
-
-Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
- einen Hund dafür zu trainieren und keine Taube.
- Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
- umgekehrt funktioniert es nicht.
- Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
- uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Artificial neural networks are machine learning systems that are strongly
- oriented towards the biological brain.
-\end_layout
-
-\begin_layout Standard
-Aus der Sicht der Erklärbarkeit ===
-\end_layout
-
-\begin_layout Standard
-Neural networks are generalized, very extensive systems of equations, which
- can adapt their own parameters in a two-complex training process by means
- of automated statistical procedures and random exploration.
- These equations often contain several thousand variables, combined with
- unintuitive activation functions such as the ReLu function or the sigmoid
- function , which is why they are not interpretable by humans.
- 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:relu-sigmoid"
-
-\end_inset
-
-
+Interpretability tanh, sinus, ...
+ Verständnis für mathematische Funktionen
 \end_layout
 
 \begin_layout Standard
@@ -1034,7 +970,363 @@ name "fig:relu-sigmoid"
 
 \end_layout
 
+\begin_layout Standard
+Selbst einfache Der Natur der Aktivierungsfunktionen unterliegt dabei ein
+ weiteres Problem der Interpretierbarkeit, sie markieren keine logische
+ Abstraktion des Problems sondern stellen eine stark unverlässliche unintuituve
+ Komponente dar.
+ Ein perceptron als zwei-neuroniges
+\end_layout
+
+\begin_layout Standard
+Andere Ansätze, wie beispielsweise GP, reduzieren das Problem gewaltig indem
+ sie direkt mathematische Formeln suchen.
+ Somit ist sind Lösungen allgemein gültig.
+\end_layout
+
+\begin_layout Standard
+Man relies on explanations to trust models, whereas ML largely dispenses
+ with explanations.
+ 
+\end_layout
+
+\begin_layout Subparagraph
+Relatability/explainability/familiarity/kausale Logik
+\end_layout
+
+\begin_layout Standard
+Alle bisher genannten Faktoren kann man messen oder bewerten und sind somit
+ gute Indikatoren, der wichtigste Aspekt ist aber dennoch wie viel Aufwand
+ es einen Menschen Kostet, eine Strategie zu verstehen.
+ Der Mensch kapselt zwar gerne und ist evolutionär bedingt auch sehr gut
+ im pattern matching, dennoch ist eine allgemein gültige beschreibung von
+ Eigenschaften, die eine Formel haben muss um als Erklärbar zu gelten eine
+ übereinfachte Lösung.
+\end_layout
+
+\begin_layout Subparagraph
+Erklärbarkeit durch Sprache
+\end_layout
+
+\begin_layout Standard
+Humans can (usually) explain learned strategies because causality already
+ plays an important role in the learning process.
+ 
+\end_layout
+
+\begin_layout Standard
+The intermediate goals that a person goes through to learn an ability are
+ usually not comparable to the learning mechanisms of neural networks or
+ genetic programming.
+ 
+\end_layout
+
+\begin_layout Standard
+An RL Agent therefore only has a working strategy that cannot point to any
+ paradigm or clue that could explain anything to a person.
+ Thus, no causality can be assumed for the system of equations.
+ 
+\end_layout
+
+\begin_layout Standard
+Es gibt keine Möglichkeit, kein Protokoll, mit dem sich ein künstliches
+ NN und ein menschliches NN abstimmen können.
+\end_layout
+
+\begin_layout Subparagraph
+Puzzle example
+\end_layout
+
+\begin_layout Standard
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ Most people know how to recognize colors, that you first have to turn puzzle
+ pieces to the colored side and that you should use the picture on the box
+ as a reference point.
+ A popular tip for beginners is therefore that you should start with the
+ edge of the puzzle.
+\end_layout
+
+\begin_layout Standard
+This is helpful, because the learning process in humans usually consists
+ of the composition of many comprehensibly strung together steps.
+\end_layout
+
+\begin_layout Subparagraph
+Understanding AI: Verhaltensanalyse
+\end_layout
+
+\begin_layout Standard
+Nevertheless, the solutions found work, which is why one can try to abstract
+ the logic into causal relationships.
+ 
+\end_layout
+
+\begin_layout Standard
+A non-verbal learning process is usually only possible in the form of detailed
+ observation of the behaviour by the person.
+ To do this, an expert watches games of the agent and tries to identify
+ where the most important strategic differences are so that he can explain
+ them.
+ With AlphaGo, for example, it has been possible to find generally valid
+ strategies that were previously unknown.
+ xx] Although this procedure is complex, it has the decisive advantage that
+ what has already been learned does not have to be discarded, but actually
+ provides a meaningful core.
+ The part that has to be integrated into the own model via a learning and
+ understanding process is therefore much less.
+\end_layout
+
+\begin_layout Standard
+The task of the approach presented in this thesis is basically to automate
+ this process as far as possible.
+\end_layout
+
+\begin_layout Subparagraph
+Willkürlichkeit der Lösung (NN verstehen bringt nichts, wie soll man was
+ ändern)
+\end_layout
+
+\begin_layout Standard
+Die Lösungen sind außerdem zu chaotisch und volatil.
+ Angenommen, ein NN wurde zu einem Problem verstanden, so ist diese Information
+ im nächsten Trainingsschritt eventuell bereits nicht mehr nutzbar.
+ Hier fehlt die intrinsische Logikstruktur des Modelle die zu allgemeinem
+ Verständnis führt.
+\end_layout
+
+\begin_layout Standard
+Bei einem NN ist es viel mehr der Lernansatz, der allgemein gültig ist,
+ aber nicht der Zustand der Neuronen zur Lösung eines Problems.
+ Deshalb lassen sich NN auch nicht ohne weiteres miteinander kombinieren.
+ 
+\end_layout
+
+\begin_layout Standard
+xxx selbst wenn trusting: Man kann keine Änderungen ohne weiteres durchführen.
+ (siehe alpha go)
+\end_layout
+
+\begin_layout Section
+Erklärbare AI
+\end_layout
+
+\begin_layout Standard
+Explainable artificial intelligence deals with the problem of making AI
+ solutions, which have so far been regarded as black boxes, understandable
+ for humans.
+ In view of the fact that even programmers often do not understand their
+ own code after some time, explainability is a very arbitrary property.
+\end_layout
+
+\begin_layout Standard
+XAI more popular 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_doshivelez2017rigorous"
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_survey"
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AIINDEX2019"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+Wie gut eine Lösung erklärbar ist hängt dabei von dem Aufwand ab der nötig
+ ist, damit eine Person genügend Verständnis erlangt um dem Ansatz zu vertrauen.
+ Wie in xxx beschrieben wird hängt dies
+\end_layout
+
+\begin_layout Quotation
+interpretable = ability to explain or to present in understandable terms
+ to humans.
+\end_layout
+
+\begin_layout Quotation
+explainable = Explanation is the collection of of features of interpretable
+ domain that have contributed for a given example to produce a decision.
+\end_layout
+
+\begin_layout Quotation
+explanation: the details or reasons that someone gives to make something
+ clear or easy to understand []
+\end_layout
+
 \begin_layout Subsection
+Erklärbarkeitsprotokoll: Sprache
+\end_layout
+
+\begin_layout Standard
+Eine Erklärung klassische Erklärung muss in einer Sprache formuliert werden.
+ Sprachen sind nicht nur klar definiert, in touringvollständigen Programmierspra
+chen Will jemand wissen, was eine Katze ist, ist es leichter, ihm eine Katze
+ zu zeigen als sie ihm zu beschreiben.
+ 
+\end_layout
+
+\begin_layout Standard
+Die Formulierung als Sprache ist essentiell um Vertrauen zu entwickeln.
+ Andere Erklärungsmethoden sind nicht klar genug durch Definitionen abgrenzbar.
+ Dies schließt beispielsweise Lehrmethoden des Menschen a priori aus, die
+ allgemeine Intelligenz benötigen.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+An Explanation is the presentation of knowledge in a language so that it
+ can be understood by a person.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Explainability-definition"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Plain Layout
+xx An explanation is the formulation of logik in a language that is understandab
+le to a person.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ 
+\end_layout
+
+\begin_layout Chapter
+Machine Learning ML Methods
+\end_layout
+
+\begin_layout Section
+Neural Networks
+\end_layout
+
+\begin_layout Standard
+The learning process is often made possible by the use of extremely complex
+ data structures such as neural networks (NN), which must be regarded as
+ black boxes.
+ Especially in sensitive areas such as industry, a tradeoff in favor of
+ performance at the expense of loss of control is often not an option, since
+ even rarely occurring wrong decisions could have fatal consequences.
+ 
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+Artificial neural networks are machine learning systems that are strongly
+ oriented towards the biological brain.
+\end_layout
+
+\begin_layout Standard
+Aus der Sicht der Erklärbarkeit ===
+\end_layout
+
+\begin_layout Standard
+Neural networks are generalized, very extensive systems of equations, which
+ can adapt their own parameters in a two-complex training process by means
+ of automated statistical procedures and random exploration.
+ These equations often contain several thousand variables, combined with
+ unintuitive activation functions such as the ReLu function or the sigmoid
+ function , which is why they are not interpretable by humans.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:relu-sigmoid"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Funktionsweise
+\end_layout
+
+\begin_layout Standard
+Zwischen dem Eingabevektor und Ausgabevektor liegen eine beliebige Anzahl
+ An versteckter Schichten.
+ Their task is to divide the problem between the input layer and the output
+ layer and to identify subproblems.
+ The training process will be started with a random parameterization and
+ the decisions will be very bad at the beginning.
+ If a wrong decision is made, the neurons from output to input adjust their
+ values so that the next time the right decision is made.
+\end_layout
+
+\begin_layout Standard
+A neuron is modeled as follows (see Neuron).
+ For a group of neurons from the previous layer (often all neurons) the
+ signals are received and weighted.
+ Together with a bias, which is added by the neuron itself, a sum is formed.
+ The sum is added to an activation function that calculates the final activation
+ of the neuron.
+ Common activation functions include ReLu and Sigmoid.
+ The result is then passed on to the neurons of the next layer.
+\end_layout
+
+\begin_layout Standard
+The complexity of such a network depends on the number of layers, the number
+ of nodes per layer and the type of interconnection between layers.
+ A possible network to solve Mountain Car could be for example an input
+ layer with two neurons and an output layer with three neurons, as well
+ as three hidden layers with 24, 48 and 24 layers each.
+ Full connectivity between the layers is not unusual, resulting in the following
+ number of connections:
+\end_layout
+
+\begin_layout Standard
+====
+\end_layout
+
+\begin_layout Subsection
+NN Logik
+\end_layout
+
+\begin_layout Standard
+Die Logik dieses Modells muss allerdings vom Entwickler, in Form der Architektur
+ des ML-Ansatzes implementiert werden (Verwendung neuronaler Netze, Anzahl
+ der hidden layer, topologie zwischen den Schichten, Aktivierungsfunktionen
+ der Neuronen, Explorationsparameter, etc.).
+ Ist die gewählte Architektur nicht für das Problem geeignet, so wird es
+ auch nicht funktionieren.
+\begin_inset Newline newline
+\end_inset
+
+Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
+ einen Hund dafür zu trainieren und keine Taube.
+ Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
+ umgekehrt funktioniert es nicht.
+ Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
+ uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
+\end_layout
+
+\begin_layout Section
 Genetic Programming
 \end_layout
 
@@ -2003,7 +2295,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -2022,7 +2313,6 @@ Candidates are assessed on the basis of their fitness, for which they are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -2063,7 +2353,7 @@ Der Suchraum für Kandidaten wird mit einer Komplexitätsgrenze eingeschränkt,
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Komplexitätsmaß?
 \end_layout
 
@@ -2080,14 +2370,13 @@ The search space of the trees is limited by the tree depth and the number
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
  
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Pareto GP Paretofront
 \end_layout
 
@@ -2146,7 +2435,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -2161,7 +2449,7 @@ literal "true"
  which always finds two matching nodes in trees.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Generation of random trees and branches
 \end_layout
 
@@ -2237,7 +2525,15 @@ name "fig:grow-vs-full-method"
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
 The nodes are randomly selected from different distributions.
+ 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Foot
 status open
 
@@ -2265,457 +2561,12 @@ xx)
 
 \end_layout
 
-\begin_layout Section
-Trusting AI
-\end_layout
-
-\begin_layout Subsection
-Trust by testing and control strategies
-\end_layout
-
-\begin_layout Standard
-Most RL-problems are too complex to test solution strategies for all cases.
- 
-\end_layout
-
-\begin_layout Subsection
-Trusting the learning process
-\end_layout
-
-\begin_layout Paragraph
-Zufällige Expoloration
-\end_layout
-
-\begin_layout Standard
-Computer sind, im Gegensatz zum Menschen, auf zufällige Exploration angewiesen.
-\end_layout
-
-\begin_layout Standard
-interpretability vs.
- complexity
-\end_layout
-
-\begin_layout Standard
-Die Anfangsparametrisierung sowie die Exploration stützen sich vor allem
- auf den Zufall
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_75.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa-75
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa-200
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-A neural network creates very complex policies which are therefore very
- adaptable and can make filigree distinctions.
- Thus, patches with volatile decision changes are visible in many areas,
- whose extent and effect are often not recognisable.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Trusting by understanding /explainability
-\end_layout
-
-\begin_layout Standard
-Verstehen und Vertrauen von jedem Aspekt
-\end_layout
-
-\begin_layout Paragraph
-Komplexität
-\end_layout
-
-\begin_layout Standard
-Die mathematischen Gleichungen durch die Ansätze wie beispielsweise NN beschrieb
-en werden bestehen aus zu vielen Variablen als dass der Mensch ihre Symbiose
- überschauen könnte.
- 
-\end_layout
-
-\begin_layout Paragraph
-Willkürlichkeit der Lösung (NN verstehen bringt nichts, wie soll man was
- ändern)
-\end_layout
-
-\begin_layout Standard
-Die Lösungen sind außerdem zu chaotisch und volatil.
- Angenommen, ein NN wurde zu einem Problem verstanden, so ist diese Information
- im nächsten Trainingsschritt eventuell bereits nicht mehr nutzbar.
- Hier fehlt die intrinsische Logikstruktur des Modelle die zu allgemeinem
- Verständnis führt.
-\end_layout
-
-\begin_layout Standard
-Bei einem NN ist es viel mehr der Lernansatz, der allgemein gültig ist,
- aber nicht der Zustand der Neuronen zur Lösung eines Problems.
- Deshalb lassen sich NN auch nicht ohne weiteres miteinander kombinieren.
- 
-\end_layout
-
-\begin_layout Standard
-xxx selbst wenn trusting: Man kann keine Änderungen ohne weiteres durchführen.
- (siehe alpha go)
-\end_layout
-
-\begin_layout Paragraph
-tanh, sinus, ...
- Verständnis für mathematische Funktionen
-\end_layout
-
-\begin_layout Standard
-Der Natur der Aktivierungsfunktionen unterliegt dabei ein weiteres Problem
- der Interpretierbarkeit, sie markieren keine logische Abstraktion des Problems
- sondern stellen eine stark unverlässliche unintuituve Komponente dar.
- Ein perceptron als zwei-neuroniges
-\end_layout
-
-\begin_layout Standard
-Andere Ansätze, wie beispielsweise GP, reduzieren das Problem gewaltig indem
- sie direkt mathematische Formeln suchen.
- Somit ist sind Lösungen allgemein gültig.
-\end_layout
-
-\begin_layout Standard
-Man relies on explanations to trust models, whereas ML largely dispenses
- with explanations.
- 
-\end_layout
-
-\begin_layout Paragraph
-Relateable approach / kausale Logik
-\end_layout
-
-\begin_layout Standard
-Alle bisher genannten Faktoren kann man messen oder bewerten und sind somit
- gute Indikatoren, der wichtigste Aspekt ist aber dennoch wie viel Aufwand
- es einen Menschen Kostet, eine Strategie zu verstehen.
- Der Mensch kapselt zwar gerne und ist evolutionär bedingt auch sehr gut
- im pattern matching, dennoch ist eine allgemein gültige beschreibung von
- Eigenschaften, die eine Formel haben muss um als Erklärbar zu gelten eine
- übereinfachte Lösung.
-\end_layout
-
 \begin_layout Subsubsection
 GP specific explainability features
 \end_layout
 
-\begin_layout Paragraph
-Divide and conquer
-\end_layout
-
 \begin_layout Standard
-Problems should be broken down into sub-problems as far as possible.
- This reduces the complexity of the problem due to the possible permutations
- of the states.
- For example, if you throw two six-sided dice, there are 
-\begin_inset Formula $6\cdot6=36$
-\end_inset
-
- possible permutations.
- If the results are considered in isolation, there are 
-\begin_inset Formula $6+6=12$
-\end_inset
-
- possibilities.
- Formulas that are found with genetic programming try to find a formula
- for the whole state space.
- An abstraction of the problem, e.g.
- by if statements, makes the formula grow exponentially larger, which is
- why only rarely if statements are present in formulas found.
-\end_layout
-
-\begin_layout Paragraph
-if-operator
-\end_layout
-
-\begin_layout Standard
-In machine learning there are many clustering methods for subdivision; in
- humans, in contrast to if distinctions play an important role.
- 
-\end_layout
-
-\begin_layout Standard
-Although it is the most complex function with 3 input parameters, it creates
- more structure than all other operators because its child trees are not
- combined but can be considered separately.
- Nevertheless, the subtrees must have a relation to each other in order
- to harmonize together.
- This combination creates encapsulated programs in a clear way that humans
- can understand more easily.
- It is always to be welcomed when these are contained in programs, but this
- should not be artificially forced, as they are not useful at every point.
-\end_layout
-
-\begin_layout Paragraph
-Observationen sind nachvollziehbar (Einflussfaktoren)
-\end_layout
-
-\begin_layout Standard
-Observations have a special meaning here, since the only task of the GP
- process is to reduce their values to a result.
- Observations that are not part of the solution are either irrelevant or
- their information can be sufficiently replaced by other observations.
- 
-\end_layout
-
-\begin_layout Standard
-The dimensionality of the problem could thus be limited without great risk.
- 
-\end_layout
-
-\begin_layout Standard
-The more isolated the variables are from each other, the less complex their
- interaction is.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Eine sehr einfache mathematische Formel kann viel schwerer zu verstehen
- sein als eine umfangreiche Strategie die dafür intuitiv ist.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Explainability
-\end_layout
-
-\begin_layout Standard
-Explainable artificial intelligence deals with the problem of making AI
- solutions, which have so far been regarded as black boxes, understandable
- for humans.
- In view of the fact that even programmers often do not understand their
- own code after some time, explainability is a very arbitrary property.
-\end_layout
-
-\begin_layout Standard
-XAI more popular 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_doshivelez2017rigorous"
-literal "false"
-
-\end_inset
-
-
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_survey"
-literal "false"
-
-\end_inset
-
-
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AIINDEX2019"
-literal "true"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Quotation
-interpretable = ability to explain or to present in understandable terms
- to humans.
-\end_layout
-
-\begin_layout Quotation
-explainable = Explanation is the collection of of features of interpretable
- domain that have contributed for a given example to produce a decision.
-\end_layout
-
-\begin_layout Quotation
-explanation: the details or reasons that someone gives to make something
- clear or easy to understand []
-\end_layout
-
-\begin_layout Subsection
-Erklärbarkeitsprotokoll: Sprache
-\end_layout
-
-\begin_layout Standard
-Die Formulierung als Sprache ist essentiell um Vertrauen zu entwickeln,
- da ihre Aussagen überprüfbar sind.
- Es schließt beispielsweise Lehrmethoden des Menschen a priori aus, die
- beispielsweise allgemeine Intelligenz benötigen.
- Will jemand wissen, was eine Katze ist, ist es leichter, ihm eine Katze
- zu zeigen als sie ihm zu beschreiben.
- 
-\end_layout
-
-\begin_layout Definition
-Explanability is the presentation of knowledge in a language so that it
- can be understood by a person.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:Explainability-definition"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Definition
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-xx An explanation is the formulation of logik in a language that is understandab
-le to a person.
-\end_layout
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-lets test this now xxx
-\end_layout
-
-\begin_layout Subsection
-Explanation
-\end_layout
-
-\begin_layout Standard
-The following definition of an explanation should therefore apply to this
- work:
-\end_layout
-
-\begin_layout Standard
-Wie gut eine Lösung erklärbar ist hängt dabei von dem Aufwand ab der nötig
- ist, damit eine Person genügend Verständnis erlangt um dem Ansatz zu vertrauen.
- Wie in xxx beschrieben wird hängt dies
-\end_layout
-
-\begin_layout Section
-tradeoff performance vs.
- readability
-\end_layout
-
-\begin_layout Standard
-Je mehr Freiheiten man einer Maschine gibt, desto besser sind auch die Lösungen
+xxxsiehe unten gp vebesserungen?
 \end_layout
 
 \begin_layout Chapter
@@ -2808,7 +2659,6 @@ Hein GP 1 Interpretable: Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "false"
 
 \end_inset
 
@@ -2841,7 +2691,6 @@ When training AIs, a distinction is made between online and offline training.
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3181,7 +3030,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3781,7 +3629,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -3805,7 +3652,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -4097,7 +3943,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4848,7 +4693,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -5262,7 +5106,6 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -5276,7 +5119,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -5517,7 +5359,6 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -7089,6 +6930,23 @@ By generating the data online, an implicit selection of the relevant states
  xx
 \end_layout
 
+\begin_layout Section
+Applicability of the approach 
+\end_layout
+
+\begin_layout Standard
+- if the start policy is too far from the black box solution, the gap may
+ be too large to bridge over it! (IB) 
+\end_layout
+
+\begin_layout Standard
+- nevertheless, it is likely that improvements can still be found
+\end_layout
+
+\begin_layout Standard
+- fuzzy gp version als sinnvolle erweiterung?
+\end_layout
+
 \begin_layout Chapter
 Familiarity based Genetic Programming
 \end_layout
@@ -7126,7 +6984,6 @@ For this work a GP suite in the language python was developed, which allows
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -8339,6 +8196,99 @@ Familiarity based features
 \end_layout
 
 \begin_layout Subsection
+Divide and conquer
+\end_layout
+
+\begin_layout Standard
+Problems should be broken down into sub-problems as far as possible.
+ This reduces the complexity of the problem due to the possible permutations
+ of the states.
+ For example, if you throw two six-sided dice, there are 
+\begin_inset Formula $6\cdot6=36$
+\end_inset
+
+ possible permutations.
+ If the results are considered in isolation, there are 
+\begin_inset Formula $6+6=12$
+\end_inset
+
+ possibilities.
+ Formulas that are found with genetic programming try to find a formula
+ for the whole state space.
+ An abstraction of the problem, e.g.
+ by if statements, makes the formula grow exponentially larger, which is
+ why only rarely if statements are present in formulas found.
+\end_layout
+
+\begin_layout Subsection
+if-operator
+\end_layout
+
+\begin_layout Standard
+In machine learning there are many clustering methods for subdivision; in
+ humans, in contrast to if distinctions play an important role.
+ 
+\end_layout
+
+\begin_layout Standard
+Although it is the most complex function with 3 input parameters, it creates
+ more structure than all other operators because its child trees are not
+ combined but can be considered separately.
+ Nevertheless, the subtrees must have a relation to each other in order
+ to harmonize together.
+ This combination creates encapsulated programs in a clear way that humans
+ can understand more easily.
+ It is always to be welcomed when these are contained in programs, but this
+ should not be artificially forced, as they are not useful at every point.
+\end_layout
+
+\begin_layout Subsection
+Observationen sind nachvollziehbar (Einflussfaktoren)
+\end_layout
+
+\begin_layout Standard
+Observations have a special meaning here, since the only task of the GP
+ process is to reduce their values to a result.
+ Observations that are not part of the solution are either irrelevant or
+ their information can be sufficiently replaced by other observations.
+ 
+\end_layout
+
+\begin_layout Standard
+The dimensionality of the problem could thus be limited without great risk.
+ 
+\end_layout
+
+\begin_layout Standard
+The more isolated the variables are from each other, the less complex their
+ interaction is.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Eine sehr einfache mathematische Formel kann viel schwerer zu verstehen
+ sein als eine umfangreiche Strategie die dafür intuitiv ist.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Fixed nodes implementation
 \end_layout
 
@@ -9111,7 +9061,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -11394,7 +11343,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 

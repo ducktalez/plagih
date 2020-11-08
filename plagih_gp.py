@@ -27,7 +27,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
 
     path_origin_tree = None
     action_name = None
-    conf.gen_max = 1000   # todo todotodo
+    conf.gen_max = 2000   # todo todotodo
 
     name_splits = prepared_run.split('_')
 
@@ -211,6 +211,9 @@ def main():  # argv sys.argv[1:]
         gp.plagih_gp_run(args.gen_additionally)
 
     gp.file_analysis_plots()
+
+    if args.gen_max:
+        conf.gen_max = args.gen_max  # workaroung for prepared run
 
     if args.analyse or not args.less_files:
         gp.analyse_pareto(cpu_cores=args.mp_cpu_cores_max)

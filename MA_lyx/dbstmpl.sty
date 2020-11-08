@@ -1,5 +1,5 @@
 \def\fileversion{v2.0}
-\def\filedate{2017/10/19}
+\def\filedate{2020/11/07}
 
 \NeedsTeXFormat{LaTeX2e}
 
@@ -19,12 +19,19 @@
 \RequirePackage{amsfonts}
 \RequirePackage[T1]{fontenc}
 
-%\RequirePackage[nottoc]{tocbibind}
-%\RequirePackage{graphicx}
-%\RequirePackage{subfigure}
+\RequirePackage{forest}
+\RequirePackage{tikz}
+\RequirePackage{array}
+\RequirePackage{longtable}
+\RequirePackage{import}
+\RequirePackage[utf8]{inputenc}
+\usetikzlibrary{matrix,chains,positioning,decorations.pathreplacing,arrows}
 
+\renewcommand{\thesubsection}{\alph{subsection})}
+%\renewcommand{\labelitemi}{$-$}
+\newcommand{\inlinecode}[2]{\lstinline[language=#1]$#2$}
 
-
+\newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
 
 \newcommand{\declarationhead}{Declaration of Authorship}
 \newcommand{\declaration}{
@@ -39,7 +46,7 @@ This paper was not previously presented to another examination board and has not
 \makebox[9.8cm]{\dotfill}\\
 \the\bearbeiter
 }
-
+% todo ngerman oder german?
 \DeclareOption{german}{
 \selectlanguage{german}
 \renewcommand{\declarationhead}{Erklärung}
@@ -118,15 +125,14 @@ Die Arbeit wurde weder einer anderen Prüfungsbehörde vorgelegt noch veröffent
 \fancyhead[L]{\small\slshape\leftmark}
 \fancyfoot[C]{\thepage}
 
-% subsubsections numerieren und ins Inhaltsverzeichnis aufnehmen
-\setcounter{secnumdepth}{3}
-\setcounter{tocdepth}{3}
+\renewcommand{\thepart}{\Alph{part}}
+\renewcommand{\thechapter}{\arabic{chapter}}  % \Roman{chapter}
+\renewcommand{\thesection}{\arabic{chapter}.\arabic{section}}
+\renewcommand{\thesubsection}{\arabic{chapter}.\arabic{section}.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{chapter}.\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
 
 
-
-%%
-%% Ausgabe des Deckblatts fuer eine Diplom- oder Projektarbeit.
-%%
+%% Ausgabe des Deckblatts fuer eine Abschlussarbeit.
 \newcommand{\deckblatt}{
   \begin{titlepage}
   ~
@@ -172,10 +178,8 @@ Die Arbeit wurde weder einer anderen Prüfungsbehörde vorgelegt noch veröffent
   \end{titlepage}
 }
 
-%%
 %% Ausgabe der Erklaerung ueber die selbstaendige Anfertigung
 %% einer Diplomarbeit
-%%
 \newcommand{\erklaerung}{
   \begin{titlepage}
     \vspace*{\fill}
@@ -203,3 +207,13 @@ Die Arbeit wurde weder einer anderen Prüfungsbehörde vorgelegt noch veröffent
 \vspace*{\fill}
 \end{titlepage}
 }
+
+
+\global\arbeit{Master Thesis}
+\global\titel{Creating familiar Reinforcement Learning Policies with Genetic Programming}
+\global\bearbeiter{Simon Fehrer}
+\global\betreuer{Dr. Steffen Udluft, Dr. Michel Tokic, Dr. Daniel Hein}
+\global\aufgabensteller{Prof. Volker Tresp}
+\global\abgabetermin{29.10.2019}
+\global\ort{Munich}
+\global\fach{Computer Science}

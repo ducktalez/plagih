@@ -81,5 +81,12 @@ if __name__ == "__main__":
     # thesis_decision_plots_dummied()
     # thesis_decision_plots_fullspace()
 
-# print('results:', mtc_play(Good_Expert(), n=100))
-# print('results:', mtc_play(sarsa_agent_75, n=100))
+    # print('results:', mtc_play(Good_Expert(), n=100))
+    # print('results simple:', mtc_play(SimpleAgent(), n=100))
+    # mtc_plot_decisions_space(sarsa_agent_1000, folder=Path.cwd() / 'img', name='decisions-sarsa_agent_1000')
+
+    # print('results 75:', mtc_play(sarsa_agent_75, n=100))
+    # print('results 200:', mtc_play(sarsa_agent_200, n=100))
+    #
+    print('results 1000:', mtc_play(sarsa_agent_1000, n=100))
+    print('results 10000:', mtc_play(sarsa_agent_10000, n=100))

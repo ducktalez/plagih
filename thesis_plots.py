@@ -204,6 +204,7 @@ if __name__ == "__main__":
     # # thesis_plot_mc_comparisson()
     # # thesis_decision_plots_dummied()
     res = mtc_play(Good_Expert(), n=100)
+    res = mtc_play(sarsa_agent_200, n=100)
     print(res)
     # mtc_plot_decisions_space(Good_Expert(), folder=Path.cwd(), name='decisions-Good_Expert')
     # mtc_plot_decisions_space(FixAgentRe(), folder=Path.cwd(), name='decisions-FixAgentRe_DEL')

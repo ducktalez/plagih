@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -9,10 +9,6 @@
 \usepackage{dbstmpl}
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -34,6 +30,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -72,6 +70,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -81,7 +80,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -351,6 +353,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -384,6 +387,13 @@ Im Angesicht der wichtigen Rolle von Algorithmen in Unserer Gesellschaft
 \begin_layout Itemize
 xxx all diese punkte unterbringen und abarbeiten! xxx, todo, sfeh, ???,
  frage, question, ...
+\end_layout
+
+\begin_layout Itemize
+In der Wissenschaft wurden deshalb viele Methoden entwickelt, um den Prozess
+ so weit zu vereinfachen, dass eine Strategie automatisiert gefunden werden
+ kann.
+ 
 \end_layout
 
 \end_inset
@@ -484,27 +494,54 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-Intelligence is the ability to develop strategies to solve a problem.
+Dank enormer Fortschritte im Bereich der Künstlichen Intelligenz können
+ immer mehr Probleme von Maschinen übernommen werden.
+ Dabei ist es mittlerweile nicht nur möglich, dem Menschen aufwändige Aufgaben
+ abzunehmen sondern auch komplett neue Problemlösungen zu entwickeln, was
+ im Bereich des Reinforcement Learning (RL) getan wird.
  
-\end_layout
+\begin_inset Newline newline
+\end_inset
 
-\begin_layout Paragraph
-M: Alpha Go
+RL is a part of ML where an agent without prior knowledge learns a strategy
+ to maximise the expected reward in an environment.
+ The environment represents a Markov decision process, which is a stochastic
+ form of determinism in which the agent moves from one state, when performing
+ an action, with a certain probability to the same subsequent state each
+ time.
+ The training process until such a strategy can be learned without prior
+ knowledge is so complex that it must be as efficient as possible through
+ a sensible balance between exploration and exploitationand by simplifying
+ the space of states.
 \end_layout
 
 \begin_layout Standard
-This area has become very popular due to the development of superhuman strategie
-s, for example for the game Go.
+===
+\end_layout
+
+\begin_layout Standard
+RL has become very popular due to the development of superhuman strategies,
+ for example for the game Go.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
- Diese Spiele galten aufgrund des tief gehenden Verständnis für Positionen
- und der enorm hohen Möglichkeit an möglichen Zügen als dem Menschen vorbehalten.
- Trotz außerorddentlicher performance trauten die Entwickler AlphaGo nicht
- vollständig und ließen den Prozess durch einen Menschen überwachen.
+ This game was considered to be reserved for humans for a long time because
+ of the deep understanding of positions and the enormously high possibility
+ of possible moves.
+ Through a clever arachitecture the team not only succeeded in beating a
+ world star of the game with media impact, new techniques could even be
+ observed.
+ 
+\end_layout
+
+\begin_layout Standard
+Trotz dieser außerorddentlichen Performance trauten die Entwickler AlphaGo
+ nicht vollständig und ließen den Prozess deshalb durch einen Menschen überwache
+n.
 \end_layout
 
 \begin_layout Quotation
@@ -533,6 +570,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -546,41 +584,15 @@ target "https://youtu.be/WXuK6gekU1Y?t=1420"
 
 \begin_layout Standard
 Even AlphaGo, as a prestige project of the RL, supervised by a research
- team, was subject to such an error of reasoning.
- Solving this problem was a big problem for the Deepmind team, as it would
- require an extensive training process.
+ team, was subject to errors of reasoning die nur schwer für das Deeopmind
+ Team zu beheben sind, as it would require an extensive training process.
+\end_layout
+
+\begin_layout Standard
+Especially in sensitive areas such as industry, a tradeoff in favor of performan
+ce at the expense of loss of control is often not an option, since even
+ rarely occurring wrong decisions could have fatal consequences.
  
-\end_layout
-
-\begin_layout Standard
-Durch verschiedene Ein weiterer tradeoff beim lernen ist die Erklärbarkeit.
- Maschinen könnmaschine möglichkeiten -> bessere Lösungen! M: tradeoff performan
-ce vs.
- readability - Je mehr Freiheiten man einer Maschine gibt, desto besser
- sind auch die Lösungen
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Chapter
-Machine Learning ML Methods
-\end_layout
-
-\begin_layout Section
-RL + NN
-\end_layout
-
-\begin_layout Standard
-Reinforcement Learning (RL) is a part of ML where an agent without prior
- knowledge learns a strategy to maximise the expected reward in an environment.
- The environment usually represents a Markov chain, a stochastic form of
- determinism in which the agent moves from a state with stochastic probability
- and the same action to the same subsequent state.
- An agent has to find a strategy with limited memory and computing power
- and, especially in complex state spaces, has to simplify the Markov process
- and find the best possible solution.
 \end_layout
 
 \begin_layout Standard
@@ -588,19 +600,30 @@ Reinforcement Learning (RL) is a part of ML where an agent without prior
 \end_layout
 
 \begin_layout Standard
-as efficiently as possible through a sensible balance between exploration
- and exploitation.
+Im Angesicht der steigenden Bedeutung von Algorithmen in unserer Gesellschaft
+ hat auch die EU in der DSGVO ein Recht auf Erklärbarkeit definiert.
  
+\end_layout
+
+\begin_layout Standard
+===
 \end_layout
 
 \begin_layout Standard
 The learning process is often made possible by the use of extremely complex
  data structures such as neural networks (NN), which must be regarded as
  black boxes.
- Especially in sensitive areas such as industry, a tradeoff in favor of
- performance at the expense of loss of control is often not an option, since
- even rarely occurring wrong decisions could have fatal consequences.
  
+\end_layout
+
+\begin_layout Standard
+M: tradeoff performance vs.
+ readability - Je mehr Freiheiten man einer Maschine gibt, desto besser
+ sind auch die Lösungen
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Standard
@@ -669,6 +692,7 @@ More general approaches promise extraordinary performance as could be shown
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -812,6 +836,7 @@ XAI more popular
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -819,6 +844,7 @@ key "XAI_doshivelez2017rigorous"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -832,6 +858,7 @@ Wie erklärbar eine Lösung ist hängt dabei von dem Aufwand ab der nötig ist,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -884,6 +911,7 @@ Nevertheless the One pixel attack
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -914,12 +942,14 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_0.png
+	height 3cm
 
 \end_inset
 
-
+ 
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_1.png
+	height 3cm
 
 \end_inset
 
@@ -949,28 +979,29 @@ male oder auch der Grund, weshalb es doch kein Hund ist, fehlt dabei.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes0.png
+	height 3cm
 
 \end_inset
 
-
+ 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes1.png
+	height 3cm
 
 \end_inset
 
-
+ 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes2.png
+	height 3cm
 
 \end_inset
 
@@ -995,7 +1026,6 @@ https://lrpserver.hhi.fraunhofer.de/
 \end_inset
 
 .
- 
 \end_layout
 
 \end_inset
@@ -3034,6 +3064,7 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -3052,6 +3083,7 @@ Candidates are assessed on the basis of their fitness, for which they are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -3109,6 +3141,7 @@ The search space of the trees is limited by the tree depth and the number
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3174,6 +3207,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -3313,6 +3347,7 @@ Hein GP 1 Interpretable: Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -3345,6 +3380,7 @@ When training AIs, a distinction is made between online and offline training.
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3692,6 +3728,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -4279,315 +4316,6 @@ xxx ALL runs in comparisson? (regression error and fitness)
 
 \end_layout
 
-\begin_layout Subsection
-Black box with SARSA and Tiling
-\end_layout
-
-\begin_layout Standard
-As a black box solution, the leader of the gym-leaderboards was chosen,
- which uses a SARSA approach with tiling and thus reaches the goal of a
- maximum of 110 steps after 75 training episodes.
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "xiao2019"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-The gym-environment has a leaderboard containing the approaches that have
- been able to learn the fastest to create a policy that solves the problem
- in steps of less than 
-\begin_inset Formula $110$
-\end_inset
-
-.
- 
-\begin_inset CommandInset href
-LatexCommand href
-name "https://github.com/openai/gym/wiki/Leaderboard"
-target "https://github.com/openai/gym/wiki/Leaderboard"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- The average reward of the SARSA-agent is, with an average reward of 
-\begin_inset Formula $-103$
-\end_inset
-
-, outperforming the simple approach of a developer that will be introduced
- in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "par:simple,-maximum-momentum"
-
-\end_inset
-
- with about 
-\begin_inset Formula $14\%$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_75.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "sarsa75_problem_decision_plots"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa-75 performance on MC.
- The marked patches in the decision plot (left) show untraceable and unsafe
- behavior in the whole space.
- The trajectories of 50 runs have the shape of a snail (right), with an
- outlier which only just missed the target (top right in the picture) and
- needed another run-up.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10-average.jpg
-	lyxscale 50
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10.jpg
-	lyxscale 50
-	height 5cm
-
-\end_inset
-
-[xx]
-\begin_inset CommandInset label
-LatexCommand label
-name "img:MTC-heuristic-vs-sarsa-reward"
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa-75 implementation learns to outperform the heuristic on average, but
- with outliers.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Weaknesses with 75 episodes
-\end_layout
-
-\begin_layout Standard
-Unfortunately, the Leaderboard only evaluates how quickly the goal is achieved,
- but not how secure the approaches are.
- In the case of the Sarsa-75 approach, this manifests itself in a generally
- poor exploration, coupled with clearly bad decisions in some cases 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sarsa75_problem_decision_plots"
-
-\end_inset
-
-.
- These cases are rare and do not influence the average result significantly,
- which can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "img:MTC-heuristic-vs-sarsa-reward"
-
-\end_inset
-
-, but represent a risk.
- Sarsa-75 represents a very inexperienced agent, while especially for sensitive
- areas, more emphasis would be placed on security.
- Derselbe Ansatz wurde deshalb für 200 Schritte trainiert und analysiert.
- Uncertainties play a much smaller role and the performance increases accordingl
-y by almost 5 steps to 
-\begin_inset Formula $\approx-98.7$
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_200.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Sarsa-200 decision plot for the complete state space (left) and for the
- occuring states only (right)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Further training did not lead to further improvements.
- On the contrary, they deteriorated strongly, which is also reflected in
- irregularities in the plots, see 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sarsa1000-plots"
-
-\end_inset
-
-, what might be caused to the non-convergence of Sarsa approaches.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_1000.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_10000.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "sarsa1000-plots"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-1000 episodes (left) still show a pattern, while 10000 episodes leave chaotic
- behaviour.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
 Industrial benchmark 
 \begin_inset CommandInset label
@@ -4605,6 +4333,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -5355,6 +5084,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -5768,6 +5498,7 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -5781,6 +5512,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -6021,6 +5753,7 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -7651,6 +7384,7 @@ For this work a GP suite in the language python was developed, which allows
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -9218,6 +8952,38 @@ xx
 Comparison & Discussion
 \end_layout
 
+\begin_layout Standard
+Bei den Tests an den Benchmarks wird vor allem untersucht, wie sich die
+ Kandidaten vertrautheitsbasierter GP von den Ergebnissen klassischer GP
+ unterscheiden.
+\end_layout
+
+\begin_layout Itemize
+Erklärbarkeit der Lösungen
+\end_layout
+
+\begin_layout Itemize
+Auswirkungen auf den Regressionsfehler
+\end_layout
+
+\begin_layout Itemize
+Auswirkungen auf den echten Reward
+\end_layout
+
+\begin_layout Itemize
+Auswirkungen auf die SIcherheit der Lösungen
+\end_layout
+
+\begin_layout Standard
+Der Regressionsfehler kann bei Sarsa-200 bestenfalls auf 0.023 sinken, bei
+ Sarsa-75 auf 0.066.
+ 
+\end_layout
+
+\begin_layout Section
+Mountain Car
+\end_layout
+
 \begin_layout Subsection
 Domain Expert solutions
 \end_layout
@@ -9499,7 +9265,7 @@ Simple agent (
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+Preset Policy
 \end_layout
 
 \end_inset
@@ -9508,7 +9274,7 @@ Simple agent (
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+-
 \end_layout
 
 \end_inset
@@ -9517,7 +9283,7 @@ Simple agent (
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+-102.61
 \end_layout
 
 \end_inset
@@ -9528,7 +9294,7 @@ Simple agent (
 \begin_inset Text
 
 \begin_layout Plain Layout
-Preset Policy
+
 \end_layout
 
 \end_inset
@@ -9537,7 +9303,7 @@ Preset Policy
 \begin_inset Text
 
 \begin_layout Plain Layout
--
+
 \end_layout
 
 \end_inset
@@ -9546,7 +9312,7 @@ Preset Policy
 \begin_inset Text
 
 \begin_layout Plain Layout
--102.61
+
 \end_layout
 
 \end_inset
@@ -9620,144 +9386,94 @@ name "table:MC_agents_rewards"
 
 \end_layout
 
-\begin_layout Subsubsection
-Simple origin by maximum Momentum 
-\begin_inset CommandInset label
-LatexCommand label
-name "par:simple,-maximum-momentum"
-
-\end_inset
-
-
+\begin_layout Subsection
+Black box with SARSA and Tiling
 \end_layout
 
 \begin_layout Standard
-Probably the most understandable solution is always to accelerate in the
- direction you are moving.
- This way the maximum momentum is achieved and the goal is always reached.
-\end_layout
-
-\begin_layout Standard
-The implementation is done as if statement and can therefore be represented
- with 6 nodes.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/tree_simple.pdf
-
+As a black box solution, the leader of the gym-leaderboards was chosen,
+ which uses a SARSA approach with tiling and required 75 training episodes
+ to find a sufficient policy with an average reward of 
+\begin_inset Formula $-103.41$
 \end_inset
 
-
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mtc_simple_tree"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Computational tree of the simplest program [xx doubled image]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-The best version of the simplest agent is used as the starting program where
- the computational tree consists of 6 nodes, all of which can be modified.
+.
  
-\end_layout
-
-\begin_layout Standard
-As can be seen especially with the more complex solutions, the TED loses
- its effect after a certain size.
- Not pushing is often selected, especially in marginal areas.
-\end_layout
-
-\begin_layout Subsubsection
-Close-form preset policy, parabolic lower and upper bound
-\end_layout
-
-\begin_layout Standard
-In 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
-, a close-form preset policy was proposed, defining a lower and upper bound
- for the car to determine the actions.
+ At this state, the agent is still a very inexperienced with generally poor
+ exploration, coupled with complete areas of bad decisions like reversing
+ shortly before the goal in some cases as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sarsa75_problem_decision_plots"
+
+\end_inset
+
+.
+ Especially for sensitive areas, more emphasis would be placed on security.
+ These cases are rare and do not influence the average result significantly,
+ which can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "img:MTC-heuristic-vs-sarsa-reward"
+
+\end_inset
+
+, but represent a risk.
+ Derselbe Ansatz wurde deshalb für 200 Schritte trainiert und analysiert.
+ Uncertainties play a much smaller role and the performance increases accordingl
+y by almost 5 steps to 
+\begin_inset Formula $\approx-98.7$
+\end_inset
+
+.
+ Further training did not lead to further improvements.
+ On the contrary, they deteriorated strongly, which is also reflected in
+ irregularities in the plots, see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sarsa1000-plots"
+
+\end_inset
+
+, what might be caused to the non-convergence of Sarsa approaches.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula 
-\[
-min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)
-\]
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+The gym-environment has a leaderboard containing the approaches that have
+ been able to learn the fastest to create a policy that solves the problem
+ in steps of less than 
+\begin_inset Formula $110$
+\end_inset
+
+.
+ As the leaderboard only evaluates how quickly the goal is achieved, but
+ not how secure the approaches are.
+ 
+\begin_inset CommandInset href
+LatexCommand href
+name "https://github.com/openai/gym/wiki/Leaderboard"
+target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout Standard
-With 36 nodes, this expert program already has an enormous natural tree
- size, which means that the TED does not lose its effect even with relatively
- large changes.
-\end_layout
+\end_inset
 
-\begin_layout Standard
-Thus two essential improvements could be found here.
- On the one hand, it was recognized that the upper limit has no meaning
- for the MC experiment.
- In the second case, a small change has led to an enormous improvement.
- This improvement is even better than the Sarsa-75 policy in the real experiment.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -9768,15 +9484,80 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
+	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetNoLowerbound.pdf
+	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_75.pdf
 	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "sarsa75_problem_decision_plots"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Sarsa-75 performance on MC.
+ The marked patches in the decision plot (left) show untraceable and unsafe
+ behavior in the whole space.
+ The trajectories of 50 runs have the shape of a snail (right), with an
+ outlier which only just missed the target (top right in the picture) and
+ needed another run-up.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10-average.jpg
+	lyxscale 50
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/MTC/MTC-heuristic_vs_sarsa-1000-10.jpg
+	lyxscale 50
+	height 5cm
+
+\end_inset
+
+[xx]
+\begin_inset CommandInset label
+LatexCommand label
+name "img:MTC-heuristic-vs-sarsa-reward"
 
 \end_inset
 
@@ -9784,15 +9565,9 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Preset policy and a GP improvement.
- Recognizable are used mathematical structures such as parabolas and the
- renunciation of action 1.
- On the right, a simplification is visible, found with the help of GP.
- It has recognized the upper limit as superfluous.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:Preset-policy:-Recognizable"
+Sarsa-75 implementation learns to outperform the heuristic on average, but
+ with outliers.
+\end_layout
 
 \end_inset
 
@@ -9807,15 +9582,6 @@ name "fig:Preset-policy:-Recognizable"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-Human, if-then-else based
-\end_layout
-
-\begin_layout Standard
-This solution is a man-made heuristic that implements the reversal point
- using if statements.
 \end_layout
 
 \begin_layout Standard
@@ -9826,7 +9592,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-Good_Expert.pdf
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_200.pdf
 	height 5cm
 
 \end_inset
@@ -9838,15 +9611,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The if statements are recognizable as square blocks.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "mc:simonsBest-plot-space"
-
-\end_inset
-
-
+Sarsa-200 decision plot for the complete state space (left) and for the
+ occuring states only (right)
 \end_layout
 
 \end_inset
@@ -9859,58 +9625,43 @@ name "mc:simonsBest-plot-space"
 
 \end_layout
 
-\begin_layout Subsubsection
-GP-friendly
-\end_layout
-
 \begin_layout Standard
-This one should help finding the starting action.
-\end_layout
-
-\begin_layout Section
-Mountain Car with Sarsa-75
-\end_layout
-
-\begin_layout Standard
-Der Sarsa 75 Agent zeichnet sich durch schlechte Exploration und große Unsicherh
-eiten aus und ist somit besonders anfällig für schlechte Ergebnisse.
-\end_layout
-
-\begin_layout Paragraph
-MAE runs are exceptionally bad
-\end_layout
-
-\begin_layout Standard
-Der MAE ist besonders anfällig für
-\end_layout
-
-\begin_layout Section
-Mountain Car with Sarsa-200
-\end_layout
-
-\begin_layout Standard
-Obwohl es dasselbe Benchmark ist, sind die Ergebnisse kaum mit der Sarsa-75
- Version vergleichbar.
- Es wird nicht nur eine neue performance erzielt, es gibt auch keine outlierläuf
-e mehr.
-\end_layout
-
-\begin_layout Subsection
-Scratch GP Results (MAE)
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/evaled_overview.pdf
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_1000.pdf
 	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_10000.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "sarsa1000-plots"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+1000 episodes (left) still show a pattern, while 10000 episodes leave chaotic
+ behaviour.
+\end_layout
 
 \end_inset
 
@@ -10190,7 +9941,6 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_08.tex"
 \begin_layout Plain Layout
 At 8 nodes the regression error drops to 0.21, but fitness deteriorates to
  140.5 steps.
- 
 \end_layout
 
 \end_inset
@@ -10403,10 +10153,6 @@ The best agent has a very low regression error of only 0.09 and a fitness
 
 \end_layout
 
-\begin_layout Standard
-
-\end_layout
-
 \begin_layout Subsection
 Maximum Momentum
 \end_layout
@@ -10445,8 +10191,8 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_simpleFix/visualisation/full_00.te
 \end_layout
 
 \begin_layout Standard
-Diese einfache und effiziente Expertenpolicy holt maximal Schwung indem
- es immer in die aktuelle Richtung beschleunigt.
+The shortest human solution we tested accelerates towards the moving direction
+ with an if condition with 6 nodes.
 \end_layout
 
 \begin_layout Standard
@@ -10541,12 +10287,6 @@ Different versions of the same heuristic offer the GP process different
 \end_layout
 
 \begin_layout Standard
-Der Regressionsfehler kann bei Sarsa-200 bestenfalls auf 0.023 sinken, bei
- Sarsa-75 auf 0.066.
- 
-\end_layout
-
-\begin_layout Standard
 Mit einem Regressionsfehler von nur 0.05 ist das sogar noch niedriger als
  bei der Scratch Version.
  Dies stellt entgegen der Annahme keine Ausnahme dar - im Durchschnitt war
@@ -10554,6 +10294,274 @@ Mit einem Regressionsfehler von nur 0.05 ist das sogar noch niedriger als
  Dieses Verhalten ist bereits mit der strukturierten Vorgabe des Experten
  zu begründen.
  
+\end_layout
+
+\begin_layout Subsubsection
+Simple origin by maximum Momentum 
+\begin_inset CommandInset label
+LatexCommand label
+name "par:simple,-maximum-momentum"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Dadurch wird maximaler Schwung geholt und das Ziel wird immer erreicht.
+ The average reward of the SARSA-agent is, with an average reward of 
+\begin_inset Formula $-103$
+\end_inset
+
+, outperforming the simple approach of a developer that will be introduced
+ in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "par:simple,-maximum-momentum"
+
+\end_inset
+
+ with about 
+\begin_inset Formula $14\%$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/tree_simple.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational tree of the simplest program 
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mtc_simple_tree"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As can be seen especially with the more complex solutions, the TED loses
+ its effect after a certain size.
+ Not pushing is often selected, especially in marginal areas.
+\end_layout
+
+\begin_layout Subsubsection
+Close-form preset policy, parabolic lower and upper bound
+\end_layout
+
+\begin_layout Standard
+In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "true"
+
+\end_inset
+
+, a close-form preset policy was proposed, defining a lower and upper bound
+ for the car to determine the actions.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With 36 nodes, this expert program already has an enormous natural tree
+ size, which means that the TED does not lose its effect even with relatively
+ large changes.
+\end_layout
+
+\begin_layout Standard
+Thus two essential improvements could be found here.
+ On the one hand, it was recognized that the upper limit has no meaning
+ for the MC experiment.
+ In the second case, a small change has led to an enormous improvement.
+ This improvement is even better than the Sarsa-75 policy in the real experiment.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetNoLowerbound.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Preset policy and a GP improvement.
+ Recognizable are used mathematical structures such as parabolas and the
+ renunciation of action 1.
+ On the right, a simplification is visible, found with the help of GP.
+ It has recognized the upper limit as superfluous.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Preset-policy:-Recognizable"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Human, if-then-else based
+\end_layout
+
+\begin_layout Standard
+This solution is a man-made heuristic that implements the reversal point
+ using if statements.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-Good_Expert.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The if statements are recognizable as square blocks.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "mc:simonsBest-plot-space"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+GP-friendly
+\end_layout
+
+\begin_layout Standard
+This one should help finding the starting action.
+\end_layout
+
+\begin_layout Section
+Mountain Car with Sarsa-200
+\end_layout
+
+\begin_layout Standard
+Obwohl es dasselbe Benchmark ist, sind die Ergebnisse kaum mit der Sarsa-75
+ Version vergleichbar.
+ Es wird nicht nur eine neue performance erzielt, es gibt auch keine outlierläuf
+e mehr.
+\end_layout
+
+\begin_layout Standard
+
 \end_layout
 
 \begin_layout Subsubsection
@@ -10632,17 +10640,6 @@ status open
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.png
-	lyxscale 10
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
 \end_inset
 
 
@@ -10666,7 +10663,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/diff-4.png
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.png
 	lyxscale 10
 	height 5cm
 
@@ -10735,17 +10732,6 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/7.png
-	lyxscale 10
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7.png
 	lyxscale 10
 	height 5cm
@@ -10778,7 +10764,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/diff-7.png
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/7.png
 	lyxscale 10
 	height 5cm
 
@@ -10865,7 +10851,7 @@ status open
 \end_layout
 
 \begin_layout Standard
-Der Anfang ist derselbe wie in 
+The beginning is the same as in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "run:MTC200_MSE_simple"
@@ -10873,28 +10859,28 @@ reference "run:MTC200_MSE_simple"
 \end_inset
 
 .
- Dank der fixen Kernstruktur beschränken sich die Änderungen aber auf die
- if-Bedingung, weshalb Aktion 0 nicht gewählt werden kann.
+ Thanks to the fixed core structure, however, the changes are limited to
+ the if condition, so action 0 cannot be selected.
 \end_layout
 
 \begin_layout Standard
-Der Regressionsfehler ist somit leicht schlechter, die reale Fitness wird
- dafür aber außerordentlich schnell besser.
- Mit insgesamt nur 9 Kandidaten bis zu Vertrautheitsstufe 14 wurden zwar
- nur wenige Kandidaten gefunden, diese verbessern aber immer die original-policy
- (Mit Ausnahme bei Komplexität 3).
+The regression error is thus slightly worse, but the real fitness improves
+ extraordinarily fast.
+ With a total of only 9 candidates up to familiarity level 14, only a few
+ candidates were found, but these always improve the original policy (except
+ for complexity 3).
 \end_layout
 
 \begin_layout Standard
-Auffällig ist auch, dass der Vergleichsoperator 
+It is also noticeable that the comparison operator 
 \begin_inset Formula $<$
 \end_inset
 
- mit 
+ was replaced with 
 \begin_inset Formula $\leq$
 \end_inset
 
-ersetzt wurde.
+.
  
 \end_layout
 
@@ -11256,6 +11242,23 @@ Die Preset policy stellt einen Kandidaten dar, bei dem die TED sehr robust
 
 \begin_layout Subsection
 gpFriendly
+\end_layout
+
+\begin_layout Section
+Mountain Car with Sarsa-75
+\end_layout
+
+\begin_layout Standard
+Der Sarsa 75 Agent zeichnet sich durch schlechte Exploration und große Unsicherh
+eiten aus und ist somit besonders anfällig für schlechte Ergebnisse.
+\end_layout
+
+\begin_layout Paragraph
+MAE runs are exceptionally bad
+\end_layout
+
+\begin_layout Standard
+Der MAE ist besonders anfällig für
 \end_layout
 
 \begin_layout Subsection
@@ -12010,6 +12013,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 

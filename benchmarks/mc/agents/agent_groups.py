@@ -288,18 +288,22 @@ class SARSALambdaAgent(SARSAAgent):
             self.z = np.zeros_like(self.z)
 
 
-def load_sarsas():
+def load_sarsas(set_epsilon=0.001):
     root_path = Path(os.path.dirname(os.path.realpath(__file__)))
     with Path.open(Path(root_path) / 'sarsa_agent_75.p', 'rb') as file:
         sarsa_agent_75 = pickle.load(file)
+        # sarsa_agent_75.epsilon = set_epsilon
 
     with Path.open(Path(root_path) / 'sarsa_agent_200.p', 'rb') as file:
         sarsa_agent_200 = pickle.load(file)
+        # sarsa_agent_200.epsilon = set_epsilon
 
     with Path.open(Path(root_path) / 'sarsa_agent_1000.p', 'rb') as file:
         sarsa_agent_1000 = pickle.load(file)
+        # sarsa_agent_1000.epsilon = set_epsilon
 
     with Path.open(Path(root_path) / 'sarsa_agent_10000.p', 'rb') as file:
         sarsa_agent_10000 = pickle.load(file)
+        # sarsa_agent_10000.epsilon = set_epsilon
 
     return sarsa_agent_75, sarsa_agent_200, sarsa_agent_1000, sarsa_agent_10000

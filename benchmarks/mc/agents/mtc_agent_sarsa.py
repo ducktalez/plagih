@@ -77,19 +77,35 @@ def train_sarsa_agent_pickle(seed=0):
     """
     env = gym.make('MountainCar-v0')
     env.seed(seed)
-
     agent = SARSALambdaAgent(env)
-    steps_done = 0
-    for training_steps in [75, 200, 1000, 10000]:
-        episode_rewards = []
-        steps_left = training_steps - steps_done
-        print(f'steps left? {steps_left}')
-        for episode in range(steps_left):
-            episode_reward = mountaincar_play_once(env, agent, train=True)
-            episode_rewards.append(episode_reward)
 
-        with open(Path('sarsa_agent_{}.p'.format(str(training_steps))), 'wb') as file:
-            pickle.dump(agent, file)
+    for x in range(75):
+        print(f'episode {x}')
+        mountaincar_play_once(env, agent, train=True)
+    with Path(f'sarsa_agent_75.p').open('wb') as file:
+        pickle.dump(agent, file)
+        print(f'done with sarsa_agent_75.p')
+
+    for x in range(200-75):
+        print(f'episode {x}')
+        mountaincar_play_once(env, agent, train=True)
+    with Path(f'sarsa_agent_200.p').open('wb') as file:
+        pickle.dump(agent, file)
+        print(f'done with sarsa_agent_200.p')
+
+    for x in range(1000-200):
+        print(f'episode {x}')
+        mountaincar_play_once(env, agent, train=True)
+    with Path(f'sarsa_agent_1000.p').open('wb') as file:
+        pickle.dump(agent, file)
+        print(f'done with sarsa_agent_1000.p')
+
+    for x in range(10000-1000):
+        print(f'episode {x}')
+        mountaincar_play_once(env, agent, train=True)
+    with Path(f'sarsa_agent_10000.p').open('wb') as file:
+        pickle.dump(agent, file)
+        print(f'done with sarsa_agent_10000.p')
 
     # episode_rewards = []
     # for episode in range(75):
@@ -103,11 +119,11 @@ def train_sarsa_agent_pickle(seed=0):
     return
 
 
-def create_plagih_samples_csv(agent, name):
+def create_plagih_samples_csv(agent, name, n=50):
     env = gym.make('MountainCar-v0')
     env.seed(0)
 
-    plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=50)  # ((cartPos, cartVel), act)
+    plagih_behaviour_samples = plagih_get_behaviour_samples(env, agent, episodes=n)  # ((cartPos, cartVel), act)
     print('Amount of samples: {}, {} bytes'.format(len(plagih_behaviour_samples), sys.getsizeof(plagih_behaviour_samples)))
     env.close()
 
@@ -119,7 +135,7 @@ def create_plagih_samples_csv(agent, name):
         row = list(sample_row[0]) + [sample_row[1]]
         samples_csv_ready.append(row[:])
 
-    with open(Path(f'../gp_files/samples{name}.csv'), 'w', newline='') as csvFile:
+    with Path(f'../gp_files/samples_{name}.csv').open('w', newline='') as csvFile:
         writer = csv.writer(csvFile)
         writer.writerows(samples_csv_ready)
 
@@ -127,12 +143,15 @@ def create_plagih_samples_csv(agent, name):
 
 
 if __name__ == "__main__":
-    # create_behaviour_samples_file()
-    # do_this = input('Please press: create (s)amples, run coming later: ')
-    # if do_this == 's':
-    sarsa_agent_75, sarsa_agent_200, _, _ = load_sarsas()
+    train_sarsa_agent_pickle()
+    # # create_behaviour_samples_file()
+    # # do_this = input('Please press: create (s)amples, run coming later: ')
+    # # if do_this == 's':
+    sarsa_agent_75, sarsa_agent_200, _, _ = load_sarsas(set_epsilon=0.001)
     create_plagih_samples_csv(sarsa_agent_75, '75')
     create_plagih_samples_csv(sarsa_agent_200, '200')
+    # sarsa_agent_75, sarsa_agent_200, _, _ = load_sarsas(set_epsilon=0)
+    # create_plagih_samples_csv(sarsa_agent_75, '75_0', n=100)
+    # create_plagih_samples_csv(sarsa_agent_200, '200_0', n=100)
 
 
-# train_sarsa_agent_pickle()

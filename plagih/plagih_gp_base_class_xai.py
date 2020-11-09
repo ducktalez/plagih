@@ -53,7 +53,7 @@ class ParetoFront:
     def __init__(self):
         pass
         # self.entries = []
-
+ag
 
 class ExplainableGP(object):
     """
@@ -620,22 +620,6 @@ class ExplainableGP(object):
         # e.g. pareto entries, that do not exist at the end leave files behind
         """
         self.printpl('i', f'Analysing the pareto candidates of your run!')
-
-        # sfeh
-        # class ParetoEntry(object):
-        #     def __init__(self):
-        #         self.histogram = None
-        #         self.latex = None
-        #         self.yamltext = None
-        #         self.realcode = None
-        #         self.texforest_bracket = {0: None, 1: None, 2: None}  # 0=fulltree, 1=tighttree, 2=oneliner
-
-        # if self.conf.period['gen_analysis']:
-        #     if self.gen_id % int(self.conf.period['gen_analysis']) == 0:
-        #         self.analyse_pareto()
-
-        # self.pareto_sort()  # is pareto not sorted?  sfeh working? check if sorted.
-        # self.file_population('last')
 
         dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
         path_hist = path_make_dir(self.root_dir / 'histograms/')

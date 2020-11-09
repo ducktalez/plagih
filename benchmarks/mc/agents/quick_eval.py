@@ -200,6 +200,7 @@ def mtc_play(agent, render=False, n=1):
             fail_sum += 1
     reward_average = reward_sum / n
     env.close()
+    print(f'asd {np.average(list_episode_rewards)}')
 
     return reward_average, fail_sum, list_episode_rewards
 

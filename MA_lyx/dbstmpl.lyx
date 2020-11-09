@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -8,10 +8,6 @@
 \begin_preamble
 \usepackage{dbstmpl}
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -33,6 +29,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -71,6 +69,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -80,7 +79,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -350,6 +352,7 @@ Fachidioten
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -554,6 +557,7 @@ s, for example for the game Go.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -589,6 +593,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -608,15 +613,15 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
  
 \end_layout
 
+\begin_layout Subsection
+M: Trusting AI 
+\end_layout
+
 \begin_layout Standard
 For applications in the industry, where small wrong decisions can often
  lead to big damages which can also be prosecuted in court for undesirable
  developments, the development of explainable policies is of great importance.
  
-\end_layout
-
-\begin_layout Subsection
-M: Trusting AI 
 \end_layout
 
 \begin_layout Standard
@@ -628,7 +633,21 @@ Eine erlernte Strategie muss nicht nur außerordentlich gut sein, man sollte
 \end_layout
 
 \begin_layout Subsubsection
-Trusting the Learner
+Implizit, Trusting the Learner
+\end_layout
+
+\begin_layout Standard
+Selbst ohne eine Strategie zu verstehen kann 
+\end_layout
+
+\begin_layout Standard
+Humans have protective mechanisms at their disposal, which have developed
+ through the evolutionary process of humans and accompany every learning
+ process.
+ Among other things, it enables us to recognize and avoid dangers, which
+ requires caution and the recognition of causal relationships.
+ We can therefore be sure that our entire pattern of action excludes life-threat
+ening damage for us.
 \end_layout
 
 \begin_layout Standard
@@ -675,7 +694,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Sarsa-75
+Patches for neuropolicies.
 \end_layout
 
 \end_inset
@@ -706,7 +725,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/mc/agents/img/decisions-AgentV1p40.pdf
 	height 5cm
 
 \end_inset
@@ -718,7 +737,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Sarsa-200
+Structure for simple heuristics.
 \end_layout
 
 \end_inset
@@ -735,7 +754,9 @@ Sarsa-200
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-A neural network creates very complex policies which are therefore very
+Visualisation of the relation between observations and selected actions
+ for the mountain car problem.
+ A neural network creates very complex policies which are therefore very
  adaptable and can make filigree distinctions.
  Thus, patches with volatile decision changes are visible in many areas,
  whose extent and effect are often not recognisable.
@@ -751,58 +772,112 @@ A neural network creates very complex policies which are therefore very
 
 \end_layout
 
+\begin_layout Subsubsection
+Explizit, by understanding, Erklärbarkeitsprotokoll: Sprache
+\end_layout
+
+\begin_layout Standard
+Laut dem Cambridge Dictionary, an explanation are 
+\begin_inset Quotes eld
+\end_inset
+
+the details or reasons that someone gives to make something clear or easy
+ to understand
+\begin_inset Quotes erd
+\end_inset
+
+ [xxx quelle]
+\end_layout
+
+\begin_layout Standard
+Um diese Informationen auszutauschen braucht man ein Protokoll zum Austausch
+ vom Informationen.
+ Sprachen eignen sich dabei als belastbare und klar abgrenzbare 
+\end_layout
+
+\begin_layout Standard
+Will jemand wissen, was eine Katze ist, ist es leichter, ihm eine Katze
+ zu zeigen als sie ihm zu beschreiben.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+An Explanation is the presentation of knowledge in a language so that it
+ can be understood by a person.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Explainability-definition"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+xx An explanation is the formulation of logik in a language that is understandab
+le to a person.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Dies schließt beispielsweise Lehrmethoden des Menschen a priori aus, die
+ allgemeine Intelligenz benötigen.
+ 
+\end_layout
+
 \begin_layout Paragraph
 Biological intelligence
 \end_layout
 
 \begin_layout Standard
-Humans have protective mechanisms at their disposal, which have developed
- through the evolutionary process of humans and accompany every learning
- process.
- Among other things, it enables us to recognize and avoid dangers, which
- requires caution and the recognition of causal relationships.
- We can therefore be sure that our entire pattern of action excludes life-threat
-ening damage for us.
-\end_layout
-
-\begin_layout Standard
-In addition to these basic instincts, humans have also learned a wide range
- of other skills that enable a rapid learning process.
- A well-known example of such a mastered ability is the recognition of shapes
- and faces, which man perfected as a baby to such an extent that interpersonal
- explanations are no longer necessary.
+Humans can (usually) explain learned strategies because causality already
+ plays an important role in the learning process.
  
 \end_layout
 
 \begin_layout Standard
-Artificial image recognition currently still requires human assistance such
- as the implementation of filters.
+Humans have also learned a wide range of other skills that enable a rapid
+ learning process.
+ A well-known example of such a mastered ability is the recognition of shapes
+ and faces, which man perfected as a baby to such an extent that interpersonal
+ explanations are no longer necessary.
+ Artificial image recognition currently still requires human assistance
+ such as the implementation of filters.
  Nevertheless the One pixel attack 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
- showed how error-prone image recognition can be.
+ showed how error-prone image recognition can be by only changing one pixel.
  More general approaches promise extraordinary performance, as could be
  shown in 2012 with 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
 , but the costs are too high for a more general application.
- These basic skills are comparable for all people.
- Thus, the human being is not only able to extract causal logic from a model,
+\end_layout
+
+\begin_layout Standard
+Thus, the human being is not only able to extract causal logic from a model,
  but due to the similar thought processes it is possible for him to put
  himself in another person's shoes and to convey this information in a pedagogic
 ally valuable way.
-\end_layout
-
-\begin_layout Paragraph
-by understanding
 \end_layout
 
 \begin_layout Paragraph
@@ -816,13 +891,13 @@ en werden bestehen aus zu vielen Variablen als dass der Mensch ihre Symbiose
  
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Interpretability tanh, sinus, ...
  Verständnis für mathematische Funktionen
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
+\begin_inset Float figure
 wide false
 sideways false
 status open
@@ -835,7 +910,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "45col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -861,7 +936,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Sigmoid function, 
+Sigmoid function 
 \begin_inset Formula $sig(t)=\frac{1}{1+e^{-t}}$
 \end_inset
 
@@ -876,6 +951,19 @@ Sigmoid function,
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -883,7 +971,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "45col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -909,7 +997,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-ReLu function, 
+ReLu function 
 \begin_inset Formula $ReLu(x)=\max(0,x)$
 \end_inset
 
@@ -920,25 +1008,6 @@ ReLu function,
 
 
 \end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/neural_networks/graph_sigmoid.pdf
-	lyxscale 50
-	height 35mm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/neural_networks/graph_relu.pdf
-	lyxscale 47
-	height 35mm
 
 \end_inset
 
@@ -971,10 +1040,9 @@ name "fig:relu-sigmoid"
 \end_layout
 
 \begin_layout Standard
-Selbst einfache Der Natur der Aktivierungsfunktionen unterliegt dabei ein
- weiteres Problem der Interpretierbarkeit, sie markieren keine logische
- Abstraktion des Problems sondern stellen eine stark unverlässliche unintuituve
- Komponente dar.
+Der Natur der Aktivierungsfunktionen unterliegt dabei ein weiteres Problem
+ der Interpretierbarkeit, sie markieren keine logische Abstraktion des Problems
+ sondern stellen eine stark unverlässliche unintuituve Komponente dar.
  Ein perceptron als zwei-neuroniges
 \end_layout
 
@@ -990,7 +1058,7 @@ Man relies on explanations to trust models, whereas ML largely dispenses
  
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Relatability/explainability/familiarity/kausale Logik
 \end_layout
 
@@ -1004,33 +1072,19 @@ Alle bisher genannten Faktoren kann man messen oder bewerten und sind somit
  übereinfachte Lösung.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Erklärbarkeit durch Sprache
 \end_layout
 
 \begin_layout Standard
-Humans can (usually) explain learned strategies because causality already
- plays an important role in the learning process.
+Der Mensch kann auf einen großen Pool von Zwischenzielen und erlernten Paradigme
+n verweisen, an AI cannot point to any paradigm or clue that could explain
+ anything to a person.
  
 \end_layout
 
 \begin_layout Standard
-The intermediate goals that a person goes through to learn an ability are
- usually not comparable to the learning mechanisms of neural networks or
- genetic programming.
- 
-\end_layout
-
-\begin_layout Standard
-An RL Agent therefore only has a working strategy that cannot point to any
- paradigm or clue that could explain anything to a person.
- Thus, no causality can be assumed for the system of equations.
- 
-\end_layout
-
-\begin_layout Standard
-Es gibt keine Möglichkeit, kein Protokoll, mit dem sich ein künstliches
- NN und ein menschliches NN abstimmen können.
+Die Logik ist nur implizit enthalten.
 \end_layout
 
 \begin_layout Subparagraph
@@ -1052,7 +1106,7 @@ This is helpful, because the learning process in humans usually consists
  of the composition of many comprehensibly strung together steps.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Understanding AI: Verhaltensanalyse
 \end_layout
 
@@ -1124,6 +1178,7 @@ XAI more popular
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -1131,6 +1186,7 @@ key "XAI_doshivelez2017rigorous"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -1138,6 +1194,7 @@ key "XAI_survey"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -1160,60 +1217,8 @@ explainable = Explanation is the collection of of features of interpretable
  domain that have contributed for a given example to produce a decision.
 \end_layout
 
-\begin_layout Quotation
-explanation: the details or reasons that someone gives to make something
- clear or easy to understand []
-\end_layout
-
-\begin_layout Subsection
-Erklärbarkeitsprotokoll: Sprache
-\end_layout
-
 \begin_layout Standard
-Eine Erklärung klassische Erklärung muss in einer Sprache formuliert werden.
- Sprachen sind nicht nur klar definiert, in touringvollständigen Programmierspra
-chen Will jemand wissen, was eine Katze ist, ist es leichter, ihm eine Katze
- zu zeigen als sie ihm zu beschreiben.
- 
-\end_layout
 
-\begin_layout Standard
-Die Formulierung als Sprache ist essentiell um Vertrauen zu entwickeln.
- Andere Erklärungsmethoden sind nicht klar genug durch Definitionen abgrenzbar.
- Dies schließt beispielsweise Lehrmethoden des Menschen a priori aus, die
- allgemeine Intelligenz benötigen.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-An Explanation is the presentation of knowledge in a language so that it
- can be understood by a person.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:Explainability-definition"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Plain Layout
-xx An explanation is the formulation of logik in a language that is understandab
-le to a person.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
- 
 \end_layout
 
 \begin_layout Chapter
@@ -2295,6 +2300,7 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -2313,6 +2319,7 @@ Candidates are assessed on the basis of their fitness, for which they are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2370,6 +2377,7 @@ The search space of the trees is limited by the tree depth and the number
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2435,6 +2443,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -2659,6 +2668,7 @@ Hein GP 1 Interpretable: Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -2691,6 +2701,7 @@ When training AIs, a distinction is made between online and offline training.
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2708,6 +2719,14 @@ However, offline training is an exploratory and very cost-effective alternative,
 Online training is only necessary for the development of new approaches.
  To explain an already known black box solution is also possible without
  knowledge of the environment.
+\end_layout
+
+\begin_layout Section
+Bewertung von Funktionen
+\end_layout
+
+\begin_layout Standard
+xxx
 \end_layout
 
 \begin_layout Standard
@@ -3030,6 +3049,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -3629,6 +3649,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -3652,6 +3673,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -3943,6 +3965,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4693,6 +4716,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -5106,6 +5130,7 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -5119,6 +5144,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -5359,6 +5385,7 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -6005,6 +6032,11 @@ In the evolutionary found candidates not only a genetic difference can be
  One possibility of implementation is a third dimension on the Pareto front.
  Another way of combining classical regression with relative regression
  to Origin is also shown and tested below.
+\end_layout
+
+\begin_layout Standard
+xxx idee phänotyp und genotyp hängen zusammmen- phänotyp ist wichtiger für
+ das Verständnis (section regr kernel 2) - struktur genotyp lässt
 \end_layout
 
 \begin_layout Paragraph
@@ -6984,6 +7016,7 @@ For this work a GP suite in the language python was developed, which allows
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -9061,6 +9094,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11343,6 +11377,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 

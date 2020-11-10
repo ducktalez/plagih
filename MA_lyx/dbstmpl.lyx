@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -10,6 +10,11 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -31,8 +36,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -71,7 +74,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -81,10 +83,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -421,7 +420,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -445,6 +443,17 @@ Differentielles Lernen ist ein Konzept aus der Sportwissenschaft, wo der
  Sowohl NN als auch die GP produzieren hingegen policies, die frei von menschlic
 hem bias sind und oft Aspekte behandeln, an die der Mensch nicht denkt.
  [xx]
+\end_layout
+
+\begin_layout Itemize
+der mensch muss meistens die erste abstraktionsstufe übernehmen
+\end_layout
+
+\begin_layout Itemize
+Ein besonders interessanter Bereich um erlernte Strategien zu überprüfen
+ ist die Bilderkennung.
+ Mustererkennung ist eine beim Menschen unglaublich stark ausgeprägte Fähigkeit,
+ die Computern große Schwierigkeiten macht.
 \end_layout
 
 \end_inset
@@ -488,6 +497,20 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/explainability_gap2.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xxx 
 \begin_inset ERT
 status open
 
@@ -507,15 +530,20 @@ import{img/inkscape}{explainability_gap2.pdf_tex}
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-An insurmountable trench as a metaphor for the explainability gap - die
- Experten stehen an der Spitze der Pyramide der menschlich erklärbaren Ansätze.
- Den Graben zur Neuropolicy zu überwinden sollte eine flache und nahe Stelle
- genutzt werden.
- Um eine Blackbox zu erklären macht es deshalb Sinn auf bereits erklärbarem
- Wissen aufzubauen.
+An insurmountable trench as a metaphor for the explainability gap - the
+ experts are at the top of the pyramid of humanly explainable approaches.
+ To overcome the trench to neuropolicy a flat and close place should be
+ used.
+ To explain a black box it makes sense to build on knowledge that can already
+ be explained.
 \end_layout
 
 \end_inset
@@ -559,7 +587,6 @@ RL has become very popular due to the development of superhuman strategies,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -603,7 +630,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -782,22 +808,19 @@ Die größte intellektuelle Leistung beim lernen mit NN liegt dabei vermutlich
  Formen wie Ecken und Kanten erleichtern sollen.
  Meistens bleiben sie dennoch Fachidioten ohne echtes Verständnis für das
  Problem.
- Mit der ein-pixel-attacke 
+ Mit der ein-pixel-attacke wurde gezeigt, wie leicht als gut befundene Lösungen
+ aus dem Konzept katapultiert werden können.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
- wurde gezeigt, wie leicht als gut befundene Lösungen aus dem Konzept katapultie
-rt werden können.
  More general approaches promise extraordinary performance as could be shown
  in 2012 with 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -813,31 +836,20 @@ literal "true"
 Dem entgegen stehen explizite Lösungen wie beispielsweise evolutionäre Algorithm
 en wie die genetische Programmierung.
  Diese suchen direkt nach Strategien, beispielsweise in Form einer Heuristik.
- Durch das direkte suchen einer Handlungsanweisung integrated interpretability.
+ Durch das direkte suchen einer Handlungsanweisung ist interpretierbarkeit
+ direkt in der Lösung integriert.
 \end_layout
 
-\begin_layout Standard
-xxx https://arxiv.org/abs/1705.07874 
-\begin_inset Quotes eld
-\end_inset
-
+\begin_layout Quote
 The best explanation of a simple model is the model itself; it perfectly
  represents itself and is easy tounderstand.
-\begin_inset Quotes eld
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-unified-approach"
+
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-Ein besonders interessanter Bereich um erlernte Strategien zu überprüfen
- ist die Bilderkennung.
- Mustererkennung ist eine beim Menschen unglaublich stark ausgeprägte Fähigkeit,
- die Computern große Schwierigkeiten macht.
 \end_layout
 
 \begin_layout Chapter
@@ -850,7 +862,6 @@ These are the reasons why explainable artificial intelligence (XAI) has
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -858,7 +869,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -871,7 +881,6 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -923,7 +932,6 @@ Layerwise Relevance propagation can be used to show which pixel areas are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -2053,7 +2061,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -2090,7 +2097,6 @@ The time-consuming evaluation process can be shortened 2-15 times by using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -2649,7 +2655,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -2787,7 +2792,6 @@ thus providing a complexity measure that can be adapted to the preferences
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2803,7 +2807,6 @@ Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -2855,7 +2858,6 @@ Neuropolicies post-hoc ganzheitlich zu erklären ist eine Aufgabe, die aktuell
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3228,7 +3230,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3833,7 +3834,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4584,7 +4584,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -4998,7 +4997,6 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -5012,7 +5010,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -5247,7 +5244,6 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -6924,7 +6920,6 @@ xx what is a marginal note? Hein, Udluft
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -9078,7 +9073,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9140,7 +9134,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -10085,7 +10078,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 

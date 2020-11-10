@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -10,10 +10,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -35,6 +31,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -73,6 +71,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -82,7 +81,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -419,6 +421,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
@@ -462,11 +465,11 @@ Im Bereich des RL müssen AI Ansätze als Blackbox angesehen werden, weshalb
 \end_layout
 
 \begin_layout Standard
-Um eine möglichst einfache Erklärung zu erhalten wird in dieser Arbeit untersuch
-t, was die strategie eine Neuropolicy von einer mensch geschriebenen Expertenpol
-icy unterscheidet.
- Dieser optimierte Startpunkt für Erklärungen zu finden wird als Vertrautheit
- bezeichnet.
+Um eine möglichst einfache Erklärung zu erhalten wird in dieser Arbeit eine
+ vom Menschen Entwickelte Heuristik als Referenz für weitere Erklärungen
+ verwendet.
+ Experten selbst entwickelte Heuristik als Referenzpunkt für Erklärungen
+ zu nutzen wird als Vertrautheit bezeichnet.
  Mithilfe von GP wird das Finden der Unterschiede automatisiert und als
  Änderung an der Heuristik dargestellt.
  Der Experte erkennt dadurch noch seinen eigenen Code und kann den Umfang
@@ -556,6 +559,7 @@ RL has become very popular due to the development of superhuman strategies,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -599,6 +603,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -781,6 +786,7 @@ Die größte intellektuelle Leistung beim lernen mit NN liegt dabei vermutlich
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -791,6 +797,7 @@ rt werden können.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -843,6 +850,7 @@ These are the reasons why explainable artificial intelligence (XAI) has
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -850,6 +858,7 @@ key "XAI_doshivelez2017rigorous"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -862,6 +871,7 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -913,6 +923,7 @@ Layerwise Relevance propagation can be used to show which pixel areas are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -931,14 +942,14 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_0.png
-	height 3cm
+	height 3.3cm
 
 \end_inset
 
  
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_1.png
-	height 3cm
+	height 3.3cm
 
 \end_inset
 
@@ -976,21 +987,21 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes0.png
-	height 3cm
+	height 3.3cm
 
 \end_inset
 
  
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes1.png
-	height 3cm
+	height 3.3cm
 
 \end_inset
 
  
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes2.png
-	height 3cm
+	height 3.3cm
 
 \end_inset
 
@@ -1919,7 +1930,7 @@ name "fig:relu-sigmoid"
 \begin_inset Note Comment
 status open
 
-\begin_layout Paragraph
+\begin_layout Plain Layout
 Implizite Strategien
 \end_layout
 
@@ -1967,7 +1978,7 @@ eben, die Ihre Gewichtungen, falls nötig, anpassen.
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Note Comment
+\begin_inset Note Greyedout
 status open
 
 \begin_layout Plain Layout
@@ -2016,10 +2027,6 @@ These equations often contain several thousand variables, combined with
 g muss als Blackbox betrachtet werden.
 \end_layout
 
-\begin_layout Plain Layout
-==
-\end_layout
-
 \end_inset
 
 
@@ -2037,7 +2044,7 @@ Evolutionary algorithms are metaheuristic optimization methods that optimize
 \end_layout
 
 \begin_layout Enumerate
-Representation als Genom (Zusammensetzung aus Genen)
+Representation as genome (composition of genes)
 \begin_inset Newline newline
 \end_inset
 
@@ -2046,6 +2053,7 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -2064,7 +2072,7 @@ Candidates are assessed on the basis of their fitness, for which they are
 
 \begin_layout Standard
 Like other random learning methods, evolutionary algorithms are not affected
- by human bias, but they remain interpretable due to the relatively simple
+ by human bias, but still remain interpretable due to the relatively simple
  models.
 \end_layout
 
@@ -2082,6 +2090,7 @@ The time-consuming evaluation process can be shortened 2-15 times by using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2103,29 +2112,25 @@ Genetic Programming (GP) is an evolutionary machine learning approach that
 \begin_layout Standard
 The programs are implemented as a programming trees whose genes are its
  nodes.
- Die Fitness ist bei Bewertung durch das RL Environment der reward, bei
- offline training
-\begin_inset space \thinspace{}
-\end_inset
-
-auf Daten ist es der Regressionsfehler.
- Bei der genetischen Programmierung muss sowohl die Formel aus einer Menge
- an Operatoren gefunden werden sowie die Parametrisierung der Blattknoten
- eines Baumes, welche sich aus Observationen und Konstanten bestehen können.
+ The fitness is the reward when evaluated by the RL Environment, for offline
+ training on data it is the regression error.
+ In genetic programming, both the formula from a set of operators must be
+ found as well as the parameterisation of the leaf nodes of a tree, which
+ can consist of observations and constants.
 \end_layout
 
 \begin_layout Standard
-Der Selektioneprozess wird mithilfe einer Tournament-selection realisiert
- bei der aus mehreren zufälligen Kandidaten einer Generation der beste überlebt.
- Mutationen können sowohl einzelne Knoten als auch komplette Äste betreffen.
- Bei Astmutationen wird der komplette Ast ausgetauscht und mit einem neuen,
- zufällig generierten Ast ersetzt.
- Dieser kann in der Größe variieren.
+The selection process is realised with the help of a tourname selection
+ where the best survives from several random candidates of a generation.
+ Mutations can affect single nodes as well as complete branches.
+ In the case of branch mutations, the complete branch is exchanged and replaced
+ with a new, randomly generated branch.
+ This can vary in size.
 \end_layout
 
 \begin_layout Standard
-Beim crossover werden die Äste zweier Elternbäume an passenden Stellen ausgetaus
-cht.
+In crossover, the branches of two parent trees are exchanged at suitable
+ points.
 \end_layout
 
 \begin_layout Standard
@@ -2136,23 +2141,13 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="19" columns="5">
+<lyxtabular version="3" rows="11" columns="4">
 <features islongtable="true" longtabularalignment="center">
 <column alignment="center" valignment="top" width="3cm">
 <column alignment="center" valignment="top" width="3cm">
 <column alignment="center" valignment="top" width="5cm">
-<column alignment="center" valignment="top" width="2cm">
 <column alignment="center" valignment="top" width="4cm">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
@@ -2218,16 +2213,7 @@ Industrial Benchmrak
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2242,7 +2228,7 @@ Industrial Benchmrak
 \begin_inset Text
 
 \begin_layout Plain Layout
-Population
+Population size
 \end_layout
 
 \end_inset
@@ -2251,7 +2237,7 @@ Population
 \begin_inset Text
 
 \begin_layout Plain Layout
-Species (7 Mrd.)
+7 Mrd.
 \end_layout
 
 \end_inset
@@ -2260,21 +2246,12 @@ Species (7 Mrd.)
 \begin_inset Text
 
 \begin_layout Plain Layout
-list of Candidates (1000)
+1000
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1000-5000
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2298,7 +2275,7 @@ Individual/Candidate implementation
 \begin_inset Text
 
 \begin_layout Plain Layout
-Lebewesen
+Living creatures
 \end_layout
 
 \end_inset
@@ -2312,16 +2289,7 @@ computational tree
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1000
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2345,7 +2313,7 @@ Genotypen Genbausteine
 \begin_inset Text
 
 \begin_layout Plain Layout
-Chromosomes, DNS, Nukleotide
+chromosomes, DNS, nucleotides
 \end_layout
 
 \end_inset
@@ -2359,157 +2327,7 @@ branches, nodes, operators
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Lebenssinn
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Harvest energy
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-geringe Kosten
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reward
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-dopamine and seratonin
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-environment reward
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2547,16 +2365,7 @@ Verhalten in der Umgebung
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2603,15 +2412,6 @@ Evolution
 
 \end_inset
 </cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
 <cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
@@ -2641,16 +2441,7 @@ Crossover
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2688,68 +2479,12 @@ Branch mutation, node mutation, filtermutation
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
 Für Gaussmutationen wurde die Turniergröße erhöht um das Fein-tuning nur
  bereits herausragenden Bäumen anzuwenden.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Genetische Vielfalt
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-siehe Sozialwissenschaften
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-random generation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
 \end_layout
 
 \end_inset
@@ -2783,7 +2518,7 @@ Generationen
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2792,18 +2527,9 @@ Generationen
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2812,11 +2538,11 @@ Selection process
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Tinder swipe to the right
+
 \end_layout
 
 \end_inset
@@ -2831,208 +2557,11 @@ tournament selection (aus 3-7 zufällig gewählten Kandidaten einer Population
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
 3
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Bewertung (online)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-kamelrechner.eu
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fitness / reward
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Bewertung (offline)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Eigenwert
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-regression error
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Beschränkt durch eine Quarantäne
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Yes
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Yes
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Beschränkungen
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Physikgesetze
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Baumtiefe, Knotenzahl
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
 \end_layout
 
 \end_inset
@@ -3047,6 +2576,7 @@ Baumtiefe, Knotenzahl
 
 \begin_layout Plain Layout
 The evolutionary aspects in biology and genetic programming in comparison.
+ (xxx delete this table)
 \end_layout
 
 \end_inset
@@ -3090,7 +2620,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/paretofront.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
 	height 5cm
 
 \end_inset
@@ -3119,6 +2649,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -3256,6 +2787,7 @@ thus providing a complexity measure that can be adapted to the preferences
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3271,6 +2803,7 @@ Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -3322,6 +2855,7 @@ Neuropolicies post-hoc ganzheitlich zu erklären ist eine Aufgabe, die aktuell
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3390,11 +2924,9 @@ Both the Mountain car (MC) as well as the Industrial Benchmark (IB) were
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
@@ -3618,11 +3150,16 @@ partially
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The used benchmarks in comparison xx
+The used benchmarks in comparison.
+ xx
 \end_layout
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -3691,6 +3228,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -4295,6 +3833,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4334,15 +3873,15 @@ status open
 \begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="8">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
+<features islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top" width="0pt">
+<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="2cm">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
@@ -4541,7 +4080,7 @@ external driver
 \begin_inset Text
 
 \begin_layout Plain Layout
-for reward
+reward
 \end_layout
 
 \end_inset
@@ -4550,7 +4089,7 @@ for reward
 \begin_inset Text
 
 \begin_layout Plain Layout
-for reward
+reward
 \end_layout
 
 \end_inset
@@ -4559,90 +4098,7 @@ for reward
 \begin_inset Text
 
 \begin_layout Plain Layout
-not used
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Adjustable?
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $\pm1$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $\pm1$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $\pm1$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
+unused
 \end_layout
 
 \end_inset
@@ -4653,7 +4109,90 @@ Adjustable?
 \begin_inset Text
 
 \begin_layout Plain Layout
-min/max
+Action
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\pm1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\pm1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\pm1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Min/Max
 \end_layout
 
 \end_inset
@@ -4970,7 +4509,7 @@ Past time
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Alle IB features im Überblick.
+All IB features at a glance.
  
 \end_layout
 
@@ -5045,6 +4584,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -5458,6 +4998,7 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -5471,6 +5012,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -5705,6 +5247,7 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -6247,12 +5790,14 @@ This kernel has been tested to give preference to scarce wrong decisions
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -6267,6 +5812,9 @@ status open
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename tikz/regression_cost/03_rounding.pdf
 
@@ -6284,6 +5832,10 @@ Continuous and conditional MAE in discrete action space
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -7372,6 +6924,7 @@ xx what is a marginal note? Hein, Udluft
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -7514,11 +7067,9 @@ Conceivable would be to see the operators only as representatives of their
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap table
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
@@ -7793,6 +7344,10 @@ Division of operators into their areas of responsibility.
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -8453,73 +8008,67 @@ n := goal amount of nodes
 b := amount of branches to build simultaneously
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 n = rand()  # n=80
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 tree_sizes = [n.split(min)]  # [15, 40, 25]
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 for nodes in [tree_sizes]:
 \end_layout
 
-\begin_deeper
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 while(True):
 \end_layout
 
-\begin_deeper
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 for node in layer:
 \end_layout
 
-\begin_deeper
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 open_nodes
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 choose_operator_arity()
 \end_layout
 
-\end_deeper
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 # left side of the tree is otherwise overloaded
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 distribute_operators_randomly_on_open_treenodes()
 \end_layout
 
-\end_deeper
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 okay
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 okay?
 \end_layout
 
-\end_deeper
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 okay.
 \end_layout
 
-\begin_layout LyX-Code
+\begin_layout Plain Layout
 
 bye
 \end_layout
@@ -8726,16 +8275,19 @@ Distribution for selecting observations.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/pyplots_custom/distribution_obs_time.pdf
+	height 5cm
 
 \end_inset
 
@@ -8743,9 +8295,9 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Auswahl des Zeitpunktes einer Observation um einen Baum zu bauen.
- Jüngere Werte werden aufgrund ihrer höheren, vermuteten Relevanz nach der
- beschriebenen Verteilung etwas häufiger ausgewählt.
+Selection of the time of an observation to build a tree.
+ Younger values are selected slightly more frequently due to their higher
+ presumed relevance according to the distribution described.
 \end_layout
 
 \end_inset
@@ -9473,7 +9025,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/mc/agents/img/mc_reward_compared.pdf
-	height 66mm
+	height 50mm
 
 \end_inset
 
@@ -9526,6 +9078,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -9587,6 +9140,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -10531,6 +10085,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 

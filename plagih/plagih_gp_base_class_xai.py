@@ -690,8 +690,9 @@ class ExplainableGP(object):
             paste_full = f"{str(self.conf.name).replace('_', '-')}\n" \
                          "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
                          "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                f"{tex_include_pdf(self.root_dir / 'sfehs_eval/evaled_overview.pdf')}\n{paste_full}" \
-                         "\\hline\n\\end{tabular}\n\n"
+                f"{tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n" \
+                f"{paste_full}" \
+                "\\hline\n\\end{tabular}\n\n"
             file_dump(self.root_dir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
 
         elif 'IB' in self.conf.name:

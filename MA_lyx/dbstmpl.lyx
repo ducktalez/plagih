@@ -396,6 +396,68 @@ In der Wissenschaft wurden deshalb viele Methoden entwickelt, um den Prozess
  
 \end_layout
 
+\begin_layout Itemize
+In den letzten Jahren entstanden somit viele Architektur des Modells enteprechen
+d der Problematik auswählt.
+ Artificial image recognition is a domain that is relatively easy to solve
+ for humans, but requires assistance for ML approaches such as the implementatio
+n of filters to recognize key features such as edges or corners.
+ 
+\end_layout
+
+\begin_layout Itemize
+More general approaches promise extraordinary performance as could be shown
+ in 2012 with 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
+
+\end_inset
+
+.
+ With extraordinary high expenditure, they performed unsupervised image
+ recognition without filters or labeled data on random youtube images, which
+ resulted in the best image recognition performance at the time.
+ Due to the high computational effort, however, the broad application of
+ this approach is out of the question.
+\end_layout
+
+\begin_layout Itemize
+Der Entwickler übernimmt dabei bereits eine wichtige Aufgabe um eine intelligent
+e Lösung zu erzeugen, indem er die Architektur des Lernprozesses vorgibt.
+ Das Trainieren eines Neuronetzes ist sehr aufwändig und kann, je nach Problemar
+t, mit speziellen Netzarchitekturen angepasst werden.
+ Diese Aufgabe obliegt aktuell immernoch dem Entwickler - die Struktur des
+ Netzes zu analysieren wäre somit ein Zirkelschluss zur Abstraktionsleistung
+ des Entwicklers und macht keinen Sinn 
+\end_layout
+
+\begin_layout Itemize
+M: tradeoff performance vs.
+ readability - Je mehr Freiheiten man einer Maschine gibt, desto besser
+ sind auch die Lösungen
+\end_layout
+
+\begin_layout Itemize
+xxx erstes NN percepron
+\end_layout
+
+\begin_layout Itemize
+The learning process is often made possible by the use of extremely complex
+ data structures such as neural networks (NN), which must be regarded as
+ black boxes.
+ 
+\end_layout
+
+\begin_layout Itemize
+Implizit cs explizit?
+\end_layout
+
+\begin_layout Itemize
+post-hoc interpretability
+\end_layout
+
 \end_inset
 
 
@@ -410,18 +472,6 @@ Im Bereich des RL müssen AI Ansätze als Blackbox angesehen werden, weshalb
  man ihnen nicht vertrauen kann.
  Um dieses Vertrauen wieder herzustellen gibt es den Bereich der XAI, der
  versucht, die Blackbox dem Menschen erklärbar zu machen.
- 
-\end_layout
-
-\begin_layout Itemize
-Die Analyse der Blackbox ist im Angesicht ihrer Lesbarkeit und Komplexität
- allerdings schwer zu erreichen.
- 
-\end_layout
-
-\begin_layout Itemize
-Doch selbst, wenn die Blackbox interpretierbar gemacht werden kann ist ihre
- Strategie oft viel zu komplex um verstanden zu werden.
  
 \end_layout
 
@@ -494,11 +544,11 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-Dank enormer Fortschritte im Bereich der Künstlichen Intelligenz können
- immer mehr Probleme von Maschinen übernommen werden.
- Dabei ist es mittlerweile nicht nur möglich, dem Menschen aufwändige Aufgaben
- abzunehmen sondern auch komplett neue Problemlösungen zu entwickeln, was
- im Bereich des Reinforcement Learning (RL) getan wird.
+Thanks to enormous progress in the field of artificial intelligence, more
+ and more problems can be taken over by machines.
+ In the meantime it is not only possible to relieve humans of complex tasks
+ but also to develop completely new solutions to problems, which is done
+ in the field of Reinforcement Learning (RL).
  
 \begin_inset Newline newline
 \end_inset
@@ -509,14 +559,9 @@ RL is a part of ML where an agent without prior knowledge learns a strategy
  form of determinism in which the agent moves from one state, when performing
  an action, with a certain probability to the same subsequent state each
  time.
- The training process until such a strategy can be learned without prior
- knowledge is so complex that it must be as efficient as possible through
- a sensible balance between exploration and exploitationand by simplifying
- the space of states.
-\end_layout
-
-\begin_layout Standard
-===
+ The agent has only limited computing power at his disposal, which is why
+ he must carefully weigh up exploration and exploitation in order to develop
+ an efficient strategy.
 \end_layout
 
 \begin_layout Standard
@@ -539,9 +584,8 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-Trotz dieser außerorddentlichen Performance trauten die Entwickler AlphaGo
- nicht vollständig und ließen den Prozess deshalb durch einen Menschen überwache
-n.
+Despite this extraordinary performance, the developers did not fully trust
+ AlphaGo and therefore had the process monitored by a human.
 \end_layout
 
 \begin_layout Quotation
@@ -584,14 +628,12 @@ literal "false"
 
 \begin_layout Standard
 Even AlphaGo, as a prestige project of the RL, supervised by a research
- team, was subject to errors of reasoning die nur schwer für das Deeopmind
- Team zu beheben sind, as it would require an extensive training process.
-\end_layout
-
-\begin_layout Standard
-Especially in sensitive areas such as industry, a tradeoff in favor of performan
-ce at the expense of loss of control is often not an option, since even
- rarely occurring wrong decisions could have fatal consequences.
+ team, was subject to errors of reasoning.
+ Especially in sensitive areas such as industry, a tradeoff in favor of
+ performance at the expense of loss of control is often not an option, since
+ even rarely occurring wrong decisions could have fatal consequences.
+ In view of the increasing importance of algorithms in our society, the
+ EU has also defined a right to explain in the GDPR (DSGVO).
  
 \end_layout
 
@@ -600,223 +642,12 @@ ce at the expense of loss of control is often not an option, since even
 \end_layout
 
 \begin_layout Standard
-Im Angesicht der steigenden Bedeutung von Algorithmen in unserer Gesellschaft
- hat auch die EU in der DSGVO ein Recht auf Erklärbarkeit definiert.
- 
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-The learning process is often made possible by the use of extremely complex
- data structures such as neural networks (NN), which must be regarded as
- black boxes.
- 
-\end_layout
-
-\begin_layout Standard
-M: tradeoff performance vs.
- readability - Je mehr Freiheiten man einer Maschine gibt, desto besser
- sind auch die Lösungen
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-xxx erstes NN percepron
-\end_layout
-
-\begin_layout Standard
-Artificial neural networks are machine learning systems that are strongly
- oriented towards the biological brain.
- Zwischen dem Eingabevektor und Ausgabevektor liegen eine beliebige Anzahl
- An versteckter Schichten.
- Their task is to divide the problem between the input layer and the output
- layer and to identify subproblems.
- The training process will be started with a random parameterization and
- the decisions will be very bad at the beginning.
- Der Inputvektor aktiviert das Netz mit den Werten der Beobachtung, welches
- als Signal durch die versteckten Neuronenschichten bis zur Ausgabeschicht
- durchgereicht.
- Die Entscheidung wird dort bewertet.
- Dieses Feedback wird in einem Backpropagation Schritt an die Neuronen zurückgeg
-eben, die Ihre Gewichtungen, falls nötig, anpassen.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-For a group of neurons from the previous layer (often all neurons) the signals
- are received and weighted.
- Together with a bias, which is added by the neuron itself, a sum is formed.
- The sum is added to an activation function that calculates the final activation
- of the neuron.
- Common activation functions include ReLu and Sigmoid.
- The result is then passed on to the neurons of the next layer.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-Das Trainieren eines Neuronetzes ist sehr aufwändig und kann, je nach Problemart
-, mit speziellen Netzarchitekturen angepasst werden.
- Diese Aufgabe obliegt aktuell immernoch dem Entwickler - die Struktur des
- Netzes zu analysieren wäre somit ein Zirkelschluss zur Abstraktionsleistung
- des Entwicklers und macht keinen Sinn
-\end_layout
-
-\begin_layout Standard
-===xxx===
-\end_layout
-
-\begin_layout Standard
-More general approaches promise extraordinary performance as could be shown
- in 2012 with 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
-
-\end_inset
-
-.
- With extraordinary high expenditure, they performed unsupervised image
- recognition without filters or labeled data on random youtube images, which
- resulted in the best image recognition performance at the time.
- Aufgrund des hohen Rechenaufwandes kommt die breite Verwendung dieses Ansatzes
- aber nicht in Frage.
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-In den letzten Jahren entstanden somit viele Architektur des Modells enteprechen
-d der Problematik auswählt.
- Artificial image recognition is a domain that is relatively easy to solve
- for humans, but requires assistance for ML approaches such as the implementatio
-n of filters to recognize key features such as edges or corners.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-(Implementierung des Eingabe- und Ausgabevektors, Anzahl der hidden layer,
- topologie zwischen den Schichten, Aktivierungsfunktionen der Neuronen,
- Explorationsparameter, etc.).
- 
-\end_layout
-
-\begin_layout Plain Layout
-LSTM, Autoencoder, ...
-\end_layout
-
-\begin_layout Plain Layout
-Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
- einen Hund dafür zu trainieren und keine Taube.
- Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
- umgekehrt funktioniert es nicht.
- Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
- uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
- [xxx echo state networks]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-=== Aus der Sicht der Erklärbarkeit 
-\end_layout
-
-\begin_layout Standard
-Neural networks are generalized, very extensive systems of equations, which
- can adapt their own parameters in a two-complex training process by means
- of automated statistical procedures and random exploration.
- 
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-Der Entwickler übernimmt dabei bereits eine wichtige Aufgabe um eine intelligent
-e Lösung zu erzeugen, indem er 
-\end_layout
-
-\begin_layout Standard
-These equations often contain several thousand variables, combined with
- unintuitive activation functions such as the ReLu function or the sigmoid
- function, which is why they are not interpretable by humans.
- Die Funktion einzelner Neuronen oder die Bedeutung der Architektur ist
- nicht ohne weiteres erkennbar.
- Die Architektur muss vom Menschen vorgegeben werden und die Entscheidungsfindun
-g muss als Blackbox betrachtet werden.
-\end_layout
-
-\begin_layout Standard
-====
-\end_layout
-
-\begin_layout Standard
-xxx PSO here?
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Paragraph
-Understanding AI: Verhaltensanalyse
-\end_layout
-
-\begin_layout Standard
-Nevertheless, the solutions found work, which is why one can try to abstract
- the logic into causal relationships.
- 
-\end_layout
-
-\begin_layout Standard
-A non-verbal learning process is usually only possible in the form of detailed
- observation of the behaviour by the person.
- To do this, an expert watches games of the agent and tries to identify
- where the most important strategic differences are so that he can explain
- them.
- With AlphaGo, for example, it has been possible to find generally valid
- strategies that were previously unknown.
- xx] Although this procedure is complex, it has the decisive advantage that
- what has already been learned does not have to be discarded, but actually
- provides a meaningful core.
- The part that has to be integrated into the own model via a learning and
- understanding process is therefore much less.
-\end_layout
-
-\begin_layout Standard
-The task of the approach presented in this thesis is basically to automate
- this process as far as possible.
+Bei allen lernenden Ansätzen gibt es dabei einen Tradeoff zwischen der Performan
+ce und der Erklärbarkeit.
+ Der größte Erfolg konnte mithilfe von neuronalen Netzen erzielt werden,
+ da mit ihrer Hilfe auch für extrem komplexe Probleme ein Mapping zwischen
+ Zuständen und Aktionen erlernt werden kann.
+ Aus Sicht der Erklärbarkeit handelt es sich dabei um verallgemein
 \end_layout
 
 \begin_layout Chapter
@@ -827,8 +658,7 @@ Related work
 Explainable artificial intelligence deals with the problem of making AI
  solutions, which have so far been regarded as black boxes, understandable
  for humans.
- In view of the fact that even programmers often do not understand their
- own code after some time, explainability is a very arbitrary property.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -852,9 +682,7 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-Wie erklärbar eine Lösung ist hängt dabei von dem Aufwand ab der nötig ist,
- damit eine Person genügend Verständnis erlangt um dem Ansatz zu vertrauen.
- Wie in 
+As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
@@ -862,8 +690,7 @@ literal "true"
 
 \end_inset
 
- beschrieben wird, wird dabei unter anderem zwischen Interpretierbarkeit
- und Erklärbarkeit unterschieden.
+, a distinction is made between interpretability and explainability.
  Interpretability is defined as 
 \begin_inset Quotes eld
 \end_inset
@@ -892,14 +719,12 @@ collection of features of interpretable domain that have contributed for
 \end_inset
 
 .
+ An explanation should thus be provided for the gap between a person who
+ has knowledge causally based on paradigms and an unmanageable, unknown
+ logic, without relying solely on statistical tests.
+ How explainable a solution is depends on the effort needed for a person
+ to gain enough understanding to trust the approach.
  
-\end_layout
-
-\begin_layout Standard
-Eine Erklärung soll somit die Lücke zwischen einem Menschen, der kausal
- auf Paradigmen aufbauendes Wissen hat und einer nicht überschaubaren, unbekannt
-en Logik hergestellt werden, ohne sich dabei nur auf statistische Tests
- zu verlassen.
 \end_layout
 
 \begin_layout Standard
@@ -916,19 +741,24 @@ literal "true"
 \end_inset
 
  showed how error-prone image recognition can be by only changing one pixel.
- Selbst für Menschen ist Bilderkennung oft nicht eindeutig, darüber hinaus
- ist das Problem aber auch so umfangreich, dass auch der Mensch eine Katze
- nicht anhand ihrer Eigenschaften beschreiben würde, sondern indem er jemandem
- eine Katze zeigt.
+ Even for humans, image recognition is often ambiguous, but beyond that
+ the problem is so extensive that even humans would not describe a cat by
+ its characteristics, but by showing a cat to someone.
 \end_layout
 
 \begin_layout Standard
-Mithilfe von Layerwise Relevance propagation [xxx] kann für einzelne Bilder
- gezeigt werden, welche Pixelbereiche für die Entscheidung des NN ausschlaggeben
-d sind.
- Diese hilft beispielsweise dabei, Fehlverhalten im Sinne eines Debuggings
- nachvollziehen zu können, ist aber viel zu speziell um Vertrauen in einen
- Ansatz zu generieren.
+Layerwise Relevance propagation can be used to show which pixel areas are
+ decisive for the NN decision for individual images.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_LRP_Frauenhofer"
+literal "false"
+
+\end_inset
+
+ This helps, for example, to trace misbehaviour in terms of debugging, but
+ is far too specific to generate confidence in an approach.
 \end_layout
 
 \begin_layout Standard
@@ -962,10 +792,10 @@ status open
 \begin_layout Plain Layout
 The object is recognized as a wolf - especially the edges that separate
  the wolf from its environment seem to be of great importance.
- Der Nacken, die Schnauze und die Beine und das Auge scheinen sehr wichtig
- zu sein, Fellfarbe und Struktur dafür nur von geringer Bedeutung.
- Welche Eigenschaft ausschlaggebend war - Farbe, Wolfsspezifische Erkennungsmerk
-male oder auch der Grund, weshalb es doch kein Hund ist, fehlt dabei.
+ The neck, the muzzle and the legs and the eye seem to be very important,
+ coat colour and structure for this only of minor importance.
+ Which characteristic was decisive - colour, wolf specific recognition features
+ or even the reason why it is not a dog after all, is missing.
 \end_layout
 
 \end_inset
@@ -1012,9 +842,9 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Falsche Klassifizierung als Stativ durch BVLC Reference CaffeNet oder als
- Spotlight durch BVLC GoogLeNet.
- xxx 
+Incorrect classification as tripod by BVLC Reference CaffeNet or as spotlight
+ by BVLC GoogLeNet.
+ 
 \begin_inset Flex URL
 status collapsed
 
@@ -1025,7 +855,7 @@ https://lrpserver.hhi.fraunhofer.de/
 
 \end_inset
 
-.
+
 \end_layout
 
 \end_inset
@@ -1042,32 +872,20 @@ https://lrpserver.hhi.fraunhofer.de/
 To trust applications in the industry, where small wrong decisions can often
  lead to big damages which can also be prosecuted in court for undesirable
  developments requires more robust explanations.
- Hier obliegt es deshalb in vielen Bereichen Domain experten nach Lösungsstrateg
-ien zu suchen.
- Diesen Lösungen wird vertraut, weil dem Entwickler vertraut wird.
+ It is therefore up to domain experts to find solution strategies in many
+ areas.
+ These solutions are trusted because the developer is trusted.
 \end_layout
 
 \begin_layout Itemize
-Bei komplexen Problemen kann auf sicher erlerntes Wissen aufgebaut werden.
- Bei einem RL Problem muss immer von neu gestertet werden.
-\end_layout
-
-\begin_layout Itemize
-Explizite Logik durch die Formulierung in einer Sprache: 
+Large pool of qualified previous knowledge
 \begin_inset Newline newline
 \end_inset
 
-Das klassische Protokoll für Erklärungen sind Aussagen, die, formuliert
- in einer klar definierten Sprache, auf ihren Wahrheitsgehalt überprüft
- werden können.
-\begin_inset Newline newline
-\end_inset
-
-Programmiercode als auf Paradigmen aufbauende, interpretierbare Heuristik
-\end_layout
-
-\begin_layout Itemize
-Transferable, understandable logic:
+In the case of complex problems, it is possible to build on the knowledge
+ of the whole of mankind that has been safely acquired.
+ In the case of a RL problem, it is always necessary to start from scratch,
+ which is why there are many more potential sources of error.
 \begin_inset Newline newline
 \end_inset
 
@@ -1090,7 +908,7 @@ due to the similar thought processes it is possible for humans to put themselves
 \end_layout
 
 \begin_layout Itemize
-Efficient and secure learning process, Implicit logic: 
+Efficient and secure learning process, Implicit logic 
 \begin_inset Newline newline
 \end_inset
 
@@ -1109,13 +927,32 @@ Computer sind, im Gegensatz zum Menschen, auf zufällige Exploration angewiesen,
 \begin_inset Newline newline
 \end_inset
 
-Der Mensch hat mehr Neuronen dafür weniger Zeit.
- Er hat Urängste die ihn schnell Strategien finden lassen, ist aber mit
- einem Bias behaftet
+
+\begin_inset Newline newline
+\end_inset
+
+Expliziten Representationen stehen impliziten Lernstrategien gegenüber.
+ Ein Beispiel dafür sind Value-Funktionen, welche ein Mapping zwischen Zustandän
+den und Aktionen berechnet und nur implizit eine Logik enthält.
+ Eine implizite Repräsentation ist zwar sehr anpassungsfähig, gleichzeitig
+ aber auch sehr volatil und unintuitiv.
+\end_layout
+
+\begin_layout Itemize
+Explicit logic through the formulation in a language
+\begin_inset Newline newline
+\end_inset
+
+Heuristics and explanations are formulated in already defined languages
+ and can be checked for their truthfulness.
+ 
 \begin_inset Newline newline
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float table
 wide false
 sideways false
@@ -1123,7 +960,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="18" columns="3">
+<lyxtabular version="3" rows="20" columns="3">
 <features islongtable="true" longtabularalignment="center">
 <column alignment="center" valignment="top" width="4.5cm">
 <column alignment="center" valignment="top" width="4.5cm">
@@ -1162,7 +999,7 @@ Neural network
 \begin_inset Text
 
 \begin_layout Plain Layout
-Neuronenzahl
+Neurons
 \end_layout
 
 \end_inset
@@ -1191,7 +1028,7 @@ Neuronenzahl
 \begin_inset Text
 
 \begin_layout Plain Layout
-Trainingsschritte, bis eine Strategie funktioniert
+Minimum training episodes
 \end_layout
 
 \end_inset
@@ -1216,98 +1053,185 @@ Trainingsschritte, bis eine Strategie funktioniert
 </cell>
 </row>
 <row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Initial strategy
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+good already
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+random
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10 episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+better
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bad
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+100 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+signs of frustration
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+okay
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1000 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+turns crazy 
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+good
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10000 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+dead
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+outperforms humans
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+100.000 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+dead
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+overfitting
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Bilderkennung
-\end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Voraussetzung
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ab 2-3 Jahre altes Kind
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Filteroperatoren
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Trainingsmethode
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Interaktion mit realer Welt, multidimensionale Lernerfahrung
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Ausschließlich Datensatz aus beschrifteten Pixeldaten
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Schach
 \end_layout
 
 \end_inset
@@ -1336,7 +1260,7 @@ Schach
 \begin_inset Text
 
 \begin_layout Plain Layout
-Architektur
+Preparatory work
 \end_layout
 
 \end_inset
@@ -1345,7 +1269,7 @@ Architektur
 \begin_inset Text
 
 \begin_layout Plain Layout
-3-5Jahre
+Recognizing shapes, colors and object structure
 \end_layout
 
 \end_inset
@@ -1354,36 +1278,7 @@ Architektur
 \begin_inset Text
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
+Filter Operators
 \end_layout
 
 \end_inset
@@ -1394,7 +1289,11 @@ Architektur
 \begin_inset Text
 
 \begin_layout Plain Layout
-Trainingsobergrenze
+Training method for 
+\end_layout
+
+\begin_layout Plain Layout
+animal recognition
 \end_layout
 
 \end_inset
@@ -1403,7 +1302,7 @@ Trainingsobergrenze
 \begin_inset Text
 
 \begin_layout Plain Layout
-frustriert, stirbt
+interaction with the real world, multidimensional learning experience
 \end_layout
 
 \end_inset
@@ -1412,7 +1311,7 @@ frustriert, stirbt
 \begin_inset Text
 
 \begin_layout Plain Layout
-None
+Data set from labelled pixel data
 \end_layout
 
 \end_inset
@@ -1423,7 +1322,7 @@ None
 \begin_inset Text
 
 \begin_layout Plain Layout
-Spaß beim lernen
+likes learning
 \end_layout
 
 \end_inset
@@ -1432,7 +1331,7 @@ Spaß beim lernen
 \begin_inset Text
 
 \begin_layout Plain Layout
-None
+No
 \end_layout
 
 \end_inset
@@ -1452,7 +1351,7 @@ Does not care
 \begin_inset Text
 
 \begin_layout Plain Layout
-Vorkenntnisse
+Prior knowledge
 \end_layout
 
 \end_inset
@@ -1490,7 +1389,7 @@ Exploration strategy
 \begin_inset Text
 
 \begin_layout Plain Layout
-only if required, fears, Vorkenntnisse
+only if required, primeval fears, based on life experience
 \end_layout
 
 \end_inset
@@ -1510,7 +1409,7 @@ variations of randomness
 \begin_inset Text
 
 \begin_layout Plain Layout
-Schlimmste Folgen aus einer Fehlentscheidung
+Worst consequences of a wrong decision
 \end_layout
 
 \end_inset
@@ -1519,7 +1418,7 @@ Schlimmste Folgen aus einer Fehlentscheidung
 \begin_inset Text
 
 \begin_layout Plain Layout
-Tod und schmoren in der Hölle
+Death and burn in hell
 \end_layout
 
 \end_inset
@@ -1548,7 +1447,7 @@ Knowledge transfer protocol to human
 \begin_inset Text
 
 \begin_layout Plain Layout
-Sprache, Lehrmethoden, Problemabhängig
+Language, teaching methods, problem-based
 \end_layout
 
 \end_inset
@@ -1557,7 +1456,7 @@ Sprache, Lehrmethoden, Problemabhängig
 \begin_inset Text
 
 \begin_layout Plain Layout
-*XAI*
+XAI
 \end_layout
 
 \end_inset
@@ -1586,7 +1485,7 @@ programming
 \begin_inset Text
 
 \begin_layout Plain Layout
-copy + paste
+copy-paste
 \end_layout
 
 \end_inset
@@ -1597,7 +1496,7 @@ copy + paste
 \begin_inset Text
 
 \begin_layout Plain Layout
-Fehler durch externe Verbesserung oder Änderung der Anforderungen
+Anpassungen von außen
 \end_layout
 
 \end_inset
@@ -1606,7 +1505,7 @@ Fehler durch externe Verbesserung oder Änderung der Anforderungen
 \begin_inset Text
 
 \begin_layout Plain Layout
-Schnell, wenn Fehler identifiziert wurde
+sehr schnell
 \end_layout
 
 \end_inset
@@ -1626,7 +1525,7 @@ requires a new training process, but unsecure anyways
 \begin_inset Text
 
 \begin_layout Plain Layout
-Spezialisiert auf
+Specialised in
 \end_layout
 
 \end_inset
@@ -1635,7 +1534,7 @@ Spezialisiert auf
 \begin_inset Text
 
 \begin_layout Plain Layout
-Pattern matching, Erkennen von Risiken
+Pattern matching, Identifying risks
 \end_layout
 
 \end_inset
@@ -1644,7 +1543,7 @@ Pattern matching, Erkennen von Risiken
 \begin_inset Text
 
 \begin_layout Plain Layout
-Komplexe mathematische Formeln finden
+complex mathematical formulas
 \end_layout
 
 \end_inset
@@ -1661,8 +1560,8 @@ Komplexe mathematische Formeln finden
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Menschen und Maschinen nutzen beide neuronale Netze zum erstellen von Strategien
-, unterscheiden sich üblicherweise aber ganz entscheidend.
+Humans and machines both use neural networks to create strategies, but they
+ usually differ significantly.
 \end_layout
 
 \end_inset
@@ -1718,7 +1617,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Patches for neuropolicies.
+Patches in implicitly learned neuropolicies.
 \end_layout
 
 \end_inset
@@ -1761,7 +1660,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Structure for simple heuristics.
+Structure within explicitly formulated heuristics.
 \end_layout
 
 \end_inset
@@ -1780,7 +1679,7 @@ Structure for simple heuristics.
 \begin_layout Plain Layout
 Visualisation of the relation between observations and selected actions
  for the mountain car problem.
- A neural network creates very complex policies which are therefore very
+ A value function creates very complex policies which are therefore very
  adaptable and can make filigree distinctions.
  Thus, patches with volatile decision changes are visible in many areas,
  whose extent and effect are often not recognisable.
@@ -1847,20 +1746,12 @@ It thought the truck was a traffic sign
 
 \end_layout
 
-\begin_layout Paragraph
-Umfang, Komplexität
-\end_layout
-
 \begin_layout Standard
-Die mathematischen Gleichungen durch die Ansätze wie beispielsweise NN beschrieb
-en werden bestehen aus zu vielen Variablen als dass der Mensch ihre Symbiose
- überschauen könnte.
- 
-\end_layout
-
-\begin_layout Paragraph
-Interpretability tanh, sinus, ...
- Verständnis für mathematische Funktionen
+The mathematical equations described by approaches such as NN consist of
+ too many variables for humans to understand their symbiosis.
+ The nature of the activation functions is subject to another problem of
+ interpretability, they do not mark a logical abstraction of the problem
+ but represent a strongly unreliable unintuitive component.
 \end_layout
 
 \begin_layout Standard
@@ -1993,7 +1884,7 @@ name "fig:relu-sigmoid"
 
 \end_inset
 
-
+ 
 \end_layout
 
 \end_inset
@@ -2007,10 +1898,7 @@ name "fig:relu-sigmoid"
 \end_layout
 
 \begin_layout Standard
-Der Natur der Aktivierungsfunktionen unterliegt dabei ein weiteres Problem
- der Interpretierbarkeit, sie markieren keine logische Abstraktion des Problems
- sondern stellen eine stark unverlässliche unintuituve Komponente dar.
- Ein perceptron als zwei-neuroniges
+Ein perceptron als zwei-neuroniges
 \end_layout
 
 \begin_layout Standard
@@ -2058,15 +1946,20 @@ This is helpful, because the learning process in humans usually consists
  of the composition of many comprehensibly strung together steps.
 \end_layout
 
-\begin_layout Subparagraph
-Willkürlichkeit der Lösung (NN verstehen bringt nichts, wie soll man was
- ändern)
+\begin_layout Section
+NN NOOO xxx
+\end_layout
+
+\begin_layout Paragraph
+Implizite Strategien
 \end_layout
 
 \begin_layout Standard
-Die Lösungen sind außerdem zu chaotisch und volatil.
- Angenommen, ein NN wurde zu einem Problem verstanden, so ist diese Information
- im nächsten Trainingsschritt eventuell bereits nicht mehr nutzbar.
+Bei einer impliziten Representation ist eine Strategie, beispielsweise durch
+ erlernen einer Value-Funktion, nur als mapping von Zustand zur besten Aktion
+ vorhanden.
+ so ist diese Information im nächsten Trainingsschritt eventuell bereits
+ nicht mehr nutzbar.
  Hier fehlt die intrinsische Logikstruktur des Modelle die zu allgemeinem
  Verständnis führt.
 \end_layout
@@ -2083,8 +1976,95 @@ xxx selbst wenn trusting: Man kann keine Änderungen ohne weiteres durchführen.
  (siehe alpha go)
 \end_layout
 
+\begin_layout Standard
+===
+\end_layout
+
+\begin_layout Standard
+Artificial neural networks are machine learning systems that are strongly
+ oriented towards the biological brain.
+ Zwischen dem Eingabevektor und Ausgabevektor liegen eine beliebige Anzahl
+ An versteckter Schichten.
+ Their task is to divide the problem between the input layer and the output
+ layer and to identify subproblems.
+ The training process will be started with a random parameterization and
+ the decisions will be very bad at the beginning.
+ Der Inputvektor aktiviert das Netz mit den Werten der Beobachtung, welches
+ als Signal durch die versteckten Neuronenschichten bis zur Ausgabeschicht
+ durchgereicht.
+ Die Entscheidung wird dort bewertet.
+ Dieses Feedback wird in einem Backpropagation Schritt an die Neuronen zurückgeg
+eben, die Ihre Gewichtungen, falls nötig, anpassen.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+(Implementierung des Eingabe- und Ausgabevektors, Anzahl der hidden layer,
+ topologie zwischen den Schichten, Aktivierungsfunktionen der Neuronen,
+ Explorationsparameter, etc.).
+\end_layout
+
+\begin_layout Plain Layout
+LSTM, Autoencoder, ...
+\end_layout
+
+\begin_layout Plain Layout
+Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
+ einen Hund dafür zu trainieren und keine Taube.
+ Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
+ umgekehrt funktioniert es nicht.
+ Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
+ uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
+ [xxx echo state networks]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Aus der Sicht der Erklärbarkeit 
+\end_layout
+
+\begin_layout Standard
+Neural networks are generalized, very extensive systems of equations, which
+ can adapt their own parameters in a two-complex training process by means
+ of automated statistical procedures and random exploration.
+ 
+\end_layout
+
+\begin_layout Standard
+These equations often contain several thousand variables, combined with
+ unintuitive activation functions such as the ReLu function or the sigmoid
+ function, which is why they are not interpretable by humans.
+ Die Funktion einzelner Neuronen oder die Bedeutung der Architektur ist
+ nicht ohne weiteres erkennbar.
+ Die Architektur muss vom Menschen vorgegeben werden und die Entscheidungsfindun
+g muss als Blackbox betrachtet werden.
+\end_layout
+
+\begin_layout Standard
+==
+\end_layout
+
+\begin_layout Standard
+xxx PSO here?
+\end_layout
+
+\begin_layout Standard
+===
+\end_layout
+
 \begin_layout Section
 Genetic Programming
+\end_layout
+
+\begin_layout Standard
+integrated interpretability
 \end_layout
 
 \begin_layout Standard

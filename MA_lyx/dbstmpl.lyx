@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -11,10 +11,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -36,6 +32,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -74,6 +72,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -83,7 +82,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -166,22 +168,6 @@ ng to the thinking structure of a developer.
  measure, which reflects the number of changes to the reference program.
  For the implementation a regression on offline data of the benchmarks was
  performed.
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-thanks{Großer Dank richtet sich an euch.}
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -420,6 +406,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
@@ -497,20 +484,6 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/inkscape/explainability_gap2.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx 
 \begin_inset ERT
 status open
 
@@ -525,11 +498,6 @@ svgwidth{
 textwidth}
 \backslash
 import{img/inkscape}{explainability_gap2.pdf_tex}
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -587,6 +555,7 @@ RL has become very popular due to the development of superhuman strategies,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -630,6 +599,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -774,45 +744,46 @@ Visualisation of the relation between observations and selected actions
 \end_layout
 
 \begin_layout Standard
-Bei allen lernenden Ansätzen gibt es dabei einen Tradeoff zwischen der Performan
-ce und der Erklärbarkeit.
- Der größte Erfolg konnte mithilfe von neuronalen Netzen erzielt werden,
- da mit ihrer Hilfe auch für extrem komplexe Probleme ein Mapping zwischen
- Zuständen und Aktionen erlernt werden kann.
- Aus Sicht der Erklärbarkeit handelt es sich bei NN um verallgemeinerte
- Gleichungssysteme ohne explizite Struktur, die mit automatisierten Verfahren
- der Statistik modelle erstellen können.
- Die Strategie ist somit nur implizit im Modell in Form der aktuellen Parametris
-ierung enthalten.
- Vertrauen kann nur über statistische Testverfahren erlangt werden und Erklärung
-en sind nur post-hoc möglich.
- Problembereiche, die auf eine solche Strategie angewiesen sind sind beispielswe
-ise Umfangreiche Probleme wie Bilderkennung oder natural language processing,
- dank einer Vielzahl von Architekturen können aber auch beispielsweise komplexe
- RL-Strategien entwickelt werden.
- Weitere Nachteile hierbei sind, dass Änderungen auch nur implizit mit großem
- Aufwand erfolgen können.
+In all learning approaches there is a trade-off between performance and
+ explainability.
+ The greatest success has been achieved with the help of neural networks,
+ since they can be used to learn a mapping between states and actions, even
+ for extremely complex problems.
+ From the point of view of explainability, NN are generalised systems of
+ equations without explicit structure, which can create models using automated
+ statistical methods.
+ The strategy is thus only implicitly contained in the model in the form
+ of the current parameterisation.
+ Confidence can only be gained through statistical test procedures and explanati
+ons are only possible post-hoc.
+ Problem areas that depend on such a strategy are, for example, extensive
+ problems such as image recognition or natural language processing, but
+ thanks to a variety of architectures, complex RL strategies can also be
+ developed, for example.
+ Further disadvantages are that changes can only be made implicitly with
+ great effort.
 \end_layout
 
 \begin_layout Standard
-Fehler können sowohl folge der zufälligen Exploration als auch von under-
- oder overfitting sein.
+Errors can be the result of accidental exploration as well as of under-
+ or overfitting.
 \end_layout
 
 \begin_layout Standard
-Die größte intellektuelle Leistung beim lernen mit NN liegt dabei vermutlich
- sogar beim Entwickler, dieser muss nämlich entsprechend des Wesens des
- Problems eine Netzarchitektur vorgeben.
- Für Bilderkennungsprobleme werden beispielsweise Bilder vereinfacht und
- Filter werden implementiert, die der Maschine das Erkennen von einfachen
- Formen wie Ecken und Kanten erleichtern sollen.
- Meistens bleiben sie dennoch Fachidioten ohne echtes Verständnis für das
- Problem.
- Mit der ein-pixel-attacke wurde gezeigt, wie leicht als gut befundene Lösungen
- aus dem Konzept katapultiert werden können.
+The biggest intellectual effort in learning with NN is probably even the
+ developer, who has to specify a network architecture according to the nature
+ of the problem.
+ For image recognition problems, for example, images are simplified and
+ filters are implemented to make it easier for the machine to recognise
+ simple shapes such as corners and edges.
+ Most of the time, however, they remain idiots with no real understanding
+ of the problem.
+ With the one-pixel attack it was shown how easily solutions that were found
+ to be good can be catapulted out of the concept.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -821,6 +792,7 @@ key "one_pixel_attack"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -833,11 +805,11 @@ key "sparse_unsupervised_learning_youtube_image_recognition"
 \end_layout
 
 \begin_layout Standard
-Dem entgegen stehen explizite Lösungen wie beispielsweise evolutionäre Algorithm
-en wie die genetische Programmierung.
- Diese suchen direkt nach Strategien, beispielsweise in Form einer Heuristik.
- Durch das direkte suchen einer Handlungsanweisung ist interpretierbarkeit
- direkt in der Lösung integriert.
+This is in contrast to explicit solutions such as evolutionary algorithms
+ like genetic programming.
+ These search directly for strategies, for example in the form of a heuristic.
+ The direct search for an instruction for action means that interpretability
+ is directly integrated into the solution.
 \end_layout
 
 \begin_layout Quote
@@ -846,6 +818,7 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -862,6 +835,7 @@ These are the reasons why explainable artificial intelligence (XAI) has
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -869,6 +843,7 @@ key "XAI_doshivelez2017rigorous"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -881,6 +856,7 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -932,6 +908,7 @@ Layerwise Relevance propagation can be used to show which pixel areas are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -2061,6 +2038,7 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -2097,6 +2075,7 @@ The time-consuming evaluation process can be shortened 2-15 times by using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2149,10 +2128,10 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="11" columns="4">
 <features islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top" width="2.5cm">
 <column alignment="center" valignment="top" width="3cm">
-<column alignment="center" valignment="top" width="3cm">
-<column alignment="center" valignment="top" width="5cm">
 <column alignment="center" valignment="top" width="4cm">
+<column alignment="center" valignment="top" width="3cm">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -2489,8 +2468,8 @@ Branch mutation, node mutation, filtermutation
 \begin_inset Text
 
 \begin_layout Plain Layout
-Für Gaussmutationen wurde die Turniergröße erhöht um das Fein-tuning nur
- bereits herausragenden Bäumen anzuwenden.
+For gaussian mutations the tournament size was increased by the Fine-tuning
+ only already outstanding trees.
 \end_layout
 
 \end_inset
@@ -2655,6 +2634,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -2775,7 +2755,7 @@ weighted complexity
 \end_layout
 
 \begin_layout Standard
-Für die Komplexität ist nicht allein die Anzahl der Knoten entscheidend.
+Not only the number of nodes is decisive for the complexity.
 \end_layout
 
 \begin_layout Standard
@@ -2792,6 +2772,7 @@ thus providing a complexity measure that can be adapted to the preferences
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2807,6 +2788,7 @@ Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -2823,8 +2805,7 @@ fuzzy genetic programming reinforcement learning does
 \end_layout
 
 \begin_layout Section
-Hein GP 2 Offline learned based, Das nachempfinden, was ein NN tut mit GP,
- offline training 
+Offline learning v1 
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:Online-offline_regression"
@@ -2858,6 +2839,7 @@ Neuropolicies post-hoc ganzheitlich zu erklären ist eine Aufgabe, die aktuell
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2874,7 +2856,7 @@ However, offline training still offers an interpretable and very cost-effective
 \end_layout
 
 \begin_layout Section
-Relatability Verständnis
+Relatability / Comprehension
 \end_layout
 
 \begin_layout Standard
@@ -2888,7 +2870,7 @@ The interpretability is often evaluated by the count of parameters and operators
  
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Puzzle example
 \end_layout
 
@@ -3230,6 +3212,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -3612,10 +3595,10 @@ name "wrap:mc-obs-act-plot-space"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Anhand der Formen kann man gut wichtige Eigenschaften verschiedener Strategien
- erkennen.
- In diesem Fall (Scratch GP results, complexity 8) sind die unterschiedlichen
- Entscheidungen in klare Blöcke unterteilbar.
+The shapes are a good way to identify important characteristics of different
+ strategies.
+ In this case (Scratch GP results, complexity 8) the different decisions
+ can be divided into clear blocks.
  
 \end_layout
 
@@ -3834,6 +3817,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4584,6 +4568,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -4654,6 +4639,7 @@ status open
 \align center
 \begin_inset Graphics
 	filename img/inkscape/concept.svg
+	lyxscale 50
 	width 100text%
 
 \end_inset
@@ -4856,6 +4842,10 @@ Not fundamentally limiting the pareto GP
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -4968,6 +4958,11 @@ Human written abstracts problems in programs often by if statements, which
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Tree Edit Distance (TED)
 \end_layout
@@ -4997,6 +4992,7 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -5010,6 +5006,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -5244,6 +5241,7 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -6920,6 +6918,7 @@ xx what is a marginal note? Hein, Udluft
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -7907,10 +7906,11 @@ Random tree branch building (node based)
 \begin_layout Standard
 In GP, the generation of random trees and branches is usually based on the
  tree depth.
- However, this is a problem for the layerwise mutation, where several branches
- have to be built up at the same time as the tree size can grow exponentially,
- the starting depth may differ between branches and the trees may end up
- very unbalanced.
+ However, this is a problem for the layerwise mutation which is needed for
+ example with fixed nodes, where several branches have to be built up at
+ the same time.
+ As the tree size can grow exponentially, the starting depth may differ
+ between branches and the trees may end up very unbalanced.
  Therefore a node based algorithm was developed, which builds up branches
  in full- and grow mode up to a certain number of nodes without risk of
  structural imbalances.
@@ -8025,27 +8025,27 @@ while(True):
 
 \begin_layout Plain Layout
 
-for node in layer:
+	for node in layer:
 \end_layout
 
 \begin_layout Plain Layout
 
-open_nodes
+		open_nodes
 \end_layout
 
 \begin_layout Plain Layout
 
-choose_operator_arity()
+		choose_operator_arity()
 \end_layout
 
 \begin_layout Plain Layout
 
-# left side of the tree is otherwise overloaded
+		# left side of the tree is otherwise overloaded
 \end_layout
 
 \begin_layout Plain Layout
 
-distribute_operators_randomly_on_open_treenodes()
+	distribute_operators_randomly_on_open_treenodes()
 \end_layout
 
 \begin_layout Plain Layout
@@ -8077,7 +8077,8 @@ bye
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-test i dont know xxx
+test i dont know, which one looks better? Both seem quite like bad pesudocode
+ xxx
 \end_layout
 
 \end_inset
@@ -8411,9 +8412,9 @@ Latex tree visualisation
 \end_layout
 
 \begin_layout Standard
-Die Visualisierung der Bäume erfolgte mithilfe von Latex.
- Das Forest-Paket löst dabei das Problem der Knotenanordnung, welche vor
- allem bei großen Bäumen möglichst Platzsparend erfolgen sollte.
+The visualisation of the trees was done with the help of latex.
+ The Forest package solves the problem of the arrangement of knots, which
+ should be done in a space-saving way, especially with large trees.
  
 \begin_inset Note Comment
 status open
@@ -8429,12 +8430,13 @@ status open
 \end_layout
 
 \begin_layout Standard
-Außerdem wurden tight-trees erstellt, bei denen Äste mit einfachen mathematische
-n Formeln (die keine fixen Knoten betreffen) als einzelnen Knoten darstellen.
- Dadurch wird sowohl die Struktur des Baumes erhalten ohne diesen durch
- einfache mathematische Formeln aufzublasen.
- Knoten werden dann zusammengefasst, wenn sie nicht fix sind und wenn ihr
- Ausdruck Bestandteil klassischer mathematischer Formeln ist.
+In addition, tight-trees were created in which branches with simple mathematical
+ formulas (which do not involve fixed nodes) are represented as individual
+ nodes.
+ This preserves the structure of the tree without inflating it with simple
+ mathematical formulas.
+ Nodes are combined if they are not fixed and if their expression is part
+ of classical mathematical formulas.
  
 \begin_inset Foot
 status open
@@ -8646,7 +8648,8 @@ Effects on the security of the solutions
 \end_layout
 
 \begin_layout Standard
-The regression error can at best decrease to 0.023 for Sarsa-200 and to 0.066
+In the examples where Action 1 (no acceleration) could not be chosen, the
+ regression error can at best decrease to 0.023 for Sarsa-200 and to 0.066
  for Sarsa-75.
  
 \end_layout
@@ -9073,6 +9076,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -9134,6 +9138,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -9254,6 +9259,10 @@ Sarsa-75 implementation learns to outperform the heuristic on average, but
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -9294,7 +9303,7 @@ Sarsa-200 decision plot for the complete state space (left) and for the
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -9330,6 +9339,11 @@ name "sarsa1000-plots"
 \begin_layout Plain Layout
 1000 episodes (left) still show a pattern, while 10000 episodes leave chaotic
  behaviour.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -9381,13 +9395,12 @@ Explainability
 \end_layout
 
 \begin_layout Standard
-The formulas are hardly comprehensible.
- Statt einer Unterscheidung zwischen Aktion 0 und Aktion 1 wird eine Mathematisc
-he Formel gefunden.
+The formulas are hardly comprehensible.Instead of a distinction between Action
+ 0 and Action 1, a mathematical formula is found.
  Potentizing was often done with very high values, often with very high
  values, which was not significant in any humanly considered approach.
- Die einfachsten Agenten zeigen leider eine schelchte Performance bei der
- echten Auswertung die die maximum-momentum Lösung nicht übertreffen könnten.
+ The simplest agents unfortunately show a poor performance in the real evaluatio
+n which could not exceed the maximum-momentum solution.
  
 \end_layout
 
@@ -10036,6 +10049,10 @@ name "img:mtc_simple_tree"
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -10063,6 +10080,11 @@ status open
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 As can be seen especially with the more complex solutions, the TED loses
  its effect after a certain size.
@@ -10078,6 +10100,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -10169,6 +10192,10 @@ This solution is a man-made heuristic that implements the reversal point
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -10193,6 +10220,11 @@ The if statements are recognizable as square blocks.
 \begin_inset CommandInset label
 LatexCommand label
 name "mc:simonsBest-plot-space"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -10477,7 +10509,7 @@ Ab 7 Änderungen (ab der ersten Möglichkeit) wird die if-Struktur des Experten
 \end_layout
 
 \begin_layout Standard
-LoLLOL xxx wtf is dis
+LOL c=23 schaut ja weird aus :D
 \end_layout
 
 \begin_layout Standard
@@ -11395,17 +11427,10 @@ Origins
 \end_layout
 
 \begin_layout Standard
-Die einfachste und dennoch erfolgreiche Heuristik 
-\begin_inset Quotes eld
-\end_inset
-
-Nothing
-\begin_inset Quotes erd
-\end_inset
-
- ist einfach nichts zu ändern, wodurch ein durchschnittlicher Reward von
- 6068 erzielt werden konnte.
- Nach der normalisierung der Werte führte das zu folgenden origin-bäumen.
+The simplest yet successful heuristic "Nothing" is simply nothing to change,
+ resulting in an average reward of 6068.
+ After the normalization of the values this led to the following origin
+ trees.
 \end_layout
 
 \begin_layout Standard

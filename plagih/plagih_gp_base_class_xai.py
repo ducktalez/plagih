@@ -665,9 +665,9 @@ class ExplainableGP(object):
                                   f"{pareto_agents[pp]['fitness']:.2f}",
                                   f"{avg_reward:0.1f}",
                                   f"{pareto_agents[pp]['tex_expr_raw']}",
-                                  f"{tex_include_pdf(f'sfehs_eval/{pp}.png')}",  # path_mcmeshplot
-                                  tex_include_pdf(f'sfehs_eval/diff-{pp}.png'),  # path_mcmeshplot_diff),
-                                  tex_include_pdf(f'sfehs_eval/space-{pp}.png'),  # todo
+                                  f"{tex_include_pdf(f'sfehs_eval/{pp}.pdf')}",  # path_mcmeshplot
+                                  tex_include_pdf(f'sfehs_eval/diff-{pp}.pdf'),  # path_mcmeshplot_diff),
+                                  tex_include_pdf(f'sfehs_eval/space-{pp}.pdf'),
                                   tex_include_pdf(f'histograms/acthist_{pp}'),
                                   f"{pareto_agents[pp]['forest_tree_full']}",  # forest_tree_full, forest_tree_tight
                                   f"{pareto_agents[pp]['forest_tree_tight']}",

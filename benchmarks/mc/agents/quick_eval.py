@@ -130,7 +130,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         fig, ax = plt.subplots()
         plt.yticks(MTC_XTICKS[0], MTC_XTICKS[1])
         plt.xticks(MTC_YTICKS[0], MTC_YTICKS[0])
-        c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
+        c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm, rasterized=True)
         ax.set(xlabel='position', ylabel='velocity')
 
         if no_colorbar:  # sfeh weird solution... placeholder for the space
@@ -138,7 +138,7 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
 
         if dummy:
             mask_nan = np.ma.masked_where(result == np.nan, result)
-            ax.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
+            ax.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1, rasterized=True)
 
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
 
@@ -149,22 +149,19 @@ def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, bo
         width = xmax - xmin
         height = ymax - ymin
 
-        p = patches.Rectangle(xy, width, height, fill=True, zorder=0.5)  # "zorder=-10" -> nan_style
+        p = patches.Rectangle(xy, width, height, fill=True, zorder=0.5, rasterized=True)  # "zorder=-10" -> nan_style
 
         if nan_style:
             ax.set(facecolor=nan_style[0], color=nan_style[0])
-            p.set(hatch=nan_style[1], edgecolor=nan_style[2])
+            p.set(hatch=nan_style[1], edgecolor=nan_style[2], rasterized=True)
             fig.rcParams['hatch.linewidth'] = nan_style[3]
         else:
-            p.set(hatch='//', color='xkcd:dark grey')
+            p.set(hatch='//', color='xkcd:dark grey', rasterized=True)
 
         ax.add_patch(p)
 
-        path_mcmeshplot = path_make_dir(folder / f'{name}.png')
+        path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
         fig.savefig(path_mcmeshplot)
-        # todo sfeh pdf only at the very end?
-        # path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
-        # fig.savefig(path_mcmeshplot)
         print(f'saved {path_mcmeshplot}')
         plt.close('all')
 

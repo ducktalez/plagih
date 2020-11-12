@@ -219,29 +219,31 @@ def latex_tight_node(tree, node_id=root_id, klammern=False):
     """
     label = tree_node_get_label(tree, node_id)
 
-    if tree_node_get_arity(tree, node_id) > 1:
+    if tree_node_get_arity(tree, node_id) >= 1:
         childs = tree_node_get_childs(tree, node_id)
-        child_tex_list = [latex_tight_node(tree, cc, klammern=True) for cc in childs]
+        if len(childs) >= 2 and any([tree_node_get_arity(tree, cc) >= 1 in [] for cc in childs]):
+            next_klammern = True
+        else:
+            next_klammern = False
 
-        # childs_max = max(tree_node_get_arity(tree, cc) for cc in childs)
+        child_tex_list = [latex_tight_node(tree, cc, klammern=next_klammern) for cc in childs]
 
-        label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
-        if klammern:
-            label = f'({label})'
+        return_label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
+        if klammern and label in latex_inline:  # ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
+            return_label = f'({return_label})'
 
     else:
         # sfehsfeh family colored? tex color?
         if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
             obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
             if obs_time is not None:
-                label = f"{prelabel}{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
+                return_label = f"{prelabel}{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
             else:
-                label = f"{prelabel}{{\\text{{{obs_family}}}}}"  # workaround
+                return_label = f"{prelabel}{{\\text{{{obs_family}}}}}"  # workaround
         else:
-            label = f"{{{label_tex_replace_digits(label)}}}"
-        return label
+            return_label = f"{{{label_tex_replace_digits(label)}}}"
 
-    return label
+    return return_label
 
 
 def latex_tree_semitight(tree):
@@ -339,3 +341,12 @@ def latex_tight_from_labellist(vizlabel_list, xtype_list, modify_list=None, arit
             core[N_modify][i] = 1
     tree = tree_convert_pcore_to_karoo(core)
     return tree
+
+
+if __name__ == "__main__":
+    """
+    test stuff
+    """
+    testtr = karoo_tree_from_expr('sin(4+vel)')
+    viszviz = latex_tight_node(testtr)
+    print(viszviz)

@@ -32,7 +32,7 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
           'sym_reduce': None, 'sym_str': '({} + {})', 'pycode': '({}+{})'},
     '-': {'fun_class': 'Subtract', 'fun_label': '-', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'subtract', 'tf': tf.subtract, 'opgroup': ['aritygroup'], 'latex1': '-', 'latexF': '{}-{}',
           'sym_reduce': None, 'sym_str': '({} - {})', 'pycode': '({}-{})'},
-    'Usub': {'fun_class': 'Usub', 'fun_label': 'Usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf_name': 'negative', 'tf': tf.negative, 'opgroup': [], 'latex1': '-', 'latexF': '-{}',
+    'Usub': {'fun_class': 'Usub', 'fun_label': 'Usub', 'arity': 1, 'xtype': 'f2f', 'c-weight': 0.5, 'tf_name': 'negative', 'tf': tf.negative, 'opgroup': [], 'latex1': '-', 'latexF': '-{{{}}}',
              'sym_reduce': None, 'sym_str': '(-{})', 'pycode': '(-{})'},
     '*': {'fun_class': 'Multiply', 'fun_label': '*', 'arity': 2, 'xtype': 'f2f', 'c-weight': 1, 'tf_name': 'multiply', 'tf': tf.multiply, 'opgroup': ['aritygroup'], 'latex1': '\\cdot ',
           'latexF': '{} \\cdot {}',
@@ -178,10 +178,10 @@ op = {
     'Maxi': op_what['Maxi'],
 }
 
+latex_inline = ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
 expr_raw_infix = ['+', '-', '*', '/', '**', '==', '!=', '<', '>', '<=', '>=', '&', '|']  # sfeh / is removed for
 
 op_test = {
-    # ast.BitOr
     '&': {'fun_class': '', 'fun_label': '&', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': '', 'tf': tf.logical_and, 'latex1': '\\land', 'latexF': '({}\\wedge{})',
           'sym_reduce': None, 'sym_str': '({} & {})', 'pycode': '({} and {})'},
     'Power3': {'fun_class': '', 'fun_label': '', 'arity': 1, 'xtype': 'f2f', 'c-weight': 3, 'tf_name': '', 'tf': tf.pow, 'latex1': None, 'latexF': '{}',

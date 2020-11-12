@@ -628,8 +628,6 @@ class ExplainableGP(object):
         for (parsim, fitness, cooltree) in self.pareto:
             # self.file_pareto_txt()  # sfeh
 
-            # sfeh path necessary?
-            # histpath = None
             histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)
 
             forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, cooltree)
@@ -688,11 +686,11 @@ class ExplainableGP(object):
 
             paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
             paste_full = f"{str(self.conf.name).replace('_', '-')}\n" \
-                         "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
-                         "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                f"{tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n" \
-                f"{paste_full}" \
-                "\\hline\n\\end{tabular}\n\n"
+                        f"{tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n" \
+                        "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
+                        "dist & error & reward & expression \\tabularnewline \\hline\n" \
+                        f"{paste_full}" \
+                        "\\hline\n\\end{tabular}\n\n"
             file_dump(self.root_dir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
 
         elif 'IB' in self.conf.name:
@@ -971,7 +969,7 @@ class ExplainableGP(object):
         hohoho = hohoho.replace('cartPos', 'pos')
         hohoho = hohoho.replace('cartVel', 'vel')
         tex_expr_raw = f'${hohoho}$'
-        print(f'HOIHOHOHOOHOHOHO {hohoho}')
+        # print(f'HOIHOHOHOOHOHOHO {hohoho}')  # sfeh delete this
         tex_expr_forest = pl_forest(f'[{tex_expr_raw}]')
 
         """

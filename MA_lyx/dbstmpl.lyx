@@ -696,7 +696,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/mc/agents/img/decisions-AgentV1p40.pdf
+	filename ../benchmarks/mc/agents/img/decisions-AgentV1p40.pdf
 	height 5cm
 
 \end_inset
@@ -3575,8 +3575,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.pdf
 	height 5cm
 
 \end_inset
@@ -3647,8 +3646,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
 	height 5cm
 
 \end_inset
@@ -3707,8 +3705,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.pdf
 	height 5cm
 
 \end_inset
@@ -3764,8 +3761,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.pdf
 	height 5cm
 
 \end_inset
@@ -8654,6 +8650,14 @@ In the examples where Action 1 (no acceleration) could not be chosen, the
  
 \end_layout
 
+\begin_layout Itemize
+Es sollte erwähnt werden, dass die Ergebnisse für verschiedene Arten der
+ Läufe durch einen veränderten Suchraum, der generell zu schlechteren GP-Resulta
+ten führen könnte.
+ Für alle Läufe wurde deshalb versucht, das bestmögliche Ergebnis zu generieren,
+ weshalb auch mehr Generationen mit mehr Resets gewählt wurden.
+\end_layout
+
 \begin_layout Section
 Mountain Car
 \end_layout
@@ -8939,7 +8943,7 @@ Simple agent (
 \begin_inset Text
 
 \begin_layout Plain Layout
-Preset Policy
+Preset improved
 \end_layout
 
 \end_inset
@@ -9259,10 +9263,6 @@ Sarsa-75 implementation learns to outperform the heuristic on average, but
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -9303,7 +9303,7 @@ Sarsa-200 decision plot for the complete state space (left) and for the
 
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -9339,11 +9339,6 @@ name "sarsa1000-plots"
 \begin_layout Plain Layout
 1000 episodes (left) still show a pattern, while 10000 episodes leave chaotic
  behaviour.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -9464,8 +9459,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-3.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-3.pdf
 	height 5cm
 
 \end_inset
@@ -9496,8 +9490,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.pdf
 	height 5cm
 
 \end_inset
@@ -9561,8 +9554,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/8.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/8.pdf
 	height 5cm
 
 \end_inset
@@ -9593,8 +9585,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-8.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-8.pdf
 	height 5cm
 
 \end_inset
@@ -9659,8 +9650,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/10.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/10.pdf
 	height 5cm
 
 \end_inset
@@ -9670,8 +9660,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.pdf
 	height 5cm
 
 \end_inset
@@ -9761,8 +9750,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.pdf
 	height 5cm
 
 \end_inset
@@ -9772,8 +9760,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.pdf
 	height 5cm
 
 \end_inset
@@ -10049,10 +10036,6 @@ name "img:mtc_simple_tree"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -10069,11 +10052,6 @@ status open
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
 	height 5cm
-
-\end_inset
-
-
-\end_layout
 
 \end_inset
 
@@ -10192,10 +10170,6 @@ This solution is a man-made heuristic that implements the reversal point
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -10220,11 +10194,6 @@ The if statements are recognizable as square blocks.
 \begin_inset CommandInset label
 LatexCommand label
 name "mc:simonsBest-plot-space"
-
-\end_inset
-
-
-\end_layout
 
 \end_inset
 
@@ -10331,8 +10300,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/4.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/4.pdf
 	height 5cm
 
 \end_inset
@@ -10363,8 +10331,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.pdf
 	height 5cm
 
 \end_inset
@@ -10432,8 +10399,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7.pdf
 	height 5cm
 
 \end_inset
@@ -10464,8 +10430,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/7.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/7.pdf
 	height 5cm
 
 \end_inset
@@ -10514,8 +10479,7 @@ LOL c=23 schaut ja weird aus :D
 
 \begin_layout Standard
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-23.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-23.pdf
 	height 5cm
 
 \end_inset
@@ -10611,8 +10575,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/11.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/11.pdf
 	height 5cm
 
 \end_inset
@@ -10622,8 +10585,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/space-11.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/space-11.pdf
 	height 5cm
 
 \end_inset
@@ -10654,8 +10616,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/diff-11.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/diff-11.pdf
 	height 5cm
 
 \end_inset
@@ -10786,8 +10747,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simplePlus/sfehs_eval/11.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simplePlus/sfehs_eval/11.pdf
 	height 5cm
 
 \end_inset
@@ -10797,8 +10757,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simplePlus/sfehs_eval/space-11.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simplePlus/sfehs_eval/space-11.pdf
 	height 5cm
 
 \end_inset
@@ -10829,8 +10788,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simplePlus/sfehs_eval/diff-11.png
-	lyxscale 10
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simplePlus/sfehs_eval/diff-11.pdf
 	height 5cm
 
 \end_inset

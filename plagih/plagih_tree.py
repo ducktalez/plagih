@@ -900,35 +900,6 @@ def tree_get_parsimony(tree):
         parsimony = float(parsimony)
     return parsimony
 
-
-def tree_get_expr_raw(tree, node_id=root_id):
-    """
-    Evaluate all or part of a Tree (starting at node_id) and return a raw multivariate expression ('algo_raw').
-    The large amount of () is required doe to some sympify errors. But feel free to reduce them.
-    sfeh update this crapshit
-    """
-    node_id = int(node_id)
-    arity = tree[N_arity, node_id]
-    label = tree[N_label, node_id]
-    if arity == '0':  # arity of 0 for the pattern '[term]'
-        return f'{label}'  # 'node_label' (function or terminal)
-
-    elif arity == '1':  # arity of 1 for the explicit pattern 'not [eval]'
-        fun = label
-        if fun == '~':  # ~- workaround
-            return '-({})'.format(tree_get_expr_raw(tree, tree[9, node_id]))
-        else:
-            return '{}({})'.format(fun, tree_get_expr_raw(tree, tree[9, node_id]))
-
-    elif arity == '2':
-        if label not in expr_raw_infix:
-            return '{}({}, {})'.format(label, tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]))
-        else:
-            return '({}){}({})'.format(tree_get_expr_raw(tree, tree[9, node_id]), label, tree_get_expr_raw(tree, tree[10, node_id]))
-
-    elif arity == '3':  # arity of 3 for the explicit pattern 'Ifte(a, b, c)'
-        return 'Ifte(({}), ({}), ({}))'.format(tree_get_expr_raw(tree, tree[9, node_id]), tree_get_expr_raw(tree, tree[10, node_id]), tree_get_expr_raw(tree, tree[11, node_id]))
-
 #
 # def tree_get_pycode(tree, node_id=root_id):
 #     """
@@ -1582,22 +1553,6 @@ def evolve_node_renum(tree):
     return tree
 
 
-def treegp_reduce_branch(tree, node_id, karoo=True):
-    """
-    Reduce a branch of a tree with sympify
-    """
-    delete_ids = tree_node_get_branch(tree, node_id, karoo=karoo)
-    expr_raw = tree_get_expr_raw(tree, node_id=node_id)
-    expr_sym = expr_sympify(expr_raw)
-    core = core_from_expr(expr_sym)
-    tree_sym = tree_insert_subtree(tree, core, delete_ids, karoo=karoo)
-    # tree_sym_tildefree = tree_remove_tilde(tree_sym)    # sfeh still needed?
-    # if tree_sym_tildefree != tree_sym:
-    #     print_e(f'sfeh FAIL \n{tree_sym_tildefree}\n{tree_sym}')  # sfeh wasd
-
-    return tree_sym
-
-
 # def tree_evolve_mutate_point(tree, choose_oparray2, random_obs, choose_distributions):
 #     """
 #     Mutate a single mutatable point in any Tree.
@@ -1656,35 +1611,6 @@ def tree_remove_node_with_child0(tree, node_id):
     else:
         raise  # should only call this when secure
     return tree
-
-
-def tree_evolve_reduce(tree, env_vars, completely=True):
-    """
-    Reducing a tree to its most basic form with sympify.
-    (completely = False: reduce just one branch. if you wanted to have more complexity)
-    """
-    try:
-        if completely:  # reduce the complete tree
-            nodes_lv0 = tree_get_mutatable_layer(tree, 0)
-            for i in range(len(nodes_lv0)):
-                nodes_lv0 = tree_get_mutatable_layer(tree, 0)
-                node_id = nodes_lv0[i]
-                tree = treegp_reduce_branch(tree, node_id, karoo=True)
-        else:
-            node_ids = tree_get_mutatable_nodes(tree)
-            func_ids = [x for x in node_ids if tree_node_get_arity(tree, x) > 0]
-            if len(func_ids) > 0:
-                node_id = random.choice(node_ids)
-                try:
-                    tree = treegp_reduce_branch(tree, node_id, karoo=True)
-                except Exception as ex:
-                    print_e(f'This failed during reduce process: ex: {ex}\nTree labels:\n{tree_get_labellist(tree)}')
-                    # tree = treegp_reduce_branch(tree, node_id, env_vars, karoo=True)  # debug
-                    pass  # This might occur when a tree is sympified (?)
-        return tree
-    except Exception as ex:
-        print_warning('ww', f'Could not reduce tree/branch due to Exception: {ex}')
-        raise
 
 
 def tree_pretty_print(tree, karoo=True):
@@ -1932,18 +1858,3 @@ def tree_iterate_range(tree, karoo=True):
     np_list = range(start, len(tree[N_label]))
     return np_list
 
-
-def tree_check_is_sympified(tree):
-    """
-    Label list from expression
-    """
-    tree_raw = copy.deepcopy(tree)
-    env_vars = 'ö'
-    tree_sym = tree_evolve_reduce(tree, env_vars, completely=True)
-
-    labellist_raw = tree_get_labellist(tree_raw)
-    labellist_sym = tree_get_labellist(tree_sym)
-    if list(labellist_raw) == list(labellist_sym):
-        return True
-    else:
-        return False

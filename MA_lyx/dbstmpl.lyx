@@ -8658,6 +8658,10 @@ ten führen könnte.
  weshalb auch mehr Generationen mit mehr Resets gewählt wurden.
 \end_layout
 
+\begin_layout Standard
+Die IB runs wurden unter folgenden Aspekten begutachtet:
+\end_layout
+
 \begin_layout Section
 Mountain Car
 \end_layout
@@ -10528,132 +10532,6 @@ reference "run:MTC200_MSE_simple"
 \end_layout
 
 \begin_layout Standard
-The regression error is thus slightly worse, but the real fitness improves
- extraordinarily fast.
- With a total of only 9 candidates up to familiarity level 14, only a few
- candidates were found, but these always improve the original policy (except
- for complexity 3).
-\end_layout
-
-\begin_layout Standard
-It is also noticeable that the comparison operator 
-\begin_inset Formula $<$
-\end_inset
-
- was replaced with 
-\begin_inset Formula $\leq$
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/11.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/space-11.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/diff-11.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "../benchmarks/slurm_runs/MTC200_MSE_simpleFix/visualisation/full_11_tight.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -10816,8 +10694,8 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_simplePlus/visualisation/full_11_t
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Kandidat 11 nutzt schließt Aktion 1 aus, die zweite if-Anweisung wird damit
- implizit zur zweiten Unterscheidung zwischen Aktion 0 und 2.
+Candidate 11 uses excludes Action 1, the second if statement thus implicitly
+ becomes the second distinction between Action 0 and 2.
 \end_layout
 
 \end_inset
@@ -10886,16 +10764,15 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_preset/visualisation/full_01_tight
 \end_layout
 
 \begin_layout Standard
-Die Performance ist bereits zu beginn außerordentlich gut - einige Läufe
- sind hier bereits besser als die Sarsa-policy.
- Der Regressionsfehler kann somit nicht viel weiter reduziert werden.
+The performance is exceptionally good right from the start - some runs here
+ are already better than the Sarsa-policy.
+ So the regression error cannot be reduced much further.
 \end_layout
 
 \begin_layout Standard
-Die Preset policy stellt einen Kandidaten dar, bei dem die TED sehr robust
- ist.
- Deshalb ist von großem Interesse, wie sich große und kleine Änderungen
- an der policy auf die echte Fitness auswirken.
+The preset policy is a candidate where the TED is very robust.
+ Therefore, it is of great interest how big and small changes in the policy
+ affect the real fitness.
 \end_layout
 
 \begin_layout Subsection
@@ -10906,9 +10783,27 @@ gpFriendly
 Mountain Car with Sarsa-75
 \end_layout
 
+\begin_layout Itemize
+performance
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+performance safe
+\end_layout
+
+\begin_layout Itemize
+performance nach randomize
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Daniel solutions
+\end_layout
+
 \begin_layout Standard
-Der Sarsa 75 Agent zeichnet sich durch schlechte Exploration und große Unsicherh
-eiten aus und ist somit besonders anfällig für schlechte Ergebnisse.
+The Sarsa 75 Agent is characterised by poor exploration and great uncertainty,
+ making it particularly vulnerable to poor results.
 \end_layout
 
 \begin_layout Paragraph
@@ -10958,32 +10853,6 @@ Robuste Blackbox ist wichtig
 
 \begin_layout Section
 Industrial Benchmark runs
-\end_layout
-
-\begin_layout Standard
-Die IB runs wurden unter folgenden Aspekten begutachtet:
-\end_layout
-
-\begin_layout Itemize
-XAI
-\end_layout
-
-\begin_layout Itemize
-performance
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-performance safe
-\end_layout
-
-\begin_layout Itemize
-performance nach randomize
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Daniel
 \end_layout
 
 \begin_layout Standard

@@ -350,7 +350,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
 
             # sfehsfeh save  time comment this todotodo todo
             bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
-            # bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+            bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
             mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
             bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
             agent_performance[parsim] = [parsim, fitness, avg_reward, fails, None, None]

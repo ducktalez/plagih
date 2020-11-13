@@ -628,7 +628,7 @@ class ExplainableGP(object):
         for (parsim, fitness, cooltree) in self.pareto:
             # self.file_pareto_txt()  # sfeh
 
-            # histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
+            histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
 
             forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, cooltree)
 
@@ -636,7 +636,7 @@ class ExplainableGP(object):
                                      'fitness': fitness,
                                      'cooltree': cooltree,
                                      'forest_tree_full': forest_tree_full, 'forest_tree_tight': forest_tree_tight, 'tex_expr_raw': tex_expr_raw, 'tex_expr_forest': tex_expr_forest,
-                                     'histogram': 'histpath',
+                                     'histogram': histpath,
                                      }
 
         tex_include_pdf = lambda x: f"\\includegraphics{{{str(x).replace('.pdf', '')}}}"
@@ -676,17 +676,15 @@ class ExplainableGP(object):
             # & decision plot & spiral plot & spiral difference-plot & histogram
 
             paste = ''.join([tex_tabuline(x[:4]) for x in tex_lines])
-            paste = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}" \
-                    "\\hline\n" \
+            paste = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}\n\\hline\n" \
                     "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                f"{paste}" \
+                    f"{paste}" \
                     "\\hline\n\\end{longtable}\n"
             file_dump(self.root_dir / f'analysis_input.tex', paste, print_type=self.print_type)
             file_dump(self.root_dir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.print_type)
 
             paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
-            paste_full = f"{str(self.conf.name).replace('_', '-')}\n" \
-                        f"{tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
+            paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.pdf')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
                         "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
                         "dist & error & reward & expression \\tabularnewline \\hline\n" \
                         f"{paste_full}" \

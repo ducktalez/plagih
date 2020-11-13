@@ -206,7 +206,7 @@ class CoolCore:
         try:
             expr_sym = expr_sympify(expr_raw)
         except:
-            raise Exception(f'Sympify failed. \n{expr_raw}')
+            raise Exception(f'Sympify failed. {expr_raw}')
 
         new_core = coolcore_from_expr(expr_sym, obs_infos)
         if len(new_core) < len(self):

@@ -225,7 +225,7 @@ def main():  # argv sys.argv[1:]
                    '3. Need to be computed, after all\n'
                    '4. Computation (Already happened, although not lately ;~D)')
 
-    print('===Program ending===\n===Program ending===\n\n')  # repeat 5 time for better view with "tail -n 10 slurm-*"
+    print('***Program ending***\n********************\n\n')  # repeat 5 time for better view with "tail -n 10 slurm-*"
     sys.exit()
 
 

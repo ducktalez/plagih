@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -11,7 +11,6 @@
 \renewcommand{\textendash}{--}
 \renewcommand{\textemdash}{---}
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -33,6 +32,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -71,6 +72,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -80,7 +82,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -401,6 +406,7 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
@@ -591,6 +597,7 @@ RL has become very popular due to the development of superhuman strategies,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -634,6 +641,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -817,6 +825,7 @@ The biggest intellectual effort in learning with NN is probably even the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
+literal "true"
 
 \end_inset
 
@@ -825,6 +834,7 @@ key "one_pixel_attack"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
+literal "true"
 
 \end_inset
 
@@ -850,6 +860,7 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -866,6 +877,7 @@ These are the reasons why explainable artificial intelligence (XAI) has
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -873,6 +885,7 @@ key "XAI_doshivelez2017rigorous"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -885,6 +898,7 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -932,6 +946,7 @@ Layerwise Relevance propagation can be used to show which pixel areas are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -1074,8 +1089,8 @@ Humans do not like to learn new stuff, but to simply use already learned
  Hier kann der Mensch auch auf einen Ggroßen Wissensschatz zurückgreifen.
  A well-known example of such a mastered ability is the recognition of shapes
  and faces, which man perfected as a baby to such an extent that interpersonal
- explanations are no longer necessary, die im übrigen auch nicht teil einer
- Erklärung wären.
+ explanations are no longer necessary, which, moreover, would not form part
+ of a declaration.
  
 \begin_inset Newline newline
 \end_inset
@@ -1488,7 +1503,7 @@ Data set from labelled pixel data
 \begin_inset Text
 
 \begin_layout Plain Layout
-likes learning
+Likes learning
 \end_layout
 
 \end_inset
@@ -1662,7 +1677,7 @@ copy-paste
 \begin_inset Text
 
 \begin_layout Plain Layout
-Anpassungen von außen
+External adjustments
 \end_layout
 
 \end_inset
@@ -1671,7 +1686,7 @@ Anpassungen von außen
 \begin_inset Text
 
 \begin_layout Plain Layout
-sehr schnell
+easy
 \end_layout
 
 \end_inset
@@ -1817,9 +1832,10 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-filename "tikz/neural_networks/graph_sigmoid_input.tex"
+\begin_inset Graphics
+	filename tikz/neural_networks/graph_sigmoid.pdf
+	lyxscale 47
+	height 35mm
 
 \end_inset
 
@@ -1877,29 +1893,10 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename tikz/neural_networks/graph_relu.pdf
 	lyxscale 47
 	height 35mm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-filename "tikz/neural_networks/graph_relu_input.tex"
 
 \end_inset
 
@@ -1966,12 +1963,7 @@ Bei einer impliziten Representation ist eine Strategie, beispielsweise durch
  vorhanden.
  so ist diese Information im nächsten Trainingsschritt eventuell bereits
  nicht mehr nutzbar.
- Hier fehlt die intrinsische Logikstruktur des Modelle die zu allgemeinem
- Verständnis führt.
-\end_layout
-
-\begin_layout Plain Layout
-Bei einem NN ist es viel mehr der Lernansatz, der allgemein gültig ist,
+ Bei einem NN ist es viel mehr der Lernansatz, der allgemein gültig ist,
  aber nicht der Zustand der Neuronen zur Lösung eines Problems.
  Deshalb lassen sich NN auch nicht ohne weiteres miteinander kombinieren.
  
@@ -1986,7 +1978,7 @@ xxx selbst wenn trusting: Man kann keine Änderungen ohne weiteres durchführen.
 ===
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Itemize
 Artificial neural networks are machine learning systems that are strongly
  oriented towards the biological brain.
  Zwischen dem Eingabevektor und Ausgabevektor liegen eine beliebige Anzahl
@@ -2003,22 +1995,12 @@ Artificial neural networks are machine learning systems that are strongly
 eben, die Ihre Gewichtungen, falls nötig, anpassen.
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Note Greyedout
-status open
-
-\begin_layout Plain Layout
+\begin_layout Itemize
 (Implementierung des Eingabe- und Ausgabevektors, Anzahl der hidden layer,
  topologie zwischen den Schichten, Aktivierungsfunktionen der Neuronen,
  Explorationsparameter, etc.).
-\end_layout
-
-\begin_layout Plain Layout
-LSTM, Autoencoder, ...
-\end_layout
-
-\begin_layout Plain Layout
-Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
+ LSTM, Autoencoder, ...
+ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
  einen Hund dafür zu trainieren und keine Taube.
  Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
  umgekehrt funktioniert es nicht.
@@ -2027,24 +2009,11 @@ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
  [xxx echo state networks]
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-Aus der Sicht der Erklärbarkeit 
-\end_layout
-
-\begin_layout Plain Layout
+\begin_layout Itemize
 Neural networks are generalized, very extensive systems of equations, which
  can adapt their own parameters in a two-complex training process by means
  of automated statistical procedures and random exploration.
- 
-\end_layout
-
-\begin_layout Plain Layout
-These equations often contain several thousand variables, combined with
+ These equations often contain several thousand variables, combined with
  unintuitive activation functions such as the ReLu function or the sigmoid
  function, which is why they are not interpretable by humans.
  Die Funktion einzelner Neuronen oder die Bedeutung der Architektur ist
@@ -2075,10 +2044,12 @@ Representation as genome (composition of genes)
 \end_inset
 
 These genes can be mutated or crossed between candidates so that the best
- ones survive in an evolutionary way over generations 
+ ones survive in an evolutionary way over generations.
+ 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -2120,6 +2091,7 @@ The time-consuming evaluation process can be shortened 2-15 times by using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2333,7 +2305,7 @@ computational tree
 \begin_inset Text
 
 \begin_layout Plain Layout
-Genotypen Genbausteine
+Genotypes
 \end_layout
 
 \end_inset
@@ -2371,7 +2343,7 @@ branches, nodes, operators
 \begin_inset Text
 
 \begin_layout Plain Layout
-Phänotyp
+Phenotype
 \end_layout
 
 \end_inset
@@ -2380,7 +2352,7 @@ Phänotyp
 \begin_inset Text
 
 \begin_layout Plain Layout
-Aussehen, Eigenschaften
+Appearance, properties
 \end_layout
 
 \end_inset
@@ -2389,7 +2361,7 @@ Aussehen, Eigenschaften
 \begin_inset Text
 
 \begin_layout Plain Layout
-Verhalten in der Umgebung
+Behaviour in the environment
 \end_layout
 
 \end_inset
@@ -2524,7 +2496,7 @@ For gaussian mutations the tournament size was increased by the Fine-tuning
 \begin_inset Text
 
 \begin_layout Plain Layout
-Generationen
+Generations
 \end_layout
 
 \end_inset
@@ -2580,7 +2552,7 @@ Selection process
 \begin_inset Text
 
 \begin_layout Plain Layout
-tournament selection (aus 3-7 zufällig gewählten Kandidaten einer Population
+Tournament selection (aus 3-7 zufällig gewählten Kandidaten einer Population
  wird der Beste gewählt)
 \end_layout
 
@@ -2678,6 +2650,7 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -2802,6 +2775,7 @@ Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -2856,6 +2830,7 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2923,6 +2898,7 @@ thus providing a complexity measure that can be adapted to the preferences
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3348,6 +3324,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -3948,6 +3925,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4693,6 +4671,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -5138,6 +5117,7 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -5151,6 +5131,7 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -5382,6 +5363,7 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -7024,6 +7006,7 @@ xx what is a marginal note? Hein, Udluft
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -9189,6 +9172,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -9250,6 +9234,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -10186,6 +10171,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 

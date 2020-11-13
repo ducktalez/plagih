@@ -15,9 +15,10 @@ run_starts = [
 
     'MTC200_MAE_scratch',
     'MTC200_MAE_gpFriendly',
-    # # 'MTC200_MAE_gpFriendlyFix',
-    # # 'MTC200_MAE_preset',
+    # 'MTC200_MAE_gpFriendlyFix',
+    # 'MTC200_MAE_preset',
     'MTC200_MAE_xiao',
+    'MTC200_MAE_xiaoFix',
     'MTC200_MAE_simple',
     'MTC200_MAE_explun01_simple',
     'MTC200_MAE_simpleFix',
@@ -26,7 +27,6 @@ run_starts = [
     'MTC200_MAE_simonBest',
     'MTC200_MAE_simonBestFix',
     'MTC200_MAE_simonBestFix2',
-    # # 'MTC200_MAE_simonBad',
 
     'MTC200_MSE_scratch',
     'MTC200_MSE_simple',
@@ -50,10 +50,10 @@ run_starts = [
     # # # """
     # # # MC75 (SARSA-Agent after 75 training steps)
     # # # """
-    # 'MTC75_MAE_scratch',
-    # 'MTC75_MAE_simple',
-    # 'MTC75_MAE_simpleFix',
-    # 'MTC75_MAE_gpFriendly',
+    'MTC75_MAE_scratch',
+    'MTC75_MAE_simple',
+    'MTC75_MAE_simpleFix',
+    'MTC75_MAE_gpFriendly',
 
     'MTC75_MSE_scratch',
     'MTC75_MSE_simple',
@@ -70,8 +70,8 @@ run_starts = [
     # 'IB_MAE_explun01_tanh_sim2_0', 'IB_MAE_explun01_tanh_sim2_1', 'IB_MAE_explun01_tanh_sim2_2',
     # 'IB_MAE_tanh_udluft_0', 'IB_MAE_tanh_udluft_1', 'IB_MAE_tanh_udluft_2',
 
-    'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
-    'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
+    # 'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
+    # 'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
     # 'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
     # 'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_s3m_1', 'IB_RMSE_explun01_s3m_2',
     # # 'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',

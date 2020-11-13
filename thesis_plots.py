@@ -196,8 +196,24 @@ def thesis_decision_plots_fullspace(folder=Path.cwd() / 'benchmarks/mc/agents/im
     mtc_plot_decisions_space(sarsa_agent_200, folder=folder, name='dummy-sarsa_agent_200', dummy=True)
 
 
+# def main2():
+#
+#     compile_files = list(Path('benchmarks/').glob('slurm_runs*/**/analysis_overview_plus.tex'))
+#     for file in compile_files:
+#
+#         print(f'===NEWFILE===\n{file.as_posix()}\n\n')
+#
+#         try:
+#             os.system(f'pdflatex {file.as_posix()}')
+#         except Exception as ex:
+#             print(f'Failed conversion for {file.name}. ignoring. Reason: {ex}')
+#
+#     return
+
+
 if __name__ == "__main__":
-    thesis_decision_plots_fullspace()
+    print(f'Making all the plots for the thesis (so they are python-style)')
+    # thesis_decision_plots_fullspace()
     # thesisplot_tempdiff()
     # thesis_plot_ib_comparisson()
     # # thesis_plot_mc_comparisson()

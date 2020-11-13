@@ -344,9 +344,10 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         pycode = cooltree.get_pycode()
         mc_gent = DummyMcAgent(pycode)
         try:
-            bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
-            if avg_reward is None:  # or fails is None:
-                avg_reward, fails, _ = mtc_play(mc_gent, n=n)
+            # bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
+            # if avg_reward is None:  # or fails is None:
+            bur1 = bur2 = None
+            avg_reward, fails, _ = mtc_play(mc_gent, n=n)
 
             # sfehsfeh save  time comment this todotodo todo
             bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
@@ -358,7 +359,7 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
             print(f'MTC eval failed because of: {ex}')
             agent_performance[parsim] = [parsim, fitness, np.nan, np.nan, None, None]
 
-    pickle_dump(root_dir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
+    # pickle_dump(root_dir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
 
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()

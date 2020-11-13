@@ -628,7 +628,7 @@ class ExplainableGP(object):
         for (parsim, fitness, cooltree) in self.pareto:
             # self.file_pareto_txt()  # sfeh
 
-            histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)
+            # histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
 
             forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, cooltree)
 
@@ -636,7 +636,7 @@ class ExplainableGP(object):
                                      'fitness': fitness,
                                      'cooltree': cooltree,
                                      'forest_tree_full': forest_tree_full, 'forest_tree_tight': forest_tree_tight, 'tex_expr_raw': tex_expr_raw, 'tex_expr_forest': tex_expr_forest,
-                                     'histogram': histpath,
+                                     'histogram': 'histpath',
                                      }
 
         tex_include_pdf = lambda x: f"\\includegraphics{{{str(x).replace('.pdf', '')}}}"
@@ -664,9 +664,9 @@ class ExplainableGP(object):
                                   f"{avg_reward:0.1f}",
                                   f"{pareto_agents[pp]['tex_expr_raw']}",
                                   f"{tex_include_pdf(f'sfehs_eval/{pp}.pdf')}",  # path_mcmeshplot
-                                  tex_include_pdf(f'sfehs_eval/diff-{pp}.pdf'),  # path_mcmeshplot_diff),
+                                  # tex_include_pdf(f'sfehs_eval/diff-{pp}.pdf'),  # path_mcmeshplot_diff),
                                   tex_include_pdf(f'sfehs_eval/space-{pp}.pdf'),
-                                  tex_include_pdf(f'histograms/acthist_{pp}'),
+                                  # tex_include_pdf(f'histograms/acthist_{pp}'),
                                   f"{pareto_agents[pp]['forest_tree_full']}",  # forest_tree_full, forest_tree_tight
                                   f"{pareto_agents[pp]['forest_tree_tight']}",
                                   f'{fails}'])
@@ -686,7 +686,7 @@ class ExplainableGP(object):
 
             paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
             paste_full = f"{str(self.conf.name).replace('_', '-')}\n" \
-                        f"{tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n" \
+                        f"{tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
                         "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
                         "dist & error & reward & expression \\tabularnewline \\hline\n" \
                         f"{paste_full}" \
@@ -737,8 +737,7 @@ class ExplainableGP(object):
                     # f"{y['experiment_r50']:0.0f}",
                     # f"{y['experiment_safe_r50']:0.0f}",
 
-                combined_overview = "\\begin{tabular}{llllllllll}\n" \
-                                    "\\hline \n" \
+                combined_overview = "\\begin{tabular}{llllllllll}\n\\hline \n" \
                     f"{tex_tabuline(['dist', 'error', 'reward', 'dist', 'Agent code'])} \\hline\n" \
                     f"{tex_line_overview}" \
                     f"\\hline\n\\end{{tabular}}\n\n"

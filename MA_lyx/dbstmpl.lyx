@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,10 +7,11 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
+
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
 % Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -32,8 +33,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -72,7 +71,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -82,10 +80,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -406,7 +401,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -453,6 +447,10 @@ Intro / Motivation
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 Im Bereich des RL müssen AI Ansätze als Blackbox angesehen werden, weshalb
  man ihnen nicht vertrauen kann.
  Um dieses Vertrauen wieder herzustellen gibt es den Bereich der XAI, der
@@ -460,7 +458,7 @@ Im Bereich des RL müssen AI Ansätze als Blackbox angesehen werden, weshalb
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Um eine möglichst einfache Erklärung zu erhalten wird in dieser Arbeit eine
  vom Menschen Entwickelte Heuristik als Referenz für weitere Erklärungen
  verwendet.
@@ -473,14 +471,47 @@ Um eine möglichst einfache Erklärung zu erhalten wird in dieser Arbeit eine
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 Der Umfang der Änderungen wird mithilfe der TED ausgerechnet.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the field of RL, AI approaches must be considered as black boxes, which
+ is why they cannot be trusted.
+ To restore this trust there is the XAI area, which tries to explain the
+ black box to humans.
+ 
+\end_layout
+
+\begin_layout Standard
+In order to get an explanation as simple as possible, in this thesis a human-dev
+eloped heuristic is used as a reference for further explanations.
+ Using heuristics developed by experts as a reference point for explanations
+ is called familiarity.
+ With the help of GP the finding of differences is automated and represented
+ as a change in the heuristic.
+ The expert still recognizes his own code and can weigh the extent of the
+ change in combination with its improvement.
+ 
+\end_layout
+
+\begin_layout Standard
+The extent of the changes is calculated with the help of TED.
 \end_layout
 
 \begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
@@ -498,6 +529,11 @@ svgwidth{
 textwidth}
 \backslash
 import{img/inkscape}{explainability_gap2.pdf_tex}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -555,7 +591,6 @@ RL has become very popular due to the development of superhuman strategies,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -599,7 +634,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -614,16 +648,16 @@ literal "false"
 \begin_layout Standard
 Even AlphaGo, as a prestige project of the RL, supervised by a research
  team, was subject to errors of reasoning.
- Especially in sensitive areas such as industry, a tradeoff in favor of
- performance at the expense of loss of control is often not an option, since
- even rarely occurring wrong decisions could have fatal consequences.
- In view of the increasing importance of algorithms in our society, the
- EU has also defined a right to explain in the GDPR (DSGVO).
  
 \end_layout
 
 \begin_layout Standard
-===
+Especially in sensitive areas such as industry, a tradeoff in favor of performan
+ce at the expense of loss of control is often not an option, since even
+ rarely occurring wrong decisions could have fatal consequences.
+ In view of the increasing importance of algorithms in our society, the
+ EU has also defined a right to explain in the GDPR (DSGVO).
+ 
 \end_layout
 
 \begin_layout Standard
@@ -783,7 +817,6 @@ The biggest intellectual effort in learning with NN is probably even the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -792,7 +825,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -818,7 +850,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -835,7 +866,6 @@ These are the reasons why explainable artificial intelligence (XAI) has
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -843,7 +873,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -856,7 +885,6 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -898,17 +926,12 @@ collection of features of interpretable domain that have contributed for
 \end_layout
 
 \begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
 Layerwise Relevance propagation can be used to show which pixel areas are
  decisive for the NN decision for individual images.
  
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -1077,8 +1100,8 @@ ening damage for us.
 \begin_inset Newline newline
 \end_inset
 
-Computer sind, im Gegensatz zum Menschen, auf zufällige Exploration angewiesen,
- welche sowohl die Startparametrisierung sowie die Exploration beeinflussen.
+Computers, unlike humans, rely on random exploration, which affects both
+ startup parameters and exploration.
 \end_layout
 
 \begin_layout Itemize
@@ -1794,10 +1817,9 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/neural_networks/graph_sigmoid.pdf
-	lyxscale 50
-	height 35mm
+\begin_inset CommandInset include
+LatexCommand input
+filename "tikz/neural_networks/graph_sigmoid_input.tex"
 
 \end_inset
 
@@ -1855,10 +1877,29 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename tikz/neural_networks/graph_relu.pdf
 	lyxscale 47
 	height 35mm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "tikz/neural_networks/graph_relu_input.tex"
 
 \end_inset
 
@@ -2038,7 +2079,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -2046,7 +2086,7 @@ literal "true"
 \end_layout
 
 \begin_layout Enumerate
-Fitnessfunktion
+Fitness function
 \begin_inset Newline newline
 \end_inset
 
@@ -2066,6 +2106,11 @@ Genetic Programming
 \end_layout
 
 \begin_layout Standard
+xxx symbolic regression: find both the funktion and its coefficients.
+ 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -2075,7 +2120,6 @@ The time-consuming evaluation process can be shortened 2-15 times by using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -2634,7 +2678,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -2750,35 +2793,6 @@ xx)
 
 \end_layout
 
-\begin_layout Section
-weighted complexity
-\end_layout
-
-\begin_layout Standard
-Not only the number of nodes is decisive for the complexity.
-\end_layout
-
-\begin_layout Standard
-xxx symbolic regression: find both the funktion and its coefficients.
- 
-\end_layout
-
-\begin_layout Standard
-thus providing a complexity measure that can be adapted to the preferences
- of the developer.
- A popular operator weighting is also used in the commercial GP tool DEAP.
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-after "p.119"
-key "daniel_hein_doktorarbeit"
-literal "true"
-
-\end_inset
-
- 
-\end_layout
-
 \begin_layout Standard
 \begin_inset Note Comment
 status open
@@ -2788,7 +2802,6 @@ Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -2804,7 +2817,7 @@ fuzzy genetic programming reinforcement learning does
 
 \end_layout
 
-\begin_layout Section
+\begin_layout Paragraph
 Offline learning v1 
 \begin_inset CommandInset label
 LatexCommand label
@@ -2832,41 +2845,30 @@ AIs, a distinction is made between online and offline training.
 \end_layout
 
 \begin_layout Standard
-Neuropolicies post-hoc ganzheitlich zu erklären ist eine Aufgabe, die aktuell
- nur verlustbehaftet möglich ist.
- As Daniel Hein has found out in 
+To explain neuropolicies post-hoc holistically is a task that is currently
+ only possible with losses.
+ 
+\end_layout
+
+\begin_layout Standard
+As Daniel Hein has found out in 
 \begin_inset CommandInset citation
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
 , policies that have been trained on offline data generated by a neuropolicy
- are almost always significantly worse than the neuropolicy or gp solutions
- that were trained on real system dynamics and thus could not further explain
- the neuropolicy.
+ are almost always significantly worse than both the neuropolicy and gp
+ solutions that were trained on real system dynamics.
+ This approach is therefore not suitable as a post-hoc explanatory method
+ of a neuropolicy.
 \end_layout
 
 \begin_layout Standard
 However, offline training still offers an interpretable and very cost-effective
  alternative which can also be trained risk-free.
- 
-\end_layout
-
-\begin_layout Section
-Relatability / Comprehension
-\end_layout
-
-\begin_layout Standard
-The interpretability is often evaluated by the count of parameters and operators
- and partly additionally by the complexity of interpretation of the operators.
- Also encapsulation of a problem or pattern matching would be properties,
- which could have a general need of properties, which a formula needs to
- have to be explainable, but it would not be accurate enough.
- All these factors are quite good indicators, but they cannot describe the
- effort of a person to understand an approach.
  
 \end_layout
 
@@ -2889,6 +2891,145 @@ This is helpful, because the learning process in humans usually consists
  of the composition of many comprehensibly strung together steps.
 \end_layout
 
+\begin_layout Section
+Interpretability is not sufficient - Relatability / Comprehension / weighted
+ complexity
+\end_layout
+
+\begin_layout Standard
+Interpretierbarkeit ist im Bereich der KI so schwer zu erreichen, dass lesbare
+ Ansätze bereits alle Normen zu erfüllen scheinen.
+ The interpretability is often evaluated by the count of parameters and
+ operators and partly additionally by the complexity of interpretation of
+ the operators.
+ Also encapsulation of a problem or pattern matching would be properties,
+ which could have a general need of properties, which a formula needs to
+ have to be explainable, but it would not be accurate enough.
+ All these factors are quite good indicators, but they cannot describe the
+ effort of a person to understand an approach.
+ 
+\end_layout
+
+\begin_layout Standard
+Not only the number of nodes is decisive for the complexity.
+\end_layout
+
+\begin_layout Standard
+thus providing a complexity measure that can be adapted to the preferences
+ of the developer.
+ A popular operator weighting is also used in the commercial GP tool DEAP.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p.119"
+key "daniel_hein_doktorarbeit"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Der Mensch wird zur Unterscheidung mithilfe einer if-Anweisung tendieren.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Ein GP-Ansatz ist auf Sparsamkeit bedacht und würde, statt zwischen Aktionen
+ zu unterscheiden, diese 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Die beiden Formeln ergeben fast genau dieselben Ergebnisse, verfolgen dabei
+ aber komplett verschiedene Ansätze.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+xxx idee sign(vel) vs if-then-else: if then else kann verbessert werden,
+ sign zwar auch, aber sieht halt kacke aus
+\end_layout
+
 \begin_layout Standard
 
 \end_layout
@@ -2908,7 +3049,7 @@ Both the Mountain car (MC) as well as the Industrial Benchmark (IB) were
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
+\begin_inset Float table
 wide false
 sideways false
 status open
@@ -3135,15 +3276,10 @@ partially
 
 \begin_layout Plain Layout
 The used benchmarks in comparison.
- xx
 \end_layout
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -3194,7 +3330,7 @@ name "img:mc_experiment"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-A possible starting position in MC
+A possible starting position in MC.
 \end_layout
 
 \end_inset
@@ -3212,7 +3348,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3813,7 +3948,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -3921,7 +4055,7 @@ fatigue
 \begin_inset Text
 
 \begin_layout Plain Layout
-consumption
+consump-tion
 \end_layout
 
 \end_inset
@@ -4522,26 +4656,19 @@ Solution Approaches
 \end_layout
 
 \begin_layout Standard
-Für das IB sind keine menschlich geschriebenen Heuristiken bekannt.
- Dennoch ist das Verhalten der Kontrolerproblems bekannt.
- Aktion 2 ist eine isoliert betrachtbare Dimension, die den Reward durch
- falsche Exploration stark verschlechtern kann, Exploration stellt hier
- somit ein Sicherheitsrisiko dar.
+No special heuristics of domain experts are known for the IB, but approaching
+ the average value is considered to be a respectably good comparison solution.
+ Nevertheless the behavior of the controller problem is known.
+ Action 2 is an isolated dimension, which can worsen the Reward by wrong
+ exploration, exploration is a security risk.
 \end_layout
 
 \begin_layout Standard
-Aktion 0 und Aktion 1 kombinieren sich miteinander und müssen entsprechend
- abgestimmt sein.
-\end_layout
-
-\begin_layout Standard
-Wie genau die Kalibrierung den Lauf beeinflusst hängt dabei zusätzlich vom
- Shift-parameter h ab.
- xxx
-\end_layout
-
-\begin_layout Standard
-xxx MSE/RMSE nur mit kombinierten Läufen
+Action 0 and Action 1 combine with each other and must be coordinated accordingl
+y.
+ How exactly the calibration influences the run depends on the shift parameter
+ h.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -4550,12 +4677,14 @@ Black box: PSONN
 
 \begin_layout Standard
 As black box a particle swarm optimisation algorithm with neural networks
- (PSONN) with a calculated IB reward of 
+ (PSONN [xxx Quelle]) with a calculated IB reward of 
 \begin_inset Formula $5353$
 \end_inset
 
  was chosen.
- 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Foot
 status open
 
@@ -4564,7 +4693,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -4582,7 +4710,29 @@ literal "true"
 
 \end_inset
 
+ Particle swarm optimisation Algorithmen können, ähnlich der GP, für sehr
+ viele Problemarten Lösungen finden.
+ [xxx quelle, hein paper] Dabei wird der Lösungsraum von einer Schwarmpopulation
+ bevölkert, die durch Schwarmintelligenz die besten Optima finden sollen.
+ Dieses Vorgehen ist sehr interessant als Blackbox, auch sehr sperrige Lösungsan
+sätze realisiert werden können.
+ Dies ist sowohl in der GP als auch bei neuronalen Netzen möglich, aber
+ nicht der vorherrschende Modus operandi.
+ Diese Policy kann somit einen weiteren Faktor der Undischerheit für die
+ GP darstellen, indem der Regressionsfehler nicht ausreichend angenähert
+ wird.
+\end_layout
 
+\begin_layout Subsection
+Hein GP results
+\end_layout
+
+\begin_layout Standard
+xxx MSE/RMSE nur mit kombinierten Läufen
+\end_layout
+
+\begin_layout Standard
+xxx Hier oder bei related work?
 \end_layout
 
 \begin_layout Chapter
@@ -4654,7 +4804,7 @@ name "img:plausibility-concept"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Improving a known solution with familiarity based Genetic Programming
+Improving a known solution with familiarity based Genetic Programming.
 \end_layout
 
 \end_inset
@@ -4775,7 +4925,7 @@ In this part we discuss possibilities to make measurable explanations.
 \end_layout
 
 \begin_layout Paragraph
-Vertrautheitsmaß
+Familiarity measure
 \end_layout
 
 \begin_layout Standard
@@ -4791,7 +4941,7 @@ name "xaiMeasurementRequirements"
 \end_layout
 
 \begin_layout Itemize
-Fulfilling the prerequisites for a distance measure 
+Prerequisites for a distance measure 
 \end_layout
 
 \begin_deeper
@@ -4880,7 +5030,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Complex if distinction
+Complex if-distinction.
 \end_layout
 
 \end_inset
@@ -4923,7 +5073,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Maximum Momentum
+Grobe Unterscheidung in zwei Fälle.
 \end_layout
 
 \end_inset
@@ -4988,7 +5138,6 @@ The tree edit distance (TED) is a well-known problem from theoretical computer
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -5002,7 +5151,6 @@ Thanks to numerous improvements made in the last years, the state of the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -5056,6 +5204,13 @@ name "fig:TED_explain_operators"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Itemize
+Funfact: Die TED hat auch auswirkungen auf den Phänotyp (siehe resultate),
+ da die Struktur bei gleichzeitiger Verbesserung des Regressionsfehlers
+ sich oftmals auf die bereits funktionierenden Strukturen stützen muss.
+ Allerdings keine Pflicht.
 \end_layout
 
 \begin_layout Subparagraph
@@ -5129,17 +5284,16 @@ The structure of a tree is essentially determined by the order of its operators.
 \end_layout
 
 \begin_layout Itemize
-Verwendung unvollständiger Strukturen als origin (z.
- B.
- fehlende Terminal-Knoten)
+Use of incomplete structures as origin (e.g.
+ missing terminal nodes)
 \end_layout
 
 \begin_layout Itemize
-Verwendung mehrerer bekannter origins in einem Lauf, wobei beispielsweise
- die kleinste oder mittlere TED verwendet wird.
- So könnten auch mehrere verständliche Ansätze auf ihre Erweiterbarkeit
- direkt verglichen werden oder mehrere Teillösungen separat eingebracht
- werden.
+Use several known origins in one run, for example the smallest or medium
+ TED is used.
+ This way, several understandable approaches could be compared directly
+ for their extensibility or several partial solutions could be introduced
+ separately.
  
 \end_layout
 
@@ -5193,7 +5347,7 @@ name "img:tree_modifiable_nodes_modified"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-A tree with fixed nodes (blue) remains untouched by a branch mutation
+A tree with fixed nodes (blue) remains untouched by a branch mutation.
 \end_layout
 
 \end_inset
@@ -5216,15 +5370,6 @@ The following describes ways to use the regression error for the benchmarks
 \end_layout
 
 \begin_layout Standard
-xxx idee: Karoo hat nur MAE!!
-\end_layout
-
-\begin_layout Standard
-xxx idee sign(vel) vs if-then-else: if then else kann verbessert werden,
- sign zwar auch, aber sieht halt kacke aus
-\end_layout
-
-\begin_layout Standard
 For this, the regression error was calculated on a data set created by the
  target solution, which is the sum of the differences of the individual
  points.
@@ -5237,7 +5382,6 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -5245,7 +5389,11 @@ literal "true"
  industrial applications.
  These are far less complex than the systems of equations of a neural network,
  but are nevertheless often difficult for humans to comprehend.
- This is often due to the fact that experts often break down problems into
+ xxx steht schon in related work
+\end_layout
+
+\begin_layout Standard
+This is often due to the fact that experts often break down problems into
  sub-problems and abstract them logically, while machine solutions often
  find only a formula consisting of few elements.
  
@@ -5253,6 +5401,10 @@ literal "true"
 
 \begin_layout Subsection
 MAE vs MSE
+\end_layout
+
+\begin_layout Standard
+xxx idee: Karoo hat nur MAE!!
 \end_layout
 
 \begin_layout Standard
@@ -5310,7 +5462,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Mean average error (MAE)
+Mean average error (MAE).
 \end_layout
 
 \end_inset
@@ -5350,7 +5502,7 @@ status open
 
 \begin_layout Plain Layout
 Mean squared error (MSE) is synonymous to the root mean squared error (RMSE)
- for one-dimensional measurements
+ for one-dimensional measurements.
 \end_layout
 
 \end_inset
@@ -5367,7 +5519,11 @@ Mean squared error (MSE) is synonymous to the root mean squared error (RMSE)
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-
+Der MAE ist distanztreu, gibt also die mittlere Abweichung von der Ziellösung
+ an und ist somit ein ehrlicher Indikator.
+ Beim MSE wird dieses Maß verfälscht, eine Interpretation der Werte wird
+ dadurch schwerer.
+ Dennoch sorgt der MSE dafür, dass die Lösung effektiver angenähert wird.
 \end_layout
 
 \end_inset
@@ -5497,7 +5653,7 @@ Regression Error after bounding to
 \begin_inset Formula $[-1,+1]$
 \end_inset
 
-
+.
 \end_layout
 
 \end_inset
@@ -5628,14 +5784,13 @@ Tanh penalize otherwise (moderate phenotype extreme cases)
 A conceivable solution would be to use a constantly increasing weighting
  function, such as tanh or log, as a distance to the edge area, to greatly
  reduce the influence of the values.
- Allerdings muss auch hier akribisch aufgepasst werden, dass die Distanzfunktion
- durch einen zu großen Zweitfaktor Zweckentfremdet wird, was zu einer kompletten
- Fehlbewertung von Kandidaten führen würde.
- Ist der Anteil der Kandidaten, die diese künstlich erzeugte Zweitbewertung
- überwinden konnten nicht groß genug, ist der genetische Selektionsprozess
- obsolet.
- Der Anteil dieser Bestrafung auf den finalen Wert wird zu einem Fehlerfaktor
- innerhalb der Regression, die ja bereits ein surrogate model ist.
+ However, it must be meticulously observed that the distance function is
+ misused by a too large second factor, which would lead to a complete misinterpr
+etation of candidates.
+ If the proportion of candidates who could overcome this artificially generated
+ second factor is not large enough, the genetic selection process is obsolete.
+ The proportion of this punishment to the final value becomes an error factor
+ within the regression, which is already a surrogate model.
 \end_layout
 
 \begin_layout Subsection
@@ -5909,14 +6064,15 @@ In the evolutionary found candidates not only a genetic difference can be
  difference as regression error.
  This means that not only the difference to the target solution plays a
  role, but also how far from the starting solution it was necessary to deviate.
- One possibility of implementation is a third dimension on the Pareto front.
- Another way of combining classical regression with relative regression
- to Origin is also shown and tested below.
+ Aus Sicherheitsgründen kann es von großem Interesse sein, dass die Änderungen
+ als Annäherung vom bekannten hin zur Blackbox gesehen werden, ohne dabei
+ unnötig von bekanntem abzuweichen oder über das Ziel drüber hinauszuschießen.
 \end_layout
 
 \begin_layout Standard
-xxx idee phänotyp und genotyp hängen zusammmen- phänotyp ist wichtiger für
- das Verständnis (section regr kernel 2) - struktur genotyp lässt
+One possibility of implementation is a third dimension on the Pareto front.
+ Another way of combining classical regression with relative regression
+ to Origin is also shown and tested below.
 \end_layout
 
 \begin_layout Paragraph
@@ -6006,19 +6162,6 @@ name "fig:relative_kernel_path"
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Leaving already solved areas, exploration no matter where vs.
- exploration in areas worth improving
 \end_layout
 
 \end_inset
@@ -6318,39 +6461,6 @@ Unsichere Verschlechterung.
 \end_layout
 
 \end_deeper
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-symbols?
-\end_layout
-
-\begin_layout Plain Layout
-expertenpolicy, modell
-\end_layout
-
-\begin_layout Plain Layout
-zielpolicy, modell
-\end_layout
-
-\begin_layout Plain Layout
-agentenpolicy, modell
-\end_layout
-
-\begin_layout Plain Layout
-daten
-\end_layout
-
 \end_inset
 
 
@@ -6914,7 +7024,6 @@ xx what is a marginal note? Hein, Udluft
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -8491,7 +8600,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Each node is shown
+Full visualisation with each node shown.
 \end_layout
 
 \end_inset
@@ -8533,7 +8642,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Tight version with joined branch
+Tight version with joined branch.
 \end_layout
 
 \end_inset
@@ -8556,10 +8665,6 @@ The same expression in the form of a tree with automatic arrangement of
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -9069,7 +9174,7 @@ name "table:MC_agents_rewards"
 \end_layout
 
 \begin_layout Subsection
-Black box with SARSA and Tiling
+Black box differentiation between safe and unsafe version
 \end_layout
 
 \begin_layout Standard
@@ -9084,7 +9189,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9146,7 +9250,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -9423,7 +9526,8 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/analysis_input.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Die Paretokandidaten im Vergleich xxx
+Die Paretokandidaten im Vergleich.
+ xxx
 \end_layout
 
 \end_inset
@@ -9712,9 +9816,8 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_10.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Dieser Agent nutzt einen sinus-Operator, welcher zu starken Schwankungen
- führt.
- Zwei Läufe müssen kurz vor dem Ziel umkehren.
+This agent uses a sine operator, which leads to strong fluctuations.
+ Two runs have to turn back shortly before the finish.
 \end_layout
 
 \end_inset
@@ -9981,7 +10084,7 @@ name "par:simple,-maximum-momentum"
 \end_layout
 
 \begin_layout Standard
-Dadurch wird maximaler Schwung geholt und das Ziel wird immer erreicht.
+This ensures maximum momentum and the goal is always reached.
  The average reward of the SARSA-agent is, with an average reward of 
 \begin_inset Formula $-103$
 \end_inset
@@ -10019,7 +10122,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Computational tree of the simplest program 
+Computational tree of the simplest program.
+ 
 \begin_inset CommandInset label
 LatexCommand label
 name "img:mtc_simple_tree"
@@ -10082,7 +10186,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -10227,10 +10330,9 @@ Mountain Car with Sarsa-200
 \end_layout
 
 \begin_layout Standard
-Obwohl es dasselbe Benchmark ist, sind die Ergebnisse kaum mit der Sarsa-75
- Version vergleichbar.
- Es wird nicht nur eine neue performance erzielt, es gibt auch keine outlierläuf
-e mehr.
+Although it is the same benchmark, the results are hardly comparable to
+ the Sarsa-75 version.
+ Not only is a new performance achieved, but there are no more outlier runs.
 \end_layout
 
 \begin_layout Standard
@@ -10462,9 +10564,9 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_07.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Ab 7 Änderungen (ab der ersten Möglichkeit) wird die if-Struktur des Experten
- bereits komplett aufgelöst und tritt auch in komplexeren Bäumen nicht mehr
- auf.
+Starting from 7 changes (starting from the first possibility) the if structure
+ of the expert is already completely dissolved and does not occur also in
+ more complex trees.
 \end_layout
 
 \end_inset
@@ -10584,18 +10686,19 @@ status open
 \end_layout
 
 \begin_layout Standard
-Diese Version der Referenzheuristik erlaubt in einer zusätzlichen dummy
- if-Anweisung die Verwendung von Aktion 1.
- Durch die hohe Anzahl von Knoten ist dieser Baum robuster gegen Änderungen
- an der Gesamtstruktur, dennoch können die Dummyaktionen durch Formeln ersetzt
- werden.
+This version of the reference heuristic allows the use of action 1 in an
+ additional dummy if statement.
+ Due to the high number of nodes, this tree is more robust against changes
+ in the overall structure, but the dummy actions can still be replaced by
+ formulas.
 \end_layout
 
 \begin_layout Standard
-Mit insgesammt 18 Kandidaten wurden in diesem Lauf extrem viele Paretokandidaten
- gefunden, die Wurzel if-Anweisung bleibt dabei in allen Kandidaten erhalten.
- Auch hier gibt es keine signifikanten Verschlechterungen.
- Die Struktur bietet zudem viel Optimierungspotential für den Crossover-operator.
+With a total of 18 candidates, an extremely high number of Pareto candidates
+ were found in this run, the root if statement remains in all candidates.
+ There is no significant deterioration here either.
+ The structure also offers a lot of optimization potential for the crossover
+ operator.
 \end_layout
 
 \begin_layout Standard

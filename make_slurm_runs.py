@@ -26,6 +26,8 @@ run_starts = [
     'MTC200_MAE_simonBest',
     'MTC200_MAE_simonBestFix',
     'MTC200_MAE_simonBestFix2',
+    # 'MTC200_MAE_simonOkay',
+    # 'MTC200_MAE_simonOkayFix',
 
     'MTC200_MAE_explun01_simple',
     'MTC200_MAE_explun01_simonBestFix2',
@@ -54,6 +56,9 @@ run_starts = [
     'MTC75_MSE_scratch',
     'MTC75_MSE_simple',
     'MTC75_MSE_simpleFix',
+
+    'MTC75_MAE_explun01_simple',
+    'MTC75_MSE_explun01_simple',
 
     # """
     # IB

@@ -92,6 +92,8 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
                    'simonBest': 'mc/gp_files/tree(simonBest).csv',
                    'simonBestFix': 'mc/gp_files/tree(simonBest)Fix.csv',
                    'simonBestFix2': 'mc/gp_files/tree(simonBest)Fix2.csv',
+                   'simonOkay': 'mc/gp_files/tree_simonOkay.csv',
+                   'simonOkayFix': 'mc/gp_files/tree_simonOkayFix.csv',
                    'scratch': None}
 
         path_origin_tree = pathify(ori_trs[name_splits[-1]])

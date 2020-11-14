@@ -14,8 +14,6 @@ run_starts = [
     # 'MTC200_RMSE_explun01_tanh_simpleFix',
 
     'MTC200_MAE_scratch',
-    'MTC200_MAE_gpFriendly',
-    # 'MTC200_MAE_gpFriendlyFix',
     # 'MTC200_MAE_preset',
     'MTC200_MAE_xiao',
     'MTC200_MAE_xiaoFix',
@@ -32,8 +30,6 @@ run_starts = [
     'MTC200_MSE_simple',
     'MTC200_MSE_simpleFix',
     'MTC200_MSE_simplePlusFix',
-    'MTC200_MSE_gpFriendly',
-    # 'MTC200_MSE_gpFriendlyFix',
     # 'MTC200_MSE_preset',
     'MTC200_MSE_xiao',
     'MTC200_MSE_xiaoFix',
@@ -44,7 +40,6 @@ run_starts = [
     # 'MTC200_MSE_simonBad',
     #
     # 'MTC200_MAE_explun01_simple',
-    # 'MTC200_MAE_explun01_gpFriendlyFix',
     # 'MTC200_MAE_explun01_presetFix',
 
     # # # """
@@ -53,7 +48,6 @@ run_starts = [
     'MTC75_MAE_scratch',
     'MTC75_MAE_simple',
     'MTC75_MAE_simpleFix',
-    'MTC75_MAE_gpFriendly',
 
     'MTC75_MSE_scratch',
     'MTC75_MSE_simple',

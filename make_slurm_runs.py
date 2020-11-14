@@ -2,7 +2,10 @@ from pathlib import Path
 
 print('Make sure that this file is executed on top level')
 
-# a_velocity,a_gain,a_shift
+"""
+gpFriendly: CORRUPT TREE CORRUPT RUNS
+preset: CORRUPT RUNS
+"""
 run_starts = [
 
     # """
@@ -14,11 +17,9 @@ run_starts = [
     # 'MTC200_RMSE_explun01_tanh_simpleFix',
 
     'MTC200_MAE_scratch',
-    # 'MTC200_MAE_preset',
     'MTC200_MAE_xiao',
     'MTC200_MAE_xiaoFix',
     'MTC200_MAE_simple',
-    'MTC200_MAE_explun01_simple',
     'MTC200_MAE_simpleFix',
     'MTC200_MAE_simplePlus',
     'MTC200_MAE_simplePlusFix',
@@ -26,21 +27,22 @@ run_starts = [
     'MTC200_MAE_simonBestFix',
     'MTC200_MAE_simonBestFix2',
 
+    'MTC200_MAE_explun01_simple',
+    'MTC200_MAE_explun01_simonBestFix2',
+
     'MTC200_MSE_scratch',
     'MTC200_MSE_simple',
     'MTC200_MSE_simpleFix',
     'MTC200_MSE_simplePlusFix',
-    # 'MTC200_MSE_preset',
     'MTC200_MSE_xiao',
     'MTC200_MSE_xiaoFix',
     'MTC200_MSE_simplePlus',
     'MTC200_MSE_simonBest',
     'MTC200_MSE_simonBestFix',
     'MTC200_MSE_simonBestFix2',
-    # 'MTC200_MSE_simonBad',
-    #
-    # 'MTC200_MAE_explun01_simple',
-    # 'MTC200_MAE_explun01_presetFix',
+
+    'MTC200_MSE_explun01_simple',
+    'MTC200_MSE_explun01_simonBestFix2',
 
     # # # """
     # # # MC75 (SARSA-Agent after 75 training steps)
@@ -64,9 +66,9 @@ run_starts = [
     # 'IB_MAE_explun01_tanh_sim2_0', 'IB_MAE_explun01_tanh_sim2_1', 'IB_MAE_explun01_tanh_sim2_2',
     # 'IB_MAE_tanh_udluft_0', 'IB_MAE_tanh_udluft_1', 'IB_MAE_tanh_udluft_2',
 
-    # 'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
+    'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
     # 'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
-    # 'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
+    'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
     # 'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_s3m_1', 'IB_RMSE_explun01_s3m_2',
     # # 'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
     # # 'IB_RMSE_explun01_sim2_0', 'IB_RMSE_explun01_sim2_1', 'IB_RMSE_explun01_sim2_2',

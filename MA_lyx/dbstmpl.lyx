@@ -10199,6 +10199,109 @@ simpleFix
 Fixe Knoten
 \end_layout
 
+\begin_layout Subsubsection
+simple Plus
+\end_layout
+
+\begin_layout Standard
+Hat einen extraknoten
+\end_layout
+
+\begin_layout Subsubsection
+Close-form preset policy, parabolic lower and upper bound
+\end_layout
+
+\begin_layout Standard
+In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "true"
+
+\end_inset
+
+, a close-form preset policy was proposed, defining a lower and upper bound
+ for the car to determine the actions.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With 36 nodes, this expert program already has an enormous natural tree
+ size, which means that the TED does not lose its effect even with relatively
+ large changes.
+\end_layout
+
+\begin_layout Standard
+Thus two essential improvements could be found here.
+ On the one hand, it was recognized that the upper limit has no meaning
+ for the MC experiment.
+ In the second case, a small change has led to an enormous improvement.
+ This improvement is even better than the Sarsa-75 policy in the real experiment.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetNoLowerbound.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Preset policy and a GP improvement.
+ Recognizable are used mathematical structures such as parabolas and the
+ renunciation of action 1.
+ On the right, a simplification is visible, found with the help of GP.
+ It has recognized the upper limit as superfluous.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Preset-policy:-Recognizable"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Human, if-then-else based
+\end_layout
+
 \begin_layout Standard
 \begin_inset Float table
 wide false
@@ -10850,7 +10953,7 @@ simonBest
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+schmalere Schnecke
 \end_layout
 
 \end_inset
@@ -10963,109 +11066,6 @@ xxx idee: TED je nach tiefe des eingriffs (root node, depth 1, depth 2,
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-simple Plus
-\end_layout
-
-\begin_layout Standard
-Hat einen extraknoten
-\end_layout
-
-\begin_layout Subsubsection
-Close-form preset policy, parabolic lower and upper bound
-\end_layout
-
-\begin_layout Standard
-In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "xiao2019"
-literal "true"
-
-\end_inset
-
-, a close-form preset policy was proposed, defining a lower and upper bound
- for the car to determine the actions.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-With 36 nodes, this expert program already has an enormous natural tree
- size, which means that the TED does not lose its effect even with relatively
- large changes.
-\end_layout
-
-\begin_layout Standard
-Thus two essential improvements could be found here.
- On the one hand, it was recognized that the upper limit has no meaning
- for the MC experiment.
- In the second case, a small change has led to an enormous improvement.
- This improvement is even better than the Sarsa-75 policy in the real experiment.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetNoLowerbound.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Preset policy and a GP improvement.
- Recognizable are used mathematical structures such as parabolas and the
- renunciation of action 1.
- On the right, a simplification is visible, found with the help of GP.
- It has recognized the upper limit as superfluous.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:Preset-policy:-Recognizable"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-Human, if-then-else based
 \end_layout
 
 \begin_layout Standard
@@ -11647,51 +11647,20 @@ status open
 xiaoFix
 \end_layout
 
+\begin_layout Subsection
+simonBest
+\end_layout
+
 \begin_layout Subsubsection
-preset
+simonBest
 \end_layout
 
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "../benchmarks/slurm_runs/MTC200_MSE_preset/visualisation/full_01_tight.tex"
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_preset/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
+\begin_layout Itemize
+overfitting an die Fehler
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The performance is exceptionally good right from the start - some runs here
- are already better than the Sarsa-policy.
- So the regression error cannot be reduced much further.
-\end_layout
-
-\begin_layout Standard
-The preset policy is a candidate where the TED is very robust.
- Therefore, it is of great interest how big and small changes in the policy
- affect the real fitness.
+\begin_layout Subsubsection
+simonBestFix
 \end_layout
 
 \begin_layout Section

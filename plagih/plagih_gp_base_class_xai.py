@@ -1190,6 +1190,7 @@ class ExplainableGP(object):
             max_dummy = self.conf.parsimony_max
         else:
             raise
+
         if mean_min_max_var[2] is None:
             mean_min_max_var[2] = max_dummy
         else:
@@ -1308,7 +1309,7 @@ class ExplainableGP(object):
             parsimony = cooltree_sym.eval_parsimony(self.conf.complexity_measure, origin_cooltree=self.origin_cooltree)
             if parsimony < cooltree.meta.parsimony:
                 self.printpl('aa', 'Successfully reduced pareto tree!')
-                sym_fitness = self.tree_eval_fitness_train(cooltree_sym)  # sfeh actually not required, delete this
+                sym_fitness = self.tree_eval_fitness_offline_train(cooltree_sym)  # sfeh actually not required, delete this
                 cooltree_sym.meta.fitness_train = sym_fitness
                 cooltree_sym.meta.parsimony = parsimony
                 self.update_pareto_with_tree(cooltree_sym)
@@ -1394,10 +1395,16 @@ class ExplainableGP(object):
                 print_warning('wwww', f'Parsimony too high, last evolution: {cooltree.meta.last_evolution}', print_type=self.print_type)  # sfeh care about wwww. should not
                 return
             try:
-                fitness_train = self.tree_eval_fitness_train(cooltree)
+                fitness_train = self.tree_eval_fitness_offline_train(cooltree)
             except Exception as evalex:
                 print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {cooltree}.', print_type=self.print_type)
                 return
+
+            try:
+                # todo
+                pass
+            except Exception as ex:
+                print(f'ASDASD oh no {ex}')
 
         expr_raw = cooltree.get_expr_raw()
         expr_sym = expr_sympify(expr_raw)
@@ -1491,7 +1498,7 @@ class ExplainableGP(object):
 
         return origin_cooltree  # self.origin_cooltree = copy.deepcopy(origin_cooltree)
 
-    def tree_eval_fitness_train(self, cooltree: CoolTree):
+    def tree_eval_fitness_offline_train(self, cooltree: CoolTree):
         """
         Very fast eval-version that only computes fitness of the train data.
         tree_eval_complete gives more options
@@ -1522,6 +1529,15 @@ class ExplainableGP(object):
         # fitness_train = round(fitness_train, self.conf.fitness_decimals)
 
         return fitness_train
+
+    def tree_eval_fitness_online(self, cooltree: CoolTree, episodes=1, seed=0, env_parameters=None):
+        """
+        an online evaluation of a tree
+        todo
+        """
+        pass
+
+        return
 
     def plot_gen_performance(self):
         """

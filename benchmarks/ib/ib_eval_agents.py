@@ -64,24 +64,25 @@ def envstate_normalize(env_state, to_daniel=True):
 
 
 def eval_agents():
-
+    """
+    Evaluate all ib agents in the list and print the result
+    """
     # agents = [Agent_Daniel_Best()]
     agents = [
         Agent_random(),
-        # Agent_nothing(),
-        # Agent_daniel_21(),
-        # Agent_daniel_27(),
+        Agent_nothing(),
+        Agent_daniel_21(),
+        Agent_daniel_27(),
         Agent_Daniel_29_Best(),
-        # Agent_505050(),
-        # Agent_Udluft(),
-        # Agent_sim1(),
-        # Agent_Test()
+        Agent_505050(),
+        Agent_Udluft(),
+        Agent_sim1(),
+        Agent_Test()
     ]
 
-    # for k in range(n_trajectories):
     for k, agent in enumerate(agents):
-        sum_all = eval_agent(agent, randomize=0)
-        sum_safe = eval_agent(agent, safe_eval=True, randomize=0)
+        sum_all = eval_agent(agent, randomize=0, repeat_avg=5)
+        sum_safe = eval_agent(agent, safe_eval=True, randomize=0, repeat_avg=5)
         sum_allr50 = eval_agent(agent, randomize=50, repeat_avg=10)
         sum_safer50 = eval_agent(agent, safe_eval=True, randomize=50, repeat_avg=10)
         print(f'Results : {agent.name} \t{sum_all:5.1f} \t (safe: {sum_safe:5.1f}) \t(r50: all: {sum_allr50:4.1f} \tsafe: {sum_safer50:4.1f})')
@@ -136,6 +137,7 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
     """
 
     discount_factor = 0.97
+    # discount_factor = 1  # todo
     t = 100  # time_horizon
     discount_len = -100
     sum_discounted_p = []

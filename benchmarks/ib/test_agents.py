@@ -87,7 +87,7 @@ class Agent_daniel_21(Ib_Agent):
     """
 
     def __init__(self):
-        self.name = 'Daniel_21'
+        self.name = 'Hein_21'
         super().__init__()
 
     def decide(self, env_state):
@@ -106,7 +106,7 @@ class Agent_daniel_21(Ib_Agent):
 class Agent_daniel_27(Ib_Agent):
 
     def __init__(self):
-        self.name = 'Daniel_27'
+        self.name = 'Hein_27'
         super().__init__()
 
     def decide(self, state):
@@ -129,7 +129,7 @@ class Agent_daniel_27(Ib_Agent):
 class Agent_Daniel_29_Best(Ib_Agent):
 
     def __init__(self):
-        self.name = 'Daniel_29'
+        self.name = 'Hein_29'
         super().__init__()
 
     def decide(self, state):

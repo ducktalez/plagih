@@ -73,7 +73,7 @@ run_starts = [
 
     'IB_RMSE_scratch_0', 'IB_RMSE_scratch_1', 'IB_RMSE_scratch_2',
     # 'IB_RMSE_s3m_0', 'IB_RMSE_s3m_1', 'IB_RMSE_s3m_2',
-    'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
+    # 'IB_RMSE_tanh_s3m_0', 'IB_RMSE_tanh_s3m_1', 'IB_RMSE_tanh_s3m_2',
     # 'IB_RMSE_explun01_s3m_0', 'IB_RMSE_explun01_s3m_1', 'IB_RMSE_explun01_s3m_2',
     # # 'IB_RMSE_sim2_0', 'IB_RMSE_sim2_1', 'IB_RMSE_sim2_2',
     # # 'IB_RMSE_explun01_sim2_0', 'IB_RMSE_explun01_sim2_1', 'IB_RMSE_explun01_sim2_2',
@@ -86,11 +86,11 @@ run_starts = [
     # # 'IB_RMSE_udluft_0', 'IB_RMSE_udluft_1', 'IB_RMSE_udluft_2'
 
     'IB_MSE_scratch_0', 'IB_MSE_scratch_1', 'IB_MSE_scratch_2',
-    'IB_MSE_mean_0', 'IB_MSE_mean_1', 'IB_MSE_mean_2',
+    # 'IB_MSE_mean_0', 'IB_MSE_mean_1', 'IB_MSE_mean_2',
     'IB_MSE_s3m_0', 'IB_MSE_s3m_1', 'IB_MSE_s3m_2',
     'IB_MSE_50_0', 'IB_MSE_50_1', 'IB_MSE_50_2',
 
-    'IB_MSE_tanh_s3m_0', 'IB_MSE_tanh_s3m_1', 'IB_MSE_tanh_s3m_2',
+    # 'IB_MSE_tanh_s3m_0', 'IB_MSE_tanh_s3m_1', 'IB_MSE_tanh_s3m_2',
     # 'IB_MSE_explun01_s3m_0', 'IB_MSE_explun01_s3m_1', 'IB_MSE_explun01_s3m_2',
     # # 'IB_MSE_sim2_0', 'IB_MSE_sim2_1', 'IB_MSE_sim2_2',
     # # 'IB_MSE_explun01_sim2_0', 'IB_MSE_explun01_sim2_1', 'IB_MSE_explun01_sim2_2',

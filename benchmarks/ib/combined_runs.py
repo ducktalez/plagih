@@ -35,9 +35,13 @@ def mp_evall(arow):
 
     try:
         ibx = eval_combined_agents(codes)
+        print('ASD 1')
         ibx_safe = eval_combined_agents(codes, complete=False)
+        print('ASD 2')
         ibx_r50 = eval_combined_agents(codes, randomize=50, repeat_avg=10)
+        print('ASD 3')
         ibx_safe_r50 = eval_combined_agents(codes, complete=False, randomize=50, repeat_avg=10)
+        print('ASD 4')
         print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. \t({parsims})\tcomplete: {ibx:0.1f} \tsafe: {ibx_safe:0.1f} \tall_r50: {ibx_r50:0.1f} \tsafe_r50: {ibx_safe_r50:0.1f}')
         return [lut_hash, ibx, ibx_safe, ibx_r50, ibx_safe_r50]
     except Exception as ex:
@@ -75,6 +79,7 @@ def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
 
     mp.Process()
     mp_cores = min(mp.cpu_count(), mp_cpu_MAX)
+
     print(f'Using {mp_cores} for mp (available: {mp.cpu_count()})')
     with mp.Pool(mp_cores) as p:
         mp_result = p.map(mp_evall, open_combinations)
@@ -299,7 +304,7 @@ def merge_paretos(path_main):
 def main():
 
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
-    parser.add_argument('-name', type=str, help='If the run has a name', default='IB_MSE_sim2')
+    parser.add_argument('-mainpath', type=str, help='lol does not work sf', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')
     parser.add_argument('-locallut', action='store_true')
     parser.add_argument('-mp_cpu_cores_max', type=int,  default=8)
@@ -307,7 +312,7 @@ def main():
     parser.add_argument('-parsim_max_single', type=int, default=40)
     args = parser.parse_args()
 
-    name = args.name
+    mainpath = args.mainpath
     parsim_max_sum = args.parsim_max_sum
     parsim_max_single = args.parsim_max_single
 
@@ -329,9 +334,15 @@ def main():
                     print(f'\nSkipping {runfolders.name}')
 
     else:
-        combined_lists(name, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
+        combined_lists(mainpath, parsim_max_sum, parsim_max_single, local_yamls=args.locallut, cpu_cores=args.mp_cpu_cores_max)
     return
 
 
 if __name__ == '__main__':
-    main()
+    # todotodo todo
+    lulzrow = {'parsim_sum': 27.0, 'parsims': [11.0, 6.0, 10.0], 'experiment': None, 'experiment_safe': None, 'experiment_r50': None, 'experiment_safe_r50': None,
+               'codes': ["((self.get_h('g', 8)*max(math.tanh(SetPoint), 0.091879))-max(0.197961, math.sqrt(self.get_h('v', 7))))", "max(math.tanh(-SetPoint), (self.get_h('g', 4)-self.get_h('g', 9)))",
+                         "(math.tanh(math.tanh(self.get_h('h', 4)))-((-self.get_h('f', 4)+self.get_h('f', 9))+math.sin(self.get_h('h', 9))))"], 'regress_sum': 2.504287,
+               'regress_vals': [0.915394, 0.80149, 0.787403]}
+    lulz = mp_evall(lulzrow)
+    # main()  # todo

@@ -11,6 +11,7 @@ import math
 import pickle
 # import multiprocessing as mp
 from plagih.file_interaction import *
+from benchmarks.ib.ib_eval_agents import eval_combined_agents
 from benchmarks.mc.agents.try_agents import *
 
 
@@ -26,6 +27,13 @@ def autolabel_xx(ax, rects, width):
                     textcoords="offset points",
                     ha='center', va='bottom')
     return ax, rects, width
+
+
+# def thesis_ib_agent_results():
+#     ibx = eval_agent(ib_agent)
+#     ibx_safe = eval_agent(ib_agent, complete=False)
+#     ibx_r50 = eval_agent(ib_agent, randomize=50, repeat_avg=10)
+#     ibx_safe_r50 = eval_agent(ib_agent, complete=False, randomize=50, repeat_avg=10)
 
 
 def thesis_plot_mc_comparisson():
@@ -65,6 +73,7 @@ def thesis_plot_mc_comparisson():
 def thesis_plot_ib_comparisson():
     """
     # sfeh adasd
+    # todo
     """
     tuples = {'Random': [-6809, -6632],
               'Nothing': [-6077, -6068],

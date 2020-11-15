@@ -864,7 +864,7 @@ def tree_get_ids_depthfirst(tree, node_id=root_id):
 def tree_get_fitness(tree, karoo=True):
     """
     Get the fitness that a tree holds.
-    For evaluation the fitness, use ? plagih_eval -> tree_eval_fitness_train()
+    For evaluation the fitness, use ? plagih_eval -> tree_eval_fitness_offline_train()
     """
     if not karoo:
         raise

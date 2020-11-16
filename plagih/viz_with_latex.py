@@ -209,7 +209,7 @@ def tex_label_beautify_end(label):
     if label in op:
         label = op[label]['latex1']
 
-    label = f'{{{label}}}'
+    label = f'{label}'
     return label
 
 
@@ -298,7 +298,7 @@ def latex_tree_semitight(tree):
             elif node_dict[node_id] > 1:  # complete expression node
                 label = latex_tight_node(tree, node_id=node_id)
                 # label = helper_format_brackets(label)
-                label = f'{{${label}$}}'
+                label = f'${label}$'
                 arity = 0
             else:
                 raise

@@ -34,18 +34,18 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
     ['IB', 'RMSE', 'explun01', 'tanh', 's3m', '1']
     ['MTC75', 'MSE', 'simple']
     """
+    conf.gen_max = 6000   # sfeh this is not used if >100 generations are without a new pareto entry
 
     if 'IB' == prepared_run[:2]:
-        conf.gen_max = 6000   # todo
         root_dir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
         kernel_name = 'regression bounded'
-        ori_trs = {'50_0': 'ib/gp_files//ib_tree_50s_0.csv',
+        ori_trs = {'50_0': 'ib/gp_files/ib_tree_50s_0.csv',
                    '50_1': 'ib/gp_files/ib_tree_50s_1.csv',
                    '50_2': 'ib/gp_files/ib_tree_50s_2.csv',
                    'udluft_0': 'ib/gp_files/ib_tree_udluft_0.csv',
                    'udluft_1': 'ib/gp_files/ib_tree_udluft_1.csv',
-                   'udluft_2': 'ib/gp_files/ib_tree_udluflont_2.csv',
+                   'udluft_2': 'ib/gp_files/ib_tree_udluft_2.csv',
                    'mean_0': 'ib/gp_files/ib_tree_mean_0.csv',
                    'mean_1': 'ib/gp_files/ib_tree_mean_1.csv',
                    'mean_2': 'ib/gp_files/ib_tree_mean_2.csv',
@@ -73,7 +73,6 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
                 action_name = v
 
     elif 'MTC' in prepared_run:
-        conf.gen_max = 5000   # todo
         kernel_name = 'regression bounded discrete'
 
         root_dir = pathify(f'{slurm_runs_folder}/{prepared_run}')

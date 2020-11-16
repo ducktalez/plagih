@@ -702,7 +702,7 @@ class ExplainableGP(object):
             file_dump(self.root_dir / f'analysis_overview.tex', latex_treeviz_full_document(paste), print_type=self.print_type)
 
             paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
-            paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.pdf')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
+            paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.png')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
                         "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
                         "dist & error & reward & parsimony & expression \\tabularnewline \\hline\n" \
                         f"{paste_full}" \
@@ -1619,7 +1619,7 @@ class ExplainableGP(object):
             axs3.set_xlim(xmin=0, xmax=max(xx)), axs3.set_xlabel('generations')
             axs0.set_title(f'monitoring gp generations {self.conf.name}')  # sfeh
             fig.tight_layout()
-            path = self.root_dir / f'monitoring.pdf'  # -{self.conf.name}
+            path = self.root_dir / f'monitoring.png'  # -{self.conf.name}
             fig.savefig(path)
             self.printpl('f', f"monitoring: {path.as_posix()}")
             plt.close('all')

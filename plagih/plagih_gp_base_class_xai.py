@@ -380,12 +380,12 @@ class ExplainableGP(object):
         Special condition to exit the evolve-loop
         1. when >100 generations, no new pareto entries were found
         """
-        if self.monitor_df['gens_since_last_pareto'] > 100:
+        if self.monitor_df['gens_since_last_pareto'].iloc[-1] > 100:
             print('SFEH This condition made your program exit!')
             return True
         else:
             return False
-
+        
     def plagih_gp_run(self, gen_additionally):
         """
         regular plagih run
@@ -688,10 +688,6 @@ class ExplainableGP(object):
                                   f"{pareto_agents[pp]['forest_tree_full']}",  # forest_tree_full, forest_tree_tight
                                   f"{pareto_agents[pp]['forest_tree_tight']}",
                                   f'{fails}'])
-
-                # df_mtc.loc[pp] = tex_line
-
-            # & decision plot & spiral plot & spiral difference-plot & histogram
 
             paste = ''.join([tex_tabuline(x[:4]) for x in tex_lines])
             paste = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}\n\\hline\n" \

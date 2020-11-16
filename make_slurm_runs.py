@@ -26,8 +26,6 @@ run_starts = [
     'MTC200_MAE_simonBestFix2',
     'MTC200_MAE_xiao',
     'MTC200_MAE_xiaoFix',
-    # 'MTC200_MAE_simonOkay',
-    # 'MTC200_MAE_simonOkayFix',
 
     'MTC200_MAE_explun01_simple',
     'MTC200_MAE_explun01_simonBestFix2',

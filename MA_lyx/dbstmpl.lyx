@@ -239,7 +239,7 @@ LatexCommand tableofcontents
 \begin_inset Note Comment
 status collapsed
 
-\begin_layout Subsubsection
+\begin_layout Plain Layout
 simplePlus
 \end_layout
 
@@ -8724,11 +8724,9 @@ Exceptions are operators too, which change between formulas and propositional
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
@@ -8739,7 +8737,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "24col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -8774,6 +8772,19 @@ Full visualisation with each node shown.
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -8781,7 +8792,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "24col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -9623,7 +9634,17 @@ name "sarsa1000-plots"
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
+Mountain Car with Sarsa-200
+\end_layout
+
+\begin_layout Standard
+Although it is the same benchmark, the results are hardly comparable to
+ the Sarsa-75 version.
+ Not only is a new performance achieved, but there are no more outlier runs.
+\end_layout
+
+\begin_layout Subsubsection
 Scratch GP Results (MSE 200)
 \end_layout
 
@@ -9801,6 +9822,12 @@ Die Paretokandidaten im Vergleich.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -9808,7 +9835,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -9832,6 +9859,19 @@ status open
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hrule
+\end_layout
+
+\end_inset
+
+
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -9839,7 +9879,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -9851,27 +9891,9 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.pdf
 	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The agent is reached with maximum acceleration by a shorter printout.
-\end_layout
 
 \end_inset
 
@@ -9893,194 +9915,12 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
 
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-huehuehue
-\end_layout
-
-\begin_layout Plain Layout
-sdf dfsg adfg awedfg awerg fawerg awse rgqawe rfgAW ERF awef awergae4fg
- awefg4aweft 
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
 The agent is reached with maximum acceleration by a shorter printout.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "45col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-3.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "45col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The agent is reached with maximum acceleration by a shorter printout.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
-
-\end_inset
-
-
+ xxx the hrule above
 \end_layout
 
 \end_inset
@@ -10216,7 +10056,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/10.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.pdf
 	height 5cm
 
 \end_inset
@@ -10226,7 +10066,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/10.pdf
 	height 5cm
 
 \end_inset
@@ -10315,7 +10155,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.pdf
 	height 5cm
 
 \end_inset
@@ -10325,7 +10165,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.pdf
 	height 5cm
 
 \end_inset
@@ -10387,8 +10227,397 @@ The best agent has a very low regression error of only 0.09 and a fitness
 
 \end_layout
 
-\begin_layout Subsection
-Maximum Momentum
+\begin_layout Subsubsection
+simple 
+\begin_inset CommandInset label
+LatexCommand label
+name "run:MTC200_MSE_simple"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Diese Standardversion ist mit 6 Knoten und einer Tiefe von 3 nur wenig robust
+ gegen Änderungen.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/4.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_04.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Statt die if-Bedingung zu ändern wird der Dummywert für Aktion 0 neu brechnet.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "49col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/7.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_07.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Starting from 7 changes (starting from the first possibility) the if structure
+ of the expert is already completely dissolved and does not occur also in
+ more complex trees.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+simple 
+\begin_inset CommandInset label
+LatexCommand label
+name "par:simple,-maximum-momentum"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+erste Verbesserung (nur aus Vollständigkleit)
+\end_layout
+
+\begin_layout Itemize
+if fall wird geändert
+\end_layout
+
+\begin_layout Standard
+This ensures maximum momentum and the goal is always reached.
+ The average reward of the SARSA-agent is, with an average reward of 
+\begin_inset Formula $-103$
+\end_inset
+
+, outperforming the simple approach of a developer that will be introduced
+ in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "par:simple,-maximum-momentum"
+
+\end_inset
+
+ with about 
+\begin_inset Formula $14\%$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/tree_simple.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational tree of the simplest program.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mtc_simple_tree"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As can be seen especially with the more complex solutions, the TED loses
+ its effect after a certain size.
+ Not pushing is often selected, especially in marginal areas.
+\end_layout
+
+\begin_layout Subsubsection
+simpleFix
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The beginning is the same as in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "run:MTC200_MSE_simple"
+
+\end_inset
+
+.
+ Thanks to the fixed core structure, however, the changes are limited to
+ the if condition, so action 0 cannot be selected.
 \end_layout
 
 \begin_layout Standard
@@ -10531,43 +10760,31 @@ With a regression error of only 0.05 this is even lower than the scratch
 \end_layout
 
 \begin_layout Subsubsection
-Simple 
-\begin_inset CommandInset label
-LatexCommand label
-name "par:simple,-maximum-momentum"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-erste Verbesserung (nur aus Vollständigkleit)
-\end_layout
-
-\begin_layout Itemize
-if fall wird geändert
+simplePlus
 \end_layout
 
 \begin_layout Standard
-This ensures maximum momentum and the goal is always reached.
- The average reward of the SARSA-agent is, with an average reward of 
-\begin_inset Formula $-103$
-\end_inset
+Hat einen extraknoten
+\end_layout
 
-, outperforming the simple approach of a developer that will be introduced
- in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "par:simple,-maximum-momentum"
+\begin_layout Subsection
+Close-form preset policy, parabolic lower and upper bound, Xiao
+\end_layout
 
-\end_inset
+\begin_layout Itemize
+ted robustness
+\end_layout
 
- with about 
-\begin_inset Formula $14\%$
-\end_inset
+\begin_layout Itemize
+KEINE Verschlechterung! SEHR sicher!
+\end_layout
 
-.
+\begin_layout Itemize
+Besser als Sarsa200 Ziellösung??
+\end_layout
+
+\begin_layout Subsubsection
+xiao
 \end_layout
 
 \begin_layout Standard
@@ -10580,51 +10797,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/tree_simple.pdf
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Computational tree of the simplest program.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mtc_simple_tree"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/evaled_overview.pdf
 	height 5cm
 
 \end_inset
@@ -10637,30 +10810,8 @@ status open
 
 \end_layout
 
-\begin_layout Standard
-As can be seen especially with the more complex solutions, the TED loses
- its effect after a certain size.
- Not pushing is often selected, especially in marginal areas.
-\end_layout
-
 \begin_layout Subsubsection
-simpleFix
-\end_layout
-
-\begin_layout Standard
-Fixe Knoten
-\end_layout
-
-\begin_layout Subsubsection
-simple Plus
-\end_layout
-
-\begin_layout Standard
-Hat einen extraknoten
-\end_layout
-
-\begin_layout Subsubsection
-Close-form preset policy, parabolic lower and upper bound
+xiaoFix
 \end_layout
 
 \begin_layout Standard
@@ -11566,363 +11717,8 @@ name "mc:simonsBest-plot-space"
 
 \end_layout
 
-\begin_layout Section
-Mountain Car with Sarsa-200
-\end_layout
-
-\begin_layout Standard
-Although it is the same benchmark, the results are hardly comparable to
- the Sarsa-75 version.
- Not only is a new performance achieved, but there are no more outlier runs.
-\end_layout
-
 \begin_layout Standard
 
-\end_layout
-
-\begin_layout Subsubsection
-simple 
-\begin_inset CommandInset label
-LatexCommand label
-name "run:MTC200_MSE_simple"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Diese Standardversion ist mit 6 Knoten und einer Tiefe von 3 nur wenig robust
- gegen Änderungen.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/4.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_04.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Statt die if-Bedingung zu ändern wird der Dummywert für Aktion 0 neu brechnet.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/7.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_07.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Starting from 7 changes (starting from the first possibility) the if structure
- of the expert is already completely dissolved and does not occur also in
- more complex trees.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-LOL c=23 schaut ja weird aus :D
-\end_layout
-
-\begin_layout Standard
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-23.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-simpleFix
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The beginning is the same as in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "run:MTC200_MSE_simple"
-
-\end_inset
-
-.
- Thanks to the fixed core structure, however, the changes are limited to
- the if condition, so action 0 cannot be selected.
-\end_layout
-
-\begin_layout Subsection
-Xiao
-\end_layout
-
-\begin_layout Itemize
-ted robustness
-\end_layout
-
-\begin_layout Itemize
-KEINE Verschlechterung! SEHR sicher!
-\end_layout
-
-\begin_layout Itemize
-Besser als Sarsa200 Ziellösung??
-\end_layout
-
-\begin_layout Subsubsection
-xiao
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-xiaoFix
-\end_layout
-
-\begin_layout Subsection
-simonBest
 \end_layout
 
 \begin_layout Subsubsection
@@ -11935,6 +11731,10 @@ overfitting an die Fehler
 
 \begin_layout Subsubsection
 simonBestFix
+\end_layout
+
+\begin_layout Standard
+xxx
 \end_layout
 
 \begin_layout Section
@@ -11964,7 +11764,7 @@ The Sarsa 75 Agent is characterised by poor exploration and great uncertainty,
  making it particularly vulnerable to poor results.
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsection
 MAE runs are exceptionally bad
 \end_layout
 
@@ -13085,14 +12885,6 @@ xxx
 \end_layout
 
 \begin_layout Paragraph
-RMSE
-\end_layout
-
-\begin_layout Itemize
-asd
-\end_layout
-
-\begin_layout Paragraph
 IB_MSE_mean
 \end_layout
 
@@ -13372,18 +13164,9 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
 filename "../benchmarks/slurm_runs/IB_MSE_mean/combined_input.tex"
-
-\end_inset
-
-
-\end_layout
 
 \end_inset
 
@@ -13405,20 +13188,6 @@ xx this input is far too long
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection
-Results
-\end_layout
-
-\begin_layout Standard
-Aktion 0 ist am schwersten anzunähren, der Regressionsfehler unterschreitet
- hier nur knapp d
-\end_layout
-
-\begin_layout Standard
-The results schow extraordinary well performance in reward, robustness and
- explainablilty.
 \end_layout
 
 \begin_layout Subsubsection
@@ -13504,6 +13273,16 @@ Diese Heuristik wurde unter durch ausprobieren erzeugt.
 
 \begin_layout Subsection
 Analysis
+\end_layout
+
+\begin_layout Standard
+Aktion 0 ist am schwersten anzunähren, der Regressionsfehler unterschreitet
+ hier nur knapp d
+\end_layout
+
+\begin_layout Standard
+The results schow extraordinary well performance in reward, robustness and
+ explainablilty.
 \end_layout
 
 \begin_layout Standard

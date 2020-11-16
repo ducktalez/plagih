@@ -385,7 +385,7 @@ class ExplainableGP(object):
             return True
         else:
             return False
-        
+
     def plagih_gp_run(self, gen_additionally):
         """
         regular plagih run
@@ -635,13 +635,6 @@ class ExplainableGP(object):
         dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
         path_hist = path_make_dir(self.root_dir / 'histograms/')
         pareto_agents = {}
-
-        # _, _, todotree = self.pareto[8]
-        # todoness = self.tree_eval_fitness_offline_train(todotree)
-        # todoness = self.tree_eval_fitness_offline_train(todotree)
-        # todoness = self.tree_eval_fitness_offline_train(todotree)
-        # todoness = self.tree_eval_fitness_offline_train(todotree)
-        # print(todoness, 'lololol')
 
         for (parsim, fitness, cooltree) in self.pareto:
             # self.file_pareto_txt()  # sfeh

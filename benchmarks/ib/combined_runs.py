@@ -35,19 +35,15 @@ def mp_evall(arow):
 
     try:
         ibx = eval_combined_agents(codes)
-        print('ASD 1')
         ibx_safe = eval_combined_agents(codes, complete=False)
-        print('ASD 2')
         ibx_r50 = eval_combined_agents(codes, randomize=50, repeat_avg=10)
-        print('ASD 3')
         ibx_safe_r50 = eval_combined_agents(codes, complete=False, randomize=50, repeat_avg=10)
-        print('ASD 4')
         print(f'Combined parsimony {parsim_sum:3.0f} regression-error: {regress_sum:.4f}. \t({parsims})\tcomplete: {ibx:0.1f} \tsafe: {ibx_safe:0.1f} \tall_r50: {ibx_r50:0.1f} \tsafe_r50: {ibx_safe_r50:0.1f}')
         return [lut_hash, ibx, ibx_safe, ibx_r50, ibx_safe_r50]
     except Exception as ex:
         print(f'WARNING: Something failed in the evaluation process: {ex}')
         print(f'WARNING: arow {arow}')
-        return None  # [lut_hash, None, None]
+        return None  [lut_hash, None, None, None, None]
 
 
 def eval_and_lut(eval_list, parsim_MAX, parsim_1MAX, lut_file, mp_cpu_MAX):
@@ -344,5 +340,6 @@ if __name__ == '__main__':
                'codes': ["((self.get_h('g', 8)*max(math.tanh(SetPoint), 0.091879))-max(0.197961, math.sqrt(self.get_h('v', 7))))", "max(math.tanh(-SetPoint), (self.get_h('g', 4)-self.get_h('g', 9)))",
                          "(math.tanh(math.tanh(self.get_h('h', 4)))-((-self.get_h('f', 4)+self.get_h('f', 9))+math.sin(self.get_h('h', 9))))"], 'regress_sum': 2.504287,
                'regress_vals': [0.915394, 0.80149, 0.787403]}
+
     lulz = mp_evall(lulzrow)
     # main()  # todo

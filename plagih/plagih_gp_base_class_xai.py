@@ -614,7 +614,7 @@ class ExplainableGP(object):
 
     def analyse_pareto(self, cpu_cores=16):
         """
-        Giving all the results
+        Giving all the analysis results
         # sfeh discussion: This is only relevant at the end. (aka not in persidical analysis)
         # in between, this might create wrong files
         # e.g. pareto entries, that do not exist at the end leave files behind
@@ -624,6 +624,13 @@ class ExplainableGP(object):
         dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
         path_hist = path_make_dir(self.root_dir / 'histograms/')
         pareto_agents = {}
+
+        # _, _, todotree = self.pareto[8]
+        # todoness = self.tree_eval_fitness_offline_train(todotree)
+        # todoness = self.tree_eval_fitness_offline_train(todotree)
+        # todoness = self.tree_eval_fitness_offline_train(todotree)
+        # todoness = self.tree_eval_fitness_offline_train(todotree)
+        # print(todoness, 'lololol')
 
         for (parsim, fitness, cooltree) in self.pareto:
             # self.file_pareto_txt()  # sfeh
@@ -1635,8 +1642,7 @@ class ExplainableGP(object):
                    ylim=(0, (max(yy) - min(min(yy), 0)) * 1.05))
 
             try:
-                fig.savefig(self.root_dir / f'paretofront.pdf')  # run_name?
-                # fig.savefig(path_plot / f'paretofront.png')
+                fig.savefig(self.root_dir / f'paretofront.pdf')
                 self.printpl('f', f"paretofront (pdf): {self.root_dir / f'paretofront.pdf'}")
             except PermissionError as perm_error:
                 print_e(f'Could not save plot: {perm_error}')  # sfeh for everything?

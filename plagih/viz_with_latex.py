@@ -237,11 +237,11 @@ def latex_tight_node(tree, node_id=root_id, klammern=False):
         if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
             obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
             if obs_time is not None:
-                return_label = f"{prelabel}{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
+                return_label = f"{prelabel}\\text{{{obs_family}}}_{obs_time}"  # workaround
             else:
-                return_label = f"{prelabel}{{\\text{{{obs_family}}}}}"  # workaround
+                return_label = f"{prelabel}\\text{{{obs_family}}}"  # workaround
         else:
-            return_label = f"{{{label_tex_replace_digits(label)}}}"
+            return_label = f"{label_tex_replace_digits(label)}"
 
     return return_label
 

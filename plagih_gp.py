@@ -45,7 +45,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
                    '50_2': 'ib/gp_files/ib_tree_50s_2.csv',
                    'udluft_0': 'ib/gp_files/ib_tree_udluft_0.csv',
                    'udluft_1': 'ib/gp_files/ib_tree_udluft_1.csv',
-                   'udluft_2': 'ib/gp_files/ib_tree_udluft_2.csv',
+                   'udluft_2': 'ib/gp_files/ib_tree_udluflont_2.csv',
                    'mean_0': 'ib/gp_files/ib_tree_mean_0.csv',
                    'mean_1': 'ib/gp_files/ib_tree_mean_1.csv',
                    'mean_2': 'ib/gp_files/ib_tree_mean_2.csv',

@@ -684,7 +684,7 @@ class ExplainableGP(object):
 
             paste = ''.join([tex_tabuline(x[:4]) for x in tex_lines])
             paste = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}\n\\hline\n" \
-                    "dist & error & reward & expression \\tabularnewline \\hline\n" \
+                    "dist & error & reward  & expression \\tabularnewline \\hline\n" \
                     f"{paste}" \
                     "\\hline\n\\end{longtable}\n"
             file_dump(self.root_dir / f'analysis_input.tex', paste, print_type=self.print_type)
@@ -693,7 +693,7 @@ class ExplainableGP(object):
             paste_full = ''.join([tex_tabuline(x[:]) for x in tex_lines])
             paste_full = f"{str(self.conf.name).replace('_', '-')}  {tex_include_pdf('monitoring.pdf')}  {tex_include_pdf('sfehs_eval/evaled_overview.pdf')}\n\n" \
                         "\\begin{tabular}{lllllllllllll}\n \\hline\n" \
-                        "dist & error & reward & expression \\tabularnewline \\hline\n" \
+                        "dist & error & reward & parsimony & expression \\tabularnewline \\hline\n" \
                         f"{paste_full}" \
                         "\\hline\n\\end{tabular}\n\n"
             file_dump(self.root_dir / f'analysis_overview_plus.tex', latex_treeviz_full_document(paste_full), print_type=self.print_type)
@@ -747,9 +747,8 @@ class ExplainableGP(object):
                     f"{tex_line_overview}" \
                     f"\\hline\n\\end{{tabular}}\n\n"
 
-                combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
-                                 "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                                 f"{tex_tabuline(['dist', 'error', 'reward', 'Agent code'])}" \
+                combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
+                                 f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
                                  f"{tex_line_input}" \
                                  "\\hline\n\\end{longtable}\n"
                 combined_overview = latex_treeviz_full_document(combined_overview)

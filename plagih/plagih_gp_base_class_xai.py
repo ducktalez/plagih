@@ -734,7 +734,7 @@ class ExplainableGP(object):
                                                     f"{y['regress_sum']:0.3f}",
                                                     f"{y['experiment']:0.0f}",
                                                     tex_stacklist([f'{int(x)}' for x in y['parsims']]),
-                                                    tex_stacklist([input_agentex(x, self.root_dir.parent.name) for x in [0, 1, 2]])])
+                                                    tex_stacklist([input_agentex(x, f'../benchmarks/{self.root_dir.parent.parent.name}/{self.root_dir.parent.name}/') for x in [0, 1, 2]])])
 
                     # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
                     # f"{y['cnt']}",
@@ -749,8 +749,8 @@ class ExplainableGP(object):
 
                 combined_input = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
                                  "dist & error & reward & expression \\tabularnewline \\hline\n" \
-                    f"{tex_tabuline(['dist', 'error', 'reward', 'Agent code'])}" \
-                    f"{tex_line_input}" \
+                                 f"{tex_tabuline(['dist', 'error', 'reward', 'Agent code'])}" \
+                                 f"{tex_line_input}" \
                                  "\\hline\n\\end{longtable}\n"
                 combined_overview = latex_treeviz_full_document(combined_overview)
                 file_dump(self.root_dir.parent / 'combined_overview.tex', combined_overview)

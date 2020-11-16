@@ -36,7 +36,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
     """
 
     if 'IB' == prepared_run[:2]:
-        conf.gen_max = 5000   # todo
+        conf.gen_max = 6000   # todo
         root_dir = pathify(f'{slurm_runs_folder}/{prepared_run[:-2]}/{prepared_run}')
         path_data_csv = pathify('ib/gp_files/samples_prepared.csv')
         kernel_name = 'regression bounded'
@@ -73,7 +73,7 @@ def load_prepared_run(conf, prepared_run, slurm_runs_folder):
                 action_name = v
 
     elif 'MTC' in prepared_run:
-        conf.gen_max = 2000   # todo
+        conf.gen_max = 5000   # todo
         kernel_name = 'regression bounded discrete'
 
         root_dir = pathify(f'{slurm_runs_folder}/{prepared_run}')

@@ -375,6 +375,17 @@ class ExplainableGP(object):
         """
         self.pareto.sort(key=lambda x: x[0])
 
+    def custom_exit_condition(self):
+        """
+        Special condition to exit the evolve-loop
+        1. when >100 generations, no new pareto entries were found
+        """
+        if self.monitor_df['gens_since_last_pareto'] > 100:
+            print('SFEH This condition made your program exit!')
+            return True
+        else:
+            return False
+
     def plagih_gp_run(self, gen_additionally):
         """
         regular plagih run
@@ -390,7 +401,7 @@ class ExplainableGP(object):
 
         self.gens_since_last_pareto = 0
 
-        while self.gen_id <= self.conf.gen_max:  # max generation, max time, done...
+        while self.gen_id <= self.conf.gen_max and not self.custom_exit_condition():  # max generation, max time, done...
             self.time_genstart = time.perf_counter()
 
             if self.gen_id == 0:

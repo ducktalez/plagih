@@ -639,6 +639,76 @@ Intro / Motivation
 \end_layout
 
 \begin_layout Standard
+\begin_inset Box Boxed
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+Diese Version wird noch weiter bearbeitet.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+Todos sind mit xx oder xxx gekennzeichnet.
+ Weitere Todos sind u.a.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+Intro
+\begin_inset Quotes erd
+\end_inset
+
+ - 
+\begin_inset Quotes eld
+\end_inset
+
+related Work
+\begin_inset Quotes erd
+\end_inset
+
+ umstrukturieren
+\end_layout
+
+\begin_layout Itemize
+Diagramme besser erkennbar machen
+\end_layout
+
+\begin_layout Itemize
+Einige Läufe rausschmeißen, Gefundene GP-Kandidaten gut darstellen aber
+ alle Lösungen des Laufes im Anhang Erwähnen
+\end_layout
+
+\begin_layout Itemize
+Einige Referenzen und Quellen einbauen
+\end_layout
+
+\begin_layout Plain Layout
+Die Seitenzahl soll außerdem, wenn möglich, auf 50 reduziert werden.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -844,7 +914,7 @@ Especially in sensitive areas such as industry, a tradeoff in favor of performan
 ce at the expense of loss of control is often not an option, since even
  rarely occurring wrong decisions could have fatal consequences.
  In view of the increasing importance of algorithms in our society, the
- EU has also defined a right to explain in the GDPR (DSGVO).
+ EU has also defined a right to explain in the GDPR (xxx Deutsch: DSGVO).
  
 \end_layout
 
@@ -9634,8 +9704,8 @@ name "sarsa1000-plots"
 
 \end_layout
 
-\begin_layout Paragraph
-Mountain Car with Sarsa-200
+\begin_layout Section
+Sarsa-200
 \end_layout
 
 \begin_layout Standard
@@ -9644,8 +9714,27 @@ Although it is the same benchmark, the results are hardly comparable to
  Not only is a new performance achieved, but there are no more outlier runs.
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Scratch GP Results (MSE 200)
+\end_layout
+
+\begin_layout Standard
+The regular GP runs could completely solve the problem from complexity 18,
+ where both the regression error and the average reward were exceptionally
+ good.
+ Very different results are noticeable in the medium-complex candidates.
+ 
+\end_layout
+
+\begin_layout Standard
+The formulas are hardly comprehensible.
+ Instead of a distinction between Action 0 and Action 1, a mathematical
+ formula is found.
+ Potentizing was often done with very high values, often with very high
+ values, which was not significant in any humanly considered approach.
+ The simplest agents unfortunately show a poor performance in the real evaluatio
+n which could not exceed the maximum-momentum solution.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -9664,6 +9753,10 @@ status open
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Pareto candidates in a regular run with MSE.
 \end_layout
 
 \end_inset
@@ -9671,35 +9764,42 @@ status open
 
 \end_layout
 
-\begin_layout Itemize
-Lösung ab 18 Knoten
-\end_layout
+\end_inset
 
-\begin_layout Itemize
-erst underfitting, dann overfitting (sinus)
-\end_layout
 
-\begin_layout Itemize
-komplexeste Lösung ist Beste
-\end_layout
-
-\begin_layout Itemize
-Lösungen generell sehr volatil, nicht sicher
-\end_layout
-
-\begin_layout Itemize
-Lösungen sehr unterschiedlich
 \end_layout
 
 \begin_layout Standard
-A random GP run without reference tree was selected as the reference run.
- Both the regression error and the average reward were exceptionally good.
- The most complex candidates were even able to undercut the Sarsa-200 policy.
- 
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/analysis_input.tex"
+
+\end_inset
+
+
 \end_layout
 
-\begin_layout Standard
-Im Vergleichslauf wurde ein ähnliches Verhalten festgestellt
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+complete analysis
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -9710,21 +9810,14 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs2/MTC200_MSE_scratch/sfehs_eval/space-6.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.pdf
 	height 5cm
 
 \end_inset
 
 
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs2/MTC200_MSE_scratch/sfehs_eval/space-8.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs2/MTC200_MSE_scratch/sfehs_eval/space-11.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-18.pdf
 	height 5cm
 
 \end_inset
@@ -9736,7 +9829,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Auch im Vergleichslauf wird eine ähnliche Formel gefunden.
+Kandidat 10 (linke) und 18 (rechts) erreichen beide das Ziel.
 \end_layout
 
 \end_inset
@@ -9747,44 +9840,6 @@ Auch im Vergleichslauf wird eine ähnliche Formel gefunden.
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs2/MTC200_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Explainability
-\end_layout
-
-\begin_layout Standard
-The formulas are hardly comprehensible.
- Instead of a distinction between Action 0 and Action 1, a mathematical
- formula is found.
- Potentizing was often done with very high values, often with very high
- values, which was not significant in any humanly considered approach.
- The simplest agents unfortunately show a poor performance in the real evaluatio
-n which could not exceed the maximum-momentum solution.
- 
 \end_layout
 
 \begin_layout Standard
@@ -9866,7 +9921,7 @@ status open
 
 
 \backslash
-hrule
+hfill
 \end_layout
 
 \end_inset
@@ -9920,7 +9975,7 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
 
 \begin_layout Plain Layout
 The agent is reached with maximum acceleration by a shorter printout.
- xxx the hrule above
+ 
 \end_layout
 
 \end_inset
@@ -10227,8 +10282,15 @@ The best agent has a very low regression error of only 0.09 and a fitness
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 simple 
+\begin_inset CommandInset label
+LatexCommand label
+name "par:simple,-maximum-momentum"
+
+\end_inset
+
+
 \begin_inset CommandInset label
 LatexCommand label
 name "run:MTC200_MSE_simple"
@@ -10236,6 +10298,100 @@ name "run:MTC200_MSE_simple"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+This ensures maximum momentum and the goal is always reached.
+ The average reward of the SARSA-agent is, with an average reward of 
+\begin_inset Formula $-103$
+\end_inset
+
+, outperforming the simple approach of a developer that will be introduced
+ in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "par:simple,-maximum-momentum"
+
+\end_inset
+
+ with about 
+\begin_inset Formula $14\%$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/tree_simple.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational tree of the simplest program.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mtc_simple_tree"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As can be seen especially with the more complex solutions, the TED loses
+ its effect after a certain size.
+ Not pushing is often selected, especially in marginal areas.
 \end_layout
 
 \begin_layout Standard
@@ -10353,7 +10509,8 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_04.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Statt die if-Bedingung zu ändern wird der Dummywert für Aktion 0 neu brechnet.
+Instead of changing the if-condition the dummy value for action 0 is recalculate
+d, but the basic structure is still recognisable.
 \end_layout
 
 \end_inset
@@ -10467,120 +10624,7 @@ Starting from 7 changes (starting from the first possibility) the if structure
 
 \end_layout
 
-\begin_layout Paragraph
-simple 
-\begin_inset CommandInset label
-LatexCommand label
-name "par:simple,-maximum-momentum"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-erste Verbesserung (nur aus Vollständigkleit)
-\end_layout
-
-\begin_layout Itemize
-if fall wird geändert
-\end_layout
-
-\begin_layout Standard
-This ensures maximum momentum and the goal is always reached.
- The average reward of the SARSA-agent is, with an average reward of 
-\begin_inset Formula $-103$
-\end_inset
-
-, outperforming the simple approach of a developer that will be introduced
- in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "par:simple,-maximum-momentum"
-
-\end_inset
-
- with about 
-\begin_inset Formula $14\%$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/MTC/tree_simple.pdf
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Computational tree of the simplest program.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mtc_simple_tree"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-As can be seen especially with the more complex solutions, the TED loses
- its effect after a certain size.
- Not pushing is often selected, especially in marginal areas.
-\end_layout
-
-\begin_layout Subsubsection
+\begin_layout Subsection
 simpleFix
 \end_layout
 
@@ -10759,59 +10803,17 @@ With a regression error of only 0.05 this is even lower than the scratch
  
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 simplePlus
 \end_layout
 
 \begin_layout Standard
-Hat einen extraknoten
+(Keine weitreichenden Erkenntnisse in diesem Lauf, Aktion 0 wurde nicht
+ wirklich genutzt)
 \end_layout
 
 \begin_layout Subsection
-Close-form preset policy, parabolic lower and upper bound, Xiao
-\end_layout
-
-\begin_layout Itemize
-ted robustness
-\end_layout
-
-\begin_layout Itemize
-KEINE Verschlechterung! SEHR sicher!
-\end_layout
-
-\begin_layout Itemize
-Besser als Sarsa200 Ziellösung??
-\end_layout
-
-\begin_layout Subsubsection
-xiao
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-xiaoFix
+Close-form preset policy, parabolic lower and upper bound (Xiao)
 \end_layout
 
 \begin_layout Standard
@@ -10899,6 +10901,49 @@ name "fig:Preset-policy:-Recognizable"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Itemize
+ted robustness
+\end_layout
+
+\begin_layout Itemize
+Keine Verschlechterungen, sehr sicher
+\end_layout
+
+\begin_layout Itemize
+Besser als Sarsa200 Ziellösung
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Fixe Knoten
+\end_layout
+
+\begin_layout Itemize
+War in diesem Lauf nicht nötig, die Grundstruktur ist erhalten geblieben.
 \end_layout
 
 \begin_layout Subsection
@@ -11073,11 +11118,11 @@ beste
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="3" alignment="left" valignment="middle" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+Scheinen generell schlechter als MSE-Versionen zu sein...
 \end_layout
 
 \end_inset
@@ -11133,7 +11178,7 @@ danach: a0!
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11193,7 +11238,7 @@ todo
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11249,7 +11294,7 @@ simplePlus
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11305,7 +11350,7 @@ ned so toll
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11373,7 +11418,7 @@ overfit ende?
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11449,7 +11494,7 @@ phänotyp diff
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11505,7 +11550,7 @@ CORRUPT
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11561,7 +11606,7 @@ schmalere Schnecke
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11617,7 +11662,7 @@ simonBestFix
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell multirow="4" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11659,11 +11704,6 @@ simonBestFix
 \end_inset
 
 
-\end_layout
-
-\begin_layout Plain Layout
-xxx idee: TED je nach tiefe des eingriffs (root node, depth 1, depth 2,
- wenn depth full belegt ist)
 \end_layout
 
 \end_inset
@@ -11725,10 +11765,6 @@ name "mc:simonsBest-plot-space"
 simonBest
 \end_layout
 
-\begin_layout Itemize
-overfitting an die Fehler
-\end_layout
-
 \begin_layout Subsubsection
 simonBestFix
 \end_layout
@@ -11738,7 +11774,7 @@ xxx
 \end_layout
 
 \begin_layout Section
-Mountain Car with Sarsa-75
+Sarsa-75
 \end_layout
 
 \begin_layout Itemize
@@ -11810,7 +11846,7 @@ Robuste Blackbox ist wichtig
 \end_layout
 
 \begin_layout Section
-Industrial Benchmark runs
+Industrial Benchmark (PSONN)
 \end_layout
 
 \begin_layout Standard
@@ -11843,6 +11879,11 @@ chsten ist, dass die PSONN policy als Blackbox zu komplex ist, als dass
 \begin_layout Standard
 Da die Kandidaten entsprechend auch keinen Performancegewinn erwarten lassen
  können wäre ihre Auswertung nicht sinnvoll.
+\end_layout
+
+\begin_layout Standard
+Da das IB besonders sichere Ansätze unterstützt werden auch die Ergebnisse
+ oft schlecht.
 \end_layout
 
 \begin_layout Standard
@@ -12726,6 +12767,12 @@ MAE_scratch
 \end_layout
 
 \begin_layout Standard
+MAE statt MSE - die rot gestrichelten Performanceausreißer sollte es eig.
+ nicht geben.
+ Lauf wird sowieso ignoriert, MAE wird nicht verwendet.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -12768,7 +12815,8 @@ Der Regressionsfehler sinkt auf 1.52.
 \end_layout
 
 \begin_layout Itemize
-Die Ergebnisse nutzen alle stark die Vorzeichenfunktion.
+Die Ergebnisse nutzen alle stark die Vorzeichenfunktion und limitieren sich
+ damit von Haus aus
 \end_layout
 
 \begin_layout Itemize
@@ -12814,6 +12862,14 @@ MSE_scratch
 \end_layout
 
 \begin_layout Standard
+Normale GP-Resultate für das IB.
+\end_layout
+
+\begin_layout Itemize
+sehen leider auch ganz gut aus.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -12837,7 +12893,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx
+xxx Results with classical genetic programming.
 \end_layout
 
 \end_inset
@@ -12875,10 +12931,6 @@ xxx
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -12886,6 +12938,27 @@ xxx
 
 \begin_layout Paragraph
 IB_MSE_mean
+\end_layout
+
+\begin_layout Standard
+Expetrenpolicy: Stellt immer auf die mittleren Werte (v, g, h) aus Daniels
+ Datensatz ein.
+\end_layout
+
+\begin_layout Itemize
+Die Startpolicy ist schon unverschämt gut.
+ 
+\end_layout
+
+\begin_layout Itemize
+Der Regressionsfehler bei der Expertenpolicy ist schon so groß, dass ein
+ Lauf nicht erfolgsversprechend ist.
+ (Summe der MSE ca.
+ 6.5)
+\end_layout
+
+\begin_layout Itemize
+Kandidat 40: MSE 1.994, Fitness 6697
 \end_layout
 
 \begin_layout Standard
@@ -12942,7 +13015,7 @@ filename "../benchmarks/slurm_runs/IB_MSE_mean/combined_input.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx
+xxx this input is far too long
 \end_layout
 
 \end_inset
@@ -12955,16 +13028,36 @@ xxx
 
 \end_layout
 
-\begin_layout Itemize
-startfehler: 6.5
-\end_layout
-
-\begin_layout Itemize
-40: 1.994, 6697
+\begin_layout Standard
+The simplest yet successful heuristic "Nothing" is simply nothing to change,
+ resulting in an average reward of 6068.
+ After the normalization of the values this led to the following origin
+ trees.
 \end_layout
 
 \begin_layout Paragraph
 IB_MSE_50
+\end_layout
+
+\begin_layout Standard
+Ähnlich wie bei IB_MSE_mean, aber statt auf den Durchschnittswert wird auf
+ den Wert 50 eingestellt.
+\end_layout
+
+\begin_layout Itemize
+Bessere Resultate als average
+\end_layout
+
+\begin_layout Itemize
+startfehler 6.566
+\end_layout
+
+\begin_layout Itemize
+40: 1.995, -6060
+\end_layout
+
+\begin_layout Itemize
+9: -5933
 \end_layout
 
 \begin_layout Standard
@@ -13039,6 +13132,15 @@ IB_MSE_s3m
 \end_layout
 
 \begin_layout Standard
+Simon's konstruierter Lauf sieht sogar relativ gut aus.
+ 
+\end_layout
+
+\begin_layout Standard
+Ergebnisse sind konstant und stets eine Verbesserung.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -13106,225 +13208,54 @@ xxx
 \end_layout
 
 \begin_layout Subsection
-Scratch GP Results MSE
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_scratch/pareto_combined.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_scratch/regression_all.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Results without any origin.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Mean values
-\end_layout
-
-\begin_layout Standard
-The simplest yet successful heuristic "Nothing" is simply nothing to change,
- resulting in an average reward of 6068.
- After the normalization of the values this led to the following origin
- trees.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-filename "../benchmarks/slurm_runs/IB_MSE_mean/combined_input.tex"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xx this input is far too long
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsubsection
-50-50-50
-\end_layout
-
-\begin_layout Standard
-This agent just resets every value to the default of 50.
- Der Ansatz ist dem nichts-tun sehr ähnlich, durch den Setpoint ändern sich
- aber die Punkte zu denen die policy konvergiert.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_50/pareto_combined.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_50/regression_all.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Bessere Resultate als average
-\end_layout
-
-\begin_layout Itemize
-startfehler 6.566
-\end_layout
-
-\begin_layout Itemize
-40: 1.995, -6060
-\end_layout
-
-\begin_layout Itemize
-9: -5933
-\end_layout
-
-\begin_layout Subsubsection
-Mean value
-\end_layout
-
-\begin_layout Standard
-Dieser Ansatz versucht stets zu den Durchschnittswerten der der Daten zu
- konvergieren.
-\end_layout
-
-\begin_layout Subsubsection
-Simons Best
-\end_layout
-
-\begin_layout Standard
-Diese Heuristik wurde unter durch ausprobieren erzeugt.
- 
-\end_layout
-
-\begin_layout Subsection
 Analysis
 \end_layout
 
-\begin_layout Standard
-Aktion 0 ist am schwersten anzunähren, der Regressionsfehler unterschreitet
- hier nur knapp d
+\begin_layout Itemize
+Aktion 0 ist am schwersten anzunähren, der Regressionsfehler liegt hier
+ meistens um 0.2 höher.
+\end_layout
+
+\begin_layout Itemize
+Wissen über Strategie, die PSONN verfolgte konnte nicht erlangt werden.
+\end_layout
+
+\begin_layout Itemize
+Ich bin kein IB-Experte, konnte somit wohl auch keine 
+\begin_inset Quotes eld
+\end_inset
+
+echte
+\begin_inset Quotes erd
+\end_inset
+
+ Expertenpolicy verwenden.
+\end_layout
+
+\begin_layout Itemize
+Die Kandidaten bei 
+\begin_inset Quotes eld
+\end_inset
+
+S3m
+\begin_inset Quotes erd
+\end_inset
+
+ haben sich alle an die Struktur der Grundlösung gehalten.
 \end_layout
 
 \begin_layout Standard
-The results schow extraordinary well performance in reward, robustness and
- explainablilty.
+Weitere Punkte:
 \end_layout
 
-\begin_layout Standard
-Das IB zeigte außerordentlich gute Performance für ein Benchmark, das schwer
- zu erreichen ist.
- Wissen über Strategie, die PSONN verfolgte konnte nicht erlangt werden.
- Dies könnte aber auch daran liegen, dass ich bei weitem kein Experte bin.
+\begin_layout Itemize
+(unwichtig: Einen scratch-Kandidaten als Ausgangspunkt zu nehmen macht keinen
+ Sinn, der wurde ja schon auf dem Datensatz trainiert
 \end_layout
 
-\begin_layout Paragraph
-Limitations
-\end_layout
-
-\begin_layout Standard
-Das IB zeigt seh gut, wie komplexe Kontroler den Einsatz von gelegentlicher
- Auswertung der Fitness erfordern, da der Regressionsfehler sonst zu schlecht
- abschneidet.
- Auch kann ein GP-Agent, der auf einem Datensatz mit normales GP erzeugt
- wurde nicht als Ausgangspunkt für Verbesserungen dienen, da er im Optimalfall
- bereits zu gut ist, als dass Verbesserungen noch viel ändern.
-\end_layout
-
-\begin_layout Standard
-Das IB zeigt außerdem, dass ein sparser Zustandsraum, für den es viele gute,
- einzelne Wege gibt, nur schwer für diesen Ansatz eignet, weil über die
- Performance von Mittelwegen keine Aussage getroffen werden kann (im Gegensatz
- zum MC, wo es eine logische beste Lösung gibt).
-\end_layout
-
-\begin_layout Standard
-Setzt sich ein Kandidat aus mehreren Teillösungen zusammen, so ist besser
- erkennbar, ab welchem Punkt sich ein testen der Kandidaten lohnt.
-\end_layout
-
-\begin_layout Section
-Results
-\end_layout
-
-\begin_layout Standard
-Einfache Benchmarks sind mit diesem Ansatz gut lösbar und können Kandidaten
- erzeugen, die sowohl sehr gut interpretierbar sind als auch gute Performance
- liefern.
+\begin_layout Itemize
+Der Lösungsraum im IB ist zu sparse als dass eine Annäherung an einen Mittelweg
+ (der zu weit von der Lösung liegt) keinen SInn macht
 \end_layout
 
 \begin_layout Section
@@ -13332,15 +13263,21 @@ Diskussion plus
 \end_layout
 
 \begin_layout Itemize
-differentielles lernen?
+differentielles lernen: Durch die Kombination aus dem Vorgehen der Expertenpolic
+y und und den Daten eines anderen Vorgehens muss dasselbe Problem nochmal
+ anders gelernt werden.
+ Im Sport ist dieses Vorgehen sehr erfolgreich.
 \end_layout
 
 \begin_layout Itemize
-kürzere Lernzeit durch einschränkung des Suchraumes?
+Durch das implizite Vorgeben einer Expertenpolicy wird der Suchraum implizit
+ eingeschränkt.
+ Wenn dieser ein gutes Gerüst stellt wird der Suchraum eingeschränkt und
+ kann so schneller zu futen Ergebnissen führen.
 \end_layout
 
 \begin_layout Chapter
-Conclusion
+Conclusion (xxx komplett neu schreiben, brainstorm)
 \end_layout
 
 \begin_layout Standard

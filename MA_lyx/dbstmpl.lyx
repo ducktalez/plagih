@@ -517,8 +517,8 @@ Im Angesicht der wichtigen Rolle von Algorithmen in Unserer Gesellschaft
 \end_layout
 
 \begin_layout Itemize
-xxx all diese punkte unterbringen und abarbeiten! xxx, todo, sfeh, ???,
- frage, question, ...
+xxx all diese punkte unterbringen und abarbeiten! todo, sfeh, ???, frage,
+ question, ...
 \end_layout
 
 \begin_layout Itemize
@@ -766,56 +766,6 @@ eloped heuristic is used as a reference for further explanations.
 The extent of the changes is calculated with the help of TED.
 \end_layout
 
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-def
-\backslash
-svgwidth{
-\backslash
-textwidth}
-\backslash
-import{img/inkscape}{explainability_gap2.pdf_tex}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-An insurmountable trench as a metaphor for the explainability gap - the
- experts are at the top of the pyramid of humanly explainable approaches.
- To overcome the trench to neuropolicy a flat and close place should be
- used.
- To explain a black box it makes sense to build on knowledge that can already
- be explained.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
 Motivation
 \end_layout
@@ -914,7 +864,7 @@ Especially in sensitive areas such as industry, a tradeoff in favor of performan
 ce at the expense of loss of control is often not an option, since even
  rarely occurring wrong decisions could have fatal consequences.
  In view of the increasing importance of algorithms in our society, the
- EU has also defined a right to explain in the GDPR (xxx Deutsch: DSGVO).
+ EU has also defined a right to explain in the GDPR.
  
 \end_layout
 
@@ -1161,7 +1111,9 @@ the ability to explain or to present in understandable terms to humans
 \begin_inset Quotes erd
 \end_inset
 
- and is thus based on the classic version of an explanation are 
+ and is thus strongly related to the classical version of an explanation
+ according to the cambridge dictionary, which defines an explanation as
+ 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1170,8 +1122,19 @@ the details or reasons that someone gives to make something clear or easy
 \begin_inset Quotes erd
 \end_inset
 
- [xxx quelle Cambridge Dictionary].
- Explicability is, in contrast, rather a 
+ [xx quelle Cambridge Dictionary angeben? 
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+https://dictionary.cambridge.org/dictionary/english/explanation
+\end_layout
+
+\end_inset
+
+].
+ Explanation is, in contrast, rather a 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1181,11 +1144,6 @@ collection of features of interpretable domain that have contributed for
 \end_inset
 
 .
- An explanation should thus be provided for the gap between a person who
- has knowledge causally based on paradigms and an unmanageable, unknown
- logic, without relying solely on statistical tests.
- How explainable a solution is depends on the effort needed for a person
- to gain enough understanding to trust the approach.
  
 \end_layout
 
@@ -1205,11 +1163,9 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
@@ -1376,11 +1332,6 @@ Explicit logic through the formulation in a language
 
 Heuristics and explanations are formulated in already defined languages
  and can be checked for their truthfulness.
- 
-\begin_inset Newline newline
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -2151,9 +2102,6 @@ status open
 \end_inset
 
 
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
@@ -2220,7 +2168,7 @@ Bei einer impliziten Representation ist eine Strategie, beispielsweise durch
 \end_layout
 
 \begin_layout Plain Layout
-xxx selbst wenn trusting: Man kann keine Änderungen ohne weiteres durchführen.
+xx selbst wenn trusting: Man kann keine Änderungen ohne weiteres durchführen.
  (siehe alpha go)
 \end_layout
 
@@ -2256,7 +2204,7 @@ eben, die Ihre Gewichtungen, falls nötig, anpassen.
  umgekehrt funktioniert es nicht.
  Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
  uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
- [xxx echo state networks]
+ [xx echo state networks]
 \end_layout
 
 \begin_layout Itemize
@@ -2323,12 +2271,34 @@ Like other random learning methods, evolutionary algorithms are not affected
 \end_layout
 
 \begin_layout Section
-Genetic Programming
+Genetic Programming 
+\begin_inset CommandInset label
+LatexCommand label
+name "gp_Genetic-Programming"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-xxx symbolic regression: find both the funktion and its coefficients.
+xxx non-binary (arity 3 functions), +depth problem
+\end_layout
+
+\begin_layout Standard
+xxx 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "poli08:fieldguide_to_genetic_programming"
+literal "true"
+
+\end_inset
+
  
+\end_layout
+
+\begin_layout Standard
+xxx symbolic regression: 
 \end_layout
 
 \begin_layout Standard
@@ -2845,23 +2815,6 @@ Pareto GP
 \end_layout
 
 \begin_layout Standard
-The search space of the trees is limited by the tree depth and the number
- of nodes.
- This avoids overvitting, the evaluation of the candidates and the evolution
- process is faster and the number of nodes can be additionally weighted.
-\end_layout
-
-\begin_layout Standard
-Instead of storing only the best candidate, a Pareto Front is created, on
- which the fittest candidates for the respective complexity are located.
- This allows the user to select the desired ratio between fitness and complexity.
- For this purpose, the best candidates are put on a Pareto front with the
- fittest candidate depending on their complexity.
- As complexity results from the number of nodes of a tree.
- 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Wrap figure
 lines 0
 placement o
@@ -2883,8 +2836,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-GP candidates aligned on the Pareto front.
- With increased complexity the curve usually flattens out.
+The Pareto front usually flattens out with increasing complexity.
 \end_layout
 
 \end_inset
@@ -2894,6 +2846,27 @@ GP candidates aligned on the Pareto front.
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+The search space of the trees is limited by the tree depth and the number
+ of nodes.
+ This avoids overvitting, the evaluation of the candidates and the evolution
+ process is faster and the number of nodes can be additionally weighted.
+\end_layout
+
+\begin_layout Standard
+Instead of storing only the best candidate, a Pareto Front is created, on
+ which the fittest candidates for the respective complexity are located.
+ This allows the user to select the desired ratio between fitness and complexity.
+ For this purpose, the best candidates are put on a Pareto front with the
+ fittest candidate depending on their complexity.
+ As complexity results from the number of nodes of a tree.
+ 
+\end_layout
+
+\begin_layout Standard
 Strongly Typed Genetic Programming (STGP) is another extension of GP, where
  an explicit transformation of truth values into numbers and vice versa
  is required 
@@ -3053,6 +3026,11 @@ name "sec:Online-offline_regression"
 \end_layout
 
 \begin_layout Standard
+xxx find both the funktion and its coefficients.
+ offline regression 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -3072,6 +3050,22 @@ AIs, a distinction is made between online and offline training.
 To explain neuropolicies post-hoc holistically is a task that is currently
  only possible with losses.
  
+\end_layout
+
+\begin_layout Standard
+xxx In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
+
+\end_inset
+
+ it is shown, for example, how policies can be created for highly complex
+ industrial applications.
+ These are far less complex than the systems of equations of a neural network,
+ but are nevertheless often difficult for humans to comprehend.
+ xxx steht schon in related work
 \end_layout
 
 \begin_layout Standard
@@ -3162,14 +3156,14 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Box Frameless
+\begin_inset Box Boxed
 position "t"
 hor_pos "c"
 has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -3179,13 +3173,23 @@ shadowsize "4pt"
 framecolor "black"
 backgroundcolor "none"
 status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_00.tex"
+
+\end_inset
+
+
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
 The human being will tend to differentiate using an if statement.
- 
 \end_layout
 
 \end_inset
@@ -3196,14 +3200,27 @@ The human being will tend to differentiate using an if statement.
 \end_inset
 
 
-\begin_inset Box Frameless
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Boxed
 position "t"
 hor_pos "c"
 has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -3215,11 +3232,21 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Ein GP-Ansatz ist auf Sparsamkeit bedacht und würde, statt zwischen Aktionen
- zu unterscheiden, diese 
+GP formula solution with almost the same result.
 \end_layout
 
 \end_inset
@@ -3236,9 +3263,8 @@ Ein GP-Ansatz ist auf Sparsamkeit bedacht und würde, statt zwischen Aktionen
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Die beiden Formeln ergeben fast genau dieselben Ergebnisse, verfolgen dabei
- aber komplett verschiedene Ansätze.
- 
+Both approaches can be further optimised with GP, but the human approach
+ could be better suited for this.
 \end_layout
 
 \end_inset
@@ -3252,8 +3278,61 @@ Die beiden Formeln ergeben fast genau dieselben Ergebnisse, verfolgen dabei
 \end_layout
 
 \begin_layout Standard
-xxx idee sign(vel) vs if-then-else: if then else kann verbessert werden,
- sign zwar auch, aber sieht halt kacke aus.
+How explainable a solution is depends on the effort needed for a person
+ to gain enough understanding to trust the approach.
+ An explanation should thus be provided for the gap between a person who
+ has knowledge causally based on paradigms and an unmanageable, unknown
+ logic, without relying solely on statistical tests.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+def
+\backslash
+svgwidth{
+\backslash
+textwidth}
+\backslash
+import{img/inkscape}{explainability_gap2.pdf_tex}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+An insurmountable trench as a metaphor for the explainability gap - the
+ experts are at the top of the pyramid of humanly explainable approaches.
+ To overcome the trench to neuropolicy a flat and close place should be
+ used.
+ To explain a black box it makes sense to build on knowledge that can already
+ be explained.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3611,7 +3690,7 @@ status open
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3620,7 +3699,7 @@ Number
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3631,7 +3710,7 @@ Action
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3640,7 +3719,7 @@ Action
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3651,7 +3730,7 @@ push left
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3660,7 +3739,7 @@ push left
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3671,7 +3750,7 @@ no push
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3680,7 +3759,7 @@ no push
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3695,9 +3774,6 @@ push right
 \end_inset
 
 
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="4">
 <features tabularvalignment="middle">
@@ -3706,7 +3782,7 @@ push right
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3733,7 +3809,7 @@ Min
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3744,7 +3820,7 @@ Max
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3771,7 +3847,7 @@ position
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3782,7 +3858,7 @@ position
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3809,7 +3885,7 @@ velocity
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3928,24 +4004,38 @@ reference "wrap:mc-obs-act-plot-space"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
 	height 5cm
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
@@ -3971,15 +4061,6 @@ name "wrap:mc-obs-act-plot-space"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -3987,74 +4068,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-MC full-space decision plot.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -4103,17 +4117,6 @@ t version was also created, which, after 100 test runs, colours the states
 \end_layout
 
 \begin_layout Standard
-A third version also examines the deviations from the reference policy in
- 100 runs.
- For this purpose, the differences were examined for the area in which the
- corresponding Sarsa policy generates data.
- In this case a completely white snail would be excellent, as the differences
- would then be minimal.
- In these plots you can see where the agents have problems.
- 
-\end_layout
-
-\begin_layout Standard
 \begin_inset Wrap figure
 lines 0
 placement o
@@ -4129,6 +4132,14 @@ status open
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+This plot marks the deviations of the Black box policy within its decision
+ space.
 \begin_inset CommandInset label
 LatexCommand label
 name "wrap:mc-obs-act-plot-space-diff"
@@ -4143,19 +4154,20 @@ name "wrap:mc-obs-act-plot-space-diff"
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-xxx ALL runs in comparisson? (regression error and fitness)
-\end_layout
-
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+A third version also examines the deviations from the reference policy in
+ 100 runs.
+ For this purpose, the differences were examined for the area in which the
+ corresponding Sarsa policy generates data.
+ In this case a completely white snail would be excellent, as the differences
+ would then be minimal.
+ In these plots you can see where the agents have problems.
+ 
 \end_layout
 
 \begin_layout Section
@@ -4216,14 +4228,14 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="8">
 <features islongtable="true" longtabularalignment="center">
-<column alignment="center" valignment="top" width="0pt">
-<column alignment="center" valignment="top" width="2cm">
-<column alignment="center" valignment="top" width="2cm">
-<column alignment="center" valignment="top" width="2cm">
-<column alignment="center" valignment="top" width="2cm">
-<column alignment="center" valignment="top" width="2cm">
-<column alignment="center" valignment="top" width="2cm">
-<column alignment="center" valignment="top" width="2cm">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.8cm">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
@@ -4904,15 +4916,21 @@ Black box: PSONN
 \end_layout
 
 \begin_layout Standard
-As black box a particle swarm optimisation algorithm with neural networks
- (PSONN [xxx Quelle]) with a calculated IB reward of 
+As black box, a particle swarm optimisation algorithm with neural networks
+ (PSONN 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "false"
+
+\end_inset
+
+) with a calculated IB reward of 
 \begin_inset Formula $5353$
 \end_inset
 
  was chosen.
-\end_layout
-
-\begin_layout Standard
+ 
 \begin_inset Foot
 status open
 
@@ -4939,29 +4957,13 @@ literal "true"
 
 \end_inset
 
- Particle swarm optimisation Algorithmen können, ähnlich der GP, für sehr
- viele Problemarten Lösungen finden.
- [xxx quelle, hein paper] Dabei wird der Lösungsraum von einer Schwarmpopulation
- bevölkert, die durch Schwarmintelligenz die besten Optima finden sollen.
- Dieses Vorgehen ist sehr interessant als Blackbox, auch sehr sperrige Lösungsan
-sätze realisiert werden können.
- Dies ist sowohl in der GP als auch bei neuronalen Netzen möglich, aber
- nicht der vorherrschende Modus operandi.
- Diese Policy kann somit einen weiteren Faktor der Undischerheit für die
- GP darstellen, indem der Regressionsfehler nicht ausreichend angenähert
- wird.
-\end_layout
-
-\begin_layout Subsection
-Hein GP results
-\end_layout
-
-\begin_layout Standard
-xxx MSE/RMSE nur mit kombinierten Läufen
-\end_layout
-
-\begin_layout Standard
-xxx Hier oder bei related work?
+ Particle swarm optimisation algorithms, similar to GP, can find solutions
+ for many types of problems.
+ The solution space is populated by a swarm population, which should find
+ the best optima by swarm intelligence.
+ This approach is very interesting as a black box, because even bulky solution
+ models can be found relatively quickly.
+ 
 \end_layout
 
 \begin_layout Chapter
@@ -5153,8 +5155,8 @@ In this part we discuss possibilities to make measurable explanations.
  
 \end_layout
 
-\begin_layout Paragraph
-Familiarity measure
+\begin_layout Subsection
+Tree Edit Distance as Familiarity measure 
 \end_layout
 
 \begin_layout Standard
@@ -5213,7 +5215,44 @@ Univariate or low-dimansional multivariate formula which is based on a few
 \end_layout
 
 \begin_layout Itemize
-Not fundamentally limiting the pareto GP
+Not fundamentally limiting the Evolution process
+\end_layout
+
+\begin_layout Standard
+The tree edit distance (TED) meets all these requirements and is also a
+ well-known problem from theoretical computer science.
+ It measures 
+\begin_inset Quotes eld
+\end_inset
+
+distance from two labeled ordered trees T and T' by the minimum cost sequence
+ of edit operations needed to transform T into T'.
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedOldestPaper"
+literal "true"
+
+\end_inset
+
+ Edits are the elemental changes 
+\begin_inset Formula $\{\text{delete},\text{insert,\text{modify}\}}$
+\end_inset
+
+ that can be applied to a tree.
+ Thanks to extensive research in this field, the algorithms for calculating
+ the TED have been greatly improved in performance and robustness.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedAPTED1,tedAPTED2"
+literal "true"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -5338,61 +5377,6 @@ Human written abstracts problems in programs often by if statements, which
 
 \end_layout
 
-\begin_layout Subsection
-Tree Edit Distance (TED)
-\end_layout
-
-\begin_layout Standard
-[xxx Zusammenhang der TED? Erst ]
-\end_layout
-
-\begin_layout Standard
-The tree edit distance (TED) is a well-known problem from theoretical computer
- science and will play a crucial role in calculating familiarity.
- It deals with the question, how many elementary changes 
-\begin_inset Formula $\{\text{delete},\text{insert,\text{modify}\}}$
-\end_inset
-
- to a tree T are at least needed to create a tree T'.
- 
-\end_layout
-
-\begin_layout Quote
-“The tree-to-tree correction problem is to determine, for two labeled ordered
- trees and T', the distance from T to T' as measured by the minimum cost
- sequence of edit operations needed to transform T into T'.
- The edit operations investigated allow changing one node of a tree into
- another node, deleting one node from a tree, or inserting a node into a
- tree.” 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tedOldestPaper"
-literal "true"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Thanks to numerous improvements made in the last years, the state of the
- art TED computation is robust and fast enough for evaluating numerous of
- GP trees 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tedAPTED1,tedAPTED2"
-literal "true"
-
-\end_inset
-
-.
- For the experiments the TED was used in its simplest form described above
- due to keeping it simple.
- Nevertheless, there are some conspicuous features and possibilities for
- improvement that should be mentioned, for example the weighted TED or the
- explicit securing of the core structure by fixed nodes.
-\end_layout
-
 \begin_layout Standard
 \begin_inset Float figure
 wide false
@@ -5437,19 +5421,28 @@ name "fig:TED_explain_operators"
 
 \end_layout
 
-\begin_layout Itemize
-Funfact: Die TED hat auch auswirkungen auf den Phänotyp (siehe resultate),
- da die Struktur bei gleichzeitiger Verbesserung des Regressionsfehlers
- sich oftmals auf die bereits funktionierenden Strukturen stützen muss.
- Allerdings keine Pflicht.
+\begin_layout Paragraph
+Weaknesses and conceivable improvements xxx
 \end_layout
 
-\begin_layout Subparagraph
-Weaknesses and conceivable improvements
+\begin_layout Standard
+For the experiments the TED was used in its simplest form described above
+ due to keeping it simple.
 \end_layout
 
 \begin_layout Itemize
 Weighted TED
+\begin_inset Newline newline
+\end_inset
+
+Das Mapping der nötigen Edits kann, je nach Vorlieben, gewichtet werden.
+ Das kann sowohl die Art des Edits (z.
+ B.
+ nicht werten von delete-operatoren) oder auch die Knotenarten betreffen,
+ sodass beispielsweise Operatoren derselben Familie (z.
+ B.
+ Winkeloperatoren) oder auch einzeln gewichtet werden können.
+ 
 \begin_inset Newline newline
 \end_inset
 
@@ -5461,8 +5454,9 @@ The weighting of the nodes is not a trivial task with the TED.
 
 \begin_deeper
 \begin_layout Itemize
-The absolute complexity of the origin is chosen as initial complexity, if
- nodes are removed or changed a part of the weighting is subtracted
+Change to a more difficult or more simple node? -> The absolute complexity
+ of the origin is chosen as initial complexity, if nodes are removed or
+ changed a part of the weighting is subtracted
 \end_layout
 
 \begin_layout Itemize
@@ -5472,6 +5466,46 @@ A separate parsimony measurement (possibly as a new dimension of the Pareto
 
 \end_deeper
 \begin_layout Itemize
+Preferred Counting of operators?
+\begin_inset Newline newline
+\end_inset
+
+The structure of a tree is essentially determined by the order of its operators.
+ The leaf-node, especially the constants, are in this case with a relative
+ high part in the weight of the TED, although the changes are often only
+ small adaptations without substantial modification.
+ Therefore constants should be much less important.
+ Use of incomplete structures as origin (e.g.
+ missing terminal nodes).
+ The occurrence of observations could be weighted separately with a relatively
+ high value to force a reduced use of them.
+\end_layout
+
+\begin_layout Itemize
+Use of several known origins in one run, for example the smallest or medium
+ TED is used.
+ This way, several understandable approaches could be compared directly
+ for their extensibility or several partial solutions could be introduced
+ separately.
+\end_layout
+
+\begin_layout Itemize
+Die TED stellt in ihrer Rohform einen Faktor dar, der viele Veränderungen
+ ausbremst ohne dass dies nötig wäre.
+\end_layout
+
+\begin_layout Subsubsection
+Fixed Nodes
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Fixed-nodes"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 Explicitly secure the core structure (fixed nodes).
  
 \begin_inset Newline newline
@@ -5496,48 +5530,6 @@ When the implicit protection of logical core structures by the TED is not
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "subsec:Fixed-nodes"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Preferred Counting of operators
-\begin_inset Newline newline
-\end_inset
-
-The structure of a tree is essentially determined by the order of its operators.
- The leaf-node, especially the constants, are in this case with a relative
- high part in the weight of the TED, although the changes are often only
- small adaptations without substantial modification.
- Therefore constants should be much less important.
-\end_layout
-
-\begin_layout Itemize
-Use of incomplete structures as origin (e.g.
- missing terminal nodes)
-\end_layout
-
-\begin_layout Itemize
-Use several known origins in one run, for example the smallest or medium
- TED is used.
- This way, several understandable approaches could be compared directly
- for their extensibility or several partial solutions could be introduced
- separately.
- 
-\end_layout
-
-\begin_layout Itemize
-The occurrence of observations could be weighted separately with a relatively
- high value to force a reduced use of them.
-\end_layout
-
-\begin_layout Subsection
-Fixed Nodes
-\begin_inset CommandInset label
-LatexCommand label
-name "subsec:Fixed-nodes"
 
 \end_inset
 
@@ -5609,19 +5601,7 @@ For this, the regression error was calculated on a data set created by the
 \end_layout
 
 \begin_layout Standard
-xxx In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
-
-\end_inset
-
- it is shown, for example, how policies can be created for highly complex
- industrial applications.
- These are far less complex than the systems of equations of a neural network,
- but are nevertheless often difficult for humans to comprehend.
- xxx steht schon in related work
+xxx 
 \end_layout
 
 \begin_layout Standard
@@ -5632,28 +5612,19 @@ This is often due to the fact that experts often break down problems into
 \end_layout
 
 \begin_layout Subsection
-MAE vs MSE
-\end_layout
-
-\begin_layout Standard
-xxx idee: Karoo hat nur MAE!!
+Error measure
 \end_layout
 
 \begin_layout Standard
 Both the mean average error (MAE) and the mean square error (MSE) were tested
  as distance measures.
- xxx MAE ist 
-\begin_inset Quotes eld
-\end_inset
-
-distanztreu
-\begin_inset Quotes erd
-\end_inset
-
- und ein Klassiker in der GP.
- MSE reduziert volatile Lösungen.
- Der MSE zeichnet sich vor allem dadurch aus, dass outlier stärker ins Gewicht
- fallen, volatiles Verhalten im Phänotyp wird somit stark erschwert.
+ Der MAE ist in der GP weit verbreitet und gibt also die mittlere Abweichung
+ von der Ziellösung an und ist somit distanztreu.
+ Der MSE ist nicht distanztreu, weshalb er ein weniger ehrlicher Indikator
+ ist.
+ Beim MSE werden allerdings Ausreißer und starke Abweichungen stärker bestraft,
+ wodurch auch die Blackbox schneller und sicherer angenähert werden konnte.
+ Dadurch werden volatile Lösungen auch stärker bestraft.
 \end_layout
 
 \begin_layout Standard
@@ -5733,8 +5704,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Mean squared error (MSE) is synonymous to the root mean squared error (RMSE)
- for one-dimensional measurements.
+Mean squared error (MSE)
 \end_layout
 
 \end_inset
@@ -5751,11 +5721,8 @@ Mean squared error (MSE) is synonymous to the root mean squared error (RMSE)
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Der MAE ist distanztreu, gibt also die mittlere Abweichung von der Ziellösung
- an und ist somit ein ehrlicher Indikator.
- Beim MSE wird dieses Maß verfälscht, eine Interpretation der Werte wird
- dadurch schwerer.
- Dennoch sorgt der MSE dafür, dass die Lösung effektiver angenähert wird.
+The MSE is synonymous to the root mean squared error (RMSE) for one-dimensional
+ measurements.
 \end_layout
 
 \end_inset
@@ -5769,7 +5736,7 @@ Der MAE ist distanztreu, gibt also die mittlere Abweichung von der Ziellösung
 \end_layout
 
 \begin_layout Subsection
-Anpassung an den Aktionsraum (bounded)
+Bounding to action space
 \end_layout
 
 \begin_layout Standard
@@ -5929,10 +5896,6 @@ The aim is to find a mathematical formula that produces moderate results
  
 \end_layout
 
-\begin_layout Paragraph
-Regression ohne Beschränkung?
-\end_layout
-
 \begin_layout Standard
 A disadvantage of the automatic limitation is that extremely high values
  in genotype and phenotype can occur.
@@ -5971,10 +5934,6 @@ This slowed down the training process extremely, furthermore, the most effective
 \end_layout
 
 \begin_layout Standard
-[xx kein baum gefunden, warum auch]
-\end_layout
-
-\begin_layout Standard
 \begin_inset Wrap figure
 lines 0
 placement o
@@ -5995,7 +5954,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-asd
+Leaving the interval is punished with a very low tanh function.
 \end_layout
 
 \end_inset
@@ -6006,10 +5965,6 @@ asd
 \end_inset
 
 
-\end_layout
-
-\begin_layout Paragraph
-Tanh penalize otherwise (moderate phenotype extreme cases)
 \end_layout
 
 \begin_layout Standard
@@ -6283,11 +6238,136 @@ xxx trickser anderer Ordner?
 \end_layout
 
 \begin_layout Standard
+xxx must be bounded!
+\end_layout
+
+\begin_layout Standard
+[xx Fazit: Mischen ist nie gut]
+\end_layout
+
+\begin_layout Standard
+[xx Fragen lambda? y antihut oder y kreis?]
+\end_layout
+
+\begin_layout Standard
+Runs with lambda=1 did not find any pareto candidates whatsoever.
+ With a multiplication factor of 0.1 candidates were found, but no statistically
+ significant properties could be attested to them.
+ Since in other experiments on regression the mixing of approaches always
+ turned out to be too much interference with the error measure as a source
+ of error, classifying further experiments on a third Pareto dimension looks
+ promising (both regression errors correlate with each other).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Itemize
+Änderungen sollen vor allem in den Bereichen durchgeführt werden, in denen
+ sich Origin und Blackbox unterscheiden.
+ Für jeden Datenpunkt sollte deshalb nicht nur die Distanz zur Ziellösung
+ eine Rolle spielen sondern auch, wie gut die Origin Lösung an dieser Stelle
+ bereits war.
+ Dadurch werden Änderungen an Bereichen, in denen die Origin bereits nah
+ an der Ziellösung war zusätzlich bestraft und dadurch stärker geschützt.
+\end_layout
+
+\begin_layout Itemize
+In Bereichen mit großen Abweichungen sollte den Kandidaten auch eine stärkere
+ Abweichung zustehen.
+ Punkte sollten deshalb einzeln betrachtet werden und nicht in einer separaten
+ Regression zur origin untergehen.
+\end_layout
+
+\begin_layout Itemize
+Eine Abweichung von der Startlösung aus in die falsche Richtung sollte stark
+ verhindert werden
+\end_layout
+
+\begin_layout Itemize
+Eine extreme Abweichung sollte bestraft werden
+\end_layout
+
+\begin_layout Itemize
+Bereiche, in denen Start und Ziellösung weit auseinanderliegen sollten Änderunge
+n an der Origin leichter zulassen.
+ xxx
+\end_layout
+
+\begin_layout Plain Layout
+Für das Kernel wurde in vier Bereiche unterschieden:
+\end_layout
+
+\begin_layout Enumerate
+Sichere Verbesserung.
+ Der Punkt liegt zwischen Basis und Ziel.
+ Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
+ nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
+\end_layout
+
+\begin_layout Enumerate
+Unsichere Verbesserung.
+ Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
+ von der bekannten policy nötig.
+ Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
+ es auch bevorzugt werden.
+ Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
+ Form der möglichen Bestrafung.
+\end_layout
+
+\begin_layout Enumerate
+Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
+ hat und so vom normalen Kernel bereits verhindert werden sollte.
+ Ein volatiler Agent kann jedoch durch eine starke Verbesserung an anderer
+ Stelle diesen Makel ausgleichen.
+ In der Regression wäre der Agent zu bevorzugen, der weniger volatil ist.
+ Auch diese können in Zwei Bereiche unterteils werden:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Sichere Verschlechterung.
+ Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
+ war eindeutig falsch, ohne Chance auf Verbesserung.
+ In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
+ dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
+ auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
+ an einder anderen Stelle in Kauf genommen.
+\end_layout
+
+\begin_layout Enumerate
+Unsichere Verschlechterung.
+ Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
+ über das Ziel hinausgeschossen.
+ Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
+ die größte Unsicherheit.
+ Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
+\end_layout
+
+\end_deeper
+\end_inset
+
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Section
 Phenotypic Analysis with Regression on the Origin Policy
+\end_layout
+
+\begin_layout Standard
+Die TED kontrolliert als Komplexitätsmaß im Evolutionsprozess den Umfang
+ der Änderungen am Programm, den Genotypen, kann aber auch entsprechend
+ Auswirkungen auf den Phänotyp haben.
+ Weil sowohl die  (siehe resultate), da die Struktur bei gleichzeitiger
+ Verbesserung des Regressionsfehlers sich oftmals auf die bereits funktionierend
+en Strukturen stützen muss.
+ Allerdings keine Pflicht.
+ xxx
 \end_layout
 
 \begin_layout Standard
@@ -6307,7 +6387,7 @@ One possibility of implementation is a third dimension on the Pareto front.
  to Origin is also shown and tested below.
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsection
 Motivation
 \end_layout
 
@@ -6318,7 +6398,7 @@ The goal of the combined regression error is still to minimise the distance
  
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
 Beispiel 1: Eier Kochzeit
 \end_layout
 
@@ -6330,7 +6410,7 @@ Let's say we cook eggs for 10 minutes and a target cooking professional
  of the changes to our already known cooking behaviour is less.
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsection
 Überlegungen
 \end_layout
 
@@ -6579,120 +6659,6 @@ Extreme versions of a combined regression kernel.
 
 \end_layout
 
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-xxx must be bounded!
-\end_layout
-
-\begin_layout Standard
-[xx Fazit: Mischen ist nie gut]
-\end_layout
-
-\begin_layout Standard
-[xx Fragen lambda? y antihut oder y kreis?]
-\end_layout
-
-\begin_layout Standard
-Runs with lambda=1 did not find any pareto candidates whatsoever.
- With a multiplication factor of 0.1 candidates were found, but no statistically
- significant properties could be attested to them.
- Since in other experiments on regression the mixing of approaches always
- turned out to be too much interference with the error measure as a source
- of error, classifying further experiments on a third Pareto dimension looks
- promising (both regression errors correlate with each other).
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Itemize
-Änderungen sollen vor allem in den Bereichen durchgeführt werden, in denen
- sich Origin und Blackbox unterscheiden.
- Für jeden Datenpunkt sollte deshalb nicht nur die Distanz zur Ziellösung
- eine Rolle spielen sondern auch, wie gut die Origin Lösung an dieser Stelle
- bereits war.
- Dadurch werden Änderungen an Bereichen, in denen die Origin bereits nah
- an der Ziellösung war zusätzlich bestraft und dadurch stärker geschützt.
-\end_layout
-
-\begin_layout Itemize
-In Bereichen mit großen Abweichungen sollte den Kandidaten auch eine stärkere
- Abweichung zustehen.
- Punkte sollten deshalb einzeln betrachtet werden und nicht in einer separaten
- Regression zur origin untergehen.
-\end_layout
-
-\begin_layout Itemize
-Eine Abweichung von der Startlösung aus in die falsche Richtung sollte stark
- verhindert werden
-\end_layout
-
-\begin_layout Itemize
-Eine extreme Abweichung sollte bestraft werden
-\end_layout
-
-\begin_layout Itemize
-Bereiche, in denen Start und Ziellösung weit auseinanderliegen sollten Änderunge
-n an der Origin leichter zulassen.
- xxx
-\end_layout
-
-\begin_layout Plain Layout
-Für das Kernel wurde in vier Bereiche unterschieden:
-\end_layout
-
-\begin_layout Enumerate
-Sichere Verbesserung.
- Der Punkt liegt zwischen Basis und Ziel.
- Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
- nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
-\end_layout
-
-\begin_layout Enumerate
-Unsichere Verbesserung.
- Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
- von der bekannten policy nötig.
- Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
- es auch bevorzugt werden.
- Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
- Form der möglichen Bestrafung.
-\end_layout
-
-\begin_layout Enumerate
-Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
- hat und so vom normalen Kernel bereits verhindert werden sollte.
- Ein volatiler Agent kann jedoch durch eine starke Verbesserung an anderer
- Stelle diesen Makel ausgleichen.
- In der Regression wäre der Agent zu bevorzugen, der weniger volatil ist.
- Auch diese können in Zwei Bereiche unterteils werden:
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sichere Verschlechterung.
- Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
- war eindeutig falsch, ohne Chance auf Verbesserung.
- In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
- dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
- auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
- an einder anderen Stelle in Kauf genommen.
-\end_layout
-
-\begin_layout Enumerate
-Unsichere Verschlechterung.
- Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
- über das Ziel hinausgeschossen.
- Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
- die größte Unsicherheit.
- Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
-\end_layout
-
-\end_deeper
 \end_inset
 
 
@@ -7206,8 +7172,7 @@ As a black box a convergent approach should be preferred to a volatile one
 \end_layout
 
 \begin_layout Standard
-xxx Die TED stellt in ihrer Rohform einen Faktor dar, der viele Veränderungen
- ausbremst ohne dass dies nötig wäre.
+
 \end_layout
 
 \begin_layout Chapter
@@ -7252,15 +7217,17 @@ xx what is a marginal note? Hein, Udluft
 \end_inset
 
 , taking into account the well-known principles of GP which were already
- described in [ref GP xxx].
-\begin_inset CommandInset citation
-LatexCommand cite
-key "poli08:fieldguide_to_genetic_programming"
-literal "true"
+ described in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp_Genetic-Programming"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 
- 
+.
 \end_layout
 
 \begin_layout Standard
@@ -7298,13 +7265,17 @@ Evolution in tree based genetic programming, filter operator and branch
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsubsection
+Recursive tree structure and meta information
+\end_layout
+
+\begin_layout Standard
+xx
 \end_layout
 
 \begin_layout Section
@@ -8918,11 +8889,9 @@ The same expression in the form of a tree with automatic arrangement of
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
@@ -8938,7 +8907,6 @@ filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.te
 
 \begin_layout Plain Layout
 Darker drawn nodes of the tree cannot be changed.
- 
 \end_layout
 
 \end_inset
@@ -8949,22 +8917,6 @@ Darker drawn nodes of the tree cannot be changed.
 \end_inset
 
 
-\end_layout
-
-\begin_layout Paragraph
-Histograms
-\end_layout
-
-\begin_layout Standard
-xx
-\end_layout
-
-\begin_layout Paragraph
-Recursive tree structure and meta information
-\end_layout
-
-\begin_layout Standard
-xx
 \end_layout
 
 \begin_layout Chapter
@@ -9061,7 +9013,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -9076,9 +9028,9 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="9" columns="3">
 <features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
+<column alignment="center" valignment="top" width="2.2cm">
+<column alignment="center" valignment="top" width="2.2cm">
+<column alignment="center" valignment="top" width="2.2cm">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
@@ -9359,6 +9311,19 @@ Simple agent (
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -9366,7 +9331,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -9405,6 +9370,259 @@ name "table:MC_agents_rewards"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+simple
+\end_layout
+
+\begin_layout Standard
+This ensures maximum momentum and the goal is always reached.
+ The average reward of the SARSA-agent is, with an average reward of 
+\begin_inset Formula $-103$
+\end_inset
+
+, outperforming the simple approach of a developer that will be introduced
+ in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "par:simple,-maximum-momentum"
+
+\end_inset
+
+ with about 
+\begin_inset Formula $14\%$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The shortest human solution we tested accelerates towards the moving direction
+ with an if condition with 6 nodes.
+ xxx
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Boxed
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "23col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/MTC/tree_simple.pdf
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hrule
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Boxed
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "23col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational tree of the simplest program in Normalform (links) und mit
+ fixen Knoten (rechts).
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mtc_simple_tree"
+
+\end_inset
+
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Die Unterscheidung ist deutlich in zwei Fälle unterteilbar.
 \end_layout
 
 \end_inset
@@ -9514,6 +9732,25 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
 	height 5cm
@@ -9521,6 +9758,43 @@ status open
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_75.pdf
 	height 5cm
@@ -9529,11 +9803,6 @@ status open
 
 
 \end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "sarsa75_problem_decision_plots"
 
 \end_inset
 
@@ -9550,6 +9819,14 @@ Sarsa-75 performance on MC.
  The trajectories of 50 runs have the shape of a snail (right), with an
  outlier which only just missed the target (top right in the picture) and
  needed another run-up.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "sarsa75_problem_decision_plots"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -9622,6 +9899,25 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/mc/agents/img/decisions-sarsa_agent_200.pdf
 	height 5cm
@@ -9629,9 +9925,51 @@ status open
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/mc/agents/img/dummy-sarsa_agent_200.pdf
 	height 5cm
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -9643,7 +9981,7 @@ status open
 
 \begin_layout Plain Layout
 Sarsa-200 decision plot for the complete state space (left) and for the
- occuring states only (right)
+ occuring states only (right).
 \end_layout
 
 \end_inset
@@ -9677,13 +10015,6 @@ status open
 \end_inset
 
 
-\begin_inset CommandInset label
-LatexCommand label
-name "sarsa1000-plots"
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Plain Layout
@@ -9692,6 +10023,14 @@ name "sarsa1000-plots"
 \begin_layout Plain Layout
 1000 episodes (left) still show a pattern, while 10000 episodes leave chaotic
  behaviour.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "sarsa1000-plots"
+
+\end_inset
+
+ xxx unterschied zu oben? box?
 \end_layout
 
 \end_inset
@@ -9789,7 +10128,7 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/analysis_input.tex"
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-complete analysis
+MTC200_MSE_scratch candidates in comparisson.
 \end_layout
 
 \end_inset
@@ -9809,6 +10148,25 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.pdf
 	height 5cm
@@ -9816,9 +10174,51 @@ status open
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-18.pdf
 	height 5cm
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -9830,40 +10230,6 @@ status open
 
 \begin_layout Plain Layout
 Kandidat 10 (linke) und 18 (rechts) erreichen beide das Ziel.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand include
-filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/analysis_input.tex"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Die Paretokandidaten im Vergleich.
- xxx
 \end_layout
 
 \end_inset
@@ -9946,16 +10312,6 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/3.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
 filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_03.tex"
@@ -10002,7 +10358,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -10033,7 +10389,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -10057,6 +10413,19 @@ status open
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Plain Layout
@@ -10075,6 +10444,9 @@ filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_08.tex"
 \begin_layout Plain Layout
 At 8 nodes the regression error drops to 0.21, but fitness deteriorates to
  140.5 steps.
+ xxx 
+\backslash
+hfill above!
 \end_layout
 
 \end_inset
@@ -10098,7 +10470,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -10119,6 +10491,40 @@ status open
 
 \end_layout
 
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/10.pdf
@@ -10132,33 +10538,12 @@ status open
 \end_inset
 
 
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
 filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_10.tex"
-
-\end_inset
-
-
-\end_layout
 
 \end_inset
 
@@ -10197,7 +10582,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -10218,6 +10603,40 @@ status open
 
 \end_layout
 
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.pdf
@@ -10231,33 +10650,12 @@ status open
 \end_inset
 
 
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset CommandInset include
 LatexCommand input
 filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_25.tex"
-
-\end_inset
-
-
-\end_layout
 
 \end_inset
 
@@ -10301,87 +10699,9 @@ name "run:MTC200_MSE_simple"
 \end_layout
 
 \begin_layout Standard
-This ensures maximum momentum and the goal is always reached.
- The average reward of the SARSA-agent is, with an average reward of 
-\begin_inset Formula $-103$
-\end_inset
-
-, outperforming the simple approach of a developer that will be introduced
- in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "par:simple,-maximum-momentum"
-
-\end_inset
-
- with about 
-\begin_inset Formula $14\%$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
 \begin_inset Graphics
-	filename img/MTC/tree_simple.pdf
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Computational tree of the simplest program.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mtc_simple_tree"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-0.pdf
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/evaled_overview.pdf
 	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/0.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
 
 \end_inset
 
@@ -10392,29 +10712,6 @@ status open
 As can be seen especially with the more complex solutions, the TED loses
  its effect after a certain size.
  Not pushing is often selected, especially in marginal areas.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -10537,7 +10834,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -10561,6 +10858,19 @@ status open
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -10568,7 +10878,7 @@ has_inner_box 1
 inner_pos "t"
 use_parbox 0
 use_makebox 0
-width "49col%"
+width "48col%"
 special "none"
 height "1in"
 height_special "totalheight"
@@ -10629,17 +10939,96 @@ simpleFix
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_simpleFix/visualisation/full_00.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
 	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The improvement of the Pareto candidates is comparatively safe if only the
+ if statement can be changed.
+\end_layout
 
 \end_inset
 
@@ -10662,135 +11051,6 @@ reference "run:MTC200_MSE_simple"
 .
  Thanks to the fixed core structure, however, the changes are limited to
  the if condition, so action 0 cannot be selected.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-filename "../benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-filename "../benchmarks/slurm_runs/MTC200_MSE_simpleFix/visualisation/full_00.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The shortest human solution we tested accelerates towards the moving direction
- with an if condition with 6 nodes.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "../benchmarks/slurm_runs/MTC200_MAE_simple/visualisation/00_input_forest.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "49col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset CommandInset include
-LatexCommand input
-preview true
-filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.tex"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Different versions of the same heuristic offer the GP process different
- possibilities for improvement.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -10831,9 +11091,11 @@ literal "true"
 
 \begin_layout Standard
 \begin_inset Formula 
-\[
-min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq velocity\leq(-0.07(position+0.38)^{2}+0.07)
-\]
+\begin{multline*}
+min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq\\
+\leq velocity\leq\\
+\leq(-0.07(position+0.38)^{2}+0.07)
+\end{multline*}
 
 \end_inset
 
@@ -10861,36 +11123,98 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetAgent.pdf
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/space-0.pdf
 	height 5cm
 
 \end_inset
 
 
-\begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-XiaoPresetNoLowerbound.pdf
-	height 5cm
+\end_layout
 
 \end_inset
 
 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MAE_xiaoFix/visualisation/full_00.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MAE_xiaoFix/visualisation/full_00_tight.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Preset policy and a GP improvement.
- Recognizable are used mathematical structures such as parabolas and the
- renunciation of action 1.
- On the right, a simplification is visible, found with the help of GP.
- It has recognized the upper limit as superfluous.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:Preset-policy:-Recognizable"
-
-\end_inset
-
-
+xxx Close-form preset policy tree with fixed nodes.
 \end_layout
 
 \end_inset
@@ -10933,6 +11257,18 @@ status open
 
 \end_layout
 
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The Pareto candidates all perform better.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \end_inset
 
 
@@ -10967,7 +11303,7 @@ status open
 <column alignment="center" valignment="top" width="2.4cm">
 <column alignment="center" valignment="top" width="2.4cm">
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10976,7 +11312,7 @@ status open
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" topline="true" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10985,7 +11321,7 @@ status open
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none" width="2.3cm">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none" width="2.3cm">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10994,7 +11330,7 @@ Sarsa-200
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11003,7 +11339,7 @@ Sarsa-200
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11012,7 +11348,7 @@ Sarsa-75
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11079,7 +11415,7 @@ MAE
 </cell>
 </row>
 <row>
-<cell multirow="3" alignment="center" valignment="top" rotate="90" usebox="none">
+<cell multirow="3" alignment="center" valignment="top" bottomline="true" rotate="90" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11088,7 +11424,7 @@ max momentum
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11097,7 +11433,7 @@ scratch
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11127,7 +11463,7 @@ Scheinen generell schlechter als MSE-Versionen zu sein...
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11136,7 +11472,7 @@ Scheinen generell schlechter als MSE-Versionen zu sein...
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11156,7 +11492,7 @@ Scheinen generell schlechter als MSE-Versionen zu sein...
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11165,7 +11501,7 @@ simple
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11187,7 +11523,7 @@ danach: a0!
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11196,7 +11532,7 @@ danach: a0!
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11216,7 +11552,7 @@ danach: a0!
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11225,7 +11561,7 @@ simpleFix
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11247,7 +11583,7 @@ todo
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11256,7 +11592,7 @@ todo
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11276,7 +11612,7 @@ todo
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11285,7 +11621,7 @@ simplePlus
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11303,7 +11639,7 @@ simplePlus
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11312,7 +11648,7 @@ simplePlus
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11332,16 +11668,20 @@ simplePlus
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-simplePlusFix
+simplePlus
+\end_layout
+
+\begin_layout Plain Layout
+Fix
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11359,7 +11699,7 @@ ned so toll
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11368,7 +11708,7 @@ ned so toll
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11379,7 +11719,7 @@ ned so toll
 </cell>
 </row>
 <row>
-<cell multirow="3" alignment="center" valignment="middle" usebox="none">
+<cell multirow="3" alignment="center" valignment="middle" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11388,7 +11728,7 @@ preset
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11397,7 +11737,7 @@ xiao
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11427,7 +11767,7 @@ overfit ende?
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11436,7 +11776,7 @@ overfit ende?
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11456,7 +11796,7 @@ overfit ende?
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11465,7 +11805,7 @@ xiaoFix
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11503,7 +11843,7 @@ phänotyp diff
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11512,119 +11852,7 @@ phänotyp diff
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multirow="4" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-preset
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-CORRUPT
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multirow="3" alignment="center" valignment="middle" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-pro
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-simonBest
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-schmalere Schnecke
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="4" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11648,7 +11876,123 @@ schmalere Schnecke
 \begin_inset Text
 
 \begin_layout Plain Layout
-simonBestFix
+preset
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+CORRUPT
+\end_layout
+
+\end_inset
+</cell>
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multirow="3" alignment="center" valignment="middle" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+pro
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simonBest
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+schmalere Schnecke
+\end_layout
+
+\end_inset
+</cell>
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simonBest
+\end_layout
+
+\begin_layout Plain Layout
+Fix
 \end_layout
 
 \end_inset
@@ -11723,9 +12067,77 @@ sideways false
 status open
 
 \begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
 \begin_inset Graphics
-	filename ../benchmarks/mc/agents/img/decisions-Good_Expert.pdf
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_simonBest/sfehs_eval/space-0.pdf
 	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_simonBest/visualisation/full_00.tex"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -11857,7 +12269,7 @@ Für jede der drei Aktionen des IB wurde ein separater Lauf gestartet, deren
  der Regressionsfehler mit 0.8 ungefähr 30% höher als die 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Ist das überhaupt möglich?
 \end_layout
 
@@ -11879,6 +12291,49 @@ chsten ist, dass die PSONN policy als Blackbox zu komplex ist, als dass
 \begin_layout Standard
 Da die Kandidaten entsprechend auch keinen Performancegewinn erwarten lassen
  können wäre ihre Auswertung nicht sinnvoll.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/histograms/acthist_25.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/IB_MSE_scratch/IB_MSE_scratch_0/histograms/acthist_29.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Histograms for the deviation from the target action for the Mountain car
+ (left) and the Industrial benchmark (right).
+ In both cases the best regular GP candidate, calculated with the MSE, was
+ chosen.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -12321,7 +12776,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="6">
+<lyxtabular version="3" rows="8" columns="6">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -12398,7 +12853,7 @@ randomized Start
 \begin_inset Text
 
 \begin_layout Plain Layout
-Random
+
 \end_layout
 
 \end_inset
@@ -12413,6 +12868,62 @@ Random
 \end_inset
 </cell>
 <cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -12421,7 +12932,7 @@ Random
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -12430,7 +12941,7 @@ Random
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -12439,7 +12950,7 @@ Random
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -12894,6 +13405,14 @@ status open
 
 \begin_layout Plain Layout
 xxx Results with classical genetic programming.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:IB_MSE_scratch_graphs"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -13255,7 +13774,7 @@ Weitere Punkte:
 
 \begin_layout Itemize
 Der Lösungsraum im IB ist zu sparse als dass eine Annäherung an einen Mittelweg
- (der zu weit von der Lösung liegt) keinen SInn macht
+ (der zu weit von der Lösung liegt) keinen Sinn macht
 \end_layout
 
 \begin_layout Section

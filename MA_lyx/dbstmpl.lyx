@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -12,6 +12,8 @@
 \renewcommand{\textemdash}{---}
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -33,8 +35,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -73,7 +73,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -83,10 +82,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -592,7 +588,6 @@ In 2018 for example, the car autopilot of a Tesla caused a fatal accident
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -774,14 +769,10 @@ Motivation
 Thanks to enormous progress in the field of artificial intelligence, more
  and more problems can be taken over by machines.
  In the meantime it is not only possible to relieve humans of complex tasks
- but also to develop completely new solutions to problems, which is done
- in the field of Reinforcement Learning (RL).
- 
-\begin_inset Newline newline
-\end_inset
-
-RL is a part of ML where an agent without prior knowledge learns a strategy
- to maximise the expected reward in an environment.
+ but also to develop completely new solutions to problems.
+ Learning a strategy to solve a problem without prior knowledge is adressed
+ in the field of reinforcement learning (RL), where an agent has to maximise
+ the expected reward in an environment.
  The environment represents a Markov decision process, which is a stochastic
  form of determinism in which the agent moves from one state, when performing
  an action, with a certain probability to the same subsequent state each
@@ -797,7 +788,6 @@ RL has become very popular due to the development of superhuman strategies,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -841,7 +831,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -1025,7 +1014,6 @@ The biggest intellectual effort in learning with NN is probably even the
 \begin_inset CommandInset citation
 LatexCommand cite
 key "one_pixel_attack"
-literal "true"
 
 \end_inset
 
@@ -1034,7 +1022,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "sparse_unsupervised_learning_youtube_image_recognition"
-literal "true"
 
 \end_inset
 
@@ -1060,7 +1047,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -1077,7 +1063,6 @@ These are the reasons why explainable artificial intelligence (XAI) has
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -1085,7 +1070,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -1098,7 +1082,6 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -1154,7 +1137,6 @@ Layerwise Relevance propagation can be used to show which pixel areas are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -2247,7 +2229,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -2290,7 +2271,6 @@ xxx
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -2311,7 +2291,6 @@ The time-consuming evaluation process can be shortened 2-15 times by using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -2873,7 +2852,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -2998,7 +2976,6 @@ Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -3057,7 +3034,6 @@ xxx In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -3065,7 +3041,7 @@ literal "true"
  industrial applications.
  These are far less complex than the systems of equations of a neural network,
  but are nevertheless often difficult for humans to comprehend.
- xxx steht schon in related work
+ 
 \end_layout
 
 \begin_layout Standard
@@ -3074,7 +3050,6 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3142,7 +3117,6 @@ thus providing a complexity measure that can be adapted to the preferences
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3653,7 +3627,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -4187,7 +4160,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4921,7 +4893,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "false"
 
 \end_inset
 
@@ -4939,7 +4910,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -5234,7 +5204,6 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -5248,7 +5217,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -6238,120 +6206,6 @@ xxx trickser anderer Ordner?
 \end_layout
 
 \begin_layout Standard
-xxx must be bounded!
-\end_layout
-
-\begin_layout Standard
-[xx Fazit: Mischen ist nie gut]
-\end_layout
-
-\begin_layout Standard
-[xx Fragen lambda? y antihut oder y kreis?]
-\end_layout
-
-\begin_layout Standard
-Runs with lambda=1 did not find any pareto candidates whatsoever.
- With a multiplication factor of 0.1 candidates were found, but no statistically
- significant properties could be attested to them.
- Since in other experiments on regression the mixing of approaches always
- turned out to be too much interference with the error measure as a source
- of error, classifying further experiments on a third Pareto dimension looks
- promising (both regression errors correlate with each other).
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Itemize
-Änderungen sollen vor allem in den Bereichen durchgeführt werden, in denen
- sich Origin und Blackbox unterscheiden.
- Für jeden Datenpunkt sollte deshalb nicht nur die Distanz zur Ziellösung
- eine Rolle spielen sondern auch, wie gut die Origin Lösung an dieser Stelle
- bereits war.
- Dadurch werden Änderungen an Bereichen, in denen die Origin bereits nah
- an der Ziellösung war zusätzlich bestraft und dadurch stärker geschützt.
-\end_layout
-
-\begin_layout Itemize
-In Bereichen mit großen Abweichungen sollte den Kandidaten auch eine stärkere
- Abweichung zustehen.
- Punkte sollten deshalb einzeln betrachtet werden und nicht in einer separaten
- Regression zur origin untergehen.
-\end_layout
-
-\begin_layout Itemize
-Eine Abweichung von der Startlösung aus in die falsche Richtung sollte stark
- verhindert werden
-\end_layout
-
-\begin_layout Itemize
-Eine extreme Abweichung sollte bestraft werden
-\end_layout
-
-\begin_layout Itemize
-Bereiche, in denen Start und Ziellösung weit auseinanderliegen sollten Änderunge
-n an der Origin leichter zulassen.
- xxx
-\end_layout
-
-\begin_layout Plain Layout
-Für das Kernel wurde in vier Bereiche unterschieden:
-\end_layout
-
-\begin_layout Enumerate
-Sichere Verbesserung.
- Der Punkt liegt zwischen Basis und Ziel.
- Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
- nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
-\end_layout
-
-\begin_layout Enumerate
-Unsichere Verbesserung.
- Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
- von der bekannten policy nötig.
- Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
- es auch bevorzugt werden.
- Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
- Form der möglichen Bestrafung.
-\end_layout
-
-\begin_layout Enumerate
-Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
- hat und so vom normalen Kernel bereits verhindert werden sollte.
- Ein volatiler Agent kann jedoch durch eine starke Verbesserung an anderer
- Stelle diesen Makel ausgleichen.
- In der Regression wäre der Agent zu bevorzugen, der weniger volatil ist.
- Auch diese können in Zwei Bereiche unterteils werden:
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sichere Verschlechterung.
- Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
- war eindeutig falsch, ohne Chance auf Verbesserung.
- In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
- dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
- auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
- an einder anderen Stelle in Kauf genommen.
-\end_layout
-
-\begin_layout Enumerate
-Unsichere Verschlechterung.
- Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
- über das Ziel hinausgeschossen.
- Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
- die größte Unsicherheit.
- Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
-\end_layout
-
-\end_deeper
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 
 \end_layout
 
@@ -6665,6 +6519,120 @@ Extreme versions of a combined regression kernel.
 \end_layout
 
 \begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+xxx must be bounded!
+\end_layout
+
+\begin_layout Standard
+[xx Fazit: Mischen ist nie gut]
+\end_layout
+
+\begin_layout Standard
+[xx Fragen lambda? y antihut oder y kreis?]
+\end_layout
+
+\begin_layout Standard
+Runs with lambda=1 did not find any pareto candidates whatsoever.
+ With a multiplication factor of 0.1 candidates were found, but no statistically
+ significant properties could be attested to them.
+ Since in other experiments on regression the mixing of approaches always
+ turned out to be too much interference with the error measure as a source
+ of error, classifying further experiments on a third Pareto dimension looks
+ promising (both regression errors correlate with each other).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Itemize
+Änderungen sollen vor allem in den Bereichen durchgeführt werden, in denen
+ sich Origin und Blackbox unterscheiden.
+ Für jeden Datenpunkt sollte deshalb nicht nur die Distanz zur Ziellösung
+ eine Rolle spielen sondern auch, wie gut die Origin Lösung an dieser Stelle
+ bereits war.
+ Dadurch werden Änderungen an Bereichen, in denen die Origin bereits nah
+ an der Ziellösung war zusätzlich bestraft und dadurch stärker geschützt.
+\end_layout
+
+\begin_layout Itemize
+In Bereichen mit großen Abweichungen sollte den Kandidaten auch eine stärkere
+ Abweichung zustehen.
+ Punkte sollten deshalb einzeln betrachtet werden und nicht in einer separaten
+ Regression zur origin untergehen.
+\end_layout
+
+\begin_layout Itemize
+Eine Abweichung von der Startlösung aus in die falsche Richtung sollte stark
+ verhindert werden
+\end_layout
+
+\begin_layout Itemize
+Eine extreme Abweichung sollte bestraft werden
+\end_layout
+
+\begin_layout Itemize
+Bereiche, in denen Start und Ziellösung weit auseinanderliegen sollten Änderunge
+n an der Origin leichter zulassen.
+ xxx
+\end_layout
+
+\begin_layout Plain Layout
+Für das Kernel wurde in vier Bereiche unterschieden:
+\end_layout
+
+\begin_layout Enumerate
+Sichere Verbesserung.
+ Der Punkt liegt zwischen Basis und Ziel.
+ Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
+ nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
+\end_layout
+
+\begin_layout Enumerate
+Unsichere Verbesserung.
+ Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
+ von der bekannten policy nötig.
+ Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
+ es auch bevorzugt werden.
+ Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
+ Form der möglichen Bestrafung.
+\end_layout
+
+\begin_layout Enumerate
+Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
+ hat und so vom normalen Kernel bereits verhindert werden sollte.
+ Ein volatiler Agent kann jedoch durch eine starke Verbesserung an anderer
+ Stelle diesen Makel ausgleichen.
+ In der Regression wäre der Agent zu bevorzugen, der weniger volatil ist.
+ Auch diese können in Zwei Bereiche unterteils werden:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Sichere Verschlechterung.
+ Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
+ war eindeutig falsch, ohne Chance auf Verbesserung.
+ In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
+ dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
+ auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
+ an einder anderen Stelle in Kauf genommen.
+\end_layout
+
+\begin_layout Enumerate
+Unsichere Verschlechterung.
+ Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
+ über das Ziel hinausgeschossen.
+ Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
+ die größte Unsicherheit.
+ Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
+\end_layout
+
+\end_deeper
+\end_inset
+
 
 \end_layout
 
@@ -7221,9 +7189,6 @@ xx what is a marginal note? Hein, Udluft
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "gp_Genetic-Programming"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7235,7 +7200,15 @@ KarooGP served as a starting point, but since this framework does not provide
  an if-operator and is not typed start, massive structural changes were
  necessary, so the resulting framework is a new development.
  By using recursive tree structures the speedup of Karoo could even be increased.
- [xx hier war es noch schneller - claim, ein buch genug?]
+ [xx hier war es noch schneller - claim, ein buch genug?] 
+\end_layout
+
+\begin_layout Standard
+Die Breitensuche aus Karoo wurde mit einer Rekursiven Baumstruktur ersetzt.
+\end_layout
+
+\begin_layout Standard
+Arity 3 funktionen xxx
 \end_layout
 
 \begin_layout Standard
@@ -7268,14 +7241,6 @@ Evolution in tree based genetic programming, filter operator and branch
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-Recursive tree structure and meta information
-\end_layout
-
-\begin_layout Standard
-xx
 \end_layout
 
 \begin_layout Section
@@ -8226,6 +8191,34 @@ In GP, the generation of random trees and branches is usually based on the
 \end_layout
 
 \begin_layout Standard
+Zufällige Bäume sollen den gesamten Suchraum für zufällige Bäume abdecken
+ und die strukturierenden Full/Grow Optionen haben.
+ xxx
+\end_layout
+
+\begin_layout Standard
+In order not to violate the principles of GP, some factors must be considered.
+ At the beginning a random number of nodes to be inserted is chosen.
+ Instead of the node depth, layers are defined, which are the distance to
+ the next fixed node.
+ Depending on the number of nodes located on a layer, the number of nodes
+ to be inserted is randomly divided into intervals.
+ These subtrees are divided according to the Grow or Full method up to the
+ interval size they are entitled to.
+ The number of nodes must be exactly reached (tolerance -1), otherwise the
+ trees could have a large variance of nodes per branch.
+\end_layout
+
+\begin_layout Standard
+When building the branches, a buffer of leaf nodes is built up to avoid
+ having to prune the tree at the end.
+ To build one level lower, a random node of the ebend is selected and assigned
+ according to the Grow or Full method.
+ This avoids an overload of the left side, which would occur because only
+ limited operators can be used.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float algorithm
 wide false
 sideways false
@@ -8395,35 +8388,9 @@ test i dont know, which one looks better? Both seem quite like bad pesudocode
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-In order not to violate the principles of GP, some factors must be considered.
- At the beginning a random number of nodes to be inserted is chosen.
- Instead of the node depth, layers are defined, which are the distance to
- the next fixed node.
- Depending on the number of nodes located on a layer, the number of nodes
- to be inserted is randomly divided into intervals.
- These subtrees are divided according to the Grow or Full method up to the
- interval size they are entitled to.
- The number of nodes must be exactly reached (tolerance -1), otherwise the
- trees could have a large variance of nodes per branch.
-\end_layout
-
-\begin_layout Standard
-When building the branches, a buffer of leaf nodes is built up to avoid
- having to prune the tree at the end.
- To build one level lower, a random node of the ebend is selected and assigned
- according to the Grow or Full method.
- This avoids an overload of the left side, which would occur because only
- limited operators can be used.
 \end_layout
 
 \begin_layout Subsection
@@ -8586,10 +8553,6 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/pyplots_custom/distribution_obs_time.pdf
 	height 5cm
@@ -8616,7 +8579,7 @@ Selection of the time of an observation to build a tree.
 \end_layout
 
 \begin_layout Section
-Familiarity based features
+Factors supporting the explainability
 \end_layout
 
 \begin_layout Standard
@@ -8625,6 +8588,18 @@ Branching factor and complexity? xxx
 
 \begin_layout Subsection
 Divide and conquer
+\end_layout
+
+\begin_layout Itemize
+unterteilen wichtig
+\end_layout
+
+\begin_layout Itemize
+Mensch: if-Unterteilung (deswegen kein Eureka)
+\end_layout
+
+\begin_layout Itemize
+Besonders interessant: Observationen
 \end_layout
 
 \begin_layout Standard
@@ -8648,10 +8623,6 @@ Problems should be broken down into sub-problems as far as possible.
  why only rarely if statements are present in formulas found.
 \end_layout
 
-\begin_layout Subsection
-if-operator
-\end_layout
-
 \begin_layout Standard
 In machine learning there are many clustering methods for subdivision; in
  humans, in contrast to if distinctions play an important role.
@@ -8670,7 +8641,7 @@ Although it is the most complex function with 3 input parameters, it creates
  should not be artificially forced, as they are not useful at every point.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Observationen sind nachvollziehbar (Einflussfaktoren)
 \end_layout
 
@@ -8729,8 +8700,8 @@ The visualisation of the trees was done with the help of latex.
 status open
 
 \begin_layout Plain Layout
- [xx anordnung de Knoten? Eigene Baumerzeugung...
- Node alignment and style xx] 
+[xx anordnung de Knoten? Eigene Baumerzeugung...
+ Node alignment and style] 
 \end_layout
 
 \end_inset
@@ -9651,7 +9622,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9713,7 +9683,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -11081,7 +11050,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 

@@ -12742,58 +12742,96 @@ Durch das implizite Vorgeben einer Expertenpolicy wird der Suchraum implizit
  kann so schneller zu futen Ergebnissen führen.
 \end_layout
 
+\begin_layout Itemize
+MC Benchmark und IB Benchmark
+\end_layout
+
 \begin_layout Section
 Conclusion
 \end_layout
 
 \begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-Eine Expertenpolic als Ausgangspunkt für GP zu nutzen ist sowohl aus Sicht
- der Vertrautheit und dadurch verbesserten Interpretierbarkeit, im Sinne
- der der Performance und sogar aus Sicherheitsgründen sinnvoll.
+In dieser Arbeit wurde sowohl das Konzept der Vertrautheit eingeführt als
+ auch eine konkrete Umsetzung mithilfe der tree-edit-distance als Komplexitätsma
+ß für die Genetische Programmierung umgesetzt.
  
 \end_layout
 
 \begin_layout Standard
-Die Regression hat als Surrogatmodell für offline Training dennoch seine
- Limitierungen gezeigt.
- 
+Die Lösungs
 \end_layout
 
-\begin_layout Standard
-Die TED zeigt in seiner Rohform auch Probleme bei origin-programmen, die
- extrem klein sind, da Änderungen bereits nach wenigen Knoten sich nicht
- mehr entscheident von der Startlösung unterscheiden.
- Einige Änderungen würden diese Probleme aber bereits wieder beheben.
+\begin_layout Itemize
+Vertrautheit als Konzept?
+\end_layout
+
+\begin_layout Itemize
+Erklärbarkeit mithilfe von Vertrautheit? YES
+\end_layout
+
+\begin_layout Itemize
+Erklärbarkeit in Benchmarks? YES, aber Umsetzung mit TED noch optimierbar
+\end_layout
+
+\begin_layout Itemize
+Sicherheit? Wenn sich ein Programm an die strukturelle Vo
+\end_layout
+
+\begin_layout Itemize
+Fitness? Eventuell sinnvoll, nicht genügend Daten um sichere Aussage treffen
+ zu können
+\end_layout
+
+\begin_layout Itemize
+Negatives: Offline Learning für IB wenig Aussagekraft
 \end_layout
 
 \begin_layout Standard
 Auch Untersuchungen der Änderung phänotypischer art durch berechnung des
  Regressionsfehler zur Expertenpolicy könnte dieser Ansatz noch erweitert
  werden.
-\end_layout
-
-\begin_layout Standard
-Die so erzeugten Kandidaten konnten klassische Ansätze der genetischen Programmi
-erung zwar nicht weit, aber doch in sämtlichen Punkten (Fitness, Robustheit,
- 
-\end_layout
-
-\begin_layout Standard
-Erklärbarkeit) übertreffen.
+ Die so erzeugten Kandidaten konnten klassische Ansätze der genetischen
+ Programmierung zwar nicht weit, aber doch in sämtlichen Punkten (Fitness,
+ Robustheit, Erklärbarkeit) übertreffen.
  Aufbauend auf diesem Ansatz bieten sich viele Ideen an, die mit modifizierten
  Vertrautheitsmaßen oder einer anderen Version einer Regression noch sicherere
  oder performantere Ergebnisse liefern, die unter Umständen noch erklärbarer
  sind.
+ Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
+ in denen optimiert werden darf.
+ Auch wäre eine teilweise Übernahme durch die gp denkbar.
+\end_layout
+
+\begin_layout Section
+Future Work
 \end_layout
 
 \begin_layout Standard
-Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
- in denen optimiert werden darf.
- Auch wäre eine teilweise Übernahme durch die gp denkbar.
+Sowohl das Konzept der Vertrat
+\end_layout
+
+\begin_layout Standard
+Es gibt einige Erweiterungen, die weitreichende Verbesserungen versprechen.
+ 
+\end_layout
+
+\begin_layout Itemize
+TED
+\begin_inset Newline newline
+\end_inset
+
+Die TED zeigt in seiner Rohform auch Probleme bei origin-programmen, die
+ extrem klein sind, da Änderungen bereits nach wenigen Knoten sich nicht
+ mehr entscheident von der Startlösung unterscheiden.
+ Einige Änderungen würden diese Probleme aber bereits wieder beheben.
+\end_layout
+
+\begin_layout Itemize
+Regression Kernel
+\end_layout
+
+\begin_layout Itemize
+Erweiterungsmöglichkeiten
 \end_layout
 
 \begin_layout Standard

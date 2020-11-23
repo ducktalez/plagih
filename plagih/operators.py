@@ -8,6 +8,7 @@ import ast
 # import tensorflow.python.util.deprecation as deprecation  # not possible on python 3.6
 # deprecation._PRINT_DEPRECATION_WARNINGS = False
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
 
 """
 op: Dict to work as 'Database' for every expression-bit and its features

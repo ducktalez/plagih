@@ -169,9 +169,10 @@ class RegressionKernel(GPKernel):
         else:
             penalized_bounds = tf.no_op()
 
-        tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
-
         with tf.compat.v1.Session(config=self.tf_config) as sess:  # tensorflow evaluation must be done in a "session". funfact: debugging is not ez
+
+            tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
+
             with sess.graph.device(self.tf_device):  # GPU evaluation in tensorflow
                 tf_results = sess.run({'pairwise_diff': pairwise_diff, 'results_kernel': results_kernel, 'regression_errors': regression_errors, 'mean_error': mean_error, 'penalize_exploration': penalize_exploration})
                 # sfeh attention: the dict above returns np-type results, not real floats

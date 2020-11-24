@@ -12725,44 +12725,17 @@ Discussion
 \end_layout
 
 \begin_layout Section
-Diskussion plus
-\end_layout
-
-\begin_layout Itemize
-differentielles lernen: Durch die Kombination aus dem Vorgehen der Expertenpolic
-y und und den Daten eines anderen Vorgehens muss dasselbe Problem nochmal
- anders gelernt werden.
- Im Sport ist dieses Vorgehen sehr erfolgreich.
-\end_layout
-
-\begin_layout Itemize
-Durch das implizite Vorgeben einer Expertenpolicy wird der Suchraum implizit
- eingeschränkt.
- Wenn dieser ein gutes Gerüst stellt wird der Suchraum eingeschränkt und
- kann so schneller zu futen Ergebnissen führen.
-\end_layout
-
-\begin_layout Itemize
-MC Benchmark und IB Benchmark
-\end_layout
-
-\begin_layout Section
 Conclusion
 \end_layout
 
-\begin_layout Standard
-In dieser Arbeit wurde sowohl das Konzept der Vertrautheit eingeführt als
- auch eine konkrete Umsetzung mithilfe der tree-edit-distance als Komplexitätsma
-ß für die Genetische Programmierung umgesetzt.
- 
-\end_layout
-
-\begin_layout Standard
-Die Lösungs
-\end_layout
-
 \begin_layout Itemize
-Vertrautheit als Konzept?
+Vertrautheit als Konzept? Wird hingenommen.
+ (keine Umfrage dazu)
+\begin_inset Newline newline
+\end_inset
+
+In dieser Arbeit wurde Vertrautheit in Form von Menschen erstellten Programmen
+ 
 \end_layout
 
 \begin_layout Itemize
@@ -12787,12 +12760,53 @@ Negatives: Offline Learning für IB wenig Aussagekraft
 \end_layout
 
 \begin_layout Standard
+In dieser Arbeit wurde sowohl das Konzept der Vertrautheit vorgestellt und
+ konkrete mithilfe der tree-edit-distance als Komplexitätsmaß für die Genetische
+ Programmierung umgesetzt.
+ Getestet wurden zwar nur zwei Benchmarks, die so erzeugten Kandidaten standen
+ denen der klassischen GP weder in Fitness, Robustheit, Erklärbarkeit nach.
+ Dies mag 
+\end_layout
+
+\begin_layout Itemize
+differentielles lernen: Durch die Kombination aus dem Vorgehen der Expertenpolic
+y und und den Daten eines anderen Vorgehens muss dasselbe Problem nochmal
+ anders gelernt werden.
+ Im Sport ist dieses Vorgehen sehr erfolgreich.
+\end_layout
+
+\begin_layout Itemize
+Durch das implizite Vorgeben einer Expertenpolicy wird der Suchraum implizit
+ eingeschränkt.
+ Wenn dieser ein gutes Gerüst stellt wird der Suchraum eingeschränkt und
+ kann so schneller zu futen Ergebnissen führen.
+\end_layout
+
+\begin_layout Itemize
+MC Benchmark und IB Benchmark
+\end_layout
+
+\begin_layout Itemize
+Fixed nodes als Erweiterung
+\end_layout
+
+\begin_layout Section
+Erweiterungen
+\end_layout
+
+\begin_layout Standard
+Die naheliegendsten Erweiterungen betreffen die tree-edit-distance und die
+ phänotypische Analyse der Kandidaten.
+\end_layout
+
+\begin_layout Paragraph
+TED?
+\end_layout
+
+\begin_layout Standard
 Auch Untersuchungen der Änderung phänotypischer art durch berechnung des
  Regressionsfehler zur Expertenpolicy könnte dieser Ansatz noch erweitert
  werden.
- Die so erzeugten Kandidaten konnten klassische Ansätze der genetischen
- Programmierung zwar nicht weit, aber doch in sämtlichen Punkten (Fitness,
- Robustheit, Erklärbarkeit) übertreffen.
  Aufbauend auf diesem Ansatz bieten sich viele Ideen an, die mit modifizierten
  Vertrautheitsmaßen oder einer anderen Version einer Regression noch sicherere
  oder performantere Ergebnisse liefern, die unter Umständen noch erklärbarer
@@ -12800,14 +12814,6 @@ Auch Untersuchungen der Änderung phänotypischer art durch berechnung des
  Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
  in denen optimiert werden darf.
  Auch wäre eine teilweise Übernahme durch die gp denkbar.
-\end_layout
-
-\begin_layout Section
-Future Work
-\end_layout
-
-\begin_layout Standard
-Sowohl das Konzept der Vertrat
 \end_layout
 
 \begin_layout Standard

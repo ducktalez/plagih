@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -13,6 +13,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -34,8 +36,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -74,7 +74,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -84,10 +83,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -1234,7 +1230,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -1278,7 +1273,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -1303,7 +1297,6 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -1312,7 +1305,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -1529,7 +1521,6 @@ In 2018, the car autopilot of a Tesla caused a fatal accident because it
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -1848,7 +1839,6 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -1984,7 +1974,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -1996,7 +1985,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -2019,7 +2007,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -2058,7 +2045,6 @@ name "gp_Genetic-Programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -2502,7 +2488,6 @@ Fuzzy GP policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -2554,7 +2539,6 @@ As Daniel Hein has found out in
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2690,7 +2674,6 @@ thus providing a complexity measure that can be adapted to the preferences
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3201,7 +3184,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3735,7 +3717,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4466,7 +4447,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -4484,7 +4464,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -4780,7 +4759,6 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -4794,7 +4772,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -6579,7 +6556,6 @@ The time-consuming evaluation process can be shortened 2-15 times by using
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -7219,7 +7195,6 @@ Strongly Typed Genetic Programming (STGP) is another extension of GP, where
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -7543,7 +7518,6 @@ bool
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -9338,7 +9312,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9618,7 +9591,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9680,7 +9652,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -12216,7 +12187,7 @@ IB Resultate im Vergleich
 Scratch GP Results
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 MAE_scratch
 \end_layout
 
@@ -12311,7 +12282,7 @@ xxx
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 MSE_scratch
 \end_layout
 
@@ -12398,7 +12369,7 @@ xxx
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 IB_MSE_mean
 \end_layout
 
@@ -12497,7 +12468,7 @@ The simplest yet successful heuristic "Nothing" is simply nothing to change,
  trees.
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 IB_MSE_50
 \end_layout
 
@@ -12589,7 +12560,7 @@ xxx
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 IB_MSE_s3m
 \end_layout
 
@@ -12711,133 +12682,45 @@ Weitere Punkte:
 \end_layout
 
 \begin_layout Itemize
-(unwichtig: Einen scratch-Kandidaten als Ausgangspunkt zu nehmen macht keinen
- Sinn, der wurde ja schon auf dem Datensatz trainiert
-\end_layout
-
-\begin_layout Itemize
 Der Lösungsraum im IB ist zu sparse als dass eine Annäherung an einen Mittelweg
  (der zu weit von der Lösung liegt) keinen Sinn macht
-\end_layout
-
-\begin_layout Chapter
-Discussion
 \end_layout
 
 \begin_layout Section
 Conclusion
 \end_layout
 
-\begin_layout Itemize
-Vertrautheit als Konzept? Wird hingenommen.
- (keine Umfrage dazu)
-\begin_inset Newline newline
-\end_inset
+\begin_layout Standard
+In this thesis, familiarity was presented as an essential factor for creating
+ interpretable policies.
+ The implementation with the edit-distance between programming trees leads
+ to results, which are structurally different from the classical GP, because
+ parts of the expert policy were recognizable in the solutions.
+ Only with simple expert solutions (3-6 nodes) the TED lost its effect quickly,
+ because the difference to the regular distance became too small.
+ Therefore fixed nodes in GP-trees were introduced as a solution, which
+ must not be changed.
+\end_layout
 
-In dieser Arbeit wurde Vertrautheit in Form von Menschen erstellten Programmen
+\begin_layout Standard
+More extensive extensions could focus even further on human thought patterns
+ in the search.
+ This could be the use of if statements to further subdivide problems, weighting
+ of functions or an interpretable evaluation of edits.
  
 \end_layout
 
-\begin_layout Itemize
-Erklärbarkeit mithilfe von Vertrautheit? YES
-\end_layout
-
-\begin_layout Itemize
-Erklärbarkeit in Benchmarks? YES, aber Umsetzung mit TED noch optimierbar
-\end_layout
-
-\begin_layout Itemize
-Sicherheit? Wenn sich ein Programm an die strukturelle Vo
-\end_layout
-
-\begin_layout Itemize
-Fitness? Eventuell sinnvoll, nicht genügend Daten um sichere Aussage treffen
- zu können
-\end_layout
-
-\begin_layout Itemize
-Negatives: Offline Learning für IB wenig Aussagekraft
-\end_layout
-
 \begin_layout Standard
-In dieser Arbeit wurde sowohl das Konzept der Vertrautheit vorgestellt und
- konkrete mithilfe der tree-edit-distance als Komplexitätsmaß für die Genetische
- Programmierung umgesetzt.
- Getestet wurden zwar nur zwei Benchmarks, die so erzeugten Kandidaten standen
- denen der klassischen GP weder in Fitness, Robustheit, Erklärbarkeit nach.
- Dies mag 
-\end_layout
-
-\begin_layout Itemize
-differentielles lernen: Durch die Kombination aus dem Vorgehen der Expertenpolic
-y und und den Daten eines anderen Vorgehens muss dasselbe Problem nochmal
- anders gelernt werden.
- Im Sport ist dieses Vorgehen sehr erfolgreich.
-\end_layout
-
-\begin_layout Itemize
-Durch das implizite Vorgeben einer Expertenpolicy wird der Suchraum implizit
- eingeschränkt.
- Wenn dieser ein gutes Gerüst stellt wird der Suchraum eingeschränkt und
- kann so schneller zu futen Ergebnissen führen.
-\end_layout
-
-\begin_layout Itemize
-MC Benchmark und IB Benchmark
-\end_layout
-
-\begin_layout Itemize
-Fixed nodes als Erweiterung
-\end_layout
-
-\begin_layout Section
-Erweiterungen
-\end_layout
-
-\begin_layout Standard
-Die naheliegendsten Erweiterungen betreffen die tree-edit-distance und die
- phänotypische Analyse der Kandidaten.
-\end_layout
-
-\begin_layout Paragraph
-TED?
-\end_layout
-
-\begin_layout Standard
-Auch Untersuchungen der Änderung phänotypischer art durch berechnung des
- Regressionsfehler zur Expertenpolicy könnte dieser Ansatz noch erweitert
- werden.
- Aufbauend auf diesem Ansatz bieten sich viele Ideen an, die mit modifizierten
- Vertrautheitsmaßen oder einer anderen Version einer Regression noch sicherere
- oder performantere Ergebnisse liefern, die unter Umständen noch erklärbarer
- sind.
- Hier könnten vom Entwickler Bereiche (beispielsweise Wertebereiche) vorgegeben,
- in denen optimiert werden darf.
- Auch wäre eine teilweise Übernahme durch die gp denkbar.
-\end_layout
-
-\begin_layout Standard
-Es gibt einige Erweiterungen, die weitreichende Verbesserungen versprechen.
- 
-\end_layout
-
-\begin_layout Itemize
-TED
-\begin_inset Newline newline
-\end_inset
-
-Die TED zeigt in seiner Rohform auch Probleme bei origin-programmen, die
- extrem klein sind, da Änderungen bereits nach wenigen Knoten sich nicht
- mehr entscheident von der Startlösung unterscheiden.
- Einige Änderungen würden diese Probleme aber bereits wieder beheben.
-\end_layout
-
-\begin_layout Itemize
-Regression Kernel
-\end_layout
-
-\begin_layout Itemize
-Erweiterungsmöglichkeiten
+Reliable statements or implications about robustness and real rewards cannot
+ be made due to the small number of benchmarks tested.
+ However, the experiments suggest that the regression error did not differ
+ significantly from solutions of classical GP, which may be due to a general
+ convergence of the regression error up to the outliers.
+ The real rewards of the mountain car were not only very robust against
+ misruns but often even exceeded the target solution.
+ In order to obtain particularly secure solutions, there are also possibilities
+ for expansion here, which, for example, evaluate the candidates additionally
+ based on their deviation from the start policy.
 \end_layout
 
 \begin_layout Standard

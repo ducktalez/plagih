@@ -8,6 +8,7 @@ import re
 from pydoc import locate
 import random
 
+
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()  # sfeh wasd wtf
 

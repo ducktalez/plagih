@@ -220,8 +220,32 @@ def thesis_decision_plots_fullspace(folder=Path.cwd() / 'benchmarks/mc/agents/im
 #     return
 
 
+def compare_savehuman_vs_sarsa():
+    """
+    plot for the thesis
+    sarsa-75 is better, but has an outlier
+    """
+    sarsa75, _, _, _ = load_sarsas(set_epsilon=0)
+    simple_agent = SimpleAgent()
+
+    _, _, rewards_sarsa = mtc_play(sarsa75, n=100)
+    _, _, rewards_mtc = mtc_play(simple_agent, n=100)
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        ax.plot(np.arange(len(rewards_sarsa)), rewards_sarsa, label='Sarsa-75')
+        ax.plot(np.arange(len(rewards_mtc)), rewards_mtc, label='Maximize velocity')
+        ax.set(xlabel='episode', ylabel='reward', xlim=(0, 100))  # 1.05  # top * 1.05 for better style
+        ax.legend(loc='lower left')
+        plt.show()
+        savepath = path_make_dir(Path.cwd() / 'MA_lyx/img/pyplots_custom/sarsa_vs_human.pdf')
+        fig.savefig(savepath)
+        plt.close('all')
+
+
 if __name__ == "__main__":
     print(f'Making all the plots for the thesis (so they are python-style)')
+    compare_savehuman_vs_sarsa()
     # thesis_decision_plots_fullspace()
     # thesisplot_tempdiff()
     # thesis_plot_ib_comparisson()

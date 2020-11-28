@@ -269,7 +269,7 @@ def merge_paretos(path_main):
     """
     load each IB run and add its pareto front to a merged plot
     """
-    with plt.rc_context(pyplot_rc_tex):
+    with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
         plt.subplots_adjust(wspace=0, hspace=0.1)  # sfeh # left=0, bottom=0, right=1, top=1
         for ii, color in enumerate(['blue', 'magenta', 'red']):

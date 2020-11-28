@@ -296,6 +296,7 @@ class ExplainableGP(object):
             try:
                 with Path.open(path_backup, 'rb') as file:
                     run_data = pickle.load(file)
+
             except NotImplementedError as nimp:
                 raise Exception(f'NotImplementedError: {nimp}')
             except EOFError as eoferr:

@@ -120,6 +120,9 @@ def train_sarsa_agent_pickle(seed=0):
 
 
 def create_plagih_samples_csv(agent, name, n=50):
+    """
+    Creates .csv data files for mountaincar runs
+    """
     env = gym.make('MountainCar-v0')
     env.seed(0)
 

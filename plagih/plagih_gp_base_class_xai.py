@@ -165,7 +165,8 @@ class ExplainableGP(object):
 
     def make_evolve_rates(self):
         """
-
+        The evolve_dict is converted into a list of the population length.
+        The evolve_loop is for the regular evolution, the evolve_random is especially required for the first generation.
         """
 
         def evolve_safety_update(evolve_dict):

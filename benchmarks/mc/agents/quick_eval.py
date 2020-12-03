@@ -1,4 +1,6 @@
 """
+sfeh-specific file. not required otherwise.
+
 pos = observation0
 velocity = observation1
 pos, vel = observation

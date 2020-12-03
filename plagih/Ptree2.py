@@ -1,3 +1,14 @@
+"""
+Ptree2 contain a new implementation of trees that we use in genetic programming to display a program.
+The old karoo "tree" is replaced with, for now, "cooltreer" in the code.
+not all functions can use cooltree for now and some tree-functions require the old "tree"
+cooltree splits the karoo tree into the
+- meta-info (fitness, parsimony, tree-id, ...) and the
+- core (coolcore)
+The core of the tree, which "is" the tree, is stored recursively
+"""
+
+
 from collections import deque
 from plagih.plagih_tree import *
 from plagih.tree_distances.tree_edit_distance import apted_distance
@@ -21,7 +32,8 @@ class Plabel:
 
 class CoolCore:
     """
-
+    The core is the structure of a plagih gp-tree.
+    It recursively holds the nodes of a tree; every tree has a list of potential children.
     """
 
     def __init__(self, label=None, is_fix=False, complete=False, arity=None, xtype=None, childs=None, depth=None,

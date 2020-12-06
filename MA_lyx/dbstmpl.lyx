@@ -7200,6 +7200,7 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
+\align center
 \begin_inset Graphics
 	filename img/tighttree_example/full_04.pdf
 
@@ -7218,19 +7219,6 @@ Full visualisation with each node shown.
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-hfill
 \end_layout
 
 \end_inset
@@ -7255,6 +7243,7 @@ backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
+\align center
 \begin_inset Graphics
 	filename img/tighttree_example/full-04_tight.pdf
 
@@ -7286,6 +7275,7 @@ Tight version with joined branch.
 \begin_layout Plain Layout
 The same expression in the form of a tree with automatic arrangement of
  the nodes.
+ xxx cartVel/pos
 \end_layout
 
 \end_inset
@@ -7380,10 +7370,6 @@ if-Expert xxx
 Mountain Car
 \end_layout
 
-\begin_layout Standard
-
-\end_layout
-
 \begin_layout Subsection
 Domain Expert solutions
 \end_layout
@@ -7431,142 +7417,6 @@ status open
 \begin_inset Graphics
 	filename ../benchmarks/mc/agents/img/mc_reward_compared.pdf
 	height 50mm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="18mm">
-<column alignment="center" valignment="top" width="2cm">
-<column alignment="center" valignment="top" width="2cm">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Agent
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Training episodes
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Avg.
- reward (100 runs)
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--102.61
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Close form
-\end_layout
-
-\begin_layout Plain Layout
-preset
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-if-Expert
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
 
 \end_inset
 
@@ -7623,10 +7473,6 @@ reference "par:simple,-maximum-momentum"
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
-
 \end_layout
 
 \begin_layout Standard
@@ -7752,15 +7598,21 @@ literal "true"
 
 , a close-form preset policy was proposed, defining a lower and upper bound
  for the car to determine the actions.
+ xxx
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $min(-0.09(\text{pos}+0.25)^{2}+0.03,0.3(\text{pos}+0.09)^{4}-0.008)\leq vel\leq(-0.07(\text{pos}+0.38)^{2}+0.07)$
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
-\begin{multline*}
-min(-0.09(position+0.25)^{2}+0.03,0.3(position+0.09)^{4}-0.008)\leq\\
-\leq velocity\leq\\
-\leq(-0.07(position+0.38)^{2}+0.07)
-\end{multline*}
+\begin{eqnarray*}
+\text{vel \leq(-0.07(\text{\text{pos}}+0.38)^{2}+0.07)}
+\end{eqnarray*}
 
 \end_inset
 
@@ -7800,9 +7652,37 @@ status open
 
 \begin_layout Plain Layout
 \align center
-\begin_inset CommandInset include
-LatexCommand input
-filename "../benchmarks/slurm_runs/MTC200_MAE_xiaoFix/visualisation/full_00_tight.tex"
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[$
+\backslash
+text{if-then-else}$,fixnode[$
+\backslash
+land$,fixnode[$
+\backslash
+leq$[$
+\backslash
+min$[${{-0.09 
+\backslash
+cdot {{
+\backslash
+text{pos}+0.25}^{2}}}+0.03}$][${{0.3 
+\backslash
+cdot {{
+\backslash
+text{pos}+0.9}^{4}}}-0.008}$]][vel]][$
+\backslash
+leq$[vel][${{-0.07 
+\backslash
+cdot {{
+\backslash
+text{pos}+0.38}^{2}}}+0.07}$]]][$2$][$0$]]} 
+\end_layout
 
 \end_inset
 
@@ -8198,11 +8078,10 @@ n which could not exceed the maximum-momentum solution.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Wrap figure
-lines 0
-placement o
-overhang 0col%
-width "50col%"
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
@@ -8231,6 +8110,7 @@ Pareto candidates in a regular run with MSE.
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float table
 wide false
 sideways false
@@ -8264,6 +8144,7 @@ MTC200_MSE_scratch candidates in comparisson.
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
 wide false
 sideways false
@@ -8318,6 +8199,7 @@ The agent is reached with maximum acceleration by a shorter printout.
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
 wide false
 sideways false
@@ -8445,6 +8327,7 @@ This agent uses a sine operator, which leads to strong fluctuations.
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
 wide false
 sideways false
@@ -9966,6 +9849,19 @@ TED Tree Edit Distance
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Mountain car
+\end_layout
+
+\begin_layout Subsection
+simplePlus
+\end_layout
+
+\begin_layout Standard
+(Keine weitreichenden Erkenntnisse in diesem Lauf, Aktion 0 wurde nicht
+ wirklich genutzt)
 \end_layout
 
 \begin_layout Section

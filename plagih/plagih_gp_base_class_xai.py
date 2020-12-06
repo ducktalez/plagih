@@ -685,7 +685,7 @@ class ExplainableGP(object):
                                   f'{fails}'])
 
             paste = ''.join([tex_tabuline(x[:4]) for x in tex_lines])
-            paste = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{90mm}}\n\\hline\n" \
+            paste = "\\begin{longtable}[c]{>{\\LTleft}p{5mm}>{\\LTleft}p{6mm}>{\\LTleft}p{10mm}>{\\LTleft}p{102mm}}\n\\hline\n" \
                     "dist & error & reward  & expression \\tabularnewline \\hline\n" \
                     f"{paste}" \
                     "\\hline\n\\end{longtable}\n"

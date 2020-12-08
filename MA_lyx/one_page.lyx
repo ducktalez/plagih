@@ -9,6 +9,9 @@
 \usepackage{dbstmpl}
 \end_preamble
 \use_default_options true
+\begin_modules
+algorithm2e
+\end_modules
 \maintain_unincluded_children false
 \language english
 \language_package default
@@ -94,19 +97,26 @@ how to fix this
 \end_layout
 
 \begin_layout Subsection
-simpleFix MAE!!!xx
+simonBestFix2 v3 easy xxx
 \end_layout
 
 \begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+\noindent
 \begin_inset Float figure
+placement h
 wide false
 sideways false
 status open
 
 \begin_layout Plain Layout
+\noindent
 \align center
 \begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/evaled_overview.pdf
+	filename ../benchmarks/slurm_runs3_easy/MTC200_MSE_simonBestFix2/sfehs_eval/evaled_overview.pdf
 	height 5cm
 
 \end_inset
@@ -133,6 +143,1076 @@ The improvement of the Pareto candidates is comparatively safe if only the
 \end_layout
 
 \begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+ & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+ 0 & 0.35 & -100.3 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<-1}
+\backslash
+lor{{
+\backslash
+text{pos}<0.1}
+\backslash
+land{
+\backslash
+text{vel}<-0.05}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{
+\backslash
+text{pos}>-0.45}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.22 & -105.0 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<-1}
+\backslash
+lor{{
+\backslash
+text{pos}<0.1}
+\backslash
+land{
+\backslash
+text{vel}<-0.05}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.19 & -103.6 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<-0.965}
+\backslash
+lor{{
+\backslash
+text{pos}<0.1}
+\backslash
+land{
+\backslash
+text{vel}<-0.05}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.18 & -103.8 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<-0.965}
+\backslash
+lor{{
+\backslash
+text{pos}<0.1}
+\backslash
+land{
+\backslash
+text{vel}<-0.05}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.016}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.15 & -103.5 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<-1}
+\backslash
+lor{{
+\backslash
+text{pos}<-0.909}
+\backslash
+land{-
+\backslash
+text{vel}<0.013}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.12 & -103.7 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<-1.046}
+\backslash
+lor{{
+\backslash
+text{pos}<-0.909}
+\backslash
+land{-
+\backslash
+text{vel}<0.013}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.12 & -103.9 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<-1.046}
+\backslash
+lor{{
+\backslash
+text{pos}<-0.909}
+\backslash
+land{-
+\backslash
+text{vel}<0.013}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.016}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+7 & 0.12 & -103.8 & ${
+\backslash
+text{ if } ({{{
+\backslash
+text{pos}-{10.031 
+\backslash
+cdot 
+\backslash
+text{vel}}}<-0.821}
+\backslash
+lor{{
+\backslash
+text{pos}<0.1}
+\backslash
+land{
+\backslash
+text{vel}<-0.05}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.016}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+9 & 0.10 & -103.6 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<
+\backslash
+text{pos}}
+\backslash
+lor{{{
+\backslash
+text{pos}-{9.973 
+\backslash
+cdot 
+\backslash
+text{vel}}}<-0.821}
+\backslash
+land{-
+\backslash
+text{vel}<0.015}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+10 & 0.10 & -104.1 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<
+\backslash
+text{pos}}
+\backslash
+lor{{{
+\backslash
+text{pos}-{10.136 
+\backslash
+cdot 
+\backslash
+text{vel}}}<-0.827}
+\backslash
+land{-
+\backslash
+text{vel}<0.015}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.016}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+13 & 0.09 & -103.8 & ${
+\backslash
+text{ if } ({{{
+\backslash
+text{pos}<-0.351}
+\backslash
+land{0.013<
+\backslash
+text{vel}}}
+\backslash
+lor{{{
+\backslash
+text{pos}-{10.110 
+\backslash
+cdot 
+\backslash
+text{vel}}}<-0.820}
+\backslash
+land{-
+\backslash
+text{vel}<0.015}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{
+\backslash
+text{pos}>-0.381}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+18 & 0.08 & -98.4 & ${
+\backslash
+text{ if } ({{
+\backslash
+text{pos}<
+\backslash
+text{pos}}
+\backslash
+lor{{{
+\backslash
+text{pos}-{10.031 
+\backslash
+cdot 
+\backslash
+text{vel}}}<-0.821}
+\backslash
+land{-
+\backslash
+text{vel}<0.015}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{{
+\backslash
+text{ if } ({
+\backslash
+text{pos}>-0.354}) 
+\backslash
+text{ then } (
+\backslash
+text{pos}) 
+\backslash
+text{ else } ({
+\backslash
+text{pos}-{9.866 
+\backslash
+cdot 
+\backslash
+text{vel}}})}>-0.473}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+22 & 0.07 & -98.2 & ${
+\backslash
+text{ if } ({{{
+\backslash
+text{pos}<-0.351}
+\backslash
+land{0.013<
+\backslash
+text{vel}}}
+\backslash
+lor{{{
+\backslash
+text{pos}-{10.435 
+\backslash
+cdot 
+\backslash
+text{vel}}}<-0.821}
+\backslash
+land{-
+\backslash
+text{vel}<0.015}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{{
+\backslash
+text{ if } ({
+\backslash
+text{pos}>-0.381}) 
+\backslash
+text{ then } (
+\backslash
+text{pos}) 
+\backslash
+text{ else } ({
+\backslash
+text{pos}-{9.941 
+\backslash
+cdot 
+\backslash
+text{vel}}})}>-0.468}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+23 & 0.07 & -98.2 & ${
+\backslash
+text{ if } ({{{
+\backslash
+text{pos}<-0.351}
+\backslash
+land{0.013<
+\backslash
+text{vel}}}
+\backslash
+lor{{{
+\backslash
+text{pos}-{10.031 
+\backslash
+cdot 
+\backslash
+text{vel}}}<-0.821}
+\backslash
+land{-
+\backslash
+text{vel}<0.015}}}) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({{
+\backslash
+text{vel}<0.02}
+\backslash
+land{{{
+\backslash
+text{ if } ({
+\backslash
+text{pos}>-0.381}) 
+\backslash
+text{ then } (
+\backslash
+text{pos}) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({-
+\backslash
+text{vel}<-0.004}) 
+\backslash
+text{ then } (-1.042) 
+\backslash
+text{ else } (
+\backslash
+text{pos})})}>-0.468}
+\backslash
+land{
+\backslash
+text{pos}<-0.05}}}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ({
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)})})}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{longtable}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="1">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0pt">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" usebox="none" width="120mm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+complexity
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\ensuremath{\text{MSE=}0.07}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $R=-98.2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs3_easy/MTC200_MSE_simonBestFix2/sfehs_eval/space-22.pdf
+	height 3cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "120mm"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[$
+\backslash
+text{if-then-else}$[$
+\backslash
+lor$[$
+\backslash
+land$[pos$<-0.351$][$0.013<$vel]][$
+\backslash
+land$[$<$[${
+\backslash
+text{pos}-{10.435 
+\backslash
+cdot 
+\backslash
+text{vel}}}$][$-0.821$]][$<$[-vel][$0.015$]]]][$2$][$
+\backslash
+text{if-then-else}$[$
+\backslash
+land$[$<$[vel$0.02$]][$
+\backslash
+land$[$>$[$
+\backslash
+text{if-then-else}$[pos$>-0.381$][pos][$
+\backslash
+text{pos}-9.94 
+\backslash
+cdot 
+\backslash
+text{vel}$]][$-0.468$]][pos$<-0.05$]]][$0$][$
+\backslash
+text{if-then-else}$[vel$<0$][$0$][$2$]]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+xxx
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+og one
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[$
+\backslash
+text{if-then-else}$[$
+\backslash
+lor$[$
+\backslash
+land$[$<$[pos][$-0.351$]][$<$[$0.013$][vel]]][$
+\backslash
+land$[$<$[${
+\backslash
+text{pos}-{10.435 
+\backslash
+cdot 
+\backslash
+text{vel}}}$][$-0.821$]][$<$[-vel][$0.015$]]]][$2$][$
+\backslash
+text{if-then-else}$[$
+\backslash
+land$[$<$[vel][$0.02$]][$
+\backslash
+land$[$>$[$
+\backslash
+text{if-then-else}$[$>$[pos][$-0.381$]][pos][${
+\backslash
+text{pos}-{9.941 
+\backslash
+cdot 
+\backslash
+text{vel}}}$]][$-0.468$]][$<$[pos][$-0.05$]]]][$0$][$
+\backslash
+text{if-then-else}$[$<$[vel][$0$]][$0$][$2$]]]]} 
+\end_layout
+
+\end_inset
+
 
 \end_layout
 

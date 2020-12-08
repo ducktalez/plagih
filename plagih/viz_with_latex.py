@@ -25,8 +25,11 @@ def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
                        'terminal/.style={rectangle,},   ' \
                        'fixnode/.style={fill=blue!60,},   ' \
                        'observation/.style={rectangle,},   ' \
-                       'variable/.style={rectangle,},   ' \
-                       'nodeinsert/.style={fill=green!50,},   ' \
+                              'variable/.style={rectangle,},   ' \
+                              'samenode/.style={fill=blue!40,},   ' \
+                              'newnode/.style={fill=green!60,},   ' \
+                              'changenode/.style={orange=green!60,},   ' \
+                              'nodeinsert/.style={fill=green!50,},   ' \
                        'nodechanged/.style={fill=orange!50,}, #1 ' \
                        '\\end{forest}}}' \
 
@@ -152,13 +155,14 @@ def label_bracket_extras(label, arity, modifiable):
     from an "OG" tree node, add some bracket-tree extras
     """
     extras = ''
-    # custom node design
-    if arity == 0:
-        extras += ',terminal'
-        if terminal_label_is_observation(label):
-            extras += ',variable'
-        else:
-            extras += ',observation'
+    # sfeh that shit is bullshit
+    # # custom node design
+    # if arity == 0:
+    #     extras += ',terminal'
+    #     if terminal_label_is_observation(label):
+    #         extras += ',variable'
+    #     else:
+    #         extras += ',observation'  # especially this does not work
 
     if not modifiable:
         extras += ',fixnode'

@@ -80,9 +80,9 @@ op_what = {  # 'f2f': Classical mathematical operators, evaluate from float to f
     # 'b2b' Classical logical operators, evaluate from bool to bool
     # DON'T USE tf.bitwise.bitwise_and
     # sympify('Or')->'|', sympify('And')->'&', sympify('Not')->'~'
-    'Andb': {'fun_class': 'And', 'fun_label': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_and', 'tf': tf.logical_and, 'latex1': '\\land', 'latexF': '{}\\wedge{}',
+    'Andb': {'fun_class': 'And', 'fun_label': 'Andb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_and', 'tf': tf.logical_and, 'latex1': '\\land', 'latexF': '{}\\land{}',
              'sym_reduce': None, 'sym_str': 'Andb({}, {})', 'pycode': '({} and {})'},
-    'Orb': {'fun_class': 'Or', 'fun_label': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_or', 'tf': tf.logical_or, 'latex1': '\\lor', 'latexF': '{}\\vee{}',
+    'Orb': {'fun_class': 'Or', 'fun_label': 'Orb', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_or', 'tf': tf.logical_or, 'latex1': '\\lor', 'latexF': '{}\\lor{}',
             'sym_reduce': None, 'sym_str': 'Orb({}, {})', 'pycode': '({} or {})'},
     'Xor': {'fun_class': 'Xor', 'fun_label': 'Xor', 'arity': 2, 'xtype': 'b2b', 'c-weight': 0.5, 'tf_name': 'logical_xor', 'tf': tf.math.logical_xor, 'latex1': '\\oplus', 'latexF': '{}\\oplus{}',
             'sym_reduce': None, 'sym_str': 'Xor({}, {})', 'pycode': '({} ^ {})'},

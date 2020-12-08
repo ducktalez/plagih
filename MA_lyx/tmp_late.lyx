@@ -9,6 +9,9 @@
 \usepackage{dbstmpl}
 \end_preamble
 \use_default_options true
+\begin_modules
+algorithm2e
+\end_modules
 \maintain_unincluded_children false
 \language english
 \language_package default
@@ -127,6 +130,7 @@ n which could not exceed the maximum-momentum solution.
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
 placement h
 wide false
@@ -531,8 +535,6 @@ status open
 \begin_inset Text
 
 \begin_layout Plain Layout
-\noindent
-\align center
 complexity
 \end_layout
 
@@ -890,9 +892,9 @@ status open
 \backslash
 plforest{[$+$[{$x^2$}[{$
 \backslash
-cdot $}[{pos},terminal,variable][$1.779$,terminal,observation]]][{$
+cdot $}[{pos}][$1.779$]]][{$
 \backslash
-cdot $}[{$174$},terminal,observation][{vel},terminal,variable]]]} 
+cdot $}[{$174$}][{vel}]]]}
 \end_layout
 
 \end_inset
@@ -949,13 +951,13 @@ status open
 \backslash
 plforest{[{$+$}[{$
 \backslash
-cdot $}[{$-2.3$},terminal,observation][{$
+cdot $}[{$-2.3$}][{$
 \backslash
 sin $}[{$
 \backslash
-div $}[{$1.244$},terminal,observation][pos,terminal,variable]]]][{$
+div $}[{$1.244$}][pos]]]][{$
 \backslash
-cdot $}[{$174$},terminal,observation][vel,terminal,variable]]]} 
+cdot $}[{$174$}][vel]]]}
 \end_layout
 
 \end_inset
@@ -1156,8 +1158,6 @@ status open
 \begin_inset Text
 
 \begin_layout Plain Layout
-\noindent
-\align center
 complexity
 \end_layout
 
@@ -1447,11 +1447,9 @@ status open
 \backslash
 plforest{[{$
 \backslash
-text{if-then-else}$}[{$<$}[{vel},terminal,variable][{$0$},terminal,observation]]
-[{$
+text{if-then-else}$}[{$<$}[{vel}][{$0$}]][{$
 \backslash
-div $}[{pos},terminal,variable][{$-1.8$},terminal,observation]][{$2.2$},terminal,o
-bservation]]} 
+div $}[{pos}][{$-1.8$}]][{$2.2$},terminal,observation]]} 
 \end_layout
 
 \end_inset
@@ -1506,9 +1504,9 @@ status open
 \backslash
 plforest{[{$-$}[{$
 \backslash
-cdot $}[{$152$},terminal,observation][{vel},terminal,variable]][{$
+cdot $}[{$152$}][{vel}]][{$
 \backslash
-cdot $}[{$2.7$},terminal,observation][{pos},terminal,variable]]]} 
+cdot $}[{$2.7$}][{pos}]]]}
 \end_layout
 
 \end_inset
@@ -2056,56 +2054,1184 @@ xxx
 \end_layout
 
 \begin_layout Subsection
-xxxxx
+simpleFix (MAE) xx
 \end_layout
 
 \begin_layout Standard
-xxxxxxxx
+Due to the fixed nodes not only the core structure is preserved but also
+ a large part of the condition.
+ xxx Image? As one of the few runs a second if-condition is used to control
+ the behaviour more precisely, which makes it even easier to distinguish
+ the candidates.
 \end_layout
 
 \begin_layout Standard
-The beginning is the same as in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "run:MTC200_MSE_simple"
-
-\end_inset
-
-.
- Thanks to the fixed core structure, however, the changes are limited to
- the if condition, so action 0 cannot be selected.
- With a regression error of only 0.05 this is even lower than the scratch
+With a regression error of only 0.05 this is just as good as the scratch
  version.
- This is no exception to the assumption - on average, the regression error
- was half as large as in the scratch runs.
+ This is no exception to the assumption xxx - on average, the regression
+ error was half as large as in the scratch runs.
  This behavior can already be explained by the structured default of the
  expert.
  
 \end_layout
 
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The improvement of the Pareto candidates is comparatively safe if only the
+ if statement can be changed.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+ & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+0 & 0.20 & -119.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.20 & -123.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<-0.001}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.19 & -116.5 & ${
+\backslash
+text{ if } ({{ 
+\backslash
+text{sign}(
+\backslash
+text{vel})}<
+\backslash
+text{pos}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.18 & -133.0 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0.007 
+\backslash
+cdot 
+\backslash
+text{pos}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.16 & -121.6 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.010 
+\backslash
+cdot {
+\backslash
+text{pos}^2}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.14 & -117.1 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.012 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}^2}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.12 & -106.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.014 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}-0.243}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+11 & 0.09 & -100.6 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < 
+\backslash
+text{ if } (
+\backslash
+text{vel}<-0.008) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.047))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+14 & 0.08 & -100.0 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < 
+\backslash
+text{ if } (
+\backslash
+text{vel}< -0.01 
+\backslash
+cdot -
+\backslash
+text{pos}^2$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ then } 0 
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.05)))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+15 & 0.07 & -99.7 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ if } (
+\backslash
+text{vel}<-0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.05)) $
+\backslash
+
+\backslash
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+17 & 0.06 & -100.0 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ if } (
+\backslash
+text{vel} < -0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2) $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ then } 0 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ else } (
+\backslash
+text{pos} - 0.73 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.03))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+20 & 0.05 & -98.3 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<
+\backslash
+text{ if } (
+\backslash
+text{vel} < 0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ then } (1.03) 
+\backslash
+text{ else } (
+\backslash
+text{pos}-0.73 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.03))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+22 & 0.05 & -98.5 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<
+\backslash
+text{ if } ((
+\backslash
+text{vel} 
+\backslash
+leq 0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ then } 0.17 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ else } 0.03 - (0.94 
+\backslash
+cdot (
+\backslash
+text{pos}-0.25)^2-0.25)^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="3">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="center" valignment="top" width="42mm">
+<column alignment="center" valignment="top" width="42mm">
+<column alignment="center" valignment="top" width="42mm">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+complexity
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\ensuremath{\text{MSE=}0.12}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $R=-106.4$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+11
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\ensuremath{\text{MSE=}0.09}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $R=-100.6$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+20
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\ensuremath{\text{MSE}=0.05}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\ensuremath{R=-98.1}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-6.pdf
+	height 3cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-11.pdf
+	height 3cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-20.pdf
+	height 3cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\align left
+The first big improvement is still a pure formula.
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align left
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "42mm"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[$
+\backslash
+text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$-0.014 
+\backslash
+cdot 
+\backslash
+text{pos}^2$
+\backslash
+
+\backslash
+$-0.243$]][$0$,fixnode][$2$,fixnode]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\align left
+The first candidate with nested if-condition also achieves the most significant
+ jump in the real evaluation.
+\begin_inset Newline newline
+\end_inset
+
+Conspicuous is a faulty reversal behaviour shortly before the destination.
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align left
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "42mm"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[$
+\backslash
+text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$
+\backslash
+text{if-then-else}$[$<$[vel][$-0.008$]][$0$][$
+\backslash
+text{pos} 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}^2}$
+\backslash
+
+\backslash
+$-0.047$]]][$0$,fixnode][$2$,fixnode]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\align left
+The black box performance is even exceeded with this candidate.
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align left
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "42mm"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "0pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[$
+\backslash
+text{if-then-else}$,fixnode[$<$[vel][$
+\backslash
+text{if-then-else}$[$<$,samenode[vel,samenode][$-0.01$
+\backslash
+
+\backslash
+$ 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2$]][$1.03$][[$
+\backslash
+text{pos} -0.03$
+\backslash
+
+\backslash
+$-0.73 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}^2}$]]]][$0$,fixnode][$2$,fixnode]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+xxx
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+sfeh Modifizierter agent-17
+\end_layout
+
+\begin_layout Plain Layout
+
+\backslash
+plforest{[$
+\backslash
+text{if-then-else}$,fixnode[$<$[vel][$
+\backslash
+text{if-then-else}$[$<$[vel][$-0.01$
+\backslash
+
+\backslash
+$ 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}^2}$]][$0$][$
+\backslash
+text{pos} 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}^2}$
+\backslash
+
+\backslash
+$-0.047$]]][$0$,fixnode][$2$,fixnode]]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+xxxx allgemein: wenn aktion 1 ausgeschlossen wird, erspart man sich einen
+ riesigen Teil des Suchraumes!
+\end_layout
+
 \begin_layout Subsection
-Parabolic lower and upper bound (Xiao)
+Parabolic lower and upper bound (Xiao) xx 26 knoten?
 \end_layout
 
 \begin_layout Standard
 This close-form preset policy was implemented by Xiao in [xxx] and is a
  mathematical formula that is characterized by a parabolic upper and lower
  bound.
-\end_layout
-
-\begin_layout Itemize
-ted robustness
-\end_layout
-
-\begin_layout Itemize
-Keine Verschlechterungen, sehr sicher
-\end_layout
-
-\begin_layout Itemize
-Besser als Sarsa200 Ziellösung
+ Mit 26 Knoten ist diese origin sehr robust gegenüber TED-problemen, ein
+ Lauf mit fixen Knoten unterschied sich nicht wesentlich in den Resultaten.
+ Obwohl die Origin mit einem Reward von -102.6 schon sehr gut war waren alle
+ gefundenen Kandidaten reale Verbesserungen die oft auch die Sarsa-policy
+ übertreffen konnten.
+ 
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
 wide false
 sideways false
@@ -2139,12 +3265,1599 @@ The Pareto candidates all perform better.
 
 \end_layout
 
-\begin_layout Subsubsection
-Fixe Knoten
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\backslash
+hline 
 \end_layout
 
-\begin_layout Itemize
-War in diesem Lauf nicht nötig, die Grundstruktur ist erhalten geblieben.
+\begin_layout Plain Layout
+
+ & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+0 & 0.14 & -102.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.3 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.12 & -99.2 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.10 & -99.3 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.09 & -98.9 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.344)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.08 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $-0.085 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.269)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.07 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.07 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.085 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+7 & 0.07 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.085 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.374)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+8 & 0.06 & -99.1 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land -0.014$
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+9 & 0.06 & -99.1 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land -0.014 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $< 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+10 & 0.06 & -99.1 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land -0.014 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $< 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.070) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+14 & 0.05 & -99.0 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+15 & 0.05 & -99.0 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+16 & 0.05 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.254)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}-0.008 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.283)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+17 & 0.05 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.254)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}-0.008 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot (
+\backslash
+text{pos}+0.372)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+18 & 0.04 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+19 & 0.04 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot (
+\backslash
+text{pos}+0.372)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+21 & 0.04 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2.06 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.070) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  (1.991) 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="1">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0pt">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" usebox="none" width="120mm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+complexity
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\ensuremath{\text{MSE=}0.07}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $R=-98.7$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/space-5.pdf
+	height 3cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "120mm"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+text{if-then-else}$},samenode[{$
+\backslash
+land$},samenode[{$
+\backslash
+leq$},samenode[{$
+\backslash
+min$},samenode[{$+$},samenode[{$
+\backslash
+cdot$},samenode[{$-0.09$},samenode][{$x^y$},samenode[{$+$},samenode[{pos},samenod
+e][{$0.271$},changenode,terminal]][{$2$},samenode,terminal]]][{$0.03$},samenode,te
+rminal]][{$-$},samenode[{$
+\backslash
+cdot $},samenode[{$0.24$},changenode][{$x^y$},samenode[{$+$},samenode[{pos},samen
+ode][{$0.9$},samenode]][{$4$},samenode]]][{$0.008$},samenode]]][{vel},samenode,ter
+minal,variable]][{$
+\backslash
+leq$},samenode[{vel},samenode][{$+$},samenode[{$
+\backslash
+cdot$},samenode[{$-0.07$},samenode][{$x^y$},samenode[{$+$},samenode[{pos},samenod
+e,variable][{$0.38$},samenode]][{$2$},samenode]]][{$0.07$},samenode,observation]]]
+][{$2$},samenode,terminal,observation][{$+$},changenode[{pos},newnode][{$0.271$},
+newnode]]]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+xxx If 5 changes are made, the first operators are replaced.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="1">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0pt">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" usebox="none" width="120mm">
+\begin_inset Text
+
+\begin_layout Plain Layout
+complexity
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="2" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\ensuremath{\text{MSE=}0.06}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $R=-99.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/space-8.pdf
+	height 3cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "120mm"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+text{if-then-else}$},samenode[{$
+\backslash
+land$},samenode[{$
+\backslash
+land$},newnode[{$
+\backslash
+leq$},samenode[{$
+\backslash
+min$},samenode[{$+$},samenode[{$
+\backslash
+cdot$},samenode[{$-0.09$},samenode][{$x^y$},samenode[{$+$},samenode[{pos},samenod
+e][{$0.25$},samenode]][{$2$},samenode]]][{$0.03$},samenode]][{$-$},samenode[{$
+\backslash
+cdot $},samenode[{$0.24$},changenode][{$x^y$},samenode[{$+$},samenode[{pos},samen
+ode][{$0.9$},samenode]][{$4$},samenode]]][{$0.008$},samenode]]][{vel},samenode]][{
+$
+\backslash
+leq$},newnode[{$-0.014$},newnode][{vel},newnode]]][{$
+\backslash
+leq$},samenode[{vel},samenode][{$+$},samenode[{$
+\backslash
+cdot$},samenode[{$-0.07$},samenode][{$x^y$},samenode[{$+$},samenode[{pos},samenod
+e][{$0.38$},samenode]][{$2$},samenode]]][{$0.07$},samenode]]]][{$2$},samenode][{$+
+$},changenode[{pos},newnode][{$0.271$},newnode]]]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+xxx With 8 changes, an additional and-case is added.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+simonBest
+\end_layout
+
+\begin_layout Standard
+MSE bad xx
+\end_layout
+
+\begin_layout Subsubsection
+simonBestFix2 v3 easy xxx
 \end_layout
 
 \end_body

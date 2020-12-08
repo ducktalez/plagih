@@ -25,13 +25,16 @@
 \RequirePackage{longtable}
 \RequirePackage{import}
 \RequirePackage[utf8]{inputenc}
+
+%\usepackage[ruled,vlined]{algorithm2e}
+
 \usetikzlibrary{matrix,chains,positioning,decorations.pathreplacing,arrows}
 
 \renewcommand{\thesubsection}{\alph{subsection})}
 %\renewcommand{\labelitemi}{$-$}
 \newcommand{\inlinecode}[2]{\lstinline[language=#1]$#2$}
 
-\newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
+\newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},  samenode/.style={fill=blue!40,},  newnode/.style={fill=green!60,}, changenode/.style={fill=orange!60,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
 
 \newcommand{\declarationhead}{Declaration of Authorship}
 \newcommand{\declaration}{

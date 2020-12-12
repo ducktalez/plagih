@@ -738,6 +738,13 @@ class ExplainableGP(object):
                                                     tex_stacklist([f'{int(x)}' for x in y['parsims']]),
                                                     tex_stacklist([input_agentex(x, f'../benchmarks/{self.root_dir.parent.parent.name}/{self.root_dir.parent.name}/') for x in [0, 1, 2]])])
 
+                    tex_line_input += tex_tabuline([f"{int(y['parsim_sum'])}",
+                                                    f"{y['regress_sum']:0.3f}",
+                                                    f"{y['experiment']:0.0f}",
+                                                    tex_stacklist([f'{int(x)}' for x in y['parsims']]),
+                                                    tex_stacklist([input_agentex(x, f'../benchmarks/{self.root_dir.parent.parent.name}/{self.root_dir.parent.name}/') for x in [0, 1, 2]])])
+
+
                     # tex_stacklist([f'{x:0.2f}' for x in y['regress_vals']]),
                     # f"{y['cnt']}",
                     # f"{y['experiment_safe']:0.0f}",
@@ -753,6 +760,12 @@ class ExplainableGP(object):
                                  f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
                                  f"{tex_line_input}" \
                                  "\\hline\n\\end{longtable}\n"
+
+                combined_fulltrees = "\\begin{longtable}[c]{>{\\centering}p{10mm}>{\\centering}p{10mm}>{\\centering}p{12mm}>{\\centering}p{12mm}>{\\centering}p{90mm}} \\hline\n" \
+                                 f"{tex_tabuline(['dist', 'error', 'reward', 'parsimony', 'expressions'])}" \
+                                 f"{tex_line_input}" \
+                                 "\\hline\n\\end{longtable}\n"
+
                 combined_overview = latex_treeviz_full_document(combined_overview)
                 file_dump(self.root_dir.parent / 'combined_overview.tex', combined_overview)
                 file_dump(self.root_dir.parent / 'combined_input.tex', combined_input)
@@ -991,6 +1004,8 @@ class ExplainableGP(object):
         file_dump(path_subfolder_tex / f'full_{parsim:02d}_tight.tex', forest_tree_tight, verbose='ff', print_type=self.print_type)
         file_dump(path_subfolder_tex / f'{parsim:02d}_input.tex', tex_expr_raw, print_type=self.print_type)
         file_dump(path_subfolder_tex / f'{parsim:02d}_input_forest.tex', tex_expr_forest, verbose='ff', print_type=self.print_type)
+        file_dump(path_subfolder_tex / f'{parsim:02d}_doc.tex', latex_treeviz_full_document(forest_tree_full), verbose='ff', print_type=self.print_type)  # delete this
+
         # f'{parsim} with mean Regression Error {fitness}:\n {forest_tree_full} tight: {forest_tree_tight} tight2: {tex_expr_raw}\n\n\n'
 
         return forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest

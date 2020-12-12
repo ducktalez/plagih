@@ -232,7 +232,7 @@ def latex_tight_node(tree, node_id=root_id, klammern=False):
 
         child_tex_list = [latex_tight_node(tree, cc, klammern=next_klammern) for cc in childs]
 
-        return_label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
+        return_label = f"{op[label]['latexF'].format(*child_tex_list)}"  # sfeh deleted {{}} around the
         if klammern and label in latex_inline:  # ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
             return_label = f'({return_label})'
 

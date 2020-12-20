@@ -261,7 +261,7 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
             dummy = False
         backup_results2 = (result, dummy)
     else:
-        result, dummy = backup_results2
+        result, dummy = backup_results2 
 
     if abs_diff:
         # result = abs(result)

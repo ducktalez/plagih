@@ -862,7 +862,7 @@ name "fig:relu-sigmoid"
 
 \end_inset
 
- xxx
+
 \end_layout
 
 \end_inset
@@ -7362,10 +7362,6 @@ All runs were carried out with both MAE and MSE.
  This also allowed them to be better compared with Hein's results.
 \end_layout
 
-\begin_layout Subsection
-if-Expert xxx
-\end_layout
-
 \begin_layout Section
 Mountain Car
 \end_layout
@@ -7761,7 +7757,7 @@ name "mc:simonsBest-plot-space"
 \end_layout
 
 \begin_layout Subsection
-Black box differentiation between safe and unsafe version
+Black box Sarsa-200 vs Sarsa-75
 \end_layout
 
 \begin_layout Standard
@@ -8035,14 +8031,258 @@ name "sarsa1000-plots"
 
 \end_layout
 
-\begin_layout Section
-Sarsa-200
+\begin_layout Subsubsection
+Sarsa-75
 \end_layout
 
 \begin_layout Standard
-Although it is the same benchmark, the results are hardly comparable to
- the Sarsa-75 version.
- Not only is a new performance achieved, but there are no more outlier runs.
+\noindent
+The lack of experience in Sarsa-75 manifests itself in a worse, but still
+ intrinsically more complex policy.
+ Not only is the reversal point far more uneven, but the data from an episode
+ that fails shortly before the finish must also be taken into account.
+ The regression error drops to just below 0.2 for all runs (MSE).
+ MAE runs performed worse in terms of both regression error (approx.
+ 0.25) and true fitness (approx.
+ 5-10 steps).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Complete operator set
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+excluding exponentiation and 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+sin$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+scratch
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
+	height 4cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
+	height 4cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simple
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
+	height 4cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
+	height 4cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simple (fixed nodes)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
+	height 4cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
+	height 4cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The results of the right column with the safer operator set has the better
+ real results.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+performance
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+performance safe
+\end_layout
+
+\begin_layout Itemize
+performance nach randomize
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Daniel solutions
+\end_layout
+
+\begin_layout Standard
+The Sarsa 75 Agent is characterised by poor exploration and great uncertainty,
+ making it particularly vulnerable to poor results.
+\end_layout
+
+\begin_layout Standard
+xxx 
+\begin_inset Quotes eld
+\end_inset
+
+Für den Rest der Experimente wurde SARSA-200 verwendet
+\begin_inset Quotes erd
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -8102,13 +8342,7 @@ Pareto candidates in a regular run with MSE.
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
+\noindent
 \begin_inset ERT
 status open
 
@@ -8126,7 +8360,15 @@ raggedright}p{10mm}>{
 \backslash
 raggedright}p{102mm}} 
 \backslash
-hline 
+hline
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{MTC200_MSE_scratch candidates in comparisson.
+ xxx longtable}
 \end_layout
 
 \begin_layout Plain Layout
@@ -8269,19 +8511,19 @@ tabularnewline
 \backslash
 cdot {{
 \backslash
-sin(174)}^{{1.836^{{-1.317 
+sin(174)}^{{1.836^{-1.317 
 \backslash
 cdot 
 \backslash
-text{pos}}}}}}} 
+text{pos}}}}}} 
 \backslash
 cdot 
 \backslash
-text{pos}}+{174 
+text{pos}}+174 
 \backslash
 cdot 
 \backslash
-text{vel}}}$
+text{vel}}$
 \backslash
 tabularnewline 
 \end_layout
@@ -8387,24 +8629,6 @@ hline
 
 \backslash
 end{longtable}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-MTC200_MSE_scratch candidates in comparisson.
- xxx
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -9496,13 +9720,7 @@ xxx
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-placement h
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
+\noindent
 \begin_inset ERT
 status open
 
@@ -9973,25 +10191,8 @@ end{longtable}
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsection
-simpleFix (MAE) xx
+simple with fixed nodes
 \end_layout
 
 \begin_layout Standard
@@ -10000,10 +10201,7 @@ Due to the fixed nodes not only the core structure is preserved but also
  xxx Image? As one of the few runs a second if-condition is used to control
  the behaviour more precisely, which makes it even easier to distinguish
  the candidates.
-\end_layout
-
-\begin_layout Standard
-With a regression error of only 0.05 this is just as good as the scratch
+ With a regression error of only 0.05 this is just as good as the scratch
  version.
  This is no exception to the assumption xxx - on average, the regression
  error was half as large as in the scratch runs.
@@ -10051,12 +10249,6 @@ The improvement of the Pareto candidates is comparatively safe if only the
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
 \noindent
 \begin_inset ERT
 status open
@@ -10575,27 +10767,6 @@ tabularnewline
 hline 
 \backslash
 end{longtable}
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \end_inset
@@ -11235,13 +11406,6 @@ The Pareto candidates all perform better.
 \end_layout
 
 \begin_layout Standard
-\noindent
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
 \noindent
 \begin_inset ERT
 status open
@@ -12477,10 +12641,6 @@ tabularnewline
 
 \begin_layout Plain Layout
 
-\end_layout
-
-\begin_layout Plain Layout
-
 
 \backslash
 hline 
@@ -12489,23 +12649,6 @@ end{longtable}
 \end_layout
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
 
 \end_layout
 
@@ -12927,15 +13070,22 @@ xxx With 8 changes, an additional and-case is added.
 \end_layout
 
 \begin_layout Subsection
-simonBest
+Human if-Expert 
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+simonBestFix2 v3 easy
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-MSE bad xx
-\end_layout
-
-\begin_layout Subsection
-simonBestFix2 v3 easy xxx
+Mit diesem Agenten soll das Verhalten bei bereits stark optimierten und
+ komplexen Expertenheuristiken untersucht werden.
 \end_layout
 
 \begin_layout Standard
@@ -12984,13 +13134,6 @@ xxx
 \end_layout
 
 \begin_layout Standard
-\noindent
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
 \noindent
 \begin_inset ERT
 status open
@@ -13793,23 +13936,6 @@ end{longtable}
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 \noindent
 \begin_inset Float table
@@ -14120,249 +14246,7 @@ text{if-then-else}$[$<$[vel][$0$]][$0$][$2$]]]]}
 
 \end_layout
 
-\begin_layout Section
-Sarsa-75
-\end_layout
-
-\begin_layout Standard
-\noindent
-The lack of experience in Sarsa-75 manifests itself in a worse, but still
- intrinsically more complex policy.
- Not only is the reversal point far more uneven, but the data from an episode
- that fails shortly before the finish must also be taken into account.
- The regression error drops to just below 0.2 for all runs (MSE).
- MAE runs performed worse in terms of both regression error (approx.
- 0.25) and true fitness (approx.
- 5-10 steps).
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Complete operator set
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-excluding exponentiation and 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-sin$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-scratch
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-simple
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-simpleFix
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The results of the right column with the safer operator set has the better
- real results.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-performance
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-performance safe
-\end_layout
-
-\begin_layout Itemize
-performance nach randomize
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-Daniel solutions
-\end_layout
-
-\begin_layout Standard
-The Sarsa 75 Agent is characterised by poor exploration and great uncertainty,
- making it particularly vulnerable to poor results.
-\end_layout
-
-\begin_layout Subsection
+\begin_layout Subsubsection
 Mountain car Summmary / Analysis
 \end_layout
 
@@ -14404,10 +14288,1561 @@ Industrial Benchmark
 \end_layout
 
 \begin_layout Standard
-xxxxxxxxxxxx
+A separate run was started for each of the three actions of the IB, whose
+ generated candidates are in turn merged on a combined Pareto front.
+ Action 0 is extremely difficult to achieve; in most runs the regression
+ error of 0.8 was about 30% higher than for the rest.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="7" columns="5">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Agent
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$a_{2}=0$
+\end_layout
+
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+randomized
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$a_{2}=0$
+\end_layout
+
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6215
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6020
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5616
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5709
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Nothing
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5651
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5638
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5418
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5827
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+xx 21
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4927
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5162
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3935
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4533
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+xx 27
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4884
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5163
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3927
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4507
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+xx 29
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4915
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5159
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4019
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4620
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+50-50-50
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+7622
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+7703
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6631
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6744
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "48col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/IB/ib_reward_compared.pdf
+	height 50mm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+IB results in comparison
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
+Scratch GP Results
+\end_layout
+
+\begin_layout Paragraph
+MSE_scratch
+\end_layout
+
+\begin_layout Standard
+Normale GP-Resultate für das IB erreichen einen kombinierten Regressionsfehler
+ von ca.
+ 2, der reale Reward liegt bei ca.
+ 6000.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_scratch/pareto_combined.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_scratch/regression_all.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Results in regular GP runs.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:IB_MSE_scratch_graphs"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+xx 
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/IB_MSE_scratch/combined_input.tex"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="10" columns="4">
+<features islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top" width="12mm">
+<column alignment="center" valignment="top" width="38mm">
+<column alignment="center" valignment="top" width="38mm">
+<column alignment="center" valignment="top" width="38mm">
+<row endhead="true">
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+nodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+Action 0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+Action 1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+Action 2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row caption="true">
+<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+IB pareto-combined candidates from regular GP with MSE.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[$-0.158$]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{-Consumption$_{1}$}]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{-Shift$_{9}$}]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+tanh$}[{$-
+\backslash
+text{Consumption}_1$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+tanh $}[{-Shift$_{9}$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+min$}[{$-0.043$}][{-Velocity$_{3}$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+max$}[{$-0.106$}][{$-
+\backslash
+text{Consumption}_1$}]]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$-$}[{Shift$_{4}$}][{Shift$_{8}$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[{-Shift$_{8}$}][{$
+\backslash
+sin $}[{Shift$_{4}$}]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[{-Velocity$_{9}$}][{$
+\backslash
+min$}[{$-0.545$}][{Velocity$_{6}$}]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$-$}[{Shift$_{8}$}][{$
+\backslash
+min$}[{SetPoint}][{Shift$_{5}$}]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[{-Shift$_{9}$}][{$
+\backslash
+cdot $}[{$0.756$}][{Shift$_{4}$}]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+6
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+tanh $}[{$+$}[{-Velocity$_{9}$}][{$
+\backslash
+min$}[{$-0.618$}][{Velocity$_{5}$}]]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+sin $}[{$-$}[{Shift$_{8}$}][{$
+\backslash
+min$}[{SetPoint}][{Shift$_{5}$}]]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+7
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[{-Velocity$_{9}$}][{$
+\backslash
+min$}[{Gain$_{6}$}][{$
+\backslash
+min$}[{Velocity$_{5}$}][{Consumption$_{9}$}]]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\noindent
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Expert reference
+\end_layout
+
+\begin_layout Standard
+As no expert policy for the IB is known, a policy that is considered to
+ be useful was used as a starting solution - but it is not a classic, human
+ solution.
+ The heuristics followed the tactic of subtracting a certain value from
+ the most current variable of the respective action (
+\begin_inset Formula $\text{Velocity}_{0},\text{Gain}_{0},\text{Shift}_{0}$
+\end_inset
+
+).
+ The real performance of the candidates, especially with more complex candidates
+, is comparable to all other runs.
+ However, the similarity to the start policies remains, either in the form
+ of the variables used or also in the form of the basic structure.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Comment
+status open
+
+\begin_layout Plain Layout
+yyy bereits in der Zusammenfassung enthalten
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="35mm">
+<column alignment="center" valignment="top" width="35mm">
+<column alignment="center" valignment="top" width="35mm">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+action
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$-$}[{Velocity$_{0}$}][{$
+\backslash
+cdot $}[{Velocity$_{5}$}][{Fatigue$_{0}$}]]]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$-$}[{Gain$_{0}$}][{$+$}[{Consumption$_{0}$}][{$
+\backslash
+cdot $}[{Gain$_{5}$}][{$0.1$}]]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$-$}[{Shift$_{0}$}][{$+$}[{Shift$_{5}$}][{Gain$_{0}$}]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The components of the expert policy.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The improvements of the start policy improve the real performance without
+ bad outliers.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/inkscape/ib_vis/ib_s3m_v2_legend.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Legend for the visualisation of the IB run.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/inkscape/ib_vis/ib_s3m_v2_1.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Action 1 is adjusted very late.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/inkscape/ib_vis/ib_s3m_v2_2.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Action 0 already reaches a local optimum with a TED of 3.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/inkscape/ib_vis/ib_s3m_v2_3.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Here, almost only Action 1 is improved.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
 IB summary
 \end_layout
 

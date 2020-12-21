@@ -94,81 +94,7 @@ fixltx2e
 \begin_body
 
 \begin_layout Chapter
-tbd
-\end_layout
-
-\begin_layout Section
-s3m
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\noindent
-\align center
-\begin_inset Graphics
-	filename img/inkscape/ib_vis/ib_s3m_v1_pages_1.pdf
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/ib_vis/ib_s3m_v1_pages_2.pdf
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-placement h
-wide false
-sideways false
-status collapsed
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/ib_vis/ib_s3m_v1_pages_3.pdf
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
+IB Visualisierungen
 \end_layout
 
 \begin_layout Section
@@ -260,6 +186,80 @@ status collapsed
 \align center
 \begin_inset Graphics
 	filename img/inkscape/ib_vis/ib_s3m_v2_3.pdf
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Version 1
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename img/inkscape/ib_vis/ib_s3m_v1_pages_1.pdf
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/ib_vis/ib_s3m_v1_pages_2.pdf
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+placement h
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/ib_vis/ib_s3m_v1_pages_3.pdf
 
 \end_inset
 

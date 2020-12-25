@@ -1573,7 +1573,7 @@ ely and in parallel, but especially with autopilots or industrial controllers,
 \end_layout
 
 \begin_layout Section
-The Trusted Domain Expert
+Trusting Domain Experts
 \end_layout
 
 \begin_layout Standard
@@ -4237,19 +4237,31 @@ Regression Error after bounding to
 \end_layout
 
 \begin_layout Subsection
-Discrete, bounded (MC) Anpassung an den Aktionsraum (discrete)
+Bounded and discrete
 \end_layout
 
 \begin_layout Standard
 If the room for action is not only limited but also discreet, results are
  rounded: 
-\begin_inset Formula $a_{discrete}=\lfloor a\rceil$
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$a_{discrete}=
+\backslash
+lfloor a
+\backslash
+rceil$
+\end_layout
+
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
+\noindent
 \begin_inset Float figure
 wide false
 sideways false
@@ -4785,43 +4797,6 @@ name "data-collection-for-benchmarks"
 Familiarity based Genetic Programming
 \end_layout
 
-\begin_layout Itemize
-xxx This property can prevent closure in certain constellations, which is
- why this possibility is checked and a mutual exclusive crossover was implemente
-d, which always finds two matching nodes in trees.
- 
-\end_layout
-
-\begin_layout Itemize
-xxx The nodes are randomly selected from different distributions.
- 
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-To obtain the most useful set of constants possible, these are chosen at
- random from 100 variables of the data set, Gaussian-distributed integers
- and Gaussian-distributed floating point values.
- 
-\begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
-\end_inset
-
- With the help of the evolutionary mutation of the Gaussian filters, the
- constants of the best trees are additionally modified to fine-tune.
- For the runs of this work, a Gaussian filter with a standard deviation
- of 0.1 was applied.
- (
-\begin_inset Formula $X\sim\mathcal{N}(x,0.1)$
-\end_inset
-
-xx)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 For this work, a GP suite in the language python was developed which provides
  the main requisites type consistancy, evaluation safety and closure while
@@ -4893,13 +4868,17 @@ literal "true"
 
 , which by using recursive tree structures could even surpass this extraordinary
  performance.
- [xx es gibt keine Statistik über die Laufzeit, allerdings hat sich nach
+ 
+\end_layout
+
+\begin_layout Standard
+[xx es gibt keine Statistik über die Laufzeit, allerdings hat sich nach
  dem Verwenden rekursiver Strukturen die Performance mindestens um 50% verbesser
-t][Reicht als GP-Quelle Koza und ein Buch?]
+t][xxx Reicht als GP-Quelle Koza und ein Buch?]
 \end_layout
 
 \begin_layout Paragraph
-Vereinfachungen
+xxx sympy
 \end_layout
 
 \begin_layout Standard
@@ -4930,43 +4909,35 @@ status open
 \begin_layout Standard
 The AST is built again from the reduced sympy expression, but instead of
  generating a TF graph, a new GP tree is built.
- 
-\end_layout
-
-\begin_layout Standard
-This implementation is very error-prone.
+ This algorithm is very error-prone.
  On the one hand, the simplest version of a formula, from a mathematical
  point of view, does not have to be the shortest tree representation, and
  on the other hand, a simplified formula can contain elements that are not
  intended when generating candidates.
  [xx Gödel'scher Unvollständigkeitssatz?] Newly found Pareto entries are
  always tried to be stored simplified.
+ The nodes are randomly selected from different distributions.
  
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
+\begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/sympy_reduction_example.pdf
-
+To obtain the most useful set of constants possible, these are chosen at
+ random from 100 variables of the data set, Gaussian-distributed integers
+ and Gaussian-distributed floating point values.
+ 
+\begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
 \end_inset
 
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xx sympy reduction
-\end_layout
-
+ With the help of the evolutionary mutation of the Gaussian filters, the
+ constants of the best trees are additionally modified to fine-tune.
+ For the runs of this work, a Gaussian filter with a standard deviation
+ of 0.1 was applied.
+ (
+\begin_inset Formula $X\sim\mathcal{N}(x,0.1)$
 \end_inset
 
-
+xx)
 \end_layout
 
 \end_inset
@@ -4997,6 +4968,41 @@ literal "true"
 
  TED mapping between trees can be used in addition to weighting the changes,
  but was not used for any runs.
+ This property can prevent closure in certain constellations, which is why
+ this possibility is checked and a mutual exclusive crossover was implemented,
+ which always finds two matching nodes in trees.
+ 
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/sympy_reduction_example.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+xx sympy reduction
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -5621,7 +5627,7 @@ mutate this node
 
 \begin_layout Plain Layout
 Pseudocode for getting first layer of modifiable nodes.
- xxxx
+ xxx
 \end_layout
 
 \end_inset
@@ -5929,22 +5935,7 @@ Latex tree visualisation
 The visualisation of the trees was done with the help of latex, where the
  Forest package which arranges nodes in a space-saving way, especially with
  large trees.
- 
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-[xx anordnung de Knoten? Eigene Baumerzeugung...
- Node alignment and style]
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-For very large trees, a tight-tree version is also created, were created
+ For very large trees, a tight-tree version is also created, were created
  in which branches with simple mathematical formulas (which do not involve
  fixed nodes) are represented as individual nodes.
  This preserves the structure of the tree without inflating it with simple
@@ -6004,9 +5995,7 @@ status open
 
 
 \backslash
-plforest{[{$
-\backslash
-text{if-then-else}$}[{$<$}[{vel}][{$0$}]][{$
+plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$
 \backslash
 div $}[{pos}][{$-1.834$}]][{$2.197$}]]}
 \end_layout
@@ -6059,9 +6048,7 @@ status open
 
 
 \backslash
-plforest{[{$
-\backslash
-text{if-then-else}$}[{$<$}[{vel}][{$0$}]][{{${
+plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${
 \backslash
 frac{
 \backslash
@@ -6122,7 +6109,7 @@ text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Dark blue nodes are fixed.
+Dark blue nodes are fixed and not affected in the gp process.
 \end_layout
 
 \end_inset
@@ -6482,29 +6469,27 @@ status open
 
 
 \backslash
-plforest{[$
-\backslash
-text{if-then-else}$,fixnode[$
+plforest{[{if-then-else},fixnode[$
 \backslash
 land$,fixnode[$
 \backslash
 leq$[$
 \backslash
-min$[${{-0.09 
+min$[$-0.09 
 \backslash
-cdot {{
+cdot (
 \backslash
-text{pos}+0.25}^{2}}}+0.03}$][${{0.3 
+text{pos}+0.25)^{2}+0.03$][$0.3 
 \backslash
-cdot {{
+cdot (
 \backslash
-text{pos}+0.9}^{4}}}-0.008}$]][vel]][$
+text{pos}+0.9)^{4}-0.008$]][vel]][$
 \backslash
-leq$[vel][${{-0.07 
+leq$[vel][${-0.07 
 \backslash
-cdot {{
+cdot (
 \backslash
-text{pos}+0.38}^{2}}}+0.07}$]]][$2$,fixnode][$0$,fixnode]]} 
+text{pos}+0.38)^{2}+0.07}$]]][$2$,fixnode][$0$,fixnode]]} 
 \end_layout
 
 \end_inset
@@ -6564,23 +6549,18 @@ status open
 
 
 \backslash
-plforest{[{$
-\backslash
-text{if-then-else}$},fixnode[{$
+plforest{[{if-then-else},fixnode[{$
 \backslash
 lor$},fixnode[{$<$}[{pos}][{$-1$}]][{$
 \backslash
-land$},fixnode[{$<$}[{pos}][{$0.1$}]][{$<$}[{vel}][{$-0.05$}]]]][{$2$},fixnode][{$
-\backslash
-text{if-then-else}$},fixnode[{$
+land$},fixnode[{$<$}[{pos}][{$0.1$}]][{$<$}[{vel}][{$-0.05$}]]]][{$2$},fixnode][{i
+f-then-else},fixnode[{$
 \backslash
 land$},fixnode[{$<$}[{vel}][{$0.02$}]][{$
 \backslash
 land$},fixnode[{$>$}[{pos}][{$-0.45$}]][{$<$}[{pos}][{$-0.05$}]]]][{$0$},fixnode][
-{$
-\backslash
-text{if-then-else}$},fixnode[{$<$},fixnode[{vel},fixnode][{$0$},fixnode]][{$0$},
-fixnode][{$2$},fixnode]]]]} 
+{if-then-else},fixnode[{$<$},fixnode[{vel},fixnode][{$0$},fixnode]][{$0$},fixnod
+e][{$2$},fixnode]]]]} 
 \end_layout
 
 \end_inset
@@ -6600,7 +6580,7 @@ name "mc:simonsBest-plot-space"
 
 \end_inset
 
- xxx mark fixed nodes!
+
 \end_layout
 
 \end_inset
@@ -6918,7 +6898,7 @@ status open
 <column alignment="center" valignment="top" width="50mm">
 <column alignment="center" valignment="top" width="50mm">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -6927,7 +6907,7 @@ status open
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -6936,7 +6916,7 @@ Complete operator set
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -6960,7 +6940,7 @@ sin$
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -6969,7 +6949,7 @@ scratch
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -6984,7 +6964,7 @@ scratch
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7001,7 +6981,7 @@ scratch
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7010,7 +6990,7 @@ simple
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7025,7 +7005,7 @@ simple
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7042,7 +7022,7 @@ simple
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7051,7 +7031,7 @@ simple (fixed nodes)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7066,7 +7046,7 @@ simple (fixed nodes)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -7436,27 +7416,27 @@ tabularnewline
 
 \begin_layout Plain Layout
 
-25 & 0.09 & -98.8 & ${{{-91 
+25 & 0.09 & -98.8 & ${-91
 \backslash
-cdot {0.041^{{
+cdot 0.041^{
 \backslash
-text{pos}+{{2.75 
+text{pos}+2.75
 \backslash
-cdot 
+cdot
 \backslash
-text{pos}}^2}^2}}}}+{5501 
+text{pos}^{2}^{2}}+5501
 \backslash
-cdot 
+cdot
 \backslash
-text{vel}}}+{68 
+text{vel}+68
 \backslash
-cdot {{
+cdot
 \backslash
 min(
 \backslash
-text{pos}, {-
+text{pos},-
 \backslash
-text{pos}-0.789})}^4}}}$
+text{pos}-0.789)^{4}}$
 \backslash
 tabularnewline 
 \backslash
@@ -7947,7 +7927,7 @@ status open
 
 
 \backslash
-plforest{[{$+$}[{$
+plforest{[$+$[{$
 \backslash
 cdot $}[{$-2.3$}][{$
 \backslash
@@ -8011,7 +7991,7 @@ status open
 
 
 \backslash
-plforest{[${-91 
+plforest{[$-91 
 \backslash
 cdot 0.04^{{
 \backslash
@@ -8019,7 +7999,7 @@ text{pos} +2.75
 \backslash
 cdot 
 \backslash
-text{pos}^{2}}^{2}}}$
+text{pos}^{2}}^{2}}$
 \backslash
 
 \backslash
@@ -8555,488 +8535,6 @@ xxx
 
 \end_layout
 
-\begin_layout Standard
-\noindent
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{longtable}[c]{>{
-\backslash
-raggedright}p{5mm}>{
-\backslash
-raggedright}p{6mm}>{
-\backslash
-raggedright}p{10mm}>{
-\backslash
-raggedright}p{102mm}} 
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-caption{MTC200 MSE scratch candidates in comparisson.
- xxx longtable} 
-\backslash
-tabularnewline
-\end_layout
-
-\begin_layout Plain Layout
-
-{} & error & reward  & expression 
-\backslash
-tabularnewline 
-\backslash
-endhead 
-\backslash
-hline 
-\end_layout
-
-\begin_layout Plain Layout
-
-0 & 0.38 & -119.4 & $
-\backslash
-text{ if }(
-\backslash
-text{vel}<0)
-\backslash
-text{ then }(0)
-\backslash
-text{ else }(2)$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-1 & 0.38 & -123.4 & $
-\backslash
-text{ if }(
-\backslash
-text{vel}<-0.001)
-\backslash
-text{ then }(0)
-\backslash
-text{ else }(2)$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-4 & 0.31 & -117.8 & $
-\backslash
-text{ if }(
-\backslash
-text{vel}<0)
-\backslash
-text{ then }(
-\backslash
-frac{
-\backslash
-text{pos}}{-1.83})
-\backslash
-text{ else }(2.19)$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-7 & 0.27 & -133.4 & $152 
-\backslash
-cdot 
-\backslash
-text{vel}-2.7 
-\backslash
-cdot
-\backslash
-text{pos}$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-8 & 0.21 & -142.8 & $152 
-\backslash
-cdot 
-\backslash
-text{vel}+2.7 
-\backslash
-cdot
-\backslash
-text{pos}^{2}$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-10 & 0.19 & -143.0 & $152 
-\backslash
-cdot 
-\backslash
-text{vel}+|-4 
-\backslash
-cdot
-\backslash
-text{pos}-1.23|$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-13 & 0.16 & -141.7 & $|5.8 
-\backslash
-cdot 
-\backslash
-text{pos}+1.85| +113 
-\backslash
-cdot
-\backslash
-min(
-\backslash
-text{vel},2
-\backslash
-cdot
-\backslash
-text{vel})$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-14 & 0.15 & -115.4 & $|8.1 
-\backslash
-cdot 
-\backslash
-text{pos}+2.68| +113 
-\backslash
-cdot
-\backslash
-min(
-\backslash
-text{vel},3.1
-\backslash
-cdot
-\backslash
-text{vel})$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-17 & 0.14 & -120.7 & $|7.3 
-\backslash
-cdot 
-\backslash
-text{pos}+2.16| +111 
-\backslash
-cdot
-\backslash
-min(
-\backslash
-text{vel},3.1
-\backslash
-cdot
-\backslash
-text{vel})-
-\backslash
-text{pos}-0.77$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-19 & 0.12 & -105.1 & $|8.4 
-\backslash
-cdot 
-\backslash
-text{pos}+2.475|-3.82
-\backslash
-cdot
-\backslash
-text{pos} +113 
-\backslash
-cdot
-\backslash
-min(
-\backslash
-text{vel},5.3
-\backslash
-cdot
-\backslash
-text{vel})-2$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-20 & 0.12 & -103.3 & $|8.5 
-\backslash
-cdot 
-\backslash
-text{pos}+2.607| + -4.3 
-\backslash
-cdot 
-\backslash
-text{pos}+ 113 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel}, 5.6 
-\backslash
-cdot 
-\backslash
-text{vel})-2.19$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-23 & 0.09 & -105.8 & $|8.6 
-\backslash
-cdot 
-\backslash
-text{pos} + 2.7| -3.86 
-\backslash
-cdot 
-\backslash
-text{pos}-1.95$ 
-\backslash
-
-\backslash
-$
-\end_layout
-
-\begin_layout Plain Layout
-
-+112  
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel},4.9 
-\backslash
-cdot 
-\backslash
-text{vel} 
-\backslash
-cdot 0.32-
-\backslash
-text{pos})$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-25 & 0.09 & -108.4 & $|8.3
-\backslash
-cdot
-\backslash
-text{pos}+2.721|-3.85 
-\backslash
-cdot 
-\backslash
-text{pos}-2$
-\backslash
-
-\backslash
-$
-\end_layout
-
-\begin_layout Plain Layout
-
-+113 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel},5.2 
-\backslash
-cdot 
-\backslash
-text{vel} 
-\backslash
-cdot 0.241-0.767 
-\backslash
-cdot 
-\backslash
-text{pos})$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-27 & 0.08 & -105.2 & $|8.3 
-\backslash
-cdot
-\backslash
-text{pos}+2.48|-3.82 
-\backslash
-cdot 
-\backslash
-text{pos}-2$
-\backslash
-
-\backslash
-$
-\end_layout
-
-\begin_layout Plain Layout
-
-+113 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel},5.18 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel},
-\backslash
-text{vel}
-\backslash
-cdot0.2 - 0.64 
-\backslash
-cdot
-\backslash
-text{pos}))$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-31 & 0.08 & -104.2 & $|8.3 
-\backslash
-cdot 
-\backslash
-text{pos}+2.48| + -3.8 
-\backslash
-cdot 
-\backslash
-text{pos}$ 
-\backslash
-
-\backslash
-$
-\end_layout
-
-\begin_layout Plain Layout
-
-+113 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-min(
-\backslash
-text{vel}, 5.3 
-\backslash
-cdot 
-\backslash
-text{vel}),5.18 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel},
-\backslash
-text{vel} 
-\backslash
-cdot 0.2 - 0.64 
-\backslash
-cdot 
-\backslash
-text{pos}))-2$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-32 & 0.07 & -107.1 & $|8.2 
-\backslash
-cdot 
-\backslash
-text{pos}+
-\backslash
-text{pos}^{17}+2.56| + -3.8 
-\backslash
-cdot 
-\backslash
-text{pos}$ 
-\backslash
-
-\backslash
-$
-\end_layout
-
-\begin_layout Plain Layout
-
-+ 113 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel},5.18 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{vel},
-\backslash
-text{vel}
-\backslash
-cdot 0.2 - 0.64 
-\backslash
-cdot 
-\backslash
-text{pos}))-2$ 
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-hline 
-\backslash
-end{longtable}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsection
 simple with fixed nodes
 \end_layout
@@ -9087,542 +8585,6 @@ The improvement of the Pareto candidates is comparatively safe if only the
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{longtable}[c]{>{
-\backslash
-raggedright}p{5mm}>{
-\backslash
-raggedright}p{6mm}>{
-\backslash
-raggedright}p{10mm}>{
-\backslash
-raggedright}p{102mm}} 
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-caption{MTC200 MSE scratch candidates in comparisson.
- xxx longtable} 
-\backslash
-tabularnewline
-\end_layout
-
-\begin_layout Plain Layout
-
-{} & error & reward  & expression 
-\backslash
-tabularnewline 
-\backslash
-endhead 
-\backslash
-hline 
-\end_layout
-
-\begin_layout Plain Layout
-
-0 & 0.20 & -119.4 & ${
-\backslash
-text{ if } ({
-\backslash
-text{vel}<0}) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-1 & 0.20 & -123.4 & ${
-\backslash
-text{ if } ({
-\backslash
-text{vel}<-0.001}) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-2 & 0.19 & -116.5 & ${
-\backslash
-text{ if } ({{ 
-\backslash
-text{sign}(
-\backslash
-text{vel})}<
-\backslash
-text{pos}}) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-3 & 0.18 & -133.0 & ${
-\backslash
-text{ if } ({
-\backslash
-text{vel}<0.007 
-\backslash
-cdot 
-\backslash
-text{pos}}) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-4 & 0.16 & -121.6 & ${
-\backslash
-text{ if } ({
-\backslash
-text{vel}<{-0.010 
-\backslash
-cdot {
-\backslash
-text{pos}^2}}}) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-5 & 0.14 & -117.1 & ${
-\backslash
-text{ if } ({
-\backslash
-text{vel}<{-0.012 
-\backslash
-cdot {{
-\backslash
-text{pos}^2}^2}}}) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-6 & 0.12 & -106.4 & ${
-\backslash
-text{ if } ({
-\backslash
-text{vel}<{-0.014 
-\backslash
-cdot {{
-\backslash
-text{pos}^2}-0.243}}}) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-11 & 0.09 & -100.6 & $
-\backslash
-text{ if } (
-\backslash
-text{vel} < 
-\backslash
-text{ if } (
-\backslash
-text{vel}<-0.008) 
-\backslash
-text{ then } 0 
-\backslash
-text{ else } (
-\backslash
-text{pos} 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2-0.047))$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-14 & 0.08 & -100.0 & $
-\backslash
-text{ if } (
-\backslash
-text{vel} < 
-\backslash
-text{ if } (
-\backslash
-text{vel}< -0.01 
-\backslash
-cdot -
-\backslash
-text{pos}^2$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{2mm} $
-\backslash
-text{ then } 0 
-\backslash
-text{ else } (
-\backslash
-text{pos} 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2-0.05)))$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-15 & 0.07 & -99.7 & $
-\backslash
-text{ if } (
-\backslash
-text{vel} < $
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{2mm} $
-\backslash
-text{ if } (
-\backslash
-text{vel}<-0.012 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2)$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-text{ then } 0 $
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{2mm} $
-\backslash
-text{ else } (
-\backslash
-text{pos} 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2-0.05)) $
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-17 & 0.06 & -100.0 & $
-\backslash
-text{ if } (
-\backslash
-text{vel}<$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{2mm} $
-\backslash
-text{ if } (
-\backslash
-text{vel} < -0.012 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2) $
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{4mm} $
-\backslash
-text{ then } 0 $
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{4mm} $
-\backslash
-text{ else } (
-\backslash
-text{pos} - 0.73 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2-0.03))$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-20 & 0.05 & -98.3 & $
-\backslash
-text{ if } (
-\backslash
-text{vel}<
-\backslash
-text{ if } (
-\backslash
-text{vel} < 0.012 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2)$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{2mm} $
-\backslash
-text{ then } (1.03) 
-\backslash
-text{ else } (
-\backslash
-text{pos}-0.73 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2-0.03))$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-22 & 0.05 & -98.5 & $
-\backslash
-text{ if } (
-\backslash
-text{vel}<
-\backslash
-text{ if } ((
-\backslash
-text{vel} 
-\backslash
-leq 0.012 
-\backslash
-cdot {
-\backslash
-text{pos}^2}^2)$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{4mm} $
-\backslash
-text{ then } 0.17 $
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-hspace{4mm} $
-\backslash
-text{ else } 0.03 - (0.94 
-\backslash
-cdot (
-\backslash
-text{pos}-0.25)^2-0.25)^2)$
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-text{ then } 0 
-\backslash
-text{ else } 2$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-hline 
-\backslash
-end{longtable}
 \end_layout
 
 \end_inset
@@ -12846,6 +11808,19 @@ For MDPs: The area where the difference between the start and target solution
 The goal of the combined regression error is still to minimise the distance
  to the target solution - only those solutions that require less behavioural
  change should be preferred.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Let's say we cook eggs for 10 minutes and a target cooking professional
+ for 5 minutes.
+ When considering whether we should cook our eggs for 3 minutes and 7, 7
+ minutes would be preferable as an interim solution, because the extent
+ of the changes to our already known cooking behaviour is less.
+\end_layout
+
+\end_inset
+
  In the evolutionary found candidates not only a genetic difference can
  be determined with the TED, it is also possible to calculate the phenotypic
  difference as regression error.
@@ -12857,22 +11832,6 @@ The goal of the combined regression error is still to minimise the distance
  One possibility of implementation is a third dimension on the Pareto front.
  Another way of combining classical regression with relative regression
  to Origin is also shown and tested below.
-\end_layout
-
-\begin_layout Subsection
-Motivation
-\end_layout
-
-\begin_layout Paragraph
-Beispiel 1: Eier Kochzeit xxx
-\end_layout
-
-\begin_layout Standard
-Let's say we cook eggs for 10 minutes and a target cooking professional
- for 5 minutes.
- When considering whether we should cook our eggs for 3 minutes and 7, 7
- minutes would be preferable as an interim solution, because the extent
- of the changes to our already known cooking behaviour is less.
 \end_layout
 
 \begin_layout Standard
@@ -12942,7 +11901,7 @@ The following regression formula was therefore tested, which evaluates the
 
 \end_inset
 
-
+ [xxx Frage: lambda? y antihut oder y kreis?]
 \end_layout
 
 \begin_layout Standard
@@ -13119,14 +12078,6 @@ Extreme versions of a combined regression kernel.
 \end_layout
 
 \begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-[xxx Fazit: Mischen ist nie gut][xxx Fragen lambda? y antihut oder y kreis?]
-\end_layout
-
-\begin_layout Standard
 Runs with 
 \begin_inset Formula $\lambda=1$
 \end_inset
@@ -13141,94 +12092,10 @@ Runs with
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Itemize
-Änderungen sollen vor allem in den Bereichen durchgeführt werden, in denen
- sich Origin und Blackbox unterscheiden.
- Für jeden Datenpunkt sollte deshalb nicht nur die Distanz zur Ziellösung
- eine Rolle spielen sondern auch, wie gut die Origin Lösung an dieser Stelle
- bereits war.
- Dadurch werden Änderungen an Bereichen, in denen die Origin bereits nah
- an der Ziellösung war zusätzlich bestraft und dadurch stärker geschützt.
-\end_layout
-
-\begin_layout Itemize
-In Bereichen mit großen Abweichungen sollte den Kandidaten auch eine stärkere
- Abweichung zustehen.
- Punkte sollten deshalb einzeln betrachtet werden und nicht in einer separaten
- Regression zur origin untergehen.
-\end_layout
-
-\begin_layout Itemize
-Eine Abweichung von der Startlösung aus in die falsche Richtung sollte stark
- verhindert werden
-\end_layout
-
-\begin_layout Itemize
-Eine extreme Abweichung sollte bestraft werden
-\end_layout
-
-\begin_layout Itemize
-Bereiche, in denen Start und Ziellösung weit auseinanderliegen sollten Änderunge
-n an der Origin leichter zulassen.
-\end_layout
-
-\begin_layout Plain Layout
-Für das Kernel wurde in vier Bereiche unterschieden:
-\end_layout
-
-\begin_layout Enumerate
-Sichere Verbesserung.
- Der Punkt liegt zwischen Basis und Ziel.
- Diese Änderung ist optimal, da für die Verbesserung die originalpolicy
- nicht unnötigerweise Verändert wurde und wird daher nicht bestraft.
-\end_layout
-
-\begin_layout Enumerate
-Unsichere Verbesserung.
- Hier wurde sich zwar dem Ziel angenähert, allerdings war ein starkes Abweichen
- von der bekannten policy nötig.
- Eine vorsichtigere Änderung wäre besser, kann dies erreicht werden sollte
- es auch bevorzugt werden.
- Dieser Bereich gilt deshalb als nicht optimal und stellt die leichteste
- Form der möglichen Bestrafung.
-\end_layout
-
-\begin_layout Enumerate
-Verschlechterungen bedeuten, dass sich der Unterschied zum Ziel vergrößert
- hat und so vom normalen Kernel bereits verhindert werden sollte.
- Ein volatiler Agent kann jedoch durch eine starke Verbesserung an anderer
- Stelle diesen Makel ausgleichen.
- In der Regression wäre der Agent zu bevorzugen, der weniger volatil ist.
- Auch diese können in Zwei Bereiche unterteils werden:
-\end_layout
-
-\begin_deeper
-\begin_layout Enumerate
-Sichere Verschlechterung.
- Die Änderung erfolgte eindeutig vom Ziel weg, die Zugrundeliegende Optimierung
- war eindeutig falsch, ohne Chance auf Verbesserung.
- In einer stetigen Umgebung mit einem Vernunftbegabten Optimierer würde
- dies als klar destruktives Verhalten gelten, unter Umständen wurde aber
- auch nur eine kleine Verschlechterung für eine umfangreice Verbesserung
- an einder anderen Stelle in Kauf genommen.
-\end_layout
-
-\begin_layout Enumerate
-Unsichere Verschlechterung.
- Es wurde in die richtige Richtung, zum Ziel hin, korrigiert, jedoch wurde
- über das Ziel hinausgeschossen.
- Der Unterschied zum bekannten Entscheidung ist sehr Umfangreich und hält
- die größte Unsicherheit.
- Dieses Verhalten könnte allerdings auch als exploration interpretiert werden.
-\end_layout
-
-\end_deeper
-\end_inset
-
-
+Mixing different paradigms is rarely a good idea, as this experiment has
+ shown.
+ For future implementations, it is recommended to implement a separate Paretofro
+nt.
 \end_layout
 
 \begin_layout Section
@@ -14388,6 +13255,1032 @@ Intro/Motivation
 
 \begin_layout Section
 MC 
+\end_layout
+
+\begin_layout Subsection
+MTC200_MSE_simple
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{MTC200 MSE scratch candidates in comparisson.
+ xxx longtable} 
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+{} & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+endhead 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+0 & 0.38 & -119.4 & $
+\backslash
+text{ if }(
+\backslash
+text{vel}<0)
+\backslash
+text{ then }(0)
+\backslash
+text{ else }(2)$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.38 & -123.4 & $
+\backslash
+text{ if }(
+\backslash
+text{vel}<-0.001)
+\backslash
+text{ then }(0)
+\backslash
+text{ else }(2)$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.31 & -117.8 & $
+\backslash
+text{ if }(
+\backslash
+text{vel}<0)
+\backslash
+text{ then }(
+\backslash
+frac{
+\backslash
+text{pos}}{-1.83})
+\backslash
+text{ else }(2.19)$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+7 & 0.27 & -133.4 & $152 
+\backslash
+cdot 
+\backslash
+text{vel}-2.7 
+\backslash
+cdot
+\backslash
+text{pos}$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+8 & 0.21 & -142.8 & $152 
+\backslash
+cdot 
+\backslash
+text{vel}+2.7 
+\backslash
+cdot
+\backslash
+text{pos}^{2}$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+10 & 0.19 & -143.0 & $152 
+\backslash
+cdot 
+\backslash
+text{vel}+|-4 
+\backslash
+cdot
+\backslash
+text{pos}-1.23|$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+13 & 0.16 & -141.7 & $|5.8 
+\backslash
+cdot 
+\backslash
+text{pos}+1.85| +113 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},2
+\backslash
+cdot
+\backslash
+text{vel})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+14 & 0.15 & -115.4 & $|8.1 
+\backslash
+cdot 
+\backslash
+text{pos}+2.68| +113 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},3.1
+\backslash
+cdot
+\backslash
+text{vel})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+17 & 0.14 & -120.7 & $|7.3 
+\backslash
+cdot 
+\backslash
+text{pos}+2.16| +111 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},3.1
+\backslash
+cdot
+\backslash
+text{vel})-
+\backslash
+text{pos}-0.77$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+19 & 0.12 & -105.1 & $|8.4 
+\backslash
+cdot 
+\backslash
+text{pos}+2.475|-3.82
+\backslash
+cdot
+\backslash
+text{pos} +113 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},5.3
+\backslash
+cdot
+\backslash
+text{vel})-2$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+20 & 0.12 & -103.3 & $|8.5 
+\backslash
+cdot 
+\backslash
+text{pos}+2.607| + -4.3 
+\backslash
+cdot 
+\backslash
+text{pos}+ 113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel}, 5.6 
+\backslash
+cdot 
+\backslash
+text{vel})-2.19$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+23 & 0.09 & -105.8 & $|8.6 
+\backslash
+cdot 
+\backslash
+text{pos} + 2.7| -3.86 
+\backslash
+cdot 
+\backslash
+text{pos}-1.95$ 
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++112  
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},4.9 
+\backslash
+cdot 
+\backslash
+text{vel} 
+\backslash
+cdot 0.32-
+\backslash
+text{pos})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+25 & 0.09 & -108.4 & $|8.3
+\backslash
+cdot
+\backslash
+text{pos}+2.721|-3.85 
+\backslash
+cdot 
+\backslash
+text{pos}-2$
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},5.2 
+\backslash
+cdot 
+\backslash
+text{vel} 
+\backslash
+cdot 0.241-0.767 
+\backslash
+cdot 
+\backslash
+text{pos})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+27 & 0.08 & -105.2 & $|8.3 
+\backslash
+cdot
+\backslash
+text{pos}+2.48|-3.82 
+\backslash
+cdot 
+\backslash
+text{pos}-2$
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},5.18 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},
+\backslash
+text{vel}
+\backslash
+cdot0.2 - 0.64 
+\backslash
+cdot
+\backslash
+text{pos}))$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+31 & 0.08 & -104.2 & $|8.3 
+\backslash
+cdot 
+\backslash
+text{pos}+2.48| + -3.8 
+\backslash
+cdot 
+\backslash
+text{pos}$ 
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+min(
+\backslash
+text{vel}, 5.3 
+\backslash
+cdot 
+\backslash
+text{vel}),5.18 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},
+\backslash
+text{vel} 
+\backslash
+cdot 0.2 - 0.64 
+\backslash
+cdot 
+\backslash
+text{pos}))-2$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+32 & 0.07 & -107.1 & $|8.2 
+\backslash
+cdot 
+\backslash
+text{pos}+
+\backslash
+text{pos}^{17}+2.56| + -3.8 
+\backslash
+cdot 
+\backslash
+text{pos}$ 
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++ 113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},5.18 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},
+\backslash
+text{vel}
+\backslash
+cdot 0.2 - 0.64 
+\backslash
+cdot 
+\backslash
+text{pos}))-2$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+MTC200_MSE_simpleFix
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{MTC200 MSE simpleFix candidates in comparisson.
+ xxx longtable} 
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+{} & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+endhead 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+0 & 0.20 & -119.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.20 & -123.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<-0.001}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.19 & -116.5 & ${
+\backslash
+text{ if } ({{ 
+\backslash
+text{sign}(
+\backslash
+text{vel})}<
+\backslash
+text{pos}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.18 & -133.0 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0.007 
+\backslash
+cdot 
+\backslash
+text{pos}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.16 & -121.6 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.010 
+\backslash
+cdot {
+\backslash
+text{pos}^2}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.14 & -117.1 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.012 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}^2}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.12 & -106.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.014 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}-0.243}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+11 & 0.09 & -100.6 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < 
+\backslash
+text{ if } (
+\backslash
+text{vel}<-0.008) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.047))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+14 & 0.08 & -100.0 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < 
+\backslash
+text{ if } (
+\backslash
+text{vel}< -0.01 
+\backslash
+cdot -
+\backslash
+text{pos}^2$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ then } 0 
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.05)))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+15 & 0.07 & -99.7 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ if } (
+\backslash
+text{vel}<-0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.05)) $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+17 & 0.06 & -100.0 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ if } (
+\backslash
+text{vel} < -0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2) $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ then } 0 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ else } (
+\backslash
+text{pos} - 0.73 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.03))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+20 & 0.05 & -98.3 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<
+\backslash
+text{ if } (
+\backslash
+text{vel} < 0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ then } (1.03) 
+\backslash
+text{ else } (
+\backslash
+text{pos}-0.73 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.03))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+22 & 0.05 & -98.5 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<
+\backslash
+text{ if } ((
+\backslash
+text{vel} 
+\backslash
+leq 0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ then } 0.17 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ else } 0.03 - (0.94 
+\backslash
+cdot (
+\backslash
+text{pos}-0.25)^2-0.25)^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection

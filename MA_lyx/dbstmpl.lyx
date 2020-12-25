@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -10,6 +10,8 @@
 
 \renewcommand{\textendash}{--}
 \renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -31,8 +33,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -73,7 +73,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -83,10 +82,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -290,7 +286,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -334,7 +329,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -359,7 +353,6 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -368,7 +361,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -577,7 +569,6 @@ In 2018, the car autopilot of a Tesla caused a fatal accident because it
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -883,7 +874,6 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -1033,7 +1023,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -1045,7 +1034,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -1071,7 +1059,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -1501,7 +1488,6 @@ ng (STGP) immer häufiger genutzt wird.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1528,7 +1514,6 @@ GP offers many expansion possibilities.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -1559,7 +1544,6 @@ GP can also be used to search for interpretable post-hoc formulas that represent
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1623,7 +1607,6 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
-literal "false"
 
 \end_inset
 
@@ -1726,9 +1709,6 @@ Interpretability is so difficult to achieve in the field of AI that readable
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:EUREKA-GP-complexities"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -1759,9 +1739,6 @@ Although it is the most complex function with 3 input parameters, it creates
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:EUREKA-GP-complexities"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -2004,7 +1981,6 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2815,7 +2791,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3639,7 +3614,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -3647,9 +3621,6 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "IB-observations-state"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3686,7 +3657,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -3704,7 +3674,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3936,7 +3905,6 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -4345,9 +4313,6 @@ To explain the black box policy, all observed states and actions are stored
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "data-collection-for-benchmarks"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -4836,24 +4801,31 @@ https://github.com/ducktalez/plagih
  
 \end_layout
 
-\begin_layout Paragraph
-sympy vereinfachung, Allgemeine mathematische Vereinfachung with symbolic
- mathematics
-\end_layout
-
 \begin_layout Standard
 The evaluation process was inspired by KarooGP, a GP-suite written by Kai
  Staats.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
  To evaluate a Gp-tree, first the mathematical expression is extracted and
  mathematically simplified with the help of Sympy, a python library for
- symbolic mathematics [xx].
+ symbolic mathematics.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "10.7717/peerj-cs.103"
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "10.7717/peerj-cs.103"
+
+\end_inset
+
  This eliminates unnecessary mathematical calculations before the evaluation.
  The reduced expression is then used to generate the AST with the python
  compiler, which is recursively converted into a Tensorflow graph (TF).
@@ -4862,7 +4834,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -4875,10 +4846,6 @@ literal "true"
 [xx es gibt keine Statistik über die Laufzeit, allerdings hat sich nach
  dem Verwenden rekursiver Strukturen die Performance mindestens um 50% verbesser
 t][xxx Reicht als GP-Quelle Koza und ein Buch?]
-\end_layout
-
-\begin_layout Paragraph
-xxx sympy
 \end_layout
 
 \begin_layout Standard
@@ -4909,14 +4876,44 @@ status open
 \begin_layout Standard
 The AST is built again from the reduced sympy expression, but instead of
  generating a TF graph, a new GP tree is built.
- This algorithm is very error-prone.
- On the one hand, the simplest version of a formula, from a mathematical
- point of view, does not have to be the shortest tree representation, and
- on the other hand, a simplified formula can contain elements that are not
- intended when generating candidates.
+ The simplest version of a formula is not necessarily the shortest tree
+ representation and a simplified formula can contain elements that are not
+ intended when generating candidates, which makes the algorithm very error-prone.
  [xx Gödel'scher Unvollständigkeitssatz?] Newly found Pareto entries are
  always tried to be stored simplified.
- The nodes are randomly selected from different distributions.
+ 
+\end_layout
+
+\begin_layout Standard
+With the introduction of the if operator, which is both the only operator
+ with arity-3 and two different input types (boolean condition and numeric
+ result), strong typing for all inputs and outputs as well as an extension
+ of binary tree structures to any arity became necessary.
+ However, due to the high variance in the branching factor, the tree depth
+ also loses its function as a limiting factor in creating random branches,
+ which is why all procedures based on the tree depth were replaced with
+ methods based on the number of nodes.
+ [xx pseudocode?] 
+\end_layout
+
+\begin_layout Standard
+The TED is calculated both a robustly and efficiently with APTED.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedAPTED1,tedAPTED2"
+
+\end_inset
+
+ TED mapping between trees can be used in addition to weighting the changes,
+ but was not used for any runs.
+ This property can prevent closure in certain constellations, which is why
+ this possibility is checked and a mutual exclusive crossover was implemented,
+ which always finds two matching nodes in trees.
+ 
+\end_layout
+
+\begin_layout Itemize
+xxx The nodes are randomly selected from different distributions.
  
 \begin_inset Foot
 status open
@@ -4943,35 +4940,6 @@ xx)
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-With the introduction of the if operator, which is both the only operator
- with arity-3 and two different input types (boolean condition and numeric
- result), strong typing for all inputs and outputs as well as an extension
- of binary tree structures to any arity became necessary.
- However, due to the high variance in the branching factor, the tree depth
- also loses its function as a limiting factor in creating random branches,
- which is why all procedures based on the tree depth were replaced with
- methods based on the number of nodes.
- [xx pseudocode?] 
-\end_layout
-
-\begin_layout Standard
-The TED is calculated both a robustly and efficiently with APTED.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tedAPTED1,tedAPTED2"
-literal "true"
-
-\end_inset
-
- TED mapping between trees can be used in addition to weighting the changes,
- but was not used for any runs.
- This property can prevent closure in certain constellations, which is why
- this possibility is checked and a mutual exclusive crossover was implemented,
- which always finds two matching nodes in trees.
- 
 \end_layout
 
 \begin_layout Standard
@@ -5608,12 +5576,10 @@ get all modifiable nodes
 while
 \end_layout
 
-\begin_deeper
 \begin_layout Algorithm
 do something
 \end_layout
 
-\end_deeper
 \begin_layout Algorithm
 choose random node
 \end_layout
@@ -6392,7 +6358,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6609,7 +6574,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6671,7 +6635,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -7094,12 +7057,8 @@ Aus einigen früh gefundenen Kandidaten ergab sich, dass die Obergrenze keine
 \end_layout
 
 \begin_layout Standard
-The Sarsa 75 Agent is characterised by poor exploration and great uncertainty,
- making it particularly vulnerable to poor results.
-\end_layout
-
-\begin_layout Standard
-xxx SARSA-200 was used for the rest of the experiments.
+xxx Für die restlichen Experimente wurde deshalb ausschließlic Sarsa-200
+ gewählt.
 \end_layout
 
 \begin_layout Subsection
@@ -7585,7 +7544,6 @@ complexity
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -7663,7 +7621,6 @@ complexity
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -7741,7 +7698,6 @@ complexity
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -8208,7 +8164,6 @@ complexity
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -8293,7 +8248,6 @@ R=-xxx.x
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -9113,7 +9067,7 @@ text{pos}^2}^2}$]]]][$0$,fixnode][$2$,fixnode]]}
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Die Kernstruktur
+xxx
 \end_layout
 
 \end_inset
@@ -11532,7 +11486,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "false"
 
 \end_inset
 
@@ -12231,7 +12184,6 @@ num
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -12267,7 +12219,6 @@ num
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -12343,7 +12294,6 @@ angles
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off
@@ -12443,7 +12393,6 @@ bool
 \emph off
 \bar no
 \strikeout off
-\xout off
 \uuline off
 \uwave off
 \noun off

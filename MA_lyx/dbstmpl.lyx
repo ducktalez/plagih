@@ -7183,7 +7183,7 @@ raggedright}p{102mm}}
 
 \backslash
 caption{MTC200 MSE scratch candidates in comparisson.
- xxx xxx quadrat bei letzter formel?? longtable} 
+ xxx quadrat bei letzter formel?? longtable} 
 \backslash
 tabularnewline
 \end_layout
@@ -7208,20 +7208,20 @@ tabularnewline
 
 \begin_layout Plain Layout
 
-2 & 0.77 & -200.0 & ${
+2 & 0.77 & -200.0 & $
 \backslash
 text{sign}(
 \backslash
-text{vel})}$ 
+text{vel})$ 
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-3 & 0.38 & -119.4 & ${
+3 & 0.38 & -119.4 & $
 \backslash
-text{vel}^{-5.0}}$
+text{vel}^{-5.0}$
 \backslash
 tabularnewline 4 & 0.38 & -115.8 & ${1.181+{ 
 \backslash
@@ -7234,80 +7234,80 @@ tabularnewline
 
 \begin_layout Plain Layout
 
-5 & 0.34 & -137.3 & ${-
+5 & 0.34 & -137.3 & $-
 \backslash
 text{pos}+{174 
 \backslash
 cdot 
 \backslash
-text{vel}}}$ 
+text{vel}}$ 
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-6 & 0.33 & -133.5 & ${{|
+6 & 0.33 & -133.5 & $|
 \backslash
-text{pos}|}+{174 
+text{pos}|+174 
 \backslash
 cdot 
 \backslash
-text{vel}}}$ 
+text{vel}$ 
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-7 & 0.27 & -127.0 & ${{0.564^{
+7 & 0.27 & -127.0 & $0.564^{
 \backslash
-text{pos}}}+{99.320 
+text{pos}}+99.32 
 \backslash
 cdot 
 \backslash
-text{vel}}}$
+text{vel}$
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-8 & 0.21 & -140.5 & ${{{
+8 & 0.21 & -140.5 & $
 \backslash
 text{pos} 
 \backslash
-cdot 1.779}^2}+{174 
+cdot 1.779^{2}+174 
 \backslash
 cdot 
 \backslash
-text{vel}}}$
+text{vel}$
 \backslash
 tabularnewline
 \end_layout
 
 \begin_layout Plain Layout
 
-10 & 0.16 & -111.0 & ${{-2.3 
-\backslash
-cdot {
-\backslash
-sin({
-\backslash
-frac{1.244}{
-\backslash
-text{pos}}})}}+{174 
+10 & 0.16 & -111.0 & $-2.3 
 \backslash
 cdot 
 \backslash
-text{vel}}}$
+sin(
+\backslash
+frac{1.244}{
+\backslash
+text{pos})+174 
+\backslash
+cdot 
+\backslash
+text{vel$
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-13 & 0.14 & -114.1 & ${2.832 
+13 & 0.14 & -114.1 & $2.832 
 \backslash
 cdot {{-{
 \backslash
@@ -7319,26 +7319,26 @@ text{pos}}})}}^{1.45}}}+{174
 \backslash
 cdot 
 \backslash
-text{vel}}$
+text{vel}$
 \backslash
 tabularnewline
 \end_layout
 
 \begin_layout Plain Layout
 
-16 & 0.14 & -114.1 & ${{-3.16 
-\backslash
-cdot {
-\backslash
-sin(174)}^{1.836^{-1.317 
+16 & 0.14 & -114.1 & $-3.16 
 \backslash
 cdot 
 \backslash
-text{pos}}}} 
+sin(174)^{1.836^{-1.317 
 \backslash
 cdot 
 \backslash
-text{pos}}+174 
+text{pos}}} 
+\backslash
+cdot 
+\backslash
+text{pos}+174 
 \backslash
 cdot 
 \backslash
@@ -7349,94 +7349,94 @@ tabularnewline
 
 \begin_layout Plain Layout
 
-18 & 0.12 & -103.2 & ${5501 
+18 & 0.12 & -103.2 & $5501 
 \backslash
-cdot {{-0.01 
+cdot -0.01 
 \backslash
-cdot {0.039^{{{-0.324+
+cdot 0.039^{-0.324+
 \backslash
-text{pos}}^2}}}}+
+text{pos}^2}+
 \backslash
-text{vel}}}+{{{2.88 
+text{vel}+2.88 
 \backslash
 cdot 
 \backslash
-text{pos}}^2}^2}$
+text{pos}^{2^{2}}$
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-20 & 0.10 & -101.2 & ${{5501 
+20 & 0.10 & -101.2 & $5501 
 \backslash
-cdot {{-0.016 
+cdot -0.016 
 \backslash
-cdot {0.023^{{
+cdot 0.023^{
 \backslash
-text{pos}+{(2.46 
-\backslash
-cdot 
-\backslash
-text{pos})^2}}}}}+
-\backslash
-text{vel}}}+{{{2.87 
+text{pos}}+(2.46 
 \backslash
 cdot 
 \backslash
-text{pos}}^2}^2}}$
+text{pos})^{2}+
+\backslash
+text{vel}}}+2.87 
+\backslash
+cdot 
+\backslash
+text{pos}^{2^{2}}$
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-23 & 0.09 & -98.8 & ${5501 
+23 & 0.09 & -98.8 & $5501 
 \backslash
-cdot {{-0.016 
-\backslash
-cdot {0.041^{{{
-\backslash
-text{pos}+{(2.75 
-\backslash
-cdot 
-\backslash
-text{pos})^2}}^2}}}}+
-\backslash
-text{vel}}}+{{{2.87 
-\backslash
-cdot {
-\backslash
-min(
-\backslash
-text{pos}, -0.467)}}^2}^2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-25 & 0.09 & -98.8 & ${-91
+cdot -0.016 
 \backslash
 cdot 0.041^{
 \backslash
-text{pos}+2.75
+text{pos}}+(2.75 
 \backslash
-cdot
+cdot 
 \backslash
-text{pos}^{2}^{2}}+5501
+text{pos})^{2^{2}}+
 \backslash
-cdot
+text{vel}+2.87 
 \backslash
-text{vel}+68
+cdot 
 \backslash
-cdot
+min(
+\backslash
+text{pos}, -0.467)^{2^{2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+25 & 0.09 & -98.8 & $5501
+\backslash
+cdot 
+\backslash
+text{vel}+68 
+\backslash
+cdot 
 \backslash
 min(
 \backslash
 text{pos},-
 \backslash
-text{pos}-0.789)^{4}}$
+text{pos}-0.789)^{4} + -91
+\backslash
+cdot 0.041^{
+\backslash
+text{pos}}+2.75
+\backslash
+cdot
+\backslash
+text{pos}^{2^{2}}$
 \backslash
 tabularnewline 
 \backslash
@@ -7453,6 +7453,10 @@ end{longtable}
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+xxx correct formulas??
 \end_layout
 
 \begin_layout Standard
@@ -8051,7 +8055,7 @@ text{pos}-0.78)^4}$]}
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Drei 
+xxx 
 \end_layout
 
 \end_inset
@@ -9109,7 +9113,7 @@ text{pos}^2}^2}$]]]][$0$,fixnode][$2$,fixnode]]}
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx
+Die Kernstruktur
 \end_layout
 
 \end_inset

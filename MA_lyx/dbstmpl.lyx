@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -11,7 +11,6 @@
 \renewcommand{\textendash}{--}
 \renewcommand{\textemdash}{---}
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -33,6 +32,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -73,6 +74,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -82,7 +84,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -181,24 +186,6 @@ Intro / Motivation
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Greyedout
-status open
-
-\begin_layout Plain Layout
-Diese Version wird noch weiter bearbeitet.
-\end_layout
-
-\begin_layout Plain Layout
-Todos sind mit xx oder gekennzeichnet.
- Weitere Todos in Kapitel 6.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset Note Comment
 status open
 
@@ -286,6 +273,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -329,6 +317,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -353,6 +342,7 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -361,6 +351,7 @@ key "XAI_doshivelez2017rigorous,AIINDEX2019"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -569,6 +560,7 @@ In 2018, the car autopilot of a Tesla caused a fatal accident because it
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
+literal "true"
 
 \end_inset
 
@@ -874,6 +866,7 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -1023,6 +1016,7 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -1034,6 +1028,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -1059,6 +1054,7 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -1488,6 +1484,7 @@ ng (STGP) immer häufiger genutzt wird.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1514,6 +1511,7 @@ GP offers many expansion possibilities.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -1544,6 +1542,7 @@ GP can also be used to search for interpretable post-hoc formulas that represent
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1607,6 +1606,7 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
@@ -1981,6 +1981,7 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2791,6 +2792,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -3614,6 +3616,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -3657,6 +3660,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -3674,6 +3678,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3905,6 +3910,7 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -4807,6 +4813,7 @@ The evaluation process was inspired by KarooGP, a GP-suite written by Kai
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -4816,6 +4823,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4823,6 +4831,7 @@ key "10.7717/peerj-cs.103"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4834,6 +4843,7 @@ key "10.7717/peerj-cs.103"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -4901,6 +4911,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -6358,6 +6369,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6574,6 +6586,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6635,6 +6648,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -7268,13 +7282,13 @@ tabularnewline
 
 13 & 0.14 & -114.1 & $2.832 
 \backslash
-cdot {{-{
+cdot -
 \backslash
-sin({
+sin(
 \backslash
 frac{1.332}{
 \backslash
-text{pos}}})}}^{1.45}}}+{174 
+text{pos}})^{1.45}+174 
 \backslash
 cdot 
 \backslash
@@ -7314,7 +7328,7 @@ cdot -0.01
 \backslash
 cdot 0.039^{-0.324+
 \backslash
-text{pos}^2}+
+text{pos}^{2}}+
 \backslash
 text{vel}+2.88 
 \backslash
@@ -7375,7 +7389,7 @@ tabularnewline
 
 \begin_layout Plain Layout
 
-25 & 0.09 & -98.8 & $5501
+25 & 0.09 & -98.8 & $5501 
 \backslash
 cdot 
 \backslash
@@ -9094,14 +9108,21 @@ Parabolic lower and upper bound (Xiao) xx 26 knoten?
 \end_layout
 
 \begin_layout Standard
-This close-form preset policy was implemented by Xiao in [xxx] and is a
- mathematical formula that is characterized by a parabolic upper and lower
+This close-form preset policy was presented by Xiao in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "xiao2019"
+literal "false"
+
+\end_inset
+
+ and is a mathematical formula characterized by a parabolic upper and lower
  bound.
- Mit 26 Knoten ist diese origin sehr robust gegenüber TED-problemen, ein
- Lauf mit fixen Knoten unterschied sich nicht wesentlich in den Resultaten.
- Obwohl die Origin mit einem Reward von -102.6 schon sehr gut war waren alle
- gefundenen Kandidaten reale Verbesserungen die oft auch die Sarsa-policy
- übertreffen konnten.
+ With 26 nodes, this origin is very robust against TED problems, a run with
+ fixed nodes did not differ significantly in the results.
+ Although the origin was already very good with a reward of -102.6, all the
+ candidates found were real improvements that often outperformed the Sarsa
+ policy.
  
 \end_layout
 
@@ -9332,7 +9353,8 @@ newnode]]]}
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx If 5 changes are made, the first operators are replaced.
+In this candidate with a TED of 5, the first structural changes are made
+ to the operators of the tree.
 \end_layout
 
 \end_inset
@@ -9486,9 +9508,7 @@ status open
 
 
 \backslash
-plforest{[{$
-\backslash
-text{if-then-else}$},samenode[{$
+plforest{[{if-then-else},samenode[{$
 \backslash
 land$},samenode[{$
 \backslash
@@ -9539,7 +9559,7 @@ $},changenode[{pos},newnode][{$0.271$},newnode]]]}
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx With 8 changes, an additional and-case is added.
+With 8 edits, an additional and-case is appended.
 \end_layout
 
 \end_inset
@@ -9843,7 +9863,7 @@ text{vel}<0$][$0$][$2$]]]]}
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx
+Pareto candidate with 8 edits.
 \end_layout
 
 \end_inset
@@ -9872,16 +9892,16 @@ The familiar solutions were superior to the scratch solutions in all respects.
 \end_layout
 
 \begin_layout Standard
-Die reale Fitness eines Agenten korrelliert oft nur gering mit seinem Regression
-sfehler, was Hein bereits in 
+e real fitness of an agent often correlates only slightly with its regression
+ error, which Hein has already described in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "sec:Online-offline_regression"
 
 \end_inset
 
- beschrieben hat.
- xx
+.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -11486,6 +11506,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 

@@ -4889,9 +4889,12 @@ The AST is built again from the reduced sympy expression, but instead of
  The simplest version of a formula is not necessarily the shortest tree
  representation and a simplified formula can contain elements that are not
  intended when generating candidates, which makes the algorithm very error-prone.
- [xx Gödel'scher Unvollständigkeitssatz?] Newly found Pareto entries are
- always tried to be stored simplified.
- 
+ [xx Gödel'scher Unvollständigkeitssatz?] New Pareto entries are nevertheless
+ attempted to be saved in a simplified version.
+\end_layout
+
+\begin_layout Standard
+xxx
 \end_layout
 
 \begin_layout Standard
@@ -4923,9 +4926,26 @@ literal "true"
  
 \end_layout
 
-\begin_layout Itemize
-xxx The nodes are randomly selected from different distributions.
+\begin_layout Standard
+The evolution of a population of candidates includes all common evolutionary
+ methods and is divided by default into 10% reproduction, 65% mutation and
+ 35% crossover, the more precise distribution can be considered in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Distribution-gp-evolutions"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
  
+\end_layout
+
+\begin_layout Standard
+Constants are randomly selected from different distributions and adjusted
+ in a filter process.
 \begin_inset Foot
 status open
 
@@ -5503,7 +5523,15 @@ Random
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Verteilung of the evolution of the generations in all runs.
+Distribution of the evolution of the generations in all runs.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Distribution-gp-evolutions"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset

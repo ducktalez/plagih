@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -11,6 +11,8 @@
 \renewcommand{\textendash}{--}
 \renewcommand{\textemdash}{---}
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -32,8 +34,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -74,7 +74,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -84,10 +83,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -273,7 +269,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -317,7 +312,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -342,7 +336,6 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -351,7 +344,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -560,7 +552,6 @@ In 2018, the car autopilot of a Tesla caused a fatal accident because it
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tesla_Autopilot_crash_article"
-literal "true"
 
 \end_inset
 
@@ -866,7 +857,6 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -1016,7 +1006,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -1028,7 +1017,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -1054,7 +1042,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -1484,7 +1471,6 @@ ng (STGP) immer häufiger genutzt wird.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1511,7 +1497,6 @@ GP offers many expansion possibilities.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -1542,7 +1527,6 @@ GP can also be used to search for interpretable post-hoc formulas that represent
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1606,7 +1590,6 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
-literal "true"
 
 \end_inset
 
@@ -1981,7 +1964,6 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2792,7 +2774,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3616,7 +3597,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -3660,7 +3640,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -3678,7 +3657,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3910,7 +3888,6 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -4807,13 +4784,16 @@ https://github.com/ducktalez/plagih
  
 \end_layout
 
+\begin_layout Section
+Allgemeine Eigenschaften
+\end_layout
+
 \begin_layout Standard
 The evaluation process was inspired by KarooGP, a GP-suite written by Kai
  Staats.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -4823,7 +4803,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4831,7 +4810,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4843,7 +4821,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -4894,10 +4871,6 @@ The AST is built again from the reduced sympy expression, but instead of
 \end_layout
 
 \begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
 With the introduction of the if operator, which is both the only operator
  with arity-3 and two different input types (boolean condition and numeric
  result), strong typing for all inputs and outputs as well as an extension
@@ -4914,7 +4887,6 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -4933,9 +4905,6 @@ The evolution of a population of candidates includes all common evolutionary
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:Distribution-gp-evolutions"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5549,24 +5518,19 @@ Fixed nodes
 \end_layout
 
 \begin_layout Standard
-Die Einführung fixer Knoten erfordert umfangreiche Anpassungen an die GP.
- Die wichtigsten Änderungen umfassen folgende Punkte:
+Fixe Knoten können für eine echte Teilmenge an Knoten des origin-baumes
+ manuell bestimmt werden und sind vom Evolutionsprozess unberührt.
+ Die Einführung fixer Knoten erfordert umfangreiche Anpassungen die Mutationsope
+rationen, vor allem aber auch die Erzeugung zufälliger Bäume betreffen.
+ Die Knotentiefe wird mit einer schichtenbasierten Interpretation ersetzt,
+ in dem die Tiefe eines Knoten die Entfernung zum nächsten fixen Knoten
+ darstellt.
+ Besonders in Fällen, in denen ein origin-Baum mehrere Ansatzpunkte auf
+ unterschiedlichen Baumtiefen anbietet kann trotzdem zu ausgewogener Erweiterung.
 \end_layout
 
-\begin_layout Itemize
-Mutating mofifiable nodes only
-\end_layout
-
-\begin_layout Itemize
-Layerwise interpretation of the node depth in respect to the fix structure
- instead of the root node
-\end_layout
-
-\begin_layout Itemize
-Nodesize-based build options including the full- and grow-method.
- Randomly generated trees should cover the entire search space and have
- the structuring Full/Grow options to have the same properties of non-fixed
- generated trees.
+\begin_layout Standard
+xxxxxx
 \end_layout
 
 \begin_layout Standard
@@ -5601,57 +5565,15 @@ Fixed nodes must not be changed in the evolve process.
 \end_layout
 
 \begin_layout Standard
-\noindent
-\begin_inset Float algorithm
-wide false
-sideways false
-status open
-
-\begin_layout Algorithm
-get all modifiable nodes
-\end_layout
-
-\begin_layout Algorithm
-while
-\end_layout
-
-\begin_layout Algorithm
-do something
-\end_layout
-
-\begin_layout Algorithm
-choose random node
-\end_layout
-
-\begin_layout Algorithm
-mutate this node
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Pseudocode for getting first layer of modifiable nodes.
- xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Random tree branch building (node based)
+Nodesize-based build options including the full- and grow-method.
+ Randomly generated trees should cover the entire search space and have
+ the structuring Full/Grow options to have the same properties of non-fixed
+ generated trees.
 \end_layout
 
 \begin_layout Standard
-In GP, the generation of random trees and branches is usually based on the
- tree depth.
+The maximum tree depth is a common factor for random , the generation of
+ random trees and branches is usually based on the tree depth.
  However, this is a problem for the layerwise mutation which is needed for
  example with fixed nodes, where several branches have to be built up at
  the same time.
@@ -6397,7 +6319,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6614,7 +6535,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6676,7 +6596,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -9140,7 +9059,6 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "false"
 
 \end_inset
 
@@ -11534,7 +11452,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 

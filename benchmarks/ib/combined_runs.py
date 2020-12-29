@@ -298,7 +298,9 @@ def merge_paretos(path_main):
 
 
 def main():
-
+    """
+    Custom method to evaluate separate industrial benchmark-runs combined
+    """
     parser = argparse.ArgumentParser(description='Plagih IB-Run evaluation')
     parser.add_argument('-mainpath', type=str, help='lol does not work sf', default='IB_MSE_sim2')
     parser.add_argument('-auto', action='store_true')

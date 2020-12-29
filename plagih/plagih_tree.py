@@ -548,7 +548,6 @@ def tree_init_core(node_amount, np_dtype):
 def tree_try_get_swapids(a_tree, b_tree, version='default'):
     """
     Try to return two branches (aka ids) [for crossover] that can be crossed
-
     """
     if version == 'default':
         # choose a node from parent a
@@ -603,12 +602,6 @@ def randomly_split_range(range_max, num_splits):
         sample_dist[greatest] += helper_diff
 
     return sample_dist
-
-
-def raise_if_empty(name, val):
-    if val == '' or val is None:
-        print(f'This variable did not work {name}')
-        raise
 
 
 def invent_label_list_depth(xtype_root, depth_goal, choose_obs, choose_oparray2, choose_distributions, float_decimals, min_depth=0, full_or_grow=None):
@@ -681,7 +674,10 @@ def invent_label_list_depth(xtype_root, depth_goal, choose_obs, choose_oparray2,
 
 def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
     """
+    Very unified utility function that returns the required tree size from the following parameters
     # branch_nodes, branch_depth, tree_depth, tree_nodes
+
+    It can either return a tree depth or an amount of tree nodes
     """
     mean, size_min, size_max, size_variance = mean_min_max_var
     if size_mode == 'branch_nodes' or size_mode == 'branch_depth' or force == 'branch':

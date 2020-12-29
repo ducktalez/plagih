@@ -381,8 +381,6 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
 
         fig.savefig(dir_save / f'evaled_overview.pdf')
 
-    # summary_text = '\n'.join([f'Tree {x[0]} (regr. error {x[1]}) has real average reward {x[2]} and failed {x[3]} times.' for x in agent_performance.values()])
-    # file_dump(dir_save / 'summary.txt', summary_text)
     yaml_dump(dir_save / 'summary.yaml', agent_performance)
 
     return agent_performance

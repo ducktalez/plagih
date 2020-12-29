@@ -479,9 +479,8 @@ class ExplainableGP(object):
 
     def gen_next_population(self):
         """
-        Creates all new Generations.
-        - adjust parameters for this generation (parsimony threshold)
-        - Create a gene pool (kick out too complex candidates)
+        Creates all new Generations by applying the evolutions in the evolve-loop.
+
         """
         # All gp creators: name, function, num of trees from tournament selection
 
@@ -592,9 +591,7 @@ class ExplainableGP(object):
                         cooltree.meta.last_evolution = tag
                         self.pop_append(cooltree)
             else:
-                print_e(f'the specified evolve call is not known: \'{evolve_name}\'')
-
-            # self.print_g('ggg', f'->Evolving \'{tag}\' (success {len(self.population_tmp)}/{evolve_num}) took: {time.perf_counter() - time_evolve:4.2f}s pop.size is now {len(self.population_tmp)}.')
+                print_e(f"Evolution not known: '{evolve_name}'")
 
         # sfeh automatically fill with random trees
         # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
@@ -605,32 +602,18 @@ class ExplainableGP(object):
 
     def file_pareto_txt(self):
         """
-        Save all the pareto efficient candidates to file
-        sfeh save as yaml?
+        Save all the pareto candidates to a file.
+        (Quick feedback that requires little overhead)
         """
         pareto_yaml = [f'Parsimony: \t{parsim} MeanError: \t{fitness} Expr: \t{cooltree.meta.expr_raw}' for (parsim, fitness, cooltree) in self.pareto]
         yaml_dump(self.root_dir / 'paretofront.yaml', pareto_yaml, print_type=self.print_type)
 
         return
 
-    def file_population(self, pop_name):
-        """
-        Save population_* to disk.
-        """
-        txt_file = f'Plagih GP by Simon Fehrer, inspired by Kai Staats Karoo-gp. Generation: {self.gen_id}\n'
-        for ii, cooltree in enumerate(self.pop_base):
-            txt_file += f'\nTree meta: {cooltree.meta}\nas string: {cooltree}\nFormatted in layers:\n{cooltree.pretty_format()}\n'
-
-        file_dump(self.root_dir / f'info/population_{pop_name}.txt', txt_file)
-
-        return
-
     def analyse_pareto(self, cpu_cores=16):
         """
-        Giving all the analysis results
-        # sfeh discussion: This is only relevant at the end. (aka not in persidical analysis)
-        # in between, this might create wrong files
-        # e.g. pareto entries, that do not exist at the end leave files behind
+        Writing all analysis files after evaluating the paretofront.
+        (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
         """
         self.printpl('i', f'Analysing the pareto candidates of your run!')
 
@@ -639,7 +622,6 @@ class ExplainableGP(object):
         pareto_agents = {}
 
         for (parsim, fitness, cooltree) in self.pareto:
-            # self.file_pareto_txt()  # sfeh
 
             histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
 
@@ -804,9 +786,11 @@ class ExplainableGP(object):
     def gp_load_oparray(self, path_operators=None, sfeh_no_crazyops=None):
         """
         Offers the possibility for the user to load a .yaml-file of operators for the gp-process.
-        If no list is loaded, the list below is used.
+        operator_pool is used otherwise.
         The Operator must match its version in the 'op'-Array (alternatively search for op_what)
         The second value in the tuple denotes the probability of choosing an operator
+
+        @:param sfeh_no_crazyops: sfeh's workaround for being too lazy to load a file with the actual operators
         """
 
         try:
@@ -905,7 +889,7 @@ class ExplainableGP(object):
 
     def activate_distributions(self, path_distrib=None):
         """
-
+        Optional custom distributions specified by the user.
         """
         path_distrib = path_distrib or self.root_dir / self.paths.use_distributions_file
 
@@ -1179,7 +1163,9 @@ class ExplainableGP(object):
 
     def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow):
         """
-        Creates a random label list
+        Creates a random label list.
+        "depth": creates a tree with a desired depth
+        "nodes": creates a tree with a desired amount of nodes
         """
         if 'depth' in size_mode:
             # sfeh warning: Attention with this one. can get quite large with depth based
@@ -1316,6 +1302,12 @@ class ExplainableGP(object):
         return left_offspring, right_offspring
 
     def pareto_append(self, tree_entry, msg=None):
+        """
+        Appending a candidate to the paretofront.
+        - append the entry to the paretofront
+        - reset gens_since_last_pareto
+        - try to add the tree in its sympified version
+        """
         if msg:
             self.printpl('a', f"New entry found! ({msg}): {BColors.RESET}{tree_entry[0]}, {tree_entry[1]}:{BColors.RESET} {tree_entry[2].meta.expr_raw}")
         self.pareto.append(tree_entry)
@@ -1346,7 +1338,6 @@ class ExplainableGP(object):
         """
         inserts a tree into the pareto front
         """
-
         # first, make a local pareto front
         self.gens_since_last_pareto += 1
         pop_parsimonies_dict = dict.fromkeys(sorted(set([cooltree.meta.parsimony for cooltree in self.population_tmp])))
@@ -1369,7 +1360,6 @@ class ExplainableGP(object):
         """
         inserts a tree into the pareto front
         """
-
         parsimony = cooltree.meta.parsimony
         fitness_train = cooltree.meta.fitness_train
         tree_entry = [parsimony, fitness_train, cooltree]
@@ -1632,7 +1622,7 @@ class ExplainableGP(object):
 
     def plot_paretofront(self):
         """
-        Plot pareto candidates
+        Write pyplot with pareto candidates
         """
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in self.pareto]
         xx, yy = np.array(tuples).T

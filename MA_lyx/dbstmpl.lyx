@@ -1627,7 +1627,7 @@ Let's consider, for example, the game Puzzle as an NP-hard problem, where
 An artificial neural network has to do without all these properties as far
  as possible.
  Through an adapted network architecture and the enormous computing power,
- a specialist idiot can nevertheless be trained to master the given task.
+ a specialist savant can nevertheless be trained to master the given task.
  In contrast to humans, a neural network is dependent on random exploration,
  which can find bias-free policies, but represents a tradeoff to the familiar
  learning process of humans.
@@ -4924,7 +4924,7 @@ To obtain the most useful set of constants possible, these are chosen at
 \begin_inset Formula $X\sim\mathcal{N}(x,0.1)$
 \end_inset
 
-xx)
+)
 \end_layout
 
 \end_inset
@@ -5061,7 +5061,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xx sympy reduction
+Durch die Vereinfachung der Formel mit Sympy wird dasselbe Ergebnis erreicht.
+ xx
 \end_layout
 
 \end_inset
@@ -6135,7 +6136,11 @@ reference "img:MTC-heuristic-vs-sarsa-reward"
 \end_inset
 
 , but represent a risk.
- Derselbe Ansatz wurde deshalb für 200 Schritte trainiert und analysiert.
+ 
+\end_layout
+
+\begin_layout Standard
+Derselbe Ansatz wurde deshalb für 200 Schritte trainiert und analysiert.
  Uncertainties play a much smaller role and the performance increases accordingl
 y by almost 5 steps to 
 \begin_inset Formula $\approx-98.7$
@@ -9983,26 +9988,6 @@ name "fig:IB_MSE_scratch_graphs"
 
 
 \end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Comment
-status open
-
-\begin_layout Plain Layout
-xx 
-\begin_inset CommandInset include
-LatexCommand input
-filename "../benchmarks/slurm_runs/IB_MSE_scratch/combined_input.tex"
 
 \end_inset
 

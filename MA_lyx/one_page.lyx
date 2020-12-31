@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,9 +7,6 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
-% Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -30,6 +27,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -68,6 +67,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -76,7 +76,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -89,7 +92,7357 @@ algorithm2e
 
 \begin_body
 
+\begin_layout Chapter
+Deleted sections
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Boxed
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+Teile, die aus der Arbeit entfernt wurden, die aber eventuell doch nützlich
+ sein könnten.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+todos
+\end_layout
+
+\begin_layout Itemize
+korrekt zitieren
+\end_layout
+
+\begin_layout Itemize
+Definitionsverzeichnis? List of abbreviations?
+\end_layout
+
+\begin_layout Itemize
+Diagramme besser erkennbar machen
+\end_layout
+
+\begin_layout Itemize
+Gefundene GP-Kandidaten gut darstellen aber alle Lösungen des Laufes im
+ Anhang Erwähnen
+\end_layout
+
+\begin_layout Itemize
+Pseudocode erneuern
+\end_layout
+
+\begin_layout Itemize
+Danksagung
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+,samenode
+\begin_inset Quotes erd
+\end_inset
+
+ option bei Bäumen
+\end_layout
+
+\begin_layout Itemize
+origin als Wort?
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Großer Dank richtet sich vor allem an meine Betreuer bei Siemens, Michel
+ Tokic, Steffen Udluft und Daniel Hein, ohne deren großartige Unterstützung
+ über den gesamten Zeitraum diese Arbeit nicht möglich gewesen wäre.
+ Auch möchte ich [xx Danksagung Volkmar Sterzing] Weiterer Dank gehört auch
+ Andreas Lammers, der mir viele Denkanstöße zu dieser Arbeit geben konnte.
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+abbreviations:
+\end_layout
+
+\begin_layout Plain Layout
+AI Artificial Intelligence
+\end_layout
+
+\begin_layout Plain Layout
+ML Machine Learning
+\end_layout
+
+\begin_layout Plain Layout
+RL Reinforcement Learning
+\end_layout
+
+\begin_layout Plain Layout
+GP Genetic Programming
+\end_layout
+
+\begin_layout Plain Layout
+NN Neural Network
+\end_layout
+
+\begin_layout Plain Layout
+TED Tree Edit Distance
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Motivation Beispiel: Tesla Autopilot
+\end_layout
+
+\begin_layout Quote
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top" width="2.5cm">
+<column alignment="center" valignment="top" width="10.5cm">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+Why did the autopilot crash the car?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mathematical
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Viewing the equation system of the black box
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+If the blackbox could speak
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+Through my visual analyser, I perceived a group of connected points that
+ formed a square.
+ Because under the rectangle the street continues and there was a writing
+ on it, I was 99.7% sure that it was a traffic sign.
+ A traffic sign is a solid object that is found at many roads, especially
+ highways, ...
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+The developer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+It thought the truck was a traffic sign
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Debugging
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+The model has learned that traffic signs are always safe to drive under.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+In 2018, the car autopilot of a Tesla caused a fatal accident because it
+ mistook a truck standing crossways for a road sign.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Tesla_Autopilot_crash_article"
+literal "true"
+
+\end_inset
+
+ Although the autopilot causes fewer accidents than humans, such a wrong
+ decision must be explained in court, and probably also be liable.
+ Attempts to explain this in court might occur some problems with their
+ state of explainability.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Explainability basiert auf einem Vorwissen
+\end_layout
+
+\begin_layout Paragraph
+Puzzle example
+\end_layout
+
+\begin_layout Standard
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ Most people know how to recognize colors, that you first have to turn puzzle
+ pieces to the colored side and that you should use the picture on the box
+ as a reference point.
+ A popular tip for beginners is therefore that you should start with the
+ edge of the puzzle.
+ This is helpful, because the learning process in humans usually consists
+ of the composition of many comprehensibly strung together steps.
+\end_layout
+
+\begin_layout Section
+Mountain car
+\end_layout
+
 \begin_layout Subsection
+simplePlus
+\end_layout
+
+\begin_layout Standard
+(Keine weitreichenden Erkenntnisse in diesem Lauf, Aktion 0 wurde nicht
+ wirklich genutzt)
+\end_layout
+
+\begin_layout Subsection
+simple 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Pareto front of the simplest expert policy.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As can be seen especially with the more complex solutions, the TED loses
+ its effect after a certain size.
+ Not pushing is often selected, especially in marginal areas.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/4.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_04.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Instead of changing the if-condition the dummy value for action 0 is recalculate
+d, but the basic structure is still recognisable.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/7.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset CommandInset include
+LatexCommand input
+preview true
+filename "../benchmarks/slurm_runs/MTC200_MSE_simple/visualisation/full_07.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Starting from 7 changes (starting from the first possibility) the if structure
+ of the expert is already completely dissolved and does not occur also in
+ more complex trees.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Simple with fixed if-condition
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_simpleFix/visualisation/full_00.tex"
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The improvement of the Pareto candidates is comparatively safe if only the
+ if statement can be changed.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The beginning is the same as in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "run:MTC200_MSE_simple"
+
+\end_inset
+
+.
+ Thanks to the fixed core structure, however, the changes are limited to
+ the if condition, so action 0 cannot be selected.
+ With a regression error of only 0.05 this is even lower than the scratch
+ version.
+ This is no exception to the assumption - on average, the regression error
+ was half as large as in the scratch runs.
+ This behavior can already be explained by the structured default of the
+ expert.
+ 
+\end_layout
+
+\begin_layout Subsection
+simplePlus
+\end_layout
+
+\begin_layout Standard
+(Keine weitreichenden Erkenntnisse in diesem Lauf, Aktion 0 wurde nicht
+ wirklich genutzt)
+\end_layout
+
+\begin_layout Subsection
+Close-form preset policy, parabolic lower and upper bound (Xiao)
+\end_layout
+
+\begin_layout Standard
+Die folgende policy wurde ebenfalls von xiao als Lösung für das Mountaincar-prob
+lem eingereicht und stellt eine close-form preset policy mit parabelförmiger
+ Ober- und Untergrenze dar.
+\end_layout
+
+\begin_layout Itemize
+ted robustness
+\end_layout
+
+\begin_layout Itemize
+Keine Verschlechterungen, sehr sicher
+\end_layout
+
+\begin_layout Itemize
+Besser als Sarsa200 Ziellösung
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The Pareto candidates all perform better.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Fixe Knoten
+\end_layout
+
+\begin_layout Itemize
+War in diesem Lauf nicht nötig, die Grundstruktur ist erhalten geblieben.
+\end_layout
+
+\begin_layout Section
+Regression error
+\end_layout
+
+\begin_layout Subsubsection
+Penalize bounded 
+\begin_inset Quotes eld
+\end_inset
+
+Upper and lower bound
+\begin_inset Quotes erd
+\end_inset
+
+ (moderate phenotype extreme cases)
+\end_layout
+
+\begin_layout Standard
+The intuition in this allocation is that values greater or smaller than
+ the bounded extreme values are to be seen as an extremely strong tendency
+ towards a particular decision.
+ Results 20 or 1.6 would both be assigned to Action 2, but 20 would have
+ the far stronger tendency.
+ If a wrong decision is made, for example 0.4 and -20, it will not be scored
+ either.
+ The aim is to find a mathematical formula that produces moderate results
+ and does not produce overfitted extreme values even in special cases.
+ If the action area has a minimum and maximum value, the intuition considering
+ results outside the action area are interpreted as belonging strongly to
+ the limit value.
+ 
+\end_layout
+
+\begin_layout Standard
+A disadvantage of the automatic limitation is that extremely high values
+ in genotype and phenotype can occur.
+ The explicit restriction is nevertheless important, because otherwise a
+ central aspect of the GP process is used to implicitly implement this barrier
+ in each candidate.
+ This is expressed for example in candidates with five-digit exponents,
+ whose values are not comprehensible for humans and also stand for classical
+ overfitting.
+ The risk of making gross mistakes in unknown observations is very high.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+d_{bounded}\begin{cases}
+0 & d(\min(\max(x_{ik},a_{\min}),a_{\max}),x_{jk})=0\\
+\min(d,\text{penalty}) & \text{otherwise}
+\end{cases}
+\]
+
+\end_inset
+
+Here, a second measure, which aims to produce moderate values, was mixed
+ with the main measure, which should indicate the distance to the target
+ solution.
+ The second measure automatically becomes the KO criterion for candidates,
+ single wrong points distort the regression error beyond recognition.
+ This slowed down the training process extremely, furthermore, the most
+ effective solution was not a formula that only generates moderate values,
+ but the use of the min and max function.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename tikz/regression_cost/13_bounded_penalized.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Leaving the interval is punished with a very low tanh function.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A conceivable solution would be to use a constantly increasing weighting
+ function, such as tanh or log, as a distance to the edge area, to greatly
+ reduce the influence of the values.
+ However, it must be meticulously observed that the distance function is
+ misused by a too large second factor, which would lead to a complete misinterpr
+etation of candidates.
+ If the proportion of candidates who could overcome this artificially generated
+ second factor is not large enough, the genetic selection process is obsolete.
+ The proportion of this punishment to the final value becomes an error factor
+ within the regression, which is already a surrogate model.
+\end_layout
+
+\begin_layout Section
+MC 
+\end_layout
+
+\begin_layout Subsection
+MTC200_MSE_scratch
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{Scratch GP candidates in comparisson.
+ check formulas!} 
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+{} & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+endhead 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.98 & -200.0 & $0.760$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.77 & -200.0 & $
+\backslash
+text{sign}(
+\backslash
+text{vel})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.38 & -119.4 & $
+\backslash
+text{vel}^{-5.0}$
+\backslash
+tabularnewline 4 & 0.38 & -115.8 & ${1.181+{ 
+\backslash
+text{sign}(
+\backslash
+text{vel})}}$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.34 & -137.3 & $-
+\backslash
+text{pos}+{174 
+\backslash
+cdot 
+\backslash
+text{vel}}$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.33 & -133.5 & $|
+\backslash
+text{pos}|+174 
+\backslash
+cdot 
+\backslash
+text{vel}$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+7 & 0.27 & -127.0 & $0.564^{
+\backslash
+text{pos}}+99.32 
+\backslash
+cdot 
+\backslash
+text{vel}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+8 & 0.21 & -140.5 & $
+\backslash
+text{pos} 
+\backslash
+cdot 1.779^{2}+174 
+\backslash
+cdot 
+\backslash
+text{vel}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+10 & 0.16 & -111.0 & $-2.3 
+\backslash
+cdot 
+\backslash
+sin(
+\backslash
+frac{1.244}{
+\backslash
+text{pos}})+174 
+\backslash
+cdot 
+\backslash
+text{vel$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+13 & 0.14 & -114.1 & $2.832 
+\backslash
+cdot -
+\backslash
+sin(
+\backslash
+frac{1.332}{
+\backslash
+text{pos}})^{1.45}+174 
+\backslash
+cdot 
+\backslash
+text{vel}$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+16 & 0.14 & -114.1 & $-3.16 
+\backslash
+cdot 
+\backslash
+sin(174)^{1.836^{-1.317 
+\backslash
+cdot 
+\backslash
+text{pos}}} 
+\backslash
+cdot 
+\backslash
+text{pos}+174 
+\backslash
+cdot 
+\backslash
+text{vel}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+18 & 0.12 & -103.2 & $5501 
+\backslash
+cdot -0.01 
+\backslash
+cdot 0.039^{-0.324+
+\backslash
+text{pos}^{2}}+
+\backslash
+text{vel}+2.88 
+\backslash
+cdot 
+\backslash
+text{pos}^{2^{2}}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+%20 & 0.10 & -101.2 & $5501 
+\backslash
+cdot -0.016 
+\backslash
+cdot 0.023^{
+\backslash
+text{pos}}+(2.46 
+\backslash
+cdot 
+\backslash
+text{pos})^{2}+
+\backslash
+text{vel}}}+2.87 
+\backslash
+cdot 
+\backslash
+text{pos}^{2^{2}}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+%23 & 0.09 & -98.8 & $5501 
+\backslash
+cdot -0.016 
+\backslash
+cdot 0.041^{
+\backslash
+text{pos}}+(2.75 
+\backslash
+cdot 
+\backslash
+text{pos})^{2^{2}}+
+\backslash
+text{vel}+2.87 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{pos}, -0.467)^{2^{2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+25 & 0.09 & -98.8 & $
+\backslash
+ensuremath{5501
+\backslash
+cdot
+\backslash
+text{vel}+68
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{pos},-
+\backslash
+text{pos}-0.789)^{4}+-91
+\backslash
+cdot0.041^{(
+\backslash
+text{pos}+(2.75
+\backslash
+cdot
+\backslash
+text{pos})^{2})^{2}}}$
+\backslash
+tabularnewline 
+\backslash
+hline
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{longtable}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+MTC200_MSE_simple
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{MTC200 MSE scratch candidates in comparisson.
+ xxx longtable} 
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+{} & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+endhead 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+0 & 0.38 & -119.4 & $
+\backslash
+text{ if }(
+\backslash
+text{vel}<0)
+\backslash
+text{ then }(0)
+\backslash
+text{ else }(2)$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.38 & -123.4 & $
+\backslash
+text{ if }(
+\backslash
+text{vel}<-0.001)
+\backslash
+text{ then }(0)
+\backslash
+text{ else }(2)$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.31 & -117.8 & $
+\backslash
+text{ if }(
+\backslash
+text{vel}<0)
+\backslash
+text{ then }(
+\backslash
+frac{
+\backslash
+text{pos}}{-1.83})
+\backslash
+text{ else }(2.19)$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+7 & 0.27 & -133.4 & $152 
+\backslash
+cdot 
+\backslash
+text{vel}-2.7 
+\backslash
+cdot
+\backslash
+text{pos}$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+8 & 0.21 & -142.8 & $152 
+\backslash
+cdot 
+\backslash
+text{vel}+2.7 
+\backslash
+cdot
+\backslash
+text{pos}^{2}$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+10 & 0.19 & -143.0 & $152 
+\backslash
+cdot 
+\backslash
+text{vel}+|-4 
+\backslash
+cdot
+\backslash
+text{pos}-1.23|$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+13 & 0.16 & -141.7 & $|5.8 
+\backslash
+cdot 
+\backslash
+text{pos}+1.85| +113 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},2
+\backslash
+cdot
+\backslash
+text{vel})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+14 & 0.15 & -115.4 & $|8.1 
+\backslash
+cdot 
+\backslash
+text{pos}+2.68| +113 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},3.1
+\backslash
+cdot
+\backslash
+text{vel})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+17 & 0.14 & -120.7 & $|7.3 
+\backslash
+cdot 
+\backslash
+text{pos}+2.16| +111 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},3.1
+\backslash
+cdot
+\backslash
+text{vel})-
+\backslash
+text{pos}-0.77$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+19 & 0.12 & -105.1 & $|8.4 
+\backslash
+cdot 
+\backslash
+text{pos}+2.475|-3.82
+\backslash
+cdot
+\backslash
+text{pos} +113 
+\backslash
+cdot
+\backslash
+min(
+\backslash
+text{vel},5.3
+\backslash
+cdot
+\backslash
+text{vel})-2$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+20 & 0.12 & -103.3 & $|8.5 
+\backslash
+cdot 
+\backslash
+text{pos}+2.607| + -4.3 
+\backslash
+cdot 
+\backslash
+text{pos}+ 113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel}, 5.6 
+\backslash
+cdot 
+\backslash
+text{vel})-2.19$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+23 & 0.09 & -105.8 & $|8.6 
+\backslash
+cdot 
+\backslash
+text{pos} + 2.7| -3.86 
+\backslash
+cdot 
+\backslash
+text{pos}-1.95$ 
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++112  
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},4.9 
+\backslash
+cdot 
+\backslash
+text{vel} 
+\backslash
+cdot 0.32-
+\backslash
+text{pos})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+25 & 0.09 & -108.4 & $|8.3
+\backslash
+cdot
+\backslash
+text{pos}+2.721|-3.85 
+\backslash
+cdot 
+\backslash
+text{pos}-2$
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},5.2 
+\backslash
+cdot 
+\backslash
+text{vel} 
+\backslash
+cdot 0.241-0.767 
+\backslash
+cdot 
+\backslash
+text{pos})$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+27 & 0.08 & -105.2 & $|8.3 
+\backslash
+cdot
+\backslash
+text{pos}+2.48|-3.82 
+\backslash
+cdot 
+\backslash
+text{pos}-2$
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},5.18 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},
+\backslash
+text{vel}
+\backslash
+cdot0.2 - 0.64 
+\backslash
+cdot
+\backslash
+text{pos}))$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+31 & 0.08 & -104.2 & $|8.3 
+\backslash
+cdot 
+\backslash
+text{pos}+2.48| + -3.8 
+\backslash
+cdot 
+\backslash
+text{pos}$ 
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+min(
+\backslash
+text{vel}, 5.3 
+\backslash
+cdot 
+\backslash
+text{vel}),5.18 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},
+\backslash
+text{vel} 
+\backslash
+cdot 0.2 - 0.64 
+\backslash
+cdot 
+\backslash
+text{pos}))-2$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+32 & 0.07 & -107.1 & $|8.2 
+\backslash
+cdot 
+\backslash
+text{pos}+
+\backslash
+text{pos}^{17}+2.56| + -3.8 
+\backslash
+cdot 
+\backslash
+text{pos}$ 
+\backslash
+
+\backslash
+$
+\end_layout
+
+\begin_layout Plain Layout
+
++ 113 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},5.18 
+\backslash
+cdot 
+\backslash
+min(
+\backslash
+text{vel},
+\backslash
+text{vel}
+\backslash
+cdot 0.2 - 0.64 
+\backslash
+cdot 
+\backslash
+text{pos}))-2$ 
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+MTC200_MSE_simpleFix
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{MTC200 MSE simpleFix candidates in comparisson.
+ xxx longtable} 
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+{} & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+endhead 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+0 & 0.20 & -119.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.20 & -123.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<-0.001}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.19 & -116.5 & ${
+\backslash
+text{ if } ({{ 
+\backslash
+text{sign}(
+\backslash
+text{vel})}<
+\backslash
+text{pos}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.18 & -133.0 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<0.007 
+\backslash
+cdot 
+\backslash
+text{pos}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.16 & -121.6 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.010 
+\backslash
+cdot {
+\backslash
+text{pos}^2}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.14 & -117.1 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.012 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}^2}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.12 & -106.4 & ${
+\backslash
+text{ if } ({
+\backslash
+text{vel}<{-0.014 
+\backslash
+cdot {{
+\backslash
+text{pos}^2}-0.243}}}) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2}$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+11 & 0.09 & -100.6 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < 
+\backslash
+text{ if } (
+\backslash
+text{vel}<-0.008) 
+\backslash
+text{ then } 0 
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.047))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+14 & 0.08 & -100.0 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < 
+\backslash
+text{ if } (
+\backslash
+text{vel}< -0.01 
+\backslash
+cdot -
+\backslash
+text{pos}^2$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ then } 0 
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.05)))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+15 & 0.07 & -99.7 & $
+\backslash
+text{ if } (
+\backslash
+text{vel} < $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ if } (
+\backslash
+text{vel}<-0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ else } (
+\backslash
+text{pos} 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.05)) $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+17 & 0.06 & -100.0 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ if } (
+\backslash
+text{vel} < -0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2) $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ then } 0 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ else } (
+\backslash
+text{pos} - 0.73 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.03))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+20 & 0.05 & -98.3 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<
+\backslash
+text{ if } (
+\backslash
+text{vel} < 0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{2mm} $
+\backslash
+text{ then } (1.03) 
+\backslash
+text{ else } (
+\backslash
+text{pos}-0.73 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2-0.03))$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+22 & 0.05 & -98.5 & $
+\backslash
+text{ if } (
+\backslash
+text{vel}<
+\backslash
+text{ if } ((
+\backslash
+text{vel} 
+\backslash
+leq 0.012 
+\backslash
+cdot {
+\backslash
+text{pos}^2}^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ then } 0.17 $
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+hspace{4mm} $
+\backslash
+text{ else } 0.03 - (0.94 
+\backslash
+cdot (
+\backslash
+text{pos}-0.25)^2-0.25)^2)$
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$
+\backslash
+text{ then } 0 
+\backslash
+text{ else } 2$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+MTC200_MSE_xiao
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{MTC200 MSE yyy candidates in comparisson.
+ xxx longtable} 
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+{} & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+endhead 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+0 & 0.14 & -102.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.3 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.12 & -99.2 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.10 & -99.3 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.09 & -98.9 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.344)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.08 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $-0.085 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.269)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  0$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.07 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.271)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.07 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.085 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+7 & 0.07 & -98.7 & $
+\backslash
+text { if } (
+\backslash
+min(-0.085 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.374)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+8 & 0.06 & -99.1 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land -0.014$
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+9 & 0.06 & -99.1 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land -0.014 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $< 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+10 & 0.06 & -99.1 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land -0.014 $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $< 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.070) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+14 & 0.05 & -99.0 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.25)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+15 & 0.05 & -99.0 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.24 
+\backslash
+cdot (
+\backslash
+text{pos}+0.9)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+16 & 0.05 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.254)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}-0.008 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.283)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+17 & 0.05 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.254)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}-0.008 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot (
+\backslash
+text{pos}+0.372)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+18 & 0.04 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+19 & 0.04 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot (
+\backslash
+text{pos}+0.372)^2 +0.07) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  2 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+21 & 0.04 & -98.6 & $
+\backslash
+text { if } (
+\backslash
+min(-0.09 
+\backslash
+cdot (
+\backslash
+text{pos}+0.253)^2.06 +0.03 ,  0.269 
+\backslash
+cdot (
+\backslash
+text{pos}+
+\backslash
+text{vel} +0.886)^4 -0.008)
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 0.006 
+\backslash
+cdot 
+\backslash
+text{pos}- 
+\backslash
+text{vel}  
+\backslash
+cdot -0.561 $
+\backslash
+
+\backslash
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{2mm} $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+land 
+\backslash
+text{vel} 
+\backslash
+leq $
+\backslash
+
+\backslash
+  
+\backslash
+hspace{2mm} $ -0.07 
+\backslash
+cdot  (
+\backslash
+text{pos}+0.38)^2 +0.070) $
+\backslash
+
+\backslash
+ $
+\backslash
+text { then }  (1.991) 
+\backslash
+text { else }  (
+\backslash
+text{pos}+0.271)$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+MTC200_MSE_ifexpert
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{longtable}[c]{>{
+\backslash
+raggedright}p{5mm}>{
+\backslash
+raggedright}p{6mm}>{
+\backslash
+raggedright}p{10mm}>{
+\backslash
+raggedright}p{102mm}} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{MTC200 MSE yyy candidates in comparisson.
+ xxx longtable} 
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+{} & error & reward  & expression 
+\backslash
+tabularnewline 
+\backslash
+endhead 
+\backslash
+hline 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+ 0 & 0.35 & -100.3 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}<-1 
+\backslash
+lor 
+\backslash
+text{pos}<0.1 
+\backslash
+land 
+\backslash
+text{vel}<-0.05 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0.02 
+\backslash
+land
+\backslash
+text{pos}>-0.45
+\backslash
+land 
+\backslash
+text{pos}<-0.05 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2) ) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+1 & 0.22 & -105.0 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}<-1 
+\backslash
+lor 
+\backslash
+text{pos}<0.1 
+\backslash
+land 
+\backslash
+text{vel}<-0.05 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0.02 
+\backslash
+land 
+\backslash
+text{pos}>-0.381 
+\backslash
+land
+\backslash
+text{pos}<-0.05) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2) ) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+2 & 0.19 & -103.6 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}<-0.965 
+\backslash
+lor 
+\backslash
+text{pos}<0.1 
+\backslash
+land 
+\backslash
+text{vel}<-0.05 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0.02 
+\backslash
+land 
+\backslash
+text{pos}>-0.381 
+\backslash
+land 
+\backslash
+text{pos}<-0.05 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+3 & 0.18 & -103.8 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}<-0.965 
+\backslash
+lor 
+\backslash
+text{pos}<0.1 
+\backslash
+land 
+\backslash
+text{vel}<-0.05 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0.016 
+\backslash
+land
+\backslash
+text{pos}>-0.381
+\backslash
+land 
+\backslash
+text{pos}<-0.05 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+4 & 0.15 & -103.5 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}<-1 
+\backslash
+lor 
+\backslash
+text{pos}<-0.909 
+\backslash
+land -
+\backslash
+text{vel}<0.013 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } (
+\backslash
+text{vel}<0.02
+\backslash
+land(
+\backslash
+text{pos}>-0.381
+\backslash
+land 
+\backslash
+text{pos}<-0.05 )) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+5 & 0.12 & -103.7 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}<-1.046 
+\backslash
+lor 
+\backslash
+text{pos}<-0.909 
+\backslash
+land -
+\backslash
+text{vel}<0.013) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } (
+\backslash
+text{vel}<0.02
+\backslash
+land
+\backslash
+text{pos}>-0.381
+\backslash
+land 
+\backslash
+text{pos}<-0.05) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+6 & 0.12 & -103.9 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}<-1.046 
+\backslash
+lor 
+\backslash
+text{pos}<-0.909 
+\backslash
+land -
+\backslash
+text{vel}<0.013 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } (
+\backslash
+text{vel}<0.016
+\backslash
+land 
+\backslash
+text{pos}>-0.381 
+\backslash
+land 
+\backslash
+text{pos}<-0.05) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+7 & 0.12 & -103.8 & $
+\backslash
+text{ if } ( 
+\backslash
+text{pos}-10.031 
+\backslash
+cdot 
+\backslash
+text{vel}<-0.821 
+\backslash
+lor  
+\backslash
+text{pos}<0.1 
+\backslash
+land 
+\backslash
+text{vel}<-0.05  ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } (
+\backslash
+text{vel}<0.016
+\backslash
+land 
+\backslash
+text{pos}>-0.381 
+\backslash
+land 
+\backslash
+text{pos}<-0.05  ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2) ) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+9 & 0.10 & -103.6 & $
+\backslash
+text{ if } (
+\backslash
+text{pos}<
+\backslash
+text{pos}
+\backslash
+lor 
+\backslash
+text{pos}-9.973 
+\backslash
+cdot 
+\backslash
+text{vel}<-0.821 
+\backslash
+land -
+\backslash
+text{vel}<0.015 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } (
+\backslash
+text{vel}<0.02
+\backslash
+land 
+\backslash
+text{pos}>-0.381 
+\backslash
+land 
+\backslash
+text{pos}<-0.05 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+10 & 0.10 & -104.1 & $
+\backslash
+text{ if } (
+\backslash
+text{pos}<
+\backslash
+text{pos}
+\backslash
+lor 
+\backslash
+text{pos}-10.136 
+\backslash
+cdot 
+\backslash
+text{vel}<-0.827 
+\backslash
+land -
+\backslash
+text{vel}<0.015 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } (
+\backslash
+text{vel}<0.016
+\backslash
+land 
+\backslash
+text{pos}>-0.381 
+\backslash
+land 
+\backslash
+text{pos}<-0.05 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (
+\backslash
+text{ if } (
+\backslash
+text{vel}<0) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2)) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+13 & 0.09 & -103.8 & $
+\backslash
+text{ if } (
+\backslash
+text{pos}<-0.351
+\backslash
+land 0.013<
+\backslash
+text{vel}
+\backslash
+lor  
+\backslash
+text{pos}- 10.11 
+\backslash
+cdot 
+\backslash
+text{vel}  <-0.82
+\backslash
+land -
+\backslash
+text{vel}<0.015  ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0.02 
+\backslash
+land  
+\backslash
+text{pos}>-0.381 
+\backslash
+land 
+\backslash
+text{pos}<-0.05  ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2) ) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+18 & 0.08 & -98.4 & $
+\backslash
+text{ if } (
+\backslash
+text{pos}<
+\backslash
+text{pos}
+\backslash
+lor  
+\backslash
+text{pos}-10.031 
+\backslash
+cdot 
+\backslash
+text{vel}<-0.821 
+\backslash
+land -
+\backslash
+text{vel}<0.015  ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } (
+\backslash
+text{vel}<0.02
+\backslash
+land  
+\backslash
+text{ if } ( 
+\backslash
+text{pos}>-0.354 ) 
+\backslash
+text{ then } (
+\backslash
+text{pos}) 
+\backslash
+text{ else } (
+\backslash
+text{pos}- 9.866 
+\backslash
+cdot 
+\backslash
+text{vel} )>-0.473 
+\backslash
+land 
+\backslash
+text{pos}<-0.05  ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2) ) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+22 & 0.07 & -98.2 & $
+\backslash
+text{ if } (
+\backslash
+text{pos}<-0.351
+\backslash
+land 0.013<
+\backslash
+text{vel}
+\backslash
+lor 
+\backslash
+text{pos}- 10.435 
+\backslash
+cdot 
+\backslash
+text{vel} <-0.821 
+\backslash
+land -
+\backslash
+text{vel}<0.015 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0.02
+\backslash
+land 
+\backslash
+text{ if } (
+\backslash
+text{pos}>-0.381) 
+\backslash
+text{ then } (
+\backslash
+text{pos}) 
+\backslash
+text{ else } (
+\backslash
+text{pos}- 9.941 
+\backslash
+cdot 
+\backslash
+text{vel} )>-0.468 
+\backslash
+land 
+\backslash
+text{pos}<-0.05 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2) ) )$
+\backslash
+tabularnewline
+\end_layout
+
+\begin_layout Plain Layout
+
+23 & 0.07 & -98.2 & $
+\backslash
+text{ if } (
+\backslash
+text{pos}<-0.351
+\backslash
+land 0.013<
+\backslash
+text{vel}
+\backslash
+lor 
+\backslash
+text{pos}- 10.031 
+\backslash
+cdot 
+\backslash
+text{vel} <-0.821 
+\backslash
+land -
+\backslash
+text{vel}<0.015 ) 
+\backslash
+text{ then } (2) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0.02
+\backslash
+land 
+\backslash
+text{ if } (
+\backslash
+text{pos}>-0.381) 
+\backslash
+text{ then } (
+\backslash
+text{pos}) 
+\backslash
+text{ else } (
+\backslash
+text{ if } (-
+\backslash
+text{vel}<-0.004) 
+\backslash
+text{ then } (-1.042) 
+\backslash
+text{ else } (
+\backslash
+text{pos}))>-0.468 
+\backslash
+land 
+\backslash
+text{pos}<-0.05  ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } ( 
+\backslash
+text{ if } ( 
+\backslash
+text{vel}<0 ) 
+\backslash
+text{ then } (0) 
+\backslash
+text{ else } (2) ) )$
+\backslash
+tabularnewline 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+hline 
+\backslash
+end{longtable}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Industrial Benchmark
+\end_layout
+
+\begin_layout Subsection
+IB_MSE_mean
+\end_layout
+
+\begin_layout Standard
+Expetrenpolicy: Stellt immer auf die mittleren Werte (v, g, h) aus Daniels
+ Datensatz ein.
+\end_layout
+
+\begin_layout Itemize
+Die Startpolicy ist schon unverschämt gut.
+ 
+\end_layout
+
+\begin_layout Itemize
+Der Regressionsfehler bei der Expertenpolicy ist schon so groß, dass ein
+ Lauf nicht erfolgsversprechend ist.
+ (Summe der MSE ca.
+ 6.5)
+\end_layout
+
+\begin_layout Itemize
+Kandidat 40: MSE 1.994, Fitness 6697
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_mean/pareto_combined.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_mean/regression_all.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+yyy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/IB_MSE_mean/combined_input.tex"
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+yyy this input is far too long
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The simplest yet successful heuristic "Nothing" is simply nothing to change,
+ resulting in an average reward of 6068.
+ After the normalization of the values this led to the following origin
+ trees.
+\end_layout
+
+\begin_layout Subsection
+IB_MSE_50
+\end_layout
+
+\begin_layout Standard
+Ähnlich wie bei IB_MSE_mean, aber statt auf den Durchschnittswert wird auf
+ den Wert 50 eingestellt.
+\end_layout
+
+\begin_layout Itemize
+Bessere Resultate als average
+\end_layout
+
+\begin_layout Itemize
+startfehler 6.566
+\end_layout
+
+\begin_layout Itemize
+40: 1.995, -6060
+\end_layout
+
+\begin_layout Itemize
+9: -5933
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_50/pareto_combined.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_50/regression_all.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+yyy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/IB_MSE_50/combined_input.tex"
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+yyy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Scratch GP Results (MSE 200)
+\end_layout
+
+\begin_layout Standard
+The regular GP runs could completely solve the problem from complexity 18,
+ where both the regression error and the average reward were exceptionally
+ good.
+ Very different results are noticeable in the medium-complex candidates.
+ 
+\end_layout
+
+\begin_layout Standard
+The formulas are hardly comprehensible.
+ Instead of a distinction between Action 0 and Action 1, a mathematical
+ formula is found.
+ Potentizing was often done with very high values, often with very high
+ values, which was not significant in any humanly considered approach.
+ The simplest agents unfortunately show a poor performance in the real evaluatio
+n which could not exceed the maximum-momentum solution.
+ 
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/evaled_overview.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Pareto candidates in a regular run with MSE.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/analysis_input.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+MTC200_MSE_scratch candidates in comparisson.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "40col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-3.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "45col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$x^y$}[{vel}][{$-5.0$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The agent is reached with maximum acceleration by a shorter printout.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/8.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-8.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_08.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+At 8 nodes the regression error drops to 0.21, but fitness deteriorates to
+ 140.5 steps.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/10.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_10.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+This agent uses a sine operator, which leads to strong fluctuations.
+ Two runs have to turn back shortly before the finish.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/25.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset CommandInset include
+LatexCommand input
+filename "../benchmarks/slurm_runs/MTC200_MSE_scratch/visualisation/full_25.tex"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The best agent has a very low regression error of only 0.09 and a fitness
+ of 98.8, which almost completely achieves the Sarsa-200 policy.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Bullet-points die sinnvoll sein könnten
+\end_layout
+
+\begin_layout Itemize
+Sprache (Kommunikationsprotokoll)
+\begin_inset Newline newline
+\end_inset
+
+Für den Menschen ist sie vor allem beim aktiven erlernen einer Fähigkeit
+ Die Kunst der Erklärbarkeit ist dabei, diese Logik in einer Sprache (Kommunikat
+ionsprotokoll) zu formulieren, als auch sie möglich so weit.
+\end_layout
+
+\begin_layout Itemize
+Menschliche Erklärungen zu Verhalten vertreten unter anderem folgende Ansätze:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Bei noch nicht gefundener Logik: Verweis auf Erfahrungen, die zu einem Verhalten
+ geführt haben.
+ Hier wird eine Fehlende Logik mit gründlicher Epistemie ersetzt
+\end_layout
+
+\begin_layout Itemize
+Eine gute Erklärung reduziert die Logik deshalb nicht nur quantitativ auf
+ die Zahl der nötigen Aussagenteile oder qualitativ auf die Bewertung allgemeine
+r komplexitätsregeln sondern vermittelt die Informationen, die der Schüler
+ braucht, um Erkenntnis zu erlangen.
+\end_layout
+
+\begin_layout Itemize
+Etwas zu Erklären zu können ist somit die Fähigkeit, Informationen verständlich
+ zu kommunizieren.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+In den letzten Jahren entstanden somit viele Architektur des Modells enteprechen
+d der Problematik auswählt.
+ Artificial image recognition is a domain that is relatively easy to solve
+ for humans, but requires assistance for ML approaches such as the implementatio
+n of filters to recognize key features such as edges or corners.
+ 
+\end_layout
+
+\begin_layout Itemize
+Der Entwickler übernimmt dabei bereits eine wichtige Aufgabe um eine intelligent
+e Lösung zu erzeugen, indem er die Architektur des Lernprozesses vorgibt.
+ Das Trainieren eines Neuronetzes ist sehr aufwändig und kann, je nach Problemar
+t, mit speziellen Netzarchitekturen angepasst werden.
+ Diese Aufgabe obliegt aktuell immernoch dem Entwickler - die Struktur des
+ Netzes zu analysieren wäre somit ein Zirkelschluss zur Abstraktionsleistung
+ des Entwicklers und macht keinen Sinn 
+\end_layout
+
+\begin_layout Itemize
+[Wiki] In reinforcement learning (RL), a model-free algorithm (as opposed
+ to a model-based one) is an algorithm which does not use the transition
+ probability distribution (and the reward function) associated with the
+ Markov decision process (MDP) [1], which, in RL, represents the problem
+ to be solved.
+ The transition probability distribution (or transition model) and the reward
+ function are often collectively called the "model"
+\end_layout
+
+\begin_layout Itemize
+Differential Learning
+\begin_inset Newline newline
+\end_inset
+
+Differentielles Lernen ist ein Konzept aus der Sportwissenschaft, wo der
+ Trainingsprozess statt wiederholung eines Ansatzes auf die Anwendung mehrerer
+ Trainingsansätze baut.
+ Obwohl beim ML das Wiederholen eines Trainingsansatzes weitaus weniger
+ limitiert ist kann dennoch eine Wechselwirkung zwischen den drei Lernansätzen
+ (NN, Menschlicher Code und GP) gefunden werden.
+ Der menschliche Code stellt als Erzeugnis eines kreativen Entwicklungsprozesses
+ eine intuitive, erklärbare Lösung dar.
+ Sowohl NN als auch die GP produzieren hingegen policies, die frei von menschlic
+hem bias sind und oft Aspekte behandeln, an die der Mensch nicht denkt.
+ [xx]
+\end_layout
+
+\begin_layout Itemize
+Eher unwichtig
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Ein besonders interessanter Bereich um erlernte Strategien zu überprüfen
+ ist die Bilderkennung.
+ Mustererkennung ist eine beim Menschen unglaublich stark ausgeprägte Fähigkeit,
+ die Computern große Schwierigkeiten macht.
+\end_layout
+
+\begin_layout Itemize
+Errors can be the result of accidental exploration as well as of under-
+ or overfitting.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Tabular
+<lyxtabular version="3" rows="20" columns="3">
+<features islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top" width="4.5cm">
+<column alignment="center" valignment="top" width="4.5cm">
+<column alignment="center" valignment="top" width="4.5cm">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Human
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Neural network
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Neurons
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+~90.000.000.000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+~20000
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Minimum training episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+>10.000
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Initial strategy
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+good already
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+random
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10 episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+better
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bad
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+100 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+signs of frustration
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+okay
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1000 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+turns crazy
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+good
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10000 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+dead
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+outperforms humans
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+100.000 Episodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+dead
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+overfitting
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Preparatory work
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Recognizing shapes, colors and object structure
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Filter Operators
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Training method for
+\end_layout
+
+\begin_layout Plain Layout
+animal recognition
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+interaction with the real world, multidimensional learning experience
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data set from labelled pixel data
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Likes learning
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+No
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Does not care
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Prior knowledge
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+lots
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+None
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Exploration strategy
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+only if required, primeval fears, based on life experience
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+variations of randomness
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Worst consequences of a wrong decision
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Death and burn in hell
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Respawn at start, weight update
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Knowledge transfer protocol to human
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Language, teaching methods, problem-based
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+XAI
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Knowledge transfer to Computer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+programming
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+copy-paste
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+External adjustments
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+easy
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+requires a new training process, but unsecure anyways
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Specialised in
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Pattern matching, Identifying risks
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+complex mathematical formulas
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Humans and machines both use neural networks to create strategies, but they
+ usually differ significantly.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Artificial neural networks are machine learning systems that are strongly
+ oriented towards the biological brain.
+ Zwischen dem Eingabevektor und Ausgabevektor liegen eine beliebige Anzahl
+ An versteckter Schichten.
+ Their task is to divide the problem between the input layer and the output
+ layer and to identify subproblems.
+ The training process will be started with a random parameterization and
+ the decisions will be very bad at the beginning.
+ Der Inputvektor aktiviert das Netz mit den Werten der Beobachtung, welches
+ als Signal durch die versteckten Neuronenschichten bis zur Ausgabeschicht
+ durchgereicht.
+ Die Entscheidung wird dort bewertet.
+ Dieses Feedback wird in einem Backpropagation Schritt an die Neuronen zurückgeg
+eben, die Ihre Gewichtungen, falls nötig, anpassen.
+\end_layout
+
+\begin_layout Itemize
+(Implementierung des Eingabe- und Ausgabevektors, Anzahl der hidden layer,
+ topologie zwischen den Schichten, Aktivierungsfunktionen der Neuronen,
+ Explorationsparameter, etc.).
+ LSTM, Autoencoder, ...
+ Dies ist ähnlich zur Biologie: Will man Drogen aufspüren, so ist es sinnvoll
+ einen Hund dafür zu trainieren und keine Taube.
+ Eine Taube könnte dafür trainiert werden, Nachrichten zu übermitteln -
+ umgekehrt funktioniert es nicht.
+ Hunde, Tauben und neuronale Netze haben auch alle das Problem, dass sie
+ uns nicht erklären können, wie sie ihre Aufgaben so gut zu erledigen.
+ [xx echo state networks]
+\end_layout
+
+\begin_layout Itemize
+Neural networks are generalized, very extensive systems of equations, which
+ can adapt their own parameters in a two-complex training process by means
+ of automated statistical procedures and random exploration.
+ These equations often contain several thousand variables, combined with
+ unintuitive activation functions such as the ReLu function or the sigmoid
+ function, which is why they are not interpretable by humans.
+ Die Funktion einzelner Neuronen oder die Bedeutung der Architektur ist
+ nicht ohne weiteres erkennbar.
+ Die Architektur muss vom Menschen vorgegeben werden und die Entscheidungsfindun
+g muss als Blackbox betrachtet werden.
+\end_layout
+
+\begin_layout Itemize
+Minimize the permutations of the states.
+ For example, if you throw two six-sided dice, there are 
+\begin_inset Formula $6\cdot6=36$
+\end_inset
+
+ possible permutations.
+ If the results are considered in isolation, there are 
+\begin_inset Formula $6+6=12$
+\end_inset
+
+ possibilities.
+ Formulas that are found with genetic programming try to find a formula
+ for the whole state space.
+ An abstraction of the problem, e.g.
+ by if statements, makes the formula grow exponentially larger, which is
+ why only rarely if statements are present in formulas found.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="14" columns="13">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa-200
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sarsa-75
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MSE
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MAE
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MSE
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MAE
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MSE-2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MAE-2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MSE-3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MAE-3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+scratch
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Y
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simple
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Y
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simplePlus
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+extra action 1 not used
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simplePlusFix
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+extra action 1 not used
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simpleFix
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fails
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Y
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+xiao
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Y
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+xiaoFix
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+same as non-fix Version
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simonBest
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bad
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+maybe
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+N
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+N
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simonBestFix
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+maybe, seems good
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+nan results
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+N
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+N
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+simonBestFix2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bad, weird
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Y
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bad
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+N
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+N
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
 
 \end_layout
 

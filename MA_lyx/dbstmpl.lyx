@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -13,7 +13,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -35,6 +34,8 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -75,6 +76,7 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -84,7 +86,10 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -270,6 +275,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -313,6 +319,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -337,6 +344,7 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -345,6 +353,7 @@ key "XAI_doshivelez2017rigorous,AIINDEX2019"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -399,178 +408,6 @@ collection of features of interpretable domain that have contributed for
 
 .
  
-\end_layout
-
-\begin_layout Quote
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Tabular
-<lyxtabular version="3" rows="5" columns="2">
-<features islongtable="true" longtabularalignment="center">
-<column alignment="center" valignment="top" width="2.5cm">
-<column alignment="center" valignment="top" width="10.5cm">
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-Why did the autopilot crash the car?
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mathematical
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Viewing the equation system of the black box
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-If the blackbox could speak
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-Through my visual analyser, I perceived a group of connected points that
- formed a square.
- Because under the rectangle the street continues and there was a writing
- on it, I was 99.7% sure that it was a traffic sign.
- A traffic sign is a solid object that is found at many roads, especially
- highways, ...
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-The developer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-It thought the truck was a traffic sign
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Debugging
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-The model has learned that traffic signs are always safe to drive under.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-In 2018, the car autopilot of a Tesla caused a fatal accident because it
- mistook a truck standing crossways for a road sign.
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Tesla_Autopilot_crash_article"
-
-\end_inset
-
- Although the autopilot causes fewer accidents than humans, such a wrong
- decision must be explained in court, and probably also be liable.
- Attempts to explain this in court might occur some problems with their
- state of explainability.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -858,6 +695,7 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -1007,6 +845,7 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -1018,6 +857,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -1043,6 +883,7 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
@@ -1472,6 +1313,7 @@ ng (STGP) immer häufiger genutzt wird.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1498,6 +1340,7 @@ GP offers many expansion possibilities.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -1528,6 +1371,7 @@ GP can also be used to search for interpretable post-hoc formulas that represent
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1591,6 +1435,7 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
@@ -1965,6 +1810,7 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2775,6 +2621,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -3598,6 +3445,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -3641,6 +3489,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -3658,6 +3507,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3889,6 +3739,7 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -4782,7 +4633,7 @@ https://github.com/ducktalez/plagih
 \end_layout
 
 \begin_layout Section
-Allgemeine Eigenschaften
+General properties
 \end_layout
 
 \begin_layout Standard
@@ -4791,6 +4642,7 @@ The evaluation process was inspired by KarooGP, a GP-suite written by Kai
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -4800,27 +4652,25 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
  This eliminates unnecessary mathematical calculations before the evaluation.
  The reduced expression is then used to generate the AST with the python
- compiler, which is recursively converted into a Tensorflow graph (TF).
+ compiler, which is recursively converted into a Tensorflow (TF) graph.
  This enables parallel evaluation on the graphics card for a 2-15x speedup
  
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
 , which by using recursive tree structures could even surpass this extraordinary
  performance.
- 
-\end_layout
-
-\begin_layout Standard
-[xx es gibt keine Statistik über die Laufzeit, allerdings hat sich nach
+ [xx es gibt keine Statistik über die Laufzeit, allerdings hat sich nach
  dem Verwenden rekursiver Strukturen die Laufzeit um mindestens um 50% verbesser
 t]
 \end_layout
@@ -4877,6 +4727,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -4890,7 +4741,7 @@ key "tedAPTED1,tedAPTED2"
 
 \begin_layout Standard
 The evolution of a population of candidates includes all common evolutionary
- methods and is divided by default into 10% reproduction, 65% mutation and
+ methods and is divided by default into 10% reproduction, 55% mutation and
  35% crossover, the more precise distribution can be considered in 
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -5991,28 +5842,28 @@ Comparison & Discussion
 \end_layout
 
 \begin_layout Standard
-In diesem Abschnitt wird eine Vielzahl vertrautheitsbasierte GP Läufe ausgewerte
-t und mit regulären GP Läufen verglichen.
- Die gefundenen Paretokandidaten werden vorrangig auf Vertrautheit und Interpret
-ierbarkeit untersucht.
- Ihre Performance wird sowohl anhand des Regressionsfehlers und der realen
- Fitness verglichen, aber auch auf Implikationen für die Sicherheit untersucht.
+In this section, a large number of familiarity-based GP runs are evaluated
+ and compared with regular GP runs.
+ The Pareto candidates found are primarily examined for familiarity and
+ interpretability.
+ Their performance is compared both in terms of regression error and real
+ fitness, but also examined for implications for security.
  
 \end_layout
 
 \begin_layout Standard
-Since the space of the candidates is artificially changed in trust-based
- GP, it is to be expected that the performance is subject to the classic
- GP.
- xxx vertraute Kandidaten dafür :3
+Since the space of the candidates is artificially changed in familiar GP,
+ it is to be expected that the performance is subject to the classic GP,
+ but the familiar candidates should be more comprehensible, more similar
+ to each other within a run and less volatile in real performance.
 \end_layout
 
 \begin_layout Standard
 All runs were carried out with both MAE and MSE.
  The runs with MSE had in almost all cases the better results in the real
  benchmarks.
- This also allowed them to be better compared with Hein's results xxx wo
- ebenfalls der MSE verwendet wurde.
+ This also allowed them to be better compared with Hein's results, in which
+ the MSE was also used.
 \end_layout
 
 \begin_layout Section
@@ -6040,7 +5891,7 @@ GP-friendly by trying to give the GP process interfaces for Innovations
 \end_layout
 
 \begin_layout Standard
-xxx Wo es sinnvoll erschien wurden usätzlich folgende Optionen getestet:
+xxx An sinnvollen wurden zusätzlich folgende Optionen getestet:
 \end_layout
 
 \begin_layout Itemize
@@ -6113,6 +5964,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6184,6 +6036,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -8259,6 +8112,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11032,6 +10886,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 

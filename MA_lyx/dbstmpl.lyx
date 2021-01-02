@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -13,6 +13,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -34,8 +36,6 @@ algorithm2e
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -76,7 +76,6 @@ algorithm2e
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -86,10 +85,7 @@ algorithm2e
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -275,7 +271,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -319,7 +314,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -344,7 +338,6 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -353,7 +346,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -446,18 +438,6 @@ status open
 
 \end_layout
 
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Patches in implicitly learned neuropolicies.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \end_inset
 
 
@@ -496,18 +476,6 @@ status open
 \begin_inset Graphics
 	filename ../benchmarks/mc/agents/img/decisions-AgentV1p40.pdf
 	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Structure within explicitly formulated heuristics.
-\end_layout
 
 \end_inset
 
@@ -695,7 +663,6 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -845,7 +812,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -857,7 +823,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -883,7 +848,6 @@ These genes can be mutated or crossed between candidates so that the best
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
 
 \end_inset
 
@@ -1313,7 +1277,6 @@ ng (STGP) immer häufiger genutzt wird.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1340,7 +1303,6 @@ GP offers many expansion possibilities.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -1371,7 +1333,6 @@ GP can also be used to search for interpretable post-hoc formulas that represent
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1435,7 +1396,6 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
-literal "true"
 
 \end_inset
 
@@ -1810,7 +1770,6 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2621,7 +2580,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3445,7 +3403,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -3489,7 +3446,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -3507,7 +3463,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3739,7 +3694,6 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -4642,7 +4596,6 @@ The evaluation process was inspired by KarooGP, a GP-suite written by Kai
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -4652,7 +4605,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4664,7 +4616,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -4727,7 +4678,6 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -5852,13 +5802,6 @@ In this section, a large number of familiarity-based GP runs are evaluated
 \end_layout
 
 \begin_layout Standard
-Since the space of the candidates is artificially changed in familiar GP,
- it is to be expected that the performance is subject to the classic GP,
- but the familiar candidates should be more comprehensible, more similar
- to each other within a run and less volatile in real performance.
-\end_layout
-
-\begin_layout Standard
 All runs were carried out with both MAE and MSE.
  The runs with MSE had in almost all cases the better results in the real
  benchmarks.
@@ -5899,10 +5842,9 @@ Select a central structure with fixed nodes
 \end_layout
 
 \begin_layout Itemize
-Forcing acceleration xxx (ignoring the no-push action).
- In the examples where Action 1 (no acceleration) could not be chosen, the
- regression error can at best decrease to 0.023 for Sarsa-200 and to 0.066
- for Sarsa-75.
+Forcing acceleration by ignoring the no-push action 1.
+ The regression error can then at best decrease to 0.023 for Sarsa-200 and
+ to 0.066 for Sarsa-75.
  
 \end_layout
 
@@ -5964,7 +5906,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6036,7 +5977,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -8112,7 +8052,6 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9287,6 +9226,13 @@ The results of the right column with the safer operator set has the better
 
 \begin_layout Subsection
 Mountain car Summmary / Analysis
+\end_layout
+
+\begin_layout Standard
+Since the space of the candidates is artificially changed in familiar GP,
+ it is to be expected that the performance is subject to the classic GP,
+ but the familiar candidates should be more comprehensible, more similar
+ to each other within a run and less volatile in real performance.
 \end_layout
 
 \begin_layout Standard
@@ -10886,7 +10832,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 

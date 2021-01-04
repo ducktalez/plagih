@@ -15,10 +15,6 @@
 % Added by lyx2lyx
 \end_preamble
 \use_default_options true
-\begin_modules
-theorems-ams-bytype
-algorithm2e
-\end_modules
 \maintain_unincluded_children false
 \language english
 \language_package default
@@ -1043,18 +1039,6 @@ Division of operators into their areas of responsibility.
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset CommandInset bibtex
-LatexCommand bibtex
-btprint "btPrintCited"
-bibfiles "dbstmpl"
-options "plain"
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Chapter
 Deleted sections
 \end_layout
@@ -1995,7 +1979,7 @@ cdot 1.779^{2}+174
 \backslash
 cdot 
 \backslash
-text{vel}$
+text{vel}$ 
 \backslash
 tabularnewline
 \end_layout
@@ -2010,11 +1994,11 @@ sin(
 \backslash
 frac{1.244}{
 \backslash
-text{pos})+174 
+text{pos}})+174 
 \backslash
 cdot 
 \backslash
-text{vel$
+text{vel}$ 
 \backslash
 tabularnewline 
 \end_layout
@@ -2056,7 +2040,7 @@ text{pos}+174
 \backslash
 cdot 
 \backslash
-text{vel}$
+text{vel}$ 
 \backslash
 tabularnewline 
 \end_layout
@@ -2075,62 +2059,37 @@ text{vel}+2.88
 \backslash
 cdot 
 \backslash
-text{pos}^{2^{2}}$
+text{pos}^{2^{2}}$ 
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-%20 & 0.10 & -101.2 & $5501 
+20 & 0.10 & -101.2 & $5501 
 \backslash
 cdot -0.016 
 \backslash
 cdot 0.023^{
 \backslash
-text{pos}}+(2.46 
+text{pos}+(2.46 
 \backslash
 cdot 
 \backslash
 text{pos})^{2}+
 \backslash
-text{vel}}}+2.87 
+text{vel}}+2.87 
 \backslash
 cdot 
 \backslash
-text{pos}^{2^{2}}$
+text{pos}^{2^{2}}$ 
 \backslash
 tabularnewline 
 \end_layout
 
 \begin_layout Plain Layout
 
-%23 & 0.09 & -98.8 & $5501 
-\backslash
-cdot -0.016 
-\backslash
-cdot 0.041^{
-\backslash
-text{pos}}+(2.75 
-\backslash
-cdot 
-\backslash
-text{pos})^{2^{2}}+
-\backslash
-text{vel}+2.87 
-\backslash
-cdot 
-\backslash
-min(
-\backslash
-text{pos}, -0.467)^{2^{2}$
-\backslash
-tabularnewline 
-\end_layout
-
-\begin_layout Plain Layout
-
-25 & 0.09 & -98.8 & $
+23 & 0.09 & -98.8 & $
 \backslash
 ensuremath{5501
 \backslash
@@ -2152,16 +2111,16 @@ text{pos}+(2.75
 \backslash
 cdot
 \backslash
-text{pos})^{2})^{2}}}$
+text{pos})^{2})^{2}}}$ 
 \backslash
 tabularnewline 
-\backslash
-hline
 \end_layout
 
 \begin_layout Plain Layout
 
 
+\backslash
+hline 
 \backslash
 end{longtable}
 \end_layout

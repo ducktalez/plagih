@@ -25,8 +25,20 @@
 \RequirePackage{longtable}
 \RequirePackage{import}
 \RequirePackage[utf8]{inputenc}
+\RequirePackage[linesnumbered,ruled,vlined]{algorithm2e}
 
-%\usepackage[ruled,vlined]{algorithm2e}
+\DontPrintSemicolon
+
+% Define pseudocode formatting
+\renewcommand{\KwSty}[1]{\textnormal{\textcolor{blue!90!black}{\ttfamily\bfseries #1}}\unskip}
+\renewcommand{\ArgSty}[1]{\textnormal{\ttfamily #1}\unskip}
+\SetKwComment{Comment}{\color{green!50!black}// }{}
+\renewcommand{\CommentSty}[1]{\textnormal{\ttfamily\color{green!50!black}#1}\unskip}
+\newcommand{\assign}{\leftarrow}
+\newcommand{\var}{\texttt}
+\newcommand{\FuncCall}[2]{\texttt{\bfseries #1(#2)}}
+\SetKwProg{Function}{function}{}{}
+\renewcommand{\ProgSty}[1]{\texttt{\bfseries #1}}
 
 \usetikzlibrary{matrix,chains,positioning,decorations.pathreplacing,arrows}
 
@@ -34,7 +46,15 @@
 %\renewcommand{\labelitemi}{$-$}
 \newcommand{\inlinecode}[2]{\lstinline[language=#1]$#2$}
 
+% Sfehs personal commands
 \newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},  samenode/.style={fill=blue!40,},  newnode/.style={fill=green!60,}, changenode/.style={fill=orange!60,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
+\newcommand{\rsymp}[0]{\xrightarrow{\text{simplify}}}
+
+
+
+
+
+
 
 \newcommand{\declarationhead}{Declaration of Authorship}
 \newcommand{\declaration}{

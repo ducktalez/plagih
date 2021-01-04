@@ -183,6 +183,7 @@ class Notb(Function):
 
 class Square(Function):
     """
+
     """
     nargs = 1
     is_Function = True

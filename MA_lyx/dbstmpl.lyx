@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -15,7 +15,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -33,6 +32,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -73,6 +74,7 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -82,7 +84,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -268,6 +273,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -311,6 +317,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -335,6 +342,7 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -343,6 +351,7 @@ key "XAI_doshivelez2017rigorous,AIINDEX2019"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -407,23 +416,14 @@ status open
 
 \begin_layout Plain Layout
 \align center
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "48col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -436,38 +436,9 @@ status open
 \end_layout
 
 \end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-hfill
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "48col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -480,12 +451,13 @@ status open
 \end_layout
 
 \end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
 
 
-\end_layout
-
-\begin_layout Plain Layout
-xxx table
 \end_layout
 
 \begin_layout Plain Layout
@@ -664,6 +636,7 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -800,7 +773,7 @@ https://lrpserver.hhi.fraunhofer.de/
 \end_layout
 
 \begin_layout Section
-Evolutionary Algorithms and Genetic Programming 
+Genetic Programming 
 \begin_inset CommandInset label
 LatexCommand label
 name "gp_Genetic-Programming"
@@ -825,6 +798,7 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -832,64 +806,74 @@ key "XAI-unified-approach"
 \end_layout
 
 \begin_layout Standard
-Evolutionary algorithms are metaheuristic ML methods that encode solution
- candidates as a set of genes.
- Diese werden als Population über Generationen hinweg durch Selektion und
- zufälliger Mutation und kreuzung der Gene optimiert.
+Eine weit verbreitete ML Methode um explizite Strategien zu suchen sind
+ Evolutionäre Algorithmen.
+ Diese erfordern die Darstellung von Kandidaten als Gensequenz sowie einer
+ Fitnessfunktion anhand der Kandidaten bewertet und selektiert werden können.
+ In der GP werden die Programme als Berechnungsbäume dargestellt..
+\end_layout
+
+\begin_layout Standard
+die von Koza vorgestellte genetische Programmierung (GP).
  
 \end_layout
 
 \begin_layout Standard
-Evolutionary algorithms require two essential components:
-\end_layout
-
-\begin_layout Enumerate
-Representation as genome (composition of genes)
-\begin_inset Newline newline
-\end_inset
-
-Ein Lösungskandidat muss sich als Gensequenz darstellen lassen, die in einem
- Evolutionsprozess mutiert oder mit anderen Kandidaten gekreuzt werden können.
- 
-\end_layout
-
-\begin_layout Enumerate
-Fitness function
-\begin_inset Newline newline
-\end_inset
-
-Candidates are assessed on the basis of their fitness, for which they are
- evaluated.
- 
+Eine Population von Programmen wird über Generationen hinweg durch Selektion
+ der fittesten, zufälliger Genmutation und Kreuzung von Kandidaten optimiert.
 \end_layout
 
 \begin_layout Standard
-Genetic programming (GP) is a special evolutionary machine learning approach
- dessen Individuen Computerprogramme sind.
- Diese sind als Computationaltree implementiert, dessen Knoten in Form von
- Operatoren und Parametern die Gensequenzen darstellen.
- It was first introduced by [xxx] und wurde stark von Koza geprägt 
+- wie findet man die?
+\end_layout
+
+\begin_layout Standard
+- gp, koza
+\end_layout
+
+\begin_layout Standard
+- gp? evolutionäre strategie
+\end_layout
+
+\begin_layout Standard
+evolutionäre strategie: population -> selektion, mutation, crossover ->
+ Verbesserung
+\end_layout
+
+\begin_layout Standard
+- formeln als Bäume
+\end_layout
+
+\begin_layout Standard
+- werden über Generationen hinweg
+\end_layout
+
+\begin_layout Standard
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
+literal "true"
 
 \end_inset
 
-.
- Sowohl die Mutation als auch Crossover kann einzelne Knoten oder ganze
- Äste betreffen.
+
+\end_layout
+
+\begin_layout Enumerate
+Representation as genome (composition of genes).
+\end_layout
+
+\begin_layout Enumerate
+Fitness function to rate and compare candidates.
+\end_layout
+
+\begin_layout Paragraph
+asd
 \end_layout
 
 \begin_layout Standard
-Die Fitness von Kandidaten kann auf mehrere Arten bestimmt werden.
- Bei einer symbolischen Regression auf Offline Daten wird anhand des Regressions
-fehlers berechnet, wie gut die Formel die Daten erklären kann.
- [xxx online?] 
-\end_layout
-
-\begin_layout Standard
-The fitness is evaluated by testing its performance in the RL environment,
- xxx karoo??.
+Sowohl die Mutation als auch Crossover kann einzelne Knoten oder ganze Äste
+ betreffen.
 \end_layout
 
 \begin_layout Standard
@@ -897,38 +881,34 @@ xxx principles: Koza, -> Hein, closure, evaluation safety
 \end_layout
 
 \begin_layout Standard
-xxx fitness: reward - regression error, MAE - MSE
+- klassische GP (selection, point + branch mutation, crossover, random trees
+ )
 \end_layout
 
 \begin_layout Standard
-xxx klassische GP (selection, point + branch mutation, crossover, random
- trees )
+-
 \end_layout
 
 \begin_layout Standard
-xxx
+- Erweiterungen: Tournament selection, strong typing, landscape (full +
+ grow initialisation)
 \end_layout
 
 \begin_layout Standard
-xxx Erweiterungen: Tournament selection, strong typing, landscape (full
- + grow initialisation)
+- fine tuning: filter optimisation, 
 \end_layout
 
 \begin_layout Standard
-xxx fine tuning: filter optimisation, 
-\end_layout
-
-\begin_layout Standard
-xxx xai: tree complexity (depth - nodes), math reduction sympy, pareto gp,
+- xai: tree complexity (depth - nodes), math reduction sympy, pareto gp,
  weighted nodes, ...
 \end_layout
 
 \begin_layout Standard
-xxx performance: tensorflow evaluation
+- performance: tensorflow evaluation
 \end_layout
 
 \begin_layout Standard
-xxx 
+- 
 \end_layout
 
 \begin_layout Paragraph
@@ -974,27 +954,37 @@ closure, evaluation safety
 
 \begin_layout Standard
 Closure ist die Eigenschaft, dass beim Erzeugen von Bäumen immer gültige
- Ausdrücke entstehen und eine wichtige Voraussetzung für GP-algorithmen
- die sowohl Zahlen- als auch Wahrheitswerte in Formeln kombinieren können.
- Dafür gibt es zwei Strategien, schwache und starke Typisierung.
- Bei der schwachen Typisierung werden Zahlenwerte beispielsweise über ihr
- Vorzeichen interpretiert und Wahrheitswerte als Binärzahlen.
- Dieser Ansatz wird zwar in vielen Programmiersprachen genutzt, beim suchen
- klassischer mathematischer Formeln ist ein häufiges und automatisiertes
- Wechseln aber unüblich und verwirrend, weshalb Strongly Typed Genetic Programmi
-ng (STGP) immer häufiger genutzt wird.
- Eine Umwandlung zwischen Zahlen und Wahrheitswerten erfolgt explizit, either
- by if-statements or comparison operators.
- 
+ Ausdrücke entstehen.
+ Eine schwache Typisierung, bei der Datentypen automatisch umgewandelt werden
+ ist in der Programmierung weit verbreitet sowie leicht zu implementieren,
+ in mathematischen Formeln aber eher unüblich und verwirrend.
+ Bei komplexeren GP Ansätzen wird deshalb mittlerweile vorrangig Strongly
+ Typed Genetic Programming (STGP) verwendet, wo eine Umwandlung zwischen
+ Zahlen- und Wahrheitswerten explizit erfolgen muss (beispielsweiwse mit
+ Vergleichsoperatoren oder if-Statements).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
- Um Konflikte zu vermeiden müssen Äste, Operatoren und Terminale ihren Datentype
-n zugeordnet werden, außerdem muss bei der Crossover-evolution auf Konflikte
- beim Wählen der Äste geachtet werden.
+ Alle Baumknoten und Operatoren sowie Terminale müssen dafür eindeutig in
+ ihre Ein- und Ausgabetypen klassifiziert werden.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+sss Crossover-evolution auf Konflikte beim Wählen der Äste geachtet werden.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1019,6 +1009,7 @@ GP offers many expansion possibilities.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -1366,6 +1357,7 @@ Die Evaluation der Fitness ist der Flaschenhals der Performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -1379,6 +1371,7 @@ Diese wird mithilfe von SymPy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -1389,6 +1382,74 @@ key "10.7717/peerj-cs.103"
 
 \begin_layout Standard
 Sympy vereinfacht Ausdrücke
+\end_layout
+
+\begin_layout Paragraph
+Fitness with Regression
+\end_layout
+
+\begin_layout Standard
+Die Fitness von Kandidaten kann auf mehrere Arten bestimmt werden.
+ Bei einer symbolischen Regression auf Offline Daten wird anhand des Regressions
+fehlers berechnet, wie gut die Formel die Daten erklären kann.
+ [xxx regression online?] 
+\end_layout
+
+\begin_layout Standard
+The fitness in a regression is the sum of the distance between the outouts
+ of the data set and the predicted values.
+ Both the mean average error (MAE) and the mean square error (MSE) are widely
+ used distance measurements for this purpose.
+ The MAE is widely used in GP, as it indicates the average deviation from
+ the target solution and is therefore distance-true.
+ The MSE squares the distance and thus is not distance-true, making it a
+ less honest indicator.
+ However, in the MSE, outliers and strong deviations are punished more severely,
+ which also allowed the black box to be approached more quickly and more
+ reliably.
+ This also means that volatile solutions are punished more severely.
+ 
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename tikz/regression_cost/01_regular.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/10_MSE.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Mean average error (MAE, left) and Mean squared error (MSE, right).
+ The MSE is synonymous to the root mean squared error (RMSE) for one-dimensional
+ measurements.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -1407,6 +1468,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -1423,6 +1485,7 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1495,6 +1558,7 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
@@ -1869,6 +1933,7 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2679,6 +2744,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -3502,6 +3568,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -3545,6 +3612,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -3562,6 +3630,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3793,6 +3862,7 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -3976,60 +4046,7 @@ Modified Regression Error
 \begin_layout Standard
 The following describes ways to use the regression error for the benchmarks
  and improve it for familiar GP.
- The fitness in a regression is the sum of the distance between the outouts
- of the data set and the predicted values.
- Both the mean average error (MAE) and the mean square error (MSE) are widely
- used distance measurements for this purpose.
- The MAE is widely used in GP, as it indicates the average deviation from
- the target solution and is therefore distance-true.
- The MSE squares the distance and thus is not distance-true, making it a
- less honest indicator.
- However, in the MSE, outliers and strong deviations are punished more severely,
- which also allowed the black box to be approached more quickly and more
- reliably.
- This also means that volatile solutions are punished more severely.
  
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/regression_cost/01_regular.pdf
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/10_MSE.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Mean average error (MAE, left) and Mean squared error (MSE, right).
- The MSE is synonymous to the root mean squared error (RMSE) for one-dimensional
- measurements.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsection
@@ -5794,6 +5811,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -7035,6 +7053,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -7100,6 +7119,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -9251,6 +9271,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -12038,6 +12059,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 

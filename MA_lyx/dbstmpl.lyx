@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -16,6 +16,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -33,8 +35,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -75,7 +75,6 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -85,10 +84,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -274,7 +270,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -318,7 +313,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -343,7 +337,6 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -352,7 +345,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -636,7 +628,6 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -796,7 +787,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -804,51 +794,31 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-Eine weit verbreitete ML Methode um explizite Strategien zu suchen sind
- Evolutionäre Algorithmen.
- Diese erfordern die Darstellung von Kandidaten als Gensequenz sowie einer
- Fitnessfunktion mit der Kandidaten bewertet und selektiert werden können.
- In der GP werden die Programme als Berechnungsbäume dargestellt.
+Alle Bestandteile einer Formel zu finden stellt ein unendlich komplexes
+ Problem dar und obliegt deshalb normalerweise der Speerspitze menschlicher
+ Abstraktionsfähigkeit, dem Informatiker.
+ Im Machine Learning gibt es dennoch metaheuristische Strategien, die evolutionä
+re Strategien zum Suchen nach Lösungen nutzen.
 \end_layout
 
 \begin_layout Standard
-Durch einen Selektionsprozess überleben nur die besten Kandidaten einer
- Population, deren Gene durch zufällige Mutation und Kreuzung weiter verbessert
- werden.
- Über Generationen hinweg verbessert sich somit der Genpool kontinuierlich.
-\end_layout
-
-\begin_layout Standard
-xxx 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Koza_GP_1992,poli08:fieldguide_to_genetic_programming"
-literal "true"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Das klassische Evolutionskonzept
-\end_layout
-
-\begin_layout Standard
-Die Gene werden metaheuristisch über Generationen hinweg verbessert.
- xxx
+Die von Koza eingeführte genetische Programmierung (GP) sieht die Bestandteile
+ von Programmen als Genpool an, der durch Selektion und Mutation einzelner
+ Gene über Generationen hinweg optimiert werden kann.
+ Die Individuen einer Population werden meist als Berechnungsbäume dargestellt,
+ die mit einer Fitnessfunktion bewertet werden können.
 \end_layout
 
 \begin_layout Standard
 Eine neue Population wird zum größten Teil aus einer Selektion der besten
- Kandidaten der letzten Generation erzeugt, dessen Gene dadurch vervielfältigt
- werden.
- Ein festgelegter Anteil erfährt dabei Genmutationen, bei denen einzelne
- Knoten oder Äste erneuert werden.
- Durch Kreuzung von Kandidaten, bei der von zwei Elternbäume zufällige Äste
- ausgetauscht werden um zwei Kinder zu erzeugen wird versucht, eine optimale
- Kombination der bereits gefundenen Gene zu erreichen.
- Der Rest der Population wird mit zufällig generierten Kandidaten aufgefüllt.
+ Kandidaten der letzten Generation erzeugt.
+ Dadurch können sich erfolgreiche Gensequenzen vervielfältigen.
+ Neue Kandidaten entstehen durch zufällige Genmutationen, ohne dabei eine
+ komplett neue Lösung suchen zu müssen und durch durch Kreuzung von Kandidaten
+ können sich die besten Bestandteile von zwei Elternbäumen durch zufällige
+ Kreuzung zweier Äste in ihren Kindern kombinieren.
+ Der Rest der Population wird mit zufällig generierten Kandidaten aufgefüllt
+ um einen konstanten Strom neuer Lösungsansätze zu garantieren.
 \end_layout
 
 \begin_layout Standard
@@ -1090,26 +1060,22 @@ closure, evaluation safety, Formeln als Gensequenz
 \end_layout
 
 \begin_layout Standard
-Beim Erzeugen von Bäumen muss darauf geachtet werden, dass immer gültige
- Ausdrücke entstehen die auch ausgewertet werden können, was als closure
- bezeichnet wird.
- Eine schwache Typisierung, bei der Datentypen automatisch umgewandelt werden
- ist in der Programmierung weit verbreitet sowie leicht zu implementieren,
- in mathematischen Formeln aber eher unüblich und verwirrend.
- Bei komplexeren GP Ansätzen wird deshalb mittlerweile vorrangig Strongly
- Typed Genetic Programming (STGP) verwendet, wo eine Umwandlung zwischen
- Zahlen- und Wahrheitswerten explizit erfolgen muss (beispielsweiwse mit
- Vergleichsoperatoren oder if-Statements).
+Closure bezeichnet dabei die Anforderung, dass beim Erzeugen von Bäumen
+ immer auswertbare Ausdrücke entstehen.
+ Um Datentypkomplikationen zu vermeiden wird heutzutage meist Strongly Typed
+ Genetic Programming (STGP) verwendet, wo eine Umwandlung zwischen Zahlen-
+ und Wahrheitswerten explizit erfolgen muss (beispielsweiwse mit Vergleichsopera
+toren oder if-Statements).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
- Alle Baumknoten und Operatoren sowie Terminale müssen dafür eindeutig in
- ihre Ein- und Ausgabetypen klassifiziert werden.
- 
+ Das erfordert zwar, dass alle Baumknoten und Operatoren sowie Terminale
+ eindeutig in Ein- und Ausgabetypen klassifiziert werden, erzeugt aber weitaus
+ besser interpretierbare Formeln die meistens keine automatische Umwandlung
+ von Datentypen vorsehen.
 \end_layout
 
 \begin_layout Standard
@@ -1122,112 +1088,43 @@ Ein besonderes Problem stellt dabei die evaluation safety dar, weil selbst
  
 \end_layout
 
-\begin_layout Standard
-xxx sympy?
-\end_layout
-
 \begin_layout Paragraph
-Tree depth, tree size, grow mode
+Komplexität des Suchraumes
 \end_layout
 
 \begin_layout Standard
-The search space of the trees is limited by the tree depth and the number
- of nodes.
- This avoids overvitting, the evaluation of the candidates and the evolution
- process is faster and the number of nodes can be additionally weighted.
- Instead of storing only the best candidate, a Pareto Front is created,
- on which the fittest candidates for the respective complexity are located.
- This allows the user to select the desired ratio between fitness and complexity.
- For this purpose, the best candidates are put on a Pareto front with the
- fittest candidate depending on their complexity.
- As complexity results from the number of nodes of a tree.
- Random trees are created by choosing a random depth, up to which the trees
- are built up with random operators.
- A branch can be build in the full and grow mode.
- With the full method, open nodes are always filled up with operators, with
- the grow method terminal nodes are inserted by chance (50%).
- Trees, which were built with the full-method, not only have more nodes
- than trees of the grow-method, but the branching factor is also much bigger
- which leads to an early combination of leaf nodes to complex expressions.
- In grow trees, partial expressions can be considered in isolation for a
- longer time, which can lead to an easier understanding.
+Wegen des hohen Branchingfaktors bei Lösungskandidaten muss der Genotypische
+ Suchraum für Bäume stark eingeschränkt werden.
+ Sowohl die maximale Baumtiefe als auch die Knotenzahl werden deshalb meistens
+ beschränkt.
  
+\end_layout
+
+\begin_layout Standard
+Formelbestandteile können auch noch zusätzlich gewichtet werden um komplexe
+ mathematische Operatoren zu vermeiden.
+ [xxx EUREKA] Um zwischen Komplexität einer Formel und der Fitness abwägen
+ zu können wird kann durch speichern aller paretoeffizienten Kombinationen
+ der Tradeoff vom Nutzer abgeschätzt werden.
+ 
+\end_layout
+
+\begin_layout Standard
+Die Baumstruktur hat große Auswirkungen auf die Formeln, wie in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:grow-vs-full-method"
 
 \end_inset
 
- Both approaches can generate important components and were used 50% each
- (half ramped mode).
+ zu sehen ist.
+ Building random trees to a certain depth can either be done in  full or
+ grow mode, with the full method filling up all levels with operators and
+ the grow method inserting terminal nodes by chance (50%), resulting in
+ a much smaller branching factor and less complex formulas.
+ Um möglichst vielfältige Mischung neuer Kandidaten zu erhalten werden meist
+ beide Ansätze kombiniert (half ramped mode).
  
-\end_layout
-
-\begin_layout Paragraph
-Technische Umsetzung, Tensorflow enabled Evaluation
-\end_layout
-
-\begin_layout Standard
-Die Evaluation der Fitness ist der Flaschenhals der Performance.
- Kai Staats has shown with KarooGP that a 2-15 times speedup can be achieved
- by converting expressions into Tensorflow graphs and thus enabling parallel
- evaluation on the GPU.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "karooGPpaper"
-literal "true"
-
-\end_inset
-
-[xx genaue Seite] In Karoo wird der Ausdruck aus einem Baum extrahiert und
- als Formel dargestellt.
- 
-\end_layout
-
-\begin_layout Standard
-Diese wird mithilfe von SymPy 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "10.7717/peerj-cs.103"
-literal "true"
-
-\end_inset
-
-, a python library for symbolic mathematics, simplifiziert und siebt dadurch
- bereits vor der Auswertung unnötige Berechnungen aus.
- [xxx siehe Fehler]
-\end_layout
-
-\begin_layout Paragraph
-Erweiterungen, Simplification xx regression error, 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-For example, fuzzy GP policies can be searched for, where even complex policies
- with many rules can be searched for without the search space becoming so
- uncontrollably large that solutions can no longer be found.
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "hein_fuzzy_gp"
-literal "true"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-pareto gp, weighted nodes, ...
 \end_layout
 
 \begin_layout Section
@@ -1298,23 +1195,11 @@ Mean average error (MAE, left) and Mean squared error (MSE, right).
 
 \end_layout
 
-\begin_layout Section
-xxx offline symbolic Regression 
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:Online-offline_regression"
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 In 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -1331,7 +1216,6 @@ literal "true"
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1343,6 +1227,62 @@ ely and in parallel, but especially with autopilots or industrial controllers,
  the risk of gross misexploration, which could even destroy the benchmark
  itself, is reduced.
  
+\end_layout
+
+\begin_layout Paragraph
+Technische Umsetzung, Tensorflow enabled Evaluation
+\end_layout
+
+\begin_layout Standard
+Die Evaluation der Fitness ist der Flaschenhals der Performance.
+ Kai Staats has shown with KarooGP that a 2-15 times speedup can be achieved
+ by converting expressions into Tensorflow graphs and thus enabling parallel
+ evaluation on the GPU.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "karooGPpaper"
+
+\end_inset
+
+[xx genaue Seite] In Karoo wird der Ausdruck aus einem Baum extrahiert und
+ als Formel dargestellt.
+ 
+\end_layout
+
+\begin_layout Standard
+Diese wird mithilfe von SymPy 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "10.7717/peerj-cs.103"
+
+\end_inset
+
+, a python library for symbolic mathematics, simplifiziert und siebt dadurch
+ bereits vor der Auswertung unnötige Berechnungen aus.
+ [xxx siehe Fehler]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+For example, fuzzy GP policies can be searched for, where even complex policies
+ with many rules can be searched for without the search space becoming so
+ uncontrollably large that solutions can no longer be found.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hein_fuzzy_gp"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -1404,7 +1344,6 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
-literal "true"
 
 \end_inset
 
@@ -2207,7 +2146,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -3031,7 +2969,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -3075,7 +3012,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -3093,7 +3029,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3421,7 +3356,6 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3803,7 +3737,6 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -5774,7 +5707,6 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -7016,7 +6948,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -7082,7 +7013,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -9234,7 +9164,6 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -12022,7 +11951,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 

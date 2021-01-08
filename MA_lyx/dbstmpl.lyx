@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -17,7 +17,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -35,11 +34,14 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
 \bibtex_command default
 \index_command default
+\float_placement h
 \paperfontsize 11
 \spacing single
 \use_hyperref true
@@ -75,6 +77,7 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -84,7 +87,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -179,7 +185,7 @@ LatexCommand tableofcontents
 \end_layout
 
 \begin_layout Chapter
-Intro / Motivation
+Introduction
 \end_layout
 
 \begin_layout Standard
@@ -270,6 +276,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -313,6 +320,7 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -337,14 +345,37 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
- XAI deals with the problem of making AI solutions understandable for humans.
+ 
+\end_layout
+
+\begin_layout Section
+Contribution xxx
+\end_layout
+
+\begin_layout Standard
+xxx DONEIn this thesis, dierent types of attention mechanisms are examined
+ in a Reinforcement Learning (RL) scenario.
+\end_layout
+
+\begin_layout Section
+Outline xxx
+\end_layout
+
+\begin_layout Chapter
+Related Work
+\end_layout
+
+\begin_layout Standard
+XAI deals with the problem of making AI solutions understandable for humans.
  As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -505,26 +536,16 @@ status open
 
 \begin_layout Plain Layout
 \align center
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "47col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
 
 \begin_layout Plain Layout
-\align center
 \begin_inset Graphics
 	filename tikz/neural_networks/graph_sigmoid.pdf
 	lyxscale 47
@@ -536,41 +557,11 @@ status open
 \end_layout
 
 \end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-hfill
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "47col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
 
 \begin_layout Plain Layout
-\align center
 \begin_inset Graphics
 	filename tikz/neural_networks/graph_relu.pdf
 	lyxscale 47
@@ -580,6 +571,11 @@ status open
 
 
 \end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
 
 \end_inset
 
@@ -628,6 +624,7 @@ In extensive problem areas, for example image recognition, any strategies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -787,10 +784,12 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
-
+ xxx Add: the best explanation of a model is when the explanation was the
+ fundament on which a human built the model on.
 \end_layout
 
 \begin_layout Standard
@@ -1060,31 +1059,33 @@ closure, evaluation safety, Formeln als Gensequenz
 \end_layout
 
 \begin_layout Standard
-Closure bezeichnet dabei die Anforderung, dass beim Erzeugen von Bäumen
- immer auswertbare Ausdrücke entstehen.
- Um Datentypkomplikationen zu vermeiden wird heutzutage meist Strongly Typed
- Genetic Programming (STGP) verwendet, wo eine Umwandlung zwischen Zahlen-
- und Wahrheitswerten explizit erfolgen muss (beispielsweiwse mit Vergleichsopera
-toren oder if-Statements).
+Closure refers to the requirement that the creation of trees always results
+ in evaluable expressions.
+ In order to avoid data type complications, Strongly Typed Genetic Programming
+ (STGP) is mostly used nowadays, where a conversion between number and truth
+ values must be done explicitly (for example, with comparison operators
+ or if statements).
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
- Das erfordert zwar, dass alle Baumknoten und Operatoren sowie Terminale
- eindeutig in Ein- und Ausgabetypen klassifiziert werden, erzeugt aber weitaus
- besser interpretierbare Formeln die meistens keine automatische Umwandlung
- von Datentypen vorsehen.
+ Although this requires that all tree nodes and operators as well as terminals
+ are uniquely classified into input and output types, it produces much more
+ interpretable formulas that usually do not provide for automatic conversion
+ of data types.
 \end_layout
 
 \begin_layout Standard
-Ein besonderes Problem stellt dabei die evaluation safety dar, weil selbst
- typkorrekte Ausdrücke mathematisch ungültig sein können.
- Bei häufig auftretenden Funktionen werden die Definitionslücken meist mit
- einem Dummywert belegt (die Division durch Null beispielsweise mit 1).
- Um eine zu starke Veränderung des Wesens eines Operators zu vermeiden kann
- bei selten vorkommenden Fehlern ein Baum aber auch einfach verworfen werden.
+Evaluation safety poses a particular problem because even type-correct expressio
+ns can be mathematically invalid.
+ In the case of frequently occurring functions, the definition gaps are
+ usually filled with a dummy value (division by zero, for example, with
+ 1).
+ To avoid changing the essence of an operator too much, a tree can also
+ simply be discarded in the case of rarely occurring errors.
  
 \end_layout
 
@@ -1093,37 +1094,36 @@ Komplexität des Suchraumes
 \end_layout
 
 \begin_layout Standard
-Wegen des hohen Branchingfaktors bei Lösungskandidaten muss der Genotypische
- Suchraum für Bäume stark eingeschränkt werden.
- Sowohl die maximale Baumtiefe als auch die Knotenzahl werden deshalb meistens
- beschränkt.
+Due to the high branching factor for solution candidates, the genotypic
+ search space for trees must be strongly restricted.
+ Both the maximum tree depth and the number of nodes are therefore usually
+ limited.
  
 \end_layout
 
 \begin_layout Standard
-Formelbestandteile können auch noch zusätzlich gewichtet werden um komplexe
- mathematische Operatoren zu vermeiden.
- [xxx EUREKA] Um zwischen Komplexität einer Formel und der Fitness abwägen
- zu können wird kann durch speichern aller paretoeffizienten Kombinationen
- der Tradeoff vom Nutzer abgeschätzt werden.
+Formula components can also be additionally weighted to avoid complex mathematic
+al operators.
+ In order to be able to weigh the complexity of a formula against its fitness,
+ the user can estimate the tradeoff by saving all pareto-efficient combinations.
  
 \end_layout
 
 \begin_layout Standard
-Die Baumstruktur hat große Auswirkungen auf die Formeln, wie in 
+The tree structure has a big impact on the formulas, as can be seen in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "fig:grow-vs-full-method"
 
 \end_inset
 
- zu sehen ist.
+ .
  Building random trees to a certain depth can either be done in  full or
  grow mode, with the full method filling up all levels with operators and
  the grow method inserting terminal nodes by chance (50%), resulting in
  a much smaller branching factor and less complex formulas.
- Um möglichst vielfältige Mischung neuer Kandidaten zu erhalten werden meist
- beide Ansätze kombiniert (half ramped mode).
+ In order to obtain as diverse a mix of new candidates as possible, both
+ approaches are usually combined (half ramped mode).
  
 \end_layout
 
@@ -1132,10 +1132,9 @@ Post-hoc Interpretability with Symbolic Regression
 \end_layout
 
 \begin_layout Standard
-Die Fitness von Kandidaten kann auf mehrere Arten bestimmt werden.
- Bei einer symbolischen Regression auf Offline Daten wird anhand des Regressions
-fehlers berechnet, wie gut die Formel die Daten erklären kann.
- [xxx regression online?] 
+The fitness of candidates can be determined in several ways.
+ In a symbolic regression on offline data, the regression error is used
+ to calculate how well the formula can explain the data.
 \end_layout
 
 \begin_layout Standard
@@ -1200,6 +1199,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -1216,6 +1216,7 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1234,32 +1235,34 @@ Technische Umsetzung, Tensorflow enabled Evaluation
 \end_layout
 
 \begin_layout Standard
-Die Evaluation der Fitness ist der Flaschenhals der Performance.
+Fitness evaluation is the bottleneck of performance.
  Kai Staats has shown with KarooGP that a 2-15 times speedup can be achieved
- by converting expressions into Tensorflow graphs and thus enabling parallel
- evaluation on the GPU.
+ by first simplifying expressions und then converting them into Tensorflow
+ graphs and thus enabling parallel evaluation on the GPU.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
-[xx genaue Seite] In Karoo wird der Ausdruck aus einem Baum extrahiert und
- als Formel dargestellt.
+[xx genaue Seite] In Karoo, the expression is extracted from a tree and
+ represented as a formula.
  
 \end_layout
 
 \begin_layout Standard
-Diese wird mithilfe von SymPy 
+This is simplified using SymPy 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
-, a python library for symbolic mathematics, simplifiziert und siebt dadurch
- bereits vor der Auswertung unnötige Berechnungen aus.
- [xxx siehe Fehler]
+, a python library for symbolic mathematics, and thus sifts out unnecessary
+ calculations before evaluation.
+ [xxx see error]
 \end_layout
 
 \begin_layout Standard
@@ -1274,6 +1277,7 @@ For example, fuzzy GP policies can be searched for, where even complex policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -1344,6 +1348,7 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
@@ -1526,1533 +1531,6 @@ name "fig:grow-vs-full-method"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Chapter
-Benchmarks
-\end_layout
-
-\begin_layout Standard
-Both the Mountain car (MC) as well as the Industrial Benchmark (IB) were
- used to evaluate the approach.
- MC is a widely used, simple toy benchmark, where the concept can be tested
- well.
- The IB is, in contrast, a stochastically independent, high-dimensional
- testbed, which was especially designed by scientists at Siemens for the
- simulation of very complex processes in industry for RL.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-MC
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-IB
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Observation dimensionality
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-6
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Action dimensionality
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-3
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reward
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-discrete
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-continuous
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Episode end
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-at target / 200
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-none
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Stochasticity
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-none
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-state-dependent
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Markov state observability
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fully
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-partially
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The used benchmarks in comparison.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Mountain car
-\begin_inset CommandInset label
-LatexCommand label
-name "experiment:mountaincar"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="4">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell multirow="3" alignment="center" valignment="middle" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename img/inkscape/mountaincar_dummy.pdf
-	width 5cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Observation space
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multirow="4" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-position
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$[-1.2, 0.6]$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multirow="4" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-velocity
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$[-0.07, 0.07]$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multirow="4" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multirow="4" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Action space
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multirow="4" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-push
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-[left, no, right]
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The main features of the Mountain car problem.
- The position of the car is by a factor of 10 larger than the speed.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "img:mc_experiment"
-
-\end_inset
-
-
-\begin_inset CommandInset label
-LatexCommand label
-name "MC-observationspace"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The Mountain car problem was introduced in 1990 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "mountaincarOriginal"
-
-\end_inset
-
-, where a car is supposed to drive up a mountain as fast as possible that
- is too steep for the car's engine.
- To reach the target, an agent has to learn to use the counter slope to
- take a swing.
- The state space is implemented in an unusual way (see 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "MC-observationspace"
-
-\end_inset
-
-), which makes it difficult to connect these values in a formula .
- Therefore in the area of AI such values are often normalized.
- For experiments in this thesis though, we assume that the developer did
- not normalize the values for his program and search for solutions without
- this intermediate step.
-\end_layout
-
-\begin_layout Paragraph
-Domain Expert approaches
-\end_layout
-
-\begin_layout Standard
-For the optimal solution strategy, the following intermediate objectives
- must also be considered:
-\end_layout
-
-\begin_layout Itemize
-Premature reversal.
- 
-\begin_inset Newline newline
-\end_inset
-
-The goal can be reached even without a maximum swing, especially during
- the last swing a lot of distance and therefore time can be saved.
-\end_layout
-
-\begin_layout Itemize
-Always accelerate.
-\begin_inset Newline newline
-\end_inset
-
-Doing nothing instead of accelerating only makes sense at turning points,
- otherwise speed is lost.
- Most of the time such waiting can be replaced by accelerating in the opposite
- direction.
- This neutral action is often chosen by neural networks in uncertain borderline
- cases, because the weights are only slowly adapted.
-\end_layout
-
-\begin_layout Itemize
-The initial action.
-\begin_inset Newline newline
-\end_inset
-
-At the starting position it is already clear whether the goal can be reached
- with two or three turns.
- How many swings are taken is decided at the start position, which is why
- it has an extremely large influence on the time required.
- This can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "table:MC_agents_rewards"
-
-\end_inset
-
-; the comparison operator decides on the first swing direction and worsens
- the result by more than 10 steps.
-\end_layout
-
-\begin_layout Paragraph
-Observation-Action-Space Plots
-\end_layout
-
-\begin_layout Standard
-The state and action space is small enough to display the complete policy
- of an agent as a two-dimensional diagram where for each state the action
- is color-coded.
- The entire state space is subdivided along its dimensions into 256 areas,
- for each of which the calculated action is coloured.
- 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "wrap:mc-obs-act-plot-space"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-hfill
-\end_layout
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Important characteristics of an agent can be identified by looking at the
- decision plot, which in this case (Scratch GP results, complexity 8), which
- manifests itself in clearly divisible blocks (left).
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "wrap:mc-obs-act-plot-space"
-
-\end_inset
-
- Some states are effectively but never reached, which is why a behaviour-depende
-nt version was also created, which, after 100 test runs, colours the states
- not reached grey (right).
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "wrap:mc-obs-act-plot-snail"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-This plot marks the deviations from the reference (Sarsa-)policy within
- 100 runs.
-\begin_inset CommandInset label
-LatexCommand label
-name "wrap:mc-obs-act-plot-space-diff"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Industrial benchmark 
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:Industrial-benchmark"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\noindent
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="8" columns="7">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="1.8cm">
-<column alignment="center" valignment="top" width="1.6cm">
-<column alignment="center" valignment="top" width="1.5cm">
-<column alignment="center" valignment="top" width="1.5cm">
-<column alignment="center" valignment="top" width="1.5cm">
-<column alignment="center" valignment="top" width="1.5cm">
-<column alignment="center" valignment="top" width="1.5cm">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-setpoint
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-velocity
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-gain
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-shift
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-fatigue
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-consump-tion
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Acronym
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-p
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-v
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-g
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-h
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-f
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-c
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Description
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-external driver,
-\end_layout
-
-\begin_layout Plain Layout
-constant
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-reward
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-reward
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Action
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $\pm1$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $\pm1$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $\pm1$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
--
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Min/Max
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $[10,100]$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $[0,100]$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $[0,100]$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $[0,100]$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $[0,100]$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Formula $[0,100]$
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mean
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-55
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-48.75
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-50.53
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-49.45
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-37.51
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-166.33
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Deviation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-28.72
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-12.31
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-29.91
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-29.22
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-31.17
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-139.44
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Past time
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-10
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-10
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-10
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-10
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-10
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-All IB features at a glance.
- The reward is not part of the GP-process.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "IB-observations-state"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The Industrial Benchmark was introduced by scientists at Siemens to meet
- the high requirements of complex, real world industrial processes.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "industrialBenchmark"
-
-\end_inset
-
- It is high-dimensional 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "IB-observations-state"
-
-\end_inset
-
-, yet the Markov process is only partially observable, so even past values
- must also be considered.
- Since it is also very stochastic, the learning process is made even more
- difficult.
- The Reward depends on a combination of Action 0 and Action 1, as well as
- Action 2, which severely penalises misconduct.
- 
-\end_layout
-
-\begin_layout Standard
-Currently there are no good human written solutions known for the IB, but
- approaching the average value (
-\begin_inset Quotes eld
-\end_inset
-
-do nothing
-\begin_inset Quotes erd
-\end_inset
-
-) is considered to be a respectably good comparison solution.
- 
-\end_layout
-
-\begin_layout Paragraph
-Black box: PSONN
-\end_layout
-
-\begin_layout Standard
-As black box, a particle swarm optimisation algorithm with neural networks
- (PSONN 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "PSONN_fuzzy_RL_Hein_Udluft"
-
-\end_inset
-
-) with a calculated IB reward of 
-\begin_inset Formula $5353$
-\end_inset
-
- was chosen.
- 
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-The initial states of the IB in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "daniel_hein_doktorarbeit"
-
-\end_inset
-
- were randomized.
- Comparable values could be obtained by a randomized initial state, but
- the results were very volatile.
- The difference of agents in Hein's work was 7% worse on average.
- This value was used for comparison.
- For the PSONN policy, this results in a adjusted penalty value of 
-\begin_inset Formula $5728/1.07=5353$
-\end_inset
-
-.
-\end_layout
-
-\end_inset
-
- Particle swarm optimisation algorithms, similar to GP, can find solutions
- for many types of problems.
- The solution space is populated by a swarm population, which should find
- the best optima by swarm intelligence.
- This approach is very interesting as a black box, because even bulky solution
- models can be found relatively quickly.
- 
 \end_layout
 
 \begin_layout Chapter
@@ -3356,6 +1834,7 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -3737,6 +2216,7 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -4746,38 +3226,12 @@ Runtime, memory, performance
 - sympy
 \end_layout
 
-\begin_layout Subsection
-Sympy
-\end_layout
-
 \begin_layout Standard
-Mathematische Vereinfachung von Formeln ist aus mehreren Gesichtspunkten
- interessant.
- 
-\end_layout
+\begin_inset Note Note
+status open
 
-\begin_layout Standard
-um einem langwierigen, auf zufälliger Mutation basierenden Evolutionsprozess
- vorzubeugen.
- 
-\end_layout
-
-\begin_layout Standard
-Eine Kernfunktion ist die Vereinfachung mathematischer Ausdrücke mit symbolische
-r Mathematik.
- Die Python library SymPy wofür die Python Library SymPy erweitert und integrier
-t wurde.
- 
-\end_layout
-
-\begin_layout Standard
-The simplified expression string is then parsed with the python compiler
- and recursively compiled into a tensorflow graph.
- [xxx ref to errors?]
-\end_layout
-
-\begin_layout Standard
-This extraordinary performance could be further improved by using recursive
+\begin_layout Plain Layout
+xxx This extraordinary performance could be further improved by using recursive
  tree structures and lookup-tables.
 \begin_inset Foot
 status open
@@ -4793,266 +3247,13 @@ No reliable statistics on the running time were compiled, but the running
 
 \end_layout
 
-\begin_layout Paragraph
-Sympy erweiterungen implementation
-\end_layout
-
-\begin_layout Standard
-Um Vereinfachungen, die die arity eines Operators ändern würden vorzubeugen
- wurden folgende Erweiterungen implementiert:
-\end_layout
-
-\begin_layout Standard
-Dennoch birgt eine so mächtige Vereinfachung von Formeln große Risiken und
- Probleme.
- Die (nach SymPy) einfachste Darstellung einer Formel ist nicht unbedingt
- die kürzeste, vor allem nicht im Bezug auf die TED.
- Zusätzlich kann eine vereinfachte Formel Elemente enthalten, die bei der
- Generierung von Kandidaten nicht vorgesehen sind, was den Algorithmus sehr
- fehleranfällig macht.
-\end_layout
-
-\begin_layout Standard
-This eliminates unnecessary mathematical calculations before the evaluation.
-\end_layout
-
-\begin_layout Standard
-Aus dem simplifizierten AST kann ein neuer GP-Baum aufgebaut werden.
- Vor allem zufällig erstellte Bäume können dadurch mit weitaus weniger Knoten
- dargestellt werden.
- 
-\end_layout
-
-\begin_layout Standard
-Die einfachste Darstellung ist aber nicht immer wünschenswert, da knotenreiche
- Bäume mehr Ansatzpunkte für evolutionäre Verbesserungen bieten.
- Vor allem bei neu gefundenen Strukturen bieten knotenreiche Äste mehr Ansatzpun
-kte für genetische Mutatio nen und Kreuzungen.
-\end_layout
-
-\begin_layout Standard
-Diese gezielte Reduktion der Knotenzahl stellt die einzige explizite Optimierung
- der Komplexität im Evolutionsprozess dar
-\end_layout
-
-\begin_layout Standard
-und wird vorrangig verwendet um einen aufwändigen, auf Zufall basierenden
- M Die Komplexität wird bei Bäumen nicht explizit optimiert.
- 
-\end_layout
-
-\begin_layout Standard
-====
-\end_layout
-
-\begin_layout Standard
-um einem langwierigen, auf zufälliger Mutation basierenden Evolutionsprozess
- vorzubeugen.
- Als Option für die Reproduktionsevolution von Bäumen einer Population wird
- die Vereinfachung deshalb nur selten eingesetzt.
- For new Pareto candidates however, vor allem bei fitten Kandidaten Pareto-Eintr
-ägen versucht wird, sie vereinfacht abzuspeichern.
- 
-\end_layout
-
-\begin_layout Standard
-xxx fixed nodes: sympy reduction für jeden Ast!
-\end_layout
-
-\begin_layout Paragraph
-Symbolic mathematical simplification
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{algorithm}[H] 
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-SetAlgoLined  
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-KwData{tree}  
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-KwResult{expression}
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-Function{get
-\backslash
-_expression(tree
-\backslash
-_node)}  
-\end_layout
-
-\begin_layout Plain Layout
-
-  {        
-\end_layout
-
-\begin_layout Plain Layout
-
-   
-\backslash
-Comment{The node is normally the root of the tree}
-\end_layout
-
-\begin_layout Plain Layout
-
-   expr $
-\backslash
-assign$ tree
-\backslash
-_node.
-\backslash
-FuncCall{get
-\backslash
-_expr}{}
-\backslash
-;    
-\end_layout
-
-\begin_layout Plain Layout
-
-   expr $
-\backslash
-assign$ 
-\backslash
-FuncCall{simplify}{expr}
-\backslash
-;    
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-If{ any$(
-\backslash
-left 
-\backslash
-text{nan}, 
-\backslash
-text{inf}, 
-\backslash
-text{zoo}, i 
-\backslash
-right) 
-\backslash
-in$  expr}{     
-\end_layout
-
-\begin_layout Plain Layout
-
-   
-\backslash
-Comment{Expression can not be interpreted}     
-\end_layout
-
-\begin_layout Plain Layout
-
-   
-\backslash
-Return{}
-\backslash
-;    
-\end_layout
-
-\begin_layout Plain Layout
-
-  }  
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-Return{expr}
-\backslash
-;  
-\end_layout
-
-\begin_layout Plain Layout
-
- }    
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-caption{xxx} 
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{algorithm}
-\end_layout
-
 \end_inset
 
 
 \end_layout
 
-\begin_layout Paragraph
-Unique order
-\end_layout
-
-\begin_layout Standard
-SymPy ist , die mathematische Formeln vereinfachen kann und diese sogar
- immer in derselben Reihenfolge darstellt, as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:sympy-ordered-expression"
-
-\end_inset
-
-.
- Durch die eindeutige Reihenfolge wird dem Problem der TED Rechnung getragen,
- wonach mathematische Beziehungen wie das Kommutativgesetz nicht berücksichtigt
- werden können.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-xxx 
-\begin_inset Formula $(a+b)=(b+a)$
-\end_inset
-
- is mathematically equivalent, but the TED between the two representations
- is 2.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Tree complexity reduction
+\begin_layout Subsection
+Sympy reduction 
 \begin_inset CommandInset label
 LatexCommand label
 name "sympy-tree-reduction"
@@ -5063,8 +3264,57 @@ name "sympy-tree-reduction"
 \end_layout
 
 \begin_layout Standard
+In the following section, an extensive reduction of GP trees is presented,
+ which is intended to improve the goal of interpretable formulae and the
+ functioning of TED.
+\end_layout
+
+\begin_layout Standard
+The simplification of formulae deals with the problem of representing mathematic
+al expressions by a minimum number of necessary expressions and thus as
+ simply as possible.
+ Less complex candidates are also preferred in GP, but complex branches
+ can be important for the evolutionary process as it offers more starting
+ points for improvements of new gene structures by random mutation or crossover.
+ For most EAs, therefore, goal-directed simplification tends to take a subordina
+te role and is mainly used for new Pareto entries.
+\end_layout
+
+\begin_layout Standard
+For familiarity-based GP, however, there are other ways to simplify a formula.
+ By using symbolic mathematics, an expression, including all its variables,
+ can be simplified and brought into a unified form.
+ This includes, for example, the elimination of factors and the restructuring
+ into a unique form, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:sympy-ordered-expression"
+
+\end_inset
+
+.
+ Thus, formula components are ordered uniformly, which counteracts the problem
+ of TED, where commutativity and associativity are not taken into account.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Formula $(a+b)=(b+a)$
+\end_inset
+
+ is mathematically equivalent, but the edit-distance between the two representat
+ions is 2.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \noindent
 \begin_inset Float figure
+placement h
 wide false
 sideways false
 status open
@@ -5116,8 +3366,302 @@ name "fig:sympy-ordered-expression"
 
 \end_layout
 
+\begin_layout Paragraph
+Implementation 
+\end_layout
+
 \begin_layout Standard
-\align center
+While simplifying formulas for more efficient evaluation can be done easily,
+ creating a simpler branch is a much more complex problem.
+ The extracted expression is simplified using symbolic mathematics, for
+ which the Python library SymPy 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "10.7717/peerj-cs.103"
+literal "false"
+
+\end_inset
+
+ was extended.
+ The simplified expression is then evaluated as an abstract ayntax tree
+ (AST), which can be transformed into a GP tree by recursively pattern matching
+ the components to the available GP operators.
+ 
+\end_layout
+
+\begin_layout Standard
+Due to its complexity, this process can lead to many special cases and in
+ any case requires extensive adaptations, for example to avoid arity-changing
+ or unwanted transformations as in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:sympy-custom-gp-operators"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ or to handle special cases of solutions, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:sympy-sonderfälle"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+In this work, the effects of simplified expert heuristics were not further
+ processed, as this would have required a reinterpretation and weighting
+ of various changes.
+ Thus, the benefits of unified formulas could not be evaluated either.
+ This approach was only used to improve the performance of the existing
+ approach by trying to simplify Pareto entries.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[H] 
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+SetAlgoLined  
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+KwData{tree, originTree}  
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+KwResult{simplified tree}
+\end_layout
+
+\begin_layout Plain Layout
+
+ complexity
+\backslash
+_before $
+\backslash
+assign$ 
+\backslash
+FuncCall{get
+\backslash
+_edit
+\backslash
+_distance}{tree, originTree}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+ expr $
+\backslash
+assign$ tree.
+\backslash
+FuncCall{get
+\backslash
+_expr}{}
+\backslash
+;    
+\end_layout
+
+\begin_layout Plain Layout
+
+ expr $
+\backslash
+assign$ 
+\backslash
+FuncCall{simplify}{expr}
+\backslash
+;    
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+uIf{any$(
+\backslash
+{ 
+\backslash
+text{nan}, 
+\backslash
+text{inf}, 
+\backslash
+tilde{
+\backslash
+infty} , i 
+\backslash
+}) 
+\backslash
+in $  expr}{     
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+Comment{Expression can not be interpreted}    
+\end_layout
+
+\begin_layout Plain Layout
+
+ }
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+Else{
+\end_layout
+
+\begin_layout Plain Layout
+
+  paretoFront.
+\backslash
+FuncCall{add}{oldTree}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+ }
+\end_layout
+
+\begin_layout Plain Layout
+
+ executable
+\backslash
+_ast = 
+\backslash
+FuncCall{ast
+\backslash
+_parse}{expr}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+ simplifiedTree = 
+\backslash
+FuncCall{tree
+\backslash
+_from
+\backslash
+_ast}{executable
+\backslash
+_ast}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+ complexity
+\backslash
+_simplified $
+\backslash
+assign$ 
+\backslash
+FuncCall{get
+\backslash
+_edit
+\backslash
+_distance}{simplifiedTree, originTree}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+uIf{complexity
+\backslash
+_simplified < complexity
+\backslash
+_before}{     
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+Return{simplifiedTree}
+\backslash
+; 
+\end_layout
+
+\begin_layout Plain Layout
+
+ }
+\backslash
+Else{
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+Return{tree}
+\backslash
+; 
+\end_layout
+
+\begin_layout Plain Layout
+
+ }
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+caption{Simplifying a new found Pareto entry.}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float table
 wide false
 sideways false
@@ -5126,221 +3670,10 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="3">
-<features booktabs="true" tabularvalignment="middle">
-<column alignment="center" valignment="top" width="30mm">
-<column alignment="center" valignment="top" width="50mm">
-<column alignment="center" valignment="top" width="50mm">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Value
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-cause
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$1^{0.5} 
-\backslash
-rsymp i$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-The imaginary part $i$ in the space of complex numbers $
-\backslash
-mathbb{C}$ are not intended as solution space.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-frac{1}{0} 
-\backslash
-rsymp 
-\backslash
-text{zoo}$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-zoo (complex infinity)
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-frac{0}{0} 
-\backslash
-rsymp 
-\backslash
-text{zoo}$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="3">
+<lyxtabular version="3" rows="7" columns="2">
 <features booktabs="true" tabularvalignment="middle">
 <column alignment="center" valignment="top" width="30mm">
 <column alignment="center" valignment="top" width="100mm">
-<column alignment="center" valignment="top">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -5360,18 +3693,9 @@ cause
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5380,7 +3704,7 @@ if-condition
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5389,18 +3713,9 @@ non existing
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5423,7 +3738,7 @@ max$
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5459,18 +3774,9 @@ max(a,b,c)}$
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5493,7 +3799,7 @@ lor$
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5529,18 +3835,9 @@ text{And}(a,b,c)}$
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5561,7 +3858,7 @@ not$
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5595,18 +3892,9 @@ text{nan}$
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5615,7 +3903,7 @@ Square
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5634,18 +3922,9 @@ $x^2$ or $x^y$ quickly become unusable through mutation.
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5654,7 +3933,7 @@ Usub (unary sub)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5664,7 +3943,200 @@ The minus sign is the only operator that occurs as a binary and unary operator
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+These operators were additionally implemented as GP-friendly versions, as
+ unwanted changes often occur during transformation, for example by changing
+ the arity.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:sympy-custom-gp-operators"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="2">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="left" valignment="top" width="30mm">
+<column alignment="left" valignment="top" width="50mm">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Value
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+cause
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$1^{0.5} 
+\backslash
+rsymp i$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+The imaginary part $i$ in the space of complex numbers $
+\backslash
+mathbb{C}$ are not intended as solution space.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+frac{1}{0} 
+\backslash
+rsymp 
+\backslash
+tilde{
+\backslash
+infty} $
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+tilde{
+\backslash
+infty}$
+\end_layout
+
+\end_inset
+
+ (complex infinity)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+frac{0}{0} 
+\backslash
+rsymp 
+\backslash
+tilde{
+\backslash
+infty} $
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5685,7 +4157,15 @@ The minus sign is the only operator that occurs as a binary and unary operator
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx
+By chance, special forms can occur during simplification.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:sympy-sonderfälle"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -5707,6 +4187,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -6928,6 +5409,1499 @@ All runs were carried out with both MAE and MSE.
  the MSE was also used.
 \end_layout
 
+\begin_layout Chapter
+Benchmarks
+\end_layout
+
+\begin_layout Standard
+Both the Mountain car (MC) as well as the Industrial Benchmark (IB) were
+ used to evaluate the approach.
+ MC is a widely used, simple toy benchmark, where the concept can be tested
+ well.
+ The IB is, in contrast, a stochastically independent, high-dimensional
+ testbed, which was especially designed by scientists at Siemens for the
+ simulation of very complex processes in industry for RL.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="7" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MC
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+IB
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Observation dimensionality
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Action dimensionality
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+discrete
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+continuous
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Episode end
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+at target / 200
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+none
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Stochasticity
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+none
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+state-dependent
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Markov state observability
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fully
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+partially
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The used benchmarks in comparison.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Mountain car
+\begin_inset CommandInset label
+LatexCommand label
+name "experiment:mountaincar"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="6" columns="4">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell multirow="3" alignment="center" valignment="middle" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename img/inkscape/mountaincar_dummy.pdf
+	width 5cm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Observation space
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+position
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$[-1.2, 0.6]$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multirow="4" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+velocity
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$[-0.07, 0.07]$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multirow="4" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multirow="4" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Action space
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multirow="4" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+push
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+[left, no, right]
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The main features of the Mountain car problem.
+ The position of the car is by a factor of 10 larger than the speed.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "img:mc_experiment"
+
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "MC-observationspace"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The Mountain car problem was introduced in 1990 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "mountaincarOriginal"
+literal "true"
+
+\end_inset
+
+, where a car is supposed to drive up a mountain as fast as possible that
+ is too steep for the car's engine.
+ To reach the target, an agent has to learn to use the counter slope to
+ take a swing.
+ The state space is implemented in an unusual way (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "MC-observationspace"
+
+\end_inset
+
+), which makes it difficult to connect these values in a formula .
+ Therefore in the area of AI such values are often normalized.
+ For experiments in this thesis though, we assume that the developer did
+ not normalize the values for his program and search for solutions without
+ this intermediate step.
+\end_layout
+
+\begin_layout Paragraph
+Domain Expert approaches
+\end_layout
+
+\begin_layout Standard
+For the optimal solution strategy, the following intermediate objectives
+ must also be considered:
+\end_layout
+
+\begin_layout Itemize
+Premature reversal.
+ 
+\begin_inset Newline newline
+\end_inset
+
+The goal can be reached even without a maximum swing, especially during
+ the last swing a lot of distance and therefore time can be saved.
+\end_layout
+
+\begin_layout Itemize
+Always accelerate.
+\begin_inset Newline newline
+\end_inset
+
+Doing nothing instead of accelerating only makes sense at turning points,
+ otherwise speed is lost.
+ Most of the time such waiting can be replaced by accelerating in the opposite
+ direction.
+ This neutral action is often chosen by neural networks in uncertain borderline
+ cases, because the weights are only slowly adapted.
+\end_layout
+
+\begin_layout Itemize
+The initial action.
+\begin_inset Newline newline
+\end_inset
+
+At the starting position it is already clear whether the goal can be reached
+ with two or three turns.
+ How many swings are taken is decided at the start position, which is why
+ it has an extremely large influence on the time required.
+ This can be seen in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "table:MC_agents_rewards"
+
+\end_inset
+
+; the comparison operator decides on the first swing direction and worsens
+ the result by more than 10 steps.
+\end_layout
+
+\begin_layout Paragraph
+Observation-Action-Space Plots
+\end_layout
+
+\begin_layout Standard
+The state and action space is small enough to display the complete policy
+ of an agent as a two-dimensional diagram where for each state the action
+ is color-coded.
+ The entire state space is subdivided along its dimensions into 256 areas,
+ for each of which the calculated action is coloured.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "wrap:mc-obs-act-plot-space"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/space-8.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hfill
+\end_layout
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/12.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Important characteristics of an agent can be identified by looking at the
+ decision plot, which in this case (Scratch GP results, complexity 8), which
+ manifests itself in clearly divisible blocks (left).
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-space"
+
+\end_inset
+
+ Some states are effectively but never reached, which is why a behaviour-depende
+nt version was also created, which, after 100 test runs, colours the states
+ not reached grey (right).
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-snail"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MAE_scratch/sfehs_eval/diff-13.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+This plot marks the deviations from the reference (Sarsa-)policy within
+ 100 runs.
+\begin_inset CommandInset label
+LatexCommand label
+name "wrap:mc-obs-act-plot-space-diff"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Industrial benchmark 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Industrial-benchmark"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="8" columns="7">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="1.8cm">
+<column alignment="center" valignment="top" width="1.6cm">
+<column alignment="center" valignment="top" width="1.5cm">
+<column alignment="center" valignment="top" width="1.5cm">
+<column alignment="center" valignment="top" width="1.5cm">
+<column alignment="center" valignment="top" width="1.5cm">
+<column alignment="center" valignment="top" width="1.5cm">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+setpoint
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+velocity
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+gain
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+shift
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fatigue
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+consump-tion
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Acronym
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+p
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+v
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+g
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+h
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+f
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+c
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Description
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+external driver,
+\end_layout
+
+\begin_layout Plain Layout
+constant
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+reward
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+reward
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Action
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\pm1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\pm1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\pm1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Min/Max
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[10,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[0,100]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mean
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+55
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+48.75
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+50.53
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+49.45
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+37.51
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+166.33
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Deviation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+28.72
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+12.31
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+29.91
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+29.22
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+31.17
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+139.44
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Past time
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+All IB features at a glance.
+ The reward is not part of the GP-process.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "IB-observations-state"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The Industrial Benchmark was introduced by scientists at Siemens to meet
+ the high requirements of complex, real world industrial processes.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "industrialBenchmark"
+literal "true"
+
+\end_inset
+
+ It is high-dimensional 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "IB-observations-state"
+
+\end_inset
+
+, yet the Markov process is only partially observable, so even past values
+ must also be considered.
+ Since it is also very stochastic, the learning process is made even more
+ difficult.
+ The Reward depends on a combination of Action 0 and Action 1, as well as
+ Action 2, which severely penalises misconduct.
+ 
+\end_layout
+
+\begin_layout Standard
+Currently there are no good human written solutions known for the IB, but
+ approaching the average value (
+\begin_inset Quotes eld
+\end_inset
+
+do nothing
+\begin_inset Quotes erd
+\end_inset
+
+) is considered to be a respectably good comparison solution.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Black box: PSONN
+\end_layout
+
+\begin_layout Standard
+As black box, a particle swarm optimisation algorithm with neural networks
+ (PSONN 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
+
+\end_inset
+
+) with a calculated IB reward of 
+\begin_inset Formula $5353$
+\end_inset
+
+ was chosen.
+ 
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+The initial states of the IB in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+literal "true"
+
+\end_inset
+
+ were randomized.
+ Comparable values could be obtained by a randomized initial state, but
+ the results were very volatile.
+ The difference of agents in Hein's work was 7% worse on average.
+ This value was used for comparison.
+ For the PSONN policy, this results in a adjusted penalty value of 
+\begin_inset Formula $5728/1.07=5353$
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+ Particle swarm optimisation algorithms, similar to GP, can find solutions
+ for many types of problems.
+ The solution space is populated by a swarm population, which should find
+ the best optima by swarm intelligence.
+ This approach is very interesting as a black box, because even bulky solution
+ models can be found relatively quickly.
+ 
+\end_layout
+
 \begin_layout Section
 Mountain Car
 \end_layout
@@ -6948,6 +6922,7 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -7013,6 +6988,7 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -9164,6 +9140,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11951,6 +11928,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 

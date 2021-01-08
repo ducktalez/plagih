@@ -26,6 +26,7 @@
 \RequirePackage{import}
 \RequirePackage[utf8]{inputenc}
 \RequirePackage[linesnumbered,ruled,vlined]{algorithm2e}
+\RequirePackage{mathtools}
 
 \DontPrintSemicolon
 
@@ -48,7 +49,7 @@
 
 % Sfehs personal commands
 \newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},  samenode/.style={fill=blue!40,},  newnode/.style={fill=green!60,}, changenode/.style={fill=orange!60,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
-\newcommand{\rsymp}[0]{\xrightarrow{\text{simplify}}}
+\newcommand{\rsymp}{\xrightarrow{\text{simplify}}}
 
 
 

@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -17,6 +17,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -34,8 +36,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -77,7 +77,6 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -87,10 +86,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -276,7 +272,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -320,7 +315,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -345,7 +339,6 @@ Even AlphaGo, as a prestige project of the RL, supervised by a research
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -375,7 +368,6 @@ XAI deals with the problem of making AI solutions understandable for humans.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -507,7 +499,7 @@ Visualisation of the relation between observations and selected actions
 \end_layout
 
 \begin_layout Section
-Machine Learning approaches
+Explainable AI
 \end_layout
 
 \begin_layout Standard
@@ -620,11 +612,18 @@ name "fig:relu-sigmoid"
 In extensive problem areas, for example image recognition, any strategies
  are so complex that even humans could not explain objects or animals adequately.
  Instead of explaining what a cat is, it is easier to show a cat to someone.
- A similar method is presented in 
+ 
+\end_layout
+
+\begin_layout Subsection
+Layerwise Relevance Propagation
+\end_layout
+
+\begin_layout Standard
+A similar method is presented in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -784,7 +783,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -1068,7 +1066,6 @@ Closure refers to the requirement that the creation of trees always results
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1105,8 +1102,43 @@ Due to the high branching factor for solution candidates, the genotypic
 Formula components can also be additionally weighted to avoid complex mathematic
 al operators.
  In order to be able to weigh the complexity of a formula against its fitness,
- the user can estimate the tradeoff by saving all pareto-efficient combinations.
+ the user can estimate the tradeoff by saving all pareto-efficient combinations
+ [xx pareto GP].
  
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The Pareto front usually flattens out with increasing complexity.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1199,7 +1231,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -1216,7 +1247,6 @@ literal "true"
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1242,7 +1272,6 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -1256,7 +1285,6 @@ This is simplified using SymPy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -1277,7 +1305,6 @@ For example, fuzzy GP policies can be searched for, where even complex policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -1348,7 +1375,6 @@ Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
-literal "true"
 
 \end_inset
 
@@ -1426,41 +1452,6 @@ name "img:MTC-heuristic-vs-sarsa-reward"
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Pareto front from a mountain car race.
- The Pareto front usually flattens out with increasing complexity.
 \end_layout
 
 \end_inset
@@ -1834,7 +1825,6 @@ name "tab:EUREKA-GP-complexities"
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2216,7 +2206,6 @@ distance from two labeled ordered trees T and T' by the minimum cost sequence
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -2386,6 +2375,132 @@ name "img:tree_modifiable_nodes_modified"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Fixed nodes imlementation
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:depth-based-gp-implementation"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Fixed nodes can be determined manually for a real subset of nodes of the
+ origin tree and are unaffected by the evolution process.
+ In order to continue to use classical GP evolution with the same intuition,
+ some procedures, especially when generating random trees, must therefore
+ be adapted.
+\end_layout
+
+\begin_layout Standard
+The fixed core of a tree must be contiguous in this implementation, but
+ can offer starting points for evolutions at any number of points at different
+ heights.
+ The node depth, which normally indicates the distance to the tree root,
+ thus almost completely loses its meaning for the GP process.
+ The depth of a node is therefore replaced with a shell-based interpretation,
+ in which the distance of a node to the next fixed node is used as.
+ Due to the high branching factor in trees with several GP interfaces, however,
+ the layer model also loses its function, which is why the number of nodes
+ replaces the tree depth as a complexity limit and complexity target in
+ random tree generation.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/fix_nodes_mutation.pdf
+	rotateOrigin center
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Fixed nodes must not be changed during the evolve process.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nodesize-based build options including the full- and grow-method.
+ Randomly generated trees should cover the entire search space and have
+ the structuring Full/Grow options to have the same properties of non-fixed
+ generated trees.
+\end_layout
+
+\begin_layout Standard
+The maximum tree depth is a common factor for random , the generation of
+ random trees and branches is usually based on the tree depth.
+ However, this is a problem for the layerwise mutation which is needed for
+ example with fixed nodes, where several branches have to be built up at
+ the same time.
+ As the tree size can grow exponentially, the starting depth may differ
+ between branches and the trees may end up very unbalanced.
+ Therefore a node based algorithm was developed, which builds up branches
+ in full- and grow mode up to a certain number of nodes without risk of
+ structural imbalances.
+ 
+\end_layout
+
+\begin_layout Standard
+In order not to violate the principles of GP, some factors must be considered.
+ At the beginning a random number of nodes to be inserted is chosen.
+ Instead of the node depth, layers are defined, which are the distance to
+ the next fixed node.
+ Depending on the number of nodes located on a layer, the number of nodes
+ to be inserted is randomly divided into intervals.
+ These subtrees are divided according to the Grow or Full method up to the
+ interval size they are entitled to.
+ The number of nodes must be exactly reached (tolerance -1), otherwise the
+ trees could have a large variance of nodes per branch.
+\end_layout
+
+\begin_layout Standard
+When building the branches, a buffer of leaf nodes is built up to avoid
+ having to prune the tree at the end.
+ To build one level lower, a random node of the ebend is selected and assigned
+ according to the Grow or Full method.
+ This avoids an overload of the left side, which would occur because only
+ limited operators can be used.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+The number of nodes replaces the tree depth as the relevant variable when
+ creating random trees.
+ xxx
+\begin_inset Newline newline
+\end_inset
+
+ yyy Soll das überhaupt als Pseudocode geschrieben werden?
 \end_layout
 
 \end_inset
@@ -3252,7 +3367,7 @@ No reliable statistics on the running time were compiled, but the running
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Section
 Sympy reduction 
 \begin_inset CommandInset label
 LatexCommand label
@@ -3378,7 +3493,6 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "false"
 
 \end_inset
 
@@ -3396,9 +3510,6 @@ Due to its complexity, this process can lead to many special cases and in
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:sympy-custom-gp-operators"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3406,9 +3517,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:sympy-sonderfälle"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -4187,7 +4295,6 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -5050,140 +5157,31 @@ The olymp reproduction includes in particular the possibility for the origin
 \end_layout
 
 \begin_layout Section
-Fixed nodes
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:depth-based-gp-implementation"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Fixed nodes can be determined manually for a real subset of nodes of the
- origin tree and are unaffected by the evolution process.
- In order to continue to use classical GP evolution with the same intuition,
- some procedures, especially when generating random trees, must therefore
- be adapted.
-\end_layout
-
-\begin_layout Standard
-The fixed core of a tree must be contiguous in this implementation, but
- can offer starting points for evolutions at any number of points at different
- heights.
- The node depth, which normally indicates the distance to the tree root,
- thus almost completely loses its meaning for the GP process.
- The depth of a node is therefore replaced with a shell-based interpretation,
- in which the distance of a node to the next fixed node is used as.
- Due to the high branching factor in trees with several GP interfaces, however,
- the layer model also loses its function, which is why the number of nodes
- replaces the tree depth as a complexity limit and complexity target in
- random tree generation.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/fix_nodes_mutation.pdf
-	rotateOrigin center
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Fixed nodes must not be changed during the evolve process.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Nodesize-based build options including the full- and grow-method.
- Randomly generated trees should cover the entire search space and have
- the structuring Full/Grow options to have the same properties of non-fixed
- generated trees.
-\end_layout
-
-\begin_layout Standard
-The maximum tree depth is a common factor for random , the generation of
- random trees and branches is usually based on the tree depth.
- However, this is a problem for the layerwise mutation which is needed for
- example with fixed nodes, where several branches have to be built up at
- the same time.
- As the tree size can grow exponentially, the starting depth may differ
- between branches and the trees may end up very unbalanced.
- Therefore a node based algorithm was developed, which builds up branches
- in full- and grow mode up to a certain number of nodes without risk of
- structural imbalances.
- 
-\end_layout
-
-\begin_layout Standard
-In order not to violate the principles of GP, some factors must be considered.
- At the beginning a random number of nodes to be inserted is chosen.
- Instead of the node depth, layers are defined, which are the distance to
- the next fixed node.
- Depending on the number of nodes located on a layer, the number of nodes
- to be inserted is randomly divided into intervals.
- These subtrees are divided according to the Grow or Full method up to the
- interval size they are entitled to.
- The number of nodes must be exactly reached (tolerance -1), otherwise the
- trees could have a large variance of nodes per branch.
-\end_layout
-
-\begin_layout Standard
-When building the branches, a buffer of leaf nodes is built up to avoid
- having to prune the tree at the end.
- To build one level lower, a random node of the ebend is selected and assigned
- according to the Grow or Full method.
- This avoids an overload of the left side, which would occur because only
- limited operators can be used.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-The number of nodes replaces the tree depth as the relevant variable when
- creating random trees.
- xxx
-\begin_inset Newline newline
-\end_inset
-
- yyy Soll das überhaupt als Pseudocode geschrieben werden?
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
 Latex tree visualisation
 \end_layout
 
 \begin_layout Standard
-The visualisation of the trees was done with the help of latex, where the
- Forest package which arranges nodes in a space-saving way, especially with
- large trees.
- For very large trees, a tight-tree version is also created, were created
+Die Visualisierung der Kandidaten spielt zwar nur eine untergeordnete Rolle,
+ als Schnittstelle für den Entwickler ist die Repräsentationsform trotzdem
+ nicht zu vernachlässigen.
+ Deshalb wurde zu den Exportoptionen als mathematische Formel und als Python
+ code auch eine Visualisierung des Baumes in Latex implementiert.
+\end_layout
+
+\begin_layout Standard
+Hierbei ist vor allem das Problem der Anordnung der Knoten zu lösen, was
+ durch das Forest package ermöglicht wird.
+ Dieses xxx arranges nodes in a space-saving way, especially with large
+ trees.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Tight Trees
+\end_layout
+
+\begin_layout Standard
+For very large trees, a tight-tree version is also created, were created
  in which branches with simple mathematical formulas (which do not involve
  fixed nodes) are represented as individual nodes.
  This preserves the structure of the tree without inflating it with simple
@@ -5223,6 +5221,14 @@ text{if},<,=,
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+xxx Um edits in Bäumen zu markieren muss ein Mapping von der Origin auf
+ den Kandidaten berechnet werden.
+ Den Knoten des GP-Baumes können somit Edits zugewiesen werden, die bei
+ der Visualisierung eingefärbt werden können.
+ Für Tight trees wurde keine Einfärbung implementiert.
 \end_layout
 
 \begin_layout Standard
@@ -5409,7 +5415,7 @@ All runs were carried out with both MAE and MSE.
  the MSE was also used.
 \end_layout
 
-\begin_layout Chapter
+\begin_layout Section
 Benchmarks
 \end_layout
 
@@ -5989,7 +5995,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -6813,7 +6818,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -6857,7 +6861,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -6875,7 +6878,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -6922,7 +6924,6 @@ As a black box solution, the leader of the gym-leaderboards was chosen,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6988,7 +6989,6 @@ The gym-environment has a leaderboard containing the approaches that have
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -9140,7 +9140,6 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -11928,7 +11927,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 

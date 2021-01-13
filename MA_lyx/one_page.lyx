@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,6 +7,9 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -24,8 +27,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype false
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -65,7 +66,6 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -74,10 +74,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -91,390 +88,7 @@
 \begin_body
 
 \begin_layout Section
-Familiarity Measurement with the Tree Edit Distance
-\end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-delete
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-This means in particular that the distance cannot be determined as a transitive
- combination or sum of the changes by the evolutionary operators.
- It must be able to be done for each tree, regardless of its previous genetic
- changes.
- yy
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-order Sympy
-\end_layout
-
-\begin_layout Plain Layout
-da sie den kompletten Eingabevektor darstellen.
- Der Rest eines Baumes hat lediglich die Aufgabe, diese Eingaben in sinnvolle
- Ausgaben umzuformen.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-In order to generate solution candidates that are as familiar as possible,
- we need to define a distance function on a suitable unit of measurement.
-\end_layout
-
-\begin_layout Standard
-The mandatory prerequisites for a distance measure are: 
-\begin_inset CommandInset label
-LatexCommand label
-name "xaiMeasurementRequirements"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$d(x,y)
-\backslash
-ge0$
-\end_layout
-
-\end_inset
-
- (non-negativity)
-\end_layout
-
-\begin_layout Itemize
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$d(x,y)=0
-\backslash
-Leftrightarrow x=y$
-\end_layout
-
-\end_inset
-
- (identity of indiscernibles) 
-\end_layout
-
-\begin_layout Itemize
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$d(x,y)=d(y,x)$
-\end_layout
-
-\end_inset
-
- (symmetry) 
-\end_layout
-
-\begin_layout Itemize
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$d(x,y)
-\backslash
-le d(x,z)+d(z,y)$
-\end_layout
-
-\end_inset
-
- (triangle inequality) 
-\end_layout
-
-\begin_layout Standard
-Considering the node-count based paradigm most GP implementations base their
- measures on (vorgestellt in xx), the tree edit distance (TED) marks the
- logical resulting distance measurement.
- several possibilities are available for which a distance measure must be
- defined.
-\end_layout
-
-\begin_layout Subsection
-TED
-\end_layout
-
-\begin_layout Standard
-Die tree edit distance (TED) considers the possible tree edits 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-{
-\backslash
-text{delete},
-\backslash
-text{insert,
-\backslash
-text{modify}
-\backslash
-}}$
-\end_layout
-
-\end_inset
-
- and is calculated as the 
-\begin_inset Quotes eld
-\end_inset
-
-distance from two labeled ordered trees T and T' by the minimum cost sequence
- of edit operations needed to transform T into T'
-\begin_inset Quotes erd
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tedOldestPaper"
-literal "true"
-
-\end_inset
-
-.
- It is a well-known problem in theoretical computer science, whose computation
- was largely worked on and lead to both robust and efficient algorithms.
- xxx cite apted, whose?`
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/TED_operators.pdf
-	lyxscale 60
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Possible TED changes on a tree: insert (green), delete (red), modify (yellow).
- If the position of a node in a branch changes, only the remaining changes
- are evaluated.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:TED_explain_operators"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-(TED) Distance based complexity annomalies
-\end_layout
-
-\begin_layout Standard
-Durch die Verwendung eines Distanzmaßes können einige zusätzliche Annomalien
- auftreten, die einige der bereits in xx angesprochenen Probleme nochmals
- verstärken.
-\end_layout
-
-\begin_layout Standard
-Als Normale Knotenbasierte Kompexitätsmaße unterscheiden meist nicht zwischen
- Operatoren und Knoten, da diese durch Gewichtungen bereits 
-\end_layout
-
-\begin_layout Paragraph
-Inner nodes
-\end_layout
-
-\begin_layout Standard
-Eine wichtige Frage stellt sich beispielsweise, ob alle Änderungen gleich
- behandelt werden sollen.
- 
-\end_layout
-
-\begin_layout Standard
-Ein Baum charakterisiert sich im wesentlichen durch die Struktur seiner
- Operatoren.
-\end_layout
-
-\begin_layout Paragraph
-The curse of Dimensionality
-\end_layout
-
-\begin_layout Standard
-Die Komplexität eines mathematischen Problems bestimmt sich im wesentlichen
- anhand der Dimension ihrer Eingabeparameter.
- Auch für den Entwickler stellen sie den wichtigsten Anhaltspunkt dar.
- 
-\end_layout
-
-\begin_layout Standard
-Knoten können in ihrer Signifikanz für den Wiedererkennungswert unterschieden
- werden.
- 
-\end_layout
-
-\begin_layout Standard
-Aus genetischer Sicht ist die Wurzel der signifikanteste Ansatzpunkt, für
- einen Entwickler stellen aber die Observationen den wichtigsten Referenzpunkt
- dar.
- 
-\end_layout
-
-\begin_layout Paragraph
-The Significance of inner nodes
-\end_layout
-
-\begin_layout Standard
-Blattknoten, die oft .
- A possible solution, that requires no further weighting or node-classification,
- would be to perform the TED calculations only for the operators of a tree.
-\end_layout
-
-\begin_layout Paragraph
-Weighting terminal nodes
-\end_layout
-
-\begin_layout Standard
-Wie bereits erwartet 
-\end_layout
-
-\begin_layout Standard
-When it seems useful, the symmetrical distance between the sets of used
- operators can be added separately.
- The constants could be further included as very weakly weighted factor,
- for example also in the form of the symmetric distance between their sets.
- Note that this approach is based on the same paradigm edit-distance, but
- If the 
-\begin_inset Quotes eld
-\end_inset
-
-identity of indiscernibles
-\begin_inset Quotes erd
-\end_inset
-
- condition of distance measurements should be further fulfilled, t.
-\end_layout
-
-\begin_layout Subsection
-Interpretability-specific TED enhancements
-\end_layout
-
-\begin_layout Standard
-The TED offers many extension possibilities which can further address the
- nature of a change, including a weighting of nodes similar to the one used
- in classical GP which was mentioned in xx.
- 
-\end_layout
-
-\begin_layout Standard
-For this, the weighted mapping must be calculated.
- A subsequent weighting of the mapping of the regular TED does not make
- sense, since a later reweighting can lead to ambiguous results that do
- not correspond to the minimum.
- This can concern the type of edit (e.g.
- not to evaluate delete-edits) or the weighting of changes, where nodes
- of the same family (e.g.
- angle-based operators), or user-specific weights can be applied.
- The weighted TED was imlemented, but opens many questions on how to deal
- with the effect and the complexity of altered nodes in the origin tree.
-\end_layout
-
-\begin_layout Standard
-Implementations might be based on the following ideas:
-\end_layout
-
-\begin_layout Itemize
-Division of all operators into classes, so that changes within the class
- are weakened.
- An example of a possible classification could be xx.
- 
-\end_layout
-
-\begin_layout Itemize
-Even more specific options that were implemented but not evaluated in order
- not to mix too many paradigms:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-With if statements, the edit distance of the child branches is calculated
- separately and only the largest factor is added.
- This procedure is intended to promote the use of if statements, which have
- a very positive influence on the interpretability of a formula due to their
- structuring influence, but which greatly increase the TED due to the high
- arity of 3 and the resulting branching factor.
-\end_layout
-
-\begin_layout Itemize
-Use of several known origins in one run and counting the minimum TED for
- each tree.
- This way, several understandable approaches could be compared directly
- for their extensibility or even incomplete solutions could be introduced
- separately.
-\end_layout
-
-\begin_layout Itemize
-Unifying and ordering trees, for example with sympify as described in xx,
- before calculating the TED.
-\end_layout
-
-\begin_layout Itemize
-Similar to fixed nodes (xx), giving nodes of the core structure a separate
- weighting so that changes are possible but very costly.
-\end_layout
-
-\end_deeper
-\begin_layout Standard
-xxxxxx fixe Knoten sind bei extrem großen Bäumen eventuell unausweichlich
- da zufällige bäume sonst crapshit sind
 \end_layout
 
 \end_body

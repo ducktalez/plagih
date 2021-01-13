@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -19,6 +19,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -36,8 +38,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -79,7 +79,6 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -89,10 +88,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -271,7 +267,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -315,7 +310,6 @@ status open
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -341,7 +335,6 @@ In view of the increasing importance of algorithms in our society, the EU
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -369,7 +362,6 @@ For example, fuzzy GP policies can be searched for, where even complex policies
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -377,7 +369,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -580,7 +571,6 @@ Every learning approach is subject to a trade-off between performance and
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -711,6 +701,109 @@ Visualisation of the relation between observations and selected actions
 
 \end_layout
 
+\begin_layout Standard
+The pinnacle of explainable intelligent approaches, human-written approaches
+ represent xxx und stellen einen sicheren Ankerpunkt für Exklärbare Ansätze
+ dar.
+ The main reasons to trust an expert over a machine learning approach should
+ be xxx verinnerlicht werden, considering that humans also have a long learning
+ process behind them before they can be considered experts.
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+Dieser lange Trainingsprozess (technische Sicht, Lernstrategie, Sprache
+ als Bestandteil xxx)
+\end_layout
+
+\begin_layout Standard
+The human brain, with almost 90 billion neurons, is not only far more complex
+ than artificial neural networks, the architecture has been perfected in
+ many areas in an evolutionary process lasting millions of years.
+ This enables humans to learn a wide range of skills in a very diverse learning
+ process, while being severely limited in time and exploration compared
+ to machines.
+ Image recognition, for example, is perfected in early childhood to such
+ an extent that it hardly needs any explanation.
+ The learning process is intrinsically continuously monitored by primal
+ fears and drives, dangers are analysed and the learned models are thus
+ endowed with a high degree of security.
+ Humans are also as lazy as they can be and, instead of making an effort
+ to find new concepts for a problem, they try to solve a problem with what
+ they have already learned.
+ Language, as well as the ability to speak, is learned as a child and at
+ the same time describes everything that a person can understand.
+\end_layout
+
+\begin_layout Quotation
+The limits of my language mean the limits of my world.
+ 
+\end_layout
+
+\begin_layout Quotation
+(Ludwig Wittgenstein, 
+\begin_inset Quotes eld
+\end_inset
+
+Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "wittgenstein1953philosophical"
+
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Standard
+Interpersonal communication and the ability to implement successful models
+ in all people (such as the Pythagorean theorem) also avoids over- and underfitt
+ing as much as possible.
+ As a communication protocol, a language works because the experiences between
+ people are similar enough to be learned and comparable.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ Most people know how to recognize colors, that you first have to turn puzzle
+ pieces to the colored side and that you should use the picture on the box
+ as a reference point.
+ A popular tip for beginners is therefore that you should start with the
+ edge of the puzzle.
+ This is helpful, because the learning process in humans usually consists
+ of the composition of many comprehensibly strung together steps.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+An artificial neural network has to do without all these properties as far
+ as possible.
+ Through an adapted network architecture and the enormous computing power,
+ a specialist savant can nevertheless be trained to master the given task.
+ In contrast to humans, a neural network is dependent on random exploration,
+ which can find bias-free policies, but represents a tradeoff to the familiar
+ learning process of humans.
+ Solutions that are searched for with the aim of minimal representation
+ in a language space as defined above can therefore be interpreted by humans,
+ but since the search process is also based on chance, the formulas found
+ are also free of human bias - but they still often appear to the observer
+ more as a random combination of various operators than as a logically abstracte
+d solution to a problem.
+\end_layout
+
 \begin_layout Paragraph
 Layerwise Relevance Propagation
 \end_layout
@@ -720,7 +813,6 @@ A similar method is presented in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -856,15 +948,12 @@ https://lrpserver.hhi.fraunhofer.de/
 
 \end_layout
 
-\begin_layout Section
-Genetic Programming 
-\begin_inset CommandInset label
-LatexCommand label
-name "gp_Genetic-Programming"
+\begin_layout Paragraph
+Explicit logic
+\end_layout
 
-\end_inset
-
-
+\begin_layout Standard
+xxx what is
 \end_layout
 
 \begin_layout Standard
@@ -882,10 +971,22 @@ Finding all the components of a formula is an infinitely complex problem
  evolutionary strategies to find solutions.
 \end_layout
 
+\begin_layout Section
+Genetic Programming 
+\begin_inset CommandInset label
+LatexCommand label
+name "gp_Genetic-Programming"
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
-Genetic programming (GP), introduced by Koza, views the components of programmes
- as a gene pool that can be optimised over generations through selection
- and mutation of individual genes.
+Genetic programming (GP), introduced by Koza, implements the components
+ of programs as genes.
+ The gene pool can be optimised over generations through selection and mutation
+ of individual genes.
  The individuals of a population are usually represented as computational
  trees that can be evaluated with a fitness function.
 \end_layout
@@ -1150,7 +1251,6 @@ Closure refers to the requirement that the creation of trees always results
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1494,7 +1594,6 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1760,7 +1859,6 @@ In
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -1858,7 +1956,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "false"
 
 \end_inset
 
@@ -1868,110 +1965,6 @@ literal "false"
 \begin_layout Standard
 xxx Add: the best explanation of a model is when the explanation was the
  fundament on which a human built the model on.
-\end_layout
-
-\begin_layout Standard
-The pinnacle of explainable intelligent approaches, human-written approaches
- represent xxx und stellen einen sicheren Ankerpunkt für Exklärbare Ansätze
- dar.
- The main reasons to trust an expert over a machine learning approach should
- be xxx verinnerlicht werden, considering that humans also have a long learning
- process behind them before they can be considered experts.
-\end_layout
-
-\begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-Dieser lange Trainingsprozess (technische Sicht, Lernstrategie, Sprache
- als Bestandteil xxx)
-\end_layout
-
-\begin_layout Standard
-The human brain, with almost 90 billion neurons, is not only far more complex
- than artificial neural networks, the architecture has been perfected in
- many areas in an evolutionary process lasting millions of years.
- This enables humans to learn a wide range of skills in a very diverse learning
- process, while being severely limited in time and exploration compared
- to machines.
- Image recognition, for example, is perfected in early childhood to such
- an extent that it hardly needs any explanation.
- The learning process is intrinsically continuously monitored by primal
- fears and drives, dangers are analysed and the learned models are thus
- endowed with a high degree of security.
- Humans are also as lazy as they can be and, instead of making an effort
- to find new concepts for a problem, they try to solve a problem with what
- they have already learned.
- Language, as well as the ability to speak, is learned as a child and at
- the same time describes everything that a person can understand.
-\end_layout
-
-\begin_layout Quotation
-The limits of my language mean the limits of my world.
- 
-\end_layout
-
-\begin_layout Quotation
-(Ludwig Wittgenstein, 
-\begin_inset Quotes eld
-\end_inset
-
-Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
-\begin_inset Quotes erd
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "wittgenstein1953philosophical"
-literal "true"
-
-\end_inset
-
-)
-\end_layout
-
-\begin_layout Standard
-Interpersonal communication and the ability to implement successful models
- in all people (such as the Pythagorean theorem) also avoids over- and underfitt
-ing as much as possible.
- As a communication protocol, a language works because the experiences between
- people are similar enough to be learned and comparable.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- Most people know how to recognize colors, that you first have to turn puzzle
- pieces to the colored side and that you should use the picture on the box
- as a reference point.
- A popular tip for beginners is therefore that you should start with the
- edge of the puzzle.
- This is helpful, because the learning process in humans usually consists
- of the composition of many comprehensibly strung together steps.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-An artificial neural network has to do without all these properties as far
- as possible.
- Through an adapted network architecture and the enormous computing power,
- a specialist savant can nevertheless be trained to master the given task.
- In contrast to humans, a neural network is dependent on random exploration,
- which can find bias-free policies, but represents a tradeoff to the familiar
- learning process of humans.
- Solutions that are searched for with the aim of minimal representation
- in a language space as defined above can therefore be interpreted by humans,
- but since the search process is also based on chance, the formulas found
- are also free of human bias - but they still often appear to the observer
- more as a random combination of various operators than as a logically abstracte
-d solution to a problem.
 \end_layout
 
 \begin_layout Paragraph
@@ -2040,7 +2033,391 @@ An insurmountable trench as a metaphor for the explainability gap - the
 \end_layout
 
 \begin_layout Section
-xxxxxxxxxxxxxx
+Familiarity Measurement with the Tree Edit Distance
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+delete
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+This means in particular that the distance cannot be determined as a transitive
+ combination or sum of the changes by the evolutionary operators.
+ It must be able to be done for each tree, regardless of its previous genetic
+ changes.
+ yy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+order Sympy
+\end_layout
+
+\begin_layout Plain Layout
+da sie den kompletten Eingabevektor darstellen.
+ Der Rest eines Baumes hat lediglich die Aufgabe, diese Eingaben in sinnvolle
+ Ausgaben umzuformen.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to generate solution candidates that are as familiar as possible,
+ we need to define a distance function on a suitable unit of measurement.
+\end_layout
+
+\begin_layout Standard
+The mandatory prerequisites for a distance measure are: 
+\begin_inset CommandInset label
+LatexCommand label
+name "xaiMeasurementRequirements"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$d(x,y)
+\backslash
+ge0$
+\end_layout
+
+\end_inset
+
+ (non-negativity)
+\end_layout
+
+\begin_layout Itemize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$d(x,y)=0
+\backslash
+Leftrightarrow x=y$
+\end_layout
+
+\end_inset
+
+ (identity of indiscernibles) 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$d(x,y)=d(y,x)$
+\end_layout
+
+\end_inset
+
+ (symmetry) 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$d(x,y)
+\backslash
+le d(x,z)+d(z,y)$
+\end_layout
+
+\end_inset
+
+ (triangle inequality) 
+\end_layout
+
+\begin_layout Subsection
+TED
+\end_layout
+
+\begin_layout Standard
+Considering the node-count based paradigm most GP implementations base their
+ measures on (vorgestellt in xx), the tree edit distance (TED) marks the
+ logical resulting distance measurement.
+ The TED is calculated as the 
+\begin_inset Quotes eld
+\end_inset
+
+distance from two labeled ordered trees T and T' by the minimum cost sequence
+ of edit operations 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+{
+\backslash
+text{delete},
+\backslash
+text{insert},
+\backslash
+text{modify}
+\backslash
+}$
+\end_layout
+
+\end_inset
+
+ needed to transform T into T'
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedOldestPaper"
+
+\end_inset
+
+.
+ It is a well-known problem in theoretical computer science, whose computation
+ was largely worked on and lead to both robust and efficient algorithms.
+ xxx cite apted, whose?`
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/TED_operators.pdf
+	lyxscale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Possible TED changes on a tree: insert (green), delete (red), modify (yellow).
+ If the position of a node in a branch changes, only the remaining changes
+ are evaluated.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:TED_explain_operators"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+(TED) Distance based complexity annomalies
+\end_layout
+
+\begin_layout Standard
+Durch die Verwendung eines Distanzmaßes können einige der bereits in xx
+ angesprochenen Probleme nochmals verstärkt werden.
+ Eine wichtige Frage ist, ob alle Änderungen gleich behandelt werden sollen.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Die TED stutzen
+\end_layout
+
+\begin_layout Standard
+Ein Programmierbaum lässt sich im wesentlichen durch die Struktur seiner
+ Operatoren charakterisieren, da die genaue Wahl der Blattknoten die logische
+ Voraussetzung für seine Fitness sind und deshalb nur an den passenden Stellen
+ verwendet werden können.
+ Wie bereits in xx erwähnt haben Konstanten für die Interpretierbarkeit
+ bzw.
+ das Wesen einer Formel sowiesi eine vergleichsweise unbedeutende Rolle.
+ Observationen spielen zwar für das Problem ansich eine wichtige Rolle (siehe
+ xx), ergeben sich aber auch aus dem reinen Operatobaum.
+ 
+\end_layout
+
+\begin_layout Standard
+Blattknoten zu bewerten hat bei normalen Komplexitätsmaßen deshalb lediglich
+ die Funktion, ohne großen Mehraufwand den Branching-faktor eines Baumes
+ zu bestrafen.
+\end_layout
+
+\begin_layout Standard
+Für Distanzbasierte Verfahren stellen Blattknoten, vor allem die Konstanten
+ dar, bei denen eine sonst gewünschte Optimierungen eine Knotenänderung
+ darstellt.
+ Das kann nicht nur gewollte Vereinfachungen verhindern sondern sogar dazu
+ führen, dass die Operatoren angepasst werden um die Konstante weiter unveränder
+t nutzen zu können.
+ Eine einfache Lösung wäre beispielsweise, Konstanten beim berechnen der
+ TED auszuschließen.
+\end_layout
+
+\begin_layout Standard
+Observationen haben im Gegensatz dazu eine weitaus bedeutendere Rolle, insbesond
+ere die Menge der verwendeten Observationen.
+ Die Anzahl nötiger Observationen stellt die Dimensionalität des Problems
+ dar xx curse of dimensionality in mathe xx.
+ Für den Entwickler stellen sie insbesondere den Startpunkt seiner Überlegungen
+ dar, was dem genetischen Ansatz mit der Baumwurzel als Hauptankerpunkt
+ konträr gegenüber steht.
+ Observationen sind die Knoten, um die herum Funktionen und Konstanten so
+ angeordnet werden sollen, sodass sinnvolle Ergebnisse entstehen; sie sollten
+ deshalb nicht wie die Konstanten ignoriert werden und können normaler Bestandte
+il der TED bleiben.
+\end_layout
+
+\begin_layout Standard
+Da die Menge der Verwendeten Operatoren aber wichtiger ist als deren Anzahl
+ kann auch die symmetrische Distanz zwischen den Mengen genutzter Observationen
+ ausgerehnet werden und beispielsweise als Summe, oder aber auch als Faktor,
+ in die Berechnung mit einfließen.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Note that this approach is based on the same paradigm edit-distance, but
+ contradicts the 
+\begin_inset Quotes eld
+\end_inset
+
+identity of indiscernibles
+\begin_inset Quotes erd
+\end_inset
+
+ condition of distance measurements.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Weighted TED
+\end_layout
+
+\begin_layout Standard
+The TED offers many extension possibilities which can further address the
+ nature of a change, including a weighting of nodes similar to the one used
+ in classical GP which was mentioned in xx.
+ 
+\end_layout
+
+\begin_layout Standard
+For this, the weighted mapping must be calculated.
+ A subsequent weighting of the mapping of the regular TED does not make
+ sense, since a later reweighting can lead to ambiguous results that do
+ not correspond to the minimum.
+ Dies betrifft vor allem den Umgang mit einem geänderten Knoten.
+\end_layout
+
+\begin_layout Standard
+of the same family (e.g.
+ angle-based operators), or user-specific weights can be applied.
+ The weighted TED was imlemented, but opens many questions on how to deal
+ with the effect and the complexity of altered nodes in the origin tree.
+\end_layout
+
+\begin_layout Standard
+Implementations might be based on the following ideas:
+\end_layout
+
+\begin_layout Itemize
+Ignoring altered nodes
+\end_layout
+
+\begin_layout Itemize
+Division of all operators into classes, where the cost for changing within
+ a class is weakened.
+ Eine potentielle Unterteilung der Operatoren könnte wie filgt aussehen,
+ special rules may be further specified.
+ This allows adaptions in konstant nodes and also a distinction between
+ basic operator types.
+\end_layout
+
+\begin_layout Itemize
+Even more specific options that were implemented but not evaluated in order
+ not to mix too many paradigms:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+With if statements, the edit distance of the child branches is calculated
+ separately and only the largest factor is added.
+ This procedure is intended to promote the use of if statements, which have
+ a very positive influence on the interpretability of a formula due to their
+ structuring influence, but which greatly increase the TED due to the high
+ arity of 3 and the resulting branching factor.
+\end_layout
+
+\begin_layout Itemize
+Use of several known origins in one run and counting the minimum TED for
+ each tree.
+ This way, several understandable approaches could be compared directly
+ for their extensibility or even incomplete solutions could be introduced
+ separately.
+\end_layout
+
+\begin_layout Itemize
+Unifying and ordering trees, for example with sympify as described in xx,
+ before calculating the TED.
+\end_layout
+
+\begin_layout Itemize
+Similar to fixed nodes (xx), giving nodes of the core structure a separate
+ weighting so that changes are possible but very costly.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+xxxxxx fixe Knoten sind bei extrem großen Bäumen eventuell unausweichlich
+ da zufällige bäume sonst crapshit sind
 \end_layout
 
 \begin_layout Standard
@@ -2222,7 +2599,6 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -2236,7 +2612,6 @@ This is simplified using SymPy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -2917,7 +3292,6 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3720,7 +4094,6 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -5766,7 +6139,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -6075,7 +6447,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6157,7 +6528,6 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -8647,7 +9017,6 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -10730,7 +11099,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -10839,7 +11207,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -10864,7 +11231,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -11614,7 +11980,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 

@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,9 +7,6 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
-% Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -27,6 +24,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -66,6 +65,7 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -74,7 +74,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -97,6 +100,7 @@ XAI deals with the problem of making AI solutions understandable for humans.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -140,7 +144,7 @@ https://dictionary.cambridge.org/dictionary/english/explanation
 
 \end_inset
 
- Explanation is, in contrast, rather a 
+ An explanation is a 
 \begin_inset Quotes eld
 \end_inset
 
@@ -154,137 +158,26 @@ collection of features of interpretable domain that have contributed for
 \end_layout
 
 \begin_layout Standard
-The best explanation of a simple model is the model itself; it perfectly
- represents itself and is easy to understand.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI-unified-approach"
-
-\end_inset
-
- 
+Ein wichtiger Forschungspunkt stellt vor allem das nachträgliche Reasoning
+ dar, wo ein bereits trainiertes Modell im Nachhinein erklärt werden soll.
+ Wie gut
 \end_layout
 
 \begin_layout Standard
-The best explanation is probably the explanation that existed before a model,
- so that the model is a good representation of the explanation.
- 
-\end_layout
-
-\begin_layout Standard
-==
-\end_layout
-
-\begin_layout Standard
-Implizite policies basieren auf einem generischen Modell, dessen Parameter
- in einem Trainingsprozess
-\end_layout
-
-\begin_layout Standard
-Implicit policies are based on generative models such as neural networks
- in the form of the parameterisation of the formula, but must be explicitly
- recognisable as a formula.
- 
-\end_layout
-
-\begin_layout Standard
-In order to be able to interpret the logic of a policy, the logic must not
- only be implicit, 
-\end_layout
-
-\begin_layout Standard
-Finding all the components of a formula is an infinitely complex problem
- and is therefore normally the task of the spearhead of human abstraction
- ability, the computer scientist.
- In machine learning, however, there are metaheuristic strategies that use
- evolutionary strategies to find solutions.
-\end_layout
-
-\begin_layout Standard
-The pinnacle of explainable intelligent approaches sss safe anchor point
- for explicable approaches.
- The main reasons to trust an expert over a machine learning approach is
- the, considering that humans also have a long learning process behind them
- before they can be considered experts.
-\end_layout
-
-\begin_layout Standard
-The learning process is intrinsically continuously monitored by primal fears
- and drives, dangers are analysed and the learned models are thus endowed
- with a high degree of security.
-\end_layout
-
-\begin_layout Subsection
-Why are experts explainable? Human vs.
- Machine
-\end_layout
-
-\begin_layout Standard
-The human brain learning architecture has been perfected in many ways through
- an evolutionary process lasting millions of years, which allows learning
- a wide range of skills in a very diverse learning process.
- while being severely limited in time and exploration compared to machines.
- Image recognition, for example, is perfected in early childhood to such
- an extent that it hardly needs any explanation.
- Humans are also as lazy as they can be and, instead of making an effort
- to find new concepts for a problem, they try to solve a problem with what
- they have already learned.
- Language, as well as the ability to speak, is learned as a child and at
- the same time describes everything that a person can understand.
-\end_layout
-
-\begin_layout Quotation
-The limits of my language mean the limits of my world.
- 
-\end_layout
-
-\begin_layout Quotation
-(Ludwig Wittgenstein, 
-\begin_inset Quotes eld
-\end_inset
-
-Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
-\begin_inset Quotes erd
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "wittgenstein1953philosophical"
-
-\end_inset
-
-)
-\end_layout
-
-\begin_layout Standard
-Interpersonal communication and the ability to implement successful models
- in all people (such as the Pythagorean theorem) also avoids over- and underfitt
-ing as much as possible.
- As a communication protocol, a language works because the experiences between
- people are similar enough to be learned and comparable.
+Erklärbarkeit ist somit auch für Probleme möglich, die für Interpretierbarkeit
+ zu komplex sind, wie beispielsweise die Bilderkennung.
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- Most people know how to recognize colors, that you first have to turn puzzle
- pieces to the colored side and that you should use the picture on the box
- as a reference point.
- A popular tip for beginners is therefore that you should start with the
- edge of the puzzle.
- This is helpful, because the learning process in humans usually consists
- of the composition of many comprehensibly strung together steps.
+Image recognition is also not explainable to humans.
+ To explain to another person what an object like a cat is, it is more helpful
+ to show him a cat than to describe one.
 \end_layout
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection
-Post-hoc Explainability
 \end_layout
 
 \begin_layout Paragraph
@@ -292,38 +185,21 @@ Layerwise Relevance Propagation
 \end_layout
 
 \begin_layout Standard
-Bilderkennung ist ein so umfangreiches Problem, dass selbst der Mensch keine
- ausreichende Erklärung liefern kann.
- xx ausschnitt von oben?
-\end_layout
-
-\begin_layout Standard
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-xx Instead of explaining what a cat is, it is easier to show a cat to someone.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 Layerwise Relevance propagation 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
- is a method to visualize a image recognition NN's decisions by tracing
- back the most significant factors of decisions thby marking the pixels
- which were most relevant for the decision process.
- This can help with debugging misbehaviour and provides a good insight into
- machine vision, but cannot provide additional trust.
+ is a technique to determine the input features which were crucial for a
+ neural network's output.
+ In der Bilderkennung können so die wichtigsten Pixel erkennbar gemacht
+ werden.
+ This can help with debugging misbehaviour and also provides a good insight
+ into machine vision.
+ However, it can not provide additional trust.
  
 \end_layout
 
@@ -444,6 +320,71 @@ https://lrpserver.hhi.fraunhofer.de/
 \end_inset
 
 
+\end_layout
+
+\begin_layout Paragraph
+Interpretability
+\end_layout
+
+\begin_layout Standard
+Language, as well as the ability to speak, is learned as a child and at
+ the same time describes everything that a person can understand.
+\end_layout
+
+\begin_layout Quotation
+The limits of my language mean the limits of my world.
+ 
+\end_layout
+
+\begin_layout Quotation
+(Ludwig Wittgenstein, 
+\begin_inset Quotes eld
+\end_inset
+
+Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "wittgenstein1953philosophical"
+literal "true"
+
+\end_inset
+
+) xxx weg damit!
+\end_layout
+
+\begin_layout Standard
+The best explanation of a simple model is the model itself; it perfectly
+ represents itself and is easy to understand.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-unified-approach"
+literal "true"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+The best explanation is probably the explanation that existed before a model,
+ so that the model is a good representation of the explanation.
+ 
+\end_layout
+
+\begin_layout Standard
+==
+\end_layout
+
+\begin_layout Standard
+Finding all the components of a formula is an infinitely complex problem
+ and is therefore normally the task of the spearhead of human abstraction
+ ability, the computer scientist.
+ In machine learning, however, there are metaheuristic strategies that use
+ evolutionary strategies to find solutions.
 \end_layout
 
 \end_body

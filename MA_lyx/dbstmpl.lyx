@@ -159,17 +159,13 @@ erklaerung
 \end_layout
 
 \begin_layout Abstract
-Machine learning approaches achieve superhuman performance in more and more
- areas.
- However, since the structures used are accepted as a black box and decisions
- cannot be explained, people still rely on heuristics written by humans,
- especially in sensitive areas.
- With the help of genetic programming it is possible to generate 
-\end_layout
-
-\begin_layout Abstract
-results, but often the solutions still have a complex structure, not correspondi
-ng to the thinking structure of a developer.
+Dank großer Fortschritte können human outperformen, aber au kosten von black
+ box.
+ XAI.
+ create policies with extraordinary performance at the price of accepting
+ the solution as black box.
+ Especially in the industry, it has become great interest to search for
+ interpretable policies, for example with genetic programming.
  We therefore present a novel approach that uses pareto genetic programming
  to extend a man-made program with as few changes as possible to adapt the
  logic of any black box machine learning approach.
@@ -190,6 +186,147 @@ LatexCommand tableofcontents
 
 \begin_layout Chapter
 Introduction
+\end_layout
+
+\begin_layout Standard
+In dieser Arbeit wird das Konzept der Vertrautheit als zusätzliche Eigenschaft
+ der Interpretierbarkeit vorgestellt um 
+\end_layout
+
+\begin_layout Standard
+Für viele Problemstellungen in der Industrie werden intelligente Lösungsstrategi
+en benötigt, die häufig von Domain experts entwickelt werden.
+ Die MöglichkeitReinforcement Learning (RL), wo ein Agent eigenständig eine
+ Strategie zum maximieren einer Belohnungen für ein Environment erlernen
+ muss.
+ MIthilfe der Verwendung von DNNs 
+\end_layout
+
+\begin_layout Standard
+Viele Bereiche der Industrie und Wissenschaft umfassen Probleme, für die
+ intelligenten Lösungsstrategien gesucht werden müssen.
+ 
+\end_layout
+
+\begin_layout Standard
+Mithilfe von deep neural networks konnten sogarerzielt werden, werdenEspecially
+ the use of neural networks, which in the first place 
+\end_layout
+
+\begin_layout Standard
+Es gibt eine Vielzahl von Problemen, für die das suchen intelligenter Lösungsstr
+ategien von großem Interesse ist.
+\end_layout
+
+\begin_layout Standard
+In vielen Bereichen der Industrie und Wissenschaft hofft man von Machine
+ Learning profitieren zu können.
+ Besonders der Bereich des Reinforcement Learning (RL), was einer Maschine
+\end_layout
+
+\begin_layout Standard
+Viele Bereiche der Wissenschaft stellt die Interpretierbarkeit
+\end_layout
+
+\begin_layout Standard
+In vielen Bereichen der Industrie und Wissenschaft
+\end_layout
+
+\begin_layout Standard
+Industrie und Wissenschaft profitieren bereits in vielen Bereichen von AI.
+ Besonders RL interessant
+\end_layout
+
+\begin_layout Standard
+Das Suchen intelligenter Lösungsstrategien ist Aufgabe von Domain experts
+ 
+\end_layout
+
+\begin_layout Standard
+Viele Unternehmen erhoffen von AI zu profitieren.
+ Vor allem RL große Aufmerksamkeit, weil Strategien finden.
+ 
+\end_layout
+
+\begin_layout Standard
+In vielen Bereichen erhofft man sich durch RL neuer Erkenntnisse.
+ (RL).
+ Dank NN werden Menschen oft übertroffen.
+\end_layout
+
+\begin_layout Standard
+Bei der suche nach intelligenten RL policies spielt 
+\end_layout
+
+\begin_layout Standard
+reinforcement learning policies is of great interest for industry.
+\end_layout
+
+\begin_layout Standard
+Finding interpretable policies is of great interest for industry and science.
+\end_layout
+
+\begin_layout Standard
+aaa Das Suchen nach intelligenten Lösungsstrategien stellt eine wichtige
+ Aufgabe für Experten für Industrie und Wissenschaft.
+ Dank RL Fortschritte wird der Mensch bereits in vielen Bereichen übertroffen
+\end_layout
+
+\begin_layout Standard
+In vielen Bereichen rückt Erklärbarkeit eine wichtige Rolle.
+\end_layout
+
+\begin_layout Standard
+In der Industrie spielt 
+\end_layout
+
+\begin_layout Standard
+- Intelligente Lösungen finden: Sehr interessant (für Alle)
+\end_layout
+
+\begin_layout Standard
+- RL ermöglicht Machine
+\end_layout
+
+\begin_layout Standard
+- Profitieren von RL möglich?
+\end_layout
+
+\begin_layout Standard
+- Super Fortschritte mit NN!
+\end_layout
+
+\begin_layout Standard
+- Aber: erklärbar :;( ...und weitere Probleme.
+\end_layout
+
+\begin_layout Standard
+-> Industrie: Sicherheit.
+\end_layout
+
+\begin_layout Standard
+-> Wissenschaft: Bias-free Wissen!
+\end_layout
+
+\begin_layout Standard
+In vielen Bereichen erhofft man vom den Einsatz von AI 
+\end_layout
+
+\begin_layout Standard
+Das suchen intelligenter Lösungsstrategien ist von großem Interesse Industrie
+ und Wissenschaft.
+ RL ist deshalb von großem Interesse für Alle.
+\end_layout
+
+\begin_layout Standard
+In vielen Bereichen hofft man deshalb von RL profitieren zu können.
+ Durch die Verwendung von NN
+\end_layout
+
+\begin_layout Standard
+Seit Fortschritte im RL sogar menschliche Lösungen übertreffen RL ermöglicht
+ auch Maschinen nach Lösungsstrategien zu suchen.
+ und übertrifft den Menschen mittlerweile.
 \end_layout
 
 \begin_layout Standard
@@ -227,10 +364,17 @@ Der Umfang der Änderungen wird mithilfe der TED ausgerechnet.
 \end_layout
 
 \begin_layout Standard
-Finding interpretable reinforcement learning policies is not is not only
- interesting from an academic point of view, it is also of great interest
- to industry.
- In the field of RL, AI approaches must be considered as black boxes, which
+Finding interpretable reinforcement learning policies is of great interest
+ to industry and academia.
+ 
+\end_layout
+
+\begin_layout Standard
+Vor allem der Bereich des RL wird mit großem 
+\end_layout
+
+\begin_layout Standard
+In the field of RL, AI approaches must be considered as black boxes, which
  is why they cannot be trusted.
  To restore this trust there is the XAI area, which tries to explain the
  black box to humans.
@@ -249,10 +393,6 @@ Finding interpretable reinforcement learning policies is not is not only
 The extent of the changes is calculated with the help of the tree edit distance.
 \end_layout
 
-\begin_layout Section
-Motivation
-\end_layout
-
 \begin_layout Standard
 Thanks to enormous progress in the field of artificial intelligence, more
  and more problems can be taken over by machines.
@@ -264,8 +404,7 @@ Thanks to enormous progress in the field of artificial intelligence, more
 \end_layout
 
 \begin_layout Subsection
-Why are experts explainable? Human vs.
- Machine
+Why are experts explainable? 
 \end_layout
 
 \begin_layout Standard
@@ -280,6 +419,11 @@ The pinnacle of explainable intelligent approaches sss safe anchor point
 The learning process is intrinsically continuously monitored by primal fears
  and drives, dangers are analysed and the learned models are thus endowed
  with a high degree of security.
+\end_layout
+
+\begin_layout Paragraph
+Human vs.
+ Machine learning
 \end_layout
 
 \begin_layout Standard
@@ -321,7 +465,7 @@ Let's consider, for example, the game Puzzle as an NP-hard problem, where
 
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 Alpha Go
 \end_layout
 

@@ -96,6 +96,8 @@ Explainable AI
 
 \begin_layout Standard
 XAI deals with the problem of making AI solutions understandable for humans.
+ An XAI approach should in some way mimic human explanation and feedback
+ mechanisms.
  As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -105,7 +107,11 @@ literal "true"
 \end_inset
 
 , a distinction is made between interpretability and explainability.
- Interpretability is defined as 
+ 
+\end_layout
+
+\begin_layout Standard
+Interpretability is defined as 
 \begin_inset Quotes eld
 \end_inset
 
@@ -113,9 +119,7 @@ the ability to explain or to present in understandable terms to humans
 \begin_inset Quotes erd
 \end_inset
 
- and is thus strongly related to the classical version of an explanation
- according to the cambridge dictionary, which defines an explanation as
- 
+, which is strongly related to the classical version of an explanation 
 \begin_inset Quotes eld
 \end_inset
 
@@ -129,6 +133,15 @@ the details or reasons that someone gives to make something clear or easy
 status open
 
 \begin_layout Plain Layout
+Definition of 
+\begin_inset Quotes eld
+\end_inset
+
+explanation
+\begin_inset Quotes erd
+\end_inset
+
+ according to the cambridge dictionar, 
 \begin_inset Flex URL
 status open
 
@@ -144,7 +157,11 @@ https://dictionary.cambridge.org/dictionary/english/explanation
 
 \end_inset
 
- An explanation is a 
+ 
+\end_layout
+
+\begin_layout Standard
+An explanation is described as 
 \begin_inset Quotes eld
 \end_inset
 
@@ -154,30 +171,6 @@ collection of features of interpretable domain that have contributed for
 \end_inset
 
 .
- 
-\end_layout
-
-\begin_layout Standard
-Ein wichtiger Forschungspunkt stellt vor allem das nachträgliche Reasoning
- dar, wo ein bereits trainiertes Modell im Nachhinein erklärt werden soll.
- Wie gut
-\end_layout
-
-\begin_layout Standard
-Erklärbarkeit ist somit auch für Probleme möglich, die für Interpretierbarkeit
- zu komplex sind, wie beispielsweise die Bilderkennung.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Image recognition is also not explainable to humans.
- To explain to another person what an object like a cat is, it is more helpful
- to show him a cat than to describe one.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Paragraph
@@ -185,7 +178,7 @@ Layerwise Relevance Propagation
 \end_layout
 
 \begin_layout Standard
-Layerwise Relevance propagation 
+For image recognition with DNNs, Layerwise Relevance propagation 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
@@ -193,14 +186,10 @@ literal "true"
 
 \end_inset
 
- is a technique to determine the input features which were crucial for a
- neural network's output.
- In der Bilderkennung können so die wichtigsten Pixel erkennbar gemacht
- werden.
- This can help with debugging misbehaviour and also provides a good insight
- into machine vision.
- However, it can not provide additional trust.
- 
+ offers a technique to highlight the areas crucial areas for a decision.
+ Besides the insight into industrial image processing, however, this technique
+ has only limited use even as a debugging aid, as can be seen in xx.
+ Unfortunately, understanding or trust cannot be gained.
 \end_layout
 
 \begin_layout Standard
@@ -331,6 +320,10 @@ Language, as well as the ability to speak, is learned as a child and at
  the same time describes everything that a person can understand.
 \end_layout
 
+\begin_layout Standard
+Interpretierbare Policies sind 
+\end_layout
+
 \begin_layout Quotation
 The limits of my language mean the limits of my world.
  
@@ -354,6 +347,12 @@ literal "true"
 \end_inset
 
 ) xxx weg damit!
+\end_layout
+
+\begin_layout Standard
+Ein wichtiger Forschungspunkt stellt vor allem das nachträgliche Reasoning
+ dar, wo ein bereits trainiertes Modell im Nachhinein erklärt werden soll.
+ 
 \end_layout
 
 \begin_layout Standard

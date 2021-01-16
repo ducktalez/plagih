@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,6 +7,9 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -24,8 +27,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype false
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -65,7 +66,6 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -74,10 +74,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -91,299 +88,7 @@
 \begin_body
 
 \begin_layout Section
-Explainable AI
-\end_layout
 
-\begin_layout Standard
-XAI deals with the problem of making AI solutions understandable for humans.
- An XAI approach should in some way mimic human explanation and feedback
- mechanisms.
- As described in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_survey"
-literal "true"
-
-\end_inset
-
-, a distinction is made between interpretability and explainability.
- 
-\end_layout
-
-\begin_layout Standard
-Interpretability is defined as 
-\begin_inset Quotes eld
-\end_inset
-
-the ability to explain or to present in understandable terms to humans
-\begin_inset Quotes erd
-\end_inset
-
-, which is strongly related to the classical version of an explanation 
-\begin_inset Quotes eld
-\end_inset
-
-the details or reasons that someone gives to make something clear or easy
- to understand
-\begin_inset Quotes erd
-\end_inset
-
-.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Definition of 
-\begin_inset Quotes eld
-\end_inset
-
-explanation
-\begin_inset Quotes erd
-\end_inset
-
- according to the cambridge dictionar, 
-\begin_inset Flex URL
-status open
-
-\begin_layout Plain Layout
-
-https://dictionary.cambridge.org/dictionary/english/explanation
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-An explanation is described as 
-\begin_inset Quotes eld
-\end_inset
-
-collection of features of interpretable domain that have contributed for
- a given example to produce a decision
-\begin_inset Quotes erd
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Paragraph
-Layerwise Relevance Propagation
-\end_layout
-
-\begin_layout Standard
-For image recognition with DNNs, Layerwise Relevance propagation 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_LRP_Frauenhofer"
-literal "true"
-
-\end_inset
-
- offers a technique to highlight the areas crucial areas for a decision.
- Besides the insight into industrial image processing, however, this technique
- has only limited use even as a debugging aid, as can be seen in xx.
- Unfortunately, understanding or trust cannot be gained.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/extern/lrp_frauenhofer_wolf_0.png
-	height 3.3cm
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/extern/lrp_frauenhofer_wolf_1.png
-	height 3.3cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The object is recognized as a wolf - especially the edges that separate
- the wolf from its environment seem to be of great importance.
- The neck, the muzzle and the legs and the eye seem to be very important,
- coat colour and structure for this only of minor importance.
- Which characteristic was decisive - colour, wolf specific recognition features
- or even the reason why it is not a dog after all, is missing.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/extern/RLP_frauenhofer_palmes0.png
-	height 3.3cm
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/extern/RLP_frauenhofer_palmes1.png
-	height 3.3cm
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/extern/RLP_frauenhofer_palmes2.png
-	height 3.3cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Incorrect classification as tripod by BVLC Reference CaffeNet or as spotlight
- by BVLC GoogLeNet.
- 
-\begin_inset Flex URL
-status collapsed
-
-\begin_layout Plain Layout
-
-https://lrpserver.hhi.fraunhofer.de/
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Interpretability
-\end_layout
-
-\begin_layout Standard
-Language, as well as the ability to speak, is learned as a child and at
- the same time describes everything that a person can understand.
-\end_layout
-
-\begin_layout Standard
-Interpretierbare Policies sind 
-\end_layout
-
-\begin_layout Quotation
-The limits of my language mean the limits of my world.
- 
-\end_layout
-
-\begin_layout Quotation
-(Ludwig Wittgenstein, 
-\begin_inset Quotes eld
-\end_inset
-
-Die Grenzen meiner Sprache bedeuten die Grenzen meiner Welt.
-\begin_inset Quotes erd
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "wittgenstein1953philosophical"
-literal "true"
-
-\end_inset
-
-) xxx weg damit!
-\end_layout
-
-\begin_layout Standard
-Ein wichtiger Forschungspunkt stellt vor allem das nachträgliche Reasoning
- dar, wo ein bereits trainiertes Modell im Nachhinein erklärt werden soll.
- 
-\end_layout
-
-\begin_layout Standard
-The best explanation of a simple model is the model itself; it perfectly
- represents itself and is easy to understand.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI-unified-approach"
-literal "true"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-The best explanation is probably the explanation that existed before a model,
- so that the model is a good representation of the explanation.
- 
-\end_layout
-
-\begin_layout Standard
-==
-\end_layout
-
-\begin_layout Standard
-Finding all the components of a formula is an infinitely complex problem
- and is therefore normally the task of the spearhead of human abstraction
- ability, the computer scientist.
- In machine learning, however, there are metaheuristic strategies that use
- evolutionary strategies to find solutions.
 \end_layout
 
 \end_body

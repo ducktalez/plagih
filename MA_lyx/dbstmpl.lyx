@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -22,7 +22,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -40,6 +39,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -79,8 +80,9 @@
 \use_indices false
 \paperorientation portrait
 \suppress_date false
-\justification true
+\justification false
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -90,7 +92,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -138,20 +143,22 @@ erklaerung
 
 \begin_layout Abstract
 Explainability is hard to achieve in the field of RL, where the great successes
- relies on black box approaches like NN.
- Genetic programming offers the opportunity to automatically generate programs
- that are interpretable, but often represent mathematic expressions which
- are still hard to fully understand completely.
+ relies on black box approaches like neural networks.
+ In many domains in industry and scienceGenetic programming (GP) offers
+ the opportunity to automatically generate programs that are interpretable,
+ but often represent mathematic expressions which are still hard to fully
+ understand completely.
+ For a domain expert, it would be very helpful to be shown where his own
+ strategy could be improved.
+ Therefore, the concept of familiarity is introduced as quality criterion
+ for GP, which measures the deviation from an expert's original programme
+ instead of pure complexity..
+ This is realised with the tree edit distance as measure, which reflects
+ the number of changes to the reference program.
 \end_layout
 
 \begin_layout Abstract
-This approach zielt darauf aus, einem Menschen zeigen, was er an seinem
- Programm ändern könnte um We therefore introduce the concept of familiarity,
- that verwenden a domain expert's program to adapt the logic of any black
- box machine learning approach.
- For this purpose, the tree edit distance was implemented as distance measure,
- which reflects the number of changes to the reference program.
- The approach was testet on the mountaincar and the industrial benchmark,
+The approach was testet on the mountaincar and the industrial benchmark,
  with several different neuropolicies provdiding transition samples als
  Basis für den Regressionsfehler.
  The results have shown no major drawbacks in terms of regression error
@@ -162,8 +169,29 @@ This approach zielt darauf aus, einem Menschen zeigen, was er an seinem
 \end_layout
 
 \begin_layout Standard
-\begin_inset CommandInset toc
-LatexCommand tableofcontents
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+pagenumbering{Roman}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+tableofcontents{}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+pagenumbering{arabic}
+\end_layout
 
 \end_inset
 
@@ -171,12 +199,7 @@ LatexCommand tableofcontents
 \end_layout
 
 \begin_layout Chapter
-Introduction
-\end_layout
-
-\begin_layout Standard
-The aim is to use the concept of familiarity to help an expert understand
- the logic of an RL approach.
+Introduction 
 \end_layout
 
 \begin_layout Standard
@@ -242,6 +265,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -282,9 +306,11 @@ It’s unbelieveably superhuman, in general, but it has some particular weakness
 status open
 
 \begin_layout Plain Layout
+yyy 
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -316,6 +342,7 @@ bly large that solutions can no longer be found.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -323,6 +350,7 @@ key "hein_fuzzy_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -335,25 +363,20 @@ Outline
 \end_layout
 
 \begin_layout Chapter
-Applied Methodoligies and Related Work
+Applied Methodoligies
 \end_layout
 
 \begin_layout Standard
-In diesem Abschnitt werden wichtige Technologien und Erkenntnisse vorgestellt.
- Reinforcement Learning is introduced including neural
+In this section, important technologies and findings are presented...
 \end_layout
 
 \begin_layout Section
-Artificial Intelligence
+Reinforcement Learning
 \end_layout
 
 \begin_layout Standard
-Artificial Intelligence ist der Überbegriff für eine Vielzahl verschiedener
- Methoden...
-\end_layout
-
-\begin_layout Subsection
-Reinforcement Learning
+Artificial Intelligence is the umbrella term for a variety of different
+ methods...
 \end_layout
 
 \begin_layout Standard
@@ -420,43 +443,18 @@ Neural networks had a major role in the recent breakthroughs in many domains,
  of artificial neurons to an output.
  During the training process, correct and false decisions are backpropagated
  through the network, which can adjust its weights accordingly.
- Aus mathematischer Sicht handelt es sich bei einem NN also um ein sehr
- umfangreiches, generisches Gleichungssystem, dessen Parameter als Teil
- eines stochastischen Modells solange angepasst werden, bis die Fehlerwahrschein
-lichkeit sehr unwahrscheinlich ist.
-\end_layout
-
-\begin_layout Standard
-Neuronale Netzt enthalten somit implizite policies, deren Logik nur in Form
- der aktuellen Parametrisierung enthalten ist.
- Um einem NN zu vertrauen kann es deshalb nicht verstanden werden, Fehler
- können aber mithilfe stochastischer Testverfahren niedrig gehalten werden.
-\end_layout
-
-\begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-Through an adapted network architecture and the enormous computing power,
- a specialist savant can nevertheless be trained to master the given task.
+ From a mathematical point of view, an NN is a very large, generic system
+ of equations whose parameters are adjusted as part of a stochastic model
+ until the probability of error is very unlikely.
  
 \end_layout
 
-\begin_layout Subparagraph
-Machine Learning
-\end_layout
-
 \begin_layout Standard
-Neural networks can be used to learn a mapping between states and actions
- even for extremely complex problems
-\end_layout
-
-\begin_layout Standard
-In contrast to humans, a neural network is dependent on random exploration,
- which can find bias-free policies, but represents a tradeoff to the familiar
- learning process of humans.
- 
+Neural networks represent a specialist savant that was trained to master
+ one given task thus contain implicit policies whose logic is only contained
+ in the form of the current parameterisation.
+ In order to trust an NN, it cannot therefore be understood, but errors
+ can be kept low with the help of stochastic test procedures.
 \end_layout
 
 \begin_layout Section
@@ -470,6 +468,7 @@ Explainable artificial intelligence (XAI) deals with the problem of making
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -485,15 +484,12 @@ An XAI approach should in some way mimic human explanation and feedback
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
 , a distinction is made between interpretability and explainability.
- 
-\end_layout
-
-\begin_layout Standard
-Interpretability is defined as 
+ Interpretability is defined as 
 \begin_inset Quotes eld
 \end_inset
 
@@ -553,75 +549,29 @@ collection of features of interpretable domain that have contributed for
 \end_inset
 
 .
+ An important point of research is post-hoc reasoning, where an already
+ trained model is to be explained retrospectively.
+ Since usually no equivalent model can be found that is also interpretable,
+ the trade-off between explainability and performance must also be accepted
+ here.
+ A complete explanation can be found for individual decisions, for example,
+ or completely interpretable models that cannot contain the complete behaviour.
 \end_layout
 
 \begin_layout Paragraph
-Human vs.
- Machine learning, XAI vs.
- AI Tradeoff
+Performance and Explainability Tradeoff
 \end_layout
 
 \begin_layout Standard
 Every learning approach is subject to a trade-off between performance and
  explainability.
-\end_layout
-
-\begin_layout Standard
-Das Maß an Erklärbarkeit ist zwar schwer zu bestimmen, menschlich geschriebene
- Ansätze können aber zumindest als sicherer Ankerpunkt für Erklärbarkeit
- verwendet werden.
- Für das in dieser Arbeit verwendete Konzept der Vertrautheit spielen sie
- aber eine besondere Rolle, weshalb im folgenden kurz erörtert werden soll,
- weshalb sie als Referenz so bedeutsam sind.
-\end_layout
-
-\begin_layout Itemize
-Safe learning process
-\begin_inset Newline newline
-\end_inset
-
-The learning process is intrinsically continuously monitored by primal fears
- and drives, dangers are analysed and the learned models are thus endowed
- with a high degree of security.
- 
-\end_layout
-
-\begin_layout Itemize
-Effective learning process, Lazyness and isolated perfection
-\begin_inset Newline newline
-\end_inset
-
-The human brain learning architecture has been perfected in many ways through
- an evolutionary process lasting millions of years, which allows learning
- a wide range of skills in a very diverse learning process.
- 
-\end_layout
-
-\begin_layout Itemize
-Save and, no subgoals
-\begin_inset Newline newline
-\end_inset
-
-Der Mensch ist stark limitiert in den Dingen, die er ausprobieren kann.
- Soll er beispielsweise etwas lernen wofür ihm das Talent fehlt, wird er
- beim stumpfen ausprobieren neuer Strategien frustrieren und, falls nötig,
- ein anderes Themengebiet wählen für das er mehr Talent hat.
- Eine Maschine ist aber gezwungen, solange zu lernen, bis sie gut genug
- geworden ist.
-\end_layout
-
-\begin_layout Itemize
-Lazy learning
-\begin_inset Newline newline
-\end_inset
-
-while being severely limited in time and exploration compared to machines.
- Image recognition, for example, is perfected in early childhood to such
- an extent that it hardly needs any explanation.
- Humans are also as lazy as they can be and, instead of making an effort
- to find new concepts for a problem, they try to solve a problem with what
- they have already learned.
- 
+ The best explanation is probably the explanation that existed before a
+ model, so that the model is a good representation of the explanation.
+ How explainable something is is difficult to determine, but humanly written
+ approaches can at least be used as a safe anchor point for explainability.
+ For the concept of familiarity used in this work, however, they play a
+ special role, which is why the following will briefly discuss why they
+ are so significant as a reference.
 \end_layout
 
 \begin_layout Itemize
@@ -629,7 +579,8 @@ Speech
 \begin_inset Newline newline
 \end_inset
 
-Speech plays an important role for human understanding.
+The ability to speak, or express thoughts in language, is automatically
+ learned by every human and plays an important role for human understanding.
  Large parts of the philosophical world even regard speech as the limits
  of what a human can understand.
 \begin_inset Foot
@@ -647,6 +598,7 @@ The limits of my language mean the limits of my world.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
@@ -655,6 +607,20 @@ key "wittgenstein1953philosophical"
 
 \end_inset
 
+ Because conscious action is based on language, an action can automatically
+ be explicitly formulated in a language and is thus explainable.
+\end_layout
+
+\begin_layout Itemize
+Secure training process
+\begin_inset Newline newline
+\end_inset
+
+All human exploration is based on monitored by the amygdula for dangers
+ and the learned models are thus endowed with a high degree of security.
+ Tasks that one does not seem to be able to solve are aborted due to frustration.
+ A machine, however, is forced to improve its approach until it has become
+ good enough and has to rely on random exploration.
  
 \end_layout
 
@@ -664,12 +630,11 @@ Leaded exploration with early feedback
 \end_inset
 
 A human learning process is mostly guided and even in experts peer-review
- their ideas before using new strategies.
+ their ideas before using new strategies, with the sub-goals widely synched
+ between interacting humans.
  This largely reduces the risc of over- and underfitting.
-  One notable example is that successful models can be implemented in all
+ One notable example is that successful models can be implemented in all
  people (such as the Pythagorean theorem) as reliable anchor point.
- The communication protocol, whether it is language or another method, is
- widely synched between interacting humans.
 \begin_inset Foot
 status open
 
@@ -690,19 +655,8 @@ A RL agent can already fail at all the subgoals very badly.
 
 \end_inset
 
-Teaching a neural network requires an extensive training process with many
- unexpected side effects.
- 
-\end_layout
-
-\begin_layout Itemize
-xxx
-\begin_inset Newline newline
-\end_inset
-
-The main reasons to trust an expert over a machine learning approach is
- the, considering that humans also have a long learning process behind them
- before they can be considered experts.
+Teaching a neural network requires an extensive training process and may
+ cause unexpected side effects.
  
 \end_layout
 
@@ -715,6 +669,7 @@ For image recognition with DNNs, Layerwise Relevance propagation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -853,43 +808,29 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
  Interpretable policies are mostly searched directly within an interpretable
  search space, the most known approach being evolutionary algorithms which
- will be further presented in xx.
+ will be further presented in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp_Genetic-Programming"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
  Solutions that are searched for with the aim of minimal representation
  in a language space as defined above can be interpreted by humans, but
  since the search process is also based on randomness, the formulas found
  are also free of human bias - but they still often appear to the observer
  more as a random combination of various operators than as a logically abstracte
 d solution to a problem.
-\end_layout
-
-\begin_layout Paragraph
-Post-hoc reasoning
-\end_layout
-
-\begin_layout Standard
-Ein wichtiger Forschungspunkt stellt vor allem das nachträgliche Reasoning
- dar, wo ein bereits trainiertes Modell im Nachhinein erklärt werden soll.
- Da meist kein äquivalentes Modell gefunden werden kann welches auch interpretie
-rbar ist muss auch hier der Tradeoff zwischen Erklärbarkeit und Performance
- in Kauf genommen werden.
- Eine vollständige Erklärung kann beispielsweise für einzelne Entscheidungen
- gedunden werden, oder aber auch komplett interpretierbare Modelle, die
- nicht das komplette Verhalten beinhalten kann.
-\end_layout
-
-\begin_layout Standard
-==xx
-\end_layout
-
-\begin_layout Standard
-The best explanation is probably the explanation that existed before a model,
- so that the model is a good representation of the explanation.
- 
 \end_layout
 
 \begin_layout Section
@@ -909,12 +850,9 @@ Searching all components of a formula is an infinitely complex problem and
  the computer scientist.
  In machine learning, however, there are metaheuristic strategies that use
  evolutionary strategies which allow automated creation of computer programs.
-\end_layout
-
-\begin_layout Standard
-Genetic programming (GP) was introduced by Koza and implements the components
+ Genetic programming (GP) was introduced by Koza and implements the components
  of programs as genes in a programming tree.
- A population of trees are optimised over generations through selection
+ A population of individuals are optimised over generations through selection
  and mutation of individual genes.
  The selection process requires a fitness function.
  
@@ -1122,7 +1060,7 @@ Trees are randomly generated and added to the new population as a constant
 
 \begin_layout Plain Layout
 Evolutionary aspects of GP in an overview.
- xxx
+ 
 \end_layout
 
 \end_inset
@@ -1153,7 +1091,6 @@ status open
 
 \begin_layout Plain Layout
 Visualisation of the crossover evolution exchanges branches between trees.
- xxx meh
 \end_layout
 
 \end_inset
@@ -1190,15 +1127,12 @@ Operators for explicit conversion are, for example, comparison operators
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
- 
-\end_layout
-
-\begin_layout Standard
-Evaluation safety poses a particular problem because even type-correct expressio
-ns can be mathematically invalid.
+ Evaluation safety poses a particular problem because even type-correct
+ expressions can be mathematically invalid.
  In the case of frequently occurring functions, the definition gaps are
  usually filled with a dummy value (for example, division by zero with 1).
  To avoid changing the essence of an operator too much, a tree can also
@@ -1207,7 +1141,7 @@ ns can be mathematically invalid.
 \end_layout
 
 \begin_layout Paragraph
-Restricting the search space complexity bloat
+Restricting the search space from complexity bloat
 \end_layout
 
 \begin_layout Standard
@@ -1509,6 +1443,7 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1530,30 +1465,13 @@ Complexity measurement
 \end_layout
 
 \begin_layout Paragraph
-Weighting 
+Divide and Conquer with the if-operator
 \end_layout
 
 \begin_layout Standard
-Unfortunately, complexity can only be used to a limited extent as an indicator
- of its explanatory power, which rather depends on the effort needed for
- a person to gain enough understanding to trust the approach.
- 
-\end_layout
-
-\begin_layout Standard
-An explanation should thus be provided for the gap between a person who
- has knowledge causally based on paradigms and an unmanageable, unknown
- logic, without relying solely on statistical tests.
-\end_layout
-
-\begin_layout Paragraph
-xxx if-function / isolation, capsuling, divide n
-\end_layout
-
-\begin_layout Standard
-Although it is the most complex function with 3 input parameters, it creates
- more structure than all other operators because its child trees are not
- combined but can be considered separately.
+Although the if-operator is the most complex function with 3 input parameters,
+ it creates more structure than all other operators because its child trees
+ are not combined but can be considered separately.
  Nevertheless, the subtrees must have a relation to each other in order
  to harmonize together.
  This combination creates encapsulated programs in a clear way that humans
@@ -1626,7 +1544,7 @@ A very simple mathematical formula can be much harder to understand than
 \end_layout
 
 \begin_layout Paragraph
-xxx observations
+Observations
 \end_layout
 
 \begin_layout Standard
@@ -1698,9 +1616,8 @@ Symbolic Regression
 \end_layout
 
 \begin_layout Standard
-The symbolic regression stellt eine häufige und für diesen Ansatz wichtige
- Version der GP dar, which is used to calculate how well the formula can
- explain data
+The symbolic regression is a common and important use case of GP for this
+ approach, which is used to calculate how well the formula can explain data.
 \end_layout
 
 \begin_layout Standard
@@ -1779,19 +1696,66 @@ Related Work
 
 \begin_layout Standard
 Despite much interest, only little work is done that cover the problems
- of highly sensible fields in the industry.
+ of finding interpretable policies for stochastic benchmarks in the industry.
+ 
 \end_layout
 
 \begin_layout Standard
-xx wet chicken, industrial benchmarks
+The Industrial Benchmark is one of the few benchmarks that simulate highly
+ stochastic industrial environments.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "industrialBenchmark"
+literal "false"
+
+\end_inset
+
+ 
 \end_layout
 
 \begin_layout Standard
-xx secure RL policies for complex industrial benchmarks (gas turbine)
+todo
 \end_layout
 
 \begin_layout Standard
-xx fuzzy gp for complex benchmarks
+xx secure RL policies for stochastic environments (requires NN) crazy gas
+ turbine 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-gas-turbine-rl-nn"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+xx interpretable gp 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hein_fuzzy_gp,Hein_Udluft_Runkler_interpretable_gp,HUR18"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+xx PSONN 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+xx gp for complex benchmarks
 \end_layout
 
 \begin_layout Standard
@@ -1800,6 +1764,7 @@ In
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1828,6 +1793,21 @@ In the following, the implementation of the approach to enhance genetic
 
 \begin_layout Section
 Domain Expert as Genetic Ancestor
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Complexity can only be used to a limited extent as an indicator of its explanato
+ry power, which rather depends on the effort needed for a person to gain
+ enough understanding to trust the approach.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1884,10 +1864,6 @@ name "img:plausibility-concept"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection
-Explainability Peak: Domain Experts
 \end_layout
 
 \begin_layout Paragraph
@@ -1956,7 +1932,7 @@ An insurmountable trench as a metaphor for the explainability gap - the
 \end_layout
 
 \begin_layout Paragraph
-Todo: Fitness landscape?
+Idea: Fitness landscape?
 \end_layout
 
 \begin_layout Standard
@@ -1967,54 +1943,6 @@ Todo: Fitness landscape?
 
 \begin_layout Section
 Familiarity Measurement with the Tree Edit Distance
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xx delete
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-This means in particular that the distance cannot be determined as a transitive
- combination or sum of the changes by the evolutionary operators.
- It must be able to be done for each tree, regardless of its previous genetic
- changes.
- yy
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-order Sympy
-\end_layout
-
-\begin_layout Plain Layout
-da sie den kompletten Eingabevektor darstellen.
- Der Rest eines Baumes hat lediglich die Aufgabe, diese Eingaben in sinnvolle
- Ausgaben umzuformen.
- 
-\end_layout
-
-\begin_layout Plain Layout
-Although this requires that all tree nodes and operators as well as terminals
- are uniquely classified into input and output types, it produces much more
- interpretable formulas that usually do not provide for automatic conversion
- of data types.
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -2096,10 +2024,6 @@ le d(x,z)+d(z,y)$
  (triangle inequality) 
 \end_layout
 
-\begin_layout Subsection
-TED
-\end_layout
-
 \begin_layout Standard
 The tree edit distance (TED) marks the logical resulting distance measurement
  considering the node-count based paradigm most GP implementations base
@@ -2138,6 +2062,7 @@ text{modify}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -2147,6 +2072,7 @@ key "tedOldestPaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -2198,175 +2124,35 @@ name "fig:TED_explain_operators"
 \end_layout
 
 \begin_layout Paragraph
-(TED) Distance based complexity annomalies
+Distance based complexity annomalies
 \end_layout
 
 \begin_layout Standard
-Durch die Verwendung eines Distanzmaßes können einige der bereits in xx
- angesprochenen Probleme nochmals verstärkt werden.
- Die wichtigste Frage ist vermutlich, ob und wie Änderungen zwischen Knoten
- unterschieden werden können.
-\end_layout
-
-\begin_layout Paragraph
-(Lösung->Diskussion?) Den Baum der Edits stutzen
-\end_layout
-
-\begin_layout Standard
-Ein Programmierbaum lässt sich im wesentlichen durch die Struktur seiner
- Operatoren charakterisieren, da die genaue Wahl der Blattknoten die logische
- Voraussetzung für seine Fitness sind und deshalb nur an den passenden Stellen
- verwendet werden können.
- Wie bereits in xx erwähnt haben Konstanten für die Interpretierbarkeit
- bzw.
- das Wesen einer Formel sowieso eine vergleichsweise unbedeutende Rolle.
- Observationen spielen zwar für das Problem ansich eine wichtige Rolle (siehe
- xx), ergeben sich aber auch aus dem reinen Operatobaum.
+By using a distance measure, some of the problems already addressed in xx
+ can be amplified again.
+ The most important question is probably whether and how changes between
+ nodes can be distinguished as changes between terminal nodes and operators
+ can be further distinguished.
+ Possible solutions, including an approach of weighting, are discussed in
  
-\end_layout
-
-\begin_layout Standard
-Blattknoten zu bewerten hat bei normalen Komplexitätsmaßen deshalb lediglich
- die Funktion, ohne großen Mehraufwand den Branching-faktor eines Baumes
- zu bestrafen.
-\end_layout
-
-\begin_layout Standard
-Für Distanzbasierte Verfahren stellen Blattknoten deshalb einen relativ
- erhöhten Faktor dar.
- Vor allem Konstanten fallen stark ins Gewicht, bei denen eine sonst gewünschte
- Optimierungen eines Wertes als vollwertiges Edit gewertet wird.
- Das kann nicht nur gewollte Vereinfachungen verhindern sondern sogar dazu
- führen, dass die Formelbestandteile um die Variablen herum angepasst werden
- um die Konstante weiter unverändert nutzen zu können.
- Eine einfache Lösung wäre beispielsweise, Konstanten beim berechnen der
- TED auszuschließen.
-\end_layout
-
-\begin_layout Standard
-Observationen haben im Gegensatz dazu eine weitaus bedeutendere Rolle, insbesond
-ere die Menge der verwendeten Observationen.
- Die Anzahl nötiger Observationen stellt die Dimensionalität des Problems
- dar xx curse of dimensionality in mathe xx.
- Für den Entwickler stellen sie insbesondere den Startpunkt seiner Überlegungen
- dar, was dem genetischen Ansatz mit der Baumwurzel als Hauptankerpunkt
- konträr gegenüber steht.
- Observationen sind die Knoten, um die herum Funktionen und Konstanten so
- angeordnet werden sollen, sodass sinnvolle Ergebnisse entstehen; sie sollten
- deshalb nicht wie die Konstanten ignoriert werden und können normaler Bestandte
-il der TED bleiben.
-\end_layout
-
-\begin_layout Standard
-Da die Menge der Verwendeten Operatoren aber wichtiger ist als deren Anzahl
- kann auch die symmetrische Distanz zwischen den Mengen genutzter Observationen
- ausgerehnet werden und beispielsweise als Summe, oder aber auch als Faktor,
- in die Berechnung mit einfließen.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Note that this approach is based on the same paradigm edit-distance, but
- contradicts the 
-\begin_inset Quotes eld
-\end_inset
-
-identity of indiscernibles
-\begin_inset Quotes erd
-\end_inset
-
- condition of distance measurements.
-\end_layout
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "TED-improvements"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 
-
+.
 \end_layout
 
-\begin_layout Subsection
-Weighted TED
-\end_layout
-
-\begin_layout Standard
-The TED offers many extension possibilities which can further address the
- nature of a change, including a weighting of nodes similar to the one used
- in classical GP which was mentioned in xx.
- 
-\end_layout
-
-\begin_layout Standard
-For this, the weighted mapping must be calculated.
- A subsequent weighting of the mapping of the regular TED does not make
- sense, since a later reweighting can lead to ambiguous results that do
- not correspond to the minimum.
- Dies betrifft vor allem den Umgang mit einem geänderten Knoten.
-\end_layout
-
-\begin_layout Standard
-The weighted TED was imlemented, but opens many questions on how to deal
- with the effect and the complexity of altered nodes in the origin tree.
-\end_layout
-
-\begin_layout Standard
-Implementations might be based on the following ideas:
-\end_layout
-
-\begin_layout Itemize
-Ignoring altered nodes
-\end_layout
-
-\begin_layout Itemize
-Division of all operators into classes, where the cost for changing within
- a class is weakened.
- A potential class might be the operator families (e.g.
- angle-based operators.
- This allows adaptions in konstant nodes and also a distinction between
- basic operator types.
-\end_layout
-
-\begin_layout Itemize
-Even more specific options that were implemented but not evaluated in order
- not to mix too many paradigms:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-With if-statements, the edit distance of the child branches is calculated
- separately and only the largest factor is added.
- This procedure is intended to promote the use of if statements, which have
- a very positive influence on the interpretability of a formula due to their
- structuring influence, but which greatly increase the TED due to the high
- arity of 3 and the resulting branching factor.
-\end_layout
-
-\begin_layout Itemize
-Use of several known origins in one run and counting the minimum TED for
- each tree.
- This way, several understandable approaches could be compared directly
- for their extensibility or even incomplete solutions could be introduced
- separately.
-\end_layout
-
-\begin_layout Itemize
-Unifying and ordering trees, for example with sympify as described in xx,
- before calculating the TED.
-\end_layout
-
-\begin_layout Itemize
-Similar to fixed nodes (xx), giving nodes of the core structure a separate
- weighting so that changes are possible but very costly.
-\end_layout
-
-\end_deeper
 \begin_layout Standard
 
 \end_layout
 
 \begin_layout Section
-GP suite
+GP Suite Implementation
 \end_layout
 
 \begin_layout Standard
@@ -2437,10 +2223,6 @@ Der Rest der Population wird mit zufällig generierten Kandidaten aufgefüllt.
 \end_layout
 
 \begin_layout Plain Layout
-xxxxxx
-\end_layout
-
-\begin_layout Plain Layout
 Die implementierung ist umfassen eine Paretofront, starke Typisierung und
  die Verwendung des if-Operator ermöglicht.
  Rekursive Baumstrukturen 
@@ -2462,12 +2244,11 @@ Die Laufzeit von Karoo konnte durch rekursive Baumstrukturen, LUTs und durch
 \end_layout
 
 \begin_layout Plain Layout
-[xxx Generell: evaluation safety + consistancy durch stark typisiert, pareto
- GP, closure-test
+closure-test
 \end_layout
 
 \begin_layout Plain Layout
-xxx technisch:
+technisch:
 \end_layout
 
 \begin_layout Plain Layout
@@ -2488,7 +2269,7 @@ xxx technisch:
 \end_layout
 
 \begin_layout Plain Layout
-- fixed nodes: fixed nodes,
+- fixed nodes
 \end_layout
 
 \begin_layout Plain Layout
@@ -2522,24 +2303,37 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
-[xx genaue Seite] 
-\end_layout
-
-\begin_layout Standard
-To further enable pre-simplification of expressions, the python library
+ To further enable pre-simplification of expressions, the python library
  Sympy
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
  was extended and integrated, which uses symbolic mathematics and thus sifts
  out unnecessary calculations before evaluation.
- [xx see error]
+ [xx see error] The memory usage and performance could be further increased,
+ largely thanks to the help of lookup-tables for tree evaluation, passing
+ variables locally and especially using recursive tree structures.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+No reliable statistics on the running time were compiled, but the running
+ time was about only 50% in all comparison runs and the memory could be
+ reduced to almost 10% of Karoo GP.
+ yyy
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -2608,27 +2402,851 @@ reference "sec:depth-based-gp-implementation"
 .
 \end_layout
 
-\begin_layout Subsubsection
-Runtime, memory, performance
+\begin_layout Paragraph
+Terminal nodes
 \end_layout
 
 \begin_layout Standard
-The memory usage and performance could be further increased, largely thanks
- to the help of lookup-tables for tree evaluation, passing variables locally
- and especially using recursive tree structures.
+Constants are randomly selected from different distributions and adjusted
+ in a filter process.
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-No reliable statistics on the running time were compiled, but the running
- time was about only 50% in all comparison runs and the memory could be
- reduced to almost 10% of Karoo GP.
- yyy
+To obtain the most useful set of constants possible, these are chosen at
+ random from 100 variables of the data set, Gaussian-distributed integers
+ and Gaussian-distributed floating point values.
+ 
+\begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
+\end_inset
+
+ With the help of the evolutionary mutation of the Gaussian filters, the
+ constants of the best trees are additionally modified to fine-tune.
+ For the runs of this work, a Gaussian filter with a standard deviation
+ of 0.1 was applied.
+ (
+\begin_inset Formula $X\sim\mathcal{N}(x,0.1)$
+\end_inset
+
+)
 \end_layout
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+In addition to variables, a filter operator for the index of constants was
+ implemented for the IB 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Industrial-benchmark"
+
+\end_inset
+
+ .
+ Especially in the case of Markov states that are not completely clear,
+ past values are taken into account, which is why the time of observation
+ is another unusual factor.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+The calculation of the index was not an optional part of the GP.
+\end_layout
+
+\end_inset
+
+ This was filtered as a natural number during the filter mutation (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$X
+\backslash
+sim
+\backslash
+mathcal{N}(x,0.1)$
+\end_layout
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[H] 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+SetAlgoLined  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+KwData{n amount of (time-)indizes an observation can have}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+KwResult{Probability distribution to choose age t of a variable}
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+Function{create
+\backslash
+_observation
+\backslash
+_indexDistribution(indexList)}  
+\end_layout
+
+\begin_layout Plain Layout
+
+ {  
+\end_layout
+
+\begin_layout Plain Layout
+
+ n $
+\backslash
+assign 
+\backslash
+FuncCall{count}{n}$
+\backslash
+;  
+\end_layout
+
+\begin_layout Plain Layout
+
+ ageBonus $
+\backslash
+assign 
+\backslash
+log(n) + 1 $
+\backslash
+;    
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+Comment{Logarithmic progression spacing from highest to lowest value}  
+\end_layout
+
+\begin_layout Plain Layout
+
+ indexProbabilities $
+\backslash
+assign$ 
+\backslash
+FuncCall{logSpace}{n + ageBonus, $1$ + ageBonus, n}
+\backslash
+;  
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+For{share in indexProbabilities}{   
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+Comment{Normalizing the shares to $100
+\backslash
+%$}   
+\end_layout
+
+\begin_layout Plain Layout
+
+  share $
+\backslash
+assign 
+\backslash
+frac{
+\backslash
+text{share}}{
+\backslash
+sum{
+\backslash
+text{indexProbabilities}}}$  
+\end_layout
+
+\begin_layout Plain Layout
+
+ }     
+\end_layout
+
+\begin_layout Plain Layout
+
+ 
+\backslash
+Return{indexProbabilities}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{A mixture between a uniform and a logarithmic frequency distribution
+ should favour recent values slightly logarithmic.}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/pyplots_custom/distribution_obs_time.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Selection of the time of an observation to build a tree.
+ Younger values are selected slightly more frequently due to their higher
+ presumed relevance according to the distribution described.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+TED calculation
+\end_layout
+
+\begin_layout Standard
+The TED is calculated both a robustly and efficiently with APTED.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "tedAPTED1,tedAPTED2"
+literal "true"
+
+\end_inset
+
+ TED mapping between trees can be used in addition to weighting the changes,
+ but was not used for any runs.
+ This property can prevent closure in certain constellations, which is why
+ this possibility is checked and a mutual exclusive crossover was implemented,
+ which always finds two matching nodes in trees.
+ 
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="17" columns="3">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top" width="0pt">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Evolution
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Options
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ratio
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.06
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+random branch simplification
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.03
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Olymp
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(from pareto candidates)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.01
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+point
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (nodes, full)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (nodes, grow)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Filter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (7, 1, 12, 3)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Filter
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+branch (7, 1, 12, 3)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Crossover
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Crossover
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.30
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(4.5, 3, 5, 1)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.05
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(10, 1, None, 5)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.15
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+(10, 1, None, 5)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.15
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The evolution of a population of candidates includes all common evolutionary
+ methods and is divided by default into 10% reproduction, 55% mutation and
+ 35% crossover in all runs.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Distribution-gp-evolutions"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Olymp-reproduction (Pareto reproduction)
+\end_layout
+
+\begin_layout Standard
+Similar to the Greek gods who came to earth to reproduce, the pareto candidates
+ were also given the opportunity to intermingle with the current population.
+ By chance, solutions already found and their genes could be completely
+ lost.
+ In order not to lose already found solutions permanently, the genes of
+ the best candidates are to provide a very small current for backups of
+ the best-ofs of the past.
+\begin_inset Newline newline
+\end_inset
+
+The olymp reproduction includes in particular the possibility for the origin
+ tree to reproduce itself.
 \end_layout
 
 \begin_layout Subsection
@@ -2925,37 +3543,6 @@ The fixed core of a tree must be contiguous in this implementation, but
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/fix_nodes_mutation.pdf
-	rotateOrigin center
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Fixed nodes must not be changed during the evolve process.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 Nodesize-based build options including the full- and grow-method.
  Randomly generated trees should cover the entire search space and have
  the structuring Full/Grow options to have the same properties of non-fixed
@@ -3066,13 +3653,7 @@ When building the branches, a buffer of leaf nodes is built up to avoid
 status open
 
 \begin_layout Plain Layout
-The number of nodes replaces the tree depth as the relevant variable when
- creating random trees.
- xxx
-\begin_inset Newline newline
-\end_inset
-
- yyy Soll das überhaupt als Pseudocode geschrieben werden?
+yyy Soll das überhaupt als Pseudocode geschrieben werden?
 \end_layout
 
 \end_inset
@@ -3085,7 +3666,7 @@ The number of nodes replaces the tree depth as the relevant variable when
 \end_layout
 
 \begin_layout Section
-Sympy reduction 
+Mathematical simplification 
 \begin_inset CommandInset label
 LatexCommand label
 name "sympy-tree-reduction"
@@ -3210,6 +3791,7 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4001,852 +4583,6 @@ name "tab:sympy-sonderfälle"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Paragraph
-TED calculation
-\end_layout
-
-\begin_layout Standard
-The TED is calculated both a robustly and efficiently with APTED.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "tedAPTED1,tedAPTED2"
-
-\end_inset
-
- TED mapping between trees can be used in addition to weighting the changes,
- but was not used for any runs.
- This property can prevent closure in certain constellations, which is why
- this possibility is checked and a mutual exclusive crossover was implemented,
- which always finds two matching nodes in trees.
- 
-\end_layout
-
-\begin_layout Paragraph
-Terminal nodes
-\end_layout
-
-\begin_layout Standard
-Constants are randomly selected from different distributions and adjusted
- in a filter process.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-To obtain the most useful set of constants possible, these are chosen at
- random from 100 variables of the data set, Gaussian-distributed integers
- and Gaussian-distributed floating point values.
- 
-\begin_inset Formula $X\sim\mathcal{N}(\mu,\sigma^{2})$
-\end_inset
-
- With the help of the evolutionary mutation of the Gaussian filters, the
- constants of the best trees are additionally modified to fine-tune.
- For the runs of this work, a Gaussian filter with a standard deviation
- of 0.1 was applied.
- (
-\begin_inset Formula $X\sim\mathcal{N}(x,0.1)$
-\end_inset
-
-)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-In addition to variables, a filter operator for the index of constants was
- implemented for the IB 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sec:Industrial-benchmark"
-
-\end_inset
-
- .
- Especially in the case of Markov states that are not completely clear,
- past values are taken into account, which is why the time of observation
- is another unusual factor.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-The calculation of the index was not an optional part of the GP.
-\end_layout
-
-\end_inset
-
- This was filtered as a natural number during the filter mutation (
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$X
-\backslash
-sim
-\backslash
-mathcal{N}(x,0.1)$
-\end_layout
-
-\end_inset
-
-).
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{algorithm}[H] 
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-SetAlgoLined  
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-KwData{n amount of (time-)indizes an observation can have}  
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-KwResult{Probability distribution to choose age t of a variable}
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-Function{create
-\backslash
-_observation
-\backslash
-_indexDistribution(indexList)}  
-\end_layout
-
-\begin_layout Plain Layout
-
- {  
-\end_layout
-
-\begin_layout Plain Layout
-
- n $
-\backslash
-assign 
-\backslash
-FuncCall{count}{n}$
-\backslash
-;  
-\end_layout
-
-\begin_layout Plain Layout
-
- ageBonus $
-\backslash
-assign 
-\backslash
-log(n) + 1 $
-\backslash
-;    
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-Comment{Logarithmic progression spacing from highest to lowest value}  
-\end_layout
-
-\begin_layout Plain Layout
-
- indexProbabilities $
-\backslash
-assign$ 
-\backslash
-FuncCall{logSpace}{n + ageBonus, $1$ + ageBonus, n}
-\backslash
-;  
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-For{share in indexProbabilities}{   
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-Comment{Normalizing the shares to $100
-\backslash
-%$}   
-\end_layout
-
-\begin_layout Plain Layout
-
-  share $
-\backslash
-assign 
-\backslash
-frac{
-\backslash
-text{share}}{
-\backslash
-sum{
-\backslash
-text{indexProbabilities}}}$  
-\end_layout
-
-\begin_layout Plain Layout
-
- }     
-\end_layout
-
-\begin_layout Plain Layout
-
- 
-\backslash
-Return{indexProbabilities}
-\backslash
-;
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-caption{A mixture between a uniform and a logarithmic frequency distribution
- should favour recent values slightly logarithmic.}  
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{algorithm}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/pyplots_custom/distribution_obs_time.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Selection of the time of an observation to build a tree.
- Younger values are selected slightly more frequently due to their higher
- presumed relevance according to the distribution described.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="17" columns="3">
-<features booktabs="true" tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top" width="0pt">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Evolution
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Options
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Ratio
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.06
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-random branch simplification
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.03
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Olymp
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(from pareto candidates)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.01
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-point
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (nodes, full)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (nodes, grow)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Filter
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (7, 1, 12, 3)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Filter
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (7, 1, 12, 3)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Crossover
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Crossover
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.30
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(4.5, 3, 5, 1)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(10, 1, None, 5)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.15
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(10, 1, None, 5)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.15
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The evolution of a population of candidates includes all common evolutionary
- methods and is divided by default into 10% reproduction, 55% mutation and
- 35% crossover in all runs.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:Distribution-gp-evolutions"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Olymp-reproduction (Pareto reproduction)
-\end_layout
-
-\begin_layout Standard
-Similar to the Greek gods who came to earth to reproduce, the pareto candidates
- were also given the opportunity to intermingle with the current population.
- By chance, solutions already found and their genes could be completely
- lost.
- In order not to lose already found solutions permanently, the genes of
- the best candidates are to provide a very small current for backups of
- the best-ofs of the past.
-\begin_inset Newline newline
-\end_inset
-
-The olymp reproduction includes in particular the possibility for the origin
- tree to reproduce itself.
 \end_layout
 
 \begin_layout Chapter
@@ -6057,6 +5793,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -6365,6 +6102,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6446,6 +6184,7 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -8935,6 +8674,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -9916,181 +9656,6 @@ status open
 \noindent
 \align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="middle" width="40mm">
-<column alignment="center" valignment="top" width="40mm">
-<column alignment="center" valignment="top" width="40mm">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Complete operator set
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-excluding exponentiation and $
-\backslash
-sin$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="middle" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs3_easy/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 4cm
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The results of the right column with the safer operator set has the better
- real results.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\noindent
-\align center
-\begin_inset Tabular
 <lyxtabular version="3" rows="4" columns="3">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="middle" width="15mm">
@@ -11017,6 +10582,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -11125,6 +10691,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -11149,6 +10716,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11233,10 +10801,8 @@ Regular GP results
 \end_layout
 
 \begin_layout Standard
-Normale GP-Resultate für das IB erreichen einen kombinierten Regressionsfehler
- von ca.
- 2, der reale Reward liegt bei ca.
- 6000.
+Normal GP results for the IB reach a combined regression error of about
+ 2, the real reward is about 6000.
 \end_layout
 
 \begin_layout Standard
@@ -11898,6 +11464,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11980,10 +11547,162 @@ Future Work & Conclusion
 Future work
 \end_layout
 
-\begin_layout Standard
-xxx
+\begin_layout Subsection
+Improving the Tree Edit Distance 
+\begin_inset CommandInset label
+LatexCommand label
+name "TED-improvements"
+
+\end_inset
+
+
 \end_layout
 
+\begin_layout Paragraph
+(Lösung->Diskussion?) Trimming the Tree of Edits
+\end_layout
+
+\begin_layout Standard
+A programming tree can essentially be characterised by the structure of
+ its operators, since the exact choice of leaf nodes are the logical prerequisit
+e for its fitness and can therefore only be used in the appropriate places.
+ As already mentioned in xx, constants have a comparatively insignificant
+ role for the interpretability or the essence of a formula anyway.
+ Observations play an important role for the problem itself (see xx), but
+ also result from the pure operational tree.
+ 
+\end_layout
+
+\begin_layout Standard
+Therefore, for normal complexity measures, the only function of evaluating
+ leaf nodes is to penalise the branching factor of a tree without much additiona
+l effort.
+\end_layout
+
+\begin_layout Standard
+For distance-based methods, leaf nodes therefore represent a relatively
+ increased factor.
+ Especially constants have a strong impact, where an otherwise desired optimisat
+ion of a value is evaluated as a full-fledged edit.
+ This can not only prevent deliberate simplifications, but can even lead
+ to the formula components around the variable being adjusted in order to
+ be able to continue to use the constant unchanged.
+ A simple solution would be, for example, to exclude constants when calculating
+ the TED.
+\end_layout
+
+\begin_layout Standard
+Observations, on the other hand, have a much more important role, especially
+ the amount of observations used.
+ The number of necessary observations represents the dimensionality of the
+ problem xx curse of dimensionality in maths xx.
+ For the developer, they represent in particular the starting point of his
+ considerations, which is contrary to the genetic approach with the tree
+ root as the main anchor point.
+ Observations are the nodes around which functions and constants are to
+ be arranged in such a way that meaningful results are produced; they should
+ therefore not be ignored like the constants and can remain a normal part
+ of the TED.
+\end_layout
+
+\begin_layout Standard
+Since the quantity of operators used is more important than their number,
+ the symmetrical distance between the quantities of observations used can
+ also be extended and included in the calculation, for example as a sum
+ or as a factor.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Note that this approach is based on the same paradigm edit-distance, but
+ contradicts the 
+\begin_inset Quotes eld
+\end_inset
+
+identity of indiscernibles
+\begin_inset Quotes erd
+\end_inset
+
+ condition of distance measurements.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Weighted TED
+\end_layout
+
+\begin_layout Standard
+The TED offers many extension possibilities which can further address the
+ nature of a change, including a weighting of nodes similar to the one used
+ in classical GP which was mentioned in xx.
+ 
+\end_layout
+
+\begin_layout Standard
+For this, the weighted mapping must be calculated.
+ A subsequent weighting of the mapping of the regular TED does not make
+ sense, since a later reweighting can lead to ambiguous results that do
+ not correspond to the minimum.
+ Dies betrifft vor allem den Umgang mit einem geänderten Knoten.
+ The weighted TED was imlemented, but opens many questions on how to deal
+ with the effect and the complexity of altered nodes in the origin tree.
+\end_layout
+
+\begin_layout Standard
+Implementations might be based on the following ideas:
+\end_layout
+
+\begin_layout Itemize
+Ignoring altered nodes
+\end_layout
+
+\begin_layout Itemize
+Division of all operators into classes, where the cost for changing within
+ a class is weakened.
+ A potential class might be the operator families (e.g.
+ angle-based operators.
+ This allows adaptions in konstant nodes and also a distinction between
+ basic operator types.
+\end_layout
+
+\begin_layout Itemize
+Even more specific options that were implemented but not evaluated in order
+ not to mix too many paradigms:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+With if-statements, the edit distance of the child branches is calculated
+ separately and only the largest factor is added.
+ This procedure is intended to promote the use of if statements, which have
+ a very positive influence on the interpretability of a formula due to their
+ structuring influence, but which greatly increase the TED due to the high
+ arity of 3 and the resulting branching factor.
+\end_layout
+
+\begin_layout Itemize
+Use of several known origins in one run and counting the minimum TED for
+ each tree.
+ This way, several understandable approaches could be compared directly
+ for their extensibility or even incomplete solutions could be introduced
+ separately.
+\end_layout
+
+\begin_layout Itemize
+Unifying and ordering trees, for example with sympify as described in xx,
+ before calculating the TED.
+\end_layout
+
+\begin_layout Itemize
+Similar to fixed nodes (xx), giving nodes of the core structure a separate
+ weighting so that changes are possible but very costly.
+\end_layout
+
+\end_deeper
 \begin_layout Section
 Conclusion
 \end_layout

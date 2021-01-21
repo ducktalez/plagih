@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,9 +7,6 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
-% Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -27,6 +24,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -66,6 +65,7 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -74,7 +74,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -87,8 +90,195 @@
 
 \begin_body
 
-\begin_layout Section
+\begin_layout Subsection
+Explainability Measure
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Complexity-measurement"
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+How explainable something is is best described by the effort a person needs
+ to understand a formula.
+ Effort, however, is a very arbitrary property, which is why explainability
+ cannot be clearly determined.
+ In GP, therefore, no further distinction is usually made between explainability
+ and the complexity of a formula.
+ The number of nodes poses some problems as a paradigm, even after weighting.
+\end_layout
+
+\begin_layout Paragraph
+Divide and Conquer with the if-operator
+\end_layout
+
+\begin_layout Standard
+Although the if-operator is the most complex function with 3 input parameters,
+ it creates more structure than all other operators because its child trees
+ are not combined but can be considered separately.
+ Nevertheless, the subtrees must have a relation to each other in order
+ to harmonize together.
+ This combination creates encapsulated programs in a clear way that humans
+ can understand more easily.
+ It is always to be welcomed when these are contained in programs, but this
+ should not be artificially forced, as they are not useful at every point.
+ 
+\end_layout
+
+\begin_layout Standard
+The if statement is already penalized by its high branching factor, which
+ should not be further supported by a higher weighting.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[abs[pos]][{$
+\backslash
+cdot$}[{$174.162$}][{vel}]]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A very simple mathematical formula can be much harder to understand than
+ a comprehensive strategy that is intuitive.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Observations 
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Observations-role"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Observations have another special role with this, since the only task of
+ the GP process is to map their values to an output.
+ Observations that are not part of the solution are either irrelevant or
+ their information can be sufficiently replaced by other observations, why
+ they should be considered in isolation to keep the permutations of their
+ influences low.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[if-then-else[{$<$}[{vel}][{$0$}]][{$0$}][{$2$}]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$x^y$}[vel][{$-5.0$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The solutions achieve almost identical results, but people are more likely
+ to use an if distinction than to look for a mathematical formula.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+observations = dimension urse of dimensionalit
+\end_layout
+
+\begin_layout Itemize
+constants = irrelevant
+\end_layout
+
+\begin_layout Itemize
+operators = structure relevant, branching factor, operators type of combination
+\end_layout
+
+\begin_layout Itemize
+anomalies: if-then-else, reapperaing patterns in cases
 \end_layout
 
 \end_body

@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -23,7 +23,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -41,6 +40,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -82,6 +83,7 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -91,7 +93,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -191,29 +196,29 @@ Machine learning methods, in particular reinforcement learning, enable the
 \end_layout
 
 \begin_layout Standard
-Als Lösung wird vorgeschlagen, die Vertrautheit anhand der nötigen edits
- an einem Expertenprogramm zu berechnen und als Komplexitätsmaß für genetische
- Programmierung zu verwenden.
- Getestet wurde der Ansatz auf dem Mountaincar und dem Industrial Benchmark
- in Form einer symbolischen Regression der Transition samples einer Neuropolicy.
- Als direkte Erweiterung der Edit-distance wurde auch die Festlegung einer
- fixen Kernstruktur implementiert und getestet.
+As a solution, it is proposed to calculate the familiarity on the basis
+ of the necessary edits to an expert programme and to use it as a complexity
+ measure for genetic programming.
+ The approach was tested on the Mountaincar and the Industrial Benchmark
+ in the form of a symbolic regression of the transition samples of a neuropolicy.
+ As a direct extension of edit-distance, the specification of a fixed core
+ structure was also implemented and tested.
 \end_layout
 
 \begin_layout Standard
-Die Kandidaten von familiären GP Ansätzen unterschieden sich signifikant
- von normalen GP Lösungen.
- Vertraute Elemente sind deutlich erkennbar und die Perfoemance war vergleichbar
- gut, teilweise sogar besser.
- Die fixe Kernstruktur ermöglichte zusätzlich den erhalt vertrauter Strukturen
- in sehr kleinen Programmen, beschleunigte aber auch Läufe mit sehr komplexen
- Programmen (mit mehr als 25 Startknoten).
+The candidates of familial GP approaches differed significantly from normal
+ GP solutions.
+ Familiar elements are clearly recognisable and performance was comparably
+ good, sometimes even better.
+ The fixed core structure additionally enabled the preservation of familiar
+ structures in very small programmes, but also accelerated runs with very
+ complex programmes (with more than 25 start nodes).
  
 \end_layout
 
 \begin_layout Standard
-Vertrautheit stellt somit eine sinnvolle Erweiterung beim suchen nach interpreti
-erbaren policies dar, die auf viele Arten noch erweitert werden kann.
+Familiarity proved to be a working and useful extension to search for interpreta
+ble policies, which can still be extended in many ways.
 \end_layout
 
 \begin_layout Standard
@@ -247,7 +252,7 @@ pagenumbering{arabic}
 \end_layout
 
 \begin_layout Chapter
-Introduction 
+Introduction
 \end_layout
 
 \begin_layout Standard
@@ -313,6 +318,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -357,6 +363,7 @@ yyy
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -414,47 +421,24 @@ Reinforcement Learning
 \end_layout
 
 \begin_layout Standard
-RL beschäftigt sich bei Probleme, wo das Ziel klar definiert ist, mit dem
- Suchen nach optimalen Lösungsstrategien.
-\end_layout
-
-\begin_layout Standard
-Reinforcement learning (RL) is a subfield of Machine Learning which illustrates
- a scenario where an agent interacts with an environment and has to learn
- a strategy from a (delayed) reward.
- 
-\end_layout
-
-\begin_layout Standard
-xx It is espedially suitable for problems such as games or control strategies,
- where the solution is somewhat obvious, but the strategy how to achieve
- it is not clear.
- 
-\end_layout
-
-\begin_layout Standard
-RL thus enables the search for new solution strategies that are free of
- human bias and can reveal new solution paths in many areas.
- 
-\end_layout
-
-\begin_layout Standard
-To do so, the agent receives the current state (observations) of the environment
- and can decide on an action, thus reaching a subsequent state and a reward.
- 
-\end_layout
-
-\begin_layout Standard
-The environment is formalized as Markov Decision Process (MDP), which are
+Reinforcement learning (RL) is a subfield of Machine Learning, which deals
+ with problems such as games or simulations, where the goal is obvious but
+ a solution strategy must be sought.
+ Das Ziel wird nur implizit in Form eines externen Rewards impliziert, dessen
+ Summe ein Agent durch Interaktion in einem environment maximieren soll.
+ To do so, the agent receives the current state (observations) of the environmen
+t and can decide on an action, thus reaching a subsequent state and receiving
+ a reward.
+ The environment is formalized as Markov Decision Process (MDP), which is
  a stochastic form of determinism so that in each state, when performing
  an action, the same subsequent state is reached with a certain probability.
  
 \end_layout
 
 \begin_layout Standard
-Learning a policy relies on trial and error, with the agent having to carefully
- weigh up exploration and exploitation to cope with the limited resources
- an agent has at his disposal.
+To learn a policy in such an environment therefore requires carefully weighting
+ up exploration and exploitation to cope with the limited resources an agent
+ has at his disposal.
 \end_layout
 
 \begin_layout Standard
@@ -555,27 +539,48 @@ Neural networks represent a specialist savant that was trained to master
 \end_layout
 
 \begin_layout Subsection
-RL in industrial context
+Kontext Industrie / RL in industrial context
 \end_layout
 
 \begin_layout Standard
-Auch für die Industrie 
+Vor allem in der Industrie sollen oft Strategien für reale Anwendungen und
+ hochstochastische Probleme gefunden werden.
 \end_layout
 
 \begin_layout Standard
-- random exploration
+Eine hohe dimensionalität, wie beispielsweise bei einer Gasturbine, kann
+ beispielsweise mithilfe eines Recurrent Control Neural Network gefunden
+ werden.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-gas-turbine-rl-nn"
+literal "true"
+
+\end_inset
+
+ PSONN ist ein evolutionärer Ansatz mit ebenfalls großem Erfolg, der auch
+ neuronale Netzwerke nutzt.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
+literal "true"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-- trust? stochastic testing
-\end_layout
+In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
-\begin_layout Standard
-- explanation? possible sometimes
-\end_layout
+\end_inset
 
-\begin_layout Standard
-- understanding? Nope
+ it is shown, how interpretable GP policies can be created even for highly
+ complex industrial applications.
 \end_layout
 
 \begin_layout Standard
@@ -593,42 +598,11 @@ Industrial problems often suffer from igh stochasticity is a problem
 \end_layout
 
 \begin_layout Standard
-The Industrial Benchmark is one of the few benchmarks that simulate highly
- stochastic industrial environments.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "industrialBenchmark"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
 todo
 \end_layout
 
 \begin_layout Standard
-xx secure RL policies for stochastic environments (requires NN) crazy gas
- turbine 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "siemens-gas-turbine-rl-nn"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-xx PSONN 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
-
-\end_inset
-
-
+xx 
 \end_layout
 
 \begin_layout Standard
@@ -645,22 +619,41 @@ bly large that solutions can no longer be found.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
- In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Hein_Udluft_Runkler_interpretable_gp"
+ 
+\end_layout
 
-\end_inset
-
- it is shown, how interpretable GP policies can be created even for highly
- complex industrial applications.
+\begin_layout Standard
+Um eine Funktion für ein state-action mapping erzeugt, gibt es im Bereich
+ des RL mehrere Möglichkeiten.
+ Für viele Bereiche konnte aber erst durch die Verwendung neuronaler Netze
 \end_layout
 
 \begin_layout Section
 Explainable AI
+\end_layout
+
+\begin_layout Standard
+xxxx
+\end_layout
+
+\begin_layout Standard
+- random exploration
+\end_layout
+
+\begin_layout Standard
+- trust? stochastic testing
+\end_layout
+
+\begin_layout Standard
+- explanation? possible sometimes
+\end_layout
+
+\begin_layout Standard
+- understanding? Nope
 \end_layout
 
 \begin_layout Standard
@@ -702,6 +695,7 @@ Explainable artificial intelligence (XAI) deals with the problem of making
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -717,6 +711,7 @@ An XAI approach should in some way mimic human explanation and feedback
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -830,6 +825,7 @@ The limits of my language mean the limits of my world.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
@@ -900,6 +896,7 @@ For image recognition with DNNs, Layerwise Relevance propagation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -1051,6 +1048,7 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -1366,6 +1364,7 @@ Operators for explicit conversion are, for example, comparison operators
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1688,6 +1687,7 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1802,6 +1802,7 @@ xx interpretable gp
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp,Hein_Udluft_Runkler_interpretable_gp,HUR18"
+literal "true"
 
 \end_inset
 
@@ -1814,6 +1815,7 @@ In
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2110,6 +2112,7 @@ text{modify}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -2119,6 +2122,7 @@ key "tedOldestPaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -2331,6 +2335,7 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2339,6 +2344,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -2702,6 +2708,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3816,6 +3823,7 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -5815,6 +5823,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -6123,6 +6132,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6204,6 +6214,7 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -8693,6 +8704,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -10592,6 +10604,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -10700,6 +10713,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -10724,6 +10738,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11471,6 +11486,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 

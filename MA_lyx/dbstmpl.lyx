@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -24,7 +24,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -42,6 +41,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -83,6 +84,7 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -92,7 +94,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -178,6 +183,10 @@ x
 
 \begin_layout Abstract
 x
+\end_layout
+
+\begin_layout Abstract
+solved in context of industry
 \end_layout
 
 \begin_layout Abstract
@@ -314,6 +323,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -358,6 +368,7 @@ yyy
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -405,9 +416,49 @@ y occur in the industry.
  Essential concerns of the industry are further in
 \end_layout
 
+\begin_layout Section
+Artificial Intelligence
+\end_layout
+
 \begin_layout Standard
 Artificial Intelligence is the umbrella term for a variety of different
  methods...
+\end_layout
+
+\begin_layout Section
+Machine Learning methods
+\end_layout
+
+\begin_layout Standard
+For this work, the division between blackbox solutions and interpretable
+ solutions is primarily relevant for ML technologies, since the approach
+ presented here is primarily tested using symbolic regression without a
+ learning strategy.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xxx Unterteilun Modelle
+\end_layout
+
+\begin_layout Plain Layout
+Indivudual - population
+\end_layout
+
+\begin_layout Plain Layout
+implicit - explicit
+\end_layout
+
+\begin_layout Plain Layout
+policy iteration (model-free) - policy search (model-based)
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -470,104 +521,121 @@ The well-known diagram that no work on reinforcement learning should be
 
 \end_layout
 
+\begin_layout Standard
+XXX LEARNING
+\end_layout
+
+\begin_layout Standard
+xxx die olle, die interpretability empfielt
+\end_layout
+
 \begin_layout Subsection
-Blackbox solution / Deep Neural Networks
+Online/offline learning
+\end_layout
+
+\begin_layout Standard
+Especially in industry, there are many safety critical domains where learning
+ on the real benchmark (online training) is not allowed because misconduct
+ can lead to great damage.
+ Offline training means training on a surrogate model (e.g.
+ on a data set).
+ Apart from the safety aspect, offline models are usually more cost-efficient
+ and perform better, but are also less meaningful.
+\end_layout
+
+\begin_layout Subsection
+Blackbox solution
+\end_layout
+
+\begin_layout Paragraph
+Neural Networks
 \end_layout
 
 \begin_layout Standard
 Neural networks (NN) are generic equation systems which learn a function
- approximation by automatically adjusting its parameters.
-\end_layout
-
-\begin_layout Standard
-Inspired by the human brain, inputs are signaled through layers of artificial
+ approximation by automatically adjusting its parameters through backpropagation.
+ Inspired by the human brain, inputs are signaled through layers of artificial
  neurons to an output.
+ Thanks to enormous advances in technology and research with deep layers,
+ there are now many architectures so that even highly complex strategies
+ can be found.
  
 \end_layout
 
-\begin_layout Standard
-- had a major role in the recent breakthroughs in many domains, one of which
- was AlphaGo.
+\begin_layout Itemize
+Complex strategies respectively deep strategies (such as the games of chess
+ or Go) require very complex models.
+ It is important to know that the most outstanding achievements in the field
+ of RL were made possible with the help of neuropolicies, including Alpha
+ Go.
 \end_layout
 
-\begin_layout Standard
-- utilize additional hidden layers to find even more complex models.
-\end_layout
-
-\begin_layout Standard
-- inspired by the human brain
-\end_layout
-
-\begin_layout Standard
-- can learn a model
-\end_layout
-
-\begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-- backpropagation: During the training process, correct and false decisions
- are backpropagated through the network, which can adjust its weights accordingl
-y.
- 
-\end_layout
-
-\begin_layout Standard
-From a mathematical point of view, an NN is a very large, generic system
- of equations whose parameters are adjusted as part of a stochastic model
- until the probability of error is very unlikely.
- 
-\end_layout
-
-\begin_layout Standard
-Neural networks represent a specialist savant that was trained to master
- one given task thus contain implicit policies whose logic is only contained
- in the form of the current parameterisation.
- In order to trust an NN, it cannot therefore be understood, but errors
- can be kept low with the help of stochastic test procedures.
-\end_layout
-
-\begin_layout Subsection
-Kontext Industrie / RL in industrial context / RL Herausforderungen
-\end_layout
-
-\begin_layout Standard
-RL war lange Zeit beschränkt auf einfache Probleme.
- Durch die Verwendung tiefer neuronaler Netze ist aber auch das lernen komplexer
- Strategien möglich geworden.
-\end_layout
-
-\begin_layout Standard
-In der Industrie gibt es viele Problemtypen, die bisher nur erfolgreich
- mithilfe von solchen impliziten Ansätzen gelöst werden konnten.
+\begin_layout Itemize
+High dimensionality tritt besonders in Bereichen der Industrie auf, wo viel
+ mehr technische Daten gesammelt werden als bei klassischen RL Benchmarks.
  Beispiele sind extrem hohe Dimensionalität eines Problems, beispielsweise
  bei Gasturbinen 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
+literal "true"
 
 \end_inset
 
- oder auch hohe Stochastizität, was beispielsweise mithilfe von evolutionären
+ 
+\end_layout
+
+\begin_layout Itemize
+High stochasticity systems include a dynamic which is strongly influenced
+ by randomness.
+ The lack of determinism massively complicates the correct evaluation of
+ exploitation, making it extremely difficult to learn a solution.
+ 
+\begin_inset Newline newline
+\end_inset
+
+oder auch hohe Stochastizität, was beispielsweise mithilfe von evolutionären
  ALgorithmen wie PSONN 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
+literal "true"
 
 \end_inset
 
- gelöst werden konnten.
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-rl-stochastic-bayesian-nn"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Neuropolicies mark a specialist savant that was trained to master one given
+ task and at the cost of being able to describe or explain why decisions
+ are being made.
+ They are considered a black box, Vertrauen in eine Neuropolicy ist nur
+ durch testen möglich.
+\end_layout
+
+\begin_layout Subsection
+Kontext Industrie / RL in industrial context / RL Herausforderungen / Controlers
+\end_layout
+
+\begin_layout Standard
+The smooth system dynamics of controlers still allow for interpretable solutions
+ to be searched.
+ xxx
 \end_layout
 
 \begin_layout Standard
 Vertrauen in ein gelerntes Modell ist nur schwer zu erlangen und beschränkt
  sich in den meisten Fällen auf ausführliche Testverfahren, die die Fehlerwahrsc
 heinlichkeit reduzieren, aber nicht ausschließen können.
-\end_layout
-
-\begin_layout Standard
-Auch einzelne Entscheidungen können oft erklärt werden, was aber
 \end_layout
 
 \begin_layout Standard
@@ -582,6 +650,7 @@ bly large that solutions can no longer be found.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -594,55 +663,17 @@ key "hein_fuzzy_gp"
 \end_layout
 
 \begin_layout Section
-Explainable AI
-\end_layout
-
-\begin_layout Standard
-The trust for implicit approaches rely on stochastic testing.
- Further explanation is subject to post-hoc explanation techniques.
-\end_layout
-
-\begin_layout Standard
-xxxAI What does understand mean?
-\end_layout
-
-\begin_layout Standard
-xxx 
-\begin_inset Quotes eld
-\end_inset
-
-Why did you do this?
-\begin_inset Quotes erd
-\end_inset
-
- can be answered for single decisions
-\end_layout
-
-\begin_layout Standard
-Single decisions can be explained Einzelne Entscheidungen rechtfertigen
- (gericht)?
-\end_layout
-
-\begin_layout Standard
-- trust?->testing
-\end_layout
-
-\begin_layout Standard
-- interpretable->>nope...
-\end_layout
-
-\begin_layout Standard
-xxxxx
+Explainable Artificial Intelligence
 \end_layout
 
 \begin_layout Standard
 Explainable artificial intelligence (XAI) deals with the problem of making
  AI solutions understandable for humans.
- Aus Sicht der Industrie, it establishes trust into a ML model.
  It has become more and more popular in recent years.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -652,12 +683,11 @@ key "XAI_doshivelez2017rigorous,AIINDEX2019"
 \end_layout
 
 \begin_layout Standard
-An XAI approach should in some way mimic human explanation and feedback
- mechanisms.
- As described in 
+As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -722,17 +752,341 @@ collection of features of interpretable domain that have contributed for
 \end_inset
 
 .
- An important point of research is post-hoc reasoning, where an already
- trained model is to be explained retrospectively.
- Since usually no equivalent model can be found that is also interpretable,
- the trade-off between explainability and performance must also be accepted
- here.
- A complete explanation can be found for individual decisions, for example,
- or completely interpretable models that cannot contain the complete behaviour.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="10" columns="2">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="center" valignment="top" width="4cm">
+<column alignment="center" valignment="top" width="4cm">
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Human demand
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Implementation
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+AI
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+Learn how to do that!
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reward
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+You did that wrong!
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+E.g.
+ NN backpropagation
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+Are you reliable?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Testing procedures
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+XAI
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+Why did you do that?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+How did you make this decision?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Explanation for the decision
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+What are you doing?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Fully interpretable policy
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+What can i learn from you?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+Why are you better?
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Targeted improvement on known strategies
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+An XAI approach should in some way mimic human explanation and feedback
+ mechanisms.
+ Requirements for AI methods, presented on the basis of the desired goals.
+ xxx
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Paragraph
 Performance and Explainability Tradeoff
+\end_layout
+
+\begin_layout Standard
+An accurate explanation is not holistic, and a interpretable solution is
+ usually not possible without generalising the model.
+ 
+\end_layout
+
+\begin_layout Standard
+Since usually no equivalent model can be found that is also interpretable,
+ the trade-off between explainability and performance must also be accepted
+ here.
+ 
+\end_layout
+
+\begin_layout Standard
+- trust?->testing
+\end_layout
+
+\begin_layout Standard
+- interpretable->nope...
+\end_layout
+
+\begin_layout Standard
+xxxxx indicate decisions -> explaining decisions -> ganzheitlich
 \end_layout
 
 \begin_layout Standard
@@ -742,18 +1096,20 @@ xxx Every machine learning model is subject to a trade-off between performance
 \end_layout
 
 \begin_layout Standard
-xxx The best explanation is probably the explanation that existed before
- a model, so that the model is a good representation of the explanation.
- 
-\end_layout
-
-\begin_layout Standard
 xxx How explainable something is is difficult to determine, but humanly
  written approaches can at least be used as a safe anchor point for explainabili
 ty.
- For the concept of familiarity used in this work, however, they play a
- special role, which is why the following will briefly discuss why they
- are so significant as a reference.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Human vs Machine (domain expert)
+\end_layout
+
+\begin_layout Standard
+For the concept of familiarity used in this work, however, they play a special
+ role, which is why the following will briefly discuss why they are so significa
+nt as a reference.
 \end_layout
 
 \begin_layout Itemize
@@ -780,6 +1136,7 @@ The limits of my language mean the limits of my world.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
@@ -793,26 +1150,38 @@ key "wittgenstein1953philosophical"
 \end_layout
 
 \begin_layout Itemize
-Secure training process
+Conscious learning process
 \begin_inset Newline newline
 \end_inset
 
 All human exploration is based on xxx monitored by the amygdula for dangers
  and the learned models are thus endowed with a high degree of security.
  Tasks that one does not seem to be able to solve are aborted due to frustration.
- A machine, however, is forced to improve its approach until it has become
- good enough and has to rely on random exploration.
+ A machine learns without awareness and is forced to adapt and improve its
+ approach until it has become good enough and has to rely on random exploration.
  
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Also the reference to experiences that have led to a behaviour is not possible,
+ as it is with humans, because the experiences are not stored but are only
+ available in the form of an improved policy.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Itemize
-Leaded exploration with early feedback
+Peer reviews
 \begin_inset Newline newline
 \end_inset
 
-A human learning process is mostly guided and even in experts peer-review
- their ideas before using new strategies, with the sub-goals widely synched
- between interacting humans.
+A human learning process is mostly guided and ideas can be peer reviewed
+ before using new strategies, with the sub-goals widely synched between
+ interacting humans.
  This largely reduces the risc of over- and underfitting.
  One notable example is that successful models can be implemented in all
  people (such as the Pythagorean theorem) as reliable anchor point.
@@ -827,7 +1196,6 @@ Let's consider, for example, the game Puzzle as an NP-hard problem, where
  about the picture on the box as reference point.
  A popular tip for beginners is therefore that one should start with the
  edge of the puzzle as pieces can be matched early to a frame.
- 
 \end_layout
 
 \begin_layout Plain Layout
@@ -841,19 +1209,60 @@ Teaching a neural network requires an extensive training process and may
  
 \end_layout
 
+\begin_layout Subsection
+Post-hoc Explanations
+\end_layout
+
+\begin_layout Standard
+An important point of research is post-hoc reasoning, where an already trained
+ model is to be explained retrospectively.
+ A profound explanation can be found for individual decisions, for example,
+ or completely interpretable models that cannot contain the complete behaviour.
+\end_layout
+
+\begin_layout Standard
+It can help to gain confidence, security or even new knowledge.
+ 
+\end_layout
+
+\begin_layout Standard
+xxx Auch eine einzelne Erklärung kann sehr umfangreich sein.
+ Deshalb nur auf das wichtigste beschränken! nicht alles!
+\end_layout
+
+\begin_layout Paragraph
+Trust
+\end_layout
+
+\begin_layout Standard
+Testing xxx
+\end_layout
+
+\begin_layout Paragraph
+Explanation Methods
+\end_layout
+
+\begin_layout Standard
+Perturbation (reacting to changes? one pixel), function analysis (taylor,
+ surrogate based, structure based
+\end_layout
+
 \begin_layout Paragraph
 Layerwise Relevance Propagation
 \end_layout
 
 \begin_layout Standard
-For image recognition with DNNs, Layerwise Relevance propagation 
+Layerwise Relevance propagation 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
- offers a technique to highlight the areas crucial areas for a decision.
+ is a structure based explanatory approach which backpropagates the relevant
+ factors for an output to an input to highlight the crucial areas for a
+ decision.
  Besides the insight into industrial image processing, however, this technique
  has only limited use even as a debugging aid, as can be seen in 
 \begin_inset CommandInset ref
@@ -866,11 +1275,6 @@ reference "LRP-Incorrect-classification-palmtrees"
 \end_layout
 
 \begin_layout Standard
-xxx Im Bereich des RL kann man eine Fehlentscheidung aber normalerweise
- nicht auf einzelne Fälle reduzieren.
-\end_layout
-
-\begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
@@ -880,7 +1284,7 @@ status open
 \align center
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_0.png
-	height 3.3cm
+	height 3cm
 
 \end_inset
 
@@ -891,7 +1295,36 @@ status open
 
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_1.png
-	height 3.3cm
+	height 3cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/extern/RLP_frauenhofer_palmes0.png
+	height 3cm
+
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/extern/RLP_frauenhofer_palmes1.png
+	height 3cm
+
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Graphics
+	filename img/extern/RLP_frauenhofer_palmes2.png
+	height 3cm
 
 \end_inset
 
@@ -908,61 +1341,10 @@ The object is recognized as a wolf - especially the edges that separate
  coat colour and structure for this only of minor importance.
  Which characteristic was decisive - colour, wolf specific recognition features
  or even the reason why it is not a dog after all, is missing.
-\end_layout
-
+\begin_inset Newline newline
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/extern/RLP_frauenhofer_palmes0.png
-	height 3.3cm
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/extern/RLP_frauenhofer_palmes1.png
-	height 3.3cm
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset Graphics
-	filename img/extern/RLP_frauenhofer_palmes2.png
-	height 3.3cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
 \begin_inset CommandInset label
 LatexCommand label
 name "LRP-Incorrect-classification-palmtrees"
@@ -995,26 +1377,30 @@ https://lrpserver.hhi.fraunhofer.de/
 
 \end_layout
 
-\begin_layout Paragraph
-Interpretability
+\begin_layout Subsection
+Interpretable Policies
 \end_layout
 
 \begin_layout Standard
-xxx learn new stuff (new strategies) + Trust (sensible field)
+In the field of RL, decisions cannot be interpreted in isolation, but only
+ in the context of the learned strategy.
+ To gain confidence or understanding 
 \end_layout
 
 \begin_layout Standard
-The best explanation of a simple model is the model itself; it perfectly
- represents itself and is easy to understand.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI-unified-approach"
+IP are simple models, for example mathematical formulas or computer programmes,
+ which can be completely understood by humans.
+\end_layout
 
-\end_inset
+\begin_layout Standard
+Interpretable policies umfassen einfache Modelle, die als can be understood
+ completely and as a whole by humans.
+\end_layout
 
- Interpretable policies are mostly searched directly within an interpretable
- search space, the most known approach being evolutionary algorithms which
- will be further presented in 
+\begin_layout Standard
+Interpretable policies are searched directly within an interpretable search
+ space, the most known approach being evolutionary algorithms which will
+ be further presented in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "gp_Genetic-Programming"
@@ -1022,9 +1408,49 @@ reference "gp_Genetic-Programming"
 \end_inset
 
 .
- Solutions that are searched for with the aim of minimal representation
- in a language space as defined above can be interpreted by humans, but
- since the search process is also based on randomness, the formulas found
+\end_layout
+
+\begin_layout Standard
+Um eine RL policy zu verstehen und ihr vertrauen zu können muss sie gesamtheitli
+ch betrachtet und verstanden werden können.
+ 
+\end_layout
+
+\begin_layout Standard
+Interpretierbare policies relativ einfache Modelle
+\end_layout
+
+\begin_layout Standard
+Solutions that are searched for with the aim of minimal representation in
+ a language space
+\end_layout
+
+\begin_layout Standard
+learn new stuff (new strategies) + Trust (sensible field)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Quotes eld
+\end_inset
+
+The best explanation of a simple model is the model itself; it perfectly
+ represents itself and is easy to understand.
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-unified-approach"
+literal "true"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+Since the search process is also based on randomness, the formulas found
  are also free of human bias - but they still often appear to the observer
  more as a random combination of various operators than as a logically abstracte
 d solution to a problem.
@@ -1324,6 +1750,7 @@ Operators for explicit conversion are, for example, comparison operators
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1646,6 +2073,7 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1663,9 +2091,503 @@ key "daniel_hein_doktorarbeit"
 \end_layout
 
 \begin_layout Subsection
-xxxxxxxxxxx
+Explainability Measure
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Complexity-measurement"
+
+\end_inset
+
+
 \end_layout
 
+\begin_layout Standard
+How explainable something is is best described by the effort a person needs
+ to understand a formula.
+ Effort, however, is a very arbitrary property, which is why explainability
+ cannot be clearly determined.
+ In GP, therefore, no further distinction is usually made between explainability
+ and the complexity of a formula.
+ The number of nodes poses some problems as a paradigm, even after weighting.
+\end_layout
+
+\begin_layout Standard
+An important distinction has to be made between the inner and outer nodes
+ of a tree.
+ The inner nodes, which contain the operators, essentially characterise
+ a programming tree by representing the computation that is performed., since
+ the exact choice of leaf nodes are the logical prerequisite for its fitness
+ and can therefore only be used in the appropriate places.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Operators 
+\end_layout
+
+\begin_layout Standard
+Operators represent the heuristic of a tree and have the most debatable
+ implications for explainability.
+ Not only is the total set of operators used of interest, explicability
+ depends above all on the structure and type of nesting.
+ Examples of this are:
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{itemize}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item Operators with a high branching factor results in more leaf nodes and
+ also more complex models.
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item The amplification regarding the output of an operator can propagated
+ disproportionately through a tree.
+ E.g.
+ the power function depends strongly on the exponent ($x+y$, $x
+\backslash
+cdot y$, $x^y$) 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item Specific requirements regarding the input of an operator.
+ E.g.
+ the exponent of a power $x^y$ should be a natural number.
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item Wiederkehrende Teilstrukturen in einem Baum können leichter wiedererkannt
+ werden
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{itemize}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+xxx wiedererkenn wert in der gesamten Paretofront -> leichter zu beurteilen!
+\end_layout
+
+\begin_layout Subparagraph
+Divide and Conquer with the if-operator
+\end_layout
+
+\begin_layout Standard
+The if operator exemplifies the contradiction between explainability measures
+ and interpretability measures.
+ Although the if-operator is the most complex function with 3 input parameters,
+ it creates more structure than all other operators because its child trees
+ are not combined but can be considered separately.
+ Nevertheless, the subtrees must have a relation to each other in order
+ to harmonize together.
+ This combination creates encapsulated programs in a clear way that humans
+ can understand more easily.
+ It is always to be welcomed when these are contained in programs, but this
+ should not be artificially forced, as they are not useful at every point.
+ 
+\end_layout
+
+\begin_layout Standard
+Also, handling cases often are defined with the same 
+\end_layout
+
+\begin_layout Standard
+xxx The if statement is already penalized by its high branching factor,
+ which should not be further supported by a higher weighting.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[abs[pos]][{$
+\backslash
+cdot$}[{$174.162$}][{vel}]]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$x^y$}[vel][{$-5.0$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A very simple mathematical formula can be much harder to understand than
+ a comprehensive strategy that is intuitive.
+ The solutions achieve almost identical results.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Leaf nodes
+\end_layout
+
+\begin_layout Standard
+The number of leaf nodes follows explicitly from the operator tree and can
+ be the branching factor, i.e.
+ the number of values to be allocated.
+ A distinction should be made between observations and numbers.
+\end_layout
+
+\begin_layout Subparagraph
+Numbers
+\end_layout
+
+\begin_layout Standard
+Numbers are constant values which are rather irrelevant for understanding
+ a formula.
+ Even though they are essential for a program to function and optimizing
+ their exact values is subject to an important part of the genetic evolution,
+ besides some remarkable constants 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+(for example $
+\backslash
+pi$)
+\end_layout
+
+\end_inset
+
+ or the general factor 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+($0.1, 10, 10.000$)
+\end_layout
+
+\end_inset
+
+, they have no outstanding characteristic.
+ 
+\end_layout
+
+\begin_layout Subparagraph
+Observations 
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Observations-role"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The observations used play a decisive role, but above all the set of unique
+ operators is crucial.
+ They are the nodes around which operators and constants are to be arranged
+ in such a way that they map their values as well as possible to an output,
+ which is, after all, the sole task of the GP process.
+ Since not all available observations have to be used automatically, they
+ mainly also represent the dimensionality of the input vector of the model
+ that the solution tree represents.
+ Dimensionality plays a crucial role for the mathematical space in which
+ solutions are sought.
+ High dimensional problems suffer from a number of problems also known as
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+curse of dimensionality
+\begin_inset Quotes erd
+\end_inset
+
+ and are therefore also more difficult to understand.
+ For the developer, they represent in particular the starting point of his
+ considerations, which is contrary to the genetic approach with the tree
+ root as the main anchor point.
+\end_layout
+
+\begin_layout Paragraph
+Fallacy factors
+\end_layout
+
+\begin_layout Itemize
+The node depth should not be considered evaluating a node.
+ Die Bedeutung eines Knotens ist meist nicht anhand seiner Position erkennbar,
+ Kommutativität sowie Assoziativität vieler Rechenarten ist nur ein Beispiel.
+\end_layout
+
+\begin_layout Itemize
+Die maximale Baumtiefe wird häufig als Grenze für Bäume gewählt
+\end_layout
+
+\begin_layout Itemize
+Die Arität von Operatoren muss nicht zusätzlich gewichtet werden, da durch
+ den höheren Branchingfaktor automatisch die Komplexität steigt.
+\end_layout
+
+\begin_layout Subsection
+Improving the Tree Edit Distance 
+\begin_inset CommandInset label
+LatexCommand label
+name "TED-improvements"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Trimming the Tree of Edits
+\end_layout
+
+\begin_layout Standard
+As already mentioned in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp-Observations-role"
+
+\end_inset
+
+, constants have a comparatively insignificant role for the interpretability
+ or the essence of a formula anyway.
+ Observations play an important role for the problem itself (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp-Observations-role"
+
+\end_inset
+
+), but also result from the pure operational tree.
+\end_layout
+
+\begin_layout Standard
+Therefore, for normal complexity measures, the only function of evaluating
+ leaf nodes is to penalise the branching factor of a tree without much additiona
+l effort.
+\end_layout
+
+\begin_layout Standard
+For distance-based methods, leaf nodes therefore represent a relatively
+ increased factor.
+ Especially constants have a strong impact, where an otherwise desired optimisat
+ion of a value is evaluated as a full-fledged edit.
+ This can not only prevent deliberate simplifications, but can even lead
+ to the formula components around the variable being adjusted in order to
+ be able to continue to use the constant unchanged.
+ A simple solution would be, for example, to exclude constants when calculating
+ the TED.
+\end_layout
+
+\begin_layout Standard
+Observations, on the other hand, have a much more important role, especially
+ the amount of observations used.
+ As the number of outputs are fixed, the number of necessary observations
+ represents the dimensionality of the room of possible solutions, which
+ is also known in mathematics as the curse of dimensionality when it is
+ too large.
+\end_layout
+
+\begin_layout Standard
+Since the quantity of operators used is more important than their number,
+ the symmetrical distance between the quantities of observations used can
+ also be extended and included in the calculation, for example as a sum
+ or as a factor.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Note that this approach is based on the same paradigm edit-distance, but
+ contradicts the 
+\begin_inset Quotes eld
+\end_inset
+
+identity of indiscernibles
+\begin_inset Quotes erd
+\end_inset
+
+ condition of distance measurements.
+\end_layout
+
+\end_inset
+
+ ; they should therefore not be ignored like the constants and can remain
+ a normal part of the TED
+\end_layout
+
+\begin_layout Subsection
+Weighted TED
+\end_layout
+
+\begin_layout Standard
+The TED offers many extension possibilities which can further address the
+ nature of a change, including a weighting of nodes similar to the one used
+ in classical GP which was mentioned in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:EUREKA-GP-complexities"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+For this, the weighted mapping must be calculated.
+ A subsequent weighting of the mapping of the regular TED does not make
+ sense, since a later reweighting can lead to ambiguous results that do
+ not correspond to the minimum.
+ This mainly concerns the handling of a changed node.
+ The weighted TED was imlemented, but opens many questions on how to deal
+ with the effect and the complexity of altered nodes in the origin tree.
+\end_layout
+
+\begin_layout Standard
+Implementations might be based on the following ideas:
+\end_layout
+
+\begin_layout Itemize
+Ignoring altered nodes
+\end_layout
+
+\begin_layout Itemize
+Division of all operators into classes, where the cost for changing within
+ a class is weakened.
+ A potential class might be the operator families (e.g.
+ angle-based operators.
+ This allows adaptions in konstant nodes and also a distinction between
+ basic operator types.
+\end_layout
+
+\begin_layout Itemize
+Even more specific options that were implemented but not evaluated in order
+ not to mix too many paradigms:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+With if-statements, the edit distance of the child branches is calculated
+ separately and only the largest factor is added.
+ This procedure is intended to promote the use of if statements, which have
+ a very positive influence on the interpretability of a formula due to their
+ structuring influence, but which greatly increase the TED due to the high
+ arity of 3 and the resulting branching factor.
+\end_layout
+
+\begin_layout Itemize
+Use of several known origins in one run and counting the minimum TED for
+ each tree.
+ This way, several understandable approaches could be compared directly
+ for their extensibility or even incomplete solutions could be introduced
+ separately.
+\end_layout
+
+\begin_layout Itemize
+Unifying and ordering trees, for example with sympify as described in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:sympy-ordered-expression"
+
+\end_inset
+
+, before calculating the TED.
+\end_layout
+
+\begin_layout Itemize
+Similar to fixed nodes (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Fixed-nodes"
+
+\end_inset
+
+), giving nodes of the core structure a separate weighting so that changes
+ are possible but very costly.
+\end_layout
+
+\end_deeper
 \begin_layout Subsection
 Symbolic Regression
 \end_layout
@@ -1760,6 +2682,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -1772,6 +2695,7 @@ xx interpretable gp
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp,HUR18"
+literal "true"
 
 \end_inset
 
@@ -1784,6 +2708,7 @@ In
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2096,6 +3021,7 @@ text{modify}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -2105,6 +3031,7 @@ key "tedOldestPaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -2317,6 +3244,7 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -2325,6 +3253,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -2688,6 +3617,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3802,6 +4732,7 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -5801,6 +6732,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -6109,6 +7041,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6190,6 +7123,7 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -8679,6 +9613,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -10578,6 +11513,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -10686,6 +11622,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -10710,6 +11647,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11457,6 +12395,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11544,192 +12483,9 @@ xxx separated cases (leaving working parts untouched)
 \end_layout
 
 \begin_layout Subsection
-Improving the Tree Edit Distance 
-\begin_inset CommandInset label
-LatexCommand label
-name "TED-improvements"
-
-\end_inset
-
-
+xxxxxxxxxxxxxxxxxx
 \end_layout
 
-\begin_layout Paragraph
-Trimming the Tree of Edits
-\end_layout
-
-\begin_layout Standard
-A programming tree can essentially be characterised by the structure of
- its operators, since the exact choice of leaf nodes are the logical prerequisit
-e for its fitness and can therefore only be used in the appropriate places.
- As already mentioned in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp-Observations-role"
-
-\end_inset
-
-, constants have a comparatively insignificant role for the interpretability
- or the essence of a formula anyway.
- Observations play an important role for the problem itself (see 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp-Observations-role"
-
-\end_inset
-
-), but also result from the pure operational tree.
-\end_layout
-
-\begin_layout Standard
-Therefore, for normal complexity measures, the only function of evaluating
- leaf nodes is to penalise the branching factor of a tree without much additiona
-l effort.
-\end_layout
-
-\begin_layout Standard
-For distance-based methods, leaf nodes therefore represent a relatively
- increased factor.
- Especially constants have a strong impact, where an otherwise desired optimisat
-ion of a value is evaluated as a full-fledged edit.
- This can not only prevent deliberate simplifications, but can even lead
- to the formula components around the variable being adjusted in order to
- be able to continue to use the constant unchanged.
- A simple solution would be, for example, to exclude constants when calculating
- the TED.
-\end_layout
-
-\begin_layout Standard
-Observations, on the other hand, have a much more important role, especially
- the amount of observations used.
- As the number of outputs are fixed, the number of necessary observations
- represents the dimensionality of the room of possible solutions, which
- is also known in mathematics as the curse of dimensionality when it is
- too large.
- For the developer, they represent in particular the starting point of his
- considerations, which is contrary to the genetic approach with the tree
- root as the main anchor point.
- Observations are the nodes around which functions and constants are to
- be arranged in such a way that meaningful results are produced; they should
- therefore not be ignored like the constants and can remain a normal part
- of the TED.
- Since the quantity of operators used is more important than their number,
- the symmetrical distance between the quantities of observations used can
- also be extended and included in the calculation, for example as a sum
- or as a factor.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Note that this approach is based on the same paradigm edit-distance, but
- contradicts the 
-\begin_inset Quotes eld
-\end_inset
-
-identity of indiscernibles
-\begin_inset Quotes erd
-\end_inset
-
- condition of distance measurements.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Weighted TED
-\end_layout
-
-\begin_layout Standard
-The TED offers many extension possibilities which can further address the
- nature of a change, including a weighting of nodes similar to the one used
- in classical GP which was mentioned in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:EUREKA-GP-complexities"
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-For this, the weighted mapping must be calculated.
- A subsequent weighting of the mapping of the regular TED does not make
- sense, since a later reweighting can lead to ambiguous results that do
- not correspond to the minimum.
- This mainly concerns the handling of a changed node.
- The weighted TED was imlemented, but opens many questions on how to deal
- with the effect and the complexity of altered nodes in the origin tree.
-\end_layout
-
-\begin_layout Standard
-Implementations might be based on the following ideas:
-\end_layout
-
-\begin_layout Itemize
-Ignoring altered nodes
-\end_layout
-
-\begin_layout Itemize
-Division of all operators into classes, where the cost for changing within
- a class is weakened.
- A potential class might be the operator families (e.g.
- angle-based operators.
- This allows adaptions in konstant nodes and also a distinction between
- basic operator types.
-\end_layout
-
-\begin_layout Itemize
-Even more specific options that were implemented but not evaluated in order
- not to mix too many paradigms:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-With if-statements, the edit distance of the child branches is calculated
- separately and only the largest factor is added.
- This procedure is intended to promote the use of if statements, which have
- a very positive influence on the interpretability of a formula due to their
- structuring influence, but which greatly increase the TED due to the high
- arity of 3 and the resulting branching factor.
-\end_layout
-
-\begin_layout Itemize
-Use of several known origins in one run and counting the minimum TED for
- each tree.
- This way, several understandable approaches could be compared directly
- for their extensibility or even incomplete solutions could be introduced
- separately.
-\end_layout
-
-\begin_layout Itemize
-Unifying and ordering trees, for example with sympify as described in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:sympy-ordered-expression"
-
-\end_inset
-
-, before calculating the TED.
-\end_layout
-
-\begin_layout Itemize
-Similar to fixed nodes (
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "subsec:Fixed-nodes"
-
-\end_inset
-
-), giving nodes of the core structure a separate weighting so that changes
- are possible but very costly.
-\end_layout
-
-\end_deeper
 \begin_layout Section
 Conclusion
 \end_layout

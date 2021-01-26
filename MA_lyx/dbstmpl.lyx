@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -24,6 +24,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -41,8 +43,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -84,7 +84,6 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -94,10 +93,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -323,7 +319,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -368,7 +363,6 @@ yyy
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -578,7 +572,6 @@ High dimensionality tritt besonders in Bereichen der Industrie auf, wo viel
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
-literal "true"
 
 \end_inset
 
@@ -599,7 +592,6 @@ oder auch hohe Stochastizität, was beispielsweise mithilfe von evolutionären
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
-literal "true"
 
 \end_inset
 
@@ -607,7 +599,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-rl-stochastic-bayesian-nn"
-literal "false"
 
 \end_inset
 
@@ -620,6 +611,7 @@ Neuropolicies mark a specialist savant that was trained to master one given
  are being made.
  They are considered a black box, Vertrauen in eine Neuropolicy ist nur
  durch testen möglich.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -630,12 +622,6 @@ Kontext Industrie / RL in industrial context / RL Herausforderungen / Controlers
 The smooth system dynamics of controlers still allow for interpretable solutions
  to be searched.
  xxx
-\end_layout
-
-\begin_layout Standard
-Vertrauen in ein gelerntes Modell ist nur schwer zu erlangen und beschränkt
- sich in den meisten Fällen auf ausführliche Testverfahren, die die Fehlerwahrsc
-heinlichkeit reduzieren, aber nicht ausschließen können.
 \end_layout
 
 \begin_layout Standard
@@ -650,7 +636,6 @@ bly large that solutions can no longer be found.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -673,7 +658,6 @@ Explainable artificial intelligence (XAI) deals with the problem of making
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -687,7 +671,6 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -1136,7 +1119,6 @@ The limits of my language mean the limits of my world.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
-literal "true"
 
 \end_inset
 
@@ -1154,7 +1136,7 @@ Conscious learning process
 \begin_inset Newline newline
 \end_inset
 
-All human exploration is based on xxx monitored by the amygdula for dangers
+Exploration, in the context of RL, is monitored by the amygdula for dangers
  and the learned models are thus endowed with a high degree of security.
  Tasks that one does not seem to be able to solve are aborted due to frustration.
  A machine learns without awareness and is forced to adapt and improve its
@@ -1221,7 +1203,7 @@ An important point of research is post-hoc reasoning, where an already trained
 \end_layout
 
 \begin_layout Standard
-It can help to gain confidence, security or even new knowledge.
+It can help to gain confidence or provide new knowledge.
  
 \end_layout
 
@@ -1230,21 +1212,10 @@ xxx Auch eine einzelne Erklärung kann sehr umfangreich sein.
  Deshalb nur auf das wichtigste beschränken! nicht alles!
 \end_layout
 
-\begin_layout Paragraph
-Trust
-\end_layout
-
 \begin_layout Standard
-Testing xxx
-\end_layout
-
-\begin_layout Paragraph
-Explanation Methods
-\end_layout
-
-\begin_layout Standard
-Perturbation (reacting to changes? one pixel), function analysis (taylor,
- surrogate based, structure based
+Explanation Methods for reasoning isolated decisions include perturbation
+ (altering parts of the input vector), function analysis (taylor decomposition),
+ surrogate based and structure based.
 \end_layout
 
 \begin_layout Paragraph
@@ -1256,7 +1227,6 @@ Layerwise Relevance propagation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -1382,54 +1352,6 @@ Interpretable Policies
 \end_layout
 
 \begin_layout Standard
-In the field of RL, decisions cannot be interpreted in isolation, but only
- in the context of the learned strategy.
- To gain confidence or understanding 
-\end_layout
-
-\begin_layout Standard
-IP are simple models, for example mathematical formulas or computer programmes,
- which can be completely understood by humans.
-\end_layout
-
-\begin_layout Standard
-Interpretable policies umfassen einfache Modelle, die als can be understood
- completely and as a whole by humans.
-\end_layout
-
-\begin_layout Standard
-Interpretable policies are searched directly within an interpretable search
- space, the most known approach being evolutionary algorithms which will
- be further presented in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp_Genetic-Programming"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-Um eine RL policy zu verstehen und ihr vertrauen zu können muss sie gesamtheitli
-ch betrachtet und verstanden werden können.
- 
-\end_layout
-
-\begin_layout Standard
-Interpretierbare policies relativ einfache Modelle
-\end_layout
-
-\begin_layout Standard
-Solutions that are searched for with the aim of minimal representation in
- a language space
-\end_layout
-
-\begin_layout Standard
-learn new stuff (new strategies) + Trust (sensible field)
-\end_layout
-
-\begin_layout Standard
 \begin_inset Quotes eld
 \end_inset
 
@@ -1442,11 +1364,63 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
  
+\end_layout
+
+\begin_layout Standard
+Interpretable policies are holistically explainable for humans.
+ This is mandatory for explanations in the field of RL, where isolated decisions
+ have no statement as they have to be set into context of the complete strategy.
+ 
+\end_layout
+
+\begin_layout Standard
+In order to generate such policies, candidate are searched only in a space
+ of interpretable candidates.
+ Interpretable space is one such as a mathematical formula or, in larger
+ context, a minimal or minimal representation in a touringcomplete language.
+ 
+\end_layout
+
+\begin_layout Standard
+The most known approach include evolutionary algorithms, which will be further
+ presented in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp_Genetic-Programming"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Im Vergleich zu Neuropolicies müssen interpretierbare Policies große Teile
+ verallgemeinern, deswegen können auch diese policies 
+\end_layout
+
+\begin_layout Standard
+learn new stuff (new strategies) + Trust (sensible field)
+\end_layout
+
+\begin_layout Standard
+xxx 
+\begin_inset Quotes eld
+\end_inset
+
+wenn eine lösung gefunden wird, dann ist sie besser
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+xxx Ein NN Model macht sicher viele Dinge, die gar keinen Sinn machen.
+ Deshalb soll wenn möglich auch nur der Phänotyp betrachtet werden.
 \end_layout
 
 \begin_layout Standard
@@ -1750,7 +1724,6 @@ Operators for explicit conversion are, for example, comparison operators
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -2073,7 +2046,6 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2682,7 +2654,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -2695,7 +2666,6 @@ xx interpretable gp
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp,HUR18"
-literal "true"
 
 \end_inset
 
@@ -2708,7 +2678,6 @@ In
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -3021,7 +2990,6 @@ text{modify}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -3031,7 +2999,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3244,7 +3211,6 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -3253,7 +3219,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3617,7 +3582,6 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -4732,7 +4696,6 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -6732,7 +6695,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -7041,7 +7003,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -7123,7 +7084,6 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -9613,7 +9573,6 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -11513,7 +11472,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -11622,7 +11580,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -11647,7 +11604,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -12395,7 +12351,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 

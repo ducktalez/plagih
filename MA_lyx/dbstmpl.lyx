@@ -1381,7 +1381,7 @@ Interpretable policies are holistically explainable for humans.
 In order to generate such policies, candidate are searched only in a space
  of interpretable candidates.
  Interpretable space is one such as a mathematical formula or, in larger
- context, a minimal or minimal representation in a touringcomplete language.
+ context, a simple or minimal representation in a touringcomplete language.
  
 \end_layout
 
@@ -1425,9 +1425,22 @@ xxx Ein NN Model macht sicher viele Dinge, die gar keinen Sinn machen.
 
 \begin_layout Standard
 Since the search process is also based on randomness, the formulas found
- are also free of human bias - but they still often appear to the observer
- more as a random combination of various operators than as a logically abstracte
-d solution to a problem.
+ are also free of human bias.
+\end_layout
+
+\begin_layout Paragraph
+Measuring explainability / interpretable policies
+\end_layout
+
+\begin_layout Standard
+xxx Die vielen Faktoren für die Komplexität einer Forme können xxx faktoren
+ nicht in ein einfaches und widerspruchsfreies paradigma bringen.
+ Weshalb deshalb werden meistens einfach nur 
+\end_layout
+
+\begin_layout Standard
+they still often appear to the observer more as a random combination of
+ various operators than as a logically abstracted solution to a problem.
 \end_layout
 
 \begin_layout Section

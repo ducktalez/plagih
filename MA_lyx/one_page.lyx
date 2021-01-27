@@ -91,7 +91,93 @@
 \begin_body
 
 \begin_layout Section
+Interpretable Policies
+\end_layout
 
+\begin_layout Standard
+ip much mopre than interpret., reliable
+\end_layout
+
+\begin_layout Standard
+ip holi humans make evryx dec explain deal with : how nake provide best
+ interpret explain whole model
+\end_layout
+
+\begin_layout Standard
+\begin_inset Quotes eld
+\end_inset
+
+The best explanation of a simple model is the model itself; it perfectly
+ represents itself and is easy to understand.
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-unified-approach"
+literal "true"
+
+\end_inset
+
+ Although this formulation is questionable in view of human-developed approaches
+, interpretability policies, as proposed in xxxhein, fulfill exactly this
+ requirement.
+ understood holistically by humans.
+ This is achieved by searching directly in an interpretable space, can be
+ is a requirement so that policies can be understood holistically by humans.
+\end_layout
+
+\begin_layout Standard
+This is mandatory for explanations in the field of RL, where isolated decisions
+ have no statement as they have to be set into context of the complete strategy.
+ 
+\end_layout
+
+\begin_layout Standard
+===
+\end_layout
+
+\begin_layout Standard
+Interpretable policies, which can be achieved 
+\end_layout
+
+\begin_layout Standard
+===
+\end_layout
+
+\begin_layout Standard
+In order to generate such policies, candidate are searched only in a space
+ of interpretable candidates.
+ Interpretable space is one such as a mathematical formula or, in larger
+ context, a simple or minimal representation in a touringcomplete language.
+ 
+\end_layout
+
+\begin_layout Standard
+The most known approach include evolutionary algorithms, which will be further
+ presented in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp_Genetic-Programming"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Im Vergleich zu Neuropolicies müssen interpretierbare Policies große Teile
+ verallgemeinern, deswegen können auch diese policies 
+\end_layout
+
+\begin_layout Standard
+learn new stuff (new strategies) + Trust (sensible field)
+\end_layout
+
+\begin_layout Standard
+qqq Ein NN Model macht sicher viele Dinge, die gar keinen Sinn machen.
+ Deshalb soll wenn möglich auch nur der Phänotyp betrachtet werden.
 \end_layout
 
 \end_body

@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -25,7 +25,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -43,6 +42,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -84,6 +85,7 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -93,7 +95,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -319,6 +324,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -363,6 +369,7 @@ yyy
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
@@ -410,33 +417,9 @@ y occur in the industry.
  Essential concerns of the industry are further in
 \end_layout
 
-\begin_layout Section
-Artificial Intelligence
-\end_layout
-
-\begin_layout Standard
-Artificial Intelligence is the umbrella term for a variety of different
- methods...
-\end_layout
-
-\begin_layout Section
-Machine Learning methods
-\end_layout
-
-\begin_layout Standard
-For this work, the division between blackbox solutions and interpretable
- solutions is primarily relevant for ML technologies, since the approach
- presented here is primarily tested using symbolic regression without a
- learning strategy.
-\end_layout
-
 \begin_layout Standard
 \begin_inset Note Note
 status open
-
-\begin_layout Plain Layout
-xxx Unterteilun Modelle
-\end_layout
 
 \begin_layout Plain Layout
 Indivudual - population
@@ -478,6 +461,11 @@ t and can decide on an action, thus reaching a subsequent state and receiving
 To learn a policy in such an environment therefore requires carefully weighting
  up exploration and exploitation to cope with the limited resources an agent
  has at his disposal.
+\end_layout
+
+\begin_layout Standard
+xxx Since the search process is also based on randomness, the formulas found
+ are also free of human bias.
 \end_layout
 
 \begin_layout Standard
@@ -523,7 +511,7 @@ XXX LEARNING
 xxx die olle, die interpretability empfielt
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Online/offline learning
 \end_layout
 
@@ -537,8 +525,19 @@ Especially in industry, there are many safety critical domains where learning
  and perform better, but are also less meaningful.
 \end_layout
 
-\begin_layout Subsection
-Blackbox solution
+\begin_layout Standard
+For this work, the division between blackbox solutions and interpretable
+ solutions is primarily relevant for ML technologies, since the approach
+ presented here is primarily tested using symbolic regression without a
+ learning strategy.
+\end_layout
+
+\begin_layout Section
+Neuropolicies / Black box
+\end_layout
+
+\begin_layout Standard
+A black box approach is one that is not interpretable by humans.
 \end_layout
 
 \begin_layout Paragraph
@@ -556,7 +555,7 @@ Neural networks (NN) are generic equation systems which learn a function
  
 \end_layout
 
-\begin_layout Itemize
+\begin_layout Standard
 Complex strategies respectively deep strategies (such as the games of chess
  or Go) require very complex models.
  It is important to know that the most outstanding achievements in the field
@@ -564,34 +563,35 @@ Complex strategies respectively deep strategies (such as the games of chess
  Go.
 \end_layout
 
-\begin_layout Itemize
-High dimensionality tritt besonders in Bereichen der Industrie auf, wo viel
- mehr technische Daten gesammelt werden als bei klassischen RL Benchmarks.
- Beispiele sind extrem hohe Dimensionalität eines Problems, beispielsweise
- bei Gasturbinen 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "siemens-gas-turbine-rl-nn"
-
-\end_inset
-
- 
+\begin_layout Paragraph
+Kontext Industrie / RL in industrial context / RL Herausforderungen / Controlers
 \end_layout
 
 \begin_layout Itemize
-High stochasticity systems include a dynamic which is strongly influenced
- by randomness.
- The lack of determinism massively complicates the correct evaluation of
- exploitation, making it extremely difficult to learn a solution.
- 
-\begin_inset Newline newline
+High dimensionality occurs particularly in real world applications such
+ as industrial controlers, where much more technical data is collected than
+ in the most popular RL benchmarks.
+ Beispiele sind extrem hohe Dimensionalität eines Problems, beispielsweise
+ bei Gasturbinen.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-gas-turbine-rl-nn"
+literal "true"
+
 \end_inset
 
-oder auch hohe Stochastizität, was beispielsweise mithilfe von evolutionären
- ALgorithmen wie PSONN 
+
+\end_layout
+
+\begin_layout Itemize
+High stochasticity systems have a dynamic which is strongly influenced by
+ randomness.
+ The lack of determinism massively complicates the correct evaluation of
+ exploitation, making it extremely difficult to learn a policy.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
+literal "true"
 
 \end_inset
 
@@ -599,28 +599,28 @@ key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-rl-stochastic-bayesian-nn"
+literal "true"
 
 \end_inset
 
 
 \end_layout
 
+\begin_layout Itemize
+Security, explainability, xxx
+\end_layout
+
 \begin_layout Standard
 Neuropolicies mark a specialist savant that was trained to master one given
  task and at the cost of being able to describe or explain why decisions
  are being made.
- They are considered a black box, Vertrauen in eine Neuropolicy ist nur
- durch testen möglich.
+ They are considered a black box, trust is only possible through testing.
  
 \end_layout
 
-\begin_layout Subsection
-Kontext Industrie / RL in industrial context / RL Herausforderungen / Controlers
-\end_layout
-
 \begin_layout Standard
-The smooth system dynamics of controlers still allow for interpretable solutions
- to be searched.
+The smooth system dynamics of controlers allow the search for interpretable
+ policies.
  xxx
 \end_layout
 
@@ -636,6 +636,7 @@ bly large that solutions can no longer be found.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -658,6 +659,7 @@ Explainable artificial intelligence (XAI) deals with the problem of making
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -671,6 +673,7 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -705,7 +708,7 @@ explanation
 \begin_inset Quotes erd
 \end_inset
 
- according to the cambridge dictionar, 
+, according to the Cambridge dictionary 
 \begin_inset Flex URL
 status open
 
@@ -721,11 +724,7 @@ https://dictionary.cambridge.org/dictionary/english/explanation
 
 \end_inset
 
- 
-\end_layout
-
-\begin_layout Standard
-An explanation is described as 
+ An explanation is described as 
 \begin_inset Quotes eld
 \end_inset
 
@@ -736,6 +735,69 @@ collection of features of interpretable domain that have contributed for
 
 .
  
+\end_layout
+
+\begin_layout Standard
+Every machine learning model is subject to a trade-off between performance
+ and explainability.
+ How explainable, or understandable, something is cannot be determined unambiguo
+usly which will be further discussed in xxx..
+ which are based on explanations, but humanly written approaches can at
+ least be used as a safe anchor point for explainability.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Measuring explainability / interpretable policies
+\end_layout
+
+\begin_layout Standard
+xxx Die vielen Faktoren für die Komplexität einer Forme können xxx faktoren
+ nicht in ein einfaches und widerspruchsfreies paradigma bringen.
+ Deshalb wird meist die Komplexität
+\end_layout
+
+\begin_layout Standard
+they still often appear to the observer more as a random combination of
+ various operators than as a logically abstracted solution to a problem.
+\end_layout
+
+\begin_layout Section
+xxxxxxxxx
+\end_layout
+
+\begin_layout Section
+Post-hoc Explainability
+\end_layout
+
+\begin_layout Standard
+An important point of research is post-hoc reasoning, where an already trained
+ model is to be explained retrospectively.
+ Since usually no equivalent model can be found that is also interpretable,
+ the trade-off between explainability and performance must be accepted.
+ xxx Bei einer Neuropolicy wird ein Modell fixer Größe trainiert, wo Teile
+ des Modells komplett irrelevant sind - für die eine Erklärung nicht zielführend
+ ist.
+ An accurate explanation is not holistic, and a interpretable solution is
+ usually not possible without generalising the model.
+ A profound explanation can be found for individual decisions is not holistic,
+ or completely interpretable models that cannot contain the complete behaviour.
+\end_layout
+
+\begin_layout Standard
+It can help to gain confidence or provide new knowledge.
+ 
+\end_layout
+
+\begin_layout Standard
+xxx Auch eine einzelne Erklärung kann sehr umfangreich sein.
+ Deshalb nur auf das wichtigste beschränken! nicht alles!
+\end_layout
+
+\begin_layout Standard
+Explanation Methods for reasoning isolated decisions include perturbation
+ (altering parts of the input vector), function analysis (taylor decomposition),
+ surrogate based and structure based.
 \end_layout
 
 \begin_layout Standard
@@ -925,7 +987,7 @@ How did you make this decision?
 \begin_inset Text
 
 \begin_layout Plain Layout
-Explanation for the decision
+Explanation for a decision
 \end_layout
 
 \end_inset
@@ -1043,182 +1105,7 @@ An XAI approach should in some way mimic human explanation and feedback
 
 \end_layout
 
-\begin_layout Paragraph
-Performance and Explainability Tradeoff
-\end_layout
-
-\begin_layout Standard
-An accurate explanation is not holistic, and a interpretable solution is
- usually not possible without generalising the model.
- 
-\end_layout
-
-\begin_layout Standard
-Since usually no equivalent model can be found that is also interpretable,
- the trade-off between explainability and performance must also be accepted
- here.
- 
-\end_layout
-
-\begin_layout Standard
-- trust?->testing
-\end_layout
-
-\begin_layout Standard
-- interpretable->nope...
-\end_layout
-
-\begin_layout Standard
-xxxxx indicate decisions -> explaining decisions -> ganzheitlich
-\end_layout
-
-\begin_layout Standard
-xxx Every machine learning model is subject to a trade-off between performance
- and explainability.
- 
-\end_layout
-
-\begin_layout Standard
-xxx How explainable something is is difficult to determine, but humanly
- written approaches can at least be used as a safe anchor point for explainabili
-ty.
- 
-\end_layout
-
-\begin_layout Paragraph
-Human vs Machine (domain expert)
-\end_layout
-
-\begin_layout Standard
-For the concept of familiarity used in this work, however, they play a special
- role, which is why the following will briefly discuss why they are so significa
-nt as a reference.
-\end_layout
-
-\begin_layout Itemize
-Speech
-\begin_inset Newline newline
-\end_inset
-
-The ability to speak, or express thoughts in language, is automatically
- learned by every human and plays an important role for human understanding.
- Large parts of the philosophical world even regard speech as the limits
- of what a human can understand.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-The limits of my language mean the limits of my world.
-\begin_inset Quotes erd
-\end_inset
-
-, Ludwig Wittgenstein, a mentor of Alan Turing
-\begin_inset CommandInset citation
-LatexCommand cite
-key "wittgenstein1953philosophical"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- Because conscious action is based on language, an action can automatically
- be explicitly formulated in a language and is thus explainable.
-\end_layout
-
-\begin_layout Itemize
-Conscious learning process
-\begin_inset Newline newline
-\end_inset
-
-Exploration, in the context of RL, is monitored by the amygdula for dangers
- and the learned models are thus endowed with a high degree of security.
- Tasks that one does not seem to be able to solve are aborted due to frustration.
- A machine learns without awareness and is forced to adapt and improve its
- approach until it has become good enough and has to rely on random exploration.
- 
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Also the reference to experiences that have led to a behaviour is not possible,
- as it is with humans, because the experiences are not stored but are only
- available in the form of an improved policy.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Peer reviews
-\begin_inset Newline newline
-\end_inset
-
-A human learning process is mostly guided and ideas can be peer reviewed
- before using new strategies, with the sub-goals widely synched between
- interacting humans.
- This largely reduces the risc of over- and underfitting.
- One notable example is that successful models can be implemented in all
- people (such as the Pythagorean theorem) as reliable anchor point.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- People are mostly synchronized between essential subgoals like recognizing
- colors and shapes, turning puzzle pieces to the colored side and knowing
- about the picture on the box as reference point.
- A popular tip for beginners is therefore that one should start with the
- edge of the puzzle as pieces can be matched early to a frame.
-\end_layout
-
-\begin_layout Plain Layout
-A RL agent can already fail at all the subgoals very badly.
-\end_layout
-
-\end_inset
-
-Teaching a neural network requires an extensive training process and may
- cause unexpected side effects.
- 
-\end_layout
-
-\begin_layout Subsection
-Post-hoc Explanations
-\end_layout
-
-\begin_layout Standard
-An important point of research is post-hoc reasoning, where an already trained
- model is to be explained retrospectively.
- A profound explanation can be found for individual decisions, for example,
- or completely interpretable models that cannot contain the complete behaviour.
-\end_layout
-
-\begin_layout Standard
-It can help to gain confidence or provide new knowledge.
- 
-\end_layout
-
-\begin_layout Standard
-xxx Auch eine einzelne Erklärung kann sehr umfangreich sein.
- Deshalb nur auf das wichtigste beschränken! nicht alles!
-\end_layout
-
-\begin_layout Standard
-Explanation Methods for reasoning isolated decisions include perturbation
- (altering parts of the input vector), function analysis (taylor decomposition),
- surrogate based and structure based.
-\end_layout
-
-\begin_layout Paragraph
+\begin_layout Subsubsection
 Layerwise Relevance Propagation
 \end_layout
 
@@ -1227,6 +1114,7 @@ Layerwise Relevance propagation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
@@ -1347,100 +1235,111 @@ https://lrpserver.hhi.fraunhofer.de/
 
 \end_layout
 
-\begin_layout Subsection
-Interpretable Policies
+\begin_layout Subsubsection
+Human vs Machine (domain expert)
 \end_layout
 
 \begin_layout Standard
+For the concept of familiarity used in this work, however, they play a special
+ role, which is why the following will briefly discuss why they are so significa
+nt as a reference.
+\end_layout
+
+\begin_layout Itemize
+Speech
+\begin_inset Newline newline
+\end_inset
+
+The ability to speak, or express thoughts in language, is automatically
+ learned by every human and plays an important role for human understanding.
+ Large parts of the philosophical world even regard speech as the limits
+ of what a human can understand.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
 \begin_inset Quotes eld
 \end_inset
 
-The best explanation of a simple model is the model itself; it perfectly
- represents itself and is easy to understand.
+The limits of my language mean the limits of my world.
 \begin_inset Quotes erd
 \end_inset
 
-
+, Ludwig Wittgenstein, a mentor of Alan Turing
 \begin_inset CommandInset citation
 LatexCommand cite
-key "XAI-unified-approach"
+key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
+
+\end_layout
+
+\end_inset
+
+ Because conscious action is based on language, an action can automatically
+ be explicitly formulated in a language and is thus explainable.
+\end_layout
+
+\begin_layout Itemize
+Conscious learning process
+\begin_inset Newline newline
+\end_inset
+
+Exploration, in the context of RL, is monitored by the amygdula for dangers
+ and the learned models are thus endowed with a high degree of security.
+ Tasks that one does not seem to be able to solve are aborted due to frustration.
+ A machine learns without awareness and is forced to adapt and improve its
+ approach until it has become good enough and has to rely on random exploration.
  
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Also the reference to experiences that have led to a behaviour is not possible,
+ as it is with humans, because the experiences are not stored but are only
+ available in the form of an improved policy.
 \end_layout
 
-\begin_layout Standard
-Interpretable policies are holistically explainable for humans.
- This is mandatory for explanations in the field of RL, where isolated decisions
- have no statement as they have to be set into context of the complete strategy.
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Peer reviews
+\begin_inset Newline newline
+\end_inset
+
+A human learning process is mostly guided and ideas can be peer reviewed
+ before using new strategies, with the sub-goals widely synched between
+ interacting humans.
+ This largely reduces the risc of over- and underfitting.
+ One notable example is that successful models can be implemented in all
+ people (such as the Pythagorean theorem) as reliable anchor point.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ People are mostly synchronized between essential subgoals like recognizing
+ colors and shapes, turning puzzle pieces to the colored side and knowing
+ about the picture on the box as reference point.
+ A popular tip for beginners is therefore that one should start with the
+ edge of the puzzle as pieces can be matched early to a frame.
+\end_layout
+
+\begin_layout Plain Layout
+A RL agent can already fail at all the subgoals very badly.
+\end_layout
+
+\end_inset
+
+Teaching a neural network requires an extensive training process and may
+ cause unexpected side effects.
  
-\end_layout
-
-\begin_layout Standard
-In order to generate such policies, candidate are searched only in a space
- of interpretable candidates.
- Interpretable space is one such as a mathematical formula or, in larger
- context, a simple or minimal representation in a touringcomplete language.
- 
-\end_layout
-
-\begin_layout Standard
-The most known approach include evolutionary algorithms, which will be further
- presented in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp_Genetic-Programming"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-Im Vergleich zu Neuropolicies müssen interpretierbare Policies große Teile
- verallgemeinern, deswegen können auch diese policies 
-\end_layout
-
-\begin_layout Standard
-learn new stuff (new strategies) + Trust (sensible field)
-\end_layout
-
-\begin_layout Standard
-xxx 
-\begin_inset Quotes eld
-\end_inset
-
-wenn eine lösung gefunden wird, dann ist sie besser
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-xxx Ein NN Model macht sicher viele Dinge, die gar keinen Sinn machen.
- Deshalb soll wenn möglich auch nur der Phänotyp betrachtet werden.
-\end_layout
-
-\begin_layout Standard
-Since the search process is also based on randomness, the formulas found
- are also free of human bias.
-\end_layout
-
-\begin_layout Paragraph
-Measuring explainability / interpretable policies
-\end_layout
-
-\begin_layout Standard
-xxx Die vielen Faktoren für die Komplexität einer Forme können xxx faktoren
- nicht in ein einfaches und widerspruchsfreies paradigma bringen.
- Weshalb deshalb werden meistens einfach nur 
-\end_layout
-
-\begin_layout Standard
-they still often appear to the observer more as a random combination of
- various operators than as a logically abstracted solution to a problem.
 \end_layout
 
 \begin_layout Section
@@ -1737,6 +1636,7 @@ Operators for explicit conversion are, for example, comparison operators
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -2059,6 +1959,7 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2091,7 +1992,22 @@ How explainable something is is best described by the effort a person needs
  to understand a formula.
  Effort, however, is a very arbitrary property, which is why explainability
  cannot be clearly determined.
- In GP, therefore, no further distinction is usually made between explainability
+ 
+\end_layout
+
+\begin_layout Standard
+It is to be described as how much effort someone needs to understand something.
+ Not everyone must understand xxx only the expert.
+ what does he understand? hehe familiarity!!
+\end_layout
+
+\begin_layout Standard
+xxx mathematical, programming tree related, context, specific: how much
+ time the expert requires
+\end_layout
+
+\begin_layout Standard
+In GP, therefore, no further distinction is usually made between explainability
  and the complexity of a formula.
  The number of nodes poses some problems as a paradigm, even after weighting.
 \end_layout
@@ -2667,6 +2583,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -2679,6 +2596,7 @@ xx interpretable gp
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp,HUR18"
+literal "true"
 
 \end_inset
 
@@ -2691,6 +2609,7 @@ In
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2719,6 +2638,18 @@ In the following, the implementation of the approach to enhance genetic
  differences of computational trees.
  The fitness of the candidates is calculated as a possible path via a regression
 , whose data is generated by black box approaches.
+\end_layout
+
+\begin_layout Standard
+xxqqq 
+\begin_inset Quotes eld
+\end_inset
+
+wenn eine lösung gefunden wird, dann ist sie besser
+\begin_inset Quotes erd
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -3003,6 +2934,7 @@ text{modify}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -3012,6 +2944,7 @@ key "tedOldestPaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3224,6 +3157,7 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -3232,6 +3166,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -3595,6 +3530,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -4709,6 +4645,7 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -6708,6 +6645,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -7016,6 +6954,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -7097,6 +7036,7 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -9586,6 +9526,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11485,6 +11426,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -11593,6 +11535,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -11617,6 +11560,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -12364,6 +12308,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 

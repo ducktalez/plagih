@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -25,6 +25,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -42,8 +44,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -85,7 +85,6 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -95,10 +94,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -324,7 +320,6 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
-literal "true"
 
 \end_inset
 
@@ -369,7 +364,6 @@ yyy
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
-literal "false"
 
 \end_inset
 
@@ -576,7 +570,6 @@ High dimensionality occurs particularly in real world applications such
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
-literal "true"
 
 \end_inset
 
@@ -591,7 +584,6 @@ High stochasticity systems have a dynamic which is strongly influenced by
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
-literal "true"
 
 \end_inset
 
@@ -599,7 +591,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-rl-stochastic-bayesian-nn"
-literal "true"
 
 \end_inset
 
@@ -636,7 +627,6 @@ bly large that solutions can no longer be found.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -659,7 +649,6 @@ Explainable artificial intelligence (XAI) deals with the problem of making
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous,AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -673,7 +662,6 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -1114,7 +1102,6 @@ Layerwise Relevance propagation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
-literal "true"
 
 \end_inset
 
@@ -1269,7 +1256,6 @@ The limits of my language mean the limits of my world.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "wittgenstein1953philosophical"
-literal "true"
 
 \end_inset
 
@@ -1636,7 +1622,6 @@ Operators for explicit conversion are, for example, comparison operators
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1959,7 +1944,6 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2583,7 +2567,6 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -2596,7 +2579,6 @@ xx interpretable gp
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp,HUR18"
-literal "true"
 
 \end_inset
 
@@ -2609,7 +2591,6 @@ In
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -2650,6 +2631,11 @@ wenn eine lösung gefunden wird, dann ist sie besser
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+qqq Ein NN Model macht sicher viele Dinge, die gar keinen Sinn machen.
+ Deshalb soll wenn möglich auch nur der Phänotyp betrachtet werden.
 \end_layout
 
 \begin_layout Section
@@ -2934,7 +2920,6 @@ text{modify}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -2944,7 +2929,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3157,7 +3141,6 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -3166,7 +3149,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3530,7 +3512,6 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -4645,7 +4626,6 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -6645,7 +6625,6 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -6954,7 +6933,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -7036,7 +7014,6 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -9526,7 +9503,6 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -11426,7 +11402,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -11535,7 +11510,6 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -11560,7 +11534,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -12308,7 +12281,6 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 

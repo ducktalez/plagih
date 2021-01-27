@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,6 +7,9 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
+% Added by lyx2lyx
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -24,8 +27,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype false
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -65,7 +66,6 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -74,10 +74,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -95,15 +92,6 @@ Interpretable Policies
 \end_layout
 
 \begin_layout Standard
-ip much mopre than interpret., reliable
-\end_layout
-
-\begin_layout Standard
-ip holi humans make evryx dec explain deal with : how nake provide best
- interpret explain whole model
-\end_layout
-
-\begin_layout Standard
 \begin_inset Quotes eld
 \end_inset
 
@@ -116,47 +104,43 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
- Although this formulation is questionable in view of human-developed approaches
-, interpretability policies, as proposed in xxxhein, fulfill exactly this
- requirement.
- understood holistically by humans.
- This is achieved by searching directly in an interpretable space, can be
- is a requirement so that policies can be understood holistically by humans.
-\end_layout
-
-\begin_layout Standard
-This is mandatory for explanations in the field of RL, where isolated decisions
- have no statement as they have to be set into context of the complete strategy.
  
 \end_layout
 
 \begin_layout Standard
-===
+xx
 \end_layout
 
 \begin_layout Standard
-Interpretable policies, which can be achieved 
+xxdie_olle 
 \end_layout
 
 \begin_layout Standard
-===
+In the context of RL, the most explainable representation of a model is
+ arguably a computer program.
+ Programming languages or, in a larger context, touringcomplete languages,
+ sind 
 \end_layout
 
 \begin_layout Standard
-In order to generate such policies, candidate are searched only in a space
- of interpretable candidates.
- Interpretable space is one such as a mathematical formula or, in larger
- context, a simple or minimal representation in a touringcomplete language.
+Interpretierbare policies sind im Bereich des ML die am besten ganzheitlich
+ erklärbaren Modelle.
+\end_layout
+
+\begin_layout Standard
+To achieve this, candidates are searched directly within an interpretable
+ space, which is, [xx sprache?] Sprachen sind eindeutig interpretierbar
  
 \end_layout
 
 \begin_layout Standard
-The most known approach include evolutionary algorithms, which will be further
- presented in 
+Da das Modell komplett erklärbar ist müssen große Teile verallgemeinert
+ werden.
+ The most known approach include evolutionary algorithms, which will be
+ further presented in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "gp_Genetic-Programming"
@@ -164,20 +148,6 @@ reference "gp_Genetic-Programming"
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
-Im Vergleich zu Neuropolicies müssen interpretierbare Policies große Teile
- verallgemeinern, deswegen können auch diese policies 
-\end_layout
-
-\begin_layout Standard
-learn new stuff (new strategies) + Trust (sensible field)
-\end_layout
-
-\begin_layout Standard
-qqq Ein NN Model macht sicher viele Dinge, die gar keinen Sinn machen.
- Deshalb soll wenn möglich auch nur der Phänotyp betrachtet werden.
 \end_layout
 
 \end_body

@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -7,9 +7,6 @@
 \textclass report
 \begin_preamble
 \usepackage{dbstmpl}
-% Added by lyx2lyx
-\renewcommand{\textendash}{--}
-\renewcommand{\textemdash}{---}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -27,6 +24,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -66,6 +65,7 @@
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -74,7 +74,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -87,67 +90,8 @@
 
 \begin_body
 
-\begin_layout Section
-Interpretable Policies
-\end_layout
+\begin_layout Subsection
 
-\begin_layout Standard
-\begin_inset Quotes eld
-\end_inset
-
-The best explanation of a simple model is the model itself; it perfectly
- represents itself and is easy to understand.
-\begin_inset Quotes erd
-\end_inset
-
-
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI-unified-approach"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-xx
-\end_layout
-
-\begin_layout Standard
-xxdie_olle 
-\end_layout
-
-\begin_layout Standard
-In the context of RL, the most explainable representation of a model is
- arguably a computer program.
- Programming languages or, in a larger context, touringcomplete languages,
- sind 
-\end_layout
-
-\begin_layout Standard
-Interpretierbare policies sind im Bereich des ML die am besten ganzheitlich
- erklärbaren Modelle.
-\end_layout
-
-\begin_layout Standard
-To achieve this, candidates are searched directly within an interpretable
- space, which is, [xx sprache?] Sprachen sind eindeutig interpretierbar
- 
-\end_layout
-
-\begin_layout Standard
-Da das Modell komplett erklärbar ist müssen große Teile verallgemeinert
- werden.
- The most known approach include evolutionary algorithms, which will be
- further presented in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp_Genetic-Programming"
-
-\end_inset
-
-.
 \end_layout
 
 \end_body

@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -26,7 +26,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -44,6 +43,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -85,6 +86,7 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -94,7 +96,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -141,56 +146,6 @@ erklaerung
 \end_layout
 
 \begin_layout Abstract
-Explainability is hard to achieve in the field of RL, where the great successes
- relies on black box approaches like neural networks.
- In many domains in industry and science, Genetic programming (GP) offers
- the opportunity to automatically generate programs that are interpretable,
- but often represent mathematic expressions which are still hard to fully
- understand completely.
- For a domain expert, it would be very helpful to be shown where his own
- strategy could be improved.
- 
-\end_layout
-
-\begin_layout Abstract
-Lösungen mit GP ohne Vorgaben sind oft naja.
- wir versuchen deshalb, GP zu nutzen um Lösungen zu finden, die bekannte
- Lösungsstrategien mit möglichst geringfügigen Änderungen verbessern können.
- Therefore, the concept of familiarity is introduced as quality criterion
- for GP, which measures the deviation from an expert's original programme
- instead of pure complexity.
- This is realised with the tree edit distance as measure, which reflects
- the number of changes to the reference program.
-\end_layout
-
-\begin_layout Abstract
-The approach was testet on the mountaincar and the industrial benchmark,
- with several different neuropolicies provdiding transition samples als
- Basis für den Regressionsfehler.
- The results have shown no major drawbacks in terms of regression error
- and fitness, while staying closer to the domain experts approach.
- The real fitness evaluation seems to have a slight tendency for more stable
- results, but seem to depend rather on the volatility of the black box and
- how good the result could be achieved.
-\end_layout
-
-\begin_layout Abstract
-x
-\end_layout
-
-\begin_layout Abstract
-x
-\end_layout
-
-\begin_layout Abstract
-solved in context of industry
-\end_layout
-
-\begin_layout Abstract
-x
-\end_layout
-
-\begin_layout Standard
 Machine learning methods, in particular reinforcement learning, enable the
  learning of policies for technical systems.
  In order to increase the acceptance for solutions, it is advantageous that
@@ -221,6 +176,49 @@ The candidates of familial GP approaches differed significantly from normal
 \begin_layout Standard
 Familiarity proved to be a working and useful extension to search for interpreta
 ble policies, which can still be extended in many ways.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Explainability is hard to achieve in the field of RL, where the great successes
+ relies on black box approaches like neural networks.
+ In many domains in industry and science, Genetic programming (GP) offers
+ the opportunity to automatically generate programs that are interpretable,
+ but often represent mathematic expressions which are still hard to fully
+ understand completely.
+ For a domain expert, it would be very helpful to be shown where his own
+ strategy could be improved.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+Lösungen mit GP ohne Vorgaben sind oft naja.
+ wir versuchen deshalb, GP zu nutzen um Lösungen zu finden, die bekannte
+ Lösungsstrategien mit möglichst geringfügigen Änderungen verbessern können.
+ Therefore, the concept of familiarity is introduced as quality criterion
+ for GP, which measures the deviation from an expert's original programme
+ instead of pure complexity.
+ This is realised with the tree edit distance as measure, which reflects
+ the number of changes to the reference program.
+\end_layout
+
+\begin_layout Plain Layout
+The approach was testet on the mountaincar and the industrial benchmark,
+ with several different neuropolicies provdiding transition samples als
+ Basis für den Regressionsfehler.
+ The results have shown no major drawbacks in terms of regression error
+ and fitness, while staying closer to the domain experts approach.
+ The real fitness evaluation seems to have a slight tendency for more stable
+ results, but seem to depend rather on the volatility of the black box and
+ how good the result could be achieved.
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -258,17 +256,39 @@ Introduction
 \end_layout
 
 \begin_layout Standard
-Enormous progress in RL has made it possible to outperform human solutions
- even in highly complex domains.
- In RL, an agent without prior knowledge searches for a strategy to maximize
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+In RL, an agent without prior knowledge searches for a strategy to maximize
  reward in an environment.
- The greatest advances have only been possible with the help of using highly
- complex structures such as neural networks.
- These are not explainable to humans and cannot domain experts to learn
- from them is very costly.
- Therefore, not only from a scientific point of view, but especially in
- sensitive areas of industry, explainability has become more and more in
- focus, where small wrong decisions can often lead to big damages.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the field of ML, there has been a strong focus on performance.
+ In the meantime, a point has been reached where a model can be learned
+ for almost any problem; in the field of RL, some even outperform human
+ solution approaches.
+ This comes at the cost of be
+\end_layout
+
+\begin_layout Standard
+===
+\end_layout
+
+\begin_layout Standard
+Machine learning systems are increasingly ubiquitous and can take over more
+ and more human tasks.
+ What is new, however, is that enormous advances in the field of RL have
+ made it possible for some years now to outperform human strategies even
+ in highly complex domains [xx].
+ Deshalb Especially in safety-relevant areas, such as industrial control
+ systems, human-written approaches are therefore used.
 \begin_inset Foot
 status open
 
@@ -279,35 +299,23 @@ A robust explanation for undesirable developments is especially required
 
 \end_inset
 
-
+ 
 \end_layout
 
 \begin_layout Standard
-In order to be able to profit from the bias-free strategies of a machine,
- there is genetic programming in the field of ML.
- With the help of evolutionary strategies, this can search for formulas
- that can be interpreted by a human.
- In order to gain understanding, they thus offer a domain expert a good
- point of reference, but the solution path often deviates strongly from
- the strategy that an expert would choose.
-\end_layout
+Explainable artificial intelligence (XAI) deals with the problem of making
+ AI solutions understandable for humans, which has become more and more
+ popular in recent years.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AIINDEX2019"
+literal "true"
 
-\begin_layout Standard
-This thesis therefore introduces the principle of familiarity, by means
- of which solutions are characterised as explainable the less they deviate
- from the expert's solution.
- For this purpose, the complexity measure of classical GP, which is based
- on the number of nodes of the programming tree, is calculated as the number
- of necessary changes to the expert's programming tree.
- This is implemented with the help of the tree edit distance, which is already
- known as a problem in theoretical computer science.
- Thus, genetic programming would still try to achieve the same goal, but
- would be more bound to the heuristic given by the expert.
-\end_layout
+\end_inset
 
-\begin_layout Standard
-In this work, the goal of GP is generated concretely as a regression problem
- on transition samples of a non-specific black box policy.
+ In view of the increasing importance of algorithms in our society, the
+ EU has even defined a right to explain in the GDPR.
+ 
 \end_layout
 
 \begin_layout Paragraph
@@ -320,6 +328,7 @@ A popular example of the development of such superhuman strategies was achieved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
+literal "true"
 
 \end_inset
 
@@ -360,14 +369,23 @@ It’s unbelieveably superhuman, in general, but it has some particular weakness
 status open
 
 \begin_layout Plain Layout
-yyy 
+David Silver in 
+\begin_inset Quotes eld
+\end_inset
+
+AlphaGo - The Movie | Full Documentary
+\begin_inset Quotes erd
+\end_inset
+
+, by DeepMind 
 \begin_inset CommandInset href
 LatexCommand href
 target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
 
 \end_inset
 
-
+, last accessed January, 2021
 \end_layout
 
 \end_inset
@@ -381,12 +399,48 @@ Howsoever, even AlphaGo, as a prestige project of the RL, supervised by
  
 \end_layout
 
+\begin_layout Standard
+In order to be able to profit from the bias-free strategies of a machine,
+ there is genetic programming in the field of ML.
+ With the help of evolutionary strategies, this can search for formulas
+ that can be interpreted by a human.
+ In order to gain understanding, they thus offer a domain expert a good
+ point of reference, but the solution path often deviates strongly from
+ the strategy that an expert would choose.
+\end_layout
+
+\begin_layout Standard
+xxx Symbolische und nicht-symbolische Ansätze xx Beim maschinellen Lernen
+ spielen Art und Mächtigkeit der Wissensrepräsentation eine wichtige Rolle.
+ Man unterscheidet zwischen symbolischen Ansätzen, in denen das Wissen –
+ sowohl die Beispiele als auch die induzierten Regeln – explizit repräsentiert
+ ist, und nicht-symbolischen Ansätzen, wie neuronalen Netzen, denen zwar
+ ein berechenbares Verhalten „antrainiert“ wird, die jedoch keinen Einblick
+ in die erlernten Lösungswege erlauben; hier ist Wissen implizit repräsentiert.[3
+] 
+\end_layout
+
 \begin_layout Section
 Contribution
 \end_layout
 
 \begin_layout Standard
-xxx
+This thesis introduces the principle of familiarity, by means of which solutions
+ are characterised as interpretable the less they deviate from the expert's
+ solution.
+ For this purpose, the complexity measure of classical GP, which is based
+ on the number of nodes of the programming tree, is calculated as the number
+ of necessary changes to the expert's programming tree.
+ This is implemented with the help of the tree edit distance, which is already
+ known as a problem in theoretical computer science.
+ Thus, genetic programming would still try to achieve the same goal, but
+ would be more bound to the heuristic given by the expert.
+ 
+\end_layout
+
+\begin_layout Standard
+In this work, the goal of GP is generated concretely as a regression problem
+ on transition samples of a non-specific black box policy.
 \end_layout
 
 \begin_layout Section
@@ -394,7 +448,18 @@ Outline
 \end_layout
 
 \begin_layout Standard
-xxx
+The structure of this thesis is organized as follows.
+ Chapter xx2provides background information covering the most important
+ aspects of interpretability in the context of reinforcement learning.
+ Chapter xx3 introduces the concept of familiarity and discribes the implementat
+ion in the form of the tree edit distance as second order optimisation.
+ Fixed nodes are further introduced as logical extension to some shortcomings
+ of the edit distance.
+ The approach is evaluated using symbolic regression on transition samples
+ from neuropolicies covering both the mountaincar and the highly stochastic
+ industrial benchmark.
+ Chapter xx5 concludes the results and discusses several expansion possibilities
+, especially enhancements for the edit distance and explorative regression.
 \end_layout
 
 \begin_layout Chapter
@@ -411,28 +476,11 @@ y occur in the industry.
  Essential concerns of the industry are further in
 \end_layout
 
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Indivudual - population
-\end_layout
-
-\begin_layout Plain Layout
-implicit - explicit
-\end_layout
-
-\begin_layout Plain Layout
-policy iteration (model-free) - policy search (model-based)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
+Interpretable Control Strategies
+\end_layout
+
+\begin_layout Subsection
 Reinforcement Learning
 \end_layout
 
@@ -440,8 +488,8 @@ Reinforcement Learning
 Reinforcement learning (RL) is a subfield of Machine Learning, which deals
  with problems such as games or simulations, where the goal is obvious but
  a solution strategy must be sought.
- Das Ziel wird nur implizit in Form eines externen Rewards impliziert, dessen
- Summe ein Agent durch Interaktion in einem environment maximieren soll.
+ The goal is only implied in the form of an external reward, the sum of
+ which an agent is supposed to maximise through interaction in an environment.
  To do so, the agent receives the current state (observations) of the environmen
 t and can decide on an action, thus reaching a subsequent state and receiving
  a reward.
@@ -455,11 +503,6 @@ t and can decide on an action, thus reaching a subsequent state and receiving
 To learn a policy in such an environment therefore requires carefully weighting
  up exploration and exploitation to cope with the limited resources an agent
  has at his disposal.
-\end_layout
-
-\begin_layout Standard
-xxx Since the search process is also based on randomness, the formulas found
- are also free of human bias.
 \end_layout
 
 \begin_layout Standard
@@ -497,93 +540,27 @@ The well-known diagram that no work on reinforcement learning should be
 
 \end_layout
 
-\begin_layout Standard
-XXX LEARNING
-\end_layout
-
-\begin_layout Standard
-xxx die olle, die interpretability empfielt
-\end_layout
-
 \begin_layout Paragraph
-Online/offline learning
+Black Box Control Strategies
 \end_layout
 
 \begin_layout Standard
-Especially in industry, there are many safety critical domains where learning
- on the real benchmark (online training) is not allowed because misconduct
- can lead to great damage.
- Offline training means training on a surrogate model (e.g.
- on a data set).
- Apart from the safety aspect, offline models are usually more cost-efficient
- and perform better, but are also less meaningful.
-\end_layout
-
-\begin_layout Standard
-For this work, the division between blackbox solutions and interpretable
- solutions is primarily relevant for ML technologies, since the approach
- presented here is primarily tested using symbolic regression without a
- learning strategy.
-\end_layout
-
-\begin_layout Section
-Neuropolicies / Black box
-\end_layout
-
-\begin_layout Standard
-A black box approach is one that is not interpretable by humans.
-\end_layout
-
-\begin_layout Paragraph
-Neural Networks
-\end_layout
-
-\begin_layout Standard
-Neural networks (NN) are generic equation systems which learn a function
- approximation by automatically adjusting its parameters through backpropagation.
- Inspired by the human brain, inputs are signaled through layers of artificial
- neurons to an output.
- Thanks to enormous advances in technology and research with deep layers,
- there are now many architectures so that even highly complex strategies
- can be found.
- 
-\end_layout
-
-\begin_layout Standard
-Complex strategies respectively deep strategies (such as the games of chess
- or Go) require very complex models.
- It is important to know that the most outstanding achievements in the field
- of RL were made possible with the help of neuropolicies, including Alpha
- Go.
-\end_layout
-
-\begin_layout Paragraph
-Kontext Industrie / RL in industrial context / RL Herausforderungen / Controlers
-\end_layout
-
-\begin_layout Itemize
-High dimensionality occurs particularly in real world applications such
- as industrial controlers, where much more technical data is collected than
- in the most popular RL benchmarks.
- Beispiele sind extrem hohe Dimensionalität eines Problems, beispielsweise
- bei Gasturbinen.
+The particularities of RL problems can be very versatile.
+ In der Industrie müssen oft Kontrollstrategien für physikalische Probleme
+ gefunden werden.
+ Many particularities, such as high dimensionality
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
+literal "true"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Itemize
-High stochasticity systems have a dynamic which is strongly influenced by
- randomness.
- The lack of determinism massively complicates the correct evaluation of
- exploitation, making it extremely difficult to learn a policy.
+ or high stochasticity 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
+literal "true"
 
 \end_inset
 
@@ -591,6 +568,176 @@ key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-rl-stochastic-bayesian-nn"
+literal "true"
+
+\end_inset
+
+ could only be solved with the help of black box approaches.
+ Neural networks (NN) are generic equation systems which learn a function
+ approximation by automatically adjusting its parameters through backpropagation.
+ They are savants, which may practice a task ad nauseam and then master
+ it, but they have to be considered a black box.
+\end_layout
+
+\begin_layout Standard
+They are considered a black box, trust is only possible through testing.
+ 
+\end_layout
+
+\begin_layout Subsection
+Symbolic Regression
+\end_layout
+
+\begin_layout Standard
+Learning on a real world system (online training) is often prohibited in
+ safety critical domains, as misconduct can lead to great damage.
+ Offline learning on a surrogate model (e.g.
+ on a data set) is an alternative which is aLso very cost efficient, but
+ also less meaningful.
+ 
+\end_layout
+
+\begin_layout Standard
+The symbolic regression is a common and important use case of GP for this
+ approach, which is used to calculate how well the formula can explain data.
+\end_layout
+
+\begin_layout Standard
+The regression error is the sum of the distance between the outouts and
+ predicted values of a data set.
+ This makes it possible to determine fitness by regression on transition
+ samples of a neuropolicy.
+ With online learning, the reward of the real benchmark is evaluated, offline
+ training takes place on a surrogate model instead and therefore has less
+ significance.
+ Training on surrogate models are nevertheless useful as they can be evaluated
+ cost-effectively and in parallel, but especially with industrial controllers,
+ the risk of destroy the benchmark itself, is reduced.
+ 
+\end_layout
+
+\begin_layout Standard
+Both the mean average error (MAE) and the mean square error (MSE) are widely
+ used distance measurements for this purpose.
+ The MAE is widely used in GP, as it indicates the average deviation from
+ the target solution and is therefore distance-true.
+ The MSE squares the distance and thus is not distance-true, making it a
+ less honest indicator.
+ However, in the MSE, outliers and strong deviations are punished more severely,
+ which also allowed the black box to be approached more quickly and more
+ reliably.
+ This also means that volatile solutions are punished more severely.
+ 
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename tikz/regression_cost/01_regular.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/10_MSE.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Mean average error (MAE) and Mean squared error (MSE).
+ The MSE is synonymous to the root mean squared error (RMSE) for one-dimensional
+ measurements.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Domain experts
+\end_layout
+
+\begin_layout Standard
+For the concept of familiarity used in this work, however, they play a special
+ role, which is why the following will briefly discuss why they are so significa
+nt as a reference.
+\end_layout
+
+\begin_layout Itemize
+Speech
+\begin_inset Newline newline
+\end_inset
+
+The ability to speak, or express thoughts in language, is automatically
+ learned by every human and plays an important role for human understanding.
+ Large parts of the philosophical world even regard speech as the limits
+ of what a human can understand.
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+The limits of my language mean the limits of my world.
+\begin_inset Quotes erd
+\end_inset
+
+, Ludwig Wittgenstein, a mentor of Alan Turing
+\begin_inset CommandInset citation
+LatexCommand cite
+key "wittgenstein1953philosophical"
+literal "true"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ Because conscious action is based on language, an action can automatically
+ be explicitly formulated in a language and is thus explainable.
+\end_layout
+
+\begin_layout Itemize
+Self-controled learning
+\begin_inset Newline newline
+\end_inset
+
+Exploration, in the context of RL, is monitored by the amygdula for dangers
+ and the learned models are thus endowed with a high degree of security.
+ Tasks that one does not seem to be able to solve are aborted due to frustration.
+ A machine learns without awareness and is forced to adapt and improve its
+ approach until it has become good enough and has to rely on random exploration.
+ 
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Also the reference to experiences that have led to a behaviour is not possible,
+ as it is with humans, because the experiences are not stored but are only
+ available in the form of an improved policy.
+\end_layout
 
 \end_inset
 
@@ -598,39 +745,31 @@ key "siemens-rl-stochastic-bayesian-nn"
 \end_layout
 
 \begin_layout Itemize
-Security, explainability, xxx
-\end_layout
-
-\begin_layout Standard
-Neuropolicies mark a specialist savant that was trained to master one given
- task and at the cost of being able to describe or explain why decisions
- are being made.
- They are considered a black box, trust is only possible through testing.
- 
-\end_layout
-
-\begin_layout Standard
-The smooth system dynamics of controlers allow the search for interpretable
- policies.
- xxx
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Fuzzy GP policies can be searched for, where even complex policies with
- many rules can be searched for without the search space becoming so uncontrolla
-bly large that solutions can no longer be found.
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "hein_fuzzy_gp"
-
+Peer-controled learning
+\begin_inset Newline newline
 \end_inset
 
- 
+A human learning process is mostly guided and ideas can be peer reviewed
+ before using new strategies, with the sub-goals widely synched between
+ interacting humans.
+ This largely reduces the risc of over- and underfitting.
+ One notable example is that successful models can be implemented in all
+ people (such as the Pythagorean theorem) as reliable anchor point.
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ People are mostly synchronized between essential subgoals like recognizing
+ colors and shapes, turning puzzle pieces to the colored side and knowing
+ about the picture on the box as reference point.
+ A popular tip for beginners is therefore that one should start with the
+ edge of the puzzle as pieces can be matched early to a frame.
+\end_layout
+
+\begin_layout Plain Layout
+A RL agent can already fail at all the subgoals very badly.
 \end_layout
 
 \end_inset
@@ -643,25 +782,11 @@ Explainable Artificial Intelligence
 \end_layout
 
 \begin_layout Standard
-Explainable artificial intelligence (XAI) deals with the problem of making
- AI solutions understandable for humans.
- It has become more and more popular in recent years.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_doshivelez2017rigorous,AIINDEX2019"
-
-\end_inset
-
- In view of the increasing importance of algorithms in our society, the
- EU has even defined a right to explain in the GDPR.
- 
-\end_layout
-
-\begin_layout Standard
 As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -672,44 +797,6 @@ key "XAI_survey"
 
 the ability to explain or to present in understandable terms to humans
 \begin_inset Quotes erd
-\end_inset
-
-, which is strongly related to the classical version of an explanation 
-\begin_inset Quotes eld
-\end_inset
-
-the details or reasons that someone gives to make something clear or easy
- to understand
-\begin_inset Quotes erd
-\end_inset
-
-.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Definition of 
-\begin_inset Quotes eld
-\end_inset
-
-explanation
-\begin_inset Quotes erd
-\end_inset
-
-, according to the Cambridge dictionary 
-\begin_inset Flex URL
-status open
-
-\begin_layout Plain Layout
-
-https://dictionary.cambridge.org/dictionary/english/explanation
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \end_inset
 
  An explanation is described as 
@@ -725,67 +812,144 @@ collection of features of interpretable domain that have contributed for
  
 \end_layout
 
+\begin_layout Subsection
+Interpretability Measure
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Complexity-measurement"
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 Every machine learning model is subject to a trade-off between performance
- and explainability.
- How explainable, or understandable, something is cannot be determined unambiguo
-usly which will be further discussed in xxx..
- which are based on explanations, but humanly written approaches can at
- least be used as a safe anchor point for explainability.
+ and interpretability.
+ How explainable something is is best described by the effort a person needs
+ to understand a model.
  
 \end_layout
 
-\begin_layout Paragraph
-Measuring explainability / interpretable policies
+\begin_layout Standard
+Interpretable is very versatile divides into many subcategories, a deeper
+ analysis is proposed in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_doshivelez2017rigorous"
+literal "false"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Itemize
+mmm How is the problem formulation incomplete?
+\end_layout
+
+\begin_layout Itemize
+mmm At what level is the evaluation being performed? (application, general
+ user study, proxy)
+\end_layout
+
+\begin_layout Itemize
+What are task-related relevant factors?
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+global vs.
+ local?
+\end_layout
+
+\begin_layout Itemize
+severity of incompleteness
+\end_layout
+
+\begin_layout Itemize
+natureel of user expertise
+\end_layout
+
+\begin_layout Itemize
+time constraints
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+What are method-related relevant factors being explored? (e.g.
+ form of cognitive chunks, number of cognitive chunks, compositionality,
+ monotonicity, uncertainty;
 \end_layout
 
 \begin_layout Standard
-xxx Die vielen Faktoren für die Komplexität einer Forme können xxx faktoren
- nicht in ein einfaches und widerspruchsfreies paradigma bringen.
- Deshalb wird meist die Komplexität
+xxx 
 \end_layout
 
 \begin_layout Standard
-they still often appear to the observer more as a random combination of
- various operators than as a logically abstracted solution to a problem.
-\end_layout
-
-\begin_layout Section
-xxxxxxxxx
-\end_layout
-
-\begin_layout Section
-Post-hoc Explainability
+sss RL problems are incomplete as they are not fully testable and can be
+ solved in many ways.
+ 
 \end_layout
 
 \begin_layout Standard
-An important point of research is post-hoc reasoning, where an already trained
- model is to be explained retrospectively.
- Since usually no equivalent model can be found that is also interpretable,
- the trade-off between explainability and performance must be accepted.
- xxx Bei einer Neuropolicy wird ein Modell fixer Größe trainiert, wo Teile
- des Modells komplett irrelevant sind - für die eine Erklärung nicht zielführend
- ist.
- An accurate explanation is not holistic, and a interpretable solution is
+An accurate explanation is not holistic, and a interpretable solution is
  usually not possible without generalising the model.
  A profound explanation can be found for individual decisions is not holistic,
  or completely interpretable models that cannot contain the complete behaviour.
-\end_layout
-
-\begin_layout Standard
-It can help to gain confidence or provide new knowledge.
  
 \end_layout
 
 \begin_layout Standard
-xxx Auch eine einzelne Erklärung kann sehr umfangreich sein.
- Deshalb nur auf das wichtigste beschränken! nicht alles!
+Effort, however, is a very arbitrary property, which is why explainability
+ cannot be clearly determined.
+ 
 \end_layout
 
 \begin_layout Standard
-Explanation Methods for reasoning isolated decisions include perturbation
- (altering parts of the input vector), function analysis (taylor decomposition),
- surrogate based and structure based.
+It is to be described as how much effort someone needs to understand something.
+ xxx Not everyone must understand only the expert.
+ what does he understand? hehe familiarity!!
+\end_layout
+
+\begin_layout Standard
+xxxx
+\end_layout
+
+\begin_layout Standard
+The following examples are all used as complexity taxonomies:
+\end_layout
+
+\begin_layout Itemize
+mathematical dimensionality of the room (curse of dimensionality)
+\end_layout
+
+\begin_layout Itemize
+amount of free parameters (neural networks)
+\end_layout
+
+\begin_layout Itemize
+computational runtime complexity (floating point operations per second,
+ Bachmann–Landau notation, ...)
+\end_layout
+
+\begin_layout Itemize
+computation tree related (amount of nodes, weighted nodes, branching factor,
+ ...)
+\end_layout
+
+\begin_layout Itemize
+human-specific (chunks of knowledge, plausibility in context, personalized
+ weighting ...)
+\end_layout
+
+\begin_layout Standard
+The many subdivision possibilities cannot be summarised in a simple and
+ contradiction-free paradigm.
+ In GP, therefore, no further distinction is usually made between interpretabili
+ty and the (weighted) number of nodes.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -1093,30 +1257,127 @@ An XAI approach should in some way mimic human explanation and feedback
 
 \end_layout
 
-\begin_layout Subsubsection
-Layerwise Relevance Propagation
+\begin_layout Subsection
+Interpretable Policies
 \end_layout
 
 \begin_layout Standard
-Layerwise Relevance propagation 
+\begin_inset Quotes eld
+\end_inset
+
+The best explanation of a simple model is the model itself; it perfectly
+ represents itself and is easy to understand.
+\begin_inset Quotes erd
+\end_inset
+
+
 \begin_inset CommandInset citation
 LatexCommand cite
-key "XAI_LRP_Frauenhofer"
+key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
- is a structure based explanatory approach which backpropagates the relevant
- factors for an output to an input to highlight the crucial areas for a
- decision.
- Besides the insight into industrial image processing, however, this technique
- has only limited use even as a debugging aid, as can be seen in 
+ To find a model that is its own best representation, candidate solutions
+ are sought directly in an interpretability-constrained feasible region.
+ 
+\end_layout
+
+\begin_layout Standard
+The most interpretable representation of a model is arguably a (well-written)
+ computer program.
+ Programming languages or, in a larger context, touringcomplete languages,
+ are the state of the art interface for explicit communication between machines
+ and humans.
+ 
+\end_layout
+
+\begin_layout Standard
+Searches are usually carried out on a population of candidates with the
+ help of evolutionary algorithms, which will be further presented in 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "LRP-Incorrect-classification-palmtrees"
+reference "gp_Genetic-Programming"
 
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+Holistically interpretable models in the field of ML.
+ but they cannot be used for all problems because the search space becomes
+ too large for complex strategies.
+ Suitable are especially problems with smooth system dynamics, like finding
+ control strategies for physical real world problems.
+ For some complex problems, fuzzy GP 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hein_fuzzy_gp"
+literal "true"
+
+\end_inset
+
+ has shown that interpretable policies could be created.
+ 
+\end_layout
+
+\begin_layout Standard
+Da das Modell komplett erklärbar ist müssen große Teile verallgemeinert
+ werden.
+ Despite their simplicity, they still often appear to the observer more
+ as a random combination of various operators of a formula than as a logically
+ abstracted solution to a problem.
+\end_layout
+
+\begin_layout Subsection
+Post-hoc Explanations
+\end_layout
+
+\begin_layout Standard
+An important point of research is post-hoc reasoning, where an already trained
+ model is to be explained retrospectively.
+ The use mainly splits between local and global interpretability.
+ Local post-hoc explanations include using perturbartion (E.g.
+ meaningful perturbations, 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-perturbation"
+literal "false"
+
+\end_inset
+
+), learning a model locally around the prediction (E.g.
+ LIME, 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-LIME"
+literal "false"
+
+\end_inset
+
+), function analysis (E.g.
+ Taylor Expansion) and analysing the structure of a model (E.g.
+ Layerwise Relevance Propagation, 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_LRP_Frauenhofer"
+literal "true"
+
+\end_inset
+
+, see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "LRP-Incorrect-classification-palmtrees"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ 
 \end_layout
 
 \begin_layout Standard
@@ -1129,47 +1390,35 @@ status open
 \align center
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_0.png
-	height 3cm
+	height 25mm
 
-\end_inset
-
-
-\begin_inset space ~
 \end_inset
 
 
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_1.png
-	height 3cm
+	height 25mm
 
 \end_inset
 
 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes0.png
-	height 3cm
+	height 25mm
 
-\end_inset
-
-
-\begin_inset space ~
 \end_inset
 
 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes1.png
-	height 3cm
+	height 25mm
 
-\end_inset
-
-
-\begin_inset space ~
 \end_inset
 
 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes2.png
-	height 3cm
+	height 25mm
 
 \end_inset
 
@@ -1180,23 +1429,13 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The object is recognized as a wolf - especially the edges that separate
- the wolf from its environment seem to be of great importance.
- The neck, the muzzle and the legs and the eye seem to be very important,
- coat colour and structure for this only of minor importance.
- Which characteristic was decisive - colour, wolf specific recognition features
- or even the reason why it is not a dog after all, is missing.
-\begin_inset Newline newline
-\end_inset
-
-
 \begin_inset CommandInset label
 LatexCommand label
 name "LRP-Incorrect-classification-palmtrees"
 
 \end_inset
 
-Incorrect classification as tripod by BVLC Reference CaffeNet or as spotlight
+ Incorrect classification as tripod by BVLC Reference CaffeNet or as spotlight
  by BVLC GoogLeNet.
  
 \begin_inset Flex URL
@@ -1209,7 +1448,17 @@ https://lrpserver.hhi.fraunhofer.de/
 
 \end_inset
 
+ By using layerwise relevance propagation 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_LRP_Frauenhofer"
+literal "true"
 
+\end_inset
+
+, the decisive pixels for a decision can be highlighted in the input image.
+ It can not give any holistic information about the strategy that is used
+ to recognize images.
 \end_layout
 
 \end_inset
@@ -1220,112 +1469,47 @@ https://lrpserver.hhi.fraunhofer.de/
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-Human vs Machine (domain expert)
 \end_layout
 
 \begin_layout Standard
-For the concept of familiarity used in this work, however, they play a special
- role, which is why the following will briefly discuss why they are so significa
-nt as a reference.
-\end_layout
-
-\begin_layout Itemize
-Speech
-\begin_inset Newline newline
-\end_inset
-
-The ability to speak, or express thoughts in language, is automatically
- learned by every human and plays an important role for human understanding.
- Large parts of the philosophical world even regard speech as the limits
- of what a human can understand.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-The limits of my language mean the limits of my world.
-\begin_inset Quotes erd
-\end_inset
-
-, Ludwig Wittgenstein, a mentor of Alan Turing
-\begin_inset CommandInset citation
-LatexCommand cite
-key "wittgenstein1953philosophical"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- Because conscious action is based on language, an action can automatically
- be explicitly formulated in a language and is thus explainable.
-\end_layout
-
-\begin_layout Itemize
-Conscious learning process
-\begin_inset Newline newline
-\end_inset
-
-Exploration, in the context of RL, is monitored by the amygdula for dangers
- and the learned models are thus endowed with a high degree of security.
- Tasks that one does not seem to be able to solve are aborted due to frustration.
- A machine learns without awareness and is forced to adapt and improve its
- approach until it has become good enough and has to rely on random exploration.
+Global interpretability can only be achieved through generalisation, since
+ usually no equivalent performing interpretable model exists.
+ Große Teile eines black box Modells können meist verallgemeinert werden.
+ Sonderfälle und überflüssige Strategien fallen dafür weg.
  
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Also the reference to experiences that have led to a behaviour is not possible,
- as it is with humans, because the experiences are not stored but are only
- available in the form of an improved policy.
 \end_layout
 
-\end_inset
-
-
+\begin_layout Section
+Learning from AI
 \end_layout
 
-\begin_layout Itemize
-Peer reviews
-\begin_inset Newline newline
-\end_inset
-
-A human learning process is mostly guided and ideas can be peer reviewed
- before using new strategies, with the sub-goals widely synched between
- interacting humans.
- This largely reduces the risc of over- and underfitting.
- One notable example is that successful models can be implemented in all
- people (such as the Pythagorean theorem) as reliable anchor point.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- People are mostly synchronized between essential subgoals like recognizing
- colors and shapes, turning puzzle pieces to the colored side and knowing
- about the picture on the box as reference point.
- A popular tip for beginners is therefore that one should start with the
- edge of the puzzle as pieces can be matched early to a frame.
+\begin_layout Standard
+Learning a new strategy through machine learning is of great interest, as
+ the machine's nature of impartiality allows to break new ground.
+ Um auf das Beispiel mit Alpha GO zurück zu kommen - hier konnte durch 
 \end_layout
 
-\begin_layout Plain Layout
-A RL agent can already fail at all the subgoals very badly.
+\begin_layout Paragraph
+Back to alpha go
 \end_layout
 
-\end_inset
+\begin_layout Standard
+alpha go could be improved!
+\end_layout
 
-Teaching a neural network requires an extensive training process and may
- cause unexpected side effects.
- 
+\begin_layout Standard
+We will discuss methods to explain models post-hoc as well as creating interpret
+able policies directly as holistic approach.
+ How interpretable something is cannot be determined unambiguously which
+ will be further discussed in xxx.
+\end_layout
+
+\begin_layout Standard
+In order to get tought by a machine 
+\end_layout
+
+\begin_layout Standard
+xxx simplification vs unification @sympy
 \end_layout
 
 \begin_layout Section
@@ -1340,17 +1524,86 @@ name "gp_Genetic-Programming"
 \end_layout
 
 \begin_layout Standard
-Searching all components of a formula is an infinitely complex problem and
- therefore normally the task of the spearhead of human abstraction ability,
- the computer scientist.
- In machine learning, however, there are metaheuristic strategies that use
- evolutionary strategies which allow automated creation of computer programs.
- Genetic programming (GP) was introduced by Koza and implements the components
- of programs as genes in a programming tree.
- A population of individuals are optimised over generations through selection
- and mutation of individual genes.
- The selection process requires a fitness function.
+Genetic programming (GP) is a population-based evolutionary algorithm that
+ can automatically create computer programs.
+ It was first introduced by Koza
+\end_layout
+
+\begin_layout Standard
+What is it?
+\end_layout
+
+\begin_layout Standard
+-> evolutionary algorithm
+\end_layout
+
+\begin_layout Standard
+-> It is a evolutionary algorithm that metaheuristic optimization which
+ means that the optimization is stochastic.
+ Populations will get better on average, but the improvement relies on randomnes
+s and does not converge to an optimum.
+ (xxx Beweis es mir?)
+\end_layout
+
+\begin_layout Standard
+-> 
+\end_layout
+
+\begin_layout Standard
+selection and mutation 
+\end_layout
+
+\begin_layout Standard
+How?
+\end_layout
+
+\begin_layout Standard
+-> Programs are encoded as set of genes / implements the components of programs
+ as genes in a programming tree.
  
+\end_layout
+
+\begin_layout Standard
+-> evolve
+\end_layout
+
+\begin_layout Standard
+-> population-based metaheuristic optimization algorithm
+\end_layout
+
+\begin_layout Standard
+Funfact?
+\end_layout
+
+\begin_layout Standard
+-> It was first introduced by Koza 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Koza_GP_patent_1990"
+literal "false"
+
+\end_inset
+
+ as evolutionary algorithm to 
+\end_layout
+
+\begin_layout Standard
+??? ?
+\end_layout
+
+\begin_layout Standard
+-> genepool, genome, gene, mutation, crossover, reproduction, recombination,
+ evaluation/fitness function, selection
+\end_layout
+
+\begin_layout Standard
+-> xxx Searching all components of a formula is an infinitely complex problem
+ and therefore normally the task of the spearhead of human abstraction ability,
+ the computer scientist.
+\end_layout
+
+\begin_layout Subsection
+Evolving a population
 \end_layout
 
 \begin_layout Standard
@@ -1363,6 +1616,10 @@ A new population is largely generated from a selection of the best candidates
  in their children.
  The rest of the population is replenished with randomly generated candidates
  to guarantee a constant stream of new solutions.
+\end_layout
+
+\begin_layout Standard
+xxx algorithm
 \end_layout
 
 \begin_layout Standard
@@ -1599,15 +1856,15 @@ Visualisation of the crossover evolution exchanges branches between trees.
 \end_layout
 
 \begin_layout Paragraph
-Evolution Concepts 
+Mutation Concepts 
 \end_layout
 
 \begin_layout Standard
 The concept of closure refers to the requirement that the creation of trees
- must alays result in evaluable expressions.
+ must alays result in interpretable expressions.
  In order to avoid data type complications, Strongly Typed Genetic Programming
- (STGP) is mostly used nowadays, where a conversion between number and truth
- values must be done explicitly.
+ (STGP) has become popular solution, where a conversion between number and
+ truth values must be done explicitly.
 \begin_inset Foot
 status open
 
@@ -1622,13 +1879,14 @@ Operators for explicit conversion are, for example, comparison operators
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
- Evaluation safety poses a particular problem because even type-correct
- expressions can be mathematically invalid.
+ Evaluation safety poses a particular problem, as even type-correct expressions
+ can be mathematically invalid.
  In the case of frequently occurring functions, the definition gaps are
- usually filled with a dummy value (for example, division by zero with 1).
+ often filled with a dummy value (for example, division by zero with 1).
  To avoid changing the essence of an operator too much, a tree can also
  simply be discarded in the case of rarely occurring errors.
  
@@ -1659,17 +1917,22 @@ reference "tab:EUREKA-GP-complexities"
 \end_inset
 
 .
- As a multi-objective optimisation, instead of saving only the best candidate,
- all pareto-efficient combinations of fitness and complexity are stored
- on a pareto front, between which a choice can be made at the end of the
- run.
+ 
+\end_layout
+
+\begin_layout Standard
+The amount of nodes is also suitable as second objective in a multi-objective
+ optimization, where all pareto-efficient combinations to the first objective
+ of fitness are saved.
+ The resulting pareto front of candidates offer the opportunity for the
+ user to weigh between the found candidates instead of saving only the best.
 \end_layout
 
 \begin_layout Standard
 \begin_inset Float table
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -1686,7 +1949,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The Pareto front usually flattens out with increasing complexity.
+The Pareto front flattens out with increasing complexity.
 \end_layout
 
 \end_inset
@@ -1721,7 +1984,7 @@ reference "fig:grow-vs-full-method"
 \begin_inset Float table
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \noindent
@@ -1944,6 +2207,7 @@ The weighting of the nodes at EUREKA.
 LatexCommand cite
 after "p.119"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -1961,39 +2225,11 @@ key "daniel_hein_doktorarbeit"
 \end_layout
 
 \begin_layout Subsection
-Explainability Measure
-\begin_inset CommandInset label
-LatexCommand label
-name "gp-Complexity-measurement"
-
-\end_inset
-
-
+Anomalies with node composition related complexity measures
 \end_layout
 
 \begin_layout Standard
-How explainable something is is best described by the effort a person needs
- to understand a formula.
- Effort, however, is a very arbitrary property, which is why explainability
- cannot be clearly determined.
- 
-\end_layout
-
-\begin_layout Standard
-It is to be described as how much effort someone needs to understand something.
- Not everyone must understand xxx only the expert.
- what does he understand? hehe familiarity!!
-\end_layout
-
-\begin_layout Standard
-xxx mathematical, programming tree related, context, specific: how much
- time the expert requires
-\end_layout
-
-\begin_layout Standard
-In GP, therefore, no further distinction is usually made between explainability
- and the complexity of a formula.
- The number of nodes poses some problems as a paradigm, even after weighting.
+The number of nodes poses some problems as a paradigm, even after weighting.
 \end_layout
 
 \begin_layout Standard
@@ -2062,8 +2298,7 @@ item Specific requirements regarding the input of an operator.
 
 
 \backslash
-item Wiederkehrende Teilstrukturen in einem Baum können leichter wiedererkannt
- werden
+item Recurring patterns in a tree can be recognised more easily
 \end_layout
 
 \begin_layout Plain Layout
@@ -2085,17 +2320,13 @@ end{itemize}
 
 \end_layout
 
-\begin_layout Itemize
-xxx wiedererkenn wert in der gesamten Paretofront -> leichter zu beurteilen!
-\end_layout
-
 \begin_layout Subparagraph
-Divide and Conquer with the if-operator
+Division into Chunks of Knowledge with the if-conditional
 \end_layout
 
 \begin_layout Standard
-The if operator exemplifies the contradiction between explainability measures
- and interpretability measures.
+The if-conditional exemplifies the contradiction between explainability
+ measures and interpretability measures.
  Although the if-operator is the most complex function with 3 input parameters,
  it creates more structure than all other operators because its child trees
  are not combined but can be considered separately.
@@ -2292,266 +2523,6 @@ Die Arität von Operatoren muss nicht zusätzlich gewichtet werden, da durch
  den höheren Branchingfaktor automatisch die Komplexität steigt.
 \end_layout
 
-\begin_layout Subsection
-Improving the Tree Edit Distance 
-\begin_inset CommandInset label
-LatexCommand label
-name "TED-improvements"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Trimming the Tree of Edits
-\end_layout
-
-\begin_layout Standard
-As already mentioned in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp-Observations-role"
-
-\end_inset
-
-, constants have a comparatively insignificant role for the interpretability
- or the essence of a formula anyway.
- Observations play an important role for the problem itself (see 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp-Observations-role"
-
-\end_inset
-
-), but also result from the pure operational tree.
-\end_layout
-
-\begin_layout Standard
-Therefore, for normal complexity measures, the only function of evaluating
- leaf nodes is to penalise the branching factor of a tree without much additiona
-l effort.
-\end_layout
-
-\begin_layout Standard
-For distance-based methods, leaf nodes therefore represent a relatively
- increased factor.
- Especially constants have a strong impact, where an otherwise desired optimisat
-ion of a value is evaluated as a full-fledged edit.
- This can not only prevent deliberate simplifications, but can even lead
- to the formula components around the variable being adjusted in order to
- be able to continue to use the constant unchanged.
- A simple solution would be, for example, to exclude constants when calculating
- the TED.
-\end_layout
-
-\begin_layout Standard
-Observations, on the other hand, have a much more important role, especially
- the amount of observations used.
- As the number of outputs are fixed, the number of necessary observations
- represents the dimensionality of the room of possible solutions, which
- is also known in mathematics as the curse of dimensionality when it is
- too large.
-\end_layout
-
-\begin_layout Standard
-Since the quantity of operators used is more important than their number,
- the symmetrical distance between the quantities of observations used can
- also be extended and included in the calculation, for example as a sum
- or as a factor.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Note that this approach is based on the same paradigm edit-distance, but
- contradicts the 
-\begin_inset Quotes eld
-\end_inset
-
-identity of indiscernibles
-\begin_inset Quotes erd
-\end_inset
-
- condition of distance measurements.
-\end_layout
-
-\end_inset
-
- ; they should therefore not be ignored like the constants and can remain
- a normal part of the TED
-\end_layout
-
-\begin_layout Subsection
-Weighted TED
-\end_layout
-
-\begin_layout Standard
-The TED offers many extension possibilities which can further address the
- nature of a change, including a weighting of nodes similar to the one used
- in classical GP which was mentioned in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:EUREKA-GP-complexities"
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-For this, the weighted mapping must be calculated.
- A subsequent weighting of the mapping of the regular TED does not make
- sense, since a later reweighting can lead to ambiguous results that do
- not correspond to the minimum.
- This mainly concerns the handling of a changed node.
- The weighted TED was imlemented, but opens many questions on how to deal
- with the effect and the complexity of altered nodes in the origin tree.
-\end_layout
-
-\begin_layout Standard
-Implementations might be based on the following ideas:
-\end_layout
-
-\begin_layout Itemize
-Ignoring altered nodes
-\end_layout
-
-\begin_layout Itemize
-Division of all operators into classes, where the cost for changing within
- a class is weakened.
- A potential class might be the operator families (e.g.
- angle-based operators.
- This allows adaptions in konstant nodes and also a distinction between
- basic operator types.
-\end_layout
-
-\begin_layout Itemize
-Even more specific options that were implemented but not evaluated in order
- not to mix too many paradigms:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-With if-statements, the edit distance of the child branches is calculated
- separately and only the largest factor is added.
- This procedure is intended to promote the use of if statements, which have
- a very positive influence on the interpretability of a formula due to their
- structuring influence, but which greatly increase the TED due to the high
- arity of 3 and the resulting branching factor.
-\end_layout
-
-\begin_layout Itemize
-Use of several known origins in one run and counting the minimum TED for
- each tree.
- This way, several understandable approaches could be compared directly
- for their extensibility or even incomplete solutions could be introduced
- separately.
-\end_layout
-
-\begin_layout Itemize
-Unifying and ordering trees, for example with sympify as described in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "fig:sympy-ordered-expression"
-
-\end_inset
-
-, before calculating the TED.
-\end_layout
-
-\begin_layout Itemize
-Similar to fixed nodes (
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "subsec:Fixed-nodes"
-
-\end_inset
-
-), giving nodes of the core structure a separate weighting so that changes
- are possible but very costly.
-\end_layout
-
-\end_deeper
-\begin_layout Subsection
-Symbolic Regression
-\end_layout
-
-\begin_layout Standard
-The symbolic regression is a common and important use case of GP for this
- approach, which is used to calculate how well the formula can explain data.
-\end_layout
-
-\begin_layout Standard
-The regression error is the sum of the distance between the outouts and
- predicted values of a data set.
- This makes it possible to determine fitness by regression on transition
- samples of a neuropolicy.
- With online learning, the reward of the real benchmark is evaluated, offline
- training takes place on a surrogate model instead and therefore has less
- significance.
- Training on surrogate models are nevertheless useful as they can be evaluated
- cost-effectively and in parallel, but especially with industrial controllers,
- the risk of destroy the benchmark itself, is reduced.
- 
-\end_layout
-
-\begin_layout Standard
-Both the mean average error (MAE) and the mean square error (MSE) are widely
- used distance measurements for this purpose.
- The MAE is widely used in GP, as it indicates the average deviation from
- the target solution and is therefore distance-true.
- The MSE squares the distance and thus is not distance-true, making it a
- less honest indicator.
- However, in the MSE, outliers and strong deviations are punished more severely,
- which also allowed the black box to be approached more quickly and more
- reliably.
- This also means that volatile solutions are punished more severely.
- 
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename tikz/regression_cost/01_regular.pdf
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/10_MSE.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Mean average error (MAE, left) and Mean squared error (MSE, right).
- The MSE is synonymous to the root mean squared error (RMSE) for one-dimensional
- measurements.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
 Related Work
 \end_layout
@@ -2567,6 +2538,7 @@ In
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -2575,22 +2547,12 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 \end_layout
 
 \begin_layout Standard
-xx interpretable gp 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "hein_fuzzy_gp,HUR18"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 In 
 \begin_inset CommandInset citation
 LatexCommand cite
 after "p. 125"
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2638,12 +2600,16 @@ qqq Ein NN Model macht sicher viele Dinge, die gar keinen Sinn machen.
  Deshalb soll wenn möglich auch nur der Phänotyp betrachtet werden.
 \end_layout
 
-\begin_layout Section
-Familiar Policies / Domain Expert as Genetic Ancestor
+\begin_layout Standard
+xxx gp strongly limited -> familiar GP NICE!
 \end_layout
 
 \begin_layout Standard
-xxxBekannte Lösungen vorteile: 
+xxx wiedererkenn wert in der gesamten Paretofront -> leichter zu beurteilen!
+\end_layout
+
+\begin_layout Standard
+xxx Bekannte Lösungen vorteile: 
 \begin_inset Quotes eld
 \end_inset
 
@@ -2655,9 +2621,17 @@ Der Ansatz stimmt zumindest
 \end_layout
 
 \begin_layout Standard
-An interpretable policy is assumed to be easier to understand if it deviates
- only slightly from known solutions.
- We designate policies as familiar, when the developer recognises his own
++++ An interpretable policy is assumed to be easier to understand if it
+ deviates only slightly from known solutions.
+ 
+\end_layout
+
+\begin_layout Section
+Familiar Policies / Domain Expert as Genetic Ancestor
+\end_layout
+
+\begin_layout Standard
+We designate policies as familiar, when the developer recognises his own
  procedure and it is therefore easier to understand.
 \end_layout
 
@@ -2920,6 +2894,7 @@ text{modify}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -2929,6 +2904,7 @@ key "tedOldestPaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3141,6 +3117,7 @@ Fitness evaluation is the bottleneck of performance.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -3149,6 +3126,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -3512,6 +3490,7 @@ The TED is calculated both a robustly and efficiently with APTED.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -4626,6 +4605,7 @@ While simplifying formulas for more efficient evaluation can be done easily,
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -6625,6 +6605,7 @@ The Mountain car problem was introduced in 1990
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -6933,6 +6914,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -7014,6 +6996,7 @@ $110$
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -9503,6 +9486,7 @@ This close-form preset policy was presented by Xiao in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11402,6 +11386,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -11510,6 +11495,7 @@ As black box, a particle swarm optimisation algorithm with neural networks
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -11534,6 +11520,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -12057,11 +12044,10 @@ Expert reference
 \end_layout
 
 \begin_layout Standard
-As no expert policy for the IB is known, a policy that is considered to
- be useful was used as a starting solution - but it is not a classic, human
- solution.
- The heuristics followed the tactic of subtracting a certain value from
- the most current variable of the respective action 
+No human-written policy for the IB is known, which is why a considerably
+ useful formula was used as a starting solution.
+ The strategy intended subtracting a certain value from the most current
+ variable of the respective action 
 \begin_inset ERT
 status open
 
@@ -12270,6 +12256,11 @@ IB summary
 \end_layout
 
 \begin_layout Standard
+xxx Durch die Kombination von drei unterschiedlichen Agenten sollten die
+ ersten Kombinationen mit oft großen Unterschieden ignoriert werden.
+\end_layout
+
+\begin_layout Standard
 The regression error of no run was able to reach the neuropolicy data set
  sufficiently; for MSE runs the limit was about 2, for MAE runs about 1.5.
  Thus even the best candidates are about 5 times worse than comparable candidate
@@ -12281,6 +12272,7 @@ s of the MC benchmark.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -12368,15 +12360,193 @@ xxx separated cases (leaving working parts untouched)
 \end_layout
 
 \begin_layout Subsection
-xxxxxxxxxxxxxxxxxx
+Improving the Tree Edit Distance 
+\begin_inset CommandInset label
+LatexCommand label
+name "TED-improvements"
+
+\end_inset
+
+
 \end_layout
 
+\begin_layout Paragraph
+Trimming the Tree of Edits
+\end_layout
+
+\begin_layout Standard
+As already mentioned in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp-Observations-role"
+
+\end_inset
+
+, constants have a comparatively insignificant role for the interpretability
+ or the essence of a formula anyway.
+ Observations play an important role for the problem itself (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "gp-Observations-role"
+
+\end_inset
+
+), but also result from the pure operational tree.
+\end_layout
+
+\begin_layout Standard
+Therefore, for normal complexity measures, the only function of evaluating
+ leaf nodes is to penalise the branching factor of a tree without much additiona
+l effort.
+\end_layout
+
+\begin_layout Standard
+For distance-based methods, leaf nodes therefore represent a relatively
+ increased factor.
+ Especially constants have a strong impact, where an otherwise desired optimisat
+ion of a value is evaluated as a full-fledged edit.
+ This can not only prevent deliberate simplifications, but can even lead
+ to the formula components around the variable being adjusted in order to
+ be able to continue to use the constant unchanged.
+ A simple solution would be, for example, to exclude constants when calculating
+ the TED.
+\end_layout
+
+\begin_layout Standard
+Observations, on the other hand, have a much more important role, especially
+ the amount of observations used.
+ As the number of outputs are fixed, the number of necessary observations
+ represents the dimensionality of the room of possible solutions, which
+ is also known in mathematics as the curse of dimensionality when it is
+ too large.
+\end_layout
+
+\begin_layout Standard
+Since the quantity of operators used is more important than their number,
+ the symmetrical distance between the quantities of observations used can
+ also be extended and included in the calculation, for example as a sum
+ or as a factor.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Note that this approach is based on the same paradigm edit-distance, but
+ contradicts the 
+\begin_inset Quotes eld
+\end_inset
+
+identity of indiscernibles
+\begin_inset Quotes erd
+\end_inset
+
+ condition of distance measurements.
+\end_layout
+
+\end_inset
+
+ ; they should therefore not be ignored like the constants and can remain
+ a normal part of the TED
+\end_layout
+
+\begin_layout Subsection
+Weighted TED
+\end_layout
+
+\begin_layout Standard
+The TED offers many extension possibilities which can further address the
+ nature of a change, including a weighting of nodes similar to the one used
+ in classical GP which was mentioned in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:EUREKA-GP-complexities"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+For this, the weighted mapping must be calculated.
+ A subsequent weighting of the mapping of the regular TED does not make
+ sense, since a later reweighting can lead to ambiguous results that do
+ not correspond to the minimum.
+ This mainly concerns the handling of a changed node.
+ The weighted TED was imlemented, but opens many questions on how to deal
+ with the effect and the complexity of altered nodes in the origin tree.
+\end_layout
+
+\begin_layout Standard
+Implementations might be based on the following ideas:
+\end_layout
+
+\begin_layout Itemize
+Ignoring altered nodes
+\end_layout
+
+\begin_layout Itemize
+Division of all operators into classes, where the cost for changing within
+ a class is weakened.
+ A potential class might be the operator families (e.g.
+ angle-based operators.
+ This allows adaptions in konstant nodes and also a distinction between
+ basic operator types.
+\end_layout
+
+\begin_layout Itemize
+Even more specific options that were implemented but not evaluated in order
+ not to mix too many paradigms:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+With if-statements, the edit distance of the child branches is calculated
+ separately and only the largest factor is added.
+ This procedure is intended to promote the use of if statements, which have
+ a very positive influence on the interpretability of a formula due to their
+ structuring influence, but which greatly increase the TED due to the high
+ arity of 3 and the resulting branching factor.
+\end_layout
+
+\begin_layout Itemize
+Use of several known origins in one run and counting the minimum TED for
+ each tree.
+ This way, several understandable approaches could be compared directly
+ for their extensibility or even incomplete solutions could be introduced
+ separately.
+\end_layout
+
+\begin_layout Itemize
+Unifying and ordering trees, for example with sympify as described in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:sympy-ordered-expression"
+
+\end_inset
+
+, before calculating the TED.
+\end_layout
+
+\begin_layout Itemize
+Similar to fixed nodes (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Fixed-nodes"
+
+\end_inset
+
+), giving nodes of the core structure a separate weighting so that changes
+ are possible but very costly.
+\end_layout
+
+\end_deeper
 \begin_layout Section
 Conclusion
 \end_layout
 
 \begin_layout Standard
-In dieser Arbeit wurde das Konzept
+In dieser Arbeit wurde das Konzept der Vertrautheit als Erweiterung interpretier
+barer policies vorgestellt.
 \end_layout
 
 \begin_layout Standard
@@ -12394,6 +12564,10 @@ In dieser Arbeit wurde das Konzept
 
 \begin_layout Standard
 - erklären eine Neuropolicy
+\end_layout
+
+\begin_layout Standard
+===
 \end_layout
 
 \begin_layout Standard
@@ -12422,12 +12596,13 @@ In dieser Arbeit wurde das Konzept
 \end_layout
 
 \begin_layout Standard
-In this thesis, familiarity was presented as an essential factor for creating
- interpretable policies.
+===
 \end_layout
 
 \begin_layout Standard
-The implementation with the edit-distance between programming trees leads
+In this thesis, familiarity was presented as novel concent for enhancing
+ interpretability.
+ The implementation with the edit-distance between programming trees leads
  to results, which are structurally different from the classical GP, because
  parts of the expert policy were recognizable in the solutions.Only with
  simple expert solutions (3-6 nodes) the TED lost its effect quickly, because

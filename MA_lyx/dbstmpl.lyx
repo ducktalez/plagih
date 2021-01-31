@@ -264,67 +264,51 @@ In RL, an agent without prior knowledge searches for a strategy to maximize
  reward in an environment.
 \end_layout
 
-\end_inset
-
-
+\begin_layout Plain Layout
+The particularities of RL problems can be very versatile.
+ 
 \end_layout
-
-\begin_layout Standard
-In the field of ML, there has been a strong focus on performance.
- In the meantime, a point has been reached where a model can be learned
- for almost any problem; in the field of RL, some even outperform human
- solution approaches.
- This comes at the cost of be
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-Machine learning systems are increasingly ubiquitous and can take over more
- and more human tasks.
- What is new, however, is that enormous advances in the field of RL have
- made it possible for some years now to outperform human strategies even
- in highly complex domains [xx].
- Deshalb Especially in safety-relevant areas, such as industrial control
- systems, human-written approaches are therefore used.
-\begin_inset Foot
-status open
 
 \begin_layout Plain Layout
-A robust explanation for undesirable developments is especially required
- in front of court.
+xxx 
+\end_layout
+
+\begin_layout Plain Layout
+xxx instead: focus on the good
+\end_layout
+
+\begin_layout Plain Layout
+yy AlphaGo has shown aggressive strategies, ...
+ safety required?
 \end_layout
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
+xxx In the field of ML, 
+\end_layout
+
+\begin_layout Standard
+Of special interest is the field of RL, where an agent learns a strategy
+ through interaction with an environment by an external reward, as it allows
+ autonomous learning of un-biased strategies.
+ there has been a strong focus on performance.
+\end_layout
+
+\begin_layout Standard
+With AlphaGo, that problems which were considered to be reserved for humans
+ for a long time, Go, which was considered to be reserved for humans for
+ a long time because of the deep understanding of positions and the enormously
+ high possibility of possible moves.
  
 \end_layout
 
 \begin_layout Standard
-Explainable artificial intelligence (XAI) deals with the problem of making
- AI solutions understandable for humans, which has become more and more
- popular in recent years.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AIINDEX2019"
-literal "true"
-
-\end_inset
-
- In view of the increasing importance of algorithms in our society, the
- EU has even defined a right to explain in the GDPR.
- 
-\end_layout
-
-\begin_layout Paragraph
-Alpha Go
-\end_layout
-
-\begin_layout Standard
-A popular example of the development of such superhuman strategies was achieved
- with alphaGo for the game Go.
+A very popular example of the development of such superhuman strategies
+ was achieved by DeepMind with AlphaGo 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AlphaGo_paper"
@@ -332,18 +316,92 @@ literal "true"
 
 \end_inset
 
- This game was considered to be reserved for humans for a long time because
- of the deep understanding of positions and the enormously high possibility
- of possible moves.
- Through a clever arachitecture, the team not only succeeded in beating
- a world star of the game with media impact, new game techniques could even
- be observed.
+, who succeeded in beating a world star of the game with media impact.
  
 \end_layout
 
 \begin_layout Standard
-Despite this extraordinary performance, the developers did not fully trust
- AlphaGo and therefore had the process monitored by a human.
+Even with industrial control strategies, particularities such as high dimensiona
+lity
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-gas-turbine-rl-nn"
+literal "true"
+
+\end_inset
+
+ or high stochasticity 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
+literal "true"
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-rl-stochastic-bayesian-nn"
+literal "true"
+
+\end_inset
+
+ could be solved.
+ 
+\end_layout
+
+\begin_layout Standard
+===
+\end_layout
+
+\begin_layout Standard
+In the meantime, a point has been reached where a model can be learned for
+ almost any problem and the desire for explainability is becoming louder
+ and louder.
+\end_layout
+
+\begin_layout Standard
+===> blackbox approaches
+\end_layout
+
+\begin_layout Standard
+Most of these breakthroughs were made possible by using black box approaches,
+ which are trained to behave in a computable manner but do not allow insight
+ into especially the induced rules, the learned solution paths.
+ They learned a task ad nauseam and become un-biased savants.
+\end_layout
+
+\begin_layout Standard
+.
+ implicit knowlegde representation, 
+\end_layout
+
+\begin_layout Standard
+in which the knowledge, is explicitly represented.
+ 
+\end_layout
+
+\begin_layout Standard
+===> NN
+\end_layout
+
+\begin_layout Standard
+The best known representative are (deep) 
+\end_layout
+
+\begin_layout Standard
+Neural networks (NN) are generic equation systems which learn a function
+ approximation by automatically adjusting its parameters through backpropagation.
+\end_layout
+
+\begin_layout Standard
+====
+\end_layout
+
+\begin_layout Standard
+Even through extensive testing, it is not possible to trust such a strategy.
+ DeepMind therefore had the learning process of AlphaGo additionally monitored
+ by a human - and was able to identify weaknesses.
 \end_layout
 
 \begin_layout Quotation
@@ -352,7 +410,14 @@ Despite this extraordinary performance, the developers did not fully trust
 
 It’s unbelieveably superhuman, in general, but it has some particular weaknesses
  in some situations.
- We can think of there being this space of all the things it knows about,
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+We can think of there being this space of all the things it knows about,
  and it knows about most of it extremely well.
  Then there will be these tricky lumps of knowledge, that it just understands
  very poorly.
@@ -364,12 +429,21 @@ It’s unbelieveably superhuman, in general, but it has some particular weakness
 \begin_inset Quotes erd
 \end_inset
 
+, 
+\begin_inset Quotes eld
+\end_inset
+
+Everybody in the team tried to work more and more to fix the problem, but
+ I think it's difficult to fix this very quickly.
+\begin_inset Quotes erd
+\end_inset
+
 
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-David Silver in 
+Shane Legg, David Silver, and Fan Hui in 
 \begin_inset Quotes eld
 \end_inset
 
@@ -385,7 +459,8 @@ literal "false"
 
 \end_inset
 
-, last accessed January, 2021
+.
+ (last accessed January, 2021)
 \end_layout
 
 \end_inset
@@ -394,14 +469,70 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
-Howsoever, even AlphaGo, as a prestige project of the RL, supervised by
- a research team, was subject to errors of reasoning.
+In view of the increasing importance of algorithms in our society, the EU
+ has even defined a right to explain in the GDPR.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "EUdataregulations2018"
+literal "false"
+
+\end_inset
+
+ A robust explanation is therefore necessary, especially in court.
  
 \end_layout
 
 \begin_layout Standard
-In order to be able to profit from the bias-free strategies of a machine,
- there is genetic programming in the field of ML.
+===> XAI
+\end_layout
+
+\begin_layout Standard
+Explainable artificial intelligence (XAI) deals with the problem of making
+ AI solutions understandable for humans, and has become more and more popular
+ in recent years.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AIINDEX2019"
+literal "true"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+Especially in security sensible systems, where a single fault can cause
+ enorm impact, it is often not sufficient to provide an explanation.
+ According to Hein et al, 
+\begin_inset Quotes eld
+\end_inset
+
+Especially for industrial systems, domain experts are more likely to deploy
+ autonomously learned controllers if they are understandable and convenient
+ to assess
+\begin_inset Quotes erd
+\end_inset
+
+, which is mainly aimed at interpretable solutions.
+\end_layout
+
+\begin_layout Standard
+===> Learning from AI?
+\end_layout
+
+\begin_layout Standard
+Obwohl auch AlphaGo ein Blackboxansatz mit Fehlern war konnte sogar eine
+ neue Strategie entwickelt werden.
+ Gute Go-Spieler analysierten die guten Spiele und fanden eine neue Strategie,
+ die dem Menschen bisher nicht bekannt war.
+\end_layout
+
+\begin_layout Standard
+===> GP!
+\end_layout
+
+\begin_layout Standard
+The main proposal being considered is GeP.
  With the help of evolutionary strategies, this can search for formulas
  that can be interpreted by a human.
  In order to gain understanding, they thus offer a domain expert a good
@@ -410,14 +541,48 @@ In order to be able to profit from the bias-free strategies of a machine,
 \end_layout
 
 \begin_layout Standard
-xxx Symbolische und nicht-symbolische Ansätze xx Beim maschinellen Lernen
- spielen Art und Mächtigkeit der Wissensrepräsentation eine wichtige Rolle.
- Man unterscheidet zwischen symbolischen Ansätzen, in denen das Wissen –
- sowohl die Beispiele als auch die induzierten Regeln – explizit repräsentiert
- ist, und nicht-symbolischen Ansätzen, wie neuronalen Netzen, denen zwar
- ein berechenbares Verhalten „antrainiert“ wird, die jedoch keinen Einblick
- in die erlernten Lösungswege erlauben; hier ist Wissen implizit repräsentiert.[3
-] 
+For some complex problems, fuzzy GP 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hein_fuzzy_gp"
+literal "true"
+
+\end_inset
+
+ has shown that interpretable policies could be created.
+ GP ist ein evolutionärer ML Ansatz, der durch Methoden der Evolution automatisc
+h Programme erstellen kann.
+ 
+\end_layout
+
+\begin_layout Standard
+Wir nehmen an, dass diese zwar interpretiert werden können, aber als tendenziell
+ mathematische Formel immernoch stark von dem Bevorzugten Lösungsansatz
+ eines Domänenexperten abweichen.
+ Unter der Annahme, dass die Expertenstrategie nicht komplett falsch ist,
+ erscheint es deshalb sehr hilfreich gezeigt zu bekommen, was denn geändert
+ werden müsste, um die Performance einer Black box zu erreichen.
+ Wir schlagen deshalb vor, mit GP das Programm des Experten nur soweit zu
+ verändern, dass er nur die Abweichungen seiner bereits bekannten Lösung
+ zusätzlich nachvollziehen muss.
+ 
+\end_layout
+
+\begin_layout Standard
+===> Familiarity
+\end_layout
+
+\begin_layout Standard
+xxx Symbolische und nicht-symbolische Ansätze 
+\end_layout
+
+\begin_layout Standard
+xxx Wichtige Eigenschaften sind neben performance offline learning, interpretier
+barkeit und 
+\end_layout
+
+\begin_layout Standard
+xx 
 \end_layout
 
 \begin_layout Section
@@ -541,51 +706,7 @@ The well-known diagram that no work on reinforcement learning should be
 \end_layout
 
 \begin_layout Paragraph
-Black Box Control Strategies
-\end_layout
-
-\begin_layout Standard
-The particularities of RL problems can be very versatile.
- In der Industrie müssen oft Kontrollstrategien für physikalische Probleme
- gefunden werden.
- Many particularities, such as high dimensionality
-\begin_inset CommandInset citation
-LatexCommand cite
-key "siemens-gas-turbine-rl-nn"
-literal "true"
-
-\end_inset
-
- or high stochasticity 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
-literal "true"
-
-\end_inset
-
-
-\begin_inset CommandInset citation
-LatexCommand cite
-key "siemens-rl-stochastic-bayesian-nn"
-literal "true"
-
-\end_inset
-
- could only be solved with the help of black box approaches.
- Neural networks (NN) are generic equation systems which learn a function
- approximation by automatically adjusting its parameters through backpropagation.
- They are savants, which may practice a task ad nauseam and then master
- it, but they have to be considered a black box.
-\end_layout
-
-\begin_layout Standard
-They are considered a black box, trust is only possible through testing.
- 
-\end_layout
-
-\begin_layout Subsection
-Symbolic Regression
+Offline Learning
 \end_layout
 
 \begin_layout Standard
@@ -595,6 +716,10 @@ Learning on a real world system (online training) is often prohibited in
  on a data set) is an alternative which is aLso very cost efficient, but
  also less meaningful.
  
+\end_layout
+
+\begin_layout Subsection
+Symbolic Regression
 \end_layout
 
 \begin_layout Standard
@@ -1310,15 +1435,6 @@ Holistically interpretable models in the field of ML.
  too large for complex strategies.
  Suitable are especially problems with smooth system dynamics, like finding
  control strategies for physical real world problems.
- For some complex problems, fuzzy GP 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "hein_fuzzy_gp"
-literal "true"
-
-\end_inset
-
- has shown that interpretable policies could be created.
  
 \end_layout
 

@@ -265,15 +265,6 @@ In RL, an agent without prior knowledge searches for a strategy to maximize
 \end_layout
 
 \begin_layout Plain Layout
-The particularities of RL problems can be very versatile.
- 
-\end_layout
-
-\begin_layout Plain Layout
-xxx 
-\end_layout
-
-\begin_layout Plain Layout
 xxx instead: focus on the good
 \end_layout
 
@@ -288,14 +279,20 @@ yy AlphaGo has shown aggressive strategies, ...
 \end_layout
 
 \begin_layout Standard
-xxx In the field of ML, 
+===> In the field of ML, 
 \end_layout
 
 \begin_layout Standard
-Of special interest is the field of RL, where an agent learns a strategy
- through interaction with an environment by an external reward, as it allows
- autonomous learning of un-biased strategies.
- there has been a strong focus on performance.
+Domain experts have developed strategies for many problems.
+ Auch, the interest in autonomously learned, unbiased strategies and the
+ knowledge to be gained on them is of great interest.
+ In the area of the RL, where an agent learns a strategy through interaction
+ with an environment by an external reward.
+ A strong focus has been on performance which lead to major improvements.
+\end_layout
+
+\begin_layout Standard
+===
 \end_layout
 
 \begin_layout Standard
@@ -316,7 +313,7 @@ literal "true"
 
 \end_inset
 
-, who succeeded in beating a world star of the game with media impact.
+, which succeeded in beating a world star of the game with media impact.
  
 \end_layout
 
@@ -351,57 +348,22 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
 In the meantime, a point has been reached where a model can be learned for
- almost any problem and the desire for explainability is becoming louder
- and louder.
+ almost any problem, which is why the desire for explainability is becoming
+ more and more significant.
 \end_layout
 
 \begin_layout Standard
-===> blackbox approaches
-\end_layout
-
-\begin_layout Standard
-Most of these breakthroughs were made possible by using black box approaches,
- which are trained to behave in a computable manner but do not allow insight
- into especially the induced rules, the learned solution paths.
- They learned a task ad nauseam and become un-biased savants.
-\end_layout
-
-\begin_layout Standard
-.
- implicit knowlegde representation, 
-\end_layout
-
-\begin_layout Standard
-in which the knowledge, is explicitly represented.
- 
-\end_layout
-
-\begin_layout Standard
-===> NN
-\end_layout
-
-\begin_layout Standard
-The best known representative are (deep) 
-\end_layout
-
-\begin_layout Standard
-Neural networks (NN) are generic equation systems which learn a function
- approximation by automatically adjusting its parameters through backpropagation.
-\end_layout
-
-\begin_layout Standard
-====
-\end_layout
-
-\begin_layout Standard
-Even through extensive testing, it is not possible to trust such a strategy.
- DeepMind therefore had the learning process of AlphaGo additionally monitored
- by a human - and was able to identify weaknesses.
+Most of these breakthroughs were enabled by using black box approaches.
+ The best known representative are (deep) Neural networks (NN), which are
+ generic equation systems which learn a function approximation by automatically
+ adjusting its parameters through backpropagation.
+ They are trained to behave in a computable manner, but the knowledge representa
+tion is implicit and does not allow insight into the induced rules or the
+ learned solution paths.
+ Even through extensive testing, it is not possible to trust such a strategy.
+ That is why DeepMind had a human monitor the learning process of AlphaGo
+ - who revealed surprising weaknesses.
 \end_layout
 
 \begin_layout Quotation
@@ -410,14 +372,7 @@ Even through extensive testing, it is not possible to trust such a strategy.
 
 It’s unbelieveably superhuman, in general, but it has some particular weaknesses
  in some situations.
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-We can think of there being this space of all the things it knows about,
+ We can think of there being this space of all the things it knows about,
  and it knows about most of it extremely well.
  Then there will be these tricky lumps of knowledge, that it just understands
  very poorly.
@@ -426,14 +381,7 @@ We can think of there being this space of all the things it knows about,
  But if it does, it can be completely delusional, thinking that it is alive
  on one part of the board when, in fact, it's dead or vice versa.
  So, there is a real risk that we could lose the match.
-\begin_inset Quotes erd
-\end_inset
-
-, 
-\begin_inset Quotes eld
-\end_inset
-
-Everybody in the team tried to work more and more to fix the problem, but
+ Everybody in the team tried to work more and more to fix the problem, but
  I think it's difficult to fix this very quickly.
 \begin_inset Quotes erd
 \end_inset
@@ -469,8 +417,19 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
-In view of the increasing importance of algorithms in our society, the EU
- has even defined a right to explain in the GDPR.
+That is why making artificial intelligence understandable for humans has
+ become more and more popular in recent years
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AIINDEX2019"
+literal "true"
+
+\end_inset
+
+, which is dealt with in the field of explainable artificial intelligence
+ (XAI).
+ In view of the increasing importance of algorithms in our society, the
+ EU has even defined a right to explain in the GDPR.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
@@ -479,30 +438,6 @@ literal "false"
 \end_inset
 
  A robust explanation is therefore necessary, especially in court.
- 
-\end_layout
-
-\begin_layout Standard
-===> XAI
-\end_layout
-
-\begin_layout Standard
-Explainable artificial intelligence (XAI) deals with the problem of making
- AI solutions understandable for humans, and has become more and more popular
- in recent years.
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AIINDEX2019"
-literal "true"
-
-\end_inset
-
- 
-\end_layout
-
-\begin_layout Standard
-Especially in security sensible systems, where a single fault can cause
- enorm impact, it is often not sufficient to provide an explanation.
  According to Hein et al, 
 \begin_inset Quotes eld
 \end_inset
@@ -513,35 +448,19 @@ Especially for industrial systems, domain experts are more likely to deploy
 \begin_inset Quotes erd
 \end_inset
 
-, which is mainly aimed at interpretable solutions.
+.
+ This, more than just explanations for decisions, requires holistically
+ interpretable solutions, which they propose to search especially with evolution
+ary algorithms.
 \end_layout
 
 \begin_layout Standard
-===> Learning from AI?
-\end_layout
-
-\begin_layout Standard
-Obwohl auch AlphaGo ein Blackboxansatz mit Fehlern war konnte sogar eine
- neue Strategie entwickelt werden.
- Gute Go-Spieler analysierten die guten Spiele und fanden eine neue Strategie,
- die dem Menschen bisher nicht bekannt war.
-\end_layout
-
-\begin_layout Standard
-===> GP!
-\end_layout
-
-\begin_layout Standard
-The main proposal being considered is GeP.
- With the help of evolutionary strategies, this can search for formulas
- that can be interpreted by a human.
+The main proposal being considered is GP, which uses evolutionary strategies
+ to optimize formulas that can be interpreted by a human.
  In order to gain understanding, they thus offer a domain expert a good
  point of reference, but the solution path often deviates strongly from
  the strategy that an expert would choose.
-\end_layout
-
-\begin_layout Standard
-For some complex problems, fuzzy GP 
+ For some complex problems, fuzzy GP 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
@@ -550,39 +469,40 @@ literal "true"
 \end_inset
 
  has shown that interpretable policies could be created.
- GP ist ein evolutionärer ML Ansatz, der durch Methoden der Evolution automatisc
-h Programme erstellen kann.
+ GP is an evolutionary ML approach that can automatically create programmes
+ through evolutionary methods.
  
 \end_layout
 
 \begin_layout Standard
-Wir nehmen an, dass diese zwar interpretiert werden können, aber als tendenziell
- mathematische Formel immernoch stark von dem Bevorzugten Lösungsansatz
- eines Domänenexperten abweichen.
- Unter der Annahme, dass die Expertenstrategie nicht komplett falsch ist,
- erscheint es deshalb sehr hilfreich gezeigt zu bekommen, was denn geändert
- werden müsste, um die Performance einer Black box zu erreichen.
- Wir schlagen deshalb vor, mit GP das Programm des Experten nur soweit zu
- verändern, dass er nur die Abweichungen seiner bereits bekannten Lösung
- zusätzlich nachvollziehen muss.
+We argue that familiarity allows for a quicker and better understanding
+ and provides some of the key requirements for good interpretability.
+ We assume that these can be interpreted still deviate strongly from the
+ preferred solution approach of a domain expert and require a complete new
+ understanding of the solution, without the expert being able to use his
+ already acquired knowledge.
+ Assuming that the expert strategy already follows a correct approach, it
+ therefore seems very helpful to be shown what would have to be changed
+ in order to achieve the performance of a black box.
  
 \end_layout
 
 \begin_layout Standard
-===> Familiarity
+This technique of offline analysis could already be used manually by analysing
+ the played games of AlphaGo, where new strategies emerged after finding
+ structural differences to the known tactics.
+ This process should be automated with our proposed principle of familiarity.
 \end_layout
 
 \begin_layout Standard
-xxx Symbolische und nicht-symbolische Ansätze 
+We therefore propose to use GP to modify an expert's programme in such a
+ way that he only has to comprehend the deviations in addition to his already
+ known solution.
 \end_layout
 
 \begin_layout Standard
 xxx Wichtige Eigenschaften sind neben performance offline learning, interpretier
 barkeit und 
-\end_layout
-
-\begin_layout Standard
-xx 
 \end_layout
 
 \begin_layout Section
@@ -642,10 +562,6 @@ y occur in the industry.
 \end_layout
 
 \begin_layout Section
-Interpretable Control Strategies
-\end_layout
-
-\begin_layout Subsection
 Reinforcement Learning
 \end_layout
 
@@ -690,101 +606,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The well-known diagram that no work on reinforcement learning should be
- without.
- sss
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Offline Learning
-\end_layout
-
-\begin_layout Standard
-Learning on a real world system (online training) is often prohibited in
- safety critical domains, as misconduct can lead to great damage.
- Offline learning on a surrogate model (e.g.
- on a data set) is an alternative which is aLso very cost efficient, but
- also less meaningful.
- 
-\end_layout
-
-\begin_layout Subsection
-Symbolic Regression
-\end_layout
-
-\begin_layout Standard
-The symbolic regression is a common and important use case of GP for this
- approach, which is used to calculate how well the formula can explain data.
-\end_layout
-
-\begin_layout Standard
-The regression error is the sum of the distance between the outouts and
- predicted values of a data set.
- This makes it possible to determine fitness by regression on transition
- samples of a neuropolicy.
- With online learning, the reward of the real benchmark is evaluated, offline
- training takes place on a surrogate model instead and therefore has less
- significance.
- Training on surrogate models are nevertheless useful as they can be evaluated
- cost-effectively and in parallel, but especially with industrial controllers,
- the risk of destroy the benchmark itself, is reduced.
- 
-\end_layout
-
-\begin_layout Standard
-Both the mean average error (MAE) and the mean square error (MSE) are widely
- used distance measurements for this purpose.
- The MAE is widely used in GP, as it indicates the average deviation from
- the target solution and is therefore distance-true.
- The MSE squares the distance and thus is not distance-true, making it a
- less honest indicator.
- However, in the MSE, outliers and strong deviations are punished more severely,
- which also allowed the black box to be approached more quickly and more
- reliably.
- This also means that volatile solutions are punished more severely.
- 
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename tikz/regression_cost/01_regular.pdf
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/10_MSE.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Mean average error (MAE) and Mean squared error (MSE).
- The MSE is synonymous to the root mean squared error (RMSE) for one-dimensional
- measurements.
+The one and only true representation of reinforcement learning.
 \end_layout
 
 \end_inset
@@ -937,17 +759,6 @@ collection of features of interpretable domain that have contributed for
  
 \end_layout
 
-\begin_layout Subsection
-Interpretability Measure
-\begin_inset CommandInset label
-LatexCommand label
-name "gp-Complexity-measurement"
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 Every machine learning model is subject to a trade-off between performance
  and interpretability.
@@ -986,7 +797,7 @@ What are task-related relevant factors?
 \begin_deeper
 \begin_layout Itemize
 global vs.
- local?
+ local
 \end_layout
 
 \begin_layout Itemize
@@ -994,7 +805,7 @@ severity of incompleteness
 \end_layout
 
 \begin_layout Itemize
-natureel of user expertise
+nature of user expertise
 \end_layout
 
 \begin_layout Itemize
@@ -1005,21 +816,13 @@ time constraints
 \begin_layout Itemize
 What are method-related relevant factors being explored? (e.g.
  form of cognitive chunks, number of cognitive chunks, compositionality,
- monotonicity, uncertainty;
+ monotonicity, uncertainty)
 \end_layout
 
 \begin_layout Standard
-xxx 
-\end_layout
-
-\begin_layout Standard
-sss RL problems are incomplete as they are not fully testable and can be
- solved in many ways.
- 
-\end_layout
-
-\begin_layout Standard
-An accurate explanation is not holistic, and a interpretable solution is
+RL problems are incomplete as they are not fully testable and can be solved
+ in many ways.
+ An accurate explanation is not holistic, and a interpretable solution is
  usually not possible without generalising the model.
  A profound explanation can be found for individual decisions is not holistic,
  or completely interpretable models that cannot contain the complete behaviour.
@@ -1038,8 +841,15 @@ It is to be described as how much effort someone needs to understand something.
  what does he understand? hehe familiarity!!
 \end_layout
 
-\begin_layout Standard
-xxxx
+\begin_layout Subsection
+Interpretability Measure
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Complexity-measurement"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1047,7 +857,7 @@ The following examples are all used as complexity taxonomies:
 \end_layout
 
 \begin_layout Itemize
-mathematical dimensionality of the room (curse of dimensionality)
+dimensionality mathematical of the room (curse of dimensionality)
 \end_layout
 
 \begin_layout Itemize
@@ -1446,14 +1256,16 @@ Da das Modell komplett erklärbar ist müssen große Teile verallgemeinert
  abstracted solution to a problem.
 \end_layout
 
+\begin_layout Standard
+xxx In order to get tought by a machine 
+\end_layout
+
 \begin_layout Subsection
 Post-hoc Explanations
 \end_layout
 
 \begin_layout Standard
-An important point of research is post-hoc reasoning, where an already trained
- model is to be explained retrospectively.
- The use mainly splits between local and global interpretability.
+An important point of research is explaining trained models retrospectively.
  Local post-hoc explanations include using perturbartion (E.g.
  meaningful perturbations, 
 \begin_inset CommandInset citation
@@ -1506,6 +1318,7 @@ status open
 \align center
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_0.png
+	lyxscale 50
 	height 25mm
 
 \end_inset
@@ -1513,6 +1326,7 @@ status open
 
 \begin_inset Graphics
 	filename img/extern/lrp_frauenhofer_wolf_1.png
+	lyxscale 50
 	height 25mm
 
 \end_inset
@@ -1520,6 +1334,7 @@ status open
 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes0.png
+	lyxscale 50
 	height 25mm
 
 \end_inset
@@ -1527,6 +1342,7 @@ status open
 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes1.png
+	lyxscale 50
 	height 25mm
 
 \end_inset
@@ -1534,6 +1350,7 @@ status open
 
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes2.png
+	lyxscale 50
 	height 25mm
 
 \end_inset
@@ -1590,42 +1407,6 @@ literal "true"
 \begin_layout Standard
 Global interpretability can only be achieved through generalisation, since
  usually no equivalent performing interpretable model exists.
- Große Teile eines black box Modells können meist verallgemeinert werden.
- Sonderfälle und überflüssige Strategien fallen dafür weg.
- 
-\end_layout
-
-\begin_layout Section
-Learning from AI
-\end_layout
-
-\begin_layout Standard
-Learning a new strategy through machine learning is of great interest, as
- the machine's nature of impartiality allows to break new ground.
- Um auf das Beispiel mit Alpha GO zurück zu kommen - hier konnte durch 
-\end_layout
-
-\begin_layout Paragraph
-Back to alpha go
-\end_layout
-
-\begin_layout Standard
-alpha go could be improved!
-\end_layout
-
-\begin_layout Standard
-We will discuss methods to explain models post-hoc as well as creating interpret
-able policies directly as holistic approach.
- How interpretable something is cannot be determined unambiguously which
- will be further discussed in xxx.
-\end_layout
-
-\begin_layout Standard
-In order to get tought by a machine 
-\end_layout
-
-\begin_layout Standard
-xxx simplification vs unification @sympy
 \end_layout
 
 \begin_layout Section
@@ -1640,59 +1421,10 @@ name "gp_Genetic-Programming"
 \end_layout
 
 \begin_layout Standard
-Genetic programming (GP) is a population-based evolutionary algorithm that
- can automatically create computer programs.
- It was first introduced by Koza
-\end_layout
-
-\begin_layout Standard
-What is it?
-\end_layout
-
-\begin_layout Standard
--> evolutionary algorithm
-\end_layout
-
-\begin_layout Standard
--> It is a evolutionary algorithm that metaheuristic optimization which
- means that the optimization is stochastic.
- Populations will get better on average, but the improvement relies on randomnes
-s and does not converge to an optimum.
- (xxx Beweis es mir?)
-\end_layout
-
-\begin_layout Standard
--> 
-\end_layout
-
-\begin_layout Standard
-selection and mutation 
-\end_layout
-
-\begin_layout Standard
-How?
-\end_layout
-
-\begin_layout Standard
--> Programs are encoded as set of genes / implements the components of programs
- as genes in a programming tree.
- 
-\end_layout
-
-\begin_layout Standard
--> evolve
-\end_layout
-
-\begin_layout Standard
--> population-based metaheuristic optimization algorithm
-\end_layout
-
-\begin_layout Standard
-Funfact?
-\end_layout
-
-\begin_layout Standard
--> It was first introduced by Koza 
+Genetic programming (GP) is an evolutionary algorithm that can automatically
+ create computer programs.
+ It has become a well known approach for creating interpretable system controlin
+g policies since it was first introduced by Koza.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
@@ -1700,245 +1432,18 @@ literal "false"
 
 \end_inset
 
- as evolutionary algorithm to 
-\end_layout
-
-\begin_layout Standard
-??? ?
-\end_layout
-
-\begin_layout Standard
--> genepool, genome, gene, mutation, crossover, reproduction, recombination,
- evaluation/fitness function, selection
-\end_layout
-
-\begin_layout Standard
--> xxx Searching all components of a formula is an infinitely complex problem
- and therefore normally the task of the spearhead of human abstraction ability,
- the computer scientist.
-\end_layout
-
-\begin_layout Subsection
-Evolving a population
-\end_layout
-
-\begin_layout Standard
-A new population is largely generated from a selection of the best candidates
- of the last generation.
- This allows successful gene sequences to multiply.
- New candidates are generated by random gene mutations without having to
- search for a completely new solution, and by crossing candidates, the best
- components of two parent trees can combine by randomly crossing two branches
- in their children.
- The rest of the population is replenished with randomly generated candidates
- to guarantee a constant stream of new solutions.
-\end_layout
-
-\begin_layout Standard
-xxx algorithm
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="8" columns="2">
-<features booktabs="true" tabularvalignment="middle">
-<column alignment="left" valignment="top" width="28mm">
-<column alignment="left" valignment="top" width="10cm">
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Evolution
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Tournament Selection
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-From (3-7) randomly selected candidates, the one with the highest fitness
- is chosen.
- This allows trees to survive in a population that have not yet been optimised
- but may carry important genes.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-The candidate enters the next generation unchanged.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Point Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-A random node in a tree is exchanged.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Branch Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-A new branch is built up at a random node.
- The tree can thereby become bigger or smaller.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Crossover
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-From two parent trees two random branches are exchanged.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Filter Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-The constants of the best candidates are modified with a Gaussian filter.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random trees
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Trees are randomly generated and added to the new population as a constant
- stream.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Evolutionary aspects of GP in an overview.
  
 \end_layout
 
-\end_inset
-
-
+\begin_layout Standard
+It requires two essential things, one is the representation of a program
+ as sequence of genes which allow for evolution strategies to be applied,
+ the other one is a fitness function which rate candidates for the selection
+ process.
 \end_layout
 
-\end_inset
-
-
+\begin_layout Paragraph
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 \end_layout
 
 \begin_layout Standard
@@ -1971,41 +1476,86 @@ Visualisation of the crossover evolution exchanges branches between trees.
 
 \end_layout
 
-\begin_layout Paragraph
-Mutation Concepts 
+\begin_layout Subsection
+Fitness Function: Offline Symbolic Regression
 \end_layout
 
 \begin_layout Standard
-The concept of closure refers to the requirement that the creation of trees
- must alays result in interpretable expressions.
- In order to avoid data type complications, Strongly Typed Genetic Programming
- (STGP) has become popular solution, where a conversion between number and
- truth values must be done explicitly.
-\begin_inset Foot
+Learning on a real world system (online training) is often prohibited in
+ safety critical domains, as misconduct can lead to great damage.
+ Offline learning on a surrogate model (e.g.
+ on a data set) is an alternative which is fast and very cost efficient,
+ but also less meaningful.
+ 
+\end_layout
+
+\begin_layout Standard
+We will evaluate our approach offline on transition sample, which will be
+ subject to a symbolic regression.
+ A symbolic regression is a common and important use case of GP for this
+ approach, which is used to calculate how well a formula can explain data.
+ 
+\end_layout
+
+\begin_layout Standard
+The fitness is calculated in the form of the regression error, which is
+ the sum of the distance between the outouts and predicted values of a data
+ set.
+ 
+\end_layout
+
+\begin_layout Standard
+Both the mean average error (MAE) and the mean square error (MSE) are widely
+ used distance measurements for this purpose.
+ The MAE is widely used in GP, as it indicates the average deviation from
+ the target solution and is distance-true.
+ The MSE squares the distance and thus is not distance-true, making it a
+ less honest indicator.
+ The MSE, however, iseverely punishes outliers, lumps of strong deviation
+ and volatile solutions, which can lead to a better overall generalisation.
+ 
+\end_layout
+
+\begin_layout Standard
+\noindent
+\begin_inset Float figure
+wide false
+sideways false
 status open
 
 \begin_layout Plain Layout
-Operators for explicit conversion are, for example, comparison operators
- or if statements
+\align center
+\begin_inset Graphics
+	filename tikz/regression_cost/01_regular.pdf
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename tikz/regression_cost/10_MSE.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Mean average error (MAE) and Mean squared error (MSE).
+ The MSE is synonymous to the root mean squared error (RMSE) for one-dimensional
+ measurements.
 \end_layout
 
 \end_inset
 
 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Strongly_typed_GP"
-literal "true"
+\end_layout
 
 \end_inset
 
- Evaluation safety poses a particular problem, as even type-correct expressions
- can be mathematically invalid.
- In the case of frequently occurring functions, the definition gaps are
- often filled with a dummy value (for example, division by zero with 1).
- To avoid changing the essence of an operator too much, a tree can also
- simply be discarded in the case of rarely occurring errors.
- 
+
 \end_layout
 
 \begin_layout Paragraph
@@ -4604,6 +4154,10 @@ name "sympy-tree-reduction"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+xxx simplification vs unification
 \end_layout
 
 \begin_layout Standard

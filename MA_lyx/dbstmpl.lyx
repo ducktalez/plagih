@@ -191,7 +191,6 @@ Explainability is hard to achieve in the field of RL, where the great successes
  understand completely.
  For a domain expert, it would be very helpful to be shown where his own
  strategy could be improved.
- 
 \end_layout
 
 \begin_layout Plain Layout
@@ -268,9 +267,43 @@ In RL, an agent without prior knowledge searches for a strategy to maximize
 xxx instead: focus on the good
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Machine learning (ML) allows a computer to learn a task on its own, sometimes
+ even with superhuman performance.
+ However, the decisions made are not explicitly comprehensible to humans;
+ a problem that is even evident in the well-known example of AlphaGo.
+\end_layout
+
+\begin_layout Standard
+xxx stride into more and more domains that were reserved for humans.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
 \begin_layout Plain Layout
-yy AlphaGo has shown aggressive strategies, ...
- safety required?
+\align center
+\begin_inset Graphics
+	filename img/rl_images/reinforcement_learning_diagram_sfeh_a4.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The one and only true representation of reinforcement learning.
 \end_layout
 
 \end_inset
@@ -278,29 +311,31 @@ yy AlphaGo has shown aggressive strategies, ...
 
 \end_layout
 
-\begin_layout Standard
-===> In the field of ML, 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Motivation: AlphaGo
 \end_layout
 
 \begin_layout Standard
-Domain experts have developed strategies for many problems.
- Auch, the interest in autonomously learned, unbiased strategies and the
- knowledge to be gained on them is of great interest.
- In the area of the RL, where an agent learns a strategy through interaction
- with an environment by an external reward.
- A strong focus has been on performance which lead to major improvements.
-\end_layout
+AlphaGo was an effort of DeepMind to let a machine learn to play the game
+ of 
+\begin_inset Quotes eld
+\end_inset
 
-\begin_layout Standard
-===
-\end_layout
+Go
+\begin_inset Quotes erd
+\end_inset
 
-\begin_layout Standard
-With AlphaGo, that problems which were considered to be reserved for humans
- for a long time, Go, which was considered to be reserved for humans for
- a long time because of the deep understanding of positions and the enormously
+ only by knowing the rules.
+ The cardboard game was considered to be reserved for humans for a long
+ time, as it requires deep understanding of positions and has an enormously
  high possibility of possible moves.
- 
+ The surprise was therefore great when, accompanied by the media, one of
+ the world's best Go players lost to the computer.
 \end_layout
 
 \begin_layout Standard
@@ -314,56 +349,16 @@ literal "true"
 \end_inset
 
 , which succeeded in beating a world star of the game with media impact.
- 
+ Little mention is therefore made of the disadvantages of such a method,
+ because neither the machine nor the human knows why it makes decisions
+ or what strategy is behind them.
+ The extent of the problem is described in passing in the documentation.
 \end_layout
 
 \begin_layout Standard
-Even with industrial control strategies, particularities such as high dimensiona
-lity
-\begin_inset CommandInset citation
-LatexCommand cite
-key "siemens-gas-turbine-rl-nn"
-literal "true"
-
-\end_inset
-
- or high stochasticity 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
-literal "true"
-
-\end_inset
-
-
-\begin_inset CommandInset citation
-LatexCommand cite
-key "siemens-rl-stochastic-bayesian-nn"
-literal "true"
-
-\end_inset
-
- could be solved.
- 
-\end_layout
-
-\begin_layout Standard
-In the meantime, a point has been reached where a model can be learned for
- almost any problem, which is why the desire for explainability is becoming
- more and more significant.
-\end_layout
-
-\begin_layout Standard
-Most of these breakthroughs were enabled by using black box approaches.
- The best known representative are (deep) Neural networks (NN), which are
- generic equation systems which learn a function approximation by automatically
- adjusting its parameters through backpropagation.
- They are trained to behave in a computable manner, but the knowledge representa
-tion is implicit and does not allow insight into the induced rules or the
- learned solution paths.
- Even through extensive testing, it is not possible to trust such a strategy.
- That is why DeepMind had a human monitor the learning process of AlphaGo
- - who revealed surprising weaknesses.
+Even through extensive testing, it is not possible to trust such a strategy.
+ The DeepMind team had concerns about the real performance and had a human
+ monitor the learning process of AlphaGo - who revealed surprising weaknesses.
 \end_layout
 
 \begin_layout Quotation
@@ -417,6 +412,93 @@ literal "false"
 \end_layout
 
 \begin_layout Standard
+AlphaGo is still considered a prime example of the possibilities offered
+ by RL; on the basis of the games shown, it was even possible to derive
+ previously unknown strategies.
+ Even if the strategies in the game of GO are probably too complex to allow
+ an automated and human-understandable explanation, we will propose the
+ concept of familiarity to .
+\end_layout
+
+\begin_layout Standard
+x
+\end_layout
+
+\begin_layout Standard
+x
+\end_layout
+
+\begin_layout Standard
+x
+\end_layout
+
+\begin_layout Paragraph
+Reinforcement learning
+\end_layout
+
+\begin_layout Standard
+Reinforcement learning (RL) is a subfield of Machine Learning, which deals
+ with problems such as games or simulations, where the goal is obvious but
+ a solution strategy must be sought.
+ The goal is only implied in the form of an external reward, the sum of
+ which an agent is supposed to maximise through interaction in an environment.
+ To do so, the agent receives the current state (observations) of the environmen
+t and can decide on an action, thus reaching a subsequent state and receiving
+ a reward.
+ The environment is formalized as Markov Decision Process (MDP), which is
+ a stochastic form of determinism so that in each state, when performing
+ an action, the same subsequent state is reached with a certain probability.
+ 
+\end_layout
+
+\begin_layout Standard
+To learn a policy in such an environment therefore requires carefully weighting
+ up exploration and exploitation to cope with the limited resources an agent
+ has at his disposal.
+ 
+\end_layout
+
+\begin_layout Subsection
+Reinforcement learning
+\end_layout
+
+\begin_layout Standard
+Even with industrial control strategies, particularities such as high dimensiona
+lity
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-gas-turbine-rl-nn"
+literal "true"
+
+\end_inset
+
+ or high stochasticity 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787"
+literal "true"
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-rl-stochastic-bayesian-nn"
+literal "true"
+
+\end_inset
+
+ could be solved.
+ 
+\end_layout
+
+\begin_layout Standard
+In the meantime, a point has been reached where a model can be learned for
+ almost any problem, which is why the desire for explainability is becoming
+ more and more significant.
+\end_layout
+
+\begin_layout Standard
 That is why making artificial intelligence understandable for humans has
  become more and more popular in recent years
 \begin_inset CommandInset citation
@@ -438,6 +520,18 @@ literal "false"
 \end_inset
 
  A robust explanation is therefore necessary, especially in court.
+ 
+\end_layout
+
+\begin_layout Standard
+Online learning on a real world system (online) is often prohibited in safety
+ critical domains, as misconduct through random exploration can lead to
+ great damage.
+ Offline learning includes methods for which the real benchmark is not needed.
+ Instead, some kind of surrogate model (e.g.
+ a data set) is utilized for the learning process.
+ Benefits are, that offline learning is often a lot faster, more cost efficient
+ and a safe learning process - but also less meaningful.
  According to Hein et al, 
 \begin_inset Quotes eld
 \end_inset
@@ -449,17 +543,189 @@ Especially for industrial systems, domain experts are more likely to deploy
 \end_inset
 
 .
- This, more than just explanations for decisions, requires holistically
- interpretable solutions, which they propose to search especially with evolution
-ary algorithms.
+ 
+\end_layout
+
+\begin_layout Section
+Interpretable Machine Learning
 \end_layout
 
 \begin_layout Standard
-The main proposal being considered is GP, which uses evolutionary strategies
- to optimize formulas that can be interpreted by a human.
- In order to gain understanding, they thus offer a domain expert a good
- point of reference, but the solution path often deviates strongly from
- the strategy that an expert would choose.
+Every machine learning model is subject to a trade-off between performance
+ and interpretability.
+ As described in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_survey"
+literal "true"
+
+\end_inset
+
+, a distinction is made between interpretability and explainability.
+ Interpretability is defined as 
+\begin_inset Quotes eld
+\end_inset
+
+the ability to explain or to present in understandable terms to humans
+\begin_inset Quotes erd
+\end_inset
+
+, while an explanation is described as 
+\begin_inset Quotes eld
+\end_inset
+
+collection of features of interpretable domain that have contributed for
+ a given example to produce a decision
+\begin_inset Quotes erd
+\end_inset
+
+.
+ It is to be described as how much effort someone needs to understand something.
+ Effort, however, is a very arbitrary property, which is why explainability
+ cannot be clearly determined.
+ 
+\end_layout
+
+\begin_layout Standard
+In contrast to performance, interpretability has many manifestations and
+ divides into many subcategories, a deeper analysis which is proposed in
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_doshivelez2017rigorous"
+literal "false"
+
+\end_inset
+
+.
+ In the following, we will discuss the most important manifestations for
+ the field of reinforcement learning and how it manifests itself in the
+ form of familiarity.
+\end_layout
+
+\begin_layout Paragraph
+RL Problems
+\end_layout
+
+\begin_layout Standard
+RL problems are incomplete as they are not fully testable and can be solved
+ in many ways.
+ Explainability addresses the entire behaviour and must therefore be global.
+ 
+\end_layout
+
+\begin_layout Standard
+xxx explain one decision vs holistic / the relevant information that has
+ to be provided...
+\end_layout
+
+\begin_layout Standard
+Interpretability can adress the reasons for a specific (local) decision
+ or cover the whole model (global).
+ 
+\end_layout
+
+\begin_layout Standard
+We argue, that the severity of incompleteness with RL problems is the strategy
+ and can thus not be further specified.
+\end_layout
+
+\begin_layout Standard
+These explanations provide rather local and specific interpretability, methods
+ include using perturbartion (E.g.
+ meaningful perturbations, 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-perturbation"
+literal "false"
+
+\end_inset
+
+), learning a model locally around the prediction (E.g.
+ LIME, 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-LIME"
+literal "false"
+
+\end_inset
+
+), function analysis (E.g.
+ Taylor Expansion) or analysing the structure of a model (E.g.
+ Layerwise Relevance Propagation, 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_LRP_Frauenhofer"
+literal "true"
+
+\end_inset
+
+, see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "LRP-Incorrect-classification-palmtrees"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ Hein xx et al have shown surrogate models xx 
+\end_layout
+
+\begin_layout Standard
+Such holistic models can only be achieved through generalisation, since
+ usually no equivalent performing interpretable model exists.
+ 
+\end_layout
+
+\begin_layout Standard
+Finding post-hoc explanations is an important point in research where already
+ trained models are to be explained retroactively.
+ 
+\end_layout
+
+\begin_layout Paragraph
+RL policies
+\end_layout
+
+\begin_layout Standard
+-> xxx Searching all components of a heuristic formula is a very complex
+ problem and therefore normally the task of the spearhead of human abstraction
+ ability, the computer scientist.
+\end_layout
+
+\begin_layout Standard
+Domain experts have developed control strategies and heuristics for many
+ problems.
+ The interest in autonomously learned, unbiased strategies and the knowledge
+ to be gained on them is of great interest.
+ In the area of the RL, where an agent learns a strategy through interaction
+ with an environment by an external reward.
+\end_layout
+
+\begin_layout Standard
+Most of these breakthroughs were enabled by using black box approaches.
+ The best known representative are (deep) Neural networks (NN), which are
+ generic equation systems which learn a function approximation by automatically
+ adjusting its parameters through backpropagation.
+ They are trained to behave in a computable manner, but the knowledge representa
+tion is implicit and does not allow insight into the induced rules or the
+ learned solution paths.
+ 
+\end_layout
+
+\begin_layout Standard
+This, more than just explanations for decisions, requires holistically interpret
+able solutions, which they propose to search especially with evolutionary
+ algorithms.
+\end_layout
+
+\begin_layout Standard
+In order to gain understanding, they thus offer a domain expert a good point
+ of reference, but the solution path often deviates strongly from the strategy
+ that an expert would choose.
  For some complex problems, fuzzy GP 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -488,21 +754,9 @@ We argue that familiarity allows for a quicker and better understanding
 \end_layout
 
 \begin_layout Standard
-This technique of offline analysis could already be used manually by analysing
- the played games of AlphaGo, where new strategies emerged after finding
- structural differences to the known tactics.
- This process should be automated with our proposed principle of familiarity.
-\end_layout
-
-\begin_layout Standard
 We therefore propose to use GP to modify an expert's programme in such a
  way that he only has to comprehend the deviations in addition to his already
  known solution.
-\end_layout
-
-\begin_layout Standard
-xxx Wichtige Eigenschaften sind neben performance offline learning, interpretier
-barkeit und 
 \end_layout
 
 \begin_layout Section
@@ -548,343 +802,11 @@ ion in the form of the tree edit distance as second order optimisation.
 \end_layout
 
 \begin_layout Chapter
-Applied Methodoligies
-\end_layout
-
-\begin_layout Standard
-In this section, important technologies and findings are presented.
- First, Reinforcement Learning is introduced and the opportunities which
- it offers for the industry.
- Neural networks are introduced as the main representatives black box technologi
-es, which seem mandatory to search for policies in some domains, which especiall
-y occur in the industry.
- Essential concerns of the industry are further in
+Applied methodology x Interpretable Machine Learning
 \end_layout
 
 \begin_layout Section
-Reinforcement Learning
-\end_layout
-
-\begin_layout Standard
-Reinforcement learning (RL) is a subfield of Machine Learning, which deals
- with problems such as games or simulations, where the goal is obvious but
- a solution strategy must be sought.
- The goal is only implied in the form of an external reward, the sum of
- which an agent is supposed to maximise through interaction in an environment.
- To do so, the agent receives the current state (observations) of the environmen
-t and can decide on an action, thus reaching a subsequent state and receiving
- a reward.
- The environment is formalized as Markov Decision Process (MDP), which is
- a stochastic form of determinism so that in each state, when performing
- an action, the same subsequent state is reached with a certain probability.
- 
-\end_layout
-
-\begin_layout Standard
-To learn a policy in such an environment therefore requires carefully weighting
- up exploration and exploitation to cope with the limited resources an agent
- has at his disposal.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/rl_images/reinforcement_learning_diagram_sfeh_a4.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The one and only true representation of reinforcement learning.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Domain experts
-\end_layout
-
-\begin_layout Standard
-For the concept of familiarity used in this work, however, they play a special
- role, which is why the following will briefly discuss why they are so significa
-nt as a reference.
-\end_layout
-
-\begin_layout Itemize
-Speech
-\begin_inset Newline newline
-\end_inset
-
-The ability to speak, or express thoughts in language, is automatically
- learned by every human and plays an important role for human understanding.
- Large parts of the philosophical world even regard speech as the limits
- of what a human can understand.
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-\begin_inset Quotes eld
-\end_inset
-
-The limits of my language mean the limits of my world.
-\begin_inset Quotes erd
-\end_inset
-
-, Ludwig Wittgenstein, a mentor of Alan Turing
-\begin_inset CommandInset citation
-LatexCommand cite
-key "wittgenstein1953philosophical"
-literal "true"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
- Because conscious action is based on language, an action can automatically
- be explicitly formulated in a language and is thus explainable.
-\end_layout
-
-\begin_layout Itemize
-Self-controled learning
-\begin_inset Newline newline
-\end_inset
-
-Exploration, in the context of RL, is monitored by the amygdula for dangers
- and the learned models are thus endowed with a high degree of security.
- Tasks that one does not seem to be able to solve are aborted due to frustration.
- A machine learns without awareness and is forced to adapt and improve its
- approach until it has become good enough and has to rely on random exploration.
- 
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-Also the reference to experiences that have led to a behaviour is not possible,
- as it is with humans, because the experiences are not stored but are only
- available in the form of an improved policy.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Peer-controled learning
-\begin_inset Newline newline
-\end_inset
-
-A human learning process is mostly guided and ideas can be peer reviewed
- before using new strategies, with the sub-goals widely synched between
- interacting humans.
- This largely reduces the risc of over- and underfitting.
- One notable example is that successful models can be implemented in all
- people (such as the Pythagorean theorem) as reliable anchor point.
-\begin_inset Foot
-status collapsed
-
-\begin_layout Plain Layout
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- People are mostly synchronized between essential subgoals like recognizing
- colors and shapes, turning puzzle pieces to the colored side and knowing
- about the picture on the box as reference point.
- A popular tip for beginners is therefore that one should start with the
- edge of the puzzle as pieces can be matched early to a frame.
-\end_layout
-
-\begin_layout Plain Layout
-A RL agent can already fail at all the subgoals very badly.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
-Explainable Artificial Intelligence
-\end_layout
-
-\begin_layout Standard
-As described in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_survey"
-literal "true"
-
-\end_inset
-
-, a distinction is made between interpretability and explainability.
- Interpretability is defined as 
-\begin_inset Quotes eld
-\end_inset
-
-the ability to explain or to present in understandable terms to humans
-\begin_inset Quotes erd
-\end_inset
-
- An explanation is described as 
-\begin_inset Quotes eld
-\end_inset
-
-collection of features of interpretable domain that have contributed for
- a given example to produce a decision
-\begin_inset Quotes erd
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-Every machine learning model is subject to a trade-off between performance
- and interpretability.
- How explainable something is is best described by the effort a person needs
- to understand a model.
- 
-\end_layout
-
-\begin_layout Standard
-Interpretable is very versatile divides into many subcategories, a deeper
- analysis is proposed in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_doshivelez2017rigorous"
-literal "false"
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Itemize
-mmm How is the problem formulation incomplete?
-\end_layout
-
-\begin_layout Itemize
-mmm At what level is the evaluation being performed? (application, general
- user study, proxy)
-\end_layout
-
-\begin_layout Itemize
-What are task-related relevant factors?
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-global vs.
- local
-\end_layout
-
-\begin_layout Itemize
-severity of incompleteness
-\end_layout
-
-\begin_layout Itemize
-nature of user expertise
-\end_layout
-
-\begin_layout Itemize
-time constraints
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-What are method-related relevant factors being explored? (e.g.
- form of cognitive chunks, number of cognitive chunks, compositionality,
- monotonicity, uncertainty)
-\end_layout
-
-\begin_layout Standard
-RL problems are incomplete as they are not fully testable and can be solved
- in many ways.
- An accurate explanation is not holistic, and a interpretable solution is
- usually not possible without generalising the model.
- A profound explanation can be found for individual decisions is not holistic,
- or completely interpretable models that cannot contain the complete behaviour.
- 
-\end_layout
-
-\begin_layout Standard
-Effort, however, is a very arbitrary property, which is why explainability
- cannot be clearly determined.
- 
-\end_layout
-
-\begin_layout Standard
-It is to be described as how much effort someone needs to understand something.
- xxx Not everyone must understand only the expert.
- what does he understand? hehe familiarity!!
-\end_layout
-
-\begin_layout Subsection
-Interpretability Measure
-\begin_inset CommandInset label
-LatexCommand label
-name "gp-Complexity-measurement"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The following examples are all used as complexity taxonomies:
-\end_layout
-
-\begin_layout Itemize
-dimensionality mathematical of the room (curse of dimensionality)
-\end_layout
-
-\begin_layout Itemize
-amount of free parameters (neural networks)
-\end_layout
-
-\begin_layout Itemize
-computational runtime complexity (floating point operations per second,
- Bachmann–Landau notation, ...)
-\end_layout
-
-\begin_layout Itemize
-computation tree related (amount of nodes, weighted nodes, branching factor,
- ...)
-\end_layout
-
-\begin_layout Itemize
-human-specific (chunks of knowledge, plausibility in context, personalized
- weighting ...)
-\end_layout
-
-\begin_layout Standard
-The many subdivision possibilities cannot be summarised in a simple and
- contradiction-free paradigm.
- In GP, therefore, no further distinction is usually made between interpretabili
-ty and the (weighted) number of nodes.
- 
+tttttthe machine: Explainable methodology
 \end_layout
 
 \begin_layout Standard
@@ -1179,7 +1101,7 @@ Targeted improvement on known strategies
 An XAI approach should in some way mimic human explanation and feedback
  mechanisms.
  Requirements for AI methods, presented on the basis of the desired goals.
- xxx
+ With our approach, we imagine we are programming ourselves a teacher.
 \end_layout
 
 \end_inset
@@ -1190,13 +1112,22 @@ An XAI approach should in some way mimic human explanation and feedback
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection
-Interpretable Policies
 \end_layout
 
 \begin_layout Standard
+===== explaining methods
+\end_layout
+
+\begin_layout Standard
+===post-hoc, RL, regression 
+\end_layout
+
+\begin_layout Standard
+=== ad-hoc
+\end_layout
+
+\begin_layout Standard
+However, 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1228,8 +1159,8 @@ The most interpretable representation of a model is arguably a (well-written)
 \end_layout
 
 \begin_layout Standard
-Searches are usually carried out on a population of candidates with the
- help of evolutionary algorithms, which will be further presented in 
+Searches are carried out on a population of candidates with the help of
+ evolutionary algorithms, which will be further presented in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "gp_Genetic-Programming"
@@ -1240,79 +1171,18 @@ reference "gp_Genetic-Programming"
 \end_layout
 
 \begin_layout Standard
-Holistically interpretable models in the field of ML.
- but they cannot be used for all problems because the search space becomes
- too large for complex strategies.
- Suitable are especially problems with smooth system dynamics, like finding
- control strategies for physical real world problems.
- 
-\end_layout
-
-\begin_layout Standard
-Da das Modell komplett erklärbar ist müssen große Teile verallgemeinert
- werden.
+Since the model is completely explainable, large parts have to be generalised.
  Despite their simplicity, they still often appear to the observer more
  as a random combination of various operators of a formula than as a logically
  abstracted solution to a problem.
-\end_layout
-
-\begin_layout Standard
-xxx In order to get tought by a machine 
-\end_layout
-
-\begin_layout Subsection
-Post-hoc Explanations
-\end_layout
-
-\begin_layout Standard
-An important point of research is explaining trained models retrospectively.
- Local post-hoc explanations include using perturbartion (E.g.
- meaningful perturbations, 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI-perturbation"
-literal "false"
-
-\end_inset
-
-), learning a model locally around the prediction (E.g.
- LIME, 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI-LIME"
-literal "false"
-
-\end_inset
-
-), function analysis (E.g.
- Taylor Expansion) and analysing the structure of a model (E.g.
- Layerwise Relevance Propagation, 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_LRP_Frauenhofer"
-literal "true"
-
-\end_inset
-
-, see 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "LRP-Incorrect-classification-palmtrees"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-).
- 
+ Interpretable is very versatile 
 \end_layout
 
 \begin_layout Standard
 \begin_inset Float figure
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \align center
@@ -1404,46 +1274,180 @@ literal "true"
 
 \end_layout
 
-\begin_layout Standard
-Global interpretability can only be achieved through generalisation, since
- usually no equivalent performing interpretable model exists.
+\begin_layout Section
+tttthe human: Domain experts? chunks of knowledge?
 \end_layout
 
-\begin_layout Section
-Genetic Programming 
-\begin_inset CommandInset label
-LatexCommand label
-name "gp_Genetic-Programming"
+\begin_layout Standard
+The domain experts are the people of interest for this work.
+ We assume, that a domain expert has built an understanding for a problem
+ and can explain his own decisions, but is also subject to only thinking
+ inside the box of his understanding.
+ RL policies are more or less bias-free, but also but often display aggressive
+ approaches to a problem (E.g.
+ AlphaGo).
+\end_layout
 
+\begin_layout Standard
+Regarding problems with smooth system dynamics, like controlers also allow
+\end_layout
+
+\begin_layout Standard
+xxx hoch? At what level is the evaluation being performed? (application->CONTROL
+ER, general user study, proxy; Section 3)
+\end_layout
+
+\begin_layout Paragraph
+Speech
+\end_layout
+
+\begin_layout Standard
+the ability to speak, or express thoughts in language, is automatically
+ learned by every human and plays an important role for human understanding.
+ Large parts of the philosophical world even regard speech as the limits
+ of what a human can understand.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
 \end_inset
 
+The limits of my language mean the limits of my world.
+\begin_inset Quotes erd
+\end_inset
 
-\end_layout
-
-\begin_layout Standard
-Genetic programming (GP) is an evolutionary algorithm that can automatically
- create computer programs.
- It has become a well known approach for creating interpretable system controlin
-g policies since it was first introduced by Koza.
+, Ludwig Wittgenstein, a mentor of Alan Turing
 \begin_inset CommandInset citation
 LatexCommand cite
-key "Koza_GP_patent_1990"
-literal "false"
+key "wittgenstein1953philosophical"
+literal "true"
 
 \end_inset
 
+
+\end_layout
+
+\end_inset
+
+ Because conscious action is based on language, an action can automatically
+ be explicitly formulated in a language and is thus explainable.
+\end_layout
+
+\begin_layout Paragraph
+Human vs machine
+\end_layout
+
+\begin_layout Standard
+Human solutions rely on conscious exploration and are learned both self-
+ and peer-controled.
  
 \end_layout
 
 \begin_layout Standard
-It requires two essential things, one is the representation of a program
- as sequence of genes which allow for evolution strategies to be applied,
- the other one is a fitness function which rate candidates for the selection
- process.
+The amygdula in the human neural brain network constantly analysis for dangers
+ and the learned models are thus endowed with a high degree of security.
+ 
 \end_layout
 
-\begin_layout Paragraph
-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+\begin_layout Standard
+A human can also decide to abort learning a frustrating task, which may
+ be out of reach.
+ An RL-agent relies on random exploration and is forced to adapt and improve
+ its approach until it has become good enough.
+ 
+\end_layout
+
+\begin_layout Standard
+Also the reference to experiences that have led to a behaviour is not possible,
+ as it is with humans, because the experiences are not stored but are only
+ available in the form of an improved policy.
+\end_layout
+
+\begin_layout Standard
+A human learning process is mostly guided and ideas can be peer reviewed
+ before using new strategies, with the sub-goals widely synched between
+ interacting humans.
+ 
+\end_layout
+
+\begin_layout Standard
+This largely reduces the risc of over- and underfitting.
+ One notable example is that successful models can be implemented in all
+ people (such as the Pythagorean theorem) as reliable anchor point.
+\end_layout
+
+\begin_layout Standard
+=======
+\end_layout
+
+\begin_layout Standard
+nature of user expertise / Time constraints:::: When we want to learn, or
+ more to the point, be taught by a machine, we want to have the most helpful
+ information.
+ pareto GP
+\end_layout
+
+\begin_layout Section
+What are method-related relevant factors being explored? ::: teaching an
+ expert / Learning from AI / Closing the explainability gap 
+\end_layout
+
+\begin_layout Standard
+Interpretable machine learning approaches usually rely on supplying very
+ general results and assume a standardised person as the demand side.
+ However, it is usually not 
+\begin_inset Quotes eld
+\end_inset
+
+everyone
+\begin_inset Quotes erd
+\end_inset
+
+ who must understand the solution, but only the expert.
+ The prior knowledge he brings with him are chunks that no longer need to
+ be learned.
+ The things which he does already understand are considered familiar.
+ 
+\end_layout
+
+\begin_layout Standard
+The proposed subdivision of chunks include (e.g.
+ form of cognitive chunks, number of cognitive chunks, compositionality,
+ monotonicity, uncertainty)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ People are mostly synchronized between essential subgoals like recognizing
+ colors and shapes, turning puzzle pieces to the colored side and knowing
+ about the picture on the box as reference point.
+ A popular tip for beginners is therefore that one should start with the
+ edge of the puzzle as pieces can be matched early to a frame.
+\end_layout
+
+\begin_layout Plain Layout
+A RL agent can already fail at all the subgoals very badly.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The explainability gap represents the learning effort one has to make from
+ one's previous knowledge to solve a black box.
+ For optimal interpretability of policies, they should be as close as possible
+ to the expert policy while having the performance of the blackbox.
+ To close this gap between the expert's approach and a black box, which
+ is better, it would therefore be optimal to show the expert what he would
+ have to change in his code to become more like the black box.
 \end_layout
 
 \begin_layout Standard
@@ -1454,16 +1458,37 @@ status open
 
 \begin_layout Plain Layout
 \align center
-\begin_inset Graphics
-	filename img/inkscape/GP-mutations.pdf
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+def
+\backslash
+svgwidth{
+\backslash
+textwidth}
+\backslash
+import{img/inkscape}{explainability_gap2.pdf_tex}
+\end_layout
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Visualisation of the crossover evolution exchanges branches between trees.
+An insurmountable trench as a metaphor for the explainability gap - the
+ experts are at the top of the pyramid of humanly explainable approaches.
+ To overcome the trench to neuropolicy a flat and close place should be
+ used.
+ To explain a black box it makes sense to build on knowledge that can already
+ be explained.
 \end_layout
 
 \end_inset
@@ -1474,26 +1499,121 @@ Visualisation of the crossover evolution exchanges branches between trees.
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsection
-Fitness Function: Offline Symbolic Regression
 \end_layout
 
 \begin_layout Standard
-Learning on a real world system (online training) is often prohibited in
- safety critical domains, as misconduct can lead to great damage.
- Offline learning on a surrogate model (e.g.
- on a data set) is an alternative which is fast and very cost efficient,
- but also less meaningful.
+[IMAGE: The fitness landscape illustrated, where the peak of a mountain
+ must be searched, but the base camp (a.k.a.
+ the expert) is already clear]
+\end_layout
+
+\begin_layout Section
+=== Measuring interpretability?
+\end_layout
+
+\begin_layout Standard
+xxx How explainable something is is best described by the effort a person
+ needs to understand a model.
  
 \end_layout
 
 \begin_layout Standard
-We will evaluate our approach offline on transition sample, which will be
- subject to a symbolic regression.
- A symbolic regression is a common and important use case of GP for this
- approach, which is used to calculate how well a formula can explain data.
+There are numerous complexity taxonomies already in use, including
+\end_layout
+
+\begin_layout Itemize
+dimensionality mathematical of the room (curse of dimensionality)
+\end_layout
+
+\begin_layout Itemize
+amount of free parameters (neural networks)
+\end_layout
+
+\begin_layout Itemize
+computational runtime complexity (floating point operations per second,
+ Bachmann–Landau notation, ...)
+\end_layout
+
+\begin_layout Itemize
+computation tree related (amount of nodes, weighted nodes, branching factor,
+ ...)
+\end_layout
+
+\begin_layout Itemize
+human-specific (chunks of knowledge, plausibility in context, personalized
+ weighting ...)
+\end_layout
+
+\begin_layout Standard
+The many subdivision possibilities cannot be summarised in a simple and
+ contradiction-free paradigm.
+ In GP, therefore, no further distinction is usually made between interpretabili
+ty and the (weighted) number of nodes.
+ 
+\end_layout
+
+\begin_layout Chapter
+Applied 2.0
+\end_layout
+
+\begin_layout Section
+x Related Work
+\end_layout
+
+\begin_layout Standard
+Despite much interest, only little work is done that cover the problems
+ of finding interpretable policies for stochastic benchmarks in the industry.
+ 
+\end_layout
+
+\begin_layout Standard
+In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
+
+\end_inset
+
+ it is shown, how interpretable GP policies can be created even for highly
+ complex industrial applications.
+\end_layout
+
+\begin_layout Standard
+In 
+\begin_inset CommandInset citation
+LatexCommand cite
+after "p. 125"
+key "daniel_hein_doktorarbeit"
+literal "true"
+
+\end_inset
+
+, Hein et al.
+ trained GP candidates for several complex benchmarks both on the real system
+ dynamics and on transition samples of a neuropolicy, where the offline
+ training was almost always worse, sometimes even significantly.
+ 
+\end_layout
+
+\begin_layout Standard
+Die Verwendung von Vertrautheit ist aber nicht 
+\end_layout
+
+\begin_layout Section
+x (Symbolic) Regression
+\begin_inset CommandInset label
+LatexCommand label
+name "Symbolic-Regression"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We will evaluate our approach offline on transition samples, which will
+ be subject to a symbolic regression.
  
 \end_layout
 
@@ -1556,6 +1676,803 @@ Mean average error (MAE) and Mean squared error (MSE).
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Genetic Programming 
+\begin_inset CommandInset label
+LatexCommand label
+name "gp_Genetic-Programming"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Genetic programming (GP) is an evolutionary algorithm that can automatically
+ create computer programs.
+ It has become a well known approach for creating interpretable system controlin
+g policies since it was first introduced by Koza.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Koza_GP_patent_1990"
+literal "false"
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+It requires two essential things, one is the representation of a program
+ as sequence of genes which allow for evolution strategies to be applied,
+ the other one is a fitness function which rate candidates for the selection
+ process.
+\end_layout
+
+\begin_layout Paragraph
+Representation as genome / Mutation Concepts 
+\end_layout
+
+\begin_layout Standard
+The genetic encoding is mostly implemented as programming tree with the
+ inner nodes being operators and the outer nodes either observations or
+ constants.
+ Regarding the concept of closure, which refers to the requirement that
+ trees must always represent an interpretable expressions, type complications
+ between boolean and numeric values must be adressed.
+ The preferred Strongly Typed Genetic Programming (STGP), requires an explicit
+ type conversion between number and truth values.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Operators for explicit conversion are, for example, comparison operators
+ or if statements
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Strongly_typed_GP"
+literal "true"
+
+\end_inset
+
+ Even though this is very implementation-heavy, the generated formulas seem
+ to be much more practicable than automatic conversions.
+ Evaluation safety poses a particular problem, as even type-correct expressions
+ can be mathematically invalid.
+ In the case of frequently occurring functions, the definition gaps for
+ the very common division-function (divide by zero) returns the dummy value
+ $1$.
+ To avoid changing the essence of other operators too much, a tree can also
+ simply be discarded in the case of rarely occurring errors.
+ 
+\end_layout
+
+\begin_layout Subsection
+Evolving a population
+\end_layout
+
+\begin_layout Standard
+The evolution of a population is a metaheuristic optimization, which means
+ that improvements occur stochastically.
+ Unter der Annahme, dass das beste Programm die Kobination der besten Gene
+ ist die Optimierung des Genpool von entscheidender Bedeutung.
+ Durch eine Selektion und Reproduktion der besten Kandidaten für die nächste
+ Generation vermehren sich gute Gene, durch Mutation und Rekombination soll
+ die Selektion noch verbessert werden.
+ Whatsoever, the evolutions rely on randomness and do not converge to an
+ optimum.
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+As for the selection process, each candidate is chosen separately through
+ tournament selection, where the fittest of (3-7) random candidates wins.
+ This allows trees to survive in a population that have not yet been optimised
+ but may carry important genes in the future.
+ The most important evolutions can be seen in 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:gp-Evolutionary-concepts"
+
+\end_inset
+
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+.
+\end_layout
+
+\begin_layout Standard
+Nevertheless, the composition of a population is very crucial, and the balance
+ has to be struck between reproduction of genes through selection, which
+ is important to maintain a functioning gene pool, and random mutation,
+ which provides genetic diversity.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[H]   
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+SetAlgoLined     
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+KwData{Population size N}    
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+KwData{Generation maximum G}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+KwData{Population pop
+\backslash
+_old, pop
+\backslash
+_new}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+While{Generation < G}   
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+        
+\backslash
+While{evolve ratios}
+\end_layout
+
+\begin_layout Plain Layout
+
+        {
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\backslash
+nl tree $
+\backslash
+assign$ 
+\backslash
+FuncCall{tournamentSelection}{size$=3$}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\backslash
+SetKwProg{myalg}{reproduce}{}{}
+\end_layout
+
+\begin_layout Plain Layout
+
+			
+\backslash
+myalg{
+\backslash
+algo{}}{
+\end_layout
+
+\begin_layout Plain Layout
+
+            	
+\backslash
+Comment{Optional: Branch simplification/unification}
+\end_layout
+
+\begin_layout Plain Layout
+
+                
+\backslash
+nl pop
+\backslash
+_new.append(tree)
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+          
+\backslash
+SetKwProg{myalg}{mutate}{}{}
+\end_layout
+
+\begin_layout Plain Layout
+
+          
+\backslash
+myalg{
+\backslash
+algo{}}{
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl node $
+\backslash
+assign$ tree.
+\backslash
+FuncCall{randomNode}{}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl insert $
+\backslash
+assign$ prepare random mutation 
+\backslash
+{point, branch, Gaussian
+\backslash
+}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl tree.node $
+\backslash
+assign$ insert
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl pop
+\backslash
+_new.append(tree)
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+                     
+\backslash
+SetKwProg{myalg}{crossover}{}{}
+\end_layout
+
+\begin_layout Plain Layout
+
+          
+\backslash
+myalg{
+\backslash
+algo{}}{
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl tree
+\backslash
+_partner $
+\backslash
+assign$ 
+\backslash
+FuncCall{tournamentSelection}{size$=3$}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl branch, branch
+\backslash
+_partner $
+\backslash
+assign$ choose type-matching 
+\backslash
+FuncCall{randomNode}{}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl switch branches between tree and tree
+\backslash
+_partner
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl pop
+\backslash
+_new.append(tree, tree
+\backslash
+_partner)
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+                     
+\backslash
+SetKwProg{myalg}{olympReproduction}{}{}
+\end_layout
+
+\begin_layout Plain Layout
+
+          
+\backslash
+myalg{
+\backslash
+algo{}}{
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl tree $
+\backslash
+assign$ Paretofront.
+\backslash
+FuncCall{randomTree}{}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+            
+\backslash
+nl pop
+\backslash
+_new.append(tree)
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+          }
+\end_layout
+
+\begin_layout Plain Layout
+
+      }
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\backslash
+While{size(pop
+\backslash
+_new) < N}
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        tree $
+\backslash
+assign$ 
+\backslash
+FuncCall{tournamentSelection}{size$=3$}
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+        pop
+\backslash
+_new.append(tree)
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+    evaluate pop
+\backslash
+_new
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+    update Paretofront
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+	pop
+\backslash
+_old $
+\backslash
+assign$ pop
+\backslash
+_new, delete pop
+\backslash
+_new
+\backslash
+;
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{GP evolution procedure xxx}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+label{alg:gp-evolutionary-main}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="left" valignment="top" width="28mm">
+<column alignment="left" valignment="top" width="10cm">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Evolution
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\begin_layout Plain Layout
+(10%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+The candidate enters the next generation unchanged.
+\end_layout
+
+\begin_layout Plain Layout
+Good genes replicate and can be improved in further generations withoug
+ dying out.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\begin_layout Plain Layout
+(25%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+A random node in a tree is chosen and replaced with
+\end_layout
+
+\begin_layout Itemize
+(point): A matching substitute node
+\end_layout
+
+\begin_layout Itemize
+(branch): A randomly built branch (of arbitraty size)
+\end_layout
+
+\begin_layout Itemize
+(Gaussian): Random terminal floating-point adjustments
+\end_layout
+
+\begin_layout Plain Layout
+Relatively small mutations should further improve genes.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Crossover
+\end_layout
+
+\begin_layout Plain Layout
+(35%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Two parent trees exchange two random branches, creating two child trees.
+\end_layout
+
+\begin_layout Plain Layout
+Unlike mutation, crossbreeding allows the best components of two parents
+ to cross.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random trees
+\end_layout
+
+\begin_layout Plain Layout
+(30%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Trees are randomly generated to replenish the population.
+\end_layout
+
+\begin_layout Plain Layout
+This constant stream of new contestants increases genetic diversity.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Evolutionary aspects of GP in an overview.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:gp-Evolutionary-concepts"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/GP-mutations.pdf
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Visualisation of the crossover evolution exchanges branches between trees.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Offline Fitness Function: Symbolic Regression xxx
+\end_layout
+
+\begin_layout Standard
+A symbolic regression is a common and important use case of GP for this
+ approach, which is used to calculate how well a formula can explain data.
+ 
 \end_layout
 
 \begin_layout Paragraph
@@ -1890,349 +2807,6 @@ literal "true"
 
 \end_layout
 
-\begin_layout Subsection
-Anomalies with node composition related complexity measures
-\end_layout
-
-\begin_layout Standard
-The number of nodes poses some problems as a paradigm, even after weighting.
-\end_layout
-
-\begin_layout Standard
-An important distinction has to be made between the inner and outer nodes
- of a tree.
- The inner nodes, which contain the operators, essentially characterise
- a programming tree by representing the computation that is performed., since
- the exact choice of leaf nodes are the logical prerequisite for its fitness
- and can therefore only be used in the appropriate places.
- 
-\end_layout
-
-\begin_layout Paragraph
-Operators 
-\end_layout
-
-\begin_layout Standard
-Operators represent the heuristic of a tree and have the most debatable
- implications for explainability.
- Not only is the total set of operators used of interest, explicability
- depends above all on the structure and type of nesting.
- Examples of this are:
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{itemize}
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-item Operators with a high branching factor results in more leaf nodes and
- also more complex models.
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-item The amplification regarding the output of an operator can propagated
- disproportionately through a tree.
- E.g.
- the power function depends strongly on the exponent ($x+y$, $x
-\backslash
-cdot y$, $x^y$) 
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-item Specific requirements regarding the input of an operator.
- E.g.
- the exponent of a power $x^y$ should be a natural number.
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-item Recurring patterns in a tree can be recognised more easily
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{itemize}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Separator plain
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subparagraph
-Division into Chunks of Knowledge with the if-conditional
-\end_layout
-
-\begin_layout Standard
-The if-conditional exemplifies the contradiction between explainability
- measures and interpretability measures.
- Although the if-operator is the most complex function with 3 input parameters,
- it creates more structure than all other operators because its child trees
- are not combined but can be considered separately.
- Nevertheless, the subtrees must have a relation to each other in order
- to harmonize together.
- This combination creates encapsulated programs in a clear way that humans
- can understand more easily.
- It is always to be welcomed when these are contained in programs, but this
- should not be artificially forced, as they are not useful at every point.
- 
-\end_layout
-
-\begin_layout Standard
-Also, handling cases often are defined with the same 
-\end_layout
-
-\begin_layout Standard
-xxx The if statement is already penalized by its high branching factor,
- which should not be further supported by a higher weighting.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]} 
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{$+$}[abs[pos]][{$
-\backslash
-cdot$}[{$174.162$}][{vel}]]]} 
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{$x^y$}[vel][{$-5.0$}]]} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-A very simple mathematical formula can be much harder to understand than
- a comprehensive strategy that is intuitive.
- The solutions achieve almost identical results.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Leaf nodes
-\end_layout
-
-\begin_layout Standard
-The number of leaf nodes follows explicitly from the operator tree and can
- be the branching factor, i.e.
- the number of values to be allocated.
- A distinction should be made between observations and numbers.
-\end_layout
-
-\begin_layout Subparagraph
-Numbers
-\end_layout
-
-\begin_layout Standard
-Numbers are constant values which are rather irrelevant for understanding
- a formula.
- Even though they are essential for a program to function and optimizing
- their exact values is subject to an important part of the genetic evolution,
- besides some remarkable constants 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-(for example $
-\backslash
-pi$)
-\end_layout
-
-\end_inset
-
- or the general factor 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-($0.1, 10, 10.000$)
-\end_layout
-
-\end_inset
-
-, they have no outstanding characteristic.
- 
-\end_layout
-
-\begin_layout Subparagraph
-Observations 
-\begin_inset CommandInset label
-LatexCommand label
-name "gp-Observations-role"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The observations used play a decisive role, but above all the set of unique
- operators is crucial.
- They are the nodes around which operators and constants are to be arranged
- in such a way that they map their values as well as possible to an output,
- which is, after all, the sole task of the GP process.
- Since not all available observations have to be used automatically, they
- mainly also represent the dimensionality of the input vector of the model
- that the solution tree represents.
- Dimensionality plays a crucial role for the mathematical space in which
- solutions are sought.
- High dimensional problems suffer from a number of problems also known as
- the 
-\begin_inset Quotes eld
-\end_inset
-
-curse of dimensionality
-\begin_inset Quotes erd
-\end_inset
-
- and are therefore also more difficult to understand.
- For the developer, they represent in particular the starting point of his
- considerations, which is contrary to the genetic approach with the tree
- root as the main anchor point.
-\end_layout
-
-\begin_layout Paragraph
-Fallacy factors
-\end_layout
-
-\begin_layout Itemize
-The node depth should not be considered evaluating a node.
- Die Bedeutung eines Knotens ist meist nicht anhand seiner Position erkennbar,
- Kommutativität sowie Assoziativität vieler Rechenarten ist nur ein Beispiel.
-\end_layout
-
-\begin_layout Itemize
-Die maximale Baumtiefe wird häufig als Grenze für Bäume gewählt
-\end_layout
-
-\begin_layout Itemize
-Die Arität von Operatoren muss nicht zusätzlich gewichtet werden, da durch
- den höheren Branchingfaktor automatisch die Komplexität steigt.
-\end_layout
-
-\begin_layout Section
-Related Work
-\end_layout
-
-\begin_layout Standard
-Despite much interest, only little work is done that cover the problems
- of finding interpretable policies for stochastic benchmarks in the industry.
- 
-\end_layout
-
-\begin_layout Standard
-In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
-
-\end_inset
-
- it is shown, how interpretable GP policies can be created even for highly
- complex industrial applications.
-\end_layout
-
-\begin_layout Standard
-In 
-\begin_inset CommandInset citation
-LatexCommand cite
-after "p. 125"
-key "daniel_hein_doktorarbeit"
-literal "true"
-
-\end_inset
-
-, Hein et al.
- trained GP candidates for several complex benchmarks both on the real system
- dynamics and on transition samples of a neuropolicy, where the offline
- training was almost always worse, sometimes even significantly.
- 
-\end_layout
-
-\begin_layout Standard
-Die Verwendung von Vertrautheit ist aber nicht 
-\end_layout
-
 \begin_layout Chapter
 Approach / Familiarity Genetic Programming
 \end_layout
@@ -2357,89 +2931,15 @@ name "img:plausibility-concept"
 
 \end_layout
 
-\begin_layout Paragraph
-Closing the explainability gap
-\end_layout
-
-\begin_layout Standard
-The explainability gap represents the learning effort one has to make from
- one's previous knowledge to solve a black box.
- For optimal interpretability of policies, they should be as close as possible
- to the expert policy while having the performance of the blackbox.
- To close this gap between the expert's approach and a black box, which
- is better, it would therefore be optimal to show the expert what he would
- have to change in his code to become more like the black box.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-def
-\backslash
-svgwidth{
-\backslash
-textwidth}
-\backslash
-import{img/inkscape}{explainability_gap2.pdf_tex}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-An insurmountable trench as a metaphor for the explainability gap - the
- experts are at the top of the pyramid of humanly explainable approaches.
- To overcome the trench to neuropolicy a flat and close place should be
- used.
- To explain a black box it makes sense to build on knowledge that can already
- be explained.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Idea: Fitness landscape?
-\end_layout
-
-\begin_layout Standard
-[IMAGE: The fitness landscape illustrated, where the peak of a mountain
- must be searched, but the base camp (a.k.a.
- the expert) is already clear]
-\end_layout
-
 \begin_layout Section
-Familiarity Measurement with the Tree Edit Distance
+Familiarity Measurement with the Edit Distance
 \end_layout
 
 \begin_layout Standard
 In order to generate solution candidates that are as familiar as possible,
  we need to define a distance function on a suitable unit of measurement
   which represents the scope of the change.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -2694,7 +3194,7 @@ reference "gp_Genetic-Programming"
 status open
 
 \begin_layout Plain Layout
-Technische Umsetzung: 
+Technische Umsetzung:
 \end_layout
 
 \begin_layout Plain Layout
@@ -12038,6 +12538,298 @@ name "TED-improvements"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Subsection
+Anomalies with node composition related complexity measures
+\end_layout
+
+\begin_layout Standard
+The number of nodes poses some problems as a paradigm, even after weighting.
+\end_layout
+
+\begin_layout Standard
+An important distinction has to be made between the inner and outer nodes
+ of a tree.
+ The inner nodes, which contain the operators, essentially characterise
+ a programming tree by representing the computation that is performed., since
+ the exact choice of leaf nodes are the logical prerequisite for its fitness
+ and can therefore only be used in the appropriate places.
+ 
+\end_layout
+
+\begin_layout Paragraph
+Operators 
+\end_layout
+
+\begin_layout Standard
+Operators represent the heuristic of a tree and have the most debatable
+ implications for explainability.
+ Not only is the total set of operators used of interest, explicability
+ depends above all on the structure and type of nesting.
+ Examples of this are:
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{itemize}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item Operators with a high branching factor results in more leaf nodes and
+ also more complex models.
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item The amplification regarding the output of an operator can propagated
+ disproportionately through a tree.
+ E.g.
+ the power function depends strongly on the exponent ($x+y$, $x
+\backslash
+cdot y$, $x^y$) 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item Specific requirements regarding the input of an operator.
+ E.g.
+ the exponent of a power $x^y$ should be a natural number.
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+item Recurring patterns in a tree can be recognised more easily
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{itemize}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subparagraph
+Division into Chunks of Knowledge with the if-conditional
+\end_layout
+
+\begin_layout Standard
+The if-conditional exemplifies the contradiction between explainability
+ measures and interpretability measures.
+ Although the if-operator is the most complex function with 3 input parameters,
+ it creates more structure than all other operators because its child trees
+ are not combined but can be considered separately.
+ Nevertheless, the subtrees must have a relation to each other in order
+ to harmonize together.
+ This combination creates encapsulated programs in a clear way that humans
+ can understand more easily.
+ It is always to be welcomed when these are contained in programs, but this
+ should not be artificially forced, as they are not useful at every point.
+ 
+\end_layout
+
+\begin_layout Standard
+Also, handling cases often are defined with the same 
+\end_layout
+
+\begin_layout Standard
+xxx The if statement is already penalized by its high branching factor,
+ which should not be further supported by a higher weighting.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[abs[pos]][{$
+\backslash
+cdot$}[{$174.162$}][{vel}]]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$x^y$}[vel][{$-5.0$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A very simple mathematical formula can be much harder to understand than
+ a comprehensive strategy that is intuitive.
+ The solutions achieve almost identical results.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Leaf nodes
+\end_layout
+
+\begin_layout Standard
+The number of leaf nodes follows explicitly from the operator tree and can
+ be the branching factor, i.e.
+ the number of values to be allocated.
+ A distinction should be made between observations and numbers.
+\end_layout
+
+\begin_layout Subparagraph
+Numbers
+\end_layout
+
+\begin_layout Standard
+Numbers are constant values which are rather irrelevant for understanding
+ a formula.
+ Even though they are essential for a program to function and optimizing
+ their exact values is subject to an important part of the genetic evolution,
+ besides some remarkable constants 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+(for example $
+\backslash
+pi$)
+\end_layout
+
+\end_inset
+
+ or the general factor 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+($0.1, 10, 10.000$)
+\end_layout
+
+\end_inset
+
+, they have no outstanding characteristic.
+ 
+\end_layout
+
+\begin_layout Subparagraph
+Observations 
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Observations-role"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The observations used play a decisive role, but above all the set of unique
+ operators is crucial.
+ They are the nodes around which operators and constants are to be arranged
+ in such a way that they map their values as well as possible to an output,
+ which is, after all, the sole task of the GP process.
+ Since not all available observations have to be used automatically, they
+ mainly also represent the dimensionality of the input vector of the model
+ that the solution tree represents.
+ Dimensionality plays a crucial role for the mathematical space in which
+ solutions are sought.
+ High dimensional problems suffer from a number of problems also known as
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+curse of dimensionality
+\begin_inset Quotes erd
+\end_inset
+
+ and are therefore also more difficult to understand.
+ For the developer, they represent in particular the starting point of his
+ considerations, which is contrary to the genetic approach with the tree
+ root as the main anchor point.
+\end_layout
+
+\begin_layout Paragraph
+Fallacy factors
+\end_layout
+
+\begin_layout Itemize
+The node depth should not be considered evaluating a node.
+ Die Bedeutung eines Knotens ist meist nicht anhand seiner Position erkennbar,
+ Kommutativität sowie Assoziativität vieler Rechenarten ist nur ein Beispiel.
+\end_layout
+
+\begin_layout Itemize
+Die maximale Baumtiefe wird häufig als Grenze für Bäume gewählt
+\end_layout
+
+\begin_layout Itemize
+Die Arität von Operatoren muss nicht zusätzlich gewichtet werden, da durch
+ den höheren Branchingfaktor automatisch die Komplexität steigt.
 \end_layout
 
 \begin_layout Paragraph

@@ -23,12 +23,12 @@ linstyle/.style = {semithick, samples=1001, blue}
 % goal-agent
 %\addplot[mark=*, mark size=2, fill=green] coordinates{(0, 0)};
 % known-agent
-\addplot[mark=*, mark size=2,  fill=orange] coordinates{(-2, 0)};
-\addplot [semithick, orange, dashed] coordinates{(-2, 0)(-2, 20 )};
-\addplot [semithick, orange, dashed] coordinates{(2, 0)(2, 20 )};
+%\addplot[mark=*, mark size=2,  fill=orange] coordinates{(-2, 0)};
+%\addplot [semithick, orange, dashed] coordinates{(-2, 0)(-2, 20 )};
+%\addplot [semithick, orange, dashed] coordinates{(2, 0)(2, 20 )};
 
 %%%%% 01_regular
-%\addplot [domain=-5.0:5.0, linstyle] {abs(x)};
+\addplot [domain=-5.0:5.0, linstyle] {abs(x)};
 
 %%%%% 02_boarders
 %\addplot [domain=-5.0:5.0, linstyle] {min(abs(x), 2)};
@@ -57,10 +57,10 @@ linstyle/.style = {semithick, samples=1001, blue}
 
 %%%%% 06-2_fourAreas_og
 %%%%%%%%% yminmax set to "10"-version
-\addplot [domain=-5:-2, linstyle] {abs(3*x)-4};
-\addplot [domain=-2:0, linstyle] {abs(x};
-\addplot [domain=0:2, linstyle] {abs(x)*2};
-\addplot [domain=2:5, linstyle] {abs(3*x)-2};
+%\addplot [domain=-5:-2, linstyle] {abs(3*x)-4};
+%\addplot [domain=-2:0, linstyle] {abs(x};
+%\addplot [domain=0:2, linstyle] {abs(x)*2};
+%\addplot [domain=2:5, linstyle] {abs(3*x)-2};
 
 %%%%% 07_onlyGoodExploration
 %\addplot [linstyle] coordinates{(-2, 10)(-2, 2)(0, 0)(2, 2)(10, 10)};

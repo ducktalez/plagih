@@ -173,12 +173,13 @@ def thesisplot_tempdiff():
     # sfeh xxx make this more beautiful
     with plt.rc_context(rc=pyplot_rc_tex):
         fig, ax = plt.subplots()
-        ax.plot(xx1, pp1, linestyle='dotted', marker='.')
-        ax.plot(xx2, pp2, linestyle='dotted', marker='.')
-        ax.plot(xx3, pp3, linestyle='dotted', marker='.')
+        ax.plot(xx1, pp1, linestyle='dotted', marker='.', label='5 values')
+        ax.plot(xx2, pp2, linestyle='dotted', marker='.', label='10 values')
+        ax.plot(xx3, pp3, linestyle='dotted', marker='.', label='20 values')
+        ax.legend(loc='upper right')
         # ax.plot(xx4, pp4, linestyle='dotted', marker='.')
         # ax.plot(xx5, pp5, linestyle='dotted', marker='.')
-        ax.set(xlabel='past timesteps', ylabel='probability')
+        ax.set(xlabel='age', ylabel='probability')
         savepath = path_make_dir(Path.cwd() / 'MA_lyx/img/pyplots_custom/distribution_obs_time.pdf')
         fig.savefig(savepath)
         plt.close('all')
@@ -245,9 +246,9 @@ def compare_savehuman_vs_sarsa():
 
 if __name__ == "__main__":
     print(f'Making all the plots for the thesis (so they are python-style)')
-    compare_savehuman_vs_sarsa()
+    # compare_savehuman_vs_sarsa()
     # thesis_decision_plots_fullspace()
-    # thesisplot_tempdiff()
+    thesisplot_tempdiff()
     # thesis_plot_ib_comparisson()
     # # thesis_plot_mc_comparisson()
     # print('SFEH COMMENTED! asd')

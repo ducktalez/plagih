@@ -91,7 +91,24 @@
 \begin_body
 
 \begin_layout Standard
+How is the problem formulation incomplete?
+\end_layout
 
+\begin_layout Standard
+At what level is the evaluation being performed? (application, general user
+ study, proxy)
+\end_layout
+
+\begin_layout Standard
+What are task-related relevant factors? (e.g.
+ global vs.
+ local, severity of incompleteness, level of user expertise, time constraints)
+\end_layout
+
+\begin_layout Standard
+What are method-related relevant factors being explored? (e.g.
+ form of cognitive chunks, number of cognitive chunks, compositionality,
+ monotonicity, uncertainty)
 \end_layout
 
 \end_body

@@ -101,6 +101,123 @@
 \begin_body
 
 \begin_layout Chapter
+TODO
+\end_layout
+
+\begin_layout Section
+todos
+\end_layout
+
+\begin_layout Itemize
+korrekt zitieren
+\end_layout
+
+\begin_layout Itemize
+Definitionsverzeichnis? List of abbreviations?
+\end_layout
+
+\begin_layout Itemize
+Diagramme besser erkennbar machen
+\end_layout
+
+\begin_layout Itemize
+Gefundene GP-Kandidaten gut darstellen aber alle Lösungen des Laufes im
+ Anhang Erwähnen
+\end_layout
+
+\begin_layout Itemize
+Pseudocode erneuern
+\end_layout
+
+\begin_layout Itemize
+Danksagung
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+,samenode
+\begin_inset Quotes erd
+\end_inset
+
+ option bei Bäumen
+\end_layout
+
+\begin_layout Itemize
+origin als Wort?
+\end_layout
+
+\begin_layout Itemize
+patent als Referenz!!
+\end_layout
+
+\begin_layout Itemize
+complexity -> simplicity!
+\end_layout
+
+\begin_layout Itemize
+slutm??
+\end_layout
+
+\begin_layout Itemize
+[IMAGE: The fitness landscape illustrated, where the peak of a mountain
+ must be searched, but the base camp (a.k.a.
+ the expert) is already clear]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Großer Dank richtet sich vor allem an meine Betreuer bei Siemens, Michel
+ Tokic, Steffen Udluft und Daniel Hein, ohne deren großartige Unterstützung
+ über den gesamten Zeitraum diese Arbeit nicht möglich gewesen wäre.
+ Auch möchte ich [xx Danksagung Volkmar Sterzing] Weiterer Dank gehört auch
+ Andreas Lammers, der mir viele Denkanstöße zu dieser Arbeit geben konnte.
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+abbreviations:
+\end_layout
+
+\begin_layout Plain Layout
+AI Artificial Intelligence
+\end_layout
+
+\begin_layout Plain Layout
+ML Machine Learning
+\end_layout
+
+\begin_layout Plain Layout
+RL Reinforcement Learning
+\end_layout
+
+\begin_layout Plain Layout
+GP Genetic Programming
+\end_layout
+
+\begin_layout Plain Layout
+NN Neural Network
+\end_layout
+
+\begin_layout Plain Layout
+TED Tree Edit Distance
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Chapter
 Future work?
 \end_layout
 
@@ -180,335 +297,6 @@ Although such a procedure seems to be intuitive, in GP optimisation it leads
  to the fact that correctly found results are only very vaguely met and
  instead only the error is optimised for the wrong decisions.
  The regression error thus loses its function as a distance measure.
-\end_layout
-
-\begin_layout Section
-Phenotypic Analysis with Regression on the Origin Policy
-\end_layout
-
-\begin_layout Standard
-As a measure of complexity in the evolutionary process, the TED controls
- the extent of changes to the programme, the genotypes, but can also have
- a corresponding effect on the phenotype.
- Because both the (see results), because the structure must often be based
- on the already functioning structures while improving the regression error.
- If one wants to analyse the deviation in phenotype, there is the option
- to add the regression error to the expert policy as a factor.
-\end_layout
-
-\begin_layout Itemize
-Changes should be made primarily in the direction of the target solution,
- otherwise they are obviously uncertain.
- 
-\end_layout
-
-\begin_layout Itemize
-Correct decisions of the starting solution should not be changed.
- Therefore, changes should remain within the corridor around the target
- solution, with the distance to the start solution.
- Punishment should be made in correlation to the size of the corridor.
-\end_layout
-
-\begin_layout Itemize
-For MDPs: The area where the difference between the start and target solution
- increases can be crucial, as the effect often only becomes apparent later.
- In terms of regression, however, this area is not particularly evaluated.
- In chess, for example, this first deviation would be the indicator for
- a blunder, which could not be corroded even later.
-\end_layout
-
-\begin_layout Standard
-The goal of the combined regression error is still to minimise the distance
- to the target solution - only those solutions that require less behavioural
- change should be preferred.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Let's say we cook eggs for 10 minutes and a target cooking professional
- for 5 minutes.
- When considering whether we should cook our eggs for 3 minutes and 7, 7
- minutes would be preferable as an interim solution, because the extent
- of the changes to our already known cooking behaviour is less.
-\end_layout
-
-\end_inset
-
- In the evolutionary found candidates not only a genetic difference can
- be determined with the TED, it is also possible to calculate the phenotypic
- difference as regression error.
- This means that not only the difference to the target solution plays a
- role, but also how far from the starting solution it was necessary to deviate.
- For security reasons, it may be of great interest that the changes are
- seen as an approximation from the known to the black box, without unnecessarily
- deviating from the known or overshooting the mark.
- One possibility of implementation is a third dimension on the Pareto front.
- Another way of combining classical regression with relative regression
- to Origin is also shown and tested below.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/kernel_hill_4options.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Starting from the origin (orange) and a target solution (green) there are
- several path candidates.
- In classical regression, only the deviation from the target solution is
- evaluated; path (1.) and path (2.) would be equally good here.
- Path (1.) achieves this, however, with a much smaller change in behaviour,
- which should be preferred from a confidence perspective.
- Path (3.) is not only worse, it is even worse in this area than the known
- solution.
- Areas where the expert solution is already close to the target solution
- should not be changed.
- Path (4.) deviates here at a point which was already well solved and therefore
- makes no sense.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:relative_kernel_path"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The following regression formula was therefore tested, which evaluates the
- resulting 4 areas differently and can be considered umdependent on the
- normal regression error.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-\sum|(y-\mathring{y})|-(\mathring{y}-\hat{y})
-\]
-
-\end_inset
-
- [xxx Frage: lambda? y antihut oder y kreis?]
-\end_layout
-
-\begin_layout Standard
-In our case it was multiplied by a factor of 
-\begin_inset Formula $\lambda=0.1$
-\end_inset
-
- and added to the normal regression error.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename tikz/regression_cost/06-2_fourAreas_og.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Weighting of the deviation as a combination of the normal regression error
- with the phenotypic error.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "48col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/regression_cost/08_noExploration.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The solution must be within the improvement interval.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-hfill
-\end_layout
-
-\end_inset
-
-
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "48col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset Graphics
-	filename tikz/regression_cost/07_onlyGoodExploration.pdf
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Obvious deteriorations are excluded.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Extreme versions of a combined regression kernel.
- As the most secure version, areas could be assigned dummy values that punish
- a change beyond a limit so severely that it is virtually impossible for
- it to occur.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Runs with 
-\begin_inset Formula $\lambda=1$
-\end_inset
-
- did not find any pareto candidates whatsoever.
- With a multiplication factor of 0.1 candidates were found, but no statistically
- significant properties could be attested to them.
- Since in other experiments on regression the mixing of approaches always
- turned out to be too much interference with the error measure as a source
- of error, classifying further experiments on a third Pareto dimension looks
- promising (both regression errors correlate with each other).
-\end_layout
-
-\begin_layout Standard
-Mixing different paradigms is rarely a good idea, as this experiment has
- shown.
- For future implementations, it is recommended to implement a separate Paretofro
-nt.
 \end_layout
 
 \begin_layout Section
@@ -1075,93 +863,160 @@ Teile, die aus der Arbeit entfernt wurden, die aber eventuell doch nützlich
 \end_layout
 
 \begin_layout Section
-todos
-\end_layout
-
-\begin_layout Itemize
-korrekt zitieren
-\end_layout
-
-\begin_layout Itemize
-Definitionsverzeichnis? List of abbreviations?
-\end_layout
-
-\begin_layout Itemize
-Diagramme besser erkennbar machen
-\end_layout
-
-\begin_layout Itemize
-Gefundene GP-Kandidaten gut darstellen aber alle Lösungen des Laufes im
- Anhang Erwähnen
-\end_layout
-
-\begin_layout Itemize
-Pseudocode erneuern
-\end_layout
-
-\begin_layout Itemize
-Danksagung
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Quotes eld
-\end_inset
-
-,samenode
-\begin_inset Quotes erd
-\end_inset
-
- option bei Bäumen
-\end_layout
-
-\begin_layout Itemize
-origin als Wort?
+Interpretable Machine Learning
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
+, and an explanation as 
+\begin_inset Quotes eld
+\end_inset
+
+collection of features of interpretable domain that have contributed for
+ a given example to produce a decision
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Explanatory methods include using perturbation (e.g.
+ meaningful perturbations 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-perturbation"
+literal "true"
+
+\end_inset
+
+), learning a model locally around the prediction (e.g.
+ LIME 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI-LIME"
+literal "true"
+
+\end_inset
+
+), function analysis (e.g.
+ Taylor Expansion) or model structure analysis (e.g.
+ 
+\begin_inset ERT
 status open
 
 \begin_layout Plain Layout
-Großer Dank richtet sich vor allem an meine Betreuer bei Siemens, Michel
- Tokic, Steffen Udluft und Daniel Hein, ohne deren großartige Unterstützung
- über den gesamten Zeitraum diese Arbeit nicht möglich gewesen wäre.
- Auch möchte ich [xx Danksagung Volkmar Sterzing] Weiterer Dank gehört auch
- Andreas Lammers, der mir viele Denkanstöße zu dieser Arbeit geben konnte.
+
+
+\backslash
+emph{Layerwise Relevance Propagation}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_LRP_Frauenhofer"
+literal "true"
+
+\end_inset
+
+, see 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "LRP-Incorrect-classification-palmtrees"
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/extern/RLP_frauenhofer_palmes0.png
+	lyxscale 50
+	height 25mm
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename img/extern/RLP_frauenhofer_palmes1.png
+	lyxscale 50
+	height 25mm
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename img/extern/RLP_frauenhofer_palmes2.png
+	lyxscale 50
+	height 25mm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "LRP-Incorrect-classification-palmtrees"
+
+\end_inset
+
+ An image of palm trees is classified incorrectly as 
+\begin_inset Quotes eld
+\end_inset
+
+tripod
+\begin_inset Quotes erd
+\end_inset
+
+ by BVLC Reference CaffeNet and as 
+\begin_inset Quotes eld
+\end_inset
+
+spotlight
+\begin_inset Quotes erd
+\end_inset
+
+ by BVLC GoogLeNet.
+ xx
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+https://lrpserver.hhi.fraunhofer.de/
+\end_layout
+
+\end_inset
+
+ The structural explanatory method layerwise relevance propagation 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_LRP_Frauenhofer"
+literal "true"
+
+\end_inset
+
+.
+ The decisive pixels for a decision are highlighted, but can not give any
+ holistic information about the strategy that is used to recognize images.
 \end_layout
 
 \end_inset
 
 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-abbreviations:
-\end_layout
-
-\begin_layout Plain Layout
-AI Artificial Intelligence
-\end_layout
-
-\begin_layout Plain Layout
-ML Machine Learning
-\end_layout
-
-\begin_layout Plain Layout
-RL Reinforcement Learning
-\end_layout
-
-\begin_layout Plain Layout
-GP Genetic Programming
-\end_layout
-
-\begin_layout Plain Layout
-NN Neural Network
-\end_layout
-
-\begin_layout Plain Layout
-TED Tree Edit Distance
 \end_layout
 
 \end_inset
@@ -1466,6 +1321,60 @@ An XAI approach should in some way mimic human explanation and feedback
  mechanisms.
  Requirements for AI methods, presented on the basis of the desired goals.
  With our approach, we imagine we are programming ourselves a teacher.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+IB comparisson
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/IB/ib_reward_compared.pdf
+	height 50mm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:IB-results-compared"
+
+\end_inset
+
+ IB results in comparison.
+\end_layout
+
+\end_inset
+
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+sss
 \end_layout
 
 \end_inset
@@ -1847,22 +1756,6 @@ Visualisation of the relation between observations and selected actions
 
 \end_layout
 
-\begin_layout Paragraph
-Puzzle example
-\end_layout
-
-\begin_layout Standard
-Let's consider, for example, the game Puzzle as an NP-hard problem, where
- a whole picture has to be assembled from a pile of pieces.
- Most people know how to recognize colors, that you first have to turn puzzle
- pieces to the colored side and that you should use the picture on the box
- as a reference point.
- A popular tip for beginners is therefore that you should start with the
- edge of the puzzle.
- This is helpful, because the learning process in humans usually consists
- of the composition of many comprehensibly strung together steps.
-\end_layout
-
 \begin_layout Section
 Mountain car
 \end_layout
@@ -2127,7 +2020,7 @@ hfill
 
 \begin_layout Plain Layout
 The improvement of the Pareto candidates is comparatively safe if only the
- if statement can be changed.
+ if-condition can be changed.
 \end_layout
 
 \end_inset
@@ -2143,8 +2036,11 @@ The improvement of the Pareto candidates is comparatively safe if only the
 \begin_layout Standard
 The beginning is the same as in 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "run:MTC200_MSE_simple"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 

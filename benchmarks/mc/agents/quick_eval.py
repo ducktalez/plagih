@@ -376,8 +376,9 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
 
         ax2 = ax.twinx()
         ax2.set(ylim=(-95, -200), xlim=(0, 35))
-        ax2.step(x, y, linestyle='None', marker='x', label='real reward')
+        ax2.step(x, y, linestyle='None', marker='x', label='reward average')
         ax2.legend(loc='upper right')
+        ax2.set(ylabel='real reward')
 
         fig.savefig(dir_save / f'evaled_overview.pdf')
 

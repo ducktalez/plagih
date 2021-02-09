@@ -366,12 +366,7 @@ literal "true"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-have shown in xxx how a surrogate model (e.g.
- a data set) can be utilized for an offline learning process.
+.
 \end_layout
 
 \begin_layout Standard
@@ -543,7 +538,8 @@ the ability to explain or to present in understandable terms to humans
 \end_inset
 
 .
- In contrast to performance, interpretability has many manifestations.
+ In contrast to performance, interpretability has many manifestations and
+ is not easy to determine.
  A deeper analysis is proposed by Doshi-Velez and Kim in 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -552,20 +548,39 @@ literal "true"
 
 \end_inset
 
-, which will be subject to the following discussion on what domain experts
- demand for.
- 
+, who recommend to describe the relevant factors of interpretability including
+ the following considerations: 
 \end_layout
 
-\begin_layout Paragraph
-Interpretable policies
+\begin_layout Itemize
+How is the problem formulation incomplete?
+\end_layout
+
+\begin_layout Itemize
+At what level is the evaluation being performed? (application, general user
+ study, proxy)
+\end_layout
+
+\begin_layout Itemize
+What are task-related relevant factors? (e.g.
+ global vs.
+ local, severity of incompleteness, level of user expertise, time constraints)
+\end_layout
+
+\begin_layout Itemize
+What are method-related relevant factors being explored? (e.g.
+ form of cognitive chunks, number of cognitive chunks, compositionality,
+ monotonicity, uncertainty)
 \end_layout
 
 \begin_layout Standard
 RL problems are incomplete as they are not fully testable and can be solved
  in various ways.
- Interpretability must concern the whole strategy and requires holistically
- interpretable policies.
+ The general level of evaluation is not limited, as applications can also
+ be learned through proxy models.
+ Considering the task-related relevant factrors, we are particulary interestet
+ in global interpretability, as post-hoc explanations for a subset of decisions
+ can not explain complex strategies of an approach.
  As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -585,11 +600,9 @@ The best explanation of a simple model is the model itself; it perfectly
 
  To find a model that is its own best representation, candidate solutions
  are sought directly in an interpretability-constrained feasible region.
- The most interpretable representation of a model is arguably a (well-written)
- computer program.
- Programming languages or, in a larger context, touring complete languages,
- are the state of the art interface for explicit communication between machines
- and humans.
+ For RL policies, computer programs or, in a larger context, touring complete
+ languages are the interface for explicit communication between machines
+ and humans that will be used in this work.
  An evolutionary method of finding such policies is genetic programming,
  which will be further presented in 
 \begin_inset CommandInset ref
@@ -599,22 +612,31 @@ reference "gp_Genetic-Programming"
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
-Despite their simplicity, they may appear to the observer more like an arbitrary
- combination of operators, as the solution path often deviates strongly
+ We argue that simple and interpretable policies can oftem seem like arbitrary
+ combinations of operators, as the solution path often deviates strongly
  from the strategy that an expert would choose.
- 
+ Understanding those requires a lot of effort, which is not clearly measurable.
+ Doshi-Velez and Kim 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_doshivelez2017rigorous"
+literal "true"
+
+\end_inset
+
+ define a cognitive chunk as the basic unit of explanation.
+ Complexity measures for formulas in genetic programming only consider the
+ amount of mathematical components of a formula (number of chunks), and
+ the complexity of the components (form of cognitive chunks).
 \end_layout
 
-\begin_layout Section
+\begin_layout Paragraph
 Machine lecturing
 \end_layout
 
 \begin_layout Standard
-Most interpretable machine learning approaches usually rely on supplying
- very general results and for a standardized person demanding for explanations.
+Interpretable machine learning methods often rely on supplying general results
+ for a standardized person.
  However, it is usually not 
 \begin_inset Quotes eld
 \end_inset
@@ -634,31 +656,12 @@ noprefix "false"
 \end_inset
 
 ).
- By putting the focus on the expert, the nature of user expertise can be
- specifically considered.
- 
-\end_layout
-
-\begin_layout Standard
-Doshi-Velez and Kim 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_doshivelez2017rigorous"
-literal "true"
-
-\end_inset
-
- define a cognitive chunk as the basic unit of explanation, which are method-rel
-ated relevant factors.
- The form of cognitive chunks, number of cognitive chunks, compositionality,
- monotonicity and uncertainty are mentioned as further specification.
- We argue, that the prior knowledge of an expert are familiar chunks that
- no longer need to be learned.
- Similar to feedback from peers or teachers, the focus should be on novelties.
-\end_layout
-
-\begin_layout Standard
-The 
+ We argue, that the level of user expertise can be considered as starting
+ point.
+ This is similar to human feedback methods, which try to focus on novelties
+ rather than explaining every aspect as the pupil will otherwise loose attention.
+ We argue, that familiar chunks represent certain and trusted knowledge
+ and even provide better compositionality for further chunk attachments.
 \end_layout
 
 \begin_layout Standard
@@ -787,10 +790,6 @@ literal "true"
  training was almost always worse, sometimes even significantly.
 \end_layout
 
-\begin_layout Standard
-The use of familiar structures is not known.
-\end_layout
-
 \begin_layout Section
 Contribution
 \end_layout
@@ -827,9 +826,7 @@ Outline
 
 \begin_layout Standard
 The structure of this thesis is organized as follows.
- Chapter xx2 provides background information covering the most important
- aspects of interpretability in the context of reinforcement learning.
- Chapter 
+ xxxx 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Applied-methods"
@@ -839,7 +836,9 @@ noprefix "false"
 
 \end_inset
 
- introduces the concept of familiarity and discribes the implementation
+ provides background information covering the most important aspects of
+ interpretability in the context of reinforcement learning.
+ Chapter introduces the concept of familiarity and discribes the implementation
  in the form of the tree edit distance as second order optimization.
  Fixed nodes are further introduced as logical extension to some shortcomings
  of the edit distance.
@@ -2596,10 +2595,6 @@ name "chap:Familiar-Genetic-Programming"
 \end_layout
 
 \begin_layout Standard
-xxx instead: focus on the good
-\end_layout
-
-\begin_layout Standard
 In the following, the implementation of the approach to enhance genetic
  programming with familiarity is presented.
  As a reference for familiarity, domain expert program to solve xxx a problem
@@ -2621,27 +2616,6 @@ emph{Tree Edit Distance} (TED)
 , which calculates the number of differences of computational trees.
  The fitness of the candidates is calculated as a possible path via a regression
 , whose data is generated by black box approaches.
-\end_layout
-
-\begin_layout Standard
-===todo
-\end_layout
-
-\begin_layout Standard
-xx An NN model certainly does many things that make no sense at all.
- Therefore, if possible, only the phenotype should be considered.
-\end_layout
-
-\begin_layout Standard
-xx gp strongly limited -> familiar GP NICE!
-\end_layout
-
-\begin_layout Standard
-xx genetic ancestor
-\end_layout
-
-\begin_layout Standard
-===
 \end_layout
 
 \begin_layout Standard
@@ -2959,38 +2933,10 @@ status open
 \end_layout
 
 \begin_layout Standard
-For this work, a GP suite in the language Python was developed by Simon
- Fehrer with the Help of Daniel Hein, Steffen Udluft.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-\begin_inset Flex URL
-status open
-
-\begin_layout Plain Layout
-
-https://github.com/ducktalez/plagih
-\end_layout
-
-\end_inset
-
- xxx (currently not available, private repository)
-\end_layout
-
-\end_inset
-
- Besides the implementation of the classical GP functions described in 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "gp_Genetic-Programming"
-
-\end_inset
-
-, the most important task is the implementation of familial GP using TED.
+For this work, a GP suite in the language Python was developed.
  The introduction of fixed nodes is an additional extension that requires
  a comprehensive adaptation of the classical evolution methods.
- The evaluation process is also accelerated with Tensorflow enabled evaluation,
+ The evaluation process is accelerated with Tensorflow enabled evaluation,
  inspired by Karoo 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -3003,13 +2949,9 @@ literal "true"
  The more detailed implementation is described below.
 \end_layout
 
-\begin_layout Paragraph
-Technical Realisation
-\end_layout
-
 \begin_layout Standard
 Fitness evaluation is the bottleneck of performance.
- Kai Staats has shown with KarooGP that a 2-15 times speedup can be achieved
+ Kai Staats has shown with Karoo that a 2-15 times speedup can be achieved
  by converting expressions into Tensorflow graphs, which enables parallel
  evaluation on the GPU.
  To further enable simplification of expressions, the Python library SymPy
@@ -3030,107 +2972,41 @@ literal "true"
 status open
 
 \begin_layout Plain Layout
-No reliable statistics on the running time were compiled, but the running
- time was about only 50% in all comparison runs and the memory could be
- reduced to almost 10% of Karoo GP.
- xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
+The running time reduced to about 50% memory usage to 
+\begin_inset ERT
 status open
 
 \begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/pyplots_custom/sarsa_vs_human.pdf
-	height 5cm
+
+$
+\backslash
+approx 10
+\backslash
+%$
+\end_layout
 
 \end_inset
 
- 
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx achsen: SARSA-75 outperforms the maximum velocity solution in 100 episodes,
- except for one outlier.
- The SARSA approach represents a strongly random exploratory approach that
- tries out and optimises many things but does not represent a strategy that
- works intrinsically.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "img:MTC-heuristic-vs-sarsa-reward"
-
-\end_inset
-
-
+ in all runs compared to Karoo.
 \end_layout
 
 \end_inset
 
 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Operator nodes xxx if-operator
 \end_layout
 
 \begin_layout Standard
-With the introduction of the if-operator, which is both the only operator
- with three inputs and two different input types (boolean condition and
- numeric result), strong typing for all inputs and outputs as well as an
- extension of binary tree structures to any arity became necessary.
- However, due to the high variance in the branching factor, the tree depth
+However, due to the high variance in the branching factor, the tree depth
  also loses its function as a limiting factor in creating random branches,
  which is why all procedures based on the tree depth were replaced with
  methods based on the number of nodes.
  
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-The implementation is discussed in detail in section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "sec:depth-based-gp-implementation"
-
-\end_inset
-
-.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Paragraph
-Terminal nodes
 \end_layout
 
 \begin_layout Standard
-Constants are randomly selected from different distributions and adjusted
- in a filter process.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-To obtain the most useful set of constants possible, these are chosen at
- random from 100 variables of the data set, Gaussian-distributed integers
- and Gaussian-distributed floating point values.
+Constants are randomly selected from three different distributions, which
+ includes sampling from the input data as well as Gaussian-distributed integers
+ and floating point values.
  
 \begin_inset ERT
 status open
@@ -3145,16 +3021,13 @@ mathcal{N}(
 \backslash
 mu,
 \backslash
-sigma^{2})$ xxx was macht das hier?
+sigma^{2})$
 \end_layout
 
 \end_inset
 
- With the help of the evolutionary mutation of the Gaussian filters, the
- constants of the best trees are additionally modified to fine-tune.
- For the runs of this work, a Gaussian filter with a standard deviation
- of 0.1 was applied.
- (
+ The mutation filtering process, which is used to fine-tune the best individuals
+ of a population, a standard deviation of 0.1 was applied (
 \begin_inset ERT
 status open
 
@@ -3169,12 +3042,7 @@ mathcal{N}(x,0.1)$
 
 \end_inset
 
-)
-\end_layout
-
-\end_inset
-
-
+).
 \end_layout
 
 \begin_layout Standard
@@ -3202,36 +3070,8 @@ noprefix "false"
 
 \end_inset
 
- .
- Especially in the case of Markov states that are not completely observable,
- past values are taken into account, which is why the time of observation
- is another unusual factor.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Calculating the index through a formula is possible, but was not considered
- in this implementation.
-\end_layout
-
-\end_inset
-
- This was filtered as a natural number during the filter mutation (
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$X
-\backslash
-sim
-\backslash
-mathcal{N}(x,0.1)$
-\end_layout
-
-\end_inset
-
 ).
+ 
 \end_layout
 
 \begin_layout Standard
@@ -6489,6 +6329,55 @@ status open
 
 \begin_layout Plain Layout
 \align center
+\begin_inset Graphics
+	filename img/pyplots_custom/sarsa_vs_human.pdf
+	height 5cm
+
+\end_inset
+
+ 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ml-sarsa-outliers"
+
+\end_inset
+
+ SARSA-75 outperforms the maximum velocity solution in 100 episodes, except
+ for one outlier.
+ The SARSA approach represents a strongly random exploratory approach that
+ tries out and optimizes many things but does not represent a strategy that
+ works intrinsically.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "img:MTC-heuristic-vs-sarsa-reward"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="1" columns="2">
 <features tabularvalignment="middle">
@@ -6537,7 +6426,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-SARSA-200 decision plot for the complete state space and for the occuring
+SARSA-200 decision plot for the complete state space and for the relevant
  states only.
  
 \begin_inset CommandInset label
@@ -6615,7 +6504,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-SARSA-200 after 1000 and 10.000 episodes.
+SARSA-200 after 1.000 and 10.000 episodes.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -7431,8 +7320,8 @@ $5728/1.07=5353$
  for many types of problems.
  The solution space is populated by a swarm population, which should find
  the best optima by swarm intelligence.
- This approach is very interesting as a black box, because the model is
- very sparse and might be difficult to fit with symbolic regression.
+ This method is very interesting as a black box, because the model is very
+ sparse and might be difficult to fit with symbolic regression.
  
 \end_layout
 
@@ -11025,7 +10914,7 @@ status open
 
 \begin_layout Plain Layout
 
-excluding x^y and $
+Excluding $x^y$ and $
 \backslash
 sin$
 \end_layout
@@ -11253,7 +11142,7 @@ status open
 
 
 \backslash
-clearpage %xx
+clearpage
 \end_layout
 
 \end_inset
@@ -11272,7 +11161,7 @@ The IB features three actions, for each of which a separate regression is
  
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsection
 Regular GP results
 \end_layout
 
@@ -11316,7 +11205,8 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The three Pareto fronts in comparison alongside with the online evaluation.
+The three Pareto fronts in comparison alongside with the online evaluation
+ results.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -11338,16 +11228,22 @@ name "fig:IB_MSE_scratch_graphs"
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 \noindent
 \align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="8" columns="3">
+<lyxtabular version="3" rows="7" columns="3">
 <features islongtable="true" longtabularalignment="center">
 <column alignment="center" valignment="top" width="38mm">
 <column alignment="center" valignment="top" width="38mm">
 <column alignment="center" valignment="top" width="38mm">
 <row endhead="true">
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11357,7 +11253,7 @@ action 0
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11367,7 +11263,7 @@ action 1
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11408,7 +11304,7 @@ Complexity 3
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11432,7 +11328,7 @@ min$}[{$-0.043$}][{-Velocity$_{3}$}]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11458,7 +11354,7 @@ text{Consumption}_1$}]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11511,7 +11407,7 @@ Complexity 5
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11535,7 +11431,7 @@ min$}[{$-0.545$}][{Velocity$_{6}$}]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11559,7 +11455,7 @@ min$}[{SetPoint}][{Shift$_{5}$}]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11614,7 +11510,7 @@ Complexity 6
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11640,7 +11536,7 @@ min$}[{$-0.618$}][{Velocity$_{5}$}]]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11666,48 +11562,11 @@ min$}[{SetPoint}][{Shift$_{5}$}]]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
 \noindent
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row caption="true">
-<cell multicolumn="1" alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx table in table? IB Pareto-combined candidates from regular GP with MSE.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -11721,8 +11580,32 @@ xxx table in table? IB Pareto-combined candidates from regular GP with MSE.
 
 \end_layout
 
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:-IB-scratch-overview"
+
+\end_inset
+
+ IB Pareto candidates from regular runs that are combined in the subsequent
+ merging process.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
-Expert reference
+Expert program
 \end_layout
 
 \begin_layout Standard
@@ -11955,7 +11838,7 @@ Here, almost only action 1 is improved.
 \end_layout
 
 \begin_layout Subsection
-Industrial Benchmark discussion
+IB Discussion
 \end_layout
 
 \begin_layout Standard

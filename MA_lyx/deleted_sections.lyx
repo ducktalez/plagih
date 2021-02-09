@@ -863,6 +863,261 @@ Teile, die aus der Arbeit entfernt wurden, die aber eventuell doch nützlich
 \end_layout
 
 \begin_layout Section
+Domain experts vs.
+ machines
+\end_layout
+
+\begin_layout Standard
+=conscious learning=The knowledge was achieved also during a conscious learning
+ process, which is controlled by itself (e.g.
+ the amygdala in the human brain) and by others (e.g.
+ peers, teachers) and strategies are thus endowed with a high degree of
+ security.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+An RL-agent relies on random exploration and is forced to adapt and improve
+ its model until it has become good enough.
+ A program written by a developer is his effort to formulate his strategy,
+ he does not try to find structure retrospectively.
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+=frustration=A human can also decide to abort learning a frustrating task,
+ which may be out of reach.
+ 
+\end_layout
+
+\begin_layout Standard
+=Xreference=Decisions can even be explained with the reference to some made
+ experience that was made and led to a behavior.
+ Machines can, in general, not store the whole training process.
+ 
+\end_layout
+
+\begin_layout Standard
+=language=An important skill is the ability to speak, or express thoughts
+ in language, which every human learns and plays an important role for human
+ understanding.
+ Some people argue, that speech limits the things humans understand 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "wittgenstein1953philosophical"
+literal "true"
+
+\end_inset
+
+.
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Quotes eld
+\end_inset
+
+The limits of my language mean the limits of my world.
+\begin_inset Quotes erd
+\end_inset
+
+, Ludwig Wittgenstein, a mentor of Alan Turing, who became very famous as
+ computer scientist.
+\end_layout
+
+\end_inset
+
+ Moreover, it plays an important role in peer-to-peer communication.
+ 
+\end_layout
+
+\begin_layout Standard
+=synched=Both the communication protocol and the experience (sub-goals)
+ are widely synchronized between interacting humans.
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+Even the learning process is largely synchronized, as most people face the
+ same challenges when learning a new skill.
+ Let's consider, for example, the game Puzzle as an NP-hard problem, where
+ a whole picture has to be assembled from a pile of pieces.
+ People are mostly synchronized between essential subgoals like recognizing
+ colours and shapes, turning puzzle pieces to the colored side and knowing
+ about the picture on the box as reference point.
+ A popular tip for beginners is therefore that one should start with the
+ edge of the puzzle as pieces can be matched early to a frame.
+\end_layout
+
+\begin_layout Plain Layout
+A RL agent can already fail at all the subgoals very badly.
+\end_layout
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+===
+\end_layout
+
+\begin_layout Standard
+already acquired knowledge.
+ Assuming that the expert strategy already follows a correct approach, it
+ therefore seems very helpful to be shown what would have to be changed
+ in order to achieve the performance of a black box.
+ 
+\end_layout
+
+\begin_layout Standard
+We therefore propose to use genetic programming to modify an expert program
+ in such a way that it deviates only slightly from prior known solutions.
+\end_layout
+
+\begin_layout Section
+AlphaGo
+\end_layout
+
+\begin_layout Standard
+A very popular example of the development of superhuman strategies was achieved
+ by DeepMind with AlphaGo, which was able to defeat one of the world's best
+ players to media attention.
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AlphaGo_paper"
+literal "true"
+
+\end_inset
+
+ Concerns about actual performance of the machine learning model prompted
+ the researchers to have a human monitor AlphaGo's learning process - which
+ revealed surprising weaknesses.
+\end_layout
+
+\begin_layout Quotation
+\begin_inset Quotes eld
+\end_inset
+
+It’s unbelievably superhuman, in general, but it has some particular weaknesses
+ in some situations.
+ We can think of there being this space of all the things it knows about,
+ and it knows about most of it extremely well.
+ Then there will be these tricky lumps of knowledge, that it just understands
+ very poorly.
+ And it's really hard for us to characterize when it is going to enter into
+ one of these lumps.
+ But if it does, it can be completely delusional, thinking that it is alive
+ on one part of the board when, in fact, it's dead or vice versa.
+ So, there is a real risk that we could lose the match.
+ Everybody in the team tried to work more and more to fix the problem, but
+ I think it's difficult to fix this very quickly.
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Shane Legg, David Silver, and Fan Hui in 
+\begin_inset Quotes eld
+\end_inset
+
+AlphaGo - The Movie | Full Documentary
+\begin_inset Quotes erd
+\end_inset
+
+, by DeepMind 
+\begin_inset CommandInset href
+LatexCommand href
+target "https://youtu.be/WXuK6gekU1Y?t=1420"
+literal "false"
+
+\end_inset
+
+.
+ (last accessed January, 2021)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+AlphaGo is still considered a prime example of the possibilities offered
+ by reinforcement learning, but the faced problems such as unexplainable
+ decisions, lack of trust (even through extensive testing) and no possibilities
+ for manual adjustments concern researchers and also the industry.
+ Even though AlphaGo is a black box and not understandable, experts were
+ able to derive previously unknown strategies from the published games.
+ Of course, the experts' prior knowledge was crucial - they did not have
+ to understand the complete procedure of AlphaGo, but could specifically
+ enrich their knowledge with the new insights of AlphaGo.
+\end_layout
+
+\begin_layout Standard
+In this work, the observation and learning process for simple problems with
+ simple or smooth dynamics is to be automated with the help of genetic programmi
+ng.
+\end_layout
+
+\begin_layout Section
+Measuring the latent dimensions of interpretability
+\begin_inset CommandInset label
+LatexCommand label
+name "interpretability-measure"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We are especially interested in the effort a person needs to understand
+ a model.
+ A proposed differentiation distincts between the number or form of cognitive
+ chunks, as well as their level of compositionality, monotonicity, interaction
+ between chunks and uncertainty, which makes it very difficult to find a
+ general measure for explainability.
+ The subdivision possibilities are too many to be summarised in a simple
+ and contradiction-free paradigm.
+ 
+\end_layout
+
+\begin_layout Standard
+On the other hand, popular and functioning taxonomies for complexity are:
+\end_layout
+
+\begin_layout Itemize
+Dimensionality of the mathematical room
+\end_layout
+
+\begin_layout Itemize
+Amount of free parameters (neural networks)
+\end_layout
+
+\begin_layout Itemize
+Computational runtime complexity (floating point operations, Bachmann–Landau
+ notation, ...)
+\end_layout
+
+\begin_layout Itemize
+Computation tree related (amount of nodes, weighted nodes, branching factor,
+ ...)
+\end_layout
+
+\begin_layout Standard
+We will focus on the measure for formulas in genetic programming, which
+ is a weighted node count.
+\end_layout
+
+\begin_layout Section
 Interpretable Machine Learning
 \end_layout
 

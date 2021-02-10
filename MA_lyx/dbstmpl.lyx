@@ -154,13 +154,17 @@ pagenumbering{gobble}
 \end_layout
 
 \begin_layout Abstract
-Machine learning methods, in particular reinforcement learning, enable the
- learning of policies for technical systems.
+Machine learning methods, in particular reinforcement learning, enables
+ autonomous learning of policies for technical systems.
+ In order to be able to trust them better, it is of great interest to be
+ able to derive interpretable rules that make these technologies more trustworth
+y in practice.
+ With the help of genetic programming, simple policies can already be created.
  In order to increase the acceptance for solutions, it is advantageous that
  the solution resembles previously known solutions.
- As a solution, it is proposed to calculate the familiarity on the basis
- of the necessary edits to an expert program and to use it as a complexity
- measure for genetic programming.
+ Hence, we propose to replace simplicity in the models with familiarity,
+ which can be calculated as the necessary edits to an expert program and
+ to use it as a complexity measure for genetic programming.
  The approach was tested on the Mountain car and the Industrial Benchmark
  in the form of a symbolic regression of the transition samples of a neuropolicy.
  As a direct extension to the edit-distance, the specification of a fixed
@@ -290,7 +294,7 @@ emph{reinforcement learning}
 
  (RL), enable the learning of such optimized control strategies at the cost
  of not being explainable.
- Making According to Hein 
+ According to Hein 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
@@ -327,10 +331,7 @@ literal "true"
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
-Simple, interpretable policies can already be learned on surrogate models
+ Simple, interpretable policies can already be learned on surrogate models
  with the help of genetic programming 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -339,11 +340,149 @@ literal "true"
 
 \end_inset
 
-.
+, which is one of many methods in explainable artificial intelligence (XAI).
 \end_layout
 
 \begin_layout Standard
-Methods in 
+In this thesis, we present a technique that uses genetic programming on
+ already known strategies and replaces the complexity paradigm of simplicity
+ with familiarity.
+\end_layout
+
+\begin_layout Section
+Related work
+\end_layout
+
+\begin_layout Standard
+Industrial control strategies feature many peculiarities can be addressed
+ with machine learning, such as be highly dimensional 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-gas-turbine-rl-nn"
+literal "true"
+
+\end_inset
+
+ or high stochasticity 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787,siemens-rl-stochastic-bayesian-nn"
+literal "true"
+
+\end_inset
+
+.
+ In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "residual-dynamic-learning"
+literal "true"
+
+\end_inset
+
+, a technique is presented to enhance human control strategies in an industrial
+ area with machine learning solutions.
+ 
+\end_layout
+
+\begin_layout Standard
+Despite much interest, only little work covers the problems of finding interpret
+able policies.
+ Hein et al.
+ present a technique in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
+
+\end_inset
+
+ to create interpretable policies with genetic programming, as well as fuzzy
+ GP 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hein_fuzzy_gp"
+literal "true"
+
+\end_inset
+
+ for more complex problems.
+ In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+literal "true"
+
+\end_inset
+
+, a comparison between online training on the real system dynamics and offline
+ training on transition samples of a neuropolicy is evaluated.
+\end_layout
+
+\begin_layout Section
+Contribution
+\end_layout
+
+\begin_layout Standard
+In this thesis, the principle of familiarity is introduced, by means of
+ which solutions are characterized as interpretable the less they deviate
+ from the expert's solution program.
+ To our knowledge, familiarity is a novel technique which has not yet been
+ used as a reference for better understanding 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "fehrer_hein_tokic_udluft_2020"
+literal "true"
+
+\end_inset
+
+.
+ For this purpose, the complexity measure of genetic programming, which
+ is based on the number of nodes of the programming tree, is calculated
+ as the number of edits to the expert's programming tree.
+ This is implemented with the help of the tree edit distance, which is already
+ known as a problem in theoretical computer science.
+ Thus, GP still tries to achieve the same goal, but would be more bound
+ to the heuristic given by the expert.
+ Transition samples of a non-specific black box policy serve as surrogate
+ model to let genetic programming elaborate the main differences to a domain
+ expert's program.
+\end_layout
+
+\begin_layout Section
+Outline
+\end_layout
+
+\begin_layout Standard
+The structure of this thesis is organized as follows.
+ 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "chap:Applied-methods"
+plural "false"
+caps "true"
+noprefix "false"
+
+\end_inset
+
+ provides background information covering the most important aspects of
+ interpretability in the context of reinforcement learning.
+ Chapter introduces the concept of familiarity and describes the implementation
+ in the form of the tree edit distance as second order optimization.
+ Fixed nodes are further introduced as logical extension to some shortcomings
+ of the edit distance.
+ The implementation is described in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "chap:Familiar-Genetic-Programming"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ using symbolic regression on transition samples from neuropolicies.
+ The approach is evaluated both on the 
 \begin_inset ERT
 status open
 
@@ -351,26 +490,118 @@ status open
 
 
 \backslash
-emph{explainable artificial intelligence} (XAI)
+emph{mountain car}
 \end_layout
 
 \end_inset
 
- make AI results understandable for humans and have become more and more
- popular in recent years 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AIINDEX2019"
-literal "true"
+ and the highly stochastic 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{industrial benchmark}
+\end_layout
+
+\end_inset
+
+, which are described in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "chap:Evaluation"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ The results are further discussed in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "chap:Results"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 
 .
  
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "chap:Conclusion"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ concludes the results and discusses several expansion possibilities, especially
+ enhancements for the edit distance and explorative regression.
+\end_layout
+
+\begin_layout Chapter
+Applied Methods
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:Applied-methods"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In this chapter, background information and applied methodologies are introduced.
+ In 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Reinforcement-learning"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, principles of reinforcement learning is introduced.
+ Background information about interpretability is introduced in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Interpretable-Machine-Learning"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ Genetic programming is presented as the main method to create interpretable
+ policies in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "gp_Genetic-Programming"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
 Reinforcement learning
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Reinforcement-learning"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -491,6 +722,40 @@ literal "true"
 
 \begin_layout Section
 Interpretable Machine Learning
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Interpretable-Machine-Learning"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Methods in 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{explainable artificial intelligence} (XAI)
+\end_layout
+
+\end_inset
+
+ make AI results understandable for humans and have become more and more
+ popular in recent years 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AIINDEX2019"
+literal "true"
+
+\end_inset
+
+.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -702,204 +967,6 @@ The interpretability gap is visualized, metaphorically, by a deep trench
 \end_layout
 
 \begin_layout Section
-Related work
-\end_layout
-
-\begin_layout Standard
-Despite much interest, only little work is covers the problems of finding
- interpretable policies.
- 
-\end_layout
-
-\begin_layout Standard
-Industrial control strategies can have many peculiarities be highly dimensional
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "siemens-gas-turbine-rl-nn"
-literal "true"
-
-\end_inset
-
- or high stochasticity 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787,siemens-rl-stochastic-bayesian-nn"
-literal "true"
-
-\end_inset
-
-, which were successfully solved.
- In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
-
-\end_inset
-
-, Hein et al.
- show, how interpretable GP policies can be searched in industrial applications.
- With fuzzy GP 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "hein_fuzzy_gp"
-literal "true"
-
-\end_inset
-
- it was shown that even comples problems can be adressed with genetic programmin
-g.
- In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "daniel_hein_doktorarbeit"
-literal "true"
-
-\end_inset
-
-, trained GP candidates for several complex benchmarks both on the real
- system dynamics and on transition samples of a neuropolicy, where the offline
- training was almost always worse, sometimes even significantly.
-\end_layout
-
-\begin_layout Section
-Contribution
-\end_layout
-
-\begin_layout Standard
-This thesis introduces the principle of familiarity, by means of which solutions
- are characterized as interpretable the less they deviate from the expert's
- solution.
- To our knowledge, familiarity has not yet been used as a reference for
- better understanding.
- 
-\end_layout
-
-\begin_layout Standard
-For this purpose, the complexity measure of genetic programming, which is
- based on the number of nodes of the programming tree, is calculated as
- the number of edits to the expert's programming tree.
- This is implemented with the help of the tree edit distance, which is already
- known as a problem in theoretical computer science.
- Thus, GP still tries to achieve the same goal, but would be more bound
- to the heuristic given by the expert.
- 
-\end_layout
-
-\begin_layout Standard
-We use transition samples of a non-specific black box policy as a proxy
- model to let genetic programming elaborate the main differences to a domain
- expert's program.
-\end_layout
-
-\begin_layout Section
-Outline
-\end_layout
-
-\begin_layout Standard
-The structure of this thesis is organized as follows.
- 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "chap:Applied-methods"
-plural "false"
-caps "true"
-noprefix "false"
-
-\end_inset
-
- provides background information covering the most important aspects of
- interpretability in the context of reinforcement learning.
- Chapter introduces the concept of familiarity and discribes the implementation
- in the form of the tree edit distance as second order optimization.
- Fixed nodes are further introduced as logical extension to some shortcomings
- of the edit distance.
- The implementation is described in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "chap:Familiar-Genetic-Programming"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
- using symbolic regression on transition samples from neuropolicies.
- The approach is evaluated both on the 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{mountain car}
-\end_layout
-
-\end_inset
-
- and the highly stochastic 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{industrial benchmark}
-\end_layout
-
-\end_inset
-
-, which are described in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "chap:Evaluation"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-.
- The results are further discussed in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "chap:Results"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-.
- 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "chap:Conclusion"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
- concludes the results and discusses several expansion possibilities, especially
- enhancements for the edit distance and explorative regression.
-\end_layout
-
-\begin_layout Chapter
-Applied methods
-\begin_inset CommandInset label
-LatexCommand label
-name "chap:Applied-methods"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
 Genetic Programming 
 \begin_inset CommandInset label
 LatexCommand label
@@ -1096,6 +1163,10 @@ ref{alg:gp-evolutionary-main}
 \end_inset
 
 .
+\begin_inset Newline newline
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -2741,13 +2812,45 @@ name "chap:Familiar-Genetic-Programming"
 \begin_layout Standard
 In the following, the implementation of the approach to enhance genetic
  programming with familiarity is presented.
- As a reference for familiarity, the domain expert's strategy or program
- must be represented as computational tree, which functions as origin.
+ This requires a pre-given expert solution, a better performing machine
+ learning solution, as well as a fitness function and a metric for the amount
+ of changes.
+\end_layout
+
+\begin_layout Standard
+As a reference for familiarity, the domain expert's strategy or program
+ must be represented as computational tree, which functions as genetic ancestor
+ for all programs (origin).
  If possible, care should be taken to ensure that the structure is hierarchical
  so that the most important structural components are as close as possible
  to the root node.
- As a measure for the changes some factors are presented that have led to
- the use of the 
+ A symbolic regression (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "Symbolic-Regression"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+) depicts the fitness function, which is performed on transition samples
+ that were collected with the (black box) machine learning solution (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Offline-Data-Selection"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Standard
+In this chapter, we will further present the 
 \begin_inset ERT
 status open
 
@@ -2760,8 +2863,50 @@ emph{Tree Edit Distance} (TED)
 
 \end_inset
 
-, which calculates the number of differences of computational trees.
- 
+ as complexity measure (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Familiarity-Measurement-TED"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+), which calculates the number of differences of computational trees.
+ Special features of the GP suites implemented for implementation are described
+ in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:GP-Suite-Implementation"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ Further extensions of fixed tree cores are presented in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "subsec:Fixed-nodes"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, as well as a tree unification algorithm in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sympy-tree-reduction"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -2818,6 +2963,13 @@ name "img:plausibility-concept"
 
 \begin_layout Section
 Familiarity Measurement with the Edit Distance
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Familiarity-Measurement-TED"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3047,6 +3199,13 @@ name "fig:TED_edits"
 
 \begin_layout Section
 GP Suite Implementation
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:GP-Suite-Implementation"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3569,7 +3728,7 @@ First, a random number of nodes to be inserted is chosen.
 \end_layout
 
 \begin_layout Section
-Mathematical simplification and unification 
+Tree Unification 
 \begin_inset CommandInset label
 LatexCommand label
 name "sympy-tree-reduction"
@@ -3994,12 +4153,12 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="2">
+<lyxtabular version="3" rows="6" columns="2">
 <features booktabs="true" tabularvalignment="middle">
-<column alignment="left" valignment="top" width="30mm">
+<column alignment="left" valignment="top" width="22mm">
 <column alignment="left" valignment="top" width="100mm">
 <row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4012,27 +4171,7 @@ Operator
 \begin_inset Text
 
 \begin_layout Plain Layout
-cause
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-if-condition
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-non existing
+Cause
 \end_layout
 
 \end_inset
@@ -4252,7 +4391,7 @@ $x^2$ or $x^y$ quickly become unusable through mutation.
 \begin_inset Text
 
 \begin_layout Plain Layout
-Usub (unary sub)
+Unary sub
 \end_layout
 
 \end_inset
@@ -4279,9 +4418,8 @@ The minus sign is the only operator that occurs as a binary and unary operator
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-These operators have to be treated differently in GP compared to mathematics,
- which requires reimplementations of the unificating transformations so
- they fit the demands of GP evolution.
+Operators, that have to be treated differently in GP compared to mathematics
+ and require a reimplementation of the unificating transformations.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -7043,7 +7181,18 @@ In the following, three solution strategies are examined more closely.
  At sensible points, the options of fixed core structure and obligatory
  acceleration were tested.
  Since action 1 cannot be selected for the latter option, the regression
- error cannot drop to 0 (0.023 for SARSA-200, 0.066 for SARSA-75).
+ error cannot drop to 0 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+($0.023$ for SARSA-200, $0.066$ for SARSA-75)
+\end_layout
+
+\end_inset
+
+.
  
 \end_layout
 
@@ -8036,7 +8185,7 @@ noprefix "false"
 
 \begin_layout Standard
 \noindent
-\begin_inset Float table
+\begin_inset Float figure
 wide false
 sideways false
 status open
@@ -9087,48 +9236,7 @@ literal "true"
 \end_inset
 
 .
- With 26 nodes, the TED protection in this origin tree is very robust.
- A fixed core did not differ in the results.
- The origin is already fairly optimized and, with a reward of -102.6, almost
- as good as the SARSA-200 policy.
- In this experiment, it is particularly interesting to see whether solutions
- that are already good can benefit even further.
-\end_layout
-
-\begin_layout Standard
-All candidates that were found demonstrated increased real performance,
- most outperforming the SARSA-200 policy (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:xiao-pareto"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-).
- Two candidates can be regarded in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:xiao-c5"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
- and 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:xiao-c8"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -9180,6 +9288,51 @@ end{center}
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+With 26 nodes, the TED protection in this origin tree is very robust.
+ A fixed core did not differ in the results.
+ The origin is already fairly optimized and, with a reward of -102.6, almost
+ as good as the SARSA-200 policy.
+ In this experiment, it is particularly interesting to see whether solutions
+ that are already good can benefit even further.
+\end_layout
+
+\begin_layout Standard
+All candidates that were found demonstrated increased real performance,
+ most outperforming the SARSA-200 policy (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:xiao-pareto"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ Two candidates can be regarded in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:xiao-c5"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:xiao-c8"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -9287,7 +9440,7 @@ name "fig:xiao-pareto"
 
 \end_inset
 
- The Pareto candidates all perform better.
+ All Pareto entries have a better online performance.
 \end_layout
 
 \end_inset
@@ -9887,7 +10040,7 @@ name "fig:mc-ifex-pareto"
 
 \begin_layout Standard
 \noindent
-\begin_inset Float table
+\begin_inset Float figure
 wide false
 sideways false
 status open
@@ -10966,7 +11119,47 @@ noprefix "false"
 
 ).
  However, the similarity to the start policies remains, either in the form
- of the variables used or also in the form of the basic structure.
+ of the variables used or also in the form of the basic structure (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:ib-progress"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:ib-progress-1"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:ib-progress-2"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:ib-progress-3"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
 \end_layout
 
 \begin_layout Standard
@@ -11036,7 +11229,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset label
 LatexCommand label
-name "fig:ib-progress-0"
+name "fig:ib-progress"
 
 \end_inset
 
@@ -11059,7 +11252,7 @@ name "fig:ib-progress-0"
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \noindent
@@ -11076,7 +11269,15 @@ status collapsed
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-action 1 is adjusted late.
+Action 1 is adjusted late.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ib-progress-1"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -11095,7 +11296,7 @@ action 1 is adjusted late.
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \noindent
@@ -11112,7 +11313,15 @@ status collapsed
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-action 0 already reaches a local optimum with a TED of 3.
+Action 0 has reached a local optimum with a TED of 3.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ib-progress-2"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -11131,7 +11340,7 @@ action 0 already reaches a local optimum with a TED of 3.
 placement h
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \noindent
@@ -11148,7 +11357,15 @@ status collapsed
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Here, almost only action 1 is improved.
+Mainly action 1 is improved with these combinations.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ib-progress-3"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset

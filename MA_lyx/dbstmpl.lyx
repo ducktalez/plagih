@@ -273,33 +273,6 @@ name "chap:Introduction"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx reinforcement learning (RL), where an agent learns a strategy only by
- interacting with an environment and an external reward.
- 
-\end_layout
-
-\begin_layout Plain Layout
-= Every machine learning model is subject to a trade-off between performance
- and interpretability.
- 
-\end_layout
-
-\begin_layout Plain Layout
-Machine learning often relies on black box technologies such as neural networks.
- From a mathematical point of view, these are generic and very extensive
- equation systems, which approximate a function by autonomously adjusting
- its parameters through backpropagation.[xx] They behave in a computable
- manner, but the knowledge representation is implicit and does not allow
- insight into the induced rules or the learned solution paths.
- [xxx explicit? distinguish?].
-\end_layout
-
-\end_inset
-
 Robots that learn tasks autonomously have the chance to be exploited in
  a wide range of situations, including industrial applications.
  Methods of machine learning, in particular 
@@ -826,12 +799,12 @@ Outline
 
 \begin_layout Standard
 The structure of this thesis is organized as follows.
- xxxx 
+ 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Applied-methods"
 plural "false"
-caps "false"
+caps "true"
 noprefix "false"
 
 \end_inset
@@ -852,7 +825,7 @@ noprefix "false"
 
 \end_inset
 
-using symbolic regression on transition samples from neuropolicies.
+ using symbolic regression on transition samples from neuropolicies.
  The approach is evaluated both on the 
 \begin_inset ERT
 status open
@@ -1158,18 +1131,14 @@ newline
 
 \begin_layout Plain Layout
 
-Generation maximum G xx
+Generation maximum G
 \backslash
 newline
 \end_layout
 
 \begin_layout Plain Layout
 
-Population pop
-\backslash
-_old, pop
-\backslash
-_new}  
+Population P, next generation P'}  
 \end_layout
 
 \begin_layout Plain Layout
@@ -1186,19 +1155,7 @@ While{Generation < G}
 
 \begin_layout Plain Layout
 
-        
-\backslash
-While{evolve ratios}
-\end_layout
-
-\begin_layout Plain Layout
-
-        {
-\end_layout
-
-\begin_layout Plain Layout
-
-			
+	
 \backslash
 nl tree $
 \backslash
@@ -1211,58 +1168,56 @@ FuncCall{tournamentSelection}{size$=3$}
 
 \begin_layout Plain Layout
 
-			
+	
 \backslash
 SetKwProg{myalg}{reproduce}{}{}
 \end_layout
 
 \begin_layout Plain Layout
 
-			
+	
 \backslash
 myalg{{}}{
 \end_layout
 
 \begin_layout Plain Layout
 
-            	
+       	
 \backslash
 Comment{Optional: Branch simplification/unification}
 \end_layout
 
 \begin_layout Plain Layout
 
-                
+           
 \backslash
-nl pop
-\backslash
-_new.append(tree)
+nl append tree to P'
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
-          }
+    }
 \end_layout
 
 \begin_layout Plain Layout
 
-          
+      
 \backslash
 SetKwProg{myalg}{mutate}{}{}
 \end_layout
 
 \begin_layout Plain Layout
 
-          
+    
 \backslash
 myalg{{}}{
 \end_layout
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
 nl node $
 \backslash
@@ -1275,7 +1230,7 @@ FuncCall{randomNode}{}
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
 nl insert $
 \backslash
@@ -1290,7 +1245,7 @@ assign$ prepare random mutation
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
 nl tree.node $
 \backslash
@@ -1301,37 +1256,35 @@ assign$ insert
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
-nl pop
-\backslash
-_new.append(tree)
+nl append tree to P'
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
-          }
+    }
 \end_layout
 
 \begin_layout Plain Layout
 
-			
+	
 \backslash
 SetKwProg{myalg}{crossover}{}{}
 \end_layout
 
 \begin_layout Plain Layout
 
-          
+    
 \backslash
 myalg{{}}{
 \end_layout
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
 nl tree
 \backslash
@@ -1346,22 +1299,20 @@ FuncCall{tournamentSelection}{size$=3$}
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
 nl branch, branch
 \backslash
 _partner $
 \backslash
-assign$ choose type-matching 
-\backslash
-FuncCall{randomNode}{}
+assign$ choose type-matching random nodes
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
 nl switch branches between tree and tree
 \backslash
@@ -1372,39 +1323,35 @@ _partner
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
-nl pop
-\backslash
-_new.append(tree, tree
-\backslash
-_partner)
+nl append tree to P'
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
-          }
+    }
 \end_layout
 
 \begin_layout Plain Layout
 
-                     
+    
 \backslash
 SetKwProg{myalg}{olympReproduction}{}{}
 \end_layout
 
 \begin_layout Plain Layout
 
-          
+    
 \backslash
 myalg{{}}{
 \end_layout
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
 nl tree $
 \backslash
@@ -1417,23 +1364,20 @@ FuncCall{randomTree}{}
 
 \begin_layout Plain Layout
 
-            
+        
 \backslash
-nl pop
-\backslash
-_new.append(tree)
+nl append tree to P'
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
-          }
+    }
 \end_layout
 
 \begin_layout Plain Layout
 
-      }
 \end_layout
 
 \begin_layout Plain Layout
@@ -1463,9 +1407,7 @@ FuncCall{tournamentSelection}{size$=3$}
 
 \begin_layout Plain Layout
 
-        pop
-\backslash
-_new.append(tree)
+        append tree to P'
 \backslash
 ;
 \end_layout
@@ -1477,31 +1419,23 @@ _new.append(tree)
 
 \begin_layout Plain Layout
 
-    evaluate pop
-\backslash
-_new
+    evaluate all trees in P'
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
-    update Paretofront
+    update Pareto front
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
-	pop
+	P $
 \backslash
-_old $
-\backslash
-assign$ pop
-\backslash
-_new, delete pop
-\backslash
-_new
+assign$ P', delete P'
 \backslash
 ;
 \end_layout
@@ -1794,7 +1728,22 @@ A fitness function is required to compare candidates.
  well a formula can explain data.
  The regression error must become as small as possible, which is the sum
  of the distance between the outputs and predicted values of a data set.
- xx
+ Both the mean average error (MAE) and the mean square error (MSE) are regressio
+n metrics (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:regression-error"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ The MAE indicates the average deviation from the target solution and is
+ distance-true.
+ The MSE, however, severely punishes outliers, lumps of strong deviation
+ and volatile solutions, which can lead to a better overall generalization.
 \end_layout
 
 \begin_layout Standard
@@ -1851,27 +1800,6 @@ end{eqnarray*}
 \end_layout
 
 \begin_layout Standard
-Both the mean average error (MAE) and the mean square error (MSE) are regression
- metrics (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:regression-error"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-).
- The MAE indicates the average deviation from the target solution and is
- distance-true.
- The MSE squares the distance and thus is xxx not distance-true, making
- it a less honest indicator.
- The MSE, however, severely punishes outliers, lumps of strong deviation
- and volatile solutions, which can lead to a better overall generalisation.
-\end_layout
-
-\begin_layout Standard
 \noindent
 \begin_inset Float figure
 wide false
@@ -1904,9 +1832,8 @@ name "fig:regression-error"
 
 \end_inset
 
- xx Abschnitt dazu? The MAE on the left is a distance-true measure, compared
- to the MSE on the right, which deviates strongly the larger the distance
- is.
+ The MAE on the left is a distance-true measure, compared to the MSE on
+ the right, which deviates strongly the larger the distance is.
  The MSE is also synonymous to the root mean squared error for one-dimensional
  measurements.
 \end_layout
@@ -1988,8 +1915,8 @@ status open
 
 \begin_layout Plain Layout
 
-xx axes! Bounded MAE (left) and MSE (right) in discrete, limited action
- space with actions $
+Bounded MAE (left) and MSE (right) in discrete, limited action space with
+ actions $
 \backslash
 {0, 1, 2
 \backslash
@@ -2583,6 +2510,223 @@ literal "true"
 
 \end_layout
 
+\begin_layout Subsection
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+LaTeX
+\end_layout
+
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+Tree Visualization
+\end_layout
+
+\begin_layout Standard
+The visualisation of candidates was implemented with 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+LaTeX
+\end_layout
+
+\end_inset
+
+, which takes care of the arrangement of nodes.
+ For very large trees, a tight-tree version is also created, in which branches
+ with simple mathematical formulas (which do not involve fixed nodes) are
+ bundled as individual nodes.
+ This preserves the structure of the tree without inflating it with simple
+ mathematical formulas.
+ Nodes are combined if they are not fixed and if their expression is part
+ of classical mathematical formulas.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Another exception are operators which change between types 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+{
+\backslash
+min,
+\backslash
+max,$if,$<,=,
+\backslash
+}$
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+ To mark edits in trees, a mapping from the origin to the candidate must
+ be calculated.
+ Edits can thus be assigned to the nodes of the tree, which can be colored
+ during visualization.
+ Bundled nodes were not colored.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="1" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$
+\backslash
+div$}[{pos}][{$-1.834$}]][{$2.197$}]]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${
+\backslash
+frac{
+\backslash
+text{pos}}{-1.834}}$}}][{$2.197$}]]}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Automatic visualization of a tree with all nodes and as a tight version.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The expert might want to only change the condition of the if-statement,
+ as he can then better understand the distinction.
+ In his start-up program, he would specify the nodes marked in dark blue
+ as fixed so that they are not affected by the GP process.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 Familiar Genetic Programming
 \begin_inset CommandInset label
@@ -2597,8 +2741,11 @@ name "chap:Familiar-Genetic-Programming"
 \begin_layout Standard
 In the following, the implementation of the approach to enhance genetic
  programming with familiarity is presented.
- As a reference for familiarity, domain expert program to solve xxx a problem
- (origin) is used.
+ As a reference for familiarity, the domain expert's strategy or program
+ must be represented as computational tree, which functions as origin.
+ If possible, care should be taken to ensure that the structure is hierarchical
+ so that the most important structural components are as close as possible
+ to the root node.
  As a measure for the changes some factors are presented that have led to
  the use of the 
 \begin_inset ERT
@@ -2614,17 +2761,7 @@ emph{Tree Edit Distance} (TED)
 \end_inset
 
 , which calculates the number of differences of computational trees.
- The fitness of the candidates is calculated as a possible path via a regression
-, whose data is generated by black box approaches.
-\end_layout
-
-\begin_layout Standard
-The reference point for what has already been understood is the program
- of a domain expert.
- This must be represented as a programming tree.
- If possible, care should be taken to ensure that the structure is hierarchical
- so that the most important structural components are as close as possible
- to the root node.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -2934,8 +3071,6 @@ status open
 
 \begin_layout Standard
 For this work, a GP suite in the language Python was developed.
- The introduction of fixed nodes is an additional extension that requires
- a comprehensive adaptation of the classical evolution methods.
  The evaluation process is accelerated with Tensorflow enabled evaluation,
  inspired by Karoo 
 \begin_inset CommandInset citation
@@ -2947,10 +3082,7 @@ literal "true"
 
 , but required a complete restructuring.
  The more detailed implementation is described below.
-\end_layout
-
-\begin_layout Standard
-Fitness evaluation is the bottleneck of performance.
+ Fitness evaluation is the bottleneck of performance.
  Kai Staats has shown with Karoo that a 2-15 times speedup can be achieved
  by converting expressions into Tensorflow graphs, which enables parallel
  evaluation on the GPU.
@@ -2963,11 +3095,11 @@ literal "true"
 
 \end_inset
 
- was extended and integrated, which uses symbolic mathematics and thus sifts
- out unnecessary calculations before evaluation.
- [xx see sympy errors] The memory usage and performance could be further
- increased, largely thanks to the help of lookup-tables for tree evaluation,
- passing variables locally and especially using recursive tree structures.
+ was extended, which uses symbolic mathematics and thus sifts out unnecessary
+ calculations before evaluation.
+ The memory usage and performance could be further increased, largely thanks
+ to the help of lookup-tables for tree evaluation, passing variables locally
+ and especially using recursive tree structures.
 \begin_inset Foot
 status open
 
@@ -3070,7 +3202,17 @@ noprefix "false"
 
 \end_inset
 
-).
+), the distribution can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:Probabilities-for-selecting"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
  
 \end_layout
 
@@ -3216,9 +3358,15 @@ Return{indexProbabilities}
 
 
 \backslash
-caption{xxx Ref! rewrite! A mixture between a uniform and a logarithmic
- frequency distribution should favour recent values slightly logarithmic.}
-  
+caption{A mixture between a uniform and a logarithmic frequency distribution
+ should favour recent values slightly logarithmic.}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{}
 \end_layout
 
 \begin_layout Plain Layout
@@ -3251,11 +3399,19 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx achse! ref! Probabilities for selecting the timestep of an observation,
- considering 5, 10 or 20 possibilities.
+Probabilities for selecting the timestep of an observation, considering
+ 5, 10 or 20 possibilities.
  Instead of a completely equal distribution, younger values are selected
  slightly more frequently due to their higher presumed relevance according
  to the distribution described.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Probabilities-for-selecting"
+
+\end_inset
+
+ 
 \end_layout
 
 \end_inset
@@ -3290,549 +3446,6 @@ literal "true"
  
 \end_layout
 
-\begin_layout Standard
-\noindent
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="17" columns="3">
-<features booktabs="true" tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top" width="0pt">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Evolution
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Options
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Ratio
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.06
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-random branch simplification
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.03
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Olymp
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(from Pareto candidates)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.01
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-point
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (nodes, full)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (nodes, grow)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Filter
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (7, 1, 12, 3)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Filter
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-branch (7, 1, 12, 3)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Crossover
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Crossover
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.30
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(4.5, 3, 5, 1)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.05
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(10, 1, None, 5)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.15
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-(10, 1, None, 5)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-0.15
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-xxx ref/delete! midrule, sonst hau ich den Scheiß einfach raus^^ xxThe evolution
- of a population of candidates includes all common evolutionary methods
- and is divided by default into 10% reproduction, 25% mutation and 35% crossover
- in all runs.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:Distribution-gp-evolutions"
-
-\end_inset
-
- xx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Paragraph
 Olymp-reproduction (Pareto reproduction)
 \end_layout
@@ -3843,267 +3456,52 @@ Similar to the Greek gods who came to earth to reproduce, the Pareto candidates
  By chance, solutions already found and their genes could be completely
  lost.
  In order not to lose already found solutions permanently, the genes of
- the best candidates are to provide a very small current for backups of
- the best-ofs of the past.
-\begin_inset Newline newline
-\end_inset
-
-The olymp reproduction includes in particular the possibility for the origin
+ the best candidates are to provide a very small current of the best candidates
+ to the population.
+ The olymp reproduction includes in particular the possibility for the origin
  tree to reproduce itself.
 \end_layout
 
-\begin_layout Subsection
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-LaTeX
-\end_layout
-
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-tree visualisation xxx nach oben
-\end_layout
-
-\begin_layout Standard
-Although the visualisation of the candidates plays only a minor role, the
- form of representation should not be neglected as an interface for the
- developer.
- Therefore, in addition to the export options as mathematical formula and
- as Python code, a visualisation of the tree was also implemented with the
- help of 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-LaTeX
-\end_layout
-
-\end_inset
-
-.
- The main problem to be solved here is the arrangement of the nodes, which
- is made possible by the Forest package.
- 
-\end_layout
-
-\begin_layout Standard
-For very large trees, a tight-tree version is also created, in which branches
- with simple mathematical formulas (which do not involve fixed nodes) are
- bundled as individual nodes.
- This preserves the structure of the tree without inflating it with simple
- mathematical formulas.
- Nodes are combined if they are not fixed and if their expression is part
- of classical mathematical formulas.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Another exception are operators which change between types 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-{
-\backslash
-min,
-\backslash
-max,$if,$<,=,
-\backslash
-}$
-\end_layout
-
-\end_inset
-
-.
-\end_layout
-
-\end_inset
-
- To mark edits in trees, a mapping from the origin to the candidate must
- be calculated.
- Edits can thus be assigned to the nodes of the tree, which can be coloured
- during visualisation.
- Bundled nodes were not coloured.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="1" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$
-\backslash
-div$}[{pos}][{$-1.834$}]][{$2.197$}]]}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${
-\backslash
-frac{
-\backslash
-text{pos}}{-1.834}}$}}][{$2.197$}]]}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Automatic visualisation of a tree with all nodes and as a tight version.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{$
-\backslash
-text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]
-}
-\end_layout
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The expert might want to only change the condition of the if-statement,
- as he can then better understand the distinction.
- In his start-up program, he would specify the nodes marked in dark blue
- as fixed so that they are not affected by the GP process.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section
-Fixed Nodes
+Fixed Tree Core 
 \begin_inset CommandInset label
 LatexCommand label
 name "subsec:Fixed-nodes"
 
 \end_inset
 
- xxx ww
+
 \end_layout
 
 \begin_layout Standard
-Fixed nodes were implemented in addition to the TED, which has shown in
- a very early stage to loose its protective effect for very small trees.
- Therefore, the expert has the chance to manually select nodes that should
- not be affected by the GP process in his origin tree.
- By explicitly securing the core structure, the GP process binds more [xxx
- rewrite] closely to the preferences of the developer.
- Especially when the developer is sure of the correctness of his abstraction,
- pointless optimization attempts of the GP process can be prevented.
- This reduces the run time and the search space.
- For very large trees, fixed nodes are actually mandatory to have the search
- space reduced.
+A fixed tree core is a manually selected tree structure which has to be
+ in every individual of the population and is not affected by mutations.
+ This was implemented to further bind the process to familiar structures
+ and extends the TED, which has shown to loose its protective effect with
+ very small trees.
+ Fixed nodes can be selected top down and must be fully connected with one
+ or more mutatable junctions (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "img:tree_modifiable_nodes_modified"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Standard
+With the possibility of multiple junctions, the branching factor is very
+ high and can lead to very complex randomly created trees if the tree depth
+ is used as limiting factor.
+ Hence, the node depth is replaced with a layer-based depth, which depicts
+ the distance to the next fixed node as depth-limiting factor.
+ The depth in the construction process of random trees was replaced with
+ a node-count based version, which included both the full- and grow-method.
 \end_layout
 
 \begin_layout Standard
@@ -4127,8 +3525,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xx ref.
- A tree with fixed nodes (blue), which remain untouched by evolutions.
+A tree with fixed nodes (blue), which remain untouched by evolution.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -4149,96 +3546,22 @@ name "img:tree_modifiable_nodes_modified"
 
 \end_layout
 
-\begin_layout Paragraph
-Implementation
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:depth-based-gp-implementation"
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
-Fixed nodes are unaffected by the evolution process and can be determined,
- starting from the root node down to the leaf nodes for a contiguous real
- subset.
- All trees, including random tree constructions, are required to build on
- this structure.
- In order to continue to use classical GP evolution with the same paradigms,
- some procedures must be re-implemented [xx how?].
-\end_layout
-
-\begin_layout Standard
-At least one junction must be offered, but the depth, the size of the succeeding
- branch and the number of branches must be considered for evolution.
- The node depth, which normally indicates the distance to the tree root,
- also loses its meaning for evolutions, why it was replaced with a layer-based
- interpretation, in which the distance of a node to the next fixed node
- is used.
- Due to the high branching factor in trees with several GP interfaces, the
- layer model also loses its function, which is why the number of nodes replaces
- the tree depth as a complexity limit and complexity target in random tree
- generation.
-\end_layout
-
-\begin_layout Standard
-Nodesize-based build options including the full- and grow-method.
- Randomly generated trees should cover the entire search space and have
- the structuring Full/Grow options to have the same properties of non-fixed
- generated trees.
-\end_layout
-
-\begin_layout Paragraph
-Node-count as random trees restriction
-\end_layout
-
-\begin_layout Standard
-Constructing random trees and branches is usually based on the tree depth.
- However, this is a problem for layer-based mutation which is needed with
- fixed nodes, where several branches have to be built up at the same time.
- The tree size can grow exponentially, the starting depth may differ between
- branches and the trees may end up very unbalanced.
- Therefore a node based algorithm was developed, which builds up branches
- in full- and grow mode up to a certain number of nodes without risk of
- structural imbalances.
+To produce generally balanced trees, the initial size of the to-be replaced
+ branches must be considered.
  
 \end_layout
 
 \begin_layout Standard
-In order not to violate the principles of GP, xxx.
- At the beginning a random number of nodes to be inserted is chosen.
- Instead of the node depth, layers are defined, which are the distance to
- the next fixed node.
+First, a random number of nodes to be inserted is chosen.
  Depending on the number of nodes located on a layer, the number of nodes
  to be inserted is randomly divided into intervals.
  These subtrees are divided according to the grow or full method up to the
  interval size they are entitled to.
- The number of nodes must be exactly reached (tolerance -1), otherwise the
- trees could have a large variance of nodes per branch.
-\end_layout
-
-\begin_layout Standard
-When building the branches, a buffer of leaf nodes is built up to avoid
- having to prune the tree at the end.
- To build one level lower, a random node of the level is selected and assigned
- according to the Grow or Full method.
- This avoids an overload of the left side, which would occur because only
- limited operators can be used.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx Soll das überhaupt als Pseudocode geschrieben werden?
-\end_layout
-
-\end_inset
-
-
+ A buffer of leaf nodes is built up to avoid having to prune the tree randomly
+ at the end.
+ To counteract the overloading of a page, the nodes for the next level are
+ selected randomly.
 \end_layout
 
 \begin_layout Standard
@@ -11631,13 +10954,7 @@ text{Shift}_{0}$)
 
 .
  The real performance of the candidates, especially with more complex candidates
-, is comparable to all other runs.
- However, the similarity to the start policies remains, either in the form
- of the variables used or also in the form of the basic structure.
-\end_layout
-
-\begin_layout Standard
-(
+, is comparable to all other runs (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-plots"
@@ -11647,7 +10964,9 @@ noprefix "false"
 
 \end_inset
 
-)
+).
+ However, the similarity to the start policies remains, either in the form
+ of the variables used or also in the form of the basic structure.
 \end_layout
 
 \begin_layout Standard
@@ -11681,8 +11000,8 @@ name "fig:ib-plots"
 
 \end_inset
 
-xxx ref, ww! The improvements of the start policy improve the real performance
- without bad outliers.
+ The improvements of the start policy improve the real performance without
+ bad outliers.
 \end_layout
 
 \end_inset
@@ -11715,7 +11034,12 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-xxx legend into img! xxx redesign this, pink, smaller, better Subdivision!
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ib-progress-0"
+
+\end_inset
+
  Legend for the visualisation of the IB run.
 \end_layout
 

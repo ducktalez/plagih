@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -27,6 +27,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -44,8 +46,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures false
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -87,7 +87,6 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -97,10 +96,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -156,76 +152,46 @@ pagenumbering{gobble}
 \begin_layout Abstract
 Machine learning methods, in particular reinforcement learning, enables
  autonomous learning of policies for technical systems.
- In order to be able to trust them better, it is of great interest to be
- able to derive interpretable rules that make these technologies more trustworth
-y in practice.
- With the help of genetic programming, simple policies can already be created.
- In order to increase the acceptance for solutions, it is advantageous that
- the solution resembles previously known solutions.
- Hence, we propose to replace simplicity in the models with familiarity,
- which can be calculated as the necessary edits to an expert program and
- to use it as a complexity measure for genetic programming.
- The approach was tested on the Mountain car and the Industrial Benchmark
- in the form of a symbolic regression of the transition samples of a neuropolicy.
- As a direct extension to the edit-distance, the specification of a fixed
- core structure was also implemented and tested.
- The candidates of familial GP approaches differ significantly from normal
- GP solutions.
- Familiar elements are clearly recognizable and the performance comparably
- good, sometimes better.
- The fixed core structure additionally enabled the preservation of familiar
- structures in very small programs, but also accelerated runs with complex
- programs (with more than 25 start nodes).
+ In order to make the technologies more trustworthy, it is of great interest
+ to derive humanly-interpretable interpretable rules.
+ With the help of genetic programming, simple policies can already be created
+ from transition samples.
+ In order to further increase the acceptance for solutions, we argue that
+ is advantageous if the solution resembles previously known solutions which
+ were already developed for many problems.
+ We propose to calculate familiarity as the required edits to an expert
+ program, which can replace simplicity as complexity metric in genetic programmi
+ng.
+ As an additional possibility, the option of defining a fixed core in the
+ expert program that must be included in all candidate solutions is presented.
  
 \end_layout
 
 \begin_layout Abstract
-The experiments conducted showed that the candidates found were more familiar,
- with comparable or better performance.
- Also extension possibilities like the definition of a program framework
- by the expert produce very promising results.
+The approach was applied on the Mountain Car and the Industrial Benchmark
+ in the form of a symbolic regression on transition samples of several neuropoli
+cies.
+ The evaluation shows that familiar structures can be recognized in familiar
+ trees compared to regular ones, without drawback concerning the offline
+ or onlineperformance.
+ The fixed core structure additionally enabled the preservation of familiar
+ structures in very small programs and also accelerated runs with complex
+ programs (with more than 25 start nodes).
+ 
+\end_layout
+
+\begin_layout Section*
+Acknowledgement
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-Explainability is hard to achieve in the field of RL, where the great successes
- relies on black box approaches like neural networks.
- In many domains in industry and science, Genetic programming (GP) offers
- the opportunity to automatically generate programs that are interpretable,
- but often represent mathematic expressions which are still hard to fully
- understand completely.
- For a domain expert, it would be very helpful to be shown where his own
- strategy could be improved.
-\end_layout
-
-\begin_layout Plain Layout
-Lösungen mit GP ohne Vorgaben sind oft naja.
- wir versuchen deshalb, GP zu nutzen um Lösungen zu finden, die bekannte
- Lösungsstrategien mit möglichst geringfügigen Änderungen verbessern können.
- Therefore, the concept of familiarity is introduced as quality criterion
- for GP, which measures the deviation from an expert's original program
- instead of pure complexity.
- This is realised with the tree edit distance as measure, which reflects
- the number of changes to the reference program.
-\end_layout
-
-\begin_layout Plain Layout
-The approach was testet on the mountaincar and the industrial benchmark,
- with several different neuropolicies provdiding transition samples als
- Basis für den Regressionsfehler.
- The results have shown no major drawbacks in terms of regression error
- and fitness, while staying closer to the domain experts approach.
- The real fitness evaluation seems to have a slight tendency for more stable
- results, but seem to depend rather on the volatility of the black box and
- how good the result could be achieved.
-\end_layout
-
-\end_inset
-
-
+I would like to thank my supervisors at Siemens, without whom this work
+ could not have been realized.
+ Michel Tokic especially for offering to supervise this work, Daniel Hein
+ for his extensive help with genetic programming, and Steffen Udluft for
+ his endorsement and feedback while supervising the work.
+ I would also like to thank all of them for their enormous patience and
+ support, which went far beyond what was expected for such a work.
 \end_layout
 
 \begin_layout Standard
@@ -298,7 +264,6 @@ emph{reinforcement learning}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -326,7 +291,6 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
-literal "true"
 
 \end_inset
 
@@ -336,7 +300,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -344,13 +307,13 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
-In this thesis, we present a technique that uses genetic programming on
+In this thesis, a technique is presented that uses genetic programming on
  already known strategies and replaces the complexity paradigm of simplicity
  with familiarity.
 \end_layout
 
 \begin_layout Section
-Related work
+Related Work
 \end_layout
 
 \begin_layout Standard
@@ -359,7 +322,6 @@ Industrial control strategies feature many peculiarities can be addressed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
-literal "true"
 
 \end_inset
 
@@ -367,7 +329,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,PSONN_PSO_particle_swarm_HEIN201787,siemens-rl-stochastic-bayesian-nn"
-literal "true"
 
 \end_inset
 
@@ -376,7 +337,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
-literal "true"
 
 \end_inset
 
@@ -393,7 +353,6 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -402,7 +361,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -411,7 +369,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -432,7 +389,6 @@ In this thesis, the principle of familiarity is introduced, by means of
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
-literal "true"
 
 \end_inset
 
@@ -459,9 +415,6 @@ The structure of this thesis is organized as follows.
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Applied-methods"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -475,9 +428,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Familiar-Genetic-Programming"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -512,9 +462,6 @@ emph{industrial benchmark}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Evaluation"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -523,9 +470,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Results"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -534,9 +478,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Conclusion"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -561,9 +502,6 @@ In this chapter, background information and applied methodologies are introduced
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Reinforcement-learning"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -572,9 +510,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Interpretable-Machine-Learning"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -584,9 +519,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp_Genetic-Programming"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -594,7 +526,7 @@ noprefix "false"
 \end_layout
 
 \begin_layout Section
-Reinforcement learning
+Reinforcement Learning
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:Reinforcement-learning"
@@ -615,9 +547,6 @@ Reinforcement learning is a subfield of machine learning, where an agent
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:RL-basics"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -663,7 +592,6 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
-literal "false"
 
 \end_inset
 
@@ -706,14 +634,13 @@ emph{Offline learning}
 
 \end_inset
 
- is a learning process that include methods for which the real benchmark
+ are learning methods that include methods for which the real benchmark
  is not required, for example by learning on previously collected data.
  It is risk-free and thus favored by the industry, but may also derive significa
 ntly from real system 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -750,7 +677,6 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -763,7 +689,6 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -782,7 +707,6 @@ the ability to explain or to present in understandable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -823,7 +747,6 @@ RL problems are incomplete as they are not fully testable and can be solved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -858,7 +781,6 @@ reference "gp_Genetic-Programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -887,9 +809,6 @@ everyone
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:The-interpretability-gap"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -997,7 +916,6 @@ g policies since it was first introduced by Koza
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
-literal "true"
 
 \end_inset
 
@@ -1041,7 +959,6 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1118,9 +1035,6 @@ As for the selection process, each candidate is chosen separately through
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:gp-Evolutionary-concepts"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -1553,7 +1467,7 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="5" columns="2">
 <features booktabs="true" tabularvalignment="middle">
-<column alignment="left" valignment="top" width="28mm">
+<column alignment="left" valignment="top" width="26mm">
 <column alignment="left" valignment="top" width="10cm">
 <row>
 <cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
@@ -1638,7 +1552,8 @@ A random node in a tree is chosen and replaced with
 \end_layout
 
 \begin_layout Plain Layout
-Relatively small mutations should further improve genes.
+Mutations randomize a subset of genes in a tree as a mixture of reproduction
+ and randomization.
 \end_layout
 
 \end_inset
@@ -1667,9 +1582,6 @@ Two parent trees exchange two random branches, creating two child trees
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:crossover"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -1794,7 +1706,7 @@ name "Symbolic-Regression"
 \end_layout
 
 \begin_layout Standard
-A fitness function is required to compare candidates.
+The fitness function is required to compare candidates.
  A symbolic regression is a common offline implementation to calculate how
  well a formula can explain data.
  The regression error must become as small as possible, which is the sum
@@ -1804,9 +1716,6 @@ n metrics (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-error"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -1881,12 +1790,14 @@ status open
 \align center
 \begin_inset Graphics
 	filename tikz/regression_cost/01_regular.pdf
+	scale 80
 
 \end_inset
 
 
 \begin_inset Graphics
 	filename tikz/regression_cost/10_MSE.pdf
+	scale 80
 
 \end_inset
 
@@ -1928,9 +1839,6 @@ In the case of discrete or restricted value ranges, a corresponding value
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-bounded-discrete"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -1938,9 +1846,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-bounded"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -1958,12 +1863,14 @@ status open
 \align center
 \begin_inset Graphics
 	filename tikz/regression_cost/03_rounding.pdf
+	scale 80
 
 \end_inset
 
 
 \begin_inset Graphics
 	filename tikz/regression_cost/03-2_rounding_MSE.pdf
+	scale 80
 
 \end_inset
 
@@ -2026,12 +1933,14 @@ status open
 \align center
 \begin_inset Graphics
 	filename tikz/regression_cost/12_MAE_bounded.pdf
+	scale 80
 
 \end_inset
 
 
 \begin_inset Graphics
 	filename tikz/regression_cost/11_MSE_boarders.pdf
+	scale 80
 
 \end_inset
 
@@ -2082,7 +1991,7 @@ min(a,A_{max}),A_{min})$
 \end_layout
 
 \begin_layout Paragraph
-Restricting the search space from complexity bloat 
+Complexity bloat 
 \begin_inset CommandInset label
 LatexCommand label
 name "gp-complexity-depth-node-based"
@@ -2121,208 +2030,11 @@ emph{Eureqa}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:EUREKA-GP-complexities"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
 .
  
-\end_layout
-
-\begin_layout Standard
-The complexity is also suitable as second objective in a multi-objective
- optimization, where all Pareto-efficient combinations to the first objective
- of fitness are saved.
- The resulting Pareto front of candidates (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:paretofront-example"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-) offer the opportunity to weigh between candidates instead of saving only
- the best.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:paretofront-example"
-
-\end_inset
-
-An example of GP candidates aligned on a Pareto front.
- The regression error becomes smaller as the candidates become more complex
- and increasingly flattens out.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/inkscape/full_vs_grow_example.pdf
-	scale 80
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-Comparing the tree construction methods full and grow using operators $
-\backslash
-{a,b,2,3
-\backslash
-}$ and terminals $
-\backslash
-cdot,-,/$.
- Only a tree created with the full-method has a branching factor high enough
- to create a complex combinations of variables like $(a-3)
-\backslash
-cdot(b/2)$.
- A grow tree has a lower branching factor and produces more encapsulated
- expressions like $(a-(b/2))
-\backslash
-cdot3$.
- 
-\end_layout
-
-\end_inset
-
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:grow-vs-full-method"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Random trees and branches are required to find new genetic structures.
- Constructing new trees can be done in the modes 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{full} and 
-\backslash
-emph{grow}
-\end_layout
-
-\end_inset
-
-.
- Both methods build trees to a certain depth, but the 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{full}
-\end_layout
-
-\end_inset
-
- method allows terminal nodes only at the target level and the grow method
- also allows terminal nodes to be inserted by chance (50%).
- The full method has a much higher branching factor and creates more complex
- formulas than the grow method.
- The structure of a tree can impact the formulas, as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:grow-vs-full-method"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-.
- As neither of them is a clearly preferable building method, combining both
- methods 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{ramped half-n-half}
-\end_layout
-
-\end_inset
-
- represents a pleasant mixture 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "gp-half-ramped"
-literal "false"
-
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Standard
@@ -2564,7 +2276,6 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
-literal "true"
 
 \end_inset
 
@@ -2579,6 +2290,197 @@ literal "true"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+The complexity is also used as second objective in a multi-objective optimizatio
+n, where all Pareto-efficient combinations to the first objective of fitness
+ are saved.
+ The resulting Pareto front of candidates (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:paretofront-example"
+
+\end_inset
+
+) offer the opportunity to weigh between candidates instead of saving the
+ best only.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:paretofront-example"
+
+\end_inset
+
+An example of GP candidates aligned on a Pareto front.
+ The regression error becomes smaller as the candidates become more complex
+ and increasingly flattens out.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/inkscape/full_vs_grow_example.pdf
+	scale 80
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+Comparing the tree construction methods full and grow using operators $
+\backslash
+{a,b,2,3
+\backslash
+}$ and terminals $
+\backslash
+{
+\backslash
+cdot,-,/
+\backslash
+}$.
+ Only a tree created with the full-method has a branching factor high enough
+ to create a complex combinations of variables like $(a-3)
+\backslash
+cdot(b/2)$.
+ A grow tree has a lower branching factor and produces more encapsulated
+ expressions like $(a-(b/2)) 
+\backslash
+cdot 3$.
+ 
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:grow-vs-full-method"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Random trees and branches are required to find new genetic structures.
+ Constructing new trees can be done in the modes 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{full} and 
+\backslash
+emph{grow}
+\end_layout
+
+\end_inset
+
+.
+ Both methods build trees to a certain depth, but the 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{full}
+\end_layout
+
+\end_inset
+
+ method allows terminal nodes only at the target level and the grow method
+ also allows terminal nodes to be inserted by chance (50%).
+ The full method has a much higher branching factor and creates more complex
+ formulas than the grow method.
+ The structure of a tree can impact the formulas, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:grow-vs-full-method"
+
+\end_inset
+
+.
+ As neither of both is clearly preferable, both methods can be combined
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{ramped half-n-half}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "gp-half-ramped"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -2828,9 +2730,6 @@ As a reference for familiarity, the domain expert's strategy or program
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "Symbolic-Regression"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -2839,9 +2738,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Offline-Data-Selection"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -2867,9 +2763,6 @@ emph{Tree Edit Distance} (TED)
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Familiarity-Measurement-TED"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -2879,9 +2772,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:GP-Suite-Implementation"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -2890,19 +2780,13 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "subsec:Fixed-nodes"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
 , as well as a tree unification algorithm in 
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "sympy-tree-reduction"
-plural "false"
-caps "false"
-noprefix "false"
+reference "sec:sympy-tree-reduction"
 
 \end_inset
 
@@ -2932,15 +2816,6 @@ status open
 
 \begin_layout Plain Layout
 Improving a known solution with familiarity based genetic programming.
- The expert should think, that 
-\begin_inset Quotes eld
-\end_inset
-
-when a solution is found, it is better.
-\begin_inset Quotes erd
-\end_inset
-
-.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -2991,16 +2866,16 @@ $d$
 \end_inset
 
  are: 
-\begin_inset CommandInset label
-LatexCommand label
-name "xaiMeasurementRequirements"
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
+
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -3087,6 +2962,21 @@ end{itemize}
 
 \end_layout
 
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "xaiMeasurementRequirements"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 The tree edit distance (TED) marks the logical resulting measure considering
  the node-count based paradigm most GP implementations are based on.
@@ -3120,9 +3010,6 @@ text{modify}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:TED_edits"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3134,23 +3021,20 @@ noprefix "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
 .
  It is a well-known problem in theoretical computer science, whose computation
  was largely worked on and lead to both robust and efficient algorithm implement
-ations.
- 
+ations 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
-
+.
 \end_layout
 
 \begin_layout Standard
@@ -3164,6 +3048,7 @@ status open
 \begin_inset Graphics
 	filename img/inkscape/TED_operators.pdf
 	lyxscale 60
+	scale 80
 
 \end_inset
 
@@ -3174,9 +3059,10 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Possible TED changes on a tree: insert (green), delete (red), modify (yellow).
- If the position of a node in a branch changes, only the remaining changes
- are evaluated.
+Visualisation of possible tree edits {insert (green), delete (red), modify
+ (yellow)}.
+ If the node position in a branch changes, only the remaining edits are
+ evaluated.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -3235,7 +3121,6 @@ For this work, a GP suite in the language Python was developed.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -3250,7 +3135,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3263,7 +3147,7 @@ literal "true"
 status open
 
 \begin_layout Plain Layout
-The running time reduced to about 50% memory usage to 
+The runtime reduced to about 50% and memory usage to 
 \begin_inset ERT
 status open
 
@@ -3278,7 +3162,7 @@ approx 10
 
 \end_inset
 
- in all runs compared to Karoo.
+ in all runs, compared to Karoo.
 \end_layout
 
 \end_inset
@@ -3297,8 +3181,7 @@ However, due to the high variance in the branching factor, the tree depth
 \begin_layout Standard
 Constants are randomly selected from three different distributions, which
  includes sampling from the input data as well as Gaussian-distributed integers
- and floating point values.
- 
+ and floating point values (
 \begin_inset ERT
 status open
 
@@ -3312,11 +3195,12 @@ mathcal{N}(
 \backslash
 mu,
 \backslash
-sigma^{2})$
+sigma^{2})$, with customizable parameters
 \end_layout
 
 \end_inset
 
+).
  The mutation filtering process, which is used to fine-tune the best individuals
  of a population, a standard deviation of 0.1 was applied (
 \begin_inset ERT
@@ -3351,13 +3235,10 @@ emph{Industrial benchmark}
 
 \end_inset
 
- 
+, 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Industrial-benchmark"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3365,9 +3246,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:Probabilities-for-selecting"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3378,6 +3256,10 @@ noprefix "false"
 \begin_layout Standard
 \begin_inset ERT
 status open
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \begin_layout Plain Layout
 
@@ -3588,20 +3470,19 @@ TED calculation
 \end_layout
 
 \begin_layout Standard
-The TED is calculated both a robustly and efficiently with APTED.
- 
+The TED is calculated both a robustly and efficiently with APTED 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
+.
  TED mapping between trees can be used in addition to weighting the changes,
  but was not used for any runs.
  This property can prevent closure in certain constellations, which is why
  this possibility is checked and a mutual exclusive crossover was implemented,
- which always finds two matching nodes in trees.
+ which assigns two matching branches in trees.
  
 \end_layout
 
@@ -3612,8 +3493,7 @@ Olymp-reproduction (Pareto reproduction)
 \begin_layout Standard
 Similar to the Greek gods who came to earth to reproduce, the Pareto candidates
  were also given the opportunity to intermingle with the current population.
- By chance, solutions already found and their genes could be completely
- lost.
+ By chance, solutions already found and their genes can be lost.
  In order not to lose already found solutions permanently, the genes of
  the best candidates are to provide a very small current of the best candidates
  to the population.
@@ -3643,9 +3523,6 @@ A fixed tree core is a manually selected tree structure which has to be
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "img:tree_modifiable_nodes_modified"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -3731,7 +3608,7 @@ First, a random number of nodes to be inserted is chosen.
 Tree Unification 
 \begin_inset CommandInset label
 LatexCommand label
-name "sympy-tree-reduction"
+name "sec:sympy-tree-reduction"
 
 \end_inset
 
@@ -3845,7 +3722,6 @@ Tree unification restructures a tree accordingly to a unique order by extracting
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3880,14 +3756,14 @@ reference "tab:sympy-custom-gp-operators"
 
 ) or special cases (
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "tab:sympy-sonderfälle"
 
 \end_inset
 
 ).
- An initial unification of the origin was not considered, as familiarity
- may be altered.
+ An initial unification of the origin was not evaluated, as the tree structure
+ and familiarity may be altered.
  Further, a uniformly order tree is not necessarily an optimal representation
  for mutations, structurally badly placed root top level nodes can limit
  the evolution process.
@@ -4029,41 +3905,27 @@ FuncCall{add}{oldTree}
 
 \begin_layout Plain Layout
 
- executable
+ asynchronuous syntax tree (ast) $
 \backslash
-_ast = 
-\backslash
-FuncCall{ast
-\backslash
-_parse}{expr}
+assign$ parsing the expression with a compiler
 \backslash
 ;
 \end_layout
 
 \begin_layout Plain Layout
 
- simplifiedTree = 
+ simplified tree $
 \backslash
-FuncCall{tree
-\backslash
-_from
-\backslash
-_ast}{executable
-\backslash
-_ast}
-\backslash
-;
+assign$ matching the ast-tree to a gp-tree
 \end_layout
 
 \begin_layout Plain Layout
 
- complexity
-\backslash
-_simplified $
+ new TED $
 \backslash
 assign$ 
 \backslash
-FuncCall{get
+FuncCall{tree
 \backslash
 _edit
 \backslash
@@ -4155,14 +4017,14 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="6" columns="2">
 <features booktabs="true" tabularvalignment="middle">
-<column alignment="left" valignment="top" width="22mm">
-<column alignment="left" valignment="top" width="100mm">
+<column alignment="left" valignment="top" width="80mm">
+<column alignment="left" valignment="top" width="40mm">
 <row>
 <cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Operator
+Example
 \end_layout
 
 \end_inset
@@ -4187,38 +4049,6 @@ status open
 
 \begin_layout Plain Layout
 
-$
-\backslash
-min,
-\backslash
-max$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-Forcing arity-2
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
 ${
 \backslash
 max(
@@ -4237,8 +4067,6 @@ max(a,b,c)}$
 
 \end_inset
 </cell>
-</row>
-<row>
 <cell alignment="left" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
@@ -4248,11 +4076,11 @@ status open
 
 \begin_layout Plain Layout
 
-$
+Forcing arity-2 for operators $
 \backslash
-land,
+min,
 \backslash
-lor$
+max$
 \end_layout
 
 \end_inset
@@ -4262,21 +4090,14 @@ lor$
 
 \end_inset
 </cell>
+</row>
+<row>
 <cell alignment="left" valignment="top" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
 \begin_inset ERT
 status open
-
-\begin_layout Plain Layout
-
-Forcing arity-2
-\backslash
-
-\backslash
-
-\end_layout
 
 \begin_layout Plain Layout
 
@@ -4298,6 +4119,29 @@ text{And}(a,b,c)}$
 
 \end_inset
 </cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+Forcing arity-2 $
+\backslash
+land,
+\backslash
+lor$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
 </row>
 <row>
 <cell alignment="left" valignment="top" leftline="true" usebox="none">
@@ -4311,7 +4155,11 @@ status open
 
 $
 \backslash
-not$
+neg (a<2) 
+\backslash
+rsymp 
+\backslash
+text{nan}$
 \end_layout
 
 \end_inset
@@ -4331,21 +4179,6 @@ status open
 \begin_layout Plain Layout
 
 Orders can not be negotiated
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-$
-\backslash
-not (a<2) 
-\backslash
-rsymp 
-\backslash
-text{nan}$
 \end_layout
 
 \end_inset
@@ -4361,7 +4194,23 @@ text{nan}$
 \begin_inset Text
 
 \begin_layout Plain Layout
-Square
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$x^2 
+\backslash
+stackrel{mutation}{
+\backslash
+longrightarrow} x^{(3.2 
+\backslash
+cdot b)}$ 
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -4391,7 +4240,21 @@ $x^2$ or $x^y$ quickly become unusable through mutation.
 \begin_inset Text
 
 \begin_layout Plain Layout
-Unary sub
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$-(a)$, $-(a,b)$
+\backslash
+
+\backslash
+(prefix notation)
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -4418,8 +4281,9 @@ The minus sign is the only operator that occurs as a binary and unary operator
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Operators, that have to be treated differently in GP compared to mathematics
+Operators that have to be treated differently in GP compared to mathematics
  and require a reimplementation of the unificating transformations.
+ The mentioned examples occured with SymPy simplification.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -4452,14 +4316,14 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="4" columns="2">
 <features booktabs="true" tabularvalignment="middle">
-<column alignment="left" valignment="top" width="30mm">
+<column alignment="left" valignment="top" width="40mm">
 <column alignment="left" valignment="top" width="50mm">
 <row>
 <cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Value
+value
 \end_layout
 
 \end_inset
@@ -4505,9 +4369,11 @@ status open
 
 \begin_layout Plain Layout
 
-The imaginary part $i$ in the space of complex numbers $
+$i 
 \backslash
-mathbb{C}$ are not intended as solution space.
+in 
+\backslash
+mathbb{C}$ (imaginary number)
 \end_layout
 
 \end_inset
@@ -4536,7 +4402,7 @@ rsymp
 \backslash
 tilde{
 \backslash
-infty} $
+infty}$
 \end_layout
 
 \end_inset
@@ -4559,12 +4425,16 @@ $
 \backslash
 tilde{
 \backslash
-infty}$
+infty} 
+\backslash
+in 
+\backslash
+mathbb{C}$ (complex infinity)
 \end_layout
 
 \end_inset
 
- (complex infinity)
+
 \end_layout
 
 \end_inset
@@ -4588,7 +4458,7 @@ rsymp
 \backslash
 tilde{
 \backslash
-infty} $
+infty}$
 \end_layout
 
 \end_inset
@@ -4602,7 +4472,7 @@ infty} $
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+not defined
 \end_layout
 
 \end_inset
@@ -4619,10 +4489,10 @@ infty} $
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Mathematical exceptions can occur by chances through unlucky composition
- of formula components.
- If a simplification fails, a calculation of the fitness also makes no sense;
- the tree is therefore discarded.
+Mathematical exceptions can occur by chances through composition of formula
+ components.
+ If a simplification fails, calculating the fitness value is superfluous;
+ the tree is discarded.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -4655,8 +4525,8 @@ name "chap:Evaluation"
 \end_layout
 
 \begin_layout Standard
-In this chapter, the two benchmarks which have been used to evaluate the
- approach are introduced.
+In this chapter, the benchmarks which have been used to evaluate the approach
+ are introduced.
  The 
 \begin_inset Quotes eld
 \end_inset
@@ -4678,17 +4548,14 @@ emph{Mountain car}
 \begin_inset Quotes erd
 \end_inset
 
- (MC) problem is introduced in 
+ (MC) problem (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:mountaincar"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
- and the 
+) is a widely used, simple toy benchmark, whereas the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -4709,25 +4576,19 @@ emph{Industrial Benchmark}
 \begin_inset Quotes erd
 \end_inset
 
- (IB) in 
+ (IB) (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Industrial-benchmark"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
-.
- MC is a widely used, simple toy benchmark, whereas the IB is a highly stochasti
-c, high-dimensional and only partially observable testbed, designed by scientist
-s at Siemens specifically for simulating a complex industrial control processes
- 
+) is a high-dimensional, partially observable and stochastic testbed, designed
+ by scientists at Siemens specifically for simulating a complex industrial
+ control processes 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "false"
 
 \end_inset
 
@@ -4736,9 +4597,6 @@ literal "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:mc-ib-comparisson"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -4756,11 +4614,11 @@ status open
 \begin_inset Tabular
 <lyxtabular version="3" rows="7" columns="3">
 <features booktabs="true" tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0pt">
+<column alignment="left" valignment="top" width="0pt">
 <column alignment="center" valignment="top" width="0pt">
 <column alignment="center" valignment="top" width="0pt">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4789,11 +4647,11 @@ IB
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Observation dimensions
+Observations
 \end_layout
 
 \end_inset
@@ -4818,7 +4676,7 @@ Observation dimensions
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4847,7 +4705,7 @@ Action dimensions
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4876,7 +4734,7 @@ continuous
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4905,7 +4763,7 @@ none
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4934,11 +4792,11 @@ state-dependent
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Markov state observability
+Observable
 \end_layout
 
 \end_inset
@@ -5009,7 +4867,6 @@ In the Mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -5020,9 +4877,6 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "img:mountaincar-overview"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5431,9 +5285,6 @@ onal diagram, where for each state the action is colour-coded (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-decision-plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5441,9 +5292,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mountaincar-plot-diff"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5593,7 +5441,6 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -5623,7 +5470,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -5638,9 +5484,6 @@ At this state, the agent outperforms the vanilla-expert solution, but it
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sarsa75_problem_decision_plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5668,9 +5511,6 @@ experienced
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sarsa-200-plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -6673,7 +6513,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -6739,7 +6578,6 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -6752,7 +6590,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -7249,9 +7086,6 @@ The regular GP runs could completely solve the problem from complexity 18.
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mtc200-mse-scratch-pareto"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7262,9 +7096,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:MC-scratch-3examples"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7938,9 +7769,6 @@ Maximizing the velocity through accelerating towards the moving direction
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:MC-simple-plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -7948,9 +7776,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "img:mtc_simple_tree"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -8162,21 +7987,15 @@ The TED loses its effect after a certain amount of changes, the first occurence
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-simple-candidates"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
 .
- The Pareto candidates show good final results, but a poor performance at
- medium complexity (
+ The Pareto candidates perform well with high complexities, but show relatively
+ poor performance at medium complexity (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc200_MSE_simple-pareto"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -8593,9 +8412,6 @@ $0.05$
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc200_simple-fix-pareto"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -8606,9 +8422,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:simpleFix-3candidates"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9221,9 +9034,6 @@ This close-form preset policy was presented by Xiao and is a mathematical
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-origin-plot"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9231,7 +9041,6 @@ noprefix "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9305,9 +9114,6 @@ All candidates that were found demonstrated increased real performance,
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-pareto"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9316,9 +9122,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-c5"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9326,9 +9129,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-c8"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9877,18 +9677,15 @@ name "fig:xiao-c8"
 \end_layout
 
 \begin_layout Subsection
-Optimized If-Expert 
+Optimized If-Expert
 \end_layout
 
 \begin_layout Standard
-This solution is a man-made heuristic that implements early reversal points
- using if-statements (
+This man-made heuristic implements early reversal points using if-statements
+ (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "mc:mc-ifex-plot"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9904,9 +9701,6 @@ As can be seen in
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-ifex-pareto"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9915,9 +9709,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-ifex-c8"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -9939,6 +9730,16 @@ status open
 \end_inset
 
 
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xxx
 \end_layout
 
 \begin_layout Plain Layout
@@ -9969,11 +9770,16 @@ e][{$2$},fixnode]]]]}
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The if-distinction is recognizable as square blocks.
+The if-distinctions can be recognized as square blocks.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -10024,8 +9830,8 @@ name "fig:mc-ifex-pareto"
 
 \end_inset
 
- The improvement of the Pareto candidates is safe when only the if-condition
- is changed (compared to the mutatable version).
+ All Pareto-efficient candidates are trustworthy.
+ (compared to the mutatable version).
 \end_layout
 
 \end_inset
@@ -10347,9 +10153,6 @@ approx 5-10$ steps
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:sarsa75-paretos"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -10390,9 +10193,13 @@ status open
 
 \begin_layout Plain Layout
 
-Excluding $x^y$ and $
+Excluding $
 \backslash
-sin$
+{x^y,
+\backslash
+sin
+\backslash
+}$
 \end_layout
 
 \end_inset
@@ -10647,9 +10454,6 @@ Normal GP results for the IB reach a combined regression error of about
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:IB_MSE_scratch_graphs"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -10681,8 +10485,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The three Pareto fronts in comparison alongside with the online evaluation
- results.
+The three Pareto fronts alongside the combined online evaluation.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -10751,36 +10554,7 @@ action 2
 </cell>
 </row>
 <row>
-<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Complexity 3
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10804,7 +10578,7 @@ min$}[{$-0.043$}][{-Velocity$_{3}$}]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10830,7 +10604,7 @@ text{Consumption}_1$}]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10854,16 +10628,16 @@ plforest{[{$-$}[{Shift$_{4}$}][{Shift$_{8}$}]]}
 </cell>
 </row>
 <row>
-<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Complexity 5
+Complexity 3
 \end_layout
 
 \end_inset
 </cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10872,7 +10646,7 @@ Complexity 5
 
 \end_inset
 </cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10883,7 +10657,7 @@ Complexity 5
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10907,7 +10681,7 @@ min$}[{$-0.545$}][{Velocity$_{6}$}]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10931,7 +10705,7 @@ min$}[{SetPoint}][{Shift$_{5}$}]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10957,16 +10731,16 @@ cdot $}[{$0.756$}][{Shift$_{4}$}]]]}
 </cell>
 </row>
 <row>
-<cell multicolumn="1" alignment="center" valignment="top" usebox="none">
+<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-Complexity 6
+Complexity 5
 \end_layout
 
 \end_inset
 </cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10975,7 +10749,7 @@ Complexity 6
 
 \end_inset
 </cell>
-<cell multicolumn="2" alignment="center" valignment="top" usebox="none">
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -10986,7 +10760,7 @@ Complexity 6
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11012,7 +10786,7 @@ min$}[{$-0.618$}][{Velocity$_{5}$}]]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -11038,11 +10812,40 @@ min$}[{SetPoint}][{Shift$_{5}$}]]]]}
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+<cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
 \noindent
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Complexity 6
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -11081,12 +10884,13 @@ name "tab:-IB-scratch-overview"
 \end_layout
 
 \begin_layout Subsection
-Expert program
+Expert Program Workaround
 \end_layout
 
 \begin_layout Standard
-No human-written policy for the IB is known, which is why a considerably
- useful formula was used as a starting solution.
+For the IB, no human-written policy for the is known.
+ Instead, a formula altering the appropriate actions was used as reference
+ solution workaround.
  The strategy intended subtracting a certain value from the most current
  variable of the respective action 
 \begin_inset ERT
@@ -11111,9 +10915,6 @@ text{Shift}_{0}$)
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -11123,9 +10924,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -11133,9 +10931,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress-1"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -11143,9 +10938,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress-2"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -11153,9 +10945,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress-3"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -11420,9 +11209,6 @@ approx 1.5$
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-plots"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -11433,7 +11219,6 @@ noprefix "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -11521,7 +11306,7 @@ name "chap:Conclusion"
 \end_layout
 
 \begin_layout Section
-Discussion
+Conclusion
 \end_layout
 
 \begin_layout Standard
@@ -11543,7 +11328,6 @@ Both the SARSA-75 and the PSONN policy featured hard to fit transition samples.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -11551,7 +11335,7 @@ literal "true"
  
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsection
 Findings on familiar GP
 \end_layout
 
@@ -11580,7 +11364,7 @@ The performance differenced regression error did not significantly differ
  strategies has been made possible.
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subsection
 Limitations and applicability
 \end_layout
 
@@ -11595,8 +11379,28 @@ The proposed approach is only applicable, when the regression error of the
  be approximated with symbolic regression.
 \end_layout
 
+\begin_layout Standard
+The second limitation is related to the edit distance, which in some cases
+ turns into a regular complexity metric, especially for small expert program,
+ which will be further discussed in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "subsec:Edit-distance-anomalies"
+
+\end_inset
+
+.
+\end_layout
+
 \begin_layout Subsection
-Edit distance anomalies
+Edit Distance Anomalies 
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Edit-distance-anomalies"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -11684,7 +11488,7 @@ end{itemize}
 \end_layout
 
 \begin_layout Subparagraph
-Composing chunks with if-cases
+Composing chunks if-cases
 \end_layout
 
 \begin_layout Standard
@@ -11725,9 +11529,35 @@ status open
 
 
 \backslash
+hspace
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
 plforest{[{$+$}[abs[pos]][{$
 \backslash
 cdot$}[{$174.162$}][{vel}]]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace
 \end_layout
 
 \end_inset
@@ -11778,13 +11608,9 @@ The number of leaf nodes follows explicitly from the operator tree and can
  A distinction should be made between observations and numbers.
 \end_layout
 
-\begin_layout Subparagraph
-Numbers
-\end_layout
-
 \begin_layout Standard
-Numbers are constant values which are rather irrelevant for understanding
- a formula.
+Constants and numbers are leaf nodeswhich are rather irrelevant for understandin
+g a formula.
  Even though they are essential for a program to function and optimizing
  their exact values is subject to an important part of the genetic evolution,
  besides some remarkable constants 
@@ -11815,23 +11641,16 @@ status open
  
 \end_layout
 
-\begin_layout Subparagraph
-Observations 
+\begin_layout Standard
 \begin_inset CommandInset label
 LatexCommand label
 name "gp-Observations-role"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-The observations used play a decisive role, but above all the set of unique
- operators is crucial.
- They are the nodes around which operators and constants are to be arranged
- in such a way that they map their values as well as possible to an output,
- which is, after all, the sole task of the GP process.
+ Observations are the nodes around which operators and constants are to
+ be arranged in such a way that they map their values as well as possible
+ to an output, which is, after all, the sole task of the GP process.
  Since not all available observations have to be used automatically, they
  mainly also represent the dimensionality of the input vector of the model
  that the solution tree represents.
@@ -11852,40 +11671,26 @@ curse of dimensionality
  root as the main anchor point.
 \end_layout
 
-\begin_layout Section
-Summary
+\begin_layout Standard
+Hence, especially the set of unique operators should be considered.
 \end_layout
 
-\begin_layout Section
-Conclusion
+\begin_layout Subsection
+Summary
 \end_layout
 
 \begin_layout Standard
 In this thesis, we proposed the concept of familiarity for creating optimized
  interpretable reinforcement learning policies, which depicts similarity
  to already known strategies of a domain expert.
-\end_layout
-
-\begin_layout Standard
-===
-\end_layout
-
-\begin_layout Standard
-Interpretable policies can already be derived through symbolic regression
- on transition samples that were previously collected with a black box method.
- These can deviate strongly from the strategy or understanding which a human
- expert has developed.
- The complexity paradigm of simplicity is therefore to be replaced with
- familiarity is implemented as the amount of necessary edits to an expert
- program.
- 
-\end_layout
-
-\begin_layout Standard
-The expert's program is used as the genetic origin for genetic programming.
- In order to raise the commitment to the origin tree, fixed nodes were introduce
-d that allow an expert to further bind the evolutionary process to the origin
- formula.
+ The technique of creating interpretable policies through symbolic regression
+ on transition samples often deviate strongly from the strategy or understanding
+ a human expert has developed.
+ The Tree Edit distance was proposed as familiarity metric to replace the
+ absolute amount of nodes as complexity measure for GP programs.
+ In order to raise the commitment to the origin tree, fixed nodes were further
+ introduced that allow an expert to further bind the evolutionary process
+ to the origin program.
  
 \end_layout
 
@@ -11909,11 +11714,30 @@ ility of the solutions, but also that solutions are found for problems that
 \end_layout
 
 \begin_layout Section
-Future work
+Future Work
+\end_layout
+
+\begin_layout Standard
+In this section, two extension options are discussed in more detail.
+ The first one concerns the TED (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "TED-improvements"
+
+\end_inset
+
+), the second one proposes an explorative regression (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "subsec:Explorative-Regression"
+
+\end_inset
+
+).
 \end_layout
 
 \begin_layout Subsection
-Differentiating the familiarity of edits 
+Differentiating and weighting the familiarity of edits 
 \begin_inset CommandInset label
 LatexCommand label
 name "TED-improvements"
@@ -11923,27 +11747,11 @@ name "TED-improvements"
 
 \end_layout
 
-\begin_layout Paragraph
-Distance based complexity anomalies
-\end_layout
-
 \begin_layout Standard
 By using a distance measure such as the edit distance, the question emerges
  whether (and how) changes between nodes can be distinguished as changes
  between terminal nodes and operators can be further distinguished.
- Possible solutions, such as including an approach of weighting, are discussed
- in section 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "TED-improvements"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Subsection
-Weighted familiar edits
+ 
 \end_layout
 
 \begin_layout Standard
@@ -11957,21 +11765,13 @@ reference "tab:EUREKA-GP-complexities"
 \end_inset
 
 .
- 
-\end_layout
-
-\begin_layout Standard
-For this, the weighted mapping has to be calculated.
+ This requires calculating the weighted mapping.
  A subsequent weighting of the mapping of the regular TED does not make
- sense, since a later reweighting can lead to ambiguous results that do
- not correspond to the minimum.
- This mainly concerns the handling of a changed node.
- The weighted TED was implemented, but opens many questions on how to deal
- with the effect and the complexity of altered nodes in the origin tree.
-\end_layout
-
-\begin_layout Standard
-Implementations might be based on the following ideas:
+ sense, since it can lead to ambiguous results that do not correspond to
+ the minimum distance.
+ The weighted TED opens many questions on how to deal with the effect and
+ the complexity of altered nodes in the origin tree.
+ Implementations might be based on the following ideas:
 \end_layout
 
 \begin_layout Itemize
@@ -12004,56 +11804,24 @@ tan$
  basic operator types.
 \end_layout
 
-\begin_layout Standard
-More specific options that were implemented but not evaluated in order not
- to mix too many paradigms:
-\end_layout
-
 \begin_layout Itemize
-With if-statements, the edit distance of the child branches is calculated
- separately and only the largest factor is added.
+With if-statements, calculating the edit distance of the child branches
+ separately and adding only the largest factor to the distance.
  This procedure is intended to promote the use of if-statements, which have
- a very positive influence on the interpretability of a formula due to their
- structuring influence, but which greatly increase the TED due to the high
- arity of 3 and the resulting branching factor.
+ positive influence on the composition of a formula, but increases the TED
+ due to the high arity of 3.
 \end_layout
 
 \begin_layout Itemize
-Use of several known origins in one run and counting the minimum TED for
- each tree.
- This way, several understandable approaches could be compared directly
- for their extensibility or even incomplete solutions could be introduced
- separately.
-\end_layout
-
-\begin_layout Itemize
-Unifying and ordering trees before calculating the TED, as can be seen in
- 
+Unifying and ordering trees before calculating the TED, as was proposed
+ in 
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "fig:sympy-ordered-expression"
-plural "false"
-caps "false"
-noprefix "false"
+reference "sec:sympy-tree-reduction"
 
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Itemize
-Similar to fixed nodes (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "subsec:Fixed-nodes"
-plural "false"
-caps "false"
-noprefix "false"
-
-\end_inset
-
-), giving nodes of the core structure a separate weighting so that changes
- are possible but very costly.
 \end_layout
 
 \begin_layout Paragraph
@@ -12072,7 +11840,7 @@ reference "gp-Observations-role"
  or the essence of a formula anyway.
  Observations play an important role for the problem itself, but also result
  from the pure operational tree.
- Therefore, for normal complexity measures, the only function of evaluating
+ Therefore, for normal complexity metrics, the only function of evaluating
  leaf nodes is to penalize the branching factor of a tree without much additiona
 l effort.
  For distance-based methods, leaf nodes therefore represent a relatively
@@ -12082,8 +11850,7 @@ ion of a value is evaluated as a full-fledged edit.
  This can not only prevent deliberate simplifications, but can even lead
  to the formula components around the variable being adjusted in order to
  be able to continue to use the constant unchanged.
- A simple solution would be, for example, to exclude constants when calculating
- the TED.
+ A simple solution is to exclude constants when calculating the TED.
 \end_layout
 
 \begin_layout Standard
@@ -12131,8 +11898,15 @@ identity of indiscernibles
 
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 Explorative Regression
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Explorative-Regression"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -12157,9 +11931,6 @@ Example: An expert cooks eggs for 10 minutes and a black box for 5 minutes.
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:relative_kernel_path"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -12168,9 +11939,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:exploression-regr1"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -12178,9 +11946,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:exploression-regr2"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -12377,9 +12142,9 @@ The following regression formula was tested, which evaluates the resulting
 \end_layout
 
 \begin_layout Standard
-Unfortunately, no candidates were found in the rollouts.
- We conclude, that mixing different paradigms is rarely a good idea and
- highly recommend to implement a separate Pareto front.
+In the rolouts, no candidates were found; the proposed paradigms should
+ not be mixed as proposed.
+ Fur further experiments, we propose to implement a separate Pareto front.
 \end_layout
 
 \begin_layout Standard

@@ -370,15 +370,18 @@ def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
         y = agentperflist[2]
         tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
         xx, yy = np.array(tuples).T
-        ax.step(xx, yy, linestyle='dotted', marker='.', where='post')
+
+        ax.step(xx, yy, linestyle='dotted', marker='.', where='post', label='regression error')
         ax.set(xlabel='complexity', ylabel='regression error', ylim=(0, 1))
-        # ax.legend('upper right')
 
         ax2 = ax.twinx()
         ax2.set(ylim=(-95, -200), xlim=(0, 35))
-        ax2.step(x, y, linestyle='None', marker='x', label='reward average')
-        ax2.legend(loc='upper right')
+        ax2.step(x, y, linestyle='None', marker='x', label='average reward')
         ax2.set(ylabel='online reward')
+
+        h1, l1 = ax.get_legend_handles_labels()
+        h2, l2 = ax2.get_legend_handles_labels()
+        ax.legend(h1+h2, l1+l2, loc='upper right')
 
         fig.savefig(dir_save / f'evaled_overview.pdf')
 

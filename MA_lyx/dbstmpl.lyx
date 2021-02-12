@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -28,6 +28,8 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -45,8 +47,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -88,7 +88,6 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -98,10 +97,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -330,7 +326,6 @@ emph{reinforcement learning}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -358,7 +353,6 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
-literal "true"
 
 \end_inset
 
@@ -368,7 +362,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -391,7 +384,6 @@ Industrial control strategies feature many peculiarities, which can be addressed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
-literal "true"
 
 \end_inset
 
@@ -399,7 +391,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
-literal "true"
 
 \end_inset
 
@@ -408,7 +399,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
-literal "true"
 
 \end_inset
 
@@ -425,7 +415,6 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -434,7 +423,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -443,7 +431,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -465,7 +452,6 @@ In this thesis, the principle of familiarity is introduced, by means of
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
-literal "true"
 
 \end_inset
 
@@ -495,7 +481,6 @@ The structure of this thesis is organized as follows.
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Applied-methods"
-caps "true"
 
 \end_inset
 
@@ -509,7 +494,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Familiar-Genetic-Programming"
-caps "true"
 
 \end_inset
 
@@ -544,7 +528,6 @@ emph{industrial benchmark}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Evaluation"
-caps "true"
 
 \end_inset
 
@@ -553,7 +536,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Results"
-caps "true"
 
 \end_inset
 
@@ -562,7 +544,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Conclusion"
-caps "true"
 
 \end_inset
 
@@ -587,7 +568,6 @@ In this chapter, background information and applied methodologies are introduced
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Reinforcement-learning"
-caps "true"
 
 \end_inset
 
@@ -596,7 +576,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Interpretable-Machine-Learning"
-caps "true"
 
 \end_inset
 
@@ -606,7 +585,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp_Genetic-Programming"
-caps "true"
 
 \end_inset
 
@@ -635,7 +613,6 @@ Reinforcement learning is a subfield of machine learning, where an agent
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:RL-basics"
-caps "true"
 
 \end_inset
 
@@ -681,7 +658,6 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
-literal "true"
 
 \end_inset
 
@@ -731,7 +707,6 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -768,7 +743,6 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -781,7 +755,6 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -800,7 +773,6 @@ the ability to explain or to present in understandable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -841,7 +813,6 @@ RL problems are incomplete as they are not fully testable and can be solved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -864,7 +835,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp_Genetic-Programming"
-caps "true"
 
 \end_inset
 
@@ -877,7 +847,6 @@ caps "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -906,7 +875,6 @@ everyone
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:The-interpretability-gap"
-caps "true"
 
 \end_inset
 
@@ -1014,7 +982,6 @@ g policies since it was first introduced by Koza
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
-literal "true"
 
 \end_inset
 
@@ -1058,7 +1025,6 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1135,7 +1101,6 @@ As for the selection process, each candidate is chosen separately through
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:gp-Evolutionary-concepts"
-caps "true"
 
 \end_inset
 
@@ -1683,7 +1648,6 @@ Two parent trees exchange two random branches, creating two child trees
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:crossover"
-caps "true"
 
 \end_inset
 
@@ -1818,7 +1782,6 @@ n metrics (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-error"
-caps "true"
 
 \end_inset
 
@@ -1942,7 +1905,6 @@ In the case of discrete or restricted value ranges, a corresponding value
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-bounded-discrete"
-caps "true"
 
 \end_inset
 
@@ -1950,7 +1912,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-bounded"
-caps "true"
 
 \end_inset
 
@@ -2138,7 +2099,6 @@ emph{Eureqa}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:EUREKA-GP-complexities"
-caps "true"
 
 \end_inset
 
@@ -2385,7 +2345,6 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
-literal "true"
 
 \end_inset
 
@@ -2410,7 +2369,6 @@ n, where all Pareto-efficient combinations to the first objective of fitness
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:paretofront-example"
-caps "true"
 
 \end_inset
 
@@ -2566,7 +2524,6 @@ emph{full}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:grow-vs-full-method"
-caps "true"
 
 \end_inset
 
@@ -2589,7 +2546,6 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
-literal "true"
 
 \end_inset
 
@@ -2843,7 +2799,6 @@ As a reference for familiarity, the domain expert's strategy or program
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "Symbolic-Regression"
-caps "true"
 
 \end_inset
 
@@ -2852,7 +2807,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Offline-Data-Selection"
-caps "true"
 
 \end_inset
 
@@ -2878,7 +2832,6 @@ emph{Tree Edit Distance} (TED)
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Familiarity-Measurement-TED"
-caps "true"
 
 \end_inset
 
@@ -2888,7 +2841,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:GP-Suite-Implementation"
-caps "true"
 
 \end_inset
 
@@ -2897,7 +2849,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "subsec:Fixed-nodes"
-caps "true"
 
 \end_inset
 
@@ -2905,7 +2856,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:sympy-tree-reduction"
-caps "true"
 
 \end_inset
 
@@ -2988,14 +2938,32 @@ $d$
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
 \begin_inset ERT
 status open
+
+\begin_layout Plain Layout
+
+The mandatory prerequisites for a metric  are: 
+\end_layout
 
 \begin_layout Plain Layout
 
@@ -3025,7 +2993,7 @@ end{tabular}
 
 	
 \backslash
-item 
+item
 \backslash
 begin{tabular}{>{
 \backslash
@@ -3128,7 +3096,6 @@ text{modify}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:TED_edits"
-caps "true"
 
 \end_inset
 
@@ -3140,7 +3107,6 @@ caps "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -3151,7 +3117,6 @@ ations
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3242,7 +3207,6 @@ For this work, a GP suite in the language Python was developed.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -3257,7 +3221,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3359,7 +3322,6 @@ emph{Industrial benchmark}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Industrial-benchmark"
-caps "true"
 
 \end_inset
 
@@ -3367,7 +3329,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:Probabilities-for-selecting"
-caps "true"
 
 \end_inset
 
@@ -3610,7 +3571,6 @@ The TED is calculated both a robustly and efficiently with APTED
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3620,9 +3580,6 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "TED-improvements"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -3792,7 +3749,6 @@ Sums are commutative and
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:sympy-ordered-expression"
-caps "true"
 
 \end_inset
 
@@ -3870,7 +3826,6 @@ Tree unification restructures a tree accordingly to a unique order by extracting
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4694,7 +4649,6 @@ emph{Mountain car}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:mountaincar"
-caps "true"
 
 \end_inset
 
@@ -4723,7 +4677,6 @@ emph{Industrial Benchmark}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Industrial-benchmark"
-caps "true"
 
 \end_inset
 
@@ -4733,7 +4686,6 @@ caps "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -4742,7 +4694,6 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:mc-ib-comparisson"
-caps "true"
 
 \end_inset
 
@@ -5013,7 +4964,6 @@ In the Mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -5024,9 +4974,6 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "img:mountaincar-overview"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -5422,7 +5369,6 @@ At the starting position it is already clear whether the goal can be reached
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "table:MC_agents_rewards"
-caps "false"
 
 \end_inset
 
@@ -5436,7 +5382,6 @@ onal diagram, where for each state the action is color-coded (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-decision-plots"
-caps "true"
 
 \end_inset
 
@@ -5444,7 +5389,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mountaincar-plot-diff"
-caps "true"
 
 \end_inset
 
@@ -5594,7 +5538,6 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -5624,7 +5567,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -5638,7 +5580,6 @@ At this state, the agent outperforms the vanilla-expert solution, but it
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sarsa75_problem_decision_plots"
-caps "true"
 
 \end_inset
 
@@ -5647,9 +5588,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ml-sarsa-outliers"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -5669,7 +5607,6 @@ experienced
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sarsa-200-plots"
-caps "true"
 
 \end_inset
 
@@ -5693,7 +5630,6 @@ approx-98.7$
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sarsa1000-plots"
-caps "true"
 
 \end_inset
 
@@ -6673,7 +6609,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -6681,7 +6616,6 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "IB-observations-state"
-caps "true"
 
 \end_inset
 
@@ -6740,7 +6674,6 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -6753,7 +6686,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -7252,7 +7184,6 @@ The regular GP runs could completely solve the problem from complexity 18.
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mtc200-mse-scratch-pareto"
-caps "true"
 
 \end_inset
 
@@ -7263,7 +7194,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:MC-scratch-3examples"
-caps "true"
 
 \end_inset
 
@@ -7934,7 +7864,6 @@ Maximizing the velocity through accelerating towards the moving direction
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:MC-simple-plots"
-caps "true"
 
 \end_inset
 
@@ -7942,9 +7871,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "img:mtc_simple_tree"
-plural "false"
-caps "false"
-noprefix "false"
 
 \end_inset
 
@@ -8169,7 +8095,6 @@ The TED loses its effect after a certain amount of changes, the first occurence
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-simple-candidates"
-caps "true"
 
 \end_inset
 
@@ -8179,7 +8104,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc200_MSE_simple-pareto"
-caps "true"
 
 \end_inset
 
@@ -8596,7 +8520,6 @@ $0.05$
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc200_simple-fix-pareto"
-caps "true"
 
 \end_inset
 
@@ -8607,7 +8530,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:simpleFix-3candidates"
-caps "true"
 
 \end_inset
 
@@ -9220,7 +9142,6 @@ This close-form preset policy was presented by Xiao and is a mathematical
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-origin-plot"
-caps "true"
 
 \end_inset
 
@@ -9228,7 +9149,6 @@ caps "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -9302,7 +9222,6 @@ All candidates that were found demonstrated increased real performance,
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-pareto"
-caps "true"
 
 \end_inset
 
@@ -9311,7 +9230,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-c5"
-caps "true"
 
 \end_inset
 
@@ -9319,7 +9237,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-c8"
-caps "true"
 
 \end_inset
 
@@ -9877,7 +9794,6 @@ This man-made heuristic implements early reversal points using if-statements
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "mc:mc-ifex-plot"
-caps "false"
 
 \end_inset
 
@@ -9893,7 +9809,6 @@ As can be seen in
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-ifex-pareto"
-caps "true"
 
 \end_inset
 
@@ -9903,7 +9818,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mc-ifex-c8"
-caps "true"
 
 \end_inset
 
@@ -10350,7 +10264,6 @@ approx 5-10$ steps
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:sarsa75-paretos"
-caps "true"
 
 \end_inset
 
@@ -10652,7 +10565,6 @@ Normal GP results for the IB reach a combined regression error of about
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:IB_MSE_scratch_graphs"
-caps "true"
 
 \end_inset
 
@@ -11114,7 +11026,6 @@ text{Shift}_{0}$)
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-plots"
-caps "true"
 
 \end_inset
 
@@ -11124,7 +11035,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress"
-caps "true"
 
 \end_inset
 
@@ -11132,7 +11042,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress-1"
-caps "true"
 
 \end_inset
 
@@ -11140,7 +11049,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress-2"
-caps "true"
 
 \end_inset
 
@@ -11148,7 +11056,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-progress-3"
-caps "true"
 
 \end_inset
 
@@ -11413,7 +11320,6 @@ approx 1.5$
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:ib-plots"
-caps "true"
 
 \end_inset
 
@@ -11424,7 +11330,6 @@ caps "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -11516,9 +11421,6 @@ The results of this work are concluded and discussed in
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Conclusion"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -11526,9 +11428,6 @@ noprefix "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Future-Work"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -11605,7 +11504,6 @@ A general limitation of offline training is that an agent's actual fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -11632,7 +11530,6 @@ The second limitation is related to the edit distance, which in some cases
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "subsec:Edit-distance-anomalies"
-caps "true"
 
 \end_inset
 
@@ -11677,9 +11574,6 @@ Operators represent the applied computations of a tree and have the most
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:if-operator-composition"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -11980,7 +11874,6 @@ In this section, two extension options are discussed in more detail.
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "TED-improvements"
-caps "true"
 
 \end_inset
 
@@ -11988,7 +11881,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "subsec:Explorative-Regression"
-caps "true"
 
 \end_inset
 
@@ -12020,7 +11912,6 @@ The TED offers many extension possibilities which can further address the
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:EUREKA-GP-complexities"
-caps "true"
 
 \end_inset
 
@@ -12045,9 +11936,6 @@ Dividing all operators into classes, where the cost for changing within
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:operator-classification"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -12070,7 +11958,6 @@ Unifying and ordering trees before calculating the TED, as was proposed
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:sympy-tree-reduction"
-caps "true"
 
 \end_inset
 
@@ -12667,7 +12554,6 @@ As already mentioned in
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp-Observations-role"
-caps "true"
 
 \end_inset
 
@@ -12766,7 +12652,6 @@ Example: An expert cooks eggs for 10 minutes and a black box for 5 minutes.
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:relative_kernel_path"
-caps "true"
 
 \end_inset
 
@@ -12775,7 +12660,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:exploression-regr1"
-caps "true"
 
 \end_inset
 
@@ -12783,7 +12667,6 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:exploression-regr2"
-caps "true"
 
 \end_inset
 

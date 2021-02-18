@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -29,7 +29,6 @@
 % Added by lyx2lyx
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -47,6 +46,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -88,6 +89,7 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -97,7 +99,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -326,6 +331,7 @@ emph{reinforcement learning}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -353,15 +359,21 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
+literal "true"
 
 \end_inset
 
 .
- Simple, interpretable policies can already be learned on surrogate models
+ 
+\end_layout
+
+\begin_layout Standard
+Simple, interpretable policies can already be learned on surrogate models
  with the help of genetic programming 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -369,9 +381,9 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 \end_layout
 
 \begin_layout Standard
-In this thesis, a technique is presented that uses genetic programming on
- already known strategies and replaces the complexity paradigm of simplicity
- with familiarity.
+In this thesis, a technique is presented that uses genetic programming to
+ enhance already known strategies by replacing the complexity paradigm of
+ simplicity with familiarity.
 \end_layout
 
 \begin_layout Section
@@ -384,6 +396,7 @@ Industrial control strategies feature many peculiarities, which can be addressed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
+literal "true"
 
 \end_inset
 
@@ -391,6 +404,7 @@ key "siemens-gas-turbine-rl-nn"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
+literal "true"
 
 \end_inset
 
@@ -399,6 +413,7 @@ key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
+literal "true"
 
 \end_inset
 
@@ -415,6 +430,7 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -423,6 +439,7 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -431,6 +448,7 @@ key "hein_fuzzy_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -452,6 +470,7 @@ In this thesis, the principle of familiarity is introduced, by means of
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
+literal "true"
 
 \end_inset
 
@@ -568,6 +587,7 @@ In this chapter, background information and applied methodologies are introduced
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Reinforcement-learning"
+caps "true"
 
 \end_inset
 
@@ -576,6 +596,7 @@ reference "sec:Reinforcement-learning"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Interpretable-Machine-Learning"
+caps "true"
 
 \end_inset
 
@@ -585,6 +606,7 @@ reference "sec:Interpretable-Machine-Learning"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp_Genetic-Programming"
+caps "true"
 
 \end_inset
 
@@ -658,6 +680,7 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
+literal "true"
 
 \end_inset
 
@@ -707,6 +730,7 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -743,6 +767,7 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -755,6 +780,7 @@ As described in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -773,6 +799,7 @@ the ability to explain or to present in understandable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -813,6 +840,7 @@ RL problems are incomplete as they are not fully testable and can be solved
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -847,6 +875,7 @@ reference "gp_Genetic-Programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -982,6 +1011,7 @@ g policies since it was first introduced by Koza
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
+literal "true"
 
 \end_inset
 
@@ -1025,6 +1055,7 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -2345,6 +2376,7 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
+literal "true"
 
 \end_inset
 
@@ -2546,6 +2578,7 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
+literal "true"
 
 \end_inset
 
@@ -2923,18 +2956,6 @@ We designate policies as familiar, when algorithmic structures can be recognized
  we need to define a distance function on a suitable unit of measurement
  which represents the scope of the change, or to put it another way, the
  necessary edits that have to be applied.
- The mandatory prerequisites for a metric 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$d$
-\end_layout
-
-\end_inset
-
- are: 
 \end_layout
 
 \begin_layout Standard
@@ -2962,7 +2983,7 @@ status open
 
 \begin_layout Plain Layout
 
-The mandatory prerequisites for a metric  are: 
+The mandatory prerequisites for a metric $d$ are: 
 \end_layout
 
 \begin_layout Plain Layout
@@ -2993,7 +3014,7 @@ end{tabular}
 
 	
 \backslash
-item
+item 
 \backslash
 begin{tabular}{>{
 \backslash
@@ -3107,6 +3128,7 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -3117,6 +3139,7 @@ ations
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3207,6 +3230,7 @@ For this work, a GP suite in the language Python was developed.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -3221,6 +3245,7 @@ key "karooGPpaper"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -3571,6 +3596,7 @@ The TED is calculated both a robustly and efficiently with APTED
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3826,6 +3852,7 @@ Tree unification restructures a tree accordingly to a unique order by extracting
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4137,7 +4164,7 @@ Cause
 </cell>
 </row>
 <row>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4164,7 +4191,7 @@ max(a,b,c)}$
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4189,7 +4216,7 @@ max$
 </cell>
 </row>
 <row>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4216,7 +4243,7 @@ text{And}(a,b,c)}$
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4241,7 +4268,7 @@ lor$
 </cell>
 </row>
 <row>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4266,7 +4293,7 @@ text{nan}$
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" leftline="true" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4287,7 +4314,7 @@ Orders can not be negotiated
 </cell>
 </row>
 <row>
-<cell alignment="left" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4312,7 +4339,7 @@ cdot b)}$
 
 \end_inset
 </cell>
-<cell alignment="left" valignment="top" usebox="none">
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4686,6 +4713,7 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -4964,6 +4992,7 @@ In the Mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -5538,6 +5567,7 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -5567,6 +5597,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6609,6 +6640,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -6674,6 +6706,7 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -6686,6 +6719,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -9149,6 +9183,7 @@ reference "fig:xiao-origin-plot"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11095,6 +11130,9 @@ name "fig:ib-plots"
 
  The improvements of the start policy improve the real performance without
  bad outliers.
+ As the IB requires merging multiple Pareto candidates, it is good advice
+ to discard the first combinations.
+ 
 \end_layout
 
 \end_inset
@@ -11118,8 +11156,34 @@ status open
 \begin_layout Plain Layout
 \noindent
 \align center
+\begin_inset Box Boxed
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 1
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
 \begin_inset Graphics
 	filename img/inkscape/ib_vis/ib_s3m_v2_legend.pdf
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -11169,7 +11233,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Action 1 is adjusted late.
+Action 1 is adjusted late in the first combinations.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -11257,7 +11321,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Mainly action 1 is improved with these combinations.
+Action 1 is further improved with more complex combinations.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -11280,12 +11344,6 @@ name "fig:ib-progress-3"
 
 \begin_layout Subsection
 IB Discussion
-\end_layout
-
-\begin_layout Standard
-As the IB requires merging multiple Pareto candidates, it is good advice
- to discard the first combinations.
- 
 \end_layout
 
 \begin_layout Standard
@@ -11323,13 +11381,24 @@ reference "fig:ib-plots"
 
 \end_inset
 
-); the regression error was (on average) 30% higher than for the rest.
+); the error was (on average) 30% higher than for the rest.
  Compared to candidates in the MC benchmark, this is worse by a factor of
- 5.
+ 5 (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:Histograms-mc-ib"
+plural "false"
+caps "true"
+noprefix "false"
+
+\end_inset
+
+).
  This is also confirmed by the results found by Hein in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11504,6 +11573,7 @@ A general limitation of offline training is that an agent's actual fitness
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -12683,7 +12753,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename img/inkscape/kernel_hill_4options.pdf
+	filename img/inkscape/explorative_regression_hill.pdf
 
 \end_inset
 
@@ -12694,18 +12764,15 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Starting from the origin (orange) and a target solution (green) there are
- several path candidates.
- In classical regression, only the deviation from the target solution is
- evaluated; path (1.) and path (2.) would be equally good here.
- Path (1.) achieves this, however, with a much smaller change in behavior,
- which should be preferred from a confidence perspective.
- Path (3.) is not only worse, it is even worse in this area than the known
- solution.
- Areas where the expert solution is already close to the target solution
- should not be changed.
- Path (4.) deviates here at a point which was already well solved and therefore
- makes no sense.
+The blue path is the familiar and trusted way up the hill, the green path
+ is a faster solution.
+ Starting from the origin path, there are several path candidates.
+ A regular regression only evaluates the deviation from the target solution;
+ path (1.) and path (2.) would be equally good.
+ However, path (1.) achieves this with a much smaller change in behavior,
+ which is preferable from a trust perspective.
+ In contrast, path (3.) is even worse than the known solution.
+ Lastly, path (4.) deviates early and affects the succeeding strategy.
  
 \begin_inset CommandInset label
 LatexCommand label

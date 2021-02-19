@@ -833,9 +833,19 @@ RL problems are incomplete as they are not fully testable and can be solved
  in various ways.
  The general level of evaluation is not limited, as applications can also
  be learned through proxy models.
- Considering the task-related relevant factrors, we are particulary interestet
+ Considering the task-related relevant factors, we are particularly interested
  in global interpretability, as post-hoc explanations for a subset of decisions
- can not explain complex strategies of an approach.
+ can not explain complex strategies.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xx
+\end_layout
+
+\end_inset
+
  As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -867,7 +877,7 @@ reference "gp_Genetic-Programming"
 \end_inset
 
 .
- We argue that simple and interpretable policies can oftem seem like arbitrary
+ We argue that simple and interpretable policies can often seem like arbitrary
  combinations of operators, as the solution path often deviates strongly
  from the strategy that an expert would choose.
  Understanding those requires a lot of effort, which is not clearly measurable.
@@ -1020,7 +1030,7 @@ literal "true"
  a fitness function to select the best individualy for the next generation.
  Random optimization like mutation or crossover allow new genes to emerge,
  which improves the pool of genes over generations.
- Improvements occur stochastically, which makes GP a metaheuristic optimization
+ Improvements occur stochastically, which makes GP a meta-heuristic optimization
  technique that does not necessarily converge to an optimum.
  The composition of a population is crucial and requires a careful balance
  between reproduction of genes through selection, which is important to
@@ -1114,7 +1124,7 @@ rightarrow 1$
 \color none
 As for the selection process, each candidate is chosen separately through
  tournament selection, where the fittest of (3-7) random candidates wins.
- This allows trees to survive in a population that have not yet been optimised
+ This allows trees to survive in a population that have not yet been optimized
  but may carry important genes in the future.
  The most important evolutions can be seen in 
 \family default
@@ -1608,7 +1618,7 @@ The candidate enters the next generation unchanged.
 \end_layout
 
 \begin_layout Plain Layout
-Good genes replicate and can be improved in further generations withoug
+Good genes replicate and can be improved in further generations without
  dying out.
 \end_layout
 
@@ -1641,7 +1651,7 @@ A random node in a tree is chosen and replaced with
 \end_layout
 
 \begin_layout Itemize
-(branch): A randomly built branch (of arbitraty size)
+(branch): A randomly built branch (of arbitrary size)
 \end_layout
 
 \begin_layout Itemize
@@ -1732,7 +1742,7 @@ This constant stream of new contestants increases genetic diversity.
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Evolutionary aspects of GP in an overview.
+A possible division of evolutionary strategies for the next generation.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -1777,8 +1787,7 @@ name "fig:crossover"
 
 \end_inset
 
- Visualisation of the crossover evolution, where branches between trees
- are recombined.
+ Visualization of the crossover evolution, where trees branches are recombined.
 \end_layout
 
 \end_inset
@@ -2111,7 +2120,7 @@ name "pareto-gp"
 \begin_layout Standard
 Due to the high branching factor for solution candidates, the amount of
  nodes in a trees must be restricted.
- The most common size restriction is a nodecount based limit, which also
+ The most common size restriction is a node-count based limit, which also
  offers the opportunity to apply a custom weighting of the components; for
  example the default weighting of the commercial GP Framework 
 \begin_inset ERT
@@ -11532,8 +11541,8 @@ Findings on familiar GP
 \end_layout
 
 \begin_layout Standard
-The experiments show significant structural differences between familiar
- and regular GP individuals.
+The experiments show significant structural differences between individuals
+ in familiar and regular GP runs.
  Structures of the origin program can be recognized in familiar candidates;
  which also forms a more homogeneous Pareto front.
  Nevertheless, in some places structures of the expert were also broken
@@ -11625,7 +11634,7 @@ The number of nodes poses some problems as a paradigm for complexity values,
 \begin_layout Standard
 An important distinction has to be made between the inner and outer nodes
  of a tree.
- The inner nodes, which contain the operators, essentially characterise
+ The inner nodes, which contain the operators, essentially characterize
  a programming tree by representing the computation that is performed, since
  the exact choice of leaf nodes are the logical prerequisite for its fitness
  and can therefore only be used in the appropriate places.
@@ -11795,7 +11804,7 @@ A very simple mathematical formula can be much harder to understand than
 \begin_inset Newline newline
 \end_inset
 
-The if-conditional exemplifies the contradiction between explainability
+The if-conditional exemplifies the contradiction between interpretability
  and a count-based measure.
  Although the if-operator has the highest arity with 3 input parameters,
  it creates more structure than other operators, as its child trees are

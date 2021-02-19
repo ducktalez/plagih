@@ -1,9 +1,5 @@
 import ast
 
-# import os
-# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
-
-
 # lol, lol. https://github.com/tensorflow/tensorflow/issues/27023 these messages are tingeling
 # import tensorflow.python.util.deprecation as deprecation  # not possible on python 3.6
 # deprecation._PRINT_DEPRECATION_WARNINGS = False
@@ -229,6 +225,9 @@ op_test = {
 
 
 def make_classes():
+    """
+    Dummy function to automatically generate text that is the op-array as class structures.
+    """
     class_str = 'import os\nimport tensorflow as tf\nimport ast\nimport math\nfrom plagih.plagih_data import *\n\n' \
                 'class Plabel:\n' \
                 '    pass\n'

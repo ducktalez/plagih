@@ -46,6 +46,26 @@ pyplot_rc_tex2 = {'figure.autolayout': True,
                   # 'axes.ymargin': 0
                   }
 
+# https://www.elsevier.com/authors/policies-and-guidelines/artwork-and-media-instructions/artwork-sizing
+plot_ratio = 9 / 16  # classic 16/9 ratio
+plot_width_twocol = 9 / 25.4  # main relevant cm->inch by /25.4
+pyplot_rc_two_column = {'figure.autolayout': True,
+                     'text.usetex': True,
+                     'backend': 'pgf',
+                     'figure.figsize': (3.5433, 2),
+                     'axes.labelpad': 0.4,  # padding axis-ticks to axis title
+                     'xtick.labelsize': 7, 'xtick.major.size': 1.2, 'xtick.major.pad': 1.2,
+                     'ytick.labelsize': 7, 'ytick.major.size': 1.2, 'ytick.major.pad': 1.2,
+                     'font.size': 10,
+                     'legend.fontsize': 8,
+                     'savefig.dpi': 600,
+                     'savefig.pad_inches': 0,
+                        'lines.linewidth': 1,
+                        'lines.markersize': 3,
+                        'axes.xmargin': 0,
+                        'axes.ymargin': 0
+                        }
+
 rc_pyplot_size = {'figure.figsize': pyplot_size}
 # ['text.latex.preamble'=r"\usepackage{lmodern}"]
 
@@ -199,6 +219,7 @@ def pickle_load(path: Path):
 def yaml_load(yaml_path):
     """
     .yaml-file loader (saves two lines that I had to look up all the time)
+    Especially the Loader has to be specified.
     """
     with Path.open(yaml_path, 'r') as file:
         loaded_yaml = yaml.load(file, Loader=yaml.FullLoader)  # yaml.safe_load sfeh?
@@ -208,10 +229,27 @@ def yaml_load(yaml_path):
 def yaml_dump(path, data, print_type=None, default_flow_style=True):
     """
     saves prepared plagih data to pickle file
+    - default_flow_style=False for dumping in a block style
     """
-
     path = path_make_dir(path)
     with Path.open(path, 'w') as file:
         _ = yaml.dump(data, file, default_flow_style=default_flow_style, sort_keys=False)
         printez('ff', f'{path.as_posix()}', print_type=print_type)
     return
+
+
+if __name__ == '__main__':
+    print(f'Testing the plot style')
+    import matplotlib.pyplot as plt
+    import numpy as np
+    x = range(10)
+    y = np.sin(np.arange(10)/10) + np.arange(10)/10
+    with plt.rc_context(rc=pyplot_rc_two_column):
+        fig, ax = plt.subplots()
+        ax.plot(x, y, marker='x', label='random values (idk)')
+        ax.set(xlabel='some label', ylabel='some other value')
+        ax.legend(loc='lower left')
+        plt.show()
+        # plt.yticks(MTC_XTICKS[0], MTC_XTICKS[1])
+        # plt.xticks(MTC_YTICKS[0], MTC_YTICKS[0])
+        # fig.xticks((0, 0.5, 1), (r'\bf{0}', r'\bf{.5}', r'\bf{1}'), color='k', size=20)

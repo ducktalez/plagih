@@ -1,5 +1,6 @@
 """
 making several stylish plots for the thesis (same style, all at once)
+not relevant for the framework (at all)
 """
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -72,8 +73,7 @@ def thesis_plot_mc_comparisson():
 
 def thesis_plot_ib_comparisson():
     """
-    # sfeh adasd
-    # todo
+    Plots that compare the main industrial benchmark solutions
     """
     tuples = {'Random': [-6809, -6632],
               'Nothing': [-6077, -6068],
@@ -121,23 +121,7 @@ def thesis_plot_ib_comparisson():
         plt.close('all')
 
 
-# def thesis_regression_comparisson():
-#     xx = np.linspace(-5, 5, 100)
-#     yy = np.abs(xx)
-#     xxd = np.linspace(-5, 5, 10+1)
-#     yyd = np.round(xx)
-#
-#     with plt.rc_context(rc=pyplot_rc_tex):
-#         fig, ax = plt.subplots()
-#         fig.figsize = plplot_size_up
-#         ax.legend(loc='lower left')
-#         ax.plot(xx, yy)
-#
-#         # savepath = path_make_dir(Path.cwd() / f'MA_lyx/img/IB/.pdf')
-#         # fig.savefig(savepath)
-#         # plt.close('all')
-
-def thesis_MC_comparisson():
+def thesis_mc_comparisson():
     xx = np.linspace(-5, 5, 100)
     yy = np.abs(xx)
     xxd = np.linspace(-5, 5, 10+1)
@@ -148,10 +132,6 @@ def thesis_MC_comparisson():
         fig.figsize = plplot_size_up
         ax.legend(loc='lower left')
         ax.plot(xx, yy)
-
-        # savepath = path_make_dir(Path.cwd() / f'MA_lyx/img/IB/.pdf')
-        # fig.savefig(savepath)
-        # plt.close('all')
 
 
 def thesisplot_tempdiff():
@@ -250,8 +230,6 @@ if __name__ == "__main__":
     # thesis_decision_plots_fullspace()
     thesisplot_tempdiff()
     # thesis_plot_ib_comparisson()
-    # # thesis_plot_mc_comparisson()
-    # print('SFEH COMMENTED! asd')
     # # thesis_plot_mc_comparisson()
     # # thesis_decision_plots_dummied()
     # res = mtc_play(Good_Expert(), n=100)

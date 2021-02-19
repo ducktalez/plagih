@@ -410,7 +410,7 @@ class ExplainableGP(object):
                 self.print_g('gg', f'Preparing to create first Generation. Gen {self.gen_id}.')
                 self.gen_create_initial()  # sfeh stattdessen einfach checken, ob die letzte population leer ist und info/warnung: neue generation?
             else:
-
+                # This might be a solution for multiprocessing:
                 # You can avoid this situation by calling multiprocessing.Process before you load your huge data.
                 # Then the additional memory allocations will not be reflected in the child process when you load the data in the parent.
                 # sfeh: In python 3.8, this might be availably: multiprocessing.shared_memory https://docs.python.org/3/library/multiprocessing.shared_memory.html
@@ -419,15 +419,13 @@ class ExplainableGP(object):
                 self.mp_cpu_cores_max = 1  # sfeh wasd
                 if self.mp_cpu_cores_max >= 2:
                     pass
-                    # sfeh asd
-                    mp.Process()  # sfeh maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
-
-                    print(f'Trying to make parallel new population: {mp.cpu_count()}')
-                    with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
-
-                        evolve_list = [[tag, evolve_specs] for tag, evolve_specs in self.evolve_loop.items()]
-                        results = p.map(self.the_fun, evolve_list)
-                    time_evolve = time.perf_counter()
+                    # # sfeh asd
+                    # mp.Process()  # sfeh maybe good for memory? https://stackoverflow.com/questions/14749897/python-multiprocessing-memory-usage
+                    # print(f'Trying to make parallel new population: {mp.cpu_count()}')
+                    # with mp.Pool(min(mp.cpu_count(), self.mp_cpu_cores_max)) as p:
+                    #     evolve_list = [[tag, evolve_specs] for tag, evolve_specs in self.evolve_loop.items()]
+                    #     results = p.map(fun, evolve_list)
+                    # time_evolve = time.perf_counter()
                 else:
                     self.gen_next_population()
                     pass
@@ -481,6 +479,10 @@ class ExplainableGP(object):
         """
         Creates all new Generations by applying the evolutions in the evolve-loop.
 
+        brainstorm:
+        - the tree can be reproduced (selection), random/new, olymp-reproduction
+        - (1 tree) mutations can affect a point, branch, terminal nodes
+        - (2 trees) can make a crossover
         """
         # All gp creators: name, function, num of trees from tournament selection
 
@@ -520,7 +522,7 @@ class ExplainableGP(object):
                     self.pop_append(cooltree)
 
             elif evolve_name == 'mutate branch':
-
+                # todo cooltree version
                 for nn in range(evolve_num):
                     cooltree = self.pop_selection_tournament(tourn_size)
 
@@ -592,8 +594,16 @@ class ExplainableGP(object):
                         self.pop_append(cooltree)
             else:
                 print_e(f"Evolution not known: '{evolve_name}'")
+        missing_trees = self.conf.pop_max - len(self.population_tmp)
+        if missing_trees > 0:
+            if missing_trees > 0.05*self.conf.pop_max:
+                self.printpl('ii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
+            else:
+                self.printpl('iii', f'{missing_trees}/{self.conf.pop_max} trees are missing in this population!')
+            while len(self.population_tmp) < self.conf.pop_max:
+                return  # sfeh aka create trees here if desired
 
-        # sfeh automatically fill with random trees
+        # sfeh automatically fill with random trees (check this at the initiation)
         # total_rate = sum([x['evolve_rate'] for x in self.evolve_list.values()])
         # if total_rate < 0:
         #     self.gen_create_random(int(self.conf.pop_max'] * (1 - total_rate)))
@@ -615,7 +625,7 @@ class ExplainableGP(object):
         Writing all analysis files after evaluating the paretofront.
         (Currently strongly customized by sfeh for the mountaincar and industrial benchmark)
         """
-        self.printpl('i', f'Analysing the pareto candidates of your run!')
+        self.printpl('i', f'Analysing the pareto candidates of the run.')
 
         dir_benchmarks = Path(__file__).parent.parent.absolute() / 'benchmarks/'
         path_hist = path_make_dir(self.root_dir / 'histograms/')
@@ -623,7 +633,7 @@ class ExplainableGP(object):
 
         for (parsim, fitness, cooltree) in self.pareto:
 
-            histpath = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
+            histograms_path = self.plot_agent_histogram(parsim, cooltree, path_hist)  # sfeh todo
 
             forest_tree_full, forest_tree_tight, tex_expr_raw, tex_expr_forest = self.file_pareto_latex(parsim, cooltree)
 
@@ -631,7 +641,7 @@ class ExplainableGP(object):
                                      'fitness': fitness,
                                      'cooltree': cooltree,
                                      'forest_tree_full': forest_tree_full, 'forest_tree_tight': forest_tree_tight, 'tex_expr_raw': tex_expr_raw, 'tex_expr_forest': tex_expr_forest,
-                                     'histogram': histpath,
+                                     'histogram': histograms_path,
                                      }
 
         tex_include_pdf = lambda x: f"\\includegraphics{{{str(x).replace('.pdf', '')}}}"
@@ -762,13 +772,12 @@ class ExplainableGP(object):
                     ax.legend(loc='lower right')
                     plt.yticks(IB_YICKS[0], IB_YICKS[1])
 
-                    # sfeh asdasd
+                    # drawing the regression error, but plots seem to be too overloaded
                     # axx = ax.twinx()
                     # axx.plot(xx, cnt, color='tab:gray', label='regression error', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
                     # axx.tick_params(axis='y', labelcolor='tab:gray')
                     # # axx.plot(xx, y['regression_sum'])
-
-                    # sfeh asdasd this is removed
+                    #
                     # ax2 = ax.twinx()
                     # ax2.plot(xx, cnt, color='tab:gray', label='combos', linestyle='dashed', marker='.')  # linestyle='None'  # , legend_loc='best'
                     # # ax2.set(ylabel='possible combinations', color='tab:gray')
@@ -966,7 +975,7 @@ class ExplainableGP(object):
 
         forest_tree_full = pl_forest(latex_brackettree(tree))
         forest_tree_tight = pl_forest(latex_brackettree_tight(latex_tree_semitight(tree)))
-        # sfeh workaround todo
+        # sfeh workaround delete this
         hohoho = latex_tight_node(tree)
         hohoho = hohoho.replace('cartPos', 'pos')
         hohoho = hohoho.replace('cartVel', 'vel')
@@ -1412,12 +1421,6 @@ class ExplainableGP(object):
             except Exception as evalex:
                 print_warning('wwww', f'Exception while evaluating: {evalex}, tree: {cooltree}.', print_type=self.print_type)
                 return
-
-            try:
-                # todo
-                pass
-            except Exception as ex:
-                print(f'ASDASD oh no {ex}')
 
         expr_raw = cooltree.get_expr_raw()
         expr_sym = expr_sympify(expr_raw)

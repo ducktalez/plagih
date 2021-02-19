@@ -22,10 +22,14 @@
 \usepackage[noend]{algpseudocode}
 \usepackage[normalem]{ulem}
 \usepackage{subfiles}
+\usepackage{import}
 % align oversets (available in TeXLive 18 - overleaf currently runs w/ texlive 17 - 5.11.19)
 % \usepackage{aligned-overset}
 \usepackage{bbm}
 
+% Sfehs personal commands (the same as in dbstmpl.sty)
+\newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},  samenode/.style={fill=blue!40,},  newnode/.style={fill=green!60,}, changenode/.style={fill=orange!60,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
+\newcommand{\rsymp}{\xrightarrow{\text{simplify}}}
 
 % Indicate clickability by colour
 \hypersetup{
@@ -76,8 +80,6 @@
 \input{macros}
 \begin{document}
 
-\section{TEST}
-
 \begin{frame}[plain, noframenumbering]
 \titlepage
 \end{frame}
@@ -87,31 +89,31 @@
 \includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
 \end{frame}
 
-%\begin{frame}{Introduction}
-%\includegraphics[height=0.89\textheight]{img/nn-blackbox.png}
-%\end{frame}
-
-
-\begin{frame}
-\frametitle{Erklärbarkeit durch Vertrautheit}
-\begin{columns}
-\column{0.5\textwidth}
-\includegraphics[width=1\linewidth]{img/3-teacher_small.png}
-\column{0.5\textwidth}
-	\begin{itemize}
-		\item Understanding the problem
-		\item Understanding what you have ahead of the other
-		\item Formulating the difference as language
-	\end{itemize}
-\end{columns}
+\begin{frame}{Introduction}
+\def\svgheight{0.8\textheight}\import{../img/inkscape}{explainability_gap2.pdf_tex}
 \end{frame}
 
 
-
-
-%\begin{frame}{Reinforcement Learning}
-%\includegraphics[height=0.8\textheight]{img/agent-env.png} 
+%\begin{frame}
+%\frametitle{Erklärbarkeit durch Vertrautheit}
+%\begin{columns}
+%\column{0.5\textwidth}
+%\includegraphics[width=1\linewidth]{img/3-teacher_small.png}
+%\column{0.5\textwidth}
+%	\begin{itemize}
+%		\item Understanding the problem
+%		\item Understanding what you have ahead of the other
+%		\item Formulating the difference as language
+%	\end{itemize}
+%\end{columns}
 %\end{frame}
+
+
+
+
+\begin{frame}{Reinforcement Learning}
+\includegraphics[height=0.8\textheight]{img/agent-env.png} 
+\end{frame}
 
 
 
@@ -130,10 +132,10 @@
 \column{0.4\textwidth}
 Different policies
 \begin{itemize}
-		\item Neural networks (75, 200)
-		\item Genetic Programming
-		\item Human
-	\end{itemize}
+	\item Neural networks
+	\item Mathematical formula
+	\item Domain expert (human)
+\end{itemize}
 
 
 
@@ -143,50 +145,92 @@ Different policies
 
 
 \begin{frame}{Tree Edit distance}
-%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
-\includegraphics[height=0.89\textheight]{../img/inkscape/ted_operators.pdf}
+%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
+\centering
+\includegraphics[height=0.75\textheight]{../img/inkscape/ted_operators.pdf}
+
 \end{frame}
 
 
-%\begin{exampleblock}{Motivational Example}
-%\end{exampleblock}
-%\begin{block}{Problem Statement}
-%\end{block}
-%\begin{alertblock}{Expected challenges}
-%\end{alertblock}
 
 
 
 
 
+\section{Genetic Programming}
 
 
+\begin{frame}{Tree Edit distance}
+%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
+\centering
+\includegraphics[height=0.75\textheight]{../img/inkscape/GP-mutations.pdf}
 
-
-
-
-
-
-
-
-\section{Benchmark: Industrial Benchmark}
-
-\begin{frame}{Monitoring}
-\includegraphics[height=0.8\textheight]{img/dummies/monitoring-IB_MSE_s3m_0.png} 
 \end{frame}
 
 
 
 
-\begin{frame}{``s3m'' pareto front visualisation}
-\includegraphics[width=0.3\textwidth]{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_0/paretofront}
-\includegraphics[width=0.3\textwidth]{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/paretofront}
-\includegraphics[width=0.3\textwidth]{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/paretofront}
+\section{Mountain Car}
 
-\includegraphics[width=0.45\textwidth]{img/dummies/combined_pareto_IB_MSE_s3m-dashed.png}
-\includegraphics[width=0.45\textwidth]{img/dummies/combined_pareto_IB_MSE_s3m-dotted.png}
+\begin{figure}[th]
+\begin{centering}
+\begin{tabular}{>{\centering}p{42mm}>{\centering}p{42mm}>{\centering}p{42mm}}
+\toprule 
+\multicolumn{3}{c}{complexity}\tabularnewline
+\midrule 
+\noindent %
+\begin{tabular}{cc}
+\multicolumn{2}{c}{6}\tabularnewline
+$\ensuremath{\text{MSE=}0.12}$ & $R=-106.4$\tabularnewline
+\end{tabular} & \noindent %
+\begin{tabular}{cc}
+\multicolumn{2}{c}{11}\tabularnewline
+$\ensuremath{\text{MSE=}0.09}$ & $R=-100.6$\tabularnewline
+\end{tabular} & \noindent %
+\begin{tabular}{cc}
+\multicolumn{2}{c}{20}\tabularnewline
+$\ensuremath{\text{MSE}=0.05}$ & $\ensuremath{R=-98.1}$\tabularnewline
+\end{tabular}\tabularnewline
+\includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-6} & \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-11} & \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-20}\tabularnewline
+\noindent \begin{raggedright}
+The first big improvement is still a pure formula.
+\par\end{raggedright}
+\noindent \raggedright{}%
+\begin{minipage}[t]{42mm}%
+\noindent \begin{center}
 
-\end{frame}
+\plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$-0.014 \cdot \text{pos}^2$\\$-0.243$]][$0$,fixnode][$2$,fixnode]]} 
+\par\end{center}%
+\end{minipage} & \begin{raggedright}
+The first candidate with nested if-condition also achieves the most
+significant jump in the real evaluation. Conspicuous is a faulty reversal
+behavior shortly before the destination.
+\par\end{raggedright}
+\noindent \raggedright{}%
+\begin{minipage}[t]{42mm}%
+\noindent \begin{center}
+
+\plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$\text{if-then-else}$[$<$[vel][$-0.008$]][$0$][$\text{pos} \cdot {{\text{pos}^2}^2}$\\$-0.047$]]][$0$,fixnode][$2$,fixnode]]} 
+\par\end{center}%
+\end{minipage} & \begin{raggedright}
+The black box performance is even exceeded with this candidate.
+\par\end{raggedright}
+\noindent \raggedright{}%
+\begin{minipage}[t]{42mm}%
+\noindent \begin{center}
+
+\plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel][$\text{if-then-else}$[$<$,samenode[vel,samenode][$-0.01$\\$ \cdot {\text{pos}^2}^2$]][$1.03$][[$\text{pos} -0.03$\\$-0.73 \cdot {{\text{pos}^2}^2}$]]]][$0$,fixnode][$2$,fixnode]]} 
+\par\end{center}%
+\end{minipage}\tabularnewline
+\bottomrule
+\end{tabular}
+\par\end{centering}
+\noindent \caption{\label{fig:simpleFix-3candidates} As one of the few runs, an additional
+if-condition is used to control the behavior more precisely, which
+makes it easier to distinguish the candidates.}
+\end{figure}
+
+\section{Industrial Benchmark}
 
 %\begin{frame}{''s3m`` start}
 %
@@ -213,7 +257,6 @@ Different policies
 
 
 
-
 %\begin{frame}{''s3m`` Start Policy}
 %
 %\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
@@ -227,132 +270,23 @@ Different policies
 %\end{frame}
 
 
-
-
-
-\begin{frame}{''s3m`` Combined Results, IB penalty}
-
-% xxx
-%\begin{minipage}[t]{0.3\textwidth}
-%Action 0
-%\input{../img/IB/s3m/forest_a0_start.tex}
-%\end{minipage}
-\includegraphics[width=0.49\textwidth]{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m regression_sum.png}
-\includegraphics[width=0.49\textwidth]{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m (best).png}
-\end{frame}
-
 %\begin{minipage}[t]{0.3\textwidth}
 %\end{minipage}
 
 
-
-
-
-\begin{frame}{''s3m`` Complexity 0}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 0 & Action 1 & Action 2 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_0/texfiles/IB_MSE_s3m_0-parsim0.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/texfiles/IB_MSE_s3m_1-parsim0.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/texfiles/IB_MSE_s3m_2-parsim0.tex} \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-\begin{frame}{''s3m`` Complexity 1}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 0 & Action 1 & Action 2 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_0/texfiles/IB_MSE_s3m_0-parsim1.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/texfiles/IB_MSE_s3m_1-parsim1.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/texfiles/IB_MSE_s3m_2-parsim1.tex} \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-\begin{frame}{''s3m`` Complexity 2}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 0 & Action 1 & Action 2 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_0/texfiles/IB_MSE_s3m_0-parsim2.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/texfiles/IB_MSE_s3m_1-parsim2.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/texfiles/IB_MSE_s3m_2-parsim2.tex} \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-\begin{frame}{''s3m`` Complexity 3}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 0 & Action 1 & Action 2 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_0/texfiles/IB_MSE_s3m_0-parsim3.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/texfiles/IB_MSE_s3m_1-parsim3.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/texfiles/IB_MSE_s3m_2-parsim3.tex} \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-
-
-\begin{frame}{''s3m`` Complexity 4}
-\begin{tabular}{p{0.48\textwidth}p{0.48\textwidth}}
-Action 1 & Action 2 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/texfiles/IB_MSE_s3m_1-parsim4.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/texfiles/IB_MSE_s3m_2-parsim4.tex} \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-
-\begin{frame}{''s3m`` Complexity 5}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 0 & Action 1 & Action 2 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_0/texfiles/IB_MSE_s3m_0-parsim5.tex} & 
-(too large) & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/texfiles/IB_MSE_s3m_2-parsim5.tex} \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-
-\begin{frame}{''s3m`` Complexity 6}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 1 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/texfiles/IB_MSE_s3m_1-parsim6.tex} 
-  \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-
-\begin{frame}{''s3m`` Complexity 7}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 0 & Action 1 & Action 2 \tabularnewline 
-\hline 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_0/texfiles/IB_MSE_s3m_0-parsim7.tex} & 
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_1/texfiles/IB_MSE_s3m_1-parsim7.tex} & 
-(next slide) \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
-
-
-\begin{frame}{''s3m`` Complexity 7}
-\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-Action 2 \tabularnewline 
-\hline 
-
-\input{../../benchmarks/slurm_runs/IB_MSE_s3m/IB_MSE_s3m_2/texfiles/IB_MSE_s3m_2-parsim7.tex} \tabularnewline
-\hline 
-\end{tabular}
-\end{frame}
 
 
 
 % sfeh frame summary?
+
+
+\section*{Future work}
+
+\centering
+\includegraphics[height=0.75\textheight]{../img/inkscape/explorative_regression_hill.pdf}
+
+
+
 
 \end{document}
 

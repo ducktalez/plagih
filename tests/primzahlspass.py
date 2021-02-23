@@ -41,6 +41,7 @@ def altering_sum_plus_minus():
     plt.plot(p_altsum_mean)
     plt.plot(lul_remerge)
     # plt.plot(p_altsum[1::2])
+    plt.figure()
     plt.show()
 
 

@@ -192,7 +192,6 @@ class CoolCore:
     def get_nodes_to_depth(self, goal_depth, only_mutable=False, get_closest_depth=False):
         """
         sum_layers=False, get_closest=True, return_all_layers=False
-
         """
         child_results = []
         if self.depth < goal_depth:
@@ -203,7 +202,6 @@ class CoolCore:
         if only_mutable and self.is_fix or \
                 get_closest_depth and self.depth != goal_depth:
             my_result = []
-
         else:
             my_result = [self]
 

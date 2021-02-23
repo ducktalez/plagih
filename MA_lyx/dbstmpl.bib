@@ -1,23 +1,21 @@
-@string{sigmod99 = "Proc.\ ACM SIGMOD Int.\ Conf.\ on Management of Data (SIGMOD'99), Philadelphia, PA"}
-
-@Inproceedings{ABKS99,
-  author    = {Ankerst, M. and Breunig, M. M. and Kriegel, H.-P. and Sander, J.},
-  title     = {OPTICS: Ordering Points to Identify the Clustering Structure},
-  booktitle = sigmod99,
-  pages     = {49--60},
-  year      = {1999}
-}
-
-@Inproceedings{EKSX96,
-  author    = {Ester, M. and Kriegel, H.-P. and Sander, J. and Xu, X.},
-  title     = {A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise},
-  booktitle = {Proc.\ 2nd Int.\ Conf.\ on Knowledge Discovery and Data Mining (KDD'96), Portland, OR},
-  pages     = {226--231},
-  year      = {1996}
-}
-
 @article{HUR18,
-author = {Hein, Daniel and Udluft, Steffen and Runkler, Thomas},
+author    = {Daniel Hein and
+             Steffen Udluft and
+             Thomas A. Runkler},
+  title     = {Interpretable Policies for Reinforcement Learning by Genetic Programming},
+  journal = {Engineering Applications of Artificial Intelligence},
+  volume    = {abs/1712.04170},
+  year      = {2017},
+  url       = {http://arxiv.org/abs/1712.04170},
+  archivePrefix = {arXiv},
+  eprint    = {1712.04170},
+  timestamp = {Tue, 04 Dec 2018 07:36:12 +0100},
+}
+
+@article{HUR18TEST,
+author = {Hein, Daniel and
+		  Udluft, Steffen and
+		  Runkler, Thomas},
 year = {2018},
 month = {09},
 pages = {158-169},
@@ -27,6 +25,23 @@ journal = {Engineering Applications of Artificial Intelligence},
 doi = {10.1016/j.engappai.2018.09.007}
 }
 
+@inproceedings{Hein_Udluft_Runkler_interpretable_gp,
+author = {Hein, Daniel and Udluft, Steffen and Runkler, Thomas A.},
+title = {Generating Interpretable Reinforcement Learning Policies Using Genetic Programming},
+year = {2019},
+isbn = {9781450367486},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3319619.3326755},
+doi = {10.1145/3319619.3326755},
+booktitle = {Proceedings of the Genetic and Evolutionary Computation Conference Companion},
+pages = {23–24},
+numpages = {2},
+keywords = {interpretable reinforcement learning, genetic programming, model-based, symbolic regression},
+location = {Prague, Czech Republic},
+series = {GECCO ’19}
+}
+
 @book{xiao2019,
  title = {Reinforcement Learning: Theory and {Python} Implementation},
  author = {Zhiqing Xiao},
@@ -34,11 +49,16 @@ doi = {10.1016/j.engappai.2018.09.007}
  publisher = {China Machine Press},
 }
 
-@INBOOK {AIINDEX2019,
+@techreport{AIINDEX2019,
     author    = {Raymond Perrault and Yoav Shoham and Erik Brynjolfsson and Jack Clark and John Etchemendy and Barbara Grosz and Terah Lyons and James Manyika and Saurabh Mishra and and Juan Carlos Niebles},
     title     = {The AI Index 2019 Annual Report},
-    publisher = {AI Index Steering Committee, Human-Centered AI Institute, Stanford University, Stanford, CA},
-    year      = {December 2019},
+    publisher = {AI Index Steering Committee, Human-Centered AI Institute and Stanford University},
+    year      = {2019},
+	month	  = {12},
+	year = {2019},
+	institution = {Stanford University},
+	address = {Stanford, CA :},
+	url = {https://hai.stanford.edu/sites/default/files/ai_index_2019_report.pdf},
 }
 
 @ARTICLE{Rosenblatt58theperceptron:,
@@ -49,22 +69,27 @@ doi = {10.1016/j.engappai.2018.09.007}
     pages = {65--386}
 }
 
-@article{karooGPpaper,
-  author    = {Kai Staats and
-               Edward R. Pantridge and
-               Marco Cavaglia and
-               Iurii Milovanov and
-               Arun Aniyan},
-  title     = {TensorFlow Enabled Genetic Programming},
-  journal   = {CoRR},
-  volume    = {abs/1708.03157},
-  year      = {2017},
-  url       = {http://arxiv.org/abs/1708.03157},
-  archivePrefix = {arXiv},
-  eprint    = {1708.03157},
-  timestamp = {Mon, 13 Aug 2018 16:45:59 +0200},
-  biburl    = {https://dblp.org/rec/journals/corr/abs-1708-03157.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+
+@inproceedings{karooGPpaper,
+author = {Staats, Kai and 
+		  Pantridge, Edward and 
+		  Cavaglia, Marco and 
+		  Milovanov, Iurii and 
+		  Aniyan, Arun},
+title = {TensorFlow Enabled Genetic Programming},
+year = {2017},
+isbn = {9781450349390},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3067695.3084216},
+doi = {10.1145/3067695.3084216},
+abstract = {Genetic Programming, a kind of evolutionary computation and machine learning algorithm, is shown to benefit significantly from the application of vectorized data and the TensorFlow numerical computation library on both CPU and GPU architectures. The open source, Python Karoo GP is employed for a series of 190 tests across 6 platforms, with real-world datasets ranging from 18 to 5.5M data points. This body of tests demonstrates that datasets measured in tens and hundreds of data points see 2--15x improvement when moving from the scalar/SymPy configuration to the vector/Ten-sorFlow configuration, with a single core performing on par or better than multiple CPU cores and CPUs. A dataset composed of 90,000 data points demonstrates a single vector/TensorFlow CPU core performing 875x better than 40 scalar/Sympy CPU cores. And a dataset containing 5.5M data points sees GPU configurations out-performing CPU configurations on average by 1.3x.},
+booktitle = {Proceedings of the Genetic and Evolutionary Computation Conference Companion},
+pages = {1872–1879},
+numpages = {8},
+keywords = {parallel, gpu, vectorized, machine learning, evolutionary computation, tensorflow, multicore, genetic programming},
+location = {Berlin, Germany},
+series = {GECCO '17}
 }
 
 @article{humanPatternRecognition,
@@ -90,7 +115,7 @@ number = {3},
 issn = {0004-5411},
 url = {https://doi.org/10.1145/322139.322143},
 doi = {10.1145/322139.322143},
-journal = {J. ACM},
+journal = {Journal of the ACM},
 month = jul,
 pages = {422–433},
 numpages = {12}
@@ -118,37 +143,32 @@ number = {1},
 issn = {0362-5915},
 url = {https://doi.org/10.1145/2699485},
 doi = {10.1145/2699485},
-journal = {ACM Trans. Database Syst.},
+journal = {ACM Transactions on Database Systems},
 month = mar,
 articleno = {Article 3},
 numpages = {40},
 keywords = {similarity search, Approximate matching, tree edit distance}
 }
 
-@article{industrialBenchmark,
-  author    = {Daniel Hein and
-               Stefan Depeweg and
-               Michel Tokic and
-               Steffen Udluft and
-               Alexander Hentschel and
-               Thomas A. Runkler and
-               Volkmar Sterzing},
-  title     = {A Benchmark Environment Motivated by Industrial Control Problems},
-  journal   = {CoRR},
-  volume    = {abs/1709.09480},
-  year      = {2017},
-  url       = {http://arxiv.org/abs/1709.09480},
-  archivePrefix = {arXiv},
-  eprint    = {1709.09480},
-  timestamp = {Tue, 04 Dec 2018 07:36:12 +0100},
-  biburl    = {https://dblp.org/rec/journals/corr/abs-1709-09480.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
-}
 
-@TECHREPORT{mountaincarOriginal,
-    author = {Andrew William Moore},
-    title = {Efficient Memory-based Learning for Robot Control},
-    year = {1990}
+@INPROCEEDINGS{industrialBenchmark,
+  author={D. {Hein} and S. {Depeweg} and M. {Tokic} and S. {Udluft} and A. {Hentschel} and T. A. {Runkler} and V. {Sterzing}},
+  booktitle={2017 IEEE Symposium Series on Computational Intelligence (SSCI)}, 
+  title={A benchmark environment motivated by industrial control problems}, 
+  year={2017},
+  volume={},
+  number={},
+  pages={1-8},
+  doi={10.1109/SSCI.2017.8280935}}
+
+
+@phdthesis{mountaincarOriginal,
+author = {Andrew Moore},
+title = {Efficient Memory-based Learning for Robot Control},
+year = {1991},
+month = {March},
+school = {Carnegie Mellon University},
+address = {Pittsburgh, PA},
 }
 
 @article{gym_openai,
@@ -180,8 +200,8 @@ keywords = {similarity search, Approximate matching, tree edit distance}
 
 @article{one_pixel_attack,
   author    = {Jiawei Su and
-               Danilo Vasconcellos Vargas and
-               Kouichi Sakurai},
+  Danilo Vasconcellos Vargas and
+  Kouichi Sakurai},
   title     = {One pixel attack for fooling deep neural networks},
   journal   = {CoRR},
   volume    = {abs/1710.08864},
@@ -194,48 +214,25 @@ keywords = {similarity search, Approximate matching, tree edit distance}
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@inproceedings{Hein_Udluft_Runkler_interpretable_gp,
-author = {Hein, Daniel and Udluft, Steffen and Runkler, Thomas},
-year = {2019},
-month = {07},
-pages = {23-24},
-title = {Generating interpretable reinforcement learning policies using genetic programming},
-isbn = {978-1-4503-6748-6},
-doi = {10.1145/3319619.3326755}
-}
-
 @article{Tesla_Autopilot_crash_article, 
 url={https://www.auto-motor-und-sport.de/elektroauto/tesla-autopilot-unfall-honda-civic/}, 
 journal={Auto Motor Sport}, 
 title={Zwei Personen im gerammtem Honda Civic sterben}, 
 author={Gregor Hebermeh}, 
-year={2020}, month={Jan}} 
+year={2020}, month={Jan}
+} 
 
-@article{Hawking_AI_warning, 
-title={Stephen Hawking warns artificial intelligence could end mankind}, 
-url={https://www.bbc.com/news/technology-30290540}, 
-journal={BBC}, 
-year={2014}, 
-month={Dec}}
-
-@inproceedings{daniel_hein_doktorarbeit,
-author = {Hein, Daniel and Udluft, Steffen and Runkler, Thomas A.},
-title = {Generating Interpretable Reinforcement Learning Policies Using Genetic Programming},
-year = {2019},
-isbn = {9781450367486},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3319619.3326755},
-doi = {10.1145/3319619.3326755},
-booktitle = {Proceedings of the Genetic and Evolutionary Computation Conference Companion},
-pages = {23–24},
-numpages = {2},
-keywords = {interpretable reinforcement learning, genetic programming, model-based, symbolic regression},
-location = {Prague, Czech Republic},
-series = {GECCO ’19}
+@phdthesis {daniel_hein_doktorarbeit,
+	author = "Hein, Daniel",
+	title = "Interpretable Reinforcement Learning Policies by Evolutionary Computation",
+	type = "Dissertation",
+	school = "Technische Universität München",
+	address = "München",
+	year = 2019,
+	keywords = "interpretable, reinforcement learning, policies, model-based, particle swarm optimization, genetic programming, evolutionary computation, rule-based, equation-based, PID, MPC, NFQ, industrial benchmark"
 }
 
-@article{AlphaGo_paper,
+@article{AlphaZero,
   author    = {David Silver and
                Thomas Hubert and
                Julian Schrittwieser and
@@ -260,7 +257,20 @@ series = {GECCO ’19}
   timestamp = {Mon, 13 Aug 2018 16:46:01 +0200},
   biburl    = {https://dblp.org/rec/journals/corr/abs-1712-01815.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
-  }
+}
+
+@article{AlphaGo_paper,
+title	= {Mastering the game of Go with deep neural networks and tree search},
+author	= {David Silver and 
+		   Aja Huang and Christopher J. Maddison and Arthur Guez and Laurent Sifre and George van den Driessche and Julian Schrittwieser and Ioannis Antonoglou and Veda Panneershelvam and Marc Lanctot and Sander Dieleman and Dominik Grewe and John Nham and Nal Kalchbrenner and Ilya Sutskever and Timothy Lillicrap and Madeleine Leach and Koray Kavukcuoglu and Thore Graepel and Demis Hassabis},
+year	= {2016},
+URL	= {http://www.nature.com/nature/journal/v529/n7587/full/nature16961.html},
+journal	= {Nature},
+pages	= {484--503},
+volume	= {529}
+}
+
+
 
 @article{sparse_unsupervised_youtube_image_recognition,
   author    = {Quoc V. Le and
@@ -285,293 +295,14 @@ series = {GECCO ’19}
 
 
 @Book{poli08:fieldguide_to_genetic_programming,
-
-    author = "Riccardo Poli and William B. Langdon and Nicholas Freitag McPhee",
+    author = "Riccardo Poli and 
+			  William B. Langdon and 
+			  Nicholas Freitag McPhee",
     title = "A field guide to genetic programming",
     publisher = "Published via \texttt{http://lulu.com} and freely available at \texttt{http://www.gp-field-guide.org.uk}",
     year = "2008",
     note = "(With contributions by J. R. Koza)",
-    URL = "http://www.gp-field-guide.org.uk",
-    URL = "http://www.lulu.com/shop/riccardo-poli-and-william-b-langdon-and-nicholas-freitag-mcphee/a-field-guide-to-genetic-programming/ebook/product-17447670.html",
-    URL = "http://dces.essex.ac.uk/staff/rpoli/gp-field-guide/A_Field_Guide_to_Genetic_Programming.pdf",
-    URL = "http://www.cs.ucl.ac.uk/staff/W.Langdon/ftp/papers/poli08_fieldguide.pdf",
-    URL = "http://www.cs.ucl.ac.uk/staff/W.Langdon/ftp/papers/poli08_fieldguide.azw3",
-    URL = "http://www.cs.ucl.ac.uk/staff/W.Langdon/ftp/papers/poli08_fieldguide.epub",
-    URL = "http://www.cs.ucl.ac.uk/staff/W.Langdon/ftp/papers/poli08_fieldguide.mobi.zip",
-    URL = "https://itunes.apple.com/gb/book/field-guide-to-genetic-programming/id445393241?mt=11",
-    URL = "http://dl.acm.org/citation.cfm?id=1796422",
-    video_url = "http://youtu.be/ftjci2XJbFA",
-    keywords = "genetic algorithms, genetic programming, cartesian genetic programming, automatic programming, machine learning, artificial intelligence, evolutionary computation, GPU",
-    isbn13 = "978-1-4092-0073-4",
-    abstract = "Genetic programming (GP) is a systematic, domain-independent method for getting computers to solve problems automatically starting from a high-level statement of what needs to be done. Using ideas from natural evolution, GP starts from an ooze of random computer programs, and progressively refines them through processes of mutation and sexual recombination, until high-fitness solutions emerge. All this without the user having to know or specify the form or structure of solutions in advance. GP has generated a plethora of human-competitive results and applications, including novel scientific discoveries and patentable inventions.
-
-    This unique overview of this exciting technique is written by three of the most active scientists in GP. See www.gp-field-guide.org.uk for more information on the book.
-
-    Table of Contents
-
-    1 Introduction
-
-    1.1 Genetic Programming in a Nutshell
-
-    1.2 Getting Started
-
-    1.3 Prerequisites
-
-    1.4 Overview of this Field Guide
-
-    Part I Basics
-
-    2 Representation, Initialisation and Operators in Tree-based GP
-
-    2.1 Representation
-
-    2.2 Initialising the Population
-
-    2.3 Selection
-
-    2.4 Recombination and Mutation",
-    abstract = "
-
-    3 Getting Ready to Run Genetic Programming
-
-    3.1 Step 1: Terminal Set
-
-    3.2 Step 2: Function Set
-
-    3.2.1 Closure
-
-    3.2.2 Sufficiency
-
-    3.2.3 Evolving Structures other than Programs
-
-    3.3 Step 3: Fitness Function
-
-    3.4 Step 4: GP Parameters
-
-    3.5 Step 5: Termination and solution designation
-
-    4 Example Genetic Programming Run 29
-
-    4.1 Preparatory Steps
-
-    4.2 Step-by-Step Sample Run
-
-    4.2.1 Initialisation
-
-    4.2.2 Fitness Evaluation
-
-    4.2.3 Selection, Crossover and Mutation
-
-    4.2.4 Termination and Solution Designation
-
-    Part II Advanced Genetic Programming
-
-    5 Alternative Initialisations and Operators in Tree-based GP
-
-    5.1 Constructing the Initial Population
-
-    5.1.1 Uniform Initialisation
-
-    5.1.2 Initialisation may Affect Bloat
-
-    5.1.3 Seeding
-
-    5.2 GP Mutation
-
-    5.2.1 Is Mutation Necessary?
-
-    5.2.2 Mutation Cookbook
-
-    5.3 GP Crossover
-
-    5.4 Other Techniques
-
-    6 Modular, Grammatical and Developmental Tree-based GP
-
-    6.1 Evolving Modular and Hierarchical Structures
-
-    6.1.1 Automatically Defined Functions
-
-    6.1.2 Program Architecture and Architecture-Altering
-
-    6.2 Constraining Structures
-
-    6.2.1 Enforcing Particular Structures
-
-    6.2.2 Strongly Typed GP
-
-    6.2.3 Grammar-based Constraints
-
-    6.2.4 Constraints and Bias
-
-    6.3 Developmental Genetic Programming
-
-    6.4 Strongly Typed Autoconstructive GP with PushGP
-
-    7 Linear and Graph Genetic Programming
-
-    7.1 Linear Genetic Programming
-
-    7.1.1 Motivations
-
-    7.1.2 Linear GP Representations
-
-    7.1.3 Linear GP Operators
-
-    7.2 Graph-Based Genetic Programming
-
-    7.2.1 Parallel Distributed GP (PDGP)
-
-    7.2.2 PADO
-
-    7.2.3 Cartesian GP
-
-    7.2.4 Evolving Parallel Programs using Indirect Encodings
-
-    8 Probabilistic Genetic Programming
-
-    8.1 Estimation of Distribution Algorithms
-
-    8.2 Pure EDA GP
-
-    8.3 Mixing Grammars and Probabilities
-
-    9 Multi-objective Genetic Programming
-
-    9.1 Combining Multiple Objectives into a Scalar Fitness Function
-
-    9.2 Keeping the Objectives Separate
-
-    9.2.1 Multi-objective Bloat and Complexity Control
-
-    9.2.2 Other Objectives
-
-    9.2.3 Non-Pareto Criteria
-
-    9.3 Multiple Objectives via Dynamic and Staged Fitness Functions
-
-    9.4 Multi-objective Optimisation via Operator Bias
-
-    10 Fast and Distributed Genetic Programming
-
-    10.1 Reducing Fitness Evaluations/Increasing their Effectiveness
-
-    10.2 Reducing Cost of Fitness with Caches
-
-    10.3 Parallel and Distributed GP are Not Equivalent
-
-    10.4 Running GP on Parallel Hardware
-
-    10.4.1 Master slave GP
-
-    10.4.2 GP Running on GPUs
-
-    10.4.3 GP on FPGAs
-
-    10.4.4 Sub-machine-code GP
-
-    10.5 Geographically Distributed GP
-
-    11 GP Theory and its Applications
-
-    11.1 Mathematical Models
-
-    11.2 Search Spaces
-
-    11.3 Bloat
-
-    11.3.1 Bloat in Theory
-
-    11.3.2 Bloat Control in Practice
-
-    Part III Practical Genetic Programming
-
-    12 Applications
-
-    12.1 Where GP has Done Well
-
-    12.2 Curve Fitting, Data Modelling and Symbolic Regression
-
-    12.3 Human Competitive Results the Humies
-
-    12.4 Image and Signal Processing
-
-    12.5 Financial Trading, Time Series, and Economic Modelling
-
-    12.6 Industrial Process Control
-
-    12.7 Medicine, Biology and Bioinformatics
-
-    12.8 GP to Create Searchers and Solvers Hyper-heuristics
-
-    12.9 Entertainment and Computer Games
-
-    12.10 The Arts
-
-    12.11 Compression
-
-    13 Troubleshooting GP
-
-    13.1 Is there a Bug in the Code?
-
-    13.2 Can you Trust your Results?
-
-    13.3 There are No Silver Bullets
-
-    13.4 Small Changes can have Big Effects
-
-    13.5 Big Changes can have No Effect
-
-    13.6 Study your Populations
-
-    13.7 Encourage Diversity
-
-    13.8 Embrace Approximation
-
-    13.9 Control Bloat
-
-    13.10 Checkpoint Results
-
-    13.11 Report Well
-
-    13.12 Convince your Customers
-
-    14 Conclusions
-
-    Part IV Tricks of the Trade
-
-    A Resources
-
-    A.1 Key Books
-
-    A.2 Key Journals
-
-    A.3 Key International Meetings
-
-    A.4 GP Implementations
-
-    A.5 On-Line Resources
-
-    B TinyGP
-
-    B.1 Overview of TinyGP
-
-    B.2 Input Data Files for TinyGP
-
-    B.3 Source Code
-
-    B.4 Compiling and Running TinyGP
-
-    Bibliography
-
-    Index",
-    notes = "http://www.gp-field-guide.org.uk/
-
-    Video of writing the book http://youtu.be/ftjci2XJbFA
-
-    Added March 2020 http://www.cs.ucl.ac.uk/staff/W.Langdon/ftp/gp-code/tiny_gp",
-    size = "250 pages", 
-
+	isbn13 = "978-1-4092-0073-4"
 }
 
 @article{Strongly_typed_GP,
@@ -587,7 +318,7 @@ issn = {1063-6560},
 url = {https://doi.org/10.1162/evco.1995.3.2.199},
 doi = {10.1162/evco.1995.3.2.199},
 abstract = {Genetic programming is a powerful method for automatically generating computer programs via the process of natural selection (Koza, 1992). However, in its standard form, there is no way to restrict the programs it generates to those where the functions operate on appropriate data types. In the case when the programs manipulate multiple data types and contain functions designed to operate on particular data types, this can lead to unnecessarily large search times and/or unnecessarily poor generalization performance. Strongly typed genetic programming (STGP) is an enhanced version of genetic programming that enforces data-type constraints and whose use of generic functions and generic data types makes it more powerful than other approaches to type-constraint enforcement. After describing its operation, we illustrate its use on problems in two domains, matrix/vector manipulation and list manipulation, which require its generality. The examples are (1) the multidimensional least-squares regression problem, (2) the multidimensional Kalman filter, (3) the list manipulation function NTH, and (4) the list manipulation function MAPCAR.},
-journal = {Evol. Comput.},
+journal = {Evolutionary Computation},
 month = jun,
 pages = {199–230},
 numpages = {32},
@@ -605,16 +336,14 @@ address = {Cambridge, MA, USA}
 
 
 @Misc{Koza_GP_patent_1990,
-
     author = "John R. Koza",
     title = "Non-Linear Genetic Algorithms for Solving Problems",
     howpublished = "United States Patent 4935877",
-    year = "1990",
+    year = {1990},
     month = "19 " # jun,
     note = "filed may 20, 1988, issued june 19, 1990, 4,935,877. Australian patent 611,350 issued september 21, 1991. Canadian patent 1,311,561 issued december 15, 1992.",
     keywords = "genetic algorithms, genetic programming",
     size = "33 pages", 
-
 }
 
 @article{differentielles_lernen_sport,
@@ -655,12 +384,16 @@ doi = {10.2174/1875399X01205010100}
 }
 
 @inproceedings{XAI_survey,
-author = {Došilović, Filip and Brcic, Mario and Hlupic, Nikica},
-year = {2018},
-month = {05},
-title = {Explainable Artificial Intelligence: A Survey},
-doi = {10.23919/MIPRO.2018.8400040}
+  author={F. K. {Došilović} and M. {Brčić} and N. {Hlupić}},
+  booktitle={2018 41st International Convention on Information and Communication Technology, Electronics and Microelectronics (MIPRO)}, 
+  title={Explainable artificial intelligence: A survey}, 
+  year={2018},
+  volume={},
+  number={},
+  pages={0210-0215},
+  doi={10.23919/MIPRO.2018.8400040}
 }
+
 
 
 @article{XAI_LRP_Frauenhofer,
@@ -682,36 +415,30 @@ doi = {10.23919/MIPRO.2018.8400040}
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@article{XAI-unified-approach,
-  author    = {Scott Lundberg and
-               Su{-}In Lee},
-  title     = {A unified approach to interpreting model predictions},
-  journal   = {CoRR},
-  volume    = {abs/1705.07874},
-  year      = {2017},
-  url       = {http://arxiv.org/abs/1705.07874},
-  archivePrefix = {arXiv},
-  eprint    = {1705.07874},
-  timestamp = {Mon, 13 Aug 2018 16:48:04 +0200},
-  biburl    = {https://dblp.org/rec/journals/corr/LundbergL17.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+@inproceedings{XAI-unified-approach,
+author = {Lundberg, Scott M. and Lee, Su-In},
+title = {A Unified Approach to Interpreting Model Predictions},
+year = {2017},
+isbn = {9781510860964},
+publisher = {Curran Associates Inc.},
+address = {Red Hook, NY, USA},
+abstract = {Understanding why a model makes a certain prediction can be as crucial as the prediction's accuracy in many applications. However, the highest accuracy for large modern datasets is often achieved by complex models that even experts struggle to interpret, such as ensemble or deep learning models, creating a tension between accuracy and interpretability. In response, various methods have recently been proposed to help users interpret the predictions of complex models, but it is often unclear how these methods are related and when one method is preferable over another. To address this problem, we present a unified framework for interpreting predictions, SHAP (SHapley Additive exPlanations). SHAP assigns each feature an importance value for a particular prediction. Its novel components include: (1) the identification of a new class of additive feature importance measures, and (2) theoretical results showing there is a unique solution in this class with a set of desirable properties. The new class unifies six existing methods, notable because several recent methods in the class lack the proposed desirable properties. Based on insights from this unification, we present new methods that show improved computational performance and/or better consistency with human intuition than previous approaches.},
+booktitle = {Proceedings of the 31st International Conference on Neural Information Processing Systems},
+pages = {4768–4777},
+numpages = {10},
+location = {Long Beach, California, USA},
+series = {NIPS'17}
 }
 
 @article{PSONN_fuzzy_RL_Hein_Udluft,
-  author    = {Daniel Hein and
-               Alexander Hentschel and
-               Thomas A. Runkler and
-               Steffen Udluft},
-  title     = {Particle Swarm Optimization for Generating Fuzzy Reinforcement Learning Policies},
-  journal   = {CoRR},
-  volume    = {abs/1610.05984},
-  year      = {2016},
-  url       = {http://arxiv.org/abs/1610.05984},
-  archivePrefix = {arXiv},
-  eprint    = {1610.05984},
-  timestamp = {Tue, 04 Dec 2018 07:36:12 +0100},
-  biburl    = {https://dblp.org/rec/journals/corr/HeinHRU16.bib},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
+	author = {Hein, Daniel and Hentschel, Alexander and Runkler, Thomas and Udluft, Steffen},
+	year = {2017},
+	month = {08},
+	pages = {87-98},
+	title = {Particle Swarm Optimization for Generating Interpretable Fuzzy Reinforcement Learning Policies},
+	volume = {65C},
+	journal = {Engineering Applications of Artificial Intelligence},
+	doi = {10.1016/j.engappai.2017.07.005}
 }
 
 @book{wittgenstein1953philosophical,
@@ -747,15 +474,14 @@ year={2007},
 volume={},  
 number={},  
 pages={1691-1696},  
-doi={10.1109/IJCNN.2007.4371212}}
+doi={10.1109/IJCNN.2007.4371212}
+}
 
-@misc{siemens-rl-stochastic-bayesian-nn,
-      title={Learning and Policy Search in Stochastic Dynamical Systems with Bayesian Neural Networks}, 
-      author={Stefan Depeweg and José Miguel Hernández-Lobato and Finale Doshi-Velez and Steffen Udluft},
-      year={2017},
-      eprint={1605.07127},
-      archivePrefix={arXiv},
-      primaryClass={stat.ML}
+@article{siemens-rl-stochastic-bayesian-nn,
+    title		={Learning and Policy Search in Stochastic Dynamical Systems with Bayesian Neural Networks}, 
+	author 	= {Depeweg, Stefan and Hernández-Lobato, José and Doshi-Velez, Finale and Udluft, Steffen},
+	journal = {ICLR},
+	year = {2017},
 }
 
 @article{XAI-perturbation,
@@ -785,6 +511,7 @@ doi={10.1109/IJCNN.2007.4371212}}
 @article{EUdataregulations2018,
     title   = "Regulation ({EU}) 2016/679 of the European Parliament and of the Council of 27 April 2016 on the protection of natural persons with regard to the processing of personal data and on the free movement of such data, and repealing Directive 95/46/EC (General Data Protection Regulation)",
     journal = "Official Journal of the European Union",
+    author  = "Council of the European Union and European Parliament",
     year    = "2016",
     volume  = "L 119/1",
 }
@@ -805,12 +532,19 @@ doi={10.1109/IJCNN.2007.4371212}}
 }
 
 @inproceedings{gp-half-ramped,
-author = {Burke, Edmund and Gustafson, Steven and Kendall, Graham},
+author = {Burke, Edmund and 
+		  Gustafson, Steven and 
+		  Kendall, Graham},
 year = {2003},
 month = {07},
 pages = {1800-1801},
 title = {Ramped Half-n-Half Initialisation Bias in GP},
-doi = {10.1007/3-540-45110-2_71}
+booktitle="Genetic and Evolutionary Computation --- GECCO 2003",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="1800--1801",
+abstract="Tree initialisation techniques for genetic programming (GP) are examined in [4],[3], highlighting a bias in the standard implementation of the initialisation method Ramped Half-n-Half (RHH) [1]. GP trees typically evolve to random shapes, even when populations were initially full or minimal trees [2]. In canonical GP, unbalanced and sparse trees increase the probability that bigger subtrees are selected for recombination, ensuring code growth occurs faster and that subtree crossover will have more difficultly in producing trees within specified depth limits. The ability to evolve tree shapes which allow more legal crossover operations, by providing more possible crossover points (by being bushier), and control code growth is critical. The GP community often uses RHH [4]. The standard implementation of the RHH method selects either the grow or full method with 0.5 probability to produce a tree. If the tree is already in the initial population it is discarded and another is created by grow or full. As duplicates are typically not allowed, this standard implementation of RHH favours full over grow and possibly biases the evolutionary process.",
+isbn="978-3-540-45110-5"
 }
 
 @article{eureqa-review,
@@ -840,5 +574,6 @@ title={Verfahren und Konfigurationssystem zum konfigurieren einer Steuereinricht
 author={Fehrer, Simon and Hein, Daniel and Tokic, Michel and Udluft, Steffen}, 
 year={2020},
 howpublished = {Europäisches Patentamt},
-month={Oct}
+month={Oct},
+note={EU Patent Anmeldenr./Patentnr. 20202826.2-1205}
 }

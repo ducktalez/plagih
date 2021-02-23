@@ -10,25 +10,6 @@
 
 \renewcommand{\textendash}{--}
 \renewcommand{\textemdash}{---}
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
-% Added by lyx2lyx
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -82,7 +63,7 @@
 \use_package undertilde 1
 \cite_engine basic
 \cite_engine_type default
-\biblio_style plain
+\biblio_style IEEEtran
 \use_bibtopic false
 \use_indices false
 \paperorientation portrait
@@ -125,7 +106,7 @@ status open
 \backslash
 global
 \backslash
-titel{Creating familiar Reinforcement Learning Policies with Genetic Programming
+titel{Creating Familiar Reinforcement Learning Policies with Genetic Programming
 }
 \end_layout
 
@@ -587,7 +568,7 @@ In this chapter, background information and applied methodologies are introduced
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Reinforcement-learning"
-caps "true"
+caps "false"
 
 \end_inset
 
@@ -596,7 +577,7 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Interpretable-Machine-Learning"
-caps "true"
+caps "false"
 
 \end_inset
 
@@ -606,7 +587,7 @@ caps "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp_Genetic-Programming"
-caps "true"
+caps "false"
 
 \end_inset
 
@@ -638,9 +619,9 @@ reference "fig:RL-basics"
 
 \end_inset
 
-, which is a stochastic form of determinism so that in each state, when
- performing an action, the same subsequent state is reached with a certain
- probability.
+, which is a stochastic form of determinism [xxx] so that in each state,
+ when performing an action, the same subsequent state is reached with a
+ certain probability.
  The policy can be learned as mapping between states and actions, which
  is an implicit representation, or as explicitly defined rule set, but regardles
 s of that, learning through interaction requires carefully weighting up
@@ -869,10 +850,11 @@ The best explanation of a simple model is the model itself; it perfectly
  languages are the interface for explicit communication between machines
  and humans that will be used in this work.
  An evolutionary method of finding such policies is genetic programming,
- which will be further presented in 
+ which will be further presented in xxx 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp_Genetic-Programming"
+caps "true"
 
 \end_inset
 
@@ -947,7 +929,7 @@ svgwidth{
 \backslash
 textwidth}
 \backslash
-import{img/inkscape}{explainability_gap2.pdf_tex}
+import{img/inkscape}{explainability_gap2_minimal.pdf_tex}
 \end_layout
 
 \end_inset
@@ -978,6 +960,10 @@ The interpretability gap is visualized, metaphorically, by a deep trench
  one has, the smaller the gap in things that need to be learned.
  The expert stands at the narrowest point, yet the trench still has to be
  crossed.
+ [todo xxx Das ist schon viel besser.
+ Aber immer noch schwer zu verstehen.
+ Du solltest noch mehr erklären.
+ Was bedeuten zB die Pfeile?]
 \end_layout
 
 \end_inset
@@ -1026,10 +1012,12 @@ literal "true"
 \end_inset
 
 .
- Computer programs are encoded as a set of genes, which can be ranked with
- a fitness function to select the best individualy for the next generation.
- Random optimization like mutation or crossover allow new genes to emerge,
- which improves the pool of genes over generations.
+ xxx Individuals in the population are ranked with a fitness function to
+ select the best individuals for the next generation.
+ [xxx So ist es missverständlich.
+ Nicht die Gene werden gerankt.] Computer programs are encoded as a set of
+ genes, which can be Random optimization like mutation or crossover allow
+ new genes to emerge, which improves the pool of genes over generations.
  Improvements occur stochastically, which makes GP a meta-heuristic optimization
  technique that does not necessarily converge to an optimum.
  The composition of a population is crucial and requires a careful balance
@@ -1059,7 +1047,7 @@ emph{closure}
 \end_inset
 
 .
- Type conversion between boolean and numeric values can be applied automatically
+ Type conversion between Boolean and numeric values can be applied automatically
  or with strong typing, which requires explicit type conversion (e.g.
  with comparison operators, if-statements) 
 \begin_inset CommandInset citation
@@ -1123,7 +1111,9 @@ rightarrow 1$
 \noun off
 \color none
 As for the selection process, each candidate is chosen separately through
- tournament selection, where the fittest of (3-7) random candidates wins.
+ tournament selection, where the fittest of (3-7) [xxx Ich würde hier versuchen
+ eine Quelle zu zitieren, aber das ist Geschmackssache] random candidates
+ wins.
  This allows trees to survive in a population that have not yet been optimized
  but may carry important genes in the future.
  The most important evolutions can be seen in 
@@ -1142,6 +1132,7 @@ As for the selection process, each candidate is chosen separately through
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:gp-Evolutionary-concepts"
+caps "true"
 
 \end_inset
 
@@ -1822,6 +1813,7 @@ n metrics (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-error"
+caps "true"
 
 \end_inset
 
@@ -2410,6 +2402,7 @@ n, where all Pareto-efficient combinations to the first objective of fitness
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:paretofront-example"
+caps "true"
 
 \end_inset
 
@@ -2565,6 +2558,7 @@ emph{full}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:grow-vs-full-method"
+caps "true"
 
 \end_inset
 
@@ -2837,10 +2831,11 @@ As a reference for familiarity, the domain expert's strategy or program
  If possible, care should be taken to ensure that the structure is hierarchical
  so that the most important structural components are as close as possible
  to the root node.
- A symbolic regression (
+ [xxx] A symbolic regression (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "Symbolic-Regression"
+caps "false"
 
 \end_inset
 
@@ -3177,7 +3172,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Visualisation of possible tree edits {insert (green), delete (red), modify
+Visualization of possible tree edits {insert (green), delete (red), modify
  (yellow)}.
  If the node position in a branch changes, only the remaining edits are
  evaluated.
@@ -3223,7 +3218,7 @@ status open
 
 \begin_layout Plain Layout
 - praktische features: automatic csv interpretation, monitoring, backups,
- print types verbosity, automatische Verteilung auf SLURM, real fitness
+ print types verbosity, automatische Verteilung auf SLURM, real performance
  evaluation]
 \end_layout
 
@@ -4672,7 +4667,7 @@ status open
 
 
 \backslash
-emph{Mountain car}
+emph{Mountain Car}
 \end_layout
 
 \end_inset
@@ -4985,7 +4980,7 @@ A comparison of the benchmarks used.
 \end_layout
 
 \begin_layout Section
-Mountain car
+Mountain Car
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:mountaincar"
@@ -5012,6 +5007,7 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "img:mountaincar-overview"
+caps "true"
 
 \end_inset
 
@@ -5492,7 +5488,7 @@ status open
 
 \begin_layout Plain Layout
 The entire state space is subdivided along its dimensions into 256 areas,
- for each of which the calculated action is coloured.
+ for each of which the calculated action is colored.
  Important characteristics of an agent can be identified by looking at the
  decision plot, which in this case (regular GP results, complexity 8), manifests
  itself in clearly divisible blocks (left).
@@ -7132,7 +7128,7 @@ In this section, a large number of familiarity-based GP runs are evaluated
  The Pareto candidates found are primarily examined for familiarity and
  interpretability.
  Their performance is compared both in terms of regression error and real
- fitness, but also examined for implications for safety.
+ performance, but also examined for implications for safety.
  
 \end_layout
 
@@ -7142,11 +7138,11 @@ All runs were performed with both MAE and MSE, MSE runs were comparatively
 \end_layout
 
 \begin_layout Section
-Mountain car
+Mountain Car
 \end_layout
 
 \begin_layout Paragraph
-Domain Expert solutions
+Domain expert solutions
 \end_layout
 
 \begin_layout Standard
@@ -7639,8 +7635,8 @@ complexity
 \begin_layout Plain Layout
 \noindent
 \align left
-At 8 nodes the regression error drops to 0.21, but fitness deteriorates to
- 140.5 steps.
+At 8 nodes the regression error drops to 0.21, but performance deteriorates
+ to 140.5 steps.
 \end_layout
 
 \begin_layout Plain Layout
@@ -7770,8 +7766,7 @@ cdot $}[{$174$}][vel]]]}
 \begin_layout Plain Layout
 \noindent
 \align left
-The most complex agent achieves a fitness which almost achieves the SARSA-200
- policy.
+The most complex agent almost achieves the SARSA-200 performance.
 \end_layout
 
 \begin_layout Plain Layout
@@ -8535,12 +8530,13 @@ name "fig:mc-simple-candidates"
 \end_layout
 
 \begin_layout Subsection
-Simple If-Acceleration with fixed nodes
+Simple If-Acceleration with a Fixed Core
 \end_layout
 
 \begin_layout Standard
-In response to the lost protective effect of the TED above a certain complexity,
- a fixed core was defined which only allows evolutions to affect the condition.
+In response to the lost protective effect xxx of the TED above a certain
+ complexity, a fixed core was defined which only allows evolutions to affect
+ the condition.
 \end_layout
 
 \begin_layout Standard
@@ -8566,7 +8562,7 @@ reference "fig:mc200_simple-fix-pareto"
 
 \end_inset
 
-, the real fitness of the Pareto candidates improves relatively early and
+, the real reward of the Pareto candidates improves relatively early and
  seems more robust against outliers compared to the fully mutatable and
  regular GP results.
  The most significant candidates are presented in 
@@ -9176,7 +9172,7 @@ name "fig:simpleFix-3candidates"
 \end_layout
 
 \begin_layout Subsection
-External Expert with parabolic Bounding
+External Expert with Parabolic Bounding xxx min
 \end_layout
 
 \begin_layout Standard
@@ -9213,7 +9209,9 @@ begin{center}
 
 \begin_layout Plain Layout
 
-$min(-0.09(
+$
+\backslash
+min(-0.09(
 \backslash
 text{pos}+0.25)^{2}+0.03,0.3(
 \backslash
@@ -11831,7 +11829,14 @@ name "fig:if-operator-composition"
 \end_layout
 
 \begin_layout Paragraph
-Leaf nodes
+Leaf nodes 
+\begin_inset CommandInset label
+LatexCommand label
+name "gp-Observations-role"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -11875,15 +11880,9 @@ status open
 \end_layout
 
 \begin_layout Standard
-\begin_inset CommandInset label
-LatexCommand label
-name "gp-Observations-role"
-
-\end_inset
-
- Observations are the nodes around which operators and constants are to
- be arranged in such a way that they map their values as well as possible
- to an output, which is, after all, the sole task of the GP process.
+Observations are the nodes around which operators and constants are to be
+ arranged in such a way that they map their values as well as possible to
+ an output, which is, after all, the sole task of the GP process.
  Since not all available observations have to be used automatically, they
  mainly also represent the dimensionality of the input vector of the model
  that the solution tree represents.
@@ -12625,7 +12624,7 @@ name "fig:operator-classification"
 \end_layout
 
 \begin_layout Paragraph
-Trimming the considered edits
+Trimming the considered Edits
 \end_layout
 
 \begin_layout Standard
@@ -12944,7 +12943,7 @@ The following regression formula was tested, which evaluates the resulting
 \begin_layout Standard
 In the rollouts, no candidates could be found; the proposed paradigms should
  not be mixed as proposed.
- Fur further experiments, we propose to implement a separate Pareto front.
+ For further experiments, we propose to implement a separate Pareto front.
 \end_layout
 
 \begin_layout Standard
@@ -12952,7 +12951,7 @@ In the rollouts, no candidates could be found; the proposed paradigms should
 LatexCommand bibtex
 btprint "btPrintCited"
 bibfiles "dbstmpl"
-options "unsrt"
+options "IEEEtran"
 
 \end_inset
 

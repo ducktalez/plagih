@@ -945,7 +945,7 @@ class ExplainableGP(object):
         with plt.rc_context(rc=pyplot_rc_tex):
             fig, ax = plt.subplots()
             ax.hist(pairwise_diff, bins=action_bins, histtype="stepfilled", facecolor="none", edgecolor='k')
-            ax.set(ylim=(0, len(self.data_train)), ylabel='Frequency', xlabel='Deviation')
+            ax.set(ylim=(0, len(self.data_train)), ylabel='frequency', xlabel='deviation')
             histpath = path_hist / f'acthist_{parsim}.pdf'
             fig.savefig(histpath)
             plt.close('all')

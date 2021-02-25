@@ -606,26 +606,51 @@ name "sec:Reinforcement-learning"
 \end_layout
 
 \begin_layout Standard
-Reinforcement learning is a subfield of machine learning, where an agent
- has to derive a policy through interaction with an environment in order
- to maximize the sum of future reward.
- Problems include games or simulations, where a goal is predefined, but
- a solution strategy must be sought.
- The environment is formalized as Markov Decision Process (MDP) as can be
- seen in 
+xx as can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:RL-basics"
 
 \end_inset
 
-, which is a stochastic form of determinism [xxx] so that in each state,
- when performing an action, the same subsequent state is reached with a
- certain probability.
- The policy can be learned as mapping between states and actions, which
- is an implicit representation, or as explicitly defined rule set, but regardles
-s of that, learning through interaction requires carefully weighting up
- exploration of new states and actions and exploitation of the learned policy.
+
+\end_layout
+
+\begin_layout Standard
+Reinforcement learning is a subfield of machine learning, in which an agent
+ autonomously learns a strategy for an environment through an external reward.
+ RL problems, unlike supervised learning, require a sequential decision
+ process for which the agent must develop a strategy (policy) to maximize
+ the cumulative reward.
+ At each time step, the environment is in a state s, which the agent can
+ observe and decide for an available action, which will lead to a succeeding
+ state s' and a reward.
+ The probability to reach state s' is assumed to only depend on the current
+ state s.
+ This stochastic form of determinism with state transitions formalizes a
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{Markov Decision Process}
+\end_layout
+
+\end_inset
+
+ (MDP).
+ If the current state of the system can not be derived from the available
+ observations, the MDP is only partially observable.
+\end_layout
+
+\begin_layout Standard
+A policy can be learned as mapping between states and actions, which is
+ an implicit representation, or as explicitly defined rule set, but regardless
+ of that, learning through interaction requires carefully weighting up explorati
+on of new states and actions and exploitation of the learned policy.
  
 \end_layout
 
@@ -704,8 +729,8 @@ emph{Offline learning}
 
 \end_inset
 
- are learning methods that include methods for which the real benchmark
- is not required, for example by learning on previously collected data.
+ are methods for which the real benchmark is not required, for example by
+ learning on previously collected data.
  It is risk-free and thus favored by the industry, but may also derive significa
 ntly from real system 
 \begin_inset CommandInset citation
@@ -753,11 +778,7 @@ literal "true"
 \end_inset
 
 .
- 
-\end_layout
-
-\begin_layout Standard
-As described in 
+ As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
@@ -776,7 +797,7 @@ the ability to explain or to present in understandable terms to humans
 .
  In contrast to performance, interpretability has many manifestations and
  is not easy to determine.
- A deeper analysis is proposed by Doshi-Velez and Kim in 
+ In 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
@@ -784,8 +805,8 @@ literal "true"
 
 \end_inset
 
-, who recommend to describe the relevant factors of interpretability including
- the following considerations: 
+, Doshi-Velez and Kim propose a subdivision of interpretability into various
+ relevant factors, including the following considerations: 
 \end_layout
 
 \begin_layout Itemize
@@ -811,12 +832,11 @@ What are method-related relevant factors being explored? (e.g.
 
 \begin_layout Standard
 RL problems are incomplete as they are not fully testable and can be solved
- in various ways.
- The general level of evaluation is not limited, as applications can also
- be learned through proxy models.
+ in various ways, while the level of evaluation is not limited as applications
+ can also be learned through proxy models.
  Considering the task-related relevant factors, we are particularly interested
  in global interpretability, as post-hoc explanations for a subset of decisions
- can not explain complex strategies.
+ is not sufficient to understand policies that depend on a sequential MDP.
  
 \begin_inset Note Note
 status open
@@ -845,16 +865,18 @@ The best explanation of a simple model is the model itself; it perfectly
 \end_inset
 
  To find a model that is its own best representation, candidate solutions
- are sought directly in an interpretability-constrained feasible region.
- For RL policies, computer programs or, in a larger context, touring complete
- languages are the interface for explicit communication between machines
- and humans that will be used in this work.
+ can be sought directly in an interpretability-constrained feasible region.
+ Computer programs or, in a larger context, touring complete languages are
+ the interface for explicit communication between machines and humans that
+ will be used in this work.
  An evolutionary method of finding such policies is genetic programming,
  which will be further presented in xxx 
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "gp_Genetic-Programming"
+reference "sec:Genetic-Programming"
+plural "false"
 caps "true"
+noprefix "false"
 
 \end_inset
 
@@ -872,7 +894,7 @@ literal "true"
 \end_inset
 
  define a cognitive chunk as the basic unit of explanation.
- Complexity measures for formulas in genetic programming only consider the
+ Complexity measures for formulae in genetic programming only consider the
  amount of mathematical components of a formula (number of chunks), and
  the complexity of the components (form of cognitive chunks).
 \end_layout
@@ -977,10 +999,10 @@ The interpretability gap is visualized, metaphorically, by a deep trench
 \end_layout
 
 \begin_layout Section
-Genetic Programming 
+Genetic Programming
 \begin_inset CommandInset label
 LatexCommand label
-name "gp_Genetic-Programming"
+name "sec:Genetic-Programming"
 
 \end_inset
 
@@ -2553,8 +2575,8 @@ emph{full}
  method allows terminal nodes only at the target level and the grow method
  also allows terminal nodes to be inserted by chance (50%).
  The full method has a much higher branching factor and creates more complex
- formulas than the grow method.
- The structure of a tree can impact the formulas, as can be seen in 
+ formulae than the grow method.
+ The structure of a tree can impact the formulae, as can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:grow-vs-full-method"
@@ -2624,12 +2646,12 @@ LaTeX
 
 , which takes care of the arrangement of nodes.
  For very large trees, a tight-tree version is also created, in which branches
- with simple mathematical formulas (which do not involve fixed nodes) are
+ with simple mathematical formulae (which do not involve fixed nodes) are
  bundled as individual nodes.
  This preserves the structure of the tree without inflating it with simple
- mathematical formulas.
+ mathematical formulae.
  Nodes are combined if they are not fixed and if their expression is part
- of classical mathematical formulas.
+ of classical mathematical formulae.
 \begin_inset Foot
 status open
 
@@ -3647,31 +3669,54 @@ name "subsec:Fixed-nodes"
 \end_layout
 
 \begin_layout Standard
-A fixed tree core is a manually selected tree structure which has to be
- in every individual of the population and is not affected by mutations.
- This was implemented to further bind the process to familiar structures
- and extends the TED, which has shown to loose its protective effect with
- very small trees.
- Fixed nodes can be selected top down and must be fully connected with one
- or more mutatable junctions (
+A fixed core comprises a node structure in the reference tree that must
+ be present in all individuals .
+ 
+\end_layout
+
+\begin_layout Standard
+The TED, which is the main method to create familiar candidates, only implicitly
+ protects familiar structures.
+ This is why degenerate changes can occur after only a few changes, especially
+ in small reference trees.
+ In contrast, fixed structures are an explicit node protection.
+ Fixed nodes can be used to obtain structures that are considered to be
+ definitely correct or decisive from the point of view of familiarity.
+ This hard constraint on the evolution process severely limits the search
+ space for candidates.
+ How decisive these limitations are will be evaluated in xxx, as well as
+ the possibility of using this method to optimize highly complex tree structures.
+\end_layout
+
+\begin_layout Paragraph
+Implementation
+\end_layout
+
+\begin_layout Standard
+The implementation of a fixed core in the reference tree does not only require
+ adjustments in the tree structure, but also modifications in the the evolutiona
+ry process.
+\end_layout
+
+\begin_layout Standard
+The fixed core depicts a connected structure of fixed nodes in a tree, which
+ have to be selected manually and root-down by the user.
+ At least one mutatable junction must be provided for the evolutionary process,
+ an example can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "img:tree_modifiable_nodes_modified"
 
 \end_inset
 
-).
+.
  
 \end_layout
 
 \begin_layout Standard
-With the possibility of multiple junctions, the branching factor is very
- high and can lead to very complex randomly created trees if the tree depth
- is used as limiting factor.
- Hence, the node depth is replaced with a layer-based depth, which depicts
- the distance to the next fixed node as depth-limiting factor.
- The depth in the construction process of random trees was replaced with
- a node-count based version, which included both the full- and grow-method.
+The most extensive adjustments concern the constructions of random trees.
+ Due to the potentially large branching factor in the first layer of a tree,
+ complexity bloat and unbalanced trees have to be concerned.
 \end_layout
 
 \begin_layout Standard
@@ -3696,6 +3741,9 @@ status open
 
 \begin_layout Plain Layout
 A tree with fixed nodes (blue), which remain untouched by evolution.
+ The second argument of the or-node is a dummy value, which should offer
+ the GP process a junction for improvement; the new nodes of a conceivable
+ improvement can be seen in the right tree.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -3717,21 +3765,58 @@ name "img:tree_modifiable_nodes_modified"
 \end_layout
 
 \begin_layout Standard
-To produce generally balanced trees, the initial size of the to-be replaced
- branches must be considered.
- 
+First, a random number of nodes 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$n$
 \end_layout
 
-\begin_layout Standard
-First, a random number of nodes to be inserted is chosen.
- Depending on the number of nodes located on a layer, the number of nodes
- to be inserted is randomly divided into intervals.
- These subtrees are divided according to the grow or full method up to the
- interval size they are entitled to.
- A buffer of leaf nodes is built up to avoid having to prune the tree randomly
- at the end.
- To counteract the overloading of a page, the nodes for the next level are
- selected randomly.
+\end_inset
+
+ to be inserted is chosen, which are distributed into 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$l_0$
+\end_layout
+
+\end_inset
+
+ amount of intervals, where 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$l_1$
+\end_layout
+
+\end_inset
+
+ is the amount of nodes on the first mutatable layer.
+ In the second step, each subtree is constructed individually with a node-based
+ method.
+ In order to avoid retroactive pruning, a node buffer of open leaf nodes
+ is created, which have to applied in the last step.
+ To further counteract overloading of a tree side (of the left side), the
+ node build-types (operator-/terminal node) for the next level are selected
+ and shuffled before being selected and inserted.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xxx pseudocode?
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3902,7 +3987,7 @@ reference "tab:sympy-sonderfälle"
  Further, a uniformly order tree is not necessarily an optimal representation
  for mutations, structurally badly placed root top level nodes can limit
  the evolution process.
- Potential benefits of using unified formulas was therefore not further
+ Potential benefits of using unified formulae was therefore not further
  evaluated, even though the implemented simplification successfully reduces
  a large amount of Pareto entries.
 \begin_inset Newline newline
@@ -5006,7 +5091,7 @@ literal "true"
  The state space is implemented in an unusual way (
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "img:mountaincar-overview"
+reference "mountaincar-overview"
 caps "true"
 
 \end_inset
@@ -5350,7 +5435,7 @@ The main features of the Mountain car problem.
  
 \begin_inset CommandInset label
 LatexCommand label
-name "img:mountaincar-overview"
+name "mountaincar-overview"
 
 \end_inset
 
@@ -5386,7 +5471,7 @@ Always accelerate.
 \begin_inset Newline newline
 \end_inset
 
-Doing nothing instead of accelerating looses speed, but is often chosen
+Doing nothing instead of accelerating xxxlooses speed, but is often chosen
  by agents in regions of turning points.
 \end_layout
 
@@ -5959,7 +6044,7 @@ name "sarsa1000-plots"
 \end_layout
 
 \begin_layout Section
-Industrial benchmark 
+Industrial Benchmark 
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:Industrial-benchmark"
@@ -7987,7 +8072,7 @@ filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.te
 \begin_layout Plain Layout
 Maximum acceleration, achieved with an if distinction.
  With only 6 nodes and a depth of 3, the tree is not robust against changes
- as the TED looses its protective weight early.
+ as the TED xxxlooses its protective weight early.
  The proposed version with fixed nodes (colored dark blue) only allows the
  condition to be mutated.
  
@@ -10552,7 +10637,7 @@ name "fig:sarsa75-paretos"
 \end_layout
 
 \begin_layout Subsection
-Mountain car Discussion
+Mountain Car Discussion
 \end_layout
 
 \begin_layout Standard
@@ -10564,7 +10649,7 @@ All origin programs could be improved with familiar approaches and showed
  Methods of restricting the search space, such as fixed nodes or a reduced
  operator set have shown better online performance, which also encourages
  the claim that simple and structured mathematics deliver the better results.
- The extraordinary performance can probably be explained by the optimised
+ The extraordinary performance can probably be explained by the optimized
  search space, which could be reduced to an efficient and smaller space
  by the expert's specification.
  
@@ -10587,7 +10672,7 @@ clearpage
 \end_layout
 
 \begin_layout Section
-Industrial benchmark
+Industrial Benchmark
 \end_layout
 
 \begin_layout Standard
@@ -11422,8 +11507,8 @@ ted.
 Familiar GP candidates have no performance advantages compared to regular
  ones, despite their enhanced familiarity, both regression error and the
  fitness did not distinguish significantly.
- Comparing online performance arguable does not make sense when the approximatio
-n of the model did not converge at all.
+ Comparing online performance arguably does not make sense when the approximatio
+n of the model did not converge.
  However, familiarity was conserved without falling short to regular GP.
  Otherwise, symbolic regression is not applicable on such sparse transition
  samples.
@@ -11464,11 +11549,11 @@ name "fig:Histograms-mc-ib"
 
 \end_inset
 
- Histograms considering the deviation from the target action (offline) for
- the Mountain car (left) and the Industrial benchmark (right) in regular
- GP runs (MSE).
- The mountain car has a very high success rate, while even the best IB agent
- has lumps of failure on both sides.
+ Histograms presenting the deviation from the black box action in the MC
+ (left) and the IB (right), both regarding the best available regular GP
+ agent (MSE).
+ MC agents have a very high success rate, while the best IB agent have lumps
+ of failure on both sides.
 \end_layout
 
 \end_inset
@@ -11479,138 +11564,10 @@ name "fig:Histograms-mc-ib"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Chapter
-Conclusion & Future Work
-\begin_inset CommandInset label
-LatexCommand label
-name "chap:Conclusion"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The results of this work are concluded and discussed in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "sec:Conclusion"
-
-\end_inset
-
-, future work is presented 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "sec:Future-Work"
-
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Section
-Conclusion 
-\begin_inset CommandInset label
-LatexCommand label
-name "sec:Conclusion"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-For the mountain car, three expert programs were combined with a black box
- SARSA approach, which was both trained for 75 and 200 training episodes,
- as the general experience at after 75 episodes is still poor.
- The IB was tested with one expert program that was combined with a PSONN
- policy.
- Both the SARSA-75 and the PSONN policy featured hard to fit transition
- samples.
- In particular, the industrial benchmark has a sparse state space; moreover,
- the neuropolicy of particle swarm optimization is very volatile, which
- is why no particularly good solutions were found.
-\end_layout
-
-\begin_layout Subsection
-Findings on familiar GP
-\end_layout
-
-\begin_layout Standard
-The experiments show significant structural differences between individuals
- in familiar and regular GP runs.
- Structures of the origin program can be recognized in familiar candidates;
- which also forms a more homogeneous Pareto front.
- Nevertheless, in some places structures of the expert were also broken
- up and replaced with new formulas, especially with very simple expert programs
- (3-6 nodes) as the TED loose its effect.
- Fixed nodes could fix this problem and further induced candidates that
- were more robust against misruns.
- A positive side effect of the implementation of fixed nodes is that it
- allows an efficient optimization of extensive computational trees, which
- would normally be too complex to be considered.
- 
-\end_layout
-
-\begin_layout Standard
-The offline performance did not differ significantly, the regression error
- was roughly the same in all runs.
- Within the same absolute complexity range, the online performance differed
- slightly, but not in a way that allow robust conclusions.
- A positive side effect is that the search for appropriately large and complex
- strategies has been made possible.
-\end_layout
-
-\begin_layout Standard
-Another finding is, that further limitations of the search space (fixed
- tree core, less operators, reduced action space) all performed equally
- in terms of regression error and often better in online performance.
-\end_layout
-
-\begin_layout Subsection
-Limitations and Applicability
-\end_layout
-
-\begin_layout Standard
-A general limitation of offline training is that an agent's actual fitness
- often correlates poorly with its regression error, which Hein has already
- described in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "daniel_hein_doktorarbeit"
-literal "true"
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-Besides, the proposed approach is only applicable when the regression error
- of the expert program implies that structural improvements conceivable.
- Is the correlation between their online- and offline performance does not
- correlate, it should not be applied.
- Reasons for this may be that the black box strategy is too sparse to be
- approximated with symbolic regression, or that the experts' strategy is
- fundamentally different from the black box.
- The same applies for GP candidates, which have to reduce the regression
- error significantly.
-\end_layout
-
-\begin_layout Standard
-The second limitation is related to the edit distance, which in some cases
- turns into a regular complexity metric, especially for small expert program,
- which will be further discussed in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "subsec:Edit-distance-anomalies"
-
-\end_inset
-
-.
+Discussion
 \end_layout
 
 \begin_layout Subsection
@@ -11897,6 +11854,139 @@ Observations are the nodes around which operators and constants are to be
 Hence, especially the set of unique operators should be considered.
 \end_layout
 
+\begin_layout Chapter
+Conclusion & Future Work
+\begin_inset CommandInset label
+LatexCommand label
+name "chap:Conclusion"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The results of this work are concluded and discussed in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Conclusion"
+
+\end_inset
+
+, future work is presented in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Future-Work"
+
+\end_inset
+
+.
+ xxx
+\end_layout
+
+\begin_layout Section
+Conclusion 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Conclusion"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For the mountain car, three expert programs were xxxcombined with a black
+ box SARSA approach, which was xxxboth trained for 75 and 200 training episodes
+ respectively, as the general experience xxxafter 75 episodes is still poor.
+ The IB was tested with one expert program that was xxxcombined with a PSONN
+ policy.
+ Both the SARSA-75 and the PSONN policy featured hard to fit transition
+ samples.
+ In particular, the industrial benchmark has a xxxsparse state space; moreover,
+ the neuropolicy of particle swarm optimization is xxxveryxxxvolatile, which
+ is why no particularly good solutions were found.
+\end_layout
+
+\begin_layout Subsection
+Findings on familiar GP
+\end_layout
+
+\begin_layout Standard
+The experiments show significant structural differences between individuals
+ in familiar and regular GP runs.
+ Structures of the origin program can be recognized in familiar candidates;
+ which also forms a more homogeneous Pareto front.
+ Nevertheless, in some places structures of the expert were also broken
+ up and replaced with new formulae, especially with very simple expert programs
+ (3-6 nodes) as the TED xxxloose its effect.
+ Fixed nodes could fix this problem and further induced candidates that
+ were more robust against misruns.
+ A positive side effect of the implementation of fixed nodes is that it
+ allows an efficient optimization of extensive computational trees, which
+ would normally be too complex to be considered.
+ 
+\end_layout
+
+\begin_layout Standard
+The offline performance did not differ significantly, the regression error
+ was roughly the same in all runs.
+ Within the same absolute complexity range, the online performance differed
+ slightly, but not in a way that allow robust conclusions xxx.
+ A positive side effect is that the search for appropriately large and complex
+ strategies has been made possible.
+\end_layout
+
+\begin_layout Standard
+Another finding is, that further limitations of the search space (fixed
+ tree core, less operators, reduced action space) all performed equally
+ in terms of regression error and often better in online performance.
+\end_layout
+
+\begin_layout Subsection
+Limitations and Applicability
+\end_layout
+
+\begin_layout Standard
+xxx A general limitation of offline training is a potentially poor correlation
+ between the offline and online performance, which Hein has already described
+ in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+literal "true"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Besides, the proposed approach is only applicable when the regression error
+ of the expert program implies that structural improvements conceivable.
+ xxx the correlation between their online- and offline performance does
+ not correlate, it should not be applied.
+ Reasons for this may be that the black box strategy is too sparse to be
+ approximated with symbolic regression, or that the experts' strategy is
+ fundamentally different from the black box.
+ The same applies for GP candidates, which have to reduce the regression
+ error significantly.
+\end_layout
+
+\begin_layout Standard
+The second limitation is related to the edit distance, which in some cases
+ turns into a regular complexity metric, especially for small expert program,
+ which will be further discussed in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "subsec:Edit-distance-anomalies"
+
+\end_inset
+
+.
+\end_layout
+
 \begin_layout Subsection
 Summary
 \end_layout
@@ -11908,7 +11998,7 @@ In this thesis, we proposed the concept of familiarity for creating optimized
  The technique of creating interpretable policies through symbolic regression
  on transition samples often deviate strongly from the strategy or understanding
  a human expert has developed.
- The Tree Edit distance was proposed as familiarity metric to replace the
+ The tree edit distance was proposed as familiarity metric to replace the
  absolute amount of nodes as complexity measure for GP programs.
  In order to raise the commitment to the origin tree, fixed nodes were further
  introduced that allow an expert to further bind the evolutionary process

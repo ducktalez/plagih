@@ -2841,18 +2841,27 @@ name "chap:Familiar-Genetic-Programming"
 \begin_layout Standard
 In the following, the implementation of the approach to enhance genetic
  programming with familiarity is presented.
- This requires a pre-given expert solution, a better performing machine
- learning solution, as well as a fitness function and a metric for the amount
- of changes.
+ The prerequisites are an expert solution and transition samples from a
+ machine learning solution with better performance, which can be used for
+ a symbolic regression.
+ In 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Familiarity-Measurement-TED"
+plural "false"
+caps "true"
+noprefix "false"
+
+\end_inset
+
+, a metric for the amount of required changes is proposed.
 \end_layout
 
 \begin_layout Standard
-As a reference for familiarity, the domain expert's strategy or program
- must be represented as computational tree, which functions as genetic ancestor
- for all programs (origin).
- If possible, care should be taken to ensure that the structure is hierarchical
- so that the most important structural components are as close as possible
- to the root node.
+First, the domain expert's program must be represented as computational
+ tree, which functions as genetic ancestor for all programs (origin).
+ If possible, the hierarchical structure should be arranged so that the
+ more important structural components are closer to the root node.
  [xxx] A symbolic regression (
 \begin_inset CommandInset ref
 LatexCommand formatted

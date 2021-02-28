@@ -6,7 +6,7 @@ import sys
 np.set_printoptions(precision=2, threshold=sys.maxsize, suppress=True)
 
 
-def altering_sum_plus_minus(pmax=100):
+def altering_sum_plus_minus(pmax=1000):
     """
     Altering sum of primes; +2, -3, +5, -7
     """
@@ -45,11 +45,10 @@ def altering_sum_plus_minus(pmax=100):
     # print(p_diff)
     with plt.rc_context(rc={}):
         fig, ax = plt.subplots()
-        # plt.plot([abs(x) for x in p_altsum])
-        # plt.plot([p_diff[x] for x in p_diff])
-        ax.step(range(pmax), pp_count)
-        ax.step(range(pmax), range(pmax))
-        ax.plot(p_altsum_mean)
+        ax.plot(p_altsum)
+        ax.plot([abs(x) for x in p_altsum])
+        plt.plot([p_diff[x] for x in p_diff])
+        ax.plot(p_diff)
         # ax.plot(hmmmm)
         # plt.plot(lul_remerge)
         # plt.plot(p_altsum[1::2])

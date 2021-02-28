@@ -1,5 +1,5 @@
-#LyX 2.3 created this file. For more info see http://www.lyx.org/
-\lyxformat 544
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -10,6 +10,8 @@
 
 \renewcommand{\textendash}{--}
 \renewcommand{\textemdash}{---}
+% Added by lyx2lyx
+\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -27,8 +29,6 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
-\use_microtype true
-\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -70,7 +70,6 @@
 \suppress_date false
 \justification false
 \use_refstyle 1
-\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -80,10 +79,7 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\is_math_indent 0
-\math_numbering_side default
-\quotes_style english
-\dynamic_quotes 0
+\quotes_language english
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -312,7 +308,6 @@ emph{reinforcement learning}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -340,7 +335,6 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
-literal "true"
 
 \end_inset
 
@@ -354,7 +348,6 @@ Simple, interpretable policies can already be learned on surrogate models
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -377,7 +370,6 @@ Industrial control strategies feature many peculiarities, which can be addressed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
-literal "true"
 
 \end_inset
 
@@ -385,7 +377,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
-literal "true"
 
 \end_inset
 
@@ -394,7 +385,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
-literal "true"
 
 \end_inset
 
@@ -411,7 +401,6 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
-literal "true"
 
 \end_inset
 
@@ -420,7 +409,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
-literal "true"
 
 \end_inset
 
@@ -429,7 +417,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -451,7 +438,6 @@ In this thesis, the principle of familiarity is introduced, by means of
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
-literal "true"
 
 \end_inset
 
@@ -568,7 +554,6 @@ In this chapter, background information and applied methodologies are introduced
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Reinforcement-learning"
-caps "false"
 
 \end_inset
 
@@ -577,7 +562,6 @@ caps "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Interpretable-Machine-Learning"
-caps "false"
 
 \end_inset
 
@@ -587,7 +571,6 @@ caps "false"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "gp_Genetic-Programming"
-caps "false"
 
 \end_inset
 
@@ -686,7 +669,6 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
-literal "true"
 
 \end_inset
 
@@ -736,7 +718,6 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -773,7 +754,6 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
-literal "true"
 
 \end_inset
 
@@ -782,7 +762,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
-literal "true"
 
 \end_inset
 
@@ -801,7 +780,6 @@ the ability to explain or to present in understandable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -851,7 +829,6 @@ xx
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
-literal "true"
 
 \end_inset
 
@@ -874,9 +851,6 @@ The best explanation of a simple model is the model itself; it perfectly
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Genetic-Programming"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -889,7 +863,6 @@ noprefix "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
-literal "true"
 
 \end_inset
 
@@ -1029,7 +1002,6 @@ g policies since it was first introduced by Koza
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
-literal "true"
 
 \end_inset
 
@@ -1075,7 +1047,6 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
-literal "true"
 
 \end_inset
 
@@ -1154,7 +1125,6 @@ As for the selection process, each candidate is chosen separately through
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:gp-Evolutionary-concepts"
-caps "true"
 
 \end_inset
 
@@ -1835,7 +1805,6 @@ n metrics (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-error"
-caps "true"
 
 \end_inset
 
@@ -2399,7 +2368,6 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
-literal "true"
 
 \end_inset
 
@@ -2424,7 +2392,6 @@ n, where all Pareto-efficient combinations to the first objective of fitness
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:paretofront-example"
-caps "true"
 
 \end_inset
 
@@ -2580,7 +2547,6 @@ emph{full}
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:grow-vs-full-method"
-caps "true"
 
 \end_inset
 
@@ -2603,7 +2569,6 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
-literal "true"
 
 \end_inset
 
@@ -2848,9 +2813,6 @@ In the following, the implementation of the approach to enhance genetic
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Familiarity-Measurement-TED"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -2866,7 +2828,6 @@ First, the domain expert's program must be represented as computational
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "Symbolic-Regression"
-caps "false"
 
 \end_inset
 
@@ -3163,7 +3124,6 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
-literal "true"
 
 \end_inset
 
@@ -3174,7 +3134,6 @@ ations
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3265,7 +3224,6 @@ For this work, a GP suite in the language Python was developed.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
-literal "true"
 
 \end_inset
 
@@ -3280,7 +3238,6 @@ literal "true"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -3631,7 +3588,6 @@ The TED is calculated both a robustly and efficiently with APTED
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
-literal "true"
 
 \end_inset
 
@@ -3950,7 +3906,6 @@ Tree unification restructures a tree accordingly to a unique order by extracting
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
-literal "true"
 
 \end_inset
 
@@ -4811,7 +4766,6 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -5090,7 +5044,6 @@ In the Mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
-literal "true"
 
 \end_inset
 
@@ -5101,7 +5054,6 @@ literal "true"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "mountaincar-overview"
-caps "true"
 
 \end_inset
 
@@ -5666,7 +5618,6 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
-literal "false"
 
 \end_inset
 
@@ -5696,7 +5647,6 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -6739,7 +6689,6 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
-literal "true"
 
 \end_inset
 
@@ -6805,7 +6754,6 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
-literal "true"
 
 \end_inset
 
@@ -6818,7 +6766,6 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -8081,7 +8028,8 @@ filename "../benchmarks/slurm_runs/MTC200_MAE_simpleFix/visualisation/full_00.te
 \begin_layout Plain Layout
 Maximum acceleration, achieved with an if distinction.
  With only 6 nodes and a depth of 3, the tree is not robust against changes
- as the TED xxxlooses its protective weight early.
+ as the TED does not sufficiently protect the familiar core structure of
+ the tree.
  The proposed version with fixed nodes (colored dark blue) only allows the
  condition to be mutated.
  
@@ -8628,9 +8576,9 @@ Simple If-Acceleration with a Fixed Core
 \end_layout
 
 \begin_layout Standard
-In response to the lost protective effect xxx of the TED above a certain
- complexity, a fixed core was defined which only allows evolutions to affect
- the condition.
+In response to the limitations of the TED preserving familiar structures
+ in trees with only few nodes, a fixed core was defined in the beforementioned
+ if-acceleration policy.
 \end_layout
 
 \begin_layout Standard
@@ -9266,7 +9214,7 @@ name "fig:simpleFix-3candidates"
 \end_layout
 
 \begin_layout Subsection
-External Expert with Parabolic Bounding xxx min
+Preset Parabolic Bounding
 \end_layout
 
 \begin_layout Standard
@@ -9282,7 +9230,6 @@ reference "fig:xiao-origin-plot"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
-literal "true"
 
 \end_inset
 
@@ -11488,9 +11435,6 @@ reference "fig:ib-plots"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:Histograms-mc-ib"
-plural "false"
-caps "true"
-noprefix "false"
 
 \end_inset
 
@@ -11499,7 +11443,6 @@ noprefix "false"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
-literal "true"
 
 \end_inset
 
@@ -11577,6 +11520,84 @@ name "fig:Histograms-mc-ib"
 
 \begin_layout Section
 Discussion
+\end_layout
+
+\begin_layout Subsection
+Findings on familiar GP
+\end_layout
+
+\begin_layout Standard
+The experiments show significant structural differences between individuals
+ in familiar and regular GP runs.
+ Structures of the origin program can be recognized in familiar candidates;
+ which also forms a more homogeneous Pareto front.
+ Nevertheless, in some places structures of the expert were also broken
+ up and replaced with new formulae, especially with very simple expert programs
+ (3-6 nodes) as the TED xxxloose its effect.
+ Fixed nodes could fix this problem and further induced candidates that
+ were more robust against misruns.
+ A positive side effect of the implementation of fixed nodes is that it
+ allows an efficient optimization of extensive computational trees, which
+ would normally be too complex to be considered.
+ 
+\end_layout
+
+\begin_layout Standard
+The offline performance did not differ significantly, the regression error
+ was roughly the same in all runs.
+ Within the same absolute complexity range, the online performance differed
+ slightly, but not in a way that allow robust conclusions xxx.
+ A positive side effect is that the search for appropriately large and complex
+ strategies has been made possible.
+\end_layout
+
+\begin_layout Standard
+Another finding is, that further limitations of the search space (fixed
+ tree core, less operators, reduced action space) all performed equally
+ in terms of regression error and often better in online performance.
+\end_layout
+
+\begin_layout Subsection
+Limitations and Applicability
+\end_layout
+
+\begin_layout Standard
+xxx A general limitation of offline training is a potentially poor correlation
+ between the offline and online performance, which Hein has already described
+ in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Besides, the proposed approach is only applicable when the regression error
+ of the expert program implies that structural improvements conceivable.
+ xxx the correlation between their online- and offline performance does
+ not correlate, it should not be applied.
+ Reasons for this may be that the black box strategy is too sparse to be
+ approximated with symbolic regression, or that the experts' strategy is
+ fundamentally different from the black box.
+ The same applies for GP candidates, which have to reduce the regression
+ error significantly.
+\end_layout
+
+\begin_layout Standard
+The second limitation is related to the edit distance, which in some cases
+ turns into a regular complexity metric, especially for small expert program,
+ which will be further discussed in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "subsec:Edit-distance-anomalies"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -11890,7 +11911,6 @@ reference "sec:Future-Work"
 \end_inset
 
 .
- xxx
 \end_layout
 
 \begin_layout Section
@@ -11905,7 +11925,11 @@ name "sec:Conclusion"
 \end_layout
 
 \begin_layout Standard
-For the mountain car, three expert programs were xxxcombined with a black
+The approach was evaluated on the 
+\end_layout
+
+\begin_layout Standard
+For the mountain car, three expert strategies were xxxcombined with a black
  box SARSA approach, which was xxxboth trained for 75 and 200 training episodes
  respectively, as the general experience xxxafter 75 episodes is still poor.
  The IB was tested with one expert program that was xxxcombined with a PSONN
@@ -11915,85 +11939,6 @@ For the mountain car, three expert programs were xxxcombined with a black
  In particular, the industrial benchmark has a xxxsparse state space; moreover,
  the neuropolicy of particle swarm optimization is xxxveryxxxvolatile, which
  is why no particularly good solutions were found.
-\end_layout
-
-\begin_layout Subsection
-Findings on familiar GP
-\end_layout
-
-\begin_layout Standard
-The experiments show significant structural differences between individuals
- in familiar and regular GP runs.
- Structures of the origin program can be recognized in familiar candidates;
- which also forms a more homogeneous Pareto front.
- Nevertheless, in some places structures of the expert were also broken
- up and replaced with new formulae, especially with very simple expert programs
- (3-6 nodes) as the TED xxxloose its effect.
- Fixed nodes could fix this problem and further induced candidates that
- were more robust against misruns.
- A positive side effect of the implementation of fixed nodes is that it
- allows an efficient optimization of extensive computational trees, which
- would normally be too complex to be considered.
- 
-\end_layout
-
-\begin_layout Standard
-The offline performance did not differ significantly, the regression error
- was roughly the same in all runs.
- Within the same absolute complexity range, the online performance differed
- slightly, but not in a way that allow robust conclusions xxx.
- A positive side effect is that the search for appropriately large and complex
- strategies has been made possible.
-\end_layout
-
-\begin_layout Standard
-Another finding is, that further limitations of the search space (fixed
- tree core, less operators, reduced action space) all performed equally
- in terms of regression error and often better in online performance.
-\end_layout
-
-\begin_layout Subsection
-Limitations and Applicability
-\end_layout
-
-\begin_layout Standard
-xxx A general limitation of offline training is a potentially poor correlation
- between the offline and online performance, which Hein has already described
- in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "daniel_hein_doktorarbeit"
-literal "true"
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-Besides, the proposed approach is only applicable when the regression error
- of the expert program implies that structural improvements conceivable.
- xxx the correlation between their online- and offline performance does
- not correlate, it should not be applied.
- Reasons for this may be that the black box strategy is too sparse to be
- approximated with symbolic regression, or that the experts' strategy is
- fundamentally different from the black box.
- The same applies for GP candidates, which have to reduce the regression
- error significantly.
-\end_layout
-
-\begin_layout Standard
-The second limitation is related to the edit distance, which in some cases
- turns into a regular complexity metric, especially for small expert program,
- which will be further discussed in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "subsec:Edit-distance-anomalies"
-
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Subsection
@@ -12013,6 +11958,18 @@ In this thesis, we proposed the concept of familiarity for creating optimized
  introduced that allow an expert to further bind the evolutionary process
  to the origin program.
  
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+The apprach was tested on 
+\end_layout
+
+\begin_layout Standard
+xxx
 \end_layout
 
 \begin_layout Standard

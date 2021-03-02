@@ -589,19 +589,8 @@ name "sec:Reinforcement-learning"
 \end_layout
 
 \begin_layout Standard
-xx as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:RL-basics"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 Reinforcement learning is a subfield of machine learning, in which an agent
- autonomously learns a strategy for an environment through an external reward.
+ autonomously learns a strategy for an environment through a reward.
  RL problems, unlike supervised learning, require a sequential decision
  process for which the agent must develop a strategy (policy) to maximize
  the cumulative reward.
@@ -820,7 +809,7 @@ RL problems are incomplete as they are not fully testable and can be solved
 status open
 
 \begin_layout Plain Layout
-xx
+xxx state
 \end_layout
 
 \end_inset
@@ -847,7 +836,7 @@ The best explanation of a simple model is the model itself; it perfectly
  the interface for explicit communication between machines and humans that
  will be used in this work.
  An evolutionary method of finding such policies is genetic programming,
- which will be further presented in xxx 
+ which will be further presented in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Genetic-Programming"
@@ -944,21 +933,19 @@ name "fig:The-interpretability-gap"
 
 The interpretability gap is visualized, metaphorically, by a deep trench
  that lies between man and machine.
- It represents the learning effort of an individual in order to understand
- a policy.
- For optimal interpretability of policies, they should be as close as possible
- to the expert policy while having the performance of the black box.
- To close this gap between the expert's approach and a black box, we want
- to automatically produce similar programs that improve to be as good as
- the black box agent.
- This is not equally difficult to cross everywhere; the more prior knowledge
- one has, the smaller the gap in things that need to be learned.
+ It represents the learning effort of an individual to understand what a
+ black box policy is doing.
+ The land on which humans stand further represents a space where communication
+ and teaching is possible, so that the expert can relate to beginners and
+ theoretically teach them techniques to improve.
+ The gap is not equally difficult to cross everywhere; the more prior knowledge
+ one has, the smaller the gap in things that need to be understood.
  The expert stands at the narrowest point, yet the trench still has to be
  crossed.
- [todo xxx Das ist schon viel besser.
- Aber immer noch schwer zu verstehen.
- Du solltest noch mehr erklären.
- Was bedeuten zB die Pfeile?]
+ We want to automatically create artificial solutions that function as stepping
+ stones for the expert, which should be as similar as possible to the expert
+ policy while having the performance of the black box.
+ 
 \end_layout
 
 \end_inset
@@ -1006,12 +993,16 @@ key "Koza_GP_patent_1990"
 \end_inset
 
 .
- xxx Individuals in the population are ranked with a fitness function to
- select the best individuals for the next generation.
- [xxx So ist es missverständlich.
- Nicht die Gene werden gerankt.] Computer programs are encoded as a set of
- genes, which can be Random optimization like mutation or crossover allow
- new genes to emerge, which improves the pool of genes over generations.
+ Computer programs are encoded as a set of genes, which allow random optimizatio
+n like mutation and crossover to create Individuals of a population of programs.
+ These individuals can reproduce between generations in a selection provess,
+ for which a fitness function is required that allows a ranking of candidates.
+\end_layout
+
+\begin_layout Standard
+The candidates are assumed to depend on the composition of genes in the
+ population, the gene pool, allow new genes to emerge, which improves the
+ pool of genes over generations.
  Improvements occur stochastically, which makes GP a meta-heuristic optimization
  technique that does not necessarily converge to an optimum.
  The composition of a population is crucial and requires a careful balance
@@ -1104,9 +1095,15 @@ rightarrow 1$
 \noun off
 \color none
 As for the selection process, each candidate is chosen separately through
- tournament selection, where the fittest of (3-7) [xxx Ich würde hier versuchen
- eine Quelle zu zitieren, aber das ist Geschmackssache] random candidates
- wins.
+ tournament selection, where the fittest of a random selection of 3 candidates
+ wins 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "gp-tournament-selection"
+
+\end_inset
+
+.
  This allows trees to survive in a population that have not yet been optimized
  but may carry important genes in the future.
  The most important evolutions can be seen in 
@@ -1142,17 +1139,9 @@ reference "tab:gp-Evolutionary-concepts"
 \color none
 .
  
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
+\end_layout
+
+\begin_layout Standard
 The procedure is described in more detail in 
 \begin_inset ERT
 status open
@@ -2808,15 +2797,23 @@ In the following, the implementation of the approach to enhance genetic
  programming with familiarity is presented.
  The prerequisites are an expert solution and transition samples from a
  machine learning solution with better performance, which can be used for
- a symbolic regression.
- In 
+ a symbolic regression (
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "sec:Familiarity-Measurement-TED"
+reference "Symbolic-Regression"
 
 \end_inset
 
-, a metric for the amount of required changes is proposed.
+).
+ The seletion process of the data is further described in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Offline-Data-Selection"
+
+\end_inset
+
+.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -2824,27 +2821,18 @@ First, the domain expert's program must be represented as computational
  tree, which functions as genetic ancestor for all programs (origin).
  If possible, the hierarchical structure should be arranged so that the
  more important structural components are closer to the root node.
- [xxx] A symbolic regression (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "Symbolic-Regression"
-
-\end_inset
-
-) depicts the fitness function, which is performed on transition samples
- that were collected with the (black box) machine learning solution (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "sec:Offline-Data-Selection"
-
-\end_inset
-
-).
  
 \end_layout
 
 \begin_layout Standard
-In this chapter, we will further present the 
+In 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Familiarity-Measurement-TED"
+
+\end_inset
+
+, the 
 \begin_inset ERT
 status open
 
@@ -2857,16 +2845,9 @@ emph{Tree Edit Distance} (TED)
 
 \end_inset
 
- as complexity measure (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "sec:Familiarity-Measurement-TED"
-
-\end_inset
-
-), which calculates the number of differences of computational trees.
- Special features of the GP suites implemented for implementation are described
- in 
+ is proposed as metric to calculate the amount of required changes to the
+ origin tree.
+ Particular features of the GP suites implemented and described in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:GP-Suite-Implementation"
@@ -2874,14 +2855,14 @@ reference "sec:GP-Suite-Implementation"
 \end_inset
 
 .
- Further extensions of fixed tree cores are presented in 
+ Additionally, selecting a fixed core in the origin tree proposed in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "subsec:Fixed-nodes"
 
 \end_inset
 
-, as well as a tree unification algorithm in 
+ as extension to the TED, as well as a tree unification algorithm in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:sympy-tree-reduction"
@@ -3649,8 +3630,15 @@ The TED, which is the main method to create familiar candidates, only implicitly
  definitely correct or decisive from the point of view of familiarity.
  This hard constraint on the evolution process severely limits the search
  space for candidates.
- How decisive these limitations are will be evaluated in xxx, as well as
- the possibility of using this method to optimize highly complex tree structures.
+ How decisive these limitations are will be evaluated in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:eval-fixed"
+
+\end_inset
+
+, as well as the possibility of using this method to optimize highly complex
+ tree structures.
 \end_layout
 
 \begin_layout Paragraph
@@ -5432,8 +5420,8 @@ Always accelerate.
 \begin_inset Newline newline
 \end_inset
 
-Doing nothing instead of accelerating xxxlooses speed, but is often chosen
- by agents in regions of turning points.
+Doing nothing instead of accelerating looses speed, but is nevertheless
+ often chosen in the area of turning points.
 \end_layout
 
 \begin_layout Itemize
@@ -8573,6 +8561,13 @@ name "fig:mc-simple-candidates"
 
 \begin_layout Subsection
 Simple If-Acceleration with a Fixed Core
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:eval-fixed"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -11522,6 +11517,18 @@ name "fig:Histograms-mc-ib"
 Discussion
 \end_layout
 
+\begin_layout Standard
+The approach was evaluated with simple expert programs on both the Mountain
+ Car (Sarsa-200 agent) and the Industrial Benchmark (PSONN agent) respectively.
+ On the MC, the possibilities of fixed tree cores, several other and more
+ complex agents, and the effects of a poorly trained black box (Sarsa-75
+ agent) were additionally tested.
+ On all MC runs, candidates were found that were also a real improvement
+ online, whereas on the IB, candidates were found offline, but these could
+ not sufficiently approximate the sparse PSONN policy and performed not
+ significantly better than the regular GP results.
+\end_layout
+
 \begin_layout Subsection
 Findings on familiar GP
 \end_layout
@@ -11530,12 +11537,15 @@ Findings on familiar GP
 The experiments show significant structural differences between individuals
  in familiar and regular GP runs.
  Structures of the origin program can be recognized in familiar candidates;
- which also forms a more homogeneous Pareto front.
- Nevertheless, in some places structures of the expert were also broken
- up and replaced with new formulae, especially with very simple expert programs
- (3-6 nodes) as the TED xxxloose its effect.
- Fixed nodes could fix this problem and further induced candidates that
- were more robust against misruns.
+ which also forms a more homogeneous Pareto front and thus allow better
+ comparability among candidates.
+ In some runs, structures of the expert were broken up and replaced with
+ new formulae to a point, where no familiar structures were left.
+ This can be attributed to an inevitable problem with the TED, which can
+ not sufficiently protect the familiar tree core structure in very simple
+ expert programs (3-6 nodes).
+ Nevertheless, fixed nodes solved this problem and further induced candidates
+ that were more robust against misruns.
  A positive side effect of the implementation of fixed nodes is that it
  allows an efficient optimization of extensive computational trees, which
  would normally be too complex to be considered.
@@ -11545,16 +11555,13 @@ The experiments show significant structural differences between individuals
 \begin_layout Standard
 The offline performance did not differ significantly, the regression error
  was roughly the same in all runs.
- Within the same absolute complexity range, the online performance differed
- slightly, but not in a way that allow robust conclusions xxx.
+ Within the same absolute complexity range, the online performance was slightly
+ better.
  A positive side effect is that the search for appropriately large and complex
  strategies has been made possible.
-\end_layout
-
-\begin_layout Standard
-Another finding is, that further limitations of the search space (fixed
- tree core, less operators, reduced action space) all performed equally
- in terms of regression error and often better in online performance.
+ Limitations of the search space (fixed tree core, less operators, reduced
+ action space) all performed equally in terms of regression error and often
+ better in online performance.
 \end_layout
 
 \begin_layout Subsection
@@ -11562,9 +11569,13 @@ Limitations and Applicability
 \end_layout
 
 \begin_layout Standard
-xxx A general limitation of offline training is a potentially poor correlation
- between the offline and online performance, which Hein has already described
- in 
+The limitations mainly concern the complexity of the black box policy and
+ protective effect of the edit distance regarding familiar tree structures.
+\end_layout
+
+\begin_layout Standard
+General disadvantages of offline learning have already been described by
+ Hein in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
@@ -11572,35 +11583,20 @@ key "daniel_hein_doktorarbeit"
 \end_inset
 
 .
- 
-\end_layout
-
-\begin_layout Standard
-Besides, the proposed approach is only applicable when the regression error
- of the expert program implies that structural improvements conceivable.
- xxx the correlation between their online- and offline performance does
- not correlate, it should not be applied.
- Reasons for this may be that the black box strategy is too sparse to be
- approximated with symbolic regression, or that the experts' strategy is
- fundamentally different from the black box.
- The same applies for GP candidates, which have to reduce the regression
- error significantly.
+ Familiar improvement are not to be expected when the the initial regression
+ error is too large (e.g.
+ the expert strategy differs fundamentally from the black box) or when the
+ GP candidates can not reduce the regression error sufficiently (e.g.
+ because the black box policy is very sparse, maybe too sparse to be approximate
+d with symbolic regression).
 \end_layout
 
 \begin_layout Standard
 The second limitation is related to the edit distance, which in some cases
- turns into a regular complexity metric, especially for small expert program,
- which will be further discussed in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "subsec:Edit-distance-anomalies"
-
-\end_inset
-
-.
+ turns into a regular complexity metric, especially for small expert programs.
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Paragraph
 Edit Distance Anomalies 
 \begin_inset CommandInset label
 LatexCommand label
@@ -11613,12 +11609,8 @@ name "subsec:Edit-distance-anomalies"
 
 \begin_layout Standard
 The number of nodes poses some problems as a paradigm for complexity values,
- even after weighting.
-\end_layout
-
-\begin_layout Standard
-An important distinction has to be made between the inner and outer nodes
- of a tree.
+ even after weighting.An important distinction has to be made between the
+ inner and outer nodes of a tree.
  The inner nodes, which contain the operators, essentially characterize
  a programming tree by representing the computation that is performed, since
  the exact choice of leaf nodes are the logical prerequisite for its fitness
@@ -11626,7 +11618,7 @@ An important distinction has to be made between the inner and outer nodes
  
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 Operators 
 \end_layout
 
@@ -11815,7 +11807,7 @@ name "fig:if-operator-composition"
 
 \end_layout
 
-\begin_layout Paragraph
+\begin_layout Subparagraph
 Leaf nodes 
 \begin_inset CommandInset label
 LatexCommand label
@@ -11924,59 +11916,32 @@ name "sec:Conclusion"
 
 \end_layout
 
-\begin_layout Standard
-The approach was evaluated on the 
-\end_layout
-
-\begin_layout Standard
-For the mountain car, three expert strategies were xxxcombined with a black
- box SARSA approach, which was xxxboth trained for 75 and 200 training episodes
- respectively, as the general experience xxxafter 75 episodes is still poor.
- The IB was tested with one expert program that was xxxcombined with a PSONN
- policy.
- Both the SARSA-75 and the PSONN policy featured hard to fit transition
- samples.
- In particular, the industrial benchmark has a xxxsparse state space; moreover,
- the neuropolicy of particle swarm optimization is xxxveryxxxvolatile, which
- is why no particularly good solutions were found.
-\end_layout
-
 \begin_layout Subsection
 Summary
 \end_layout
 
 \begin_layout Standard
-In this thesis, we proposed the concept of familiarity for creating optimized
- interpretable reinforcement learning policies, which depicts similarity
- to already known strategies of a domain expert.
- The technique of creating interpretable policies through symbolic regression
- on transition samples often deviate strongly from the strategy or understanding
- a human expert has developed.
- The tree edit distance was proposed as familiarity metric to replace the
- absolute amount of nodes as complexity measure for GP programs.
- In order to raise the commitment to the origin tree, fixed nodes were further
- introduced that allow an expert to further bind the evolutionary process
- to the origin program.
- 
+In this thesis, familiarity is introduced as concept for a novel method
+ to create interpretable RL policies based on prior known expert strategies
+ with genetic programming.
+ First, transition samples are collected with a black box agent that is
+ to be explained.
+ Second, the expert program is used as origin for a GP process, in which
+ the complexity metric is the tree edit distance between candidates and
+ the origin.
+ Additionally, the opportunity to select a fixed core in the origin was
+ implemented to further protect familiar structures in programs.
 \end_layout
 
 \begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-The apprach was tested on 
-\end_layout
-
-\begin_layout Standard
-xxx
+This technique allows a domain experts to build on familiar knowledge to
+ interpret a formular, instead of having to understand an artificial formula
+ from scratch, which may deviate fundamentally from previously known strategies.
 \end_layout
 
 \begin_layout Standard
 The experiments have shown that familiarity can replace the paradigm of
  simplicity in genetic programming without major drawbacks.
- Candidates were allowed to recognize original structures easily and also
- allowed better comparability among Pareto candidates.
  The main difficulty concerned a lack of familiarity with some simple expert
  programs, which could be solved by defining a fixed core.
  

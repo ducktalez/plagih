@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -11,7 +11,6 @@
 \renewcommand{\textendash}{--}
 \renewcommand{\textemdash}{---}
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \maintain_unincluded_children false
@@ -29,6 +28,8 @@
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -69,7 +70,8 @@
 \paperorientation portrait
 \suppress_date false
 \justification false
-\use_refstyle 1
+\use_refstyle 0
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -79,7 +81,10 @@
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -308,6 +313,7 @@ emph{reinforcement learning}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -335,6 +341,7 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
+literal "true"
 
 \end_inset
 
@@ -348,6 +355,7 @@ Simple, interpretable policies can already be learned on surrogate models
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -370,6 +378,7 @@ Industrial control strategies feature many peculiarities, which can be addressed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
+literal "true"
 
 \end_inset
 
@@ -377,6 +386,7 @@ key "siemens-gas-turbine-rl-nn"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
+literal "true"
 
 \end_inset
 
@@ -385,6 +395,7 @@ key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
+literal "true"
 
 \end_inset
 
@@ -401,6 +412,7 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -409,6 +421,7 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -417,6 +430,7 @@ key "hein_fuzzy_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -438,6 +452,7 @@ In this thesis, the principle of familiarity is introduced, by means of
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
+literal "true"
 
 \end_inset
 
@@ -562,6 +577,7 @@ reference "sec:Reinforcement-learning"
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Interpretable-Machine-Learning"
+caps "false"
 
 \end_inset
 
@@ -570,7 +586,10 @@ reference "sec:Interpretable-Machine-Learning"
  policies in 
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "gp_Genetic-Programming"
+reference "sec:Genetic-Programming"
+plural "false"
+caps "true"
+noprefix "false"
 
 \end_inset
 
@@ -614,7 +633,7 @@ emph{Markov Decision Process}
 \end_inset
 
  (MDP).
- If the current state of the system can not be derived from the available
+ If the current state of the system cannot be derived from the available
  observations, the MDP is only partially observable.
 \end_layout
 
@@ -658,6 +677,7 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
+literal "true"
 
 \end_inset
 
@@ -707,6 +727,7 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -743,6 +764,7 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -751,6 +773,7 @@ key "AIINDEX2019"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -769,6 +792,7 @@ the ability to explain or to present in understandable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -818,6 +842,7 @@ xxx state
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -852,6 +877,7 @@ reference "sec:Genetic-Programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -989,13 +1015,14 @@ g policies since it was first introduced by Koza
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
+literal "true"
 
 \end_inset
 
 .
  Computer programs are encoded as a set of genes, which allow random optimizatio
 n like mutation and crossover to create Individuals of a population of programs.
- These individuals can reproduce between generations in a selection provess,
+ These individuals can reproduce between generations in a selection process,
  for which a fitness function is required that allows a ranking of candidates.
 \end_layout
 
@@ -1038,6 +1065,7 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1100,6 +1128,7 @@ As for the selection process, each candidate is chosen separately through
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-tournament-selection"
+literal "true"
 
 \end_inset
 
@@ -1403,7 +1432,7 @@ nl append tree to P'
 
     
 \backslash
-SetKwProg{myalg}{olympReproduction}{}{}
+SetKwProg{myalg}{olympusReproduction}{}{}
 \end_layout
 
 \begin_layout Plain Layout
@@ -2357,6 +2386,7 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
+literal "true"
 
 \end_inset
 
@@ -2558,6 +2588,7 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
+literal "true"
 
 \end_inset
 
@@ -2805,7 +2836,7 @@ reference "Symbolic-Regression"
 \end_inset
 
 ).
- The seletion process of the data is further described in 
+ The selection process of the data is further described in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Offline-Data-Selection"
@@ -3105,6 +3136,7 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -3115,6 +3147,7 @@ ations
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3184,7 +3217,7 @@ status open
 
 \begin_layout Plain Layout
 - Laufzeit: rekursive Baumstrukturen mit arity-3, LUTs, laufzeit durch passing
- values, Tensorflow,
+ values, TensorFlow,
 \end_layout
 
 \begin_layout Plain Layout
@@ -3200,11 +3233,12 @@ status open
 
 \begin_layout Standard
 For this work, a GP suite in the language Python was developed.
- The evaluation process is accelerated with Tensorflow enabled evaluation,
+ The evaluation process is accelerated with TensorFlow enabled evaluation,
  inspired by Karoo 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
@@ -3212,13 +3246,14 @@ key "karooGPpaper"
  The more detailed implementation is described below.
  Fitness evaluation is the bottleneck of performance.
  Kai Staats has shown with Karoo that a 2-15 times speedup can be achieved
- by converting expressions into Tensorflow graphs, which enables parallel
+ by converting expressions into TensorFlow graphs, which enables parallel
  evaluation on the GPU.
  To further enable simplification of expressions, the Python library SymPy
  
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -3265,7 +3300,7 @@ However, due to the high variance in the branching factor, the tree depth
 \begin_layout Standard
 Constants are randomly selected from three different distributions, which
  includes sampling from the input data as well as Gaussian-distributed integers
- and floating point values (
+ and floating-point values (
 \begin_inset ERT
 status open
 
@@ -3569,6 +3604,7 @@ The TED is calculated both a robustly and efficiently with APTED
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3589,18 +3625,18 @@ reference "TED-improvements"
 \end_layout
 
 \begin_layout Paragraph
-Olymp reproduction (Pareto reproduction)
+Olympus reproduction (Pareto reproduction)
 \end_layout
 
 \begin_layout Standard
 Similar to the Greek gods who came to earth to reproduce, the Pareto candidates
  were also given the opportunity to intermingle with the current population.
- By chance, solutions already found and their genes can be lost.
+ By chance, solutions already found, and their genes can be lost.
  In order not to lose already found solutions permanently, the genes of
  the best candidates are to provide a very small current of the best candidates
  to the population.
- The Olymp reproduction includes in particular the possibility for the origin
- tree to reproduce itself.
+ The Olympus reproduction includes the possibility for the origin tree to
+ reproduce itself.
 \end_layout
 
 \begin_layout Section
@@ -3616,18 +3652,18 @@ name "subsec:Fixed-nodes"
 
 \begin_layout Standard
 A fixed core comprises a node structure in the reference tree that must
- be present in all individuals .
+ be present in all individuals.
  
 \end_layout
 
 \begin_layout Standard
 The TED, which is the main method to create familiar candidates, only implicitly
  protects familiar structures.
- This is why degenerate changes can occur after only a few changes, especially
+ Therefore,  degenerate changes can occur after only a few changes, especially
  in small reference trees.
  In contrast, fixed structures are an explicit node protection.
- Fixed nodes can be used to obtain structures that are considered to be
- definitely correct or decisive from the point of view of familiarity.
+ Fixed nodes can be used to obtain structures that are definitely correct
+ or decisive from the point of view of familiarity.
  This hard constraint on the evolution process severely limits the search
  space for candidates.
  How decisive these limitations are will be evaluated in 
@@ -3647,14 +3683,14 @@ Implementation
 
 \begin_layout Standard
 The implementation of a fixed core in the reference tree does not only require
- adjustments in the tree structure, but also modifications in the the evolutiona
-ry process.
+ adjustments in the tree structure, but also modifications in the evolutionary
+ process.
 \end_layout
 
 \begin_layout Standard
 The fixed core depicts a connected structure of fixed nodes in a tree, which
  have to be selected manually and root-down by the user.
- At least one mutatable junction must be provided for the evolutionary process,
+ At least one mutable junction must be provided for the evolutionary process,
  an example can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
@@ -3740,7 +3776,7 @@ $l_0$
 
 \end_inset
 
- amount of intervals, where 
+ number of intervals, where 
 \begin_inset ERT
 status open
 
@@ -3751,11 +3787,11 @@ $l_1$
 
 \end_inset
 
- is the amount of nodes on the first mutatable layer.
+ is the amount of nodes on the first mutable layer.
  In the second step, each subtree is constructed individually with a node-based
  method.
  In order to avoid retroactive pruning, a node buffer of open leaf nodes
- is created, which have to applied in the last step.
+ is created, which must be applied in the last step.
  To further counteract overloading of a tree side (of the left side), the
  node build-types (operator-/terminal node) for the next level are selected
  and shuffled before being selected and inserted.
@@ -3790,7 +3826,7 @@ name "sec:sympy-tree-reduction"
 \begin_layout Standard
 Automatic equation cancellation is the process of replacing calculable branches
  with its result.
- This process can shorten a long process of random mutations, but is only
+ This process can shorten a long process of random mutations but is only
  applied on the best performing individuals as complex branches offers more
  junctions for the mutation of innovative new gene structures.
 \end_layout
@@ -3798,7 +3834,7 @@ Automatic equation cancellation is the process of replacing calculable branches
 \begin_layout Standard
 We argue that in familiarity-based GP, which relies on recognizing formula
  structures, unification is more important than simplification, as it strongly
- affects the TED which can not take mathematical similarities into account.
+ affects the TED which cannot take mathematical similarities into account.
 \begin_inset Foot
 status open
 
@@ -3894,6 +3930,7 @@ Tree unification restructures a tree accordingly to a unique order by extracting
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4060,7 +4097,7 @@ in $  expr}{
 
   
 \backslash
-Comment{Expression can not be interpreted}
+Comment{Expression cannot be interpreted}
 \end_layout
 
 \begin_layout Plain Layout
@@ -4343,7 +4380,7 @@ status open
 
 \begin_layout Plain Layout
 
-Orders can not be negotiated
+Orders cannot be negotiated
 \end_layout
 
 \end_inset
@@ -4754,6 +4791,7 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -5032,6 +5070,7 @@ In the Mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -5420,8 +5459,8 @@ Always accelerate.
 \begin_inset Newline newline
 \end_inset
 
-Doing nothing instead of accelerating looses speed, but is nevertheless
- often chosen in the area of turning points.
+Doing nothing instead of accelerating loses speed but is nevertheless often
+ chosen in the area of turning points.
 \end_layout
 
 \begin_layout Itemize
@@ -5453,7 +5492,7 @@ reference "fig:mc-decision-plots"
 
 \end_inset
 
-,
+, 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:mountaincar-plot-diff"
@@ -5570,7 +5609,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-This behaviour-dependent plot marks the deviations from the reference (SARSA-)
+This behavior-dependent plot marks the deviations from the reference (SARSA-)
  policy.
  
 \begin_inset CommandInset label
@@ -5606,6 +5645,7 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -5635,6 +5675,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -5660,8 +5701,9 @@ reference "fig:ml-sarsa-outliers"
 \end_inset
 
 ).
- Since such problems could not be noticed in reality, the approach was evaluated
-, especially in safety-critical areas, more attention would be paid to safety.
+ Since such problems could not be noticed in real world applications, the
+ approach was evaluated, especially in safety-critical areas, more attention
+ would be paid to safety.
  For comparison, the results were also evaluated with a more 
 \begin_inset Quotes eld
 \end_inset
@@ -6649,7 +6691,7 @@ retrospective
 
 \begin_layout Plain Layout
 Overview of the most important IB features.
- The reward can not be used in the GP-process.
+ The reward cannot be used in the GP-process.
  
 \begin_inset CommandInset label
 LatexCommand label
@@ -6677,6 +6719,7 @@ The Industrial Benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -6689,7 +6732,7 @@ reference "IB-observations-state"
 
 ) and the reward depends on a combination of actions 0 and 1, as well as
  action 2, which severely penalizes misconduct.
- The development of observations have to be taken into account (in the form
+ The development of observations has to be taken into account (in the form
  of retrospective consideration).
  Finally, high stochastic system dynamics further complicates learning reliable
  policies.
@@ -6742,6 +6785,7 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -6754,6 +6798,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -8103,7 +8148,7 @@ name "fig:MC-simple-plots"
 
 \end_inset
 
-The acceleration corresponds with the current velocity and clearly devides
+The acceleration corresponds with the current velocity and clearly divides
  into two cases.
 \end_layout
 
@@ -8158,7 +8203,7 @@ name "fig:mc200_MSE_simple-pareto"
 \end_layout
 
 \begin_layout Standard
-The TED loses its effect after a certain amount of changes, the first occurence
+The TED loses its effect after a certain amount of changes, the first occurrence
  can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
@@ -8600,8 +8645,8 @@ reference "fig:mc200_simple-fix-pareto"
 \end_inset
 
 , the real reward of the Pareto candidates improves relatively early and
- seems more robust against outliers compared to the fully mutatable and
- regular GP results.
+ seems more robust against outliers compared to the fully mutable and regular
+ GP results.
  The most significant candidates are presented in 
 \begin_inset CommandInset ref
 LatexCommand formatted
@@ -9225,6 +9270,7 @@ reference "fig:xiao-origin-plot"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -10020,7 +10066,7 @@ name "fig:mc-ifex-pareto"
 \end_inset
 
  All Pareto-efficient candidates are trustworthy.
- (compared to the fully mutatable version on the right).
+ (compared to the fully mutable version on the right).
 \end_layout
 
 \end_inset
@@ -10595,7 +10641,7 @@ Mountain Car Discussion
 All origin programs could be improved with familiar approaches and showed
  significant structural difference to regular GP candidates.
  Simple expert heuristics have shown limitations regarding the tree edit
- distance, but can be solved by defining a fixed core.
+ distance but can be solved by defining a fixed core.
  The more experienced SARSA-200 policy was easier to fit than SARSA-75.
  Methods of restricting the search space, such as fixed nodes or a reduced
  operator set have shown better online performance, which also encourages
@@ -10639,10 +10685,22 @@ Regular GP Results
 
 \begin_layout Standard
 Normal GP results for the IB reach a combined regression error of about
- 2, the real reward is about 6000 for all candidates 
+ 2, the real reward is about 6000 for all candidates (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:IB_MSE_scratch_graphs"
+
+\end_inset
+
+).
+ The Pareto candidates are difficult to compare with each other because
+ they often use completely different approaches, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "tab:-IB-scratch-overview"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 
@@ -11077,6 +11135,53 @@ Expert Program Workaround
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ib-plots"
+
+\end_inset
+
+ The improvements of the start policy improve the real performance without
+ bad outliers.
+ As the IB requires merging multiple Pareto candidates, it is good advice
+ to discard the first combinations.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 For the IB, no human-written policy for the is known.
  Instead, a formula altering the appropriate actions was used as reference
  solution workaround.
@@ -11138,54 +11243,6 @@ reference "fig:ib-progress-3"
 \end_inset
 
 ).
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:ib-plots"
-
-\end_inset
-
- The improvements of the start policy improve the real performance without
- bad outliers.
- As the IB requires merging multiple Pareto candidates, it is good advice
- to discard the first combinations.
- 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -11259,7 +11316,7 @@ name "fig:ib-progress"
 placement h
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \noindent
@@ -11344,7 +11401,6 @@ name "fig:ib-progress-2"
 \begin_layout Standard
 \noindent
 \begin_inset Float figure
-placement h
 wide false
 sideways false
 status open
@@ -11378,6 +11434,22 @@ name "fig:ib-progress-3"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -11438,6 +11510,7 @@ reference "fig:Histograms-mc-ib"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11541,9 +11614,9 @@ The experiments show significant structural differences between individuals
  comparability among candidates.
  In some runs, structures of the expert were broken up and replaced with
  new formulae to a point, where no familiar structures were left.
- This can be attributed to an inevitable problem with the TED, which can
- not sufficiently protect the familiar tree core structure in very simple
- expert programs (3-6 nodes).
+ This can be attributed to an inevitable problem with the TED, which cannot
+ sufficiently protect the familiar tree core structure in very simple expert
+ programs (3-6 nodes).
  Nevertheless, fixed nodes solved this problem and further induced candidates
  that were more robust against misruns.
  A positive side effect of the implementation of fixed nodes is that it
@@ -11579,14 +11652,15 @@ General disadvantages of offline learning have already been described by
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
 .
- Familiar improvement are not to be expected when the the initial regression
+ Familiar improvement are not to be expected when the initial regression
  error is too large (e.g.
  the expert strategy differs fundamentally from the black box) or when the
- GP candidates can not reduce the regression error sufficiently (e.g.
+ GP candidates cannot reduce the regression error sufficiently (e.g.
  because the black box policy is very sparse, maybe too sparse to be approximate
 d with symbolic regression).
 \end_layout
@@ -11609,8 +11683,9 @@ name "subsec:Edit-distance-anomalies"
 
 \begin_layout Standard
 The number of nodes poses some problems as a paradigm for complexity values,
- even after weighting.An important distinction has to be made between the
- inner and outer nodes of a tree.
+ even after weighting.
+ An important distinction has to be made between the inner and outer nodes
+ of a tree.
  The inner nodes, which contain the operators, essentially characterize
  a programming tree by representing the computation that is performed, since
  the exact choice of leaf nodes are the logical prerequisite for its fitness
@@ -11934,8 +12009,8 @@ In this thesis, familiarity is introduced as concept for a novel method
 \end_layout
 
 \begin_layout Standard
-This technique allows a domain experts to build on familiar knowledge to
- interpret a formular, instead of having to understand an artificial formula
+This technique allows a domain expert to build on familiar knowledge to
+ interpret a formula, instead of having to understand an artificial formula
  from scratch, which may deviate fundamentally from previously known strategies.
 \end_layout
 
@@ -12047,7 +12122,7 @@ reference "fig:operator-classification"
 With if-statements, calculating the edit distance of the child branches
  separately and adding only the largest factor to the distance.
  This procedure is intended to promote the use of if-statements, which have
- positive influence on the composition of a formula, but increases the TED
+ positive influence on the composition of a formula but increases the TED
  due to the high arity of 3.
 \end_layout
 
@@ -12667,9 +12742,9 @@ l effort.
  increased factor.
  Especially constants have a strong impact, where an otherwise desired optimizat
 ion of a value is evaluated as a full-fledged edit.
- This can not only prevent deliberate simplifications, but can even lead
- to the formula components around the variable being adjusted in order to
- be able to continue to use the constant unchanged.
+ This cannot only prevent deliberate simplifications but can even lead to
+ the formula components around the variable being adjusted in order to be
+ able to continue to use the constant unchanged.
  A simple solution is to exclude constants when calculating the TED.
 \end_layout
 

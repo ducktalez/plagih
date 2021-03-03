@@ -11135,53 +11135,6 @@ Expert Program Workaround
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf
-	height 5cm
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:ib-plots"
-
-\end_inset
-
- The improvements of the start policy improve the real performance without
- bad outliers.
- As the IB requires merging multiple Pareto candidates, it is good advice
- to discard the first combinations.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 For the IB, no human-written policy for the is known.
  Instead, a formula altering the appropriate actions was used as reference
  solution workaround.
@@ -11243,6 +11196,53 @@ reference "fig:ib-progress-3"
 \end_inset
 
 ).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf
+	height 5cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ib-plots"
+
+\end_inset
+
+ The improvements of the start policy improve the real performance without
+ bad outliers.
+ As the IB requires merging multiple Pareto candidates, it is good advice
+ to discard the first combinations.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard

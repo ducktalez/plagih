@@ -18,7 +18,6 @@
 \RequirePackage{fancyhdr}
 \RequirePackage{amsfonts}
 \RequirePackage[T1]{fontenc}
-
 \RequirePackage{forest}
 \RequirePackage{tikz}
 \RequirePackage{array}
@@ -59,7 +58,15 @@
 
 
 
+\renewcommand{\textendash}{--}
+\renewcommand{\textemdash}{---}
+% Added by lyx2lyx
 
+
+
+\RequirePackage[capitalise]{cleveref}
+\renewcommand{\ref}{\cref}%I am lazy and have \ref in my thesis
+\renewcommand{\prettyref}{\cref}%I am lazy and have \pretty ref in my thesis aswell
 
 
 
@@ -249,7 +256,8 @@ Die Arbeit wurde weder einer anderen Prüfungsbehörde vorgelegt noch veröffent
 \global\fach{Computer Science}
 
 
-\newcommand{\secref}[1]{Section~\ref{#1}}
-\newcommand{\Secref}[1]{Section~\ref{#1}}% otherwise, it says "...can be seen in Section §2.2"
-\newcommand{\Figref}[1]{Figure~\ref{#1}}
-\newcommand{\figref}[1]{Figure~\ref{#1}}
+%\newcommand{\secref}[1]{Section~\ref{#1}}
+%\newcommand{\Secref}[1]{Section~\ref{#1}}% otherwise, it says "...can be seen in Section §2.2"
+%\newcommand{\Figref}[1]{Figure~\ref{#1}}
+%\newcommand{\figref}[1]{Figure~\ref{#1}}
+

@@ -145,11 +145,24 @@ pagenumbering{gobble}
 status open
 
 \begin_layout Plain Layout
-Machine learning methods, especially reinforcement learning, enable the
- autonomous learning of policies for technical systems.
- However, the decision-making process is not explainable to humans and is
- considered a black box.
- which is why the interest in deriving interpretable rules is great.
+In this Thesis, a novel machine learning technique is proposed, which uses
+ genetic programming (GP) to elaborate essential algorithmic improvements
+ to a previously known familiar strategy rather than starting from scratch.
+ We argue that novelties are more easily herausgefunden if solutions are
+ similar to the previously developed strategy.
+\end_layout
+
+\begin_layout Plain Layout
+=
+\end_layout
+
+\begin_layout Plain Layout
+In this thesis, a novel technique to create familiar reinforcement learning
+ policies is introduced.
+ We use genetic programming, which is a known method for creating interpretable
+ policies, but instead of starting from scratch, we base the evolutionary
+ approach on a familiar expert strategy, for which essential algorithmic
+ and structural improvements are elaborated.
 \end_layout
 
 \end_inset
@@ -158,82 +171,51 @@ Machine learning methods, especially reinforcement learning, enable the
 \end_layout
 
 \begin_layout Abstract
-We propose to use genetic programming to elaborate essential algorithmic
- difference between a previously developed, familiar, domain expert strategy
- and a black box machine learning policy.
- Assuming that the fundamental strategy of the expert is correct, we argue
- that it is advantageous, both in terms of performance and interpretability,
- when strategies resemble previously known solutions instead of starting
- from scratch.
- This is achieved by representing the familiar solution as computational
- tree and using the tree edit distance, which is the amount of required
- edits, as complexity metric.
+In this thesis, a novel technique to create familiar reinforcement learning
+ policies is introduced.
+ Genetic programming is a known method for creating interpretable policies.
+ Instead of starting from scratch, we argue that it is advantageous if solutions
+ resembles previously known strategies.
+ Therefore, we propose to base the evolutionary approach on a familiar domain
+ expert strategy, on which GP is applied to elaborate essential algorithmic
+ and structural improvements.
+ To achieve this, the familiar program is converted into a computational
+ tree so that the tree edit distance, which calculates the number of edits
+ required, can be used as a complexity metric.
+ Additionally, the option to select a fixed core in the expert program,
+ which is not affected in the evolutionary process, was implemented.
  
 \end_layout
 
 \begin_layout Abstract
-Additionally, the option to manually select a structural core in the expert
- program, which are not affected in the evolutionary process, was implemented.
+The approach was tested on the Mountain Car and Industrial benchmark by
+ performing a symbolic regression on previously collected transition samples.
+ The tests included over 100 expressions were compared to regular GP runs.
  
 \end_layout
 
 \begin_layout Abstract
-The approach was extensively tested on the Mountain Car and Industrial benchmark
-s by performing symbolic regression on previously collected transition samples.
- In total, over 100 expressions were compared.
- 
+The evaluation showed that known structures in the respective trees can
+ be preserved without any drawbacks, neither in offline nor in online performanc
+e.
+ The mountain-car black-box agents were generally very well approximated
+ and in some cases outperformed.
+ Problems with very small programs, in which a few edits can already have
+ fundamental effects, could already be solved by using fixed core structures.
+ The black box agent of the industrial benchmark could not be sufficiently
+ approximated, yet familiar candidates with equivalent performance were
+ found.
 \end_layout
 
 \begin_layout Abstract
-The evaluation demonstrated that familiar structures can be preserved in
- the respective trees compared to the ones built from scratch, without drawbacks
- concerning neither the offline or online performance.
- The Mountain car black box agents could be approximated very well in general
- and were sometimes even outperformed.
- The fixed core structure enabled the preservation of familiar structures
- in very small programs, where a few edits can have fundamental structural
- effects such that the tree edit distance transforms into a absolute metric.
- In runs with complex expert strategies (with more than 25 start nodes),
- selecting a fixed core even lead to an observable speedup.
- 
-\end_layout
-
-\begin_layout Abstract
-However, familiar candidates with equally good performance could be found.
- 
-\end_layout
-
-\begin_layout Abstract
-In summary, it was noticed that further restrictions of the search space
- (e.g.
- fixed core, limited set of operators, artificially restricting the action
- space) did not significantly restrict the offline performance while even
- inducing comparatively well online performance.
- The approach offers many possibilities both for genetic programming and
- as a way to find interpretable policies.
- As future work, for example, conceivable extensions of the edit distance
- and an explorative regression are presented.
-\end_layout
-
-\begin_layout Abstract
-\begin_inset Note Note
-status open
-
-\begin_layout Abstract
-Furthermore, the effects comparing several expert strategies and expert
- with various strategies, high and low complexity and selected fixed core.
- As black box agents, a SARSA agent was trained for 75 episodes as well
- as 200 episodes in the MC problem to investigate the effects of black box
- experience.
- Only in the case of simple expert strategies, the edit distance may no
- longer prevent fundamental structural changes, but this can already be
- solved by using fixed nodes.
- 
-\end_layout
-
-\end_inset
-
-
+In summary, it was found that further constraints on the search space (e.g.,
+ fixed kernel, limited set of operators, action space constraint) do not
+ significantly limit offline performance, but even induce comparatively
+ good online performance.
+ The presented approach offers many possibilities, both for genetic programming
+ and as a way to find interpretable policies.
+ As future work, possibilities of optimizing the edit distance or extending
+ it with exploratory regression will be discussed.
 \end_layout
 
 \begin_layout Standard
@@ -377,7 +359,29 @@ emph{reinforcement learning}
  systems, sometimes even outperforming humans.
  However, the decision-making process requires complex technologies which
  cannot be explained and are considered as a black box.
- Especially since the 
+ Methods in 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{explainable artificial intelligence} (XAI)
+\end_layout
+
+\end_inset
+
+ make AI results understandable for humans and have become more and more
+ popular in recent years 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "AIINDEX2019"
+literal "true"
+
+\end_inset
+
+, especially since the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -385,7 +389,7 @@ right to explanation
 \begin_inset Quotes erd
 \end_inset
 
- was included as a directive in the EU's GDPR regulations 
+ was included as a directive in the GDPR regulations 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
@@ -393,7 +397,7 @@ literal "true"
 
 \end_inset
 
-, the interest in creating humanly interpretable policies has increased.
+.
  According to Hein 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -417,113 +421,57 @@ Especially for industrial systems, domain experts are more likely to deploy
 \end_layout
 
 \begin_layout Standard
-In this thesis, methods of aexplainable artificial intelligence, such as
- creating interpretable RL policies are discussed.
- Wewith genetic programming, especially known strategies by replacing the
- complexity paradigm of simplicity with familiarity.
-\end_layout
-
-\begin_layout Section
-Related Work 
 \begin_inset Note Note
 status open
 
 \begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Industrial control strategies feature many peculiarities which can be addressed
- with reinforcement learning, such as highly dimensional 
+Explanatory methods include using perturbation (e.g.
+ meaningful perturbations 
 \begin_inset CommandInset citation
 LatexCommand cite
-key "siemens-gas-turbine-rl-nn"
+key "XAI-perturbation"
 literal "true"
 
 \end_inset
 
- or high stochasticity 
+), learning a model locally around the prediction (e.g.
+ LIME 
 \begin_inset CommandInset citation
 LatexCommand cite
-key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
+key "XAI-LIME"
 literal "true"
 
 \end_inset
 
-, which are not interpretable.
+), function analysis (e.g.
+ Taylor Expansion) or model structure analysis (e.g.
  
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{Layerwise Relevance Propagation}
 \end_layout
 
-\begin_layout Standard
-Despite much interest, only little work covers the problems of finding interpret
-able policies.
- In 
+\end_inset
+
+ 
 \begin_inset CommandInset citation
 LatexCommand cite
-key "Hein_Udluft_Runkler_interpretable_gp"
+key "XAI_LRP_Frauenhofer"
 literal "true"
 
 \end_inset
 
-, Hein et al.
- present a method which uses genetic programming to create holistically
- interpretable policies for industrial controllers.
- In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "hein_fuzzy_gp"
-literal "true"
-
-\end_inset
-
-, the possibility of derive a fuzzy rule set for more complex problems is
- presented.
- The possibility of training on a surrogate model, such as performing a
- symbolic regression on previously collected transition samples is evaluated
- in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "daniel_hein_doktorarbeit"
-literal "true"
-
-\end_inset
-
-, which, considering some limitations, allows for a secure learning process.
+.
 \end_layout
 
-\begin_layout Standard
-Despite their simplicity, the generated formulas are often hardly comprehensible
- because they are too mathematical and contain no recognizable intuition.
- We argue that it is advantageous when solutions resemble previously known
- strategies.
- In 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Tresp_prior_knowledge"
-literal "true"
-
 \end_inset
 
-, it is shown how prior knowledge in the form of a set of rules can be used
- to pre-structure policies that provide improved trustworthiness and allow
- a probabilistic interpretation.
- A similar method is evaluated in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "residual-dynamic-learning"
-literal "true"
 
-\end_inset
-
-, where human control strategies in an industrial area are enhanced with
- machine learning.
- These approaches allow a stochastic version of interpretability, but not
- in a global manner such that novelties can be easily recognized.
 \end_layout
 
 \begin_layout Section
@@ -539,7 +487,7 @@ In this work, a novel technique is presented, with which, a previously known,
  tree.
  To further enhance familiarity in the solutions, techniques such as defining
  a fixed core structure or tree unification are implemented.
- In the domain of explainable artificial intelligence, familiari genetic
+ In the domain of explainable artificial intelligence, familiar genetic
  programming is a novel approach 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -666,13 +614,24 @@ caps "false"
 \end_inset
 
 .
- Lastly, genetic programming is presented as the main method to create interpret
-able policies in 
+ Genetic programming is presented as the main method to create interpretable
+ policies in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sec:Genetic-Programming"
 plural "false"
 caps "true"
+noprefix "false"
+
+\end_inset
+
+.
+ Lastly, related work is suggested in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Related-Work"
+plural "false"
+caps "false"
 noprefix "false"
 
 \end_inset
@@ -830,30 +789,7 @@ name "sec:Interpretable-Machine-Learning"
 \end_layout
 
 \begin_layout Standard
-Methods in 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{explainable artificial intelligence} (XAI)
-\end_layout
-
-\end_inset
-
- make AI results understandable for humans and have become more and more
- popular in recent years 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "AIINDEX2019"
-literal "true"
-
-\end_inset
-
-.
- As described in 
+As described in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
@@ -912,17 +848,7 @@ RL problems are incomplete as they are not fully testable and can be solved
  Considering the task-related relevant factors, we are particularly interested
  in global interpretability, as post-hoc explanations for a subset of decisions
  is not sufficient to understand policies that depend on a sequential MDP.
- 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx they state
-\end_layout
-
-\end_inset
-
- As claimed in 
+  As claimed in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
@@ -1124,13 +1050,12 @@ The candidates are assumed to depend on the composition of genes in the
 \end_layout
 
 \begin_layout Subsection
-Tree Construction 
+Tree Construction
 \end_layout
 
 \begin_layout Standard
-The representation as computational trees allows for an efficient evolution
- procedure.
- Each tree generated must be evaluable, which is also known as 
+Individuals are represented as computational trees.
+ Trees must be evaluable, which is also known as the concept of 
 \begin_inset ERT
 status open
 
@@ -1154,12 +1079,10 @@ literal "true"
 
 \end_inset
 
-.
- We argue that, even though strong typing is implementation-heavy, the resulting
- programs depict a more practicable composition of mathematical components.
+, which arguably composes mathematical components in a more natural way.
  Evaluation safety poses a particular problem, as type-correct expressions
  can be mathematically invalid.
- For frequently affected operators, dummy exits are defined (e.g.
+ For frequently affected operators, dummy exits can be defined (e.g.
  the 
 \begin_inset ERT
 status open
@@ -1173,7 +1096,7 @@ emph{division by zero}
 
 \end_inset
 
- returns one 
+ returns one, 
 \begin_inset ERT
 status open
 
@@ -1189,9 +1112,78 @@ rightarrow 1$
 \end_inset
 
 ).
- To avoid changing the essence of other operators too much, faulty trees
- are discarded and replaced randomly.
+ However, to avoid changing the essence of other operators too much, faulty
+ trees are discarded and replaced randomly.
  
+\end_layout
+
+\begin_layout Standard
+Random trees and branches also have to be constructed in order to find new
+ genes, for which the 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{full} and 
+\backslash
+emph{grow}
+\end_layout
+
+\end_inset
+
+ method are available.
+ Both methods build trees nodes to a certain depth, but the 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{full}
+\end_layout
+
+\end_inset
+
+ method allows terminal nodes only at the lowest level while the grow method
+ also allows terminal nodes to be inserted by chance (50%).
+ The full method has a much higher branching factor and creates more complex
+ formulae than the grow method.
+ This affects the tree structure, which also affects the formulae, as can
+ be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:grow-vs-full-method"
+
+\end_inset
+
+.
+ As neither of both is clearly preferable, a combination of both methods
+ is proposed in 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{ramped half-n-half}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "gp-half-ramped"
+literal "true"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -1207,9 +1199,8 @@ rightarrow 1$
 \uwave off
 \noun off
 \color none
-As for the selection process, each candidate is chosen separately through
- tournament selection, where the fittest of a random selection of 3 candidates
- wins 
+The selection process is implemented as a tournament where the fittest of
+ a random selection of 3 candidates wins 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-tournament-selection"
@@ -1239,24 +1230,7 @@ reference "tab:gp-Evolutionary-concepts"
 
 \end_inset
 
-
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
-.
- 
-\end_layout
-
-\begin_layout Standard
-The procedure is described in more detail in 
+, the evolutionary algorithm is described in more detail in 
 \begin_inset ERT
 status open
 
@@ -1270,10 +1244,6 @@ ref{alg:gp-evolutionary-main}
 \end_inset
 
 .
-\begin_inset Newline newline
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -2612,74 +2582,6 @@ name "fig:grow-vs-full-method"
 
 \end_layout
 
-\begin_layout Standard
-Random trees and branches are required to find new genetic structures.
- Constructing new trees can be done in the modes 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{full} and 
-\backslash
-emph{grow}
-\end_layout
-
-\end_inset
-
-.
- Both methods build trees to a certain depth, but the 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{full}
-\end_layout
-
-\end_inset
-
- method allows terminal nodes only at the target level and the grow method
- also allows terminal nodes to be inserted by chance (50%).
- The full method has a much higher branching factor and creates more complex
- formulae than the grow method.
- The structure of a tree can impact the formulae, as can be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:grow-vs-full-method"
-
-\end_inset
-
-.
- As neither of both is clearly preferable, both methods can be combined
- 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{ramped half-n-half}
-\end_layout
-
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "gp-half-ramped"
-literal "true"
-
-\end_inset
-
-.
-\end_layout
-
 \begin_layout Subsection
 \begin_inset ERT
 status open
@@ -2895,6 +2797,106 @@ The expert might want to only change the condition of the if-statement,
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Related Work
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Related-Work"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Industrial control strategies feature many peculiarities which can be addressed
+ with reinforcement learning, such as highly dimensional 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "siemens-gas-turbine-rl-nn"
+literal "true"
+
+\end_inset
+
+ or high stochasticity 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
+literal "true"
+
+\end_inset
+
+, which are not interpretable.
+ 
+\end_layout
+
+\begin_layout Standard
+Despite much interest, only little work covers the problems of finding interpret
+able policies.
+ In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
+
+\end_inset
+
+, Hein et al.
+ present a method which uses genetic programming to create holistically
+ interpretable policies for industrial controllers.
+ In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hein_fuzzy_gp"
+literal "true"
+
+\end_inset
+
+, the possibility of derive a fuzzy rule set for more complex problems is
+ presented.
+ The possibility of training on a surrogate model, such as performing a
+ symbolic regression on previously collected transition samples is evaluated
+ in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "daniel_hein_doktorarbeit"
+literal "true"
+
+\end_inset
+
+, which, considering some limitations, allows for a secure learning process.
+\end_layout
+
+\begin_layout Standard
+Despite their simplicity, the generated formulas are often hardly comprehensible
+ because they are too mathematical and contain no recognizable intuition.
+ We argue that it is advantageous when solutions resemble previously known
+ strategies.
+ In 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Tresp_prior_knowledge"
+literal "true"
+
+\end_inset
+
+, it is shown how prior knowledge in the form of a set of rules can be used
+ to pre-structure policies that provide improved trustworthiness and allow
+ a probabilistic interpretation.
+ A similar method is evaluated in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "residual-dynamic-learning"
+literal "true"
+
+\end_inset
+
+, where human control strategies in an industrial area are enhanced with
+ machine learning.
+ These approaches allow a stochastic version of interpretability, but not
+ in a global manner such that novelties can be easily recognized.
 \end_layout
 
 \begin_layout Chapter
@@ -3902,7 +3904,7 @@ $l_1$
 status open
 
 \begin_layout Plain Layout
-xxx pseudocode?
+xx pseudocode?
 \end_layout
 
 \end_inset

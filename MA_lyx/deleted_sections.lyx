@@ -104,6 +104,192 @@
 TODO
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Abstract
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Machine learning methods, especially reinforcement learning, enable the
+ autonomous learning of policies for technical systems.
+ However, the decision-making process is not explainable to humans and is
+ considered a black box.
+ which is why the interest in deriving interpretable rules is great.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Abstract
+Genetic programming is a popular method to create interpretable policies
+ is offered by genetic programming which can be used to generate simple
+ solutions, for example on previously collected data.
+ However, as the solutions found are very mathematical and bear no resemblance
+ to known strategies.
+ We argue, that, regarding domain expert, who have developed strategies
+ in many fields, it is advantageous to 
+\end_layout
+
+\begin_layout Abstract
+We argue that it is advantageous when solutions appear familiar.
+ Instead of starting from scratch, we propose to use the computational tree
+ of a strategy written by a domain expert as origin for a genetic programming
+ enhancement, where the distance metric is calculated as the required edits.
+ 
+\end_layout
+
+\begin_layout Abstract
+As an additional possibility, the option of defining a fixed core in the
+ expert program that must be included in all candidate solutions is presented.
+ 
+\end_layout
+
+\begin_layout Abstract
+The approach was applied on the Mountain Car and the Industrial Benchmark
+ in the form of a symbolic regression on transition samples of several neuropoli
+cies.
+ The evaluation shows that familiar structures can be recognized in familiar
+ trees compared to regular ones, without drawback concerning the offline
+ or online performance.
+ The fixed core structure additionally enabled the preservation of familiar
+ structures in very small programs and also accelerated runs with complex
+ programs (with more than 25 start nodes).
+ 
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+Machine learning methods, especially reinforcement learning, enable the
+ autonomous learning of policies for technical systems.
+ A major disadvantage of such policies is that they often rely on black
+ box methods.
+ In order to make these technologies more trustworthy, it is of great interest
+ to make the decision process explainable for humans.
+ 
+\end_layout
+
+\begin_layout Abstract
+Humanly-interpretable rules can already be derived from previously collected
+ transition samples by using genetic programming.
+ Interpretability is achieved here through the simplicity of the formulae.
+ Dennoch ist es für den Menschen oft schwer, die gefundenen Formeln zu verstehen
+, da sie oft einen sehr mathematischen, bekannten Lösungen darstellen.
+ , they are very mathematical and therefore often difficult for humans to
+ understand.
+ We argue, that in order to further increase the acceptance for solutions,
+ it is advantageous if the solution resembles previously known strategies.
+ We propose to calculate familiarity as the required edits to an expert
+ program, which can replace simplicity as complexity metric in genetic programmi
+ng.
+ As an additional possibility, the option of defining a fixed core in the
+ expert program that must be included in all candidate solutions is presented.
+ 
+\end_layout
+
+\begin_layout Abstract
+The approach was applied on the Mountain Car and the Industrial Benchmark
+ in the form of a symbolic regression on transition samples of several neuropoli
+cies.
+ The evaluation shows that familiar structures can be recognized in familiar
+ trees compared to regular ones, without drawback concerning the offline
+ or online performance.
+ The fixed core structure additionally enabled the preservation of familiar
+ structures in very small programs and also accelerated runs with complex
+ programs (with more than 25 start nodes).
+ 
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+x
+\end_layout
+
+\begin_layout Abstract
+Machine learning methods, especially reinforcement learning, enable the
+ autonomous learning of policies for technical systems.
+ However, the decision-making process is not explainable and is regarded
+ as a black box.
+ The interest in explainable ML solutions is therefore great; one possibility
+ for this is offered by genetic programming which can be used to generate
+ simple solutions, for example on previously collected data.
+ 
+\end_layout
+
+\begin_layout Abstract
+For domain expert, who have developed strategies in many fields, it is of
+ special interest to learn novelties from artificial policies.
+ However, as the solutions found are very mathematical and bear no resemblance
+ to known strategies.
+ 
+\end_layout
+
+\begin_layout Abstract
+We argue that it is advantageous when solutions appear familiar.
+ Instead of starting from scratch, we propose to use the computational tree
+ of a strategy written by a domain expert as origin for a genetic programming
+ enhancement, where the distance metric is calculated as the required edits.
+ 
+\end_layout
+
+\begin_layout Abstract
+As an additional possibility, the option of defining a fixed core in the
+ expert program that must be included in all candidate solutions is presented.
+ 
+\end_layout
+
+\begin_layout Abstract
+The approach was applied on the Mountain Car and the Industrial Benchmark
+ in the form of a symbolic regression on transition samples of several neuropoli
+cies.
+ The evaluation shows that familiar structures can be recognized in familiar
+ trees compared to regular ones, without drawback concerning the offline
+ or online performance.
+ The fixed core structure additionally enabled the preservation of familiar
+ structures in very small programs and also accelerated runs with complex
+ programs (with more than 25 start nodes).
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 todos
 \end_layout

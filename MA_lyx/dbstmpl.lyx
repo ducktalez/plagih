@@ -173,7 +173,7 @@ In this thesis, a novel technique to create familiar reinforcement learning
 \begin_layout Abstract
 In this thesis, a novel technique to create familiar reinforcement learning
  policies is introduced.
- We argue that it is advantageous if solutions resembles strategies which
+ We argue that it is advantageous if solutions resemble strategies which
  have been previously developed by domain experts.
  Therefore, we propose to use genetic programming to enhance such a familiar
  domain expert strategy, by elaborating essential algorithmic and structural
@@ -198,7 +198,7 @@ g a symbolic regression on previously collected transition samples.
 The evaluation shows that known structures in the respective trees can be
  preserved without any drawbacks, neither in offline nor in online performance.
  The mountain-car black-box agents are generally very well approximated
- and in some cases even outperformed.
+ and, in some cases even, outperformed.
  Problems with very small programs, in which a few edits can already have
  fundamental effects, could be solved by using fixed core structures.
  The black box agent of the industrial benchmark could not be sufficiently
@@ -899,7 +899,7 @@ literal "true"
 
  define a cognitive chunk as the basic unit of explanation.
  Complexity measures for formulae in genetic programming only consider the
- amount of mathematical components of a formula (number of chunks), and
+ number of mathematical components of a formula (number of chunks), and
  the complexity of the components (form of cognitive chunks).
 \end_layout
 

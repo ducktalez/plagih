@@ -173,35 +173,34 @@ In this thesis, a novel technique to create familiar reinforcement learning
 \begin_layout Abstract
 In this thesis, a novel technique to create familiar reinforcement learning
  policies is introduced.
- Genetic programming is a known method for creating interpretable policies.
- Instead of starting from scratch, we argue that it is advantageous if solutions
- resembles previously known strategies.
- Therefore, we propose to base the evolutionary approach on a familiar domain
- expert strategy, on which GP is applied to elaborate essential algorithmic
- and structural improvements.
+ We argue that it is advantageous if solutions resembles strategies which
+ have been previously developed by domain experts.
+ Therefore, we propose to use genetic programming to enhance such a familiar
+ domain expert strategy, by elaborating essential algorithmic and structural
+ improvements instead of starting a run from scratch.
  To achieve this, the familiar program is converted into a computational
  tree so that the tree edit distance, which calculates the number of edits
  required, can be used as a complexity metric.
- Additionally, the option to select a fixed core in the expert program,
- which is not affected in the evolutionary process, was implemented.
+ Additionally, we implement the option to select a fixed core in the expert
+ program, which is not affected in the evolutionary process.
  
 \end_layout
 
 \begin_layout Abstract
-The approach was tested on the Mountain Car and Industrial benchmark by
- performing a symbolic regression on previously collected transition samples.
- The tests included over 100 expressions were compared to regular GP runs.
+The approach is tested on the Mountain Car and Industrial benchmark by performin
+g a symbolic regression on previously collected transition samples.
+ The tests included over 100 combinations of different agents, policies
+ and other aspects, in comparison to regular GP runs.
  
 \end_layout
 
 \begin_layout Abstract
-The evaluation showed that known structures in the respective trees can
- be preserved without any drawbacks, neither in offline nor in online performanc
-e.
- The mountain-car black-box agents were generally very well approximated
- and in some cases outperformed.
+The evaluation shows that known structures in the respective trees can be
+ preserved without any drawbacks, neither in offline nor in online performance.
+ The mountain-car black-box agents are generally very well approximated
+ and in some cases even outperformed.
  Problems with very small programs, in which a few edits can already have
- fundamental effects, could already be solved by using fixed core structures.
+ fundamental effects, could be solved by using fixed core structures.
  The black box agent of the industrial benchmark could not be sufficiently
  approximated, yet familiar candidates with equivalent performance were
  found.
@@ -213,9 +212,9 @@ In summary, it was found that further constraints on the search space (e.g.,
  significantly limit offline performance, but even induce comparatively
  good online performance.
  The presented approach offers many possibilities, both for genetic programming
- and as a way to find interpretable policies.
+ and as a way to find more easily interpretable policies.
  As future work, possibilities of optimizing the edit distance or extending
- it with exploratory regression will be discussed.
+ it with exploratory regression are be discussed.
 \end_layout
 
 \begin_layout Standard
@@ -356,9 +355,10 @@ emph{reinforcement learning}
 \end_inset
 
  (RL), enable the autonomous learning of policies in a wide field of technical
- systems, sometimes even outperforming humans.
- However, the decision-making process requires complex technologies which
- cannot be explained and are considered as a black box.
+ systems.
+ Even though they sometimes outperform humans, the decision-making process
+ requires complex technologies that cannot be explained and are considered
+ a black box.
  Methods in 
 \begin_inset ERT
 status open
@@ -421,11 +421,17 @@ Especially for industrial systems, domain experts are more likely to deploy
 \end_layout
 
 \begin_layout Standard
-\begin_inset Note Note
-status open
+Interpretability is defined as the ability to explain or to present in understan
+dable terms to humans, an explanation 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "XAI_survey"
+literal "true"
 
-\begin_layout Plain Layout
-Explanatory methods include using perturbation (e.g.
+\end_inset
+
+.
+ Explanatory methods include using perturbation (e.g.
  meaningful perturbations 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -466,12 +472,15 @@ literal "true"
 
 \end_inset
 
-.
-\end_layout
-
-\end_inset
-
-
+).
+ While these techniques help extracting features that contributed to a specific
+ decision, they leave large parts of the decision process untouched.
+ In contrast, evolutionary approaches such as genetic programming (GP) allows
+ to produce policies that are simple enough to be interpreted globally.
+ However, interpretability does not necessarily mean that they are easy
+ to understand.
+ On the contrary, they are often very mathematical and non-intuitive formulas
+ which can still be difficult to understand.
 \end_layout
 
 \begin_layout Section
@@ -479,16 +488,21 @@ Contribution
 \end_layout
 
 \begin_layout Standard
-In this work, a novel technique is presented, with which, a previously known,
- familiar strategy can be algorithmically extended by genetic programming.
+In this work, a novel technique is presented that extends a previously developed
+ expert program with genetic programming, which creates programs that should
+ be easier to understand for a domain expert.
  This is achieved by replacing the absolute node-count metric in genetic
- programming with the tree edit distance; a metric which is calculated as
- the number of edits to the expert's program represented as computational
+ programming with the tree edit distance; a measure which is calculated
+ as the number of edits to the expert's program, represented as computational
  tree.
  To further enhance familiarity in the solutions, techniques such as defining
  a fixed core structure or tree unification are implemented.
- In the domain of explainable artificial intelligence, familiar genetic
- programming is a novel approach 
+ 
+\end_layout
+
+\begin_layout Standard
+In the domain of explainable artificial intelligence, familiar genetic programmi
+ng is a novel approach 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
@@ -508,7 +522,7 @@ Outline
 The structure of this thesis is organized as follows.
  
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "chap:Applied-methods"
 
 \end_inset
@@ -563,19 +577,19 @@ reference "chap:Evaluation"
 \end_inset
 
 .
- The evaluation will be discussed regarding the success of preserving structures
- and the opportunity of familiarity, as well as the implications on offline
- and online performance or security in 
+ The results will be discussed in 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "chap:Results"
 
 \end_inset
 
-.
- 
+, regarding the success of preserving structures and the opportunity of
+ familiarity, as well as the implications on offline and online performance
+ and security.
+ Finally, 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "chap:Conclusion"
 
 \end_inset
@@ -628,7 +642,7 @@ noprefix "false"
 .
  Lastly, related work is suggested in 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "sec:Related-Work"
 plural "false"
 caps "false"
@@ -652,13 +666,20 @@ name "sec:Reinforcement-learning"
 
 \begin_layout Standard
 Reinforcement learning is a subfield of machine learning, in which an agent
- autonomously learns a strategy for an environment through a reward.
+ autonomously learns a strategy for an environment in order to maximize
+ cumulative reward.
  RL problems, unlike supervised learning, require a sequential decision
- process for which the agent must develop a strategy (policy) to maximize
- the cumulative reward.
+ process for which the agent must develop a policy.
  At each time step, the environment is in a state s, which the agent can
  observe and decide for an available action, which will lead to a succeeding
- state s' and a reward.
+ state s' and a reward, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:RL-basics"
+
+\end_inset
+
+.
  The probability to reach state s' is assumed to only depend on the current
  state s.
  This stochastic form of determinism with state transitions formalizes a
@@ -789,24 +810,7 @@ name "sec:Interpretable-Machine-Learning"
 \end_layout
 
 \begin_layout Standard
-As described in 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "XAI_survey"
-literal "true"
-
-\end_inset
-
-, interpretability is defined as 
-\begin_inset Quotes eld
-\end_inset
-
-the ability to explain or to present in understandable terms to humans
-\begin_inset Quotes erd
-\end_inset
-
-.
- In contrast to performance, interpretability has many manifestations and
+In contrast to performance, interpretability has many manifestations and
  is not easy to determine.
  In 
 \begin_inset CommandInset citation
@@ -842,9 +846,10 @@ What are method-related relevant factors being explored? (e.g.
 \end_layout
 
 \begin_layout Standard
-RL problems are incomplete as they are not fully testable and can be solved
- in various ways, while the level of evaluation is not limited as applications
- can also be learned through proxy models.
+In this thesis, we deal with RL problems, which are incomplete as they are
+ not fully testable and can be solved in various ways.
+ The level of evaluation is also not limited, as applications can also be
+ learned through proxy models.
  Considering the task-related relevant factors, we are particularly interested
  in global interpretability, as post-hoc explanations for a subset of decisions
  is not sufficient to understand policies that depend on a sequential MDP.
@@ -915,7 +920,7 @@ everyone
 
  who has to understand the strategy, but only a single expert (
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "fig:The-interpretability-gap"
 
 \end_inset
@@ -1019,8 +1024,7 @@ emph{Genetic programming}
 
 \end_inset
 
- (GP) is an evolutionary algorithm that can automatically create computer
- programs.
+ is an evolutionary algorithm that can automatically create computer programs.
  It has become a well known approach for finding interpretable system controllin
 g policies since it was first introduced by Koza 
 \begin_inset CommandInset citation
@@ -1225,7 +1229,7 @@ literal "true"
 \color inherit
 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "tab:gp-Evolutionary-concepts"
 
 \end_inset
@@ -3772,7 +3776,7 @@ The TED, which is the main method to create familiar candidates, only implicitly
  space for candidates.
  How decisive these limitations are will be evaluated in 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "subsec:eval-fixed"
 
 \end_inset
@@ -4902,7 +4906,7 @@ literal "true"
 .
  An overview can be seen in 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "tab:mc-ib-comparisson"
 
 \end_inset
@@ -5598,7 +5602,7 @@ reference "fig:mc-decision-plots"
 
 , 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "fig:mountaincar-plot-diff"
 
 \end_inset
@@ -6861,7 +6865,7 @@ Black box
 \end_layout
 
 \begin_layout Standard
-As black box, 
+As black box technology, a 
 \begin_inset ERT
 status open
 
@@ -6874,7 +6878,7 @@ emph{particle swarm optimisation neural networks} (PSONN)
 
 \end_inset
 
- with a calculated IB reward of 
+ agent with a calculated IB reward of 
 \begin_inset ERT
 status open
 
@@ -11307,21 +11311,21 @@ reference "fig:ib-progress"
 
 , 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "fig:ib-progress-1"
 
 \end_inset
 
 , 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "fig:ib-progress-2"
 
 \end_inset
 
 , 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "fig:ib-progress-3"
 
 \end_inset
@@ -12083,7 +12087,7 @@ Hence, especially the set of unique operators should be considered.
 \end_layout
 
 \begin_layout Chapter
-Conclusion & Future Work
+Conclusion & Future Work 
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Conclusion"

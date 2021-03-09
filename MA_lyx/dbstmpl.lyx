@@ -141,80 +141,48 @@ pagenumbering{gobble}
 \end_layout
 
 \begin_layout Abstract
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-In this Thesis, a novel machine learning technique is proposed, which uses
- genetic programming (GP) to elaborate essential algorithmic improvements
- to a previously known familiar strategy rather than starting from scratch.
- We argue that novelties are more easily herausgefunden if solutions are
- similar to the previously developed strategy.
-\end_layout
-
-\begin_layout Plain Layout
-=
-\end_layout
-
-\begin_layout Plain Layout
-In this thesis, a novel technique to create familiar reinforcement learning
- policies is introduced.
- We use genetic programming, which is a known method for creating interpretable
- policies, but instead of starting from scratch, we base the evolutionary
- approach on a familiar expert strategy, for which essential algorithmic
- and structural improvements are elaborated.
-\end_layout
-
-\end_inset
-
-
+In this thesis, a novel technique to create interpretable reinforcement
+ learning policies is introduced.
+ From an interpretability perspective, it is advantageous if solutions resemble
+ known and familiar strategies.
+ Therefore, we propose to use genetic programming to enhance a previously
+ developed domain expert strategy, by elaborating essential algorithmic
+ and structural improvements, instead of starting from scratch.
+ To achieve this, the tree edit distance between the program's computation
+ tree and a genetic improvement is calculated and used as a complexity metric.
+ Additionally, the option to select a fixed core in the expert program is
+ implemented, which is not affected in the evolutionary process.
 \end_layout
 
 \begin_layout Abstract
-In this thesis, a novel technique to create familiar reinforcement learning
- policies is introduced.
- We argue that it is advantageous if solutions resemble strategies which
- have been previously developed by domain experts.
- Therefore, we propose to use genetic programming to enhance such a familiar
- domain expert strategy, by elaborating essential algorithmic and structural
- improvements instead of starting a run from scratch.
- To achieve this, the familiar program is converted into a computational
- tree so that the tree edit distance, which calculates the number of edits
- required, can be used as a complexity metric.
- Additionally, we implement the option to select a fixed core in the expert
- program, which is not affected in the evolutionary process.
- 
-\end_layout
-
-\begin_layout Abstract
-The approach is tested on the Mountain Car and Industrial benchmark by performin
-g a symbolic regression on previously collected transition samples.
- The tests included over 100 combinations of different agents, policies
- and other aspects, in comparison to regular GP runs.
+The approach is tested on the Mountain Car and Industrial Benchmark by performin
+g a symbolic regression on transition samples that were collected by black
+ box agents.
+ The tests include over 100 combinations of agents, policies and other aspects,
+ which are compared to regular runs.
  
 \end_layout
 
 \begin_layout Abstract
 The evaluation shows that known structures in the respective trees can be
- preserved without any drawbacks, neither in offline nor in online performance.
- The mountain-car black-box agents are generally very well approximated
- and, in some cases even, outperformed.
- Problems with very small programs, in which a few edits can already have
- fundamental effects, could be solved by using fixed core structures.
+ preserved without drawbacks, neither in offline nor in online performance.
+ The mountain-car black box agents are generally very well approximated
+ and outperformed in some cases.
+ Problems with very small programs, in which a few edits can have fundamental
+ effects, can be solved by using fixed core structures.
  The black box agent of the industrial benchmark could not be sufficiently
- approximated, yet familiar candidates with equivalent performance were
- found.
+ approximated, yet familiar candidates with equivalent performance are found.
 \end_layout
 
 \begin_layout Abstract
 In summary, it was found that further constraints on the search space (e.g.,
- fixed kernel, limited set of operators, action space constraint) do not
- significantly limit offline performance, but even induce comparatively
+ fixed nodes, limited set of operators, action space constraint) do not
+ significantly restrict offline performance, but even induce comparatively
  good online performance.
- The presented approach offers many possibilities, both for genetic programming
- and as a way to find more easily interpretable policies.
- As future work, possibilities of optimizing the edit distance or extending
- it with exploratory regression are be discussed.
+ Therefore, the presented approach offers many possibilities, both for genetic
+ programming and as a way to find more easily interpretable policies.
+ As future work, possibilities of optimizing the edit distance or an extension
+ with exploratory regression are discussed as well.
 \end_layout
 
 \begin_layout Standard
@@ -356,7 +324,7 @@ emph{reinforcement learning}
 
  (RL), enable the autonomous learning of policies in a wide field of technical
  systems.
- Even though they sometimes outperform humans, the decision-making process
+ Even though they sometimes outperform humans; the decision-making process
  requires complex technologies that cannot be explained and are considered
  a black box.
  Methods in 
@@ -422,7 +390,7 @@ Especially for industrial systems, domain experts are more likely to deploy
 
 \begin_layout Standard
 Interpretability is defined as the ability to explain or to present in understan
-dable terms to humans, an explanation 
+dable terms to humans 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
@@ -473,14 +441,12 @@ literal "true"
 \end_inset
 
 ).
- While these techniques help extracting features that contributed to a specific
+ While these techniques help extracting features that contribute to a specific
  decision, they leave large parts of the decision process untouched.
- In contrast, evolutionary approaches such as genetic programming (GP) allows
- to produce policies that are simple enough to be interpreted globally.
- However, interpretability does not necessarily mean that they are easy
- to understand.
- On the contrary, they are often very mathematical and non-intuitive formulas
- which can still be difficult to understand.
+ In contrast, evolutionary approaches such as genetic programming (GP) create
+ policies that are simple enough to be interpreted globally.
+ However, the programs are often very mathematical and counterintuitive,
+ so they can still be difficult to understand.
 \end_layout
 
 \begin_layout Section
@@ -489,20 +455,14 @@ Contribution
 
 \begin_layout Standard
 In this work, a novel technique is presented that extends a previously developed
- expert program with genetic programming, which creates programs that should
- be easier to understand for a domain expert.
- This is achieved by replacing the absolute node-count metric in genetic
- programming with the tree edit distance; a measure which is calculated
- as the number of edits to the expert's program, represented as computational
- tree.
+ expert program with genetic programming.
+ The scope of the extensions is calculated using the tree edit distance
+ so that the candidates have stronger similarity to the original strategy,
+ which arguably leads to more easily interpretable candidates.
  To further enhance familiarity in the solutions, techniques such as defining
  a fixed core structure or tree unification are implemented.
- 
-\end_layout
-
-\begin_layout Standard
-In the domain of explainable artificial intelligence, familiar genetic programmi
-ng is a novel approach 
+ Familiar genetic programming is a novel approach in the domain of explainable
+ artificial intelligence 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
@@ -596,6 +556,22 @@ reference "chap:Conclusion"
 
  concludes the work and presents expansion possibilities, especially enhancement
 s considering the tree edit distance and an explorative regression.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
@@ -769,7 +745,7 @@ name "fig:RL-basics"
 \end_layout
 
 \begin_layout Standard
-Learning in a real world system is often prohibited in safety-critical domains,
+Learning in a real-world system is often prohibited in safety-critical domains,
  where misconduct and random exploration can lead to great damage.
  
 \begin_inset ERT
@@ -796,6 +772,22 @@ literal "true"
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -908,17 +900,11 @@ Machine lecturing
 \end_layout
 
 \begin_layout Standard
-Interpretable machine learning methods often rely on supplying general results
- for a standardized person.
- However, it is usually not 
-\begin_inset Quotes eld
-\end_inset
-
-everyone
-\begin_inset Quotes erd
-\end_inset
-
- who has to understand the strategy, but only a single expert (
+Interpretable machine learning methods often rely on supplying simple results
+ that can be understood by many people.
+ However, if the prior knowledge of an expert can already be assumed, an
+ explanation can be far more specific.
+ (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:The-interpretability-gap"
@@ -926,12 +912,11 @@ reference "fig:The-interpretability-gap"
 \end_inset
 
 ).
- We argue, that the level of user expertise can be considered as starting
- point.
- This is similar to human feedback methods, which try to focus on novelties
- rather than explaining every aspect as the pupil will otherwise loose attention.
- We argue, that familiar chunks represent certain and trusted knowledge
- and even provide better compositionality for further chunk attachments.
+ The same strategy is used in human feedback methods, where the level of
+ user experience is taken into account to focus on innovations rather than
+ explaining every aspect.
+ Therefore, preserving familiar chunks can serve as a trusted anchor point
+ for further attachments.
 \end_layout
 
 \begin_layout Standard
@@ -984,8 +969,8 @@ The interpretability gap is visualized, metaphorically, by a deep trench
  one has, the smaller the gap in things that need to be understood.
  The expert stands at the narrowest point, yet the trench still has to be
  crossed.
- We want to automatically create artificial solutions that function as stepping
- stones for the expert, which should be as similar as possible to the expert
+ We want to automatically create artificial solutions that function as steppings
+tones for the expert, which should be as similar as possible to the expert
  policy while having the performance of the black box.
  
 \end_layout
@@ -993,6 +978,22 @@ The interpretability gap is visualized, metaphorically, by a deep trench
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -1025,7 +1026,7 @@ emph{Genetic programming}
 \end_inset
 
  is an evolutionary algorithm that can automatically create computer programs.
- It has become a well known approach for finding interpretable system controllin
+ It has become a well-known approach for finding interpretable system controllin
 g policies since it was first introduced by Koza 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -1051,6 +1052,22 @@ The candidates are assumed to depend on the composition of genes in the
  between reproduction of genes through selection, which is important to
  maintain a functioning gene pool, and random mutation, which provides genetic
  diversity.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -1122,7 +1139,7 @@ rightarrow 1$
 \end_layout
 
 \begin_layout Standard
-Random trees and branches also have to be constructed in order to find new
+Random trees and branches also must be constructed in order to find new
  genes, for which the 
 \begin_inset ERT
 status open
@@ -1860,6 +1877,22 @@ name "fig:crossover"
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Offline Fitness Function: Symbolic Regression 
 \begin_inset CommandInset label
@@ -2159,6 +2192,22 @@ min(a,A_{max}),A_{min})$
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Paragraph
 Complexity bloat 
 \begin_inset CommandInset label
@@ -2178,8 +2227,8 @@ name "pareto-gp"
 \end_layout
 
 \begin_layout Standard
-Due to the high branching factor for solution candidates, the amount of
- nodes in a trees must be restricted.
+Due to the high branching factor for solution candidates, the number of
+ nodes in a tree must be restricted.
  The most common size restriction is a node-count based limit, which also
  offers the opportunity to apply a custom weighting of the components; for
  example the default weighting of the commercial GP Framework 
@@ -2553,8 +2602,8 @@ Comparing the tree construction methods full and grow using operators $
 cdot,-,/
 \backslash
 }$.
- Only a tree created with the full-method has a branching factor high enough
- to create a complex combinations of variables like $(a-3)
+ Only a tree created with the full method has a branching factor high enough
+ to create a complex combination of variables like $(a-3)
 \backslash
 cdot(b/2)$.
  A grow tree has a lower branching factor and produces more encapsulated
@@ -2579,6 +2628,22 @@ name "fig:grow-vs-full-method"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -2858,8 +2923,8 @@ literal "true"
 
 \end_inset
 
-, the possibility of derive a fuzzy rule set for more complex problems is
- presented.
+, the possibility of deriving a fuzzy rule set for more complex problems
+ is presented.
  The possibility of training on a surrogate model, such as performing a
  symbolic regression on previously collected transition samples is evaluated
  in 
@@ -2870,7 +2935,7 @@ literal "true"
 
 \end_inset
 
-, which, considering some limitations, allows for a secure learning process.
+, which, considering some limitations allows for a secure learning process.
 \end_layout
 
 \begin_layout Standard
@@ -2901,6 +2966,22 @@ literal "true"
  machine learning.
  These approaches allow a stochastic version of interpretability, but not
  in a global manner such that novelties can be easily recognized.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
@@ -3054,7 +3135,7 @@ We designate policies as familiar, when algorithmic structures can be recognized
  In order to generate solution candidates that are as familiar as possible,
  we need to define a distance function on a suitable unit of measurement
  which represents the scope of the change, or to put it another way, the
- necessary edits that have to be applied.
+ necessary edits that must be applied.
 \end_layout
 
 \begin_layout Standard
@@ -3284,6 +3365,22 @@ name "fig:TED_edits"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -3895,7 +3992,7 @@ $l_1$
 
 \end_inset
 
- is the amount of nodes on the first mutable layer.
+ is the number of nodes on the first mutable layer.
  In the second step, each subtree is constructed individually with a node-based
  method.
  In order to avoid retroactive pruning, a node buffer of open leaf nodes
@@ -3917,6 +4014,22 @@ xx pseudocode?
 \end_layout
 
 \begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
@@ -4224,7 +4337,7 @@ Return{}
 
 \begin_layout Plain Layout
 
- asynchronuous syntax tree (ast) $
+ asynchronous syntax tree (ast) $
 \backslash
 assign$ parsing the expression with a compiler
 \backslash
@@ -4294,7 +4407,7 @@ Return{old tree}
 
  
 \backslash
-caption{Unification applied on new found Pareto entries.}
+caption{Unification applied on newfound Pareto entries.}
 \end_layout
 
 \begin_layout Plain Layout
@@ -4592,7 +4705,7 @@ The minus sign is the only operator that occurs as a binary and unary operator
 
 \begin_layout Plain Layout
 Operators that have to be treated differently in GP compared to mathematics
- and require a re-implementation of the unificating transformations.
+ and require a re-implementation of the unification transformations.
  The presented examples occurred with SymPy simplification.
  
 \begin_inset CommandInset label
@@ -4816,6 +4929,22 @@ name "tab:sympy-sonderfälle"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -6140,6 +6269,22 @@ name "sarsa1000-plots"
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Industrial Benchmark 
 \begin_inset CommandInset label
@@ -6860,6 +7005,22 @@ nothing
  
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Paragraph
 Black box
 \end_layout
@@ -6938,6 +7099,22 @@ $5728/1.07=5353$
  This method is very interesting as a black box, because the model is very
  sparse and might be difficult to fit with symbolic regression.
  
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -7379,6 +7556,22 @@ name "table:MC_agents_rewards"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -8057,6 +8250,22 @@ name "fig:MC-scratch-3examples"
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Simple If-Acceleration 
 \begin_inset CommandInset label
@@ -8695,6 +8904,22 @@ name "fig:mc-simple-candidates"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -9359,6 +9584,22 @@ name "fig:simpleFix-3candidates"
 \end_layout
 
 \begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
@@ -10042,6 +10283,22 @@ name "fig:xiao-c8"
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Optimized If-Expert
 \end_layout
@@ -10467,6 +10724,22 @@ name "fig:mc-ifex-c8"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+clearpage
 \end_layout
 
 \end_inset
@@ -11836,14 +12109,14 @@ Operators
 Operators represent the applied computations of a tree and have the most
  debatable implications for interpretability.
  Not only is the total set of operators used of interest, interpretability
- depends on the structure and type of composition, as can be seen in (
+ depends on the structure and type of composition, as can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:if-operator-composition"
 
 \end_inset
 
-).
+.
 \end_layout
 
 \begin_layout Standard
@@ -12017,7 +12290,7 @@ name "fig:if-operator-composition"
 
 \end_layout
 
-\begin_layout Subparagraph
+\begin_layout Paragraph
 Leaf nodes 
 \begin_inset CommandInset label
 LatexCommand label
@@ -12080,10 +12353,7 @@ Observations are the nodes around which operators and constants are to be
  The same applies to the developer, for whom these observations represent
  a starting point for interpretation, which is contrary to the genetic approach
  with the tree root as the main anchor point.
-\end_layout
-
-\begin_layout Standard
-Hence, especially the set of unique operators should be considered.
+ Hence, especially the set of unique operators should be considered.
 \end_layout
 
 \begin_layout Chapter
@@ -12098,10 +12368,10 @@ name "chap:Conclusion"
 \end_layout
 
 \begin_layout Standard
-The results of this work are concluded and discussed in 
+The results of this work are summarized in 
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "sec:Conclusion"
+reference "sec:summary"
 
 \end_inset
 
@@ -12119,51 +12389,47 @@ reference "sec:Future-Work"
 Conclusion 
 \begin_inset CommandInset label
 LatexCommand label
-name "sec:Conclusion"
+name "sec:summary"
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout Subsection
-Summary
-\end_layout
-
 \begin_layout Standard
-In this thesis, familiarity is introduced as concept for a novel method
- to create interpretable RL policies based on prior known expert strategies
- with genetic programming.
+In this thesis, familiarity was introduced as concept for a novel method
+ to create interpretable RL policies based on prior known expert strategies.
  First, transition samples are collected with a black box agent that is
  to be explained.
- Second, the expert program is used as origin for a GP process, in which
- the complexity metric is the tree edit distance between candidates and
- the origin.
- Additionally, the opportunity to select a fixed core in the origin was
- implemented to further protect familiar structures in programs.
+ Second, the expert program is used as origin for a genetic programming
+ enhancement, in which the tree edit distance between candidates and the
+ origin is used as complexity metric.
+ Additionally, a fixed core can be selected manually to further protect
+ familiar structures in programs.
 \end_layout
 
 \begin_layout Standard
-This technique allows a domain expert to build on familiar knowledge to
- interpret a formula, instead of having to understand an artificial formula
- from scratch, which may deviate fundamentally from previously known strategies.
+This technique allows one to retain the familiarity of a strategy that helps
+ interpret a formula, rather than having to understand an artificial formula
+ from scratch that may be fundamentally different from previously known
+ strategies.
 \end_layout
 
 \begin_layout Standard
 The experiments have shown that familiarity can replace the paradigm of
  simplicity in genetic programming without major drawbacks.
- The main difficulty concerned a lack of familiarity with some simple expert
- programs, which could be solved by defining a fixed core.
- 
-\end_layout
-
-\begin_layout Standard
-The proposed approach is mainly limited by black box solutions that deviate
- too much from the expert, for example because their policy is very sparse.
- Otherwise, it is conceivable that familiarity not only improves the interpretab
-ility of the solutions, but also that solutions are found for problems that
- could not previously be solved with symbolic regression due to their high
- complexity, but that can benefit from the expert's prior knowledge.
+ The main difficulty concerned simple expert programs that could not be
+ sufficiently protected.
+ This problem could be solved with the help of a fixed core.
+ The proposed approach is also limited by black box solutions that deviate
+ too much from the expert policy, for example because it handles a lot of
+ cases.
+ It was also observed that constraints on the evolutionary process were
+ easily compensated for and in many cases even led to improved and safer
+ online performance.
+ The benefit of familiar strategies for interpretability is evident, and
+ the knowledge and structural specifications could additionally help solve
+ problems that were previously too complex for GP due to their high complexity.
 \end_layout
 
 \begin_layout Section
@@ -12882,11 +13148,7 @@ reference "gp-Observations-role"
 Observations have a more important role for interpretability than constants,
  but here the size of the set of necessary observations is relevant, as
  it represents the dimensionality of the solution.
- 
-\end_layout
-
-\begin_layout Standard
-A simple solution for the constants is to largely exclude them in the TED.
+ A simple solution for the constants is to largely exclude them in the TED.
  For observations, the symmetric distance to the known observation set can
  also be considered.
 \begin_inset Foot
@@ -12927,7 +13189,7 @@ Explorative regression describes the deviation from the previous policy
  We argue that, among comparable candidates, less deviation from the known
  is preferred, especially in security-critical domains.
 \begin_inset Foot
-status collapsed
+status open
 
 \begin_layout Plain Layout
 Example: An expert cooks eggs for 10 minutes and a black box for 5 minutes.

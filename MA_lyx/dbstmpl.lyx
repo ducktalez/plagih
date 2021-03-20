@@ -166,7 +166,7 @@ g a symbolic regression on transition samples that were collected by black
 \begin_layout Abstract
 The evaluation shows that known structures in the respective trees can be
  preserved without drawbacks, neither in offline nor in online performance.
- The mountain-car black box agents are generally very well approximated
+ The mountain car black box agents are generally very well approximated
  and outperformed in some cases.
  Problems with very small programs, in which a few edits can have fundamental
  effects, can be solved by using fixed core structures.
@@ -181,8 +181,6 @@ In summary, it was found that further constraints on the search space (e.g.,
  good online performance.
  Therefore, the presented approach offers many possibilities, both for genetic
  programming and as a way to find more easily interpretable policies.
- As future work, possibilities of optimizing the edit distance or an extension
- with exploratory regression are discussed as well.
 \end_layout
 
 \begin_layout Standard
@@ -228,10 +226,11 @@ section*{Acknowledgements}}
 \begin_layout Plain Layout
 
 I would like to thank my supervisors at Siemens, Dr Michel Tokic, Dr Daniel
- Hein and Dr Steffen Udluft, who gave me the opportunity to write this thesis,
- introduced me to the concepts of genetic programming and, most importantly,
- showed extraordinary passion and patience in supervising and guiding me
- through this work.
+ Hein and Dr.
+ Steffen Udluft, who gave me the opportunity to write this thesis, introduced
+ me to the concepts of genetic programming and, most importantly, showed
+ extraordinary passion and patience in supervising and guiding me through
+ this work.
 \end_layout
 
 \begin_layout Plain Layout
@@ -480,15 +479,15 @@ Outline
 
 \begin_layout Standard
 The structure of this thesis is organized as follows.
- 
+ Background information covering the most important aspects of interpretability
+ in the context of reinforcement learning is provided in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "chap:Applied-methods"
 
 \end_inset
 
- provides background information covering the most important aspects of
- interpretability in the context of reinforcement learning.
+.
  
 \begin_inset CommandInset ref
 LatexCommand ref
@@ -594,7 +593,7 @@ reference "sec:Reinforcement-learning"
 
 \end_inset
 
-, principles of reinforcement learning are introduced, manifestations of
+ principles of reinforcement learning are introduced, manifestations of
  interpretability are discussed in 
 \begin_inset CommandInset ref
 LatexCommand formatted
@@ -657,9 +656,7 @@ reference "fig:RL-basics"
 
 .
  The probability to reach state s' is assumed to only depend on the current
- state s.
- This stochastic form of determinism with state transitions formalizes a
- 
+ state s, which formalizes a 
 \begin_inset ERT
 status open
 
@@ -5302,7 +5299,7 @@ name "sec:mountaincar"
 \end_layout
 
 \begin_layout Standard
-In the Mountain car problem, a car is supposed to drive up a mountain that
+In the mountain car problem, a car is supposed to drive up a mountain that
  is too steep for the car's engine as fast as possible 
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -5655,7 +5652,7 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-The main features of the Mountain car problem.
+The main features of the mountain car problem.
  The position of the car is by a factor of 10 larger than the speed.
  
 \begin_inset CommandInset label
@@ -11999,8 +11996,8 @@ Discussion
 \end_layout
 
 \begin_layout Standard
-The approach was evaluated with simple expert programs on both the Mountain
- Car (SARSA-200 agent) and the Industrial Benchmark (PSONN agent) respectively.
+The approach was evaluated with simple expert programs on both the mountain
+ car (SARSA-200 agent) and the Industrial Benchmark (PSONN agent) respectively.
  On the MC, the possibilities of fixed tree cores, several other and more
  complex agents, and the effects of a poorly trained black box (SARSA-75
  agent) were additionally tested.
@@ -13383,7 +13380,7 @@ name "fig:exploression-regr2"
 
 \end_inset
 
- Extreme versions of a combined regression kernel.
+ Extreme versions of a combined explorative regression kernel.
  As the most secure version, areas could be assigned dummy values that punish
  a change beyond a limit so severely that it is virtually impossible for
  it to occur.

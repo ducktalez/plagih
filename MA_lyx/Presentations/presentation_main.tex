@@ -85,12 +85,14 @@
 \end{frame}
 
 \begin{frame}{Introduction}
-%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
-\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
+\centering
+\includegraphics[height=0.89\textheight]{../img/inkscape/explainability_gap2_minimal_beamer.pdf}
+    %\import{../img/inkscape}{explainability_gap2_minimal_beamer.pdf}
 \end{frame}
 
 \begin{frame}{Introduction}
-\def\svgheight{0.8\textheight}\import{../img/inkscape}{explainability_gap2.pdf_tex}
+%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
+\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
 \end{frame}
 
 
@@ -109,37 +111,75 @@
 %\end{frame}
 
 
-
-
 \begin{frame}{Reinforcement Learning}
 \includegraphics[height=0.8\textheight]{img/agent-env.png} 
 \end{frame}
 
 
+\begin{frame}{Mountain car}
+ \begin{table}[th]
+ \begin{centering}
+ \begin{tabular}{cccc}
+ \multirow{6}{*}{\includegraphics[width=5cm]{../img/inkscape/mountaincar_dummy}} &  & \multicolumn{2}{c}{Observation space}\tabularnewline
+ \cline{3-4} \cline{4-4} 
+  &  & position & $[-1.2, 0.6]$\tabularnewline
+  &  & velocity & $[-0.07, 0.07]$\tabularnewline
+ \cline{3-4} \cline{4-4} 
+  &  &  & \tabularnewline
+  &  & \multicolumn{2}{c}{action space}\tabularnewline
+ \cline{3-4} \cline{4-4} 
+  &  & push & \{left, none, right\}\tabularnewline
+ %workaround latex pdf format idk why &  &  & \tabularnewline
+ \end{tabular}
+ \par\end{centering}
+% \caption{The main features of the Mountain car problem. The position of the car is by a factor of 10 larger than the speed. \label{mountaincar-overview}}
+\end{table}
 
-%\section{Introduction}
+\end{frame}
+
+
+
+\begin{frame}{Reinforcement Learning}
+ \frametitle{Mountain car policies}
+  Simple expert policy:\\
+   ``Accelerating towards the current direction''
+ \begin{columns}
+  
+  \column{0.45\textwidth}
+   \includegraphics[height=0.4\textheight]{img/mtc/decisions-SimpleAgent.pdf}
+
+  \column{0.45\textwidth}
+   Potential improvements:
+   \begin{itemize}
+ 	  \item Reverse early
+ 	  \item Are two or three swings necessary?
+ 	  \item Always accelerate
+   \end{itemize}
+
+ \end{columns}
+\end{frame}
+
+
 \begin{frame}
-\frametitle{Mountain car policies}
-\begin{columns}
-\column{0.30\textwidth}
-\includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_75.pdf}
-\includegraphics[height=0.4\textheight]{img/mtc/decisions-XiaoPresetAgent.png}
+ \frametitle{Mountain car policies}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_75.pdf}
+   \includegraphics[height=0.4\textheight]{img/mtc/decisions-XiaoPresetAgent.png}
 
-\column{0.30\textwidth}
-\includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_200.pdf}
-\includegraphics[height=0.4\textheight]{img/mtc/decisions-Good_Expert.png}
+  \column{0.30\textwidth}
+   \includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_200.pdf}
+   \includegraphics[height=0.4\textheight]{img/mtc/decisions-Good_Expert.png}
 
-\column{0.4\textwidth}
-Different policies
-\begin{itemize}
-	\item Neural networks
-	\item Mathematical formula
-	\item Domain expert (human)
-\end{itemize}
+  \column{0.4\textwidth}
+   Different policies
+   \begin{itemize}
+ 	  \item Neural networks
+ 	  \item Mathematical formula
+ 	  \item Domain expert (human)
+   \end{itemize}
 
-
-
-\end{columns}
+ \end{columns}
 \end{frame}
 
 

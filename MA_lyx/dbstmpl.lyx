@@ -155,7 +155,7 @@ In this thesis, a novel technique to create interpretable reinforcement
 \end_layout
 
 \begin_layout Abstract
-The approach is tested on the Mountain Car and Industrial Benchmark by performin
+The approach is tested on the mountain car and industrial benchmark by performin
 g a symbolic regression on transition samples that were collected by black
  box agents.
  The tests include over 100 combinations of agents, policies and other aspects,
@@ -892,10 +892,6 @@ literal "true"
  the complexity of the components (form of cognitive chunks).
 \end_layout
 
-\begin_layout Paragraph
-Machine lecturing
-\end_layout
-
 \begin_layout Standard
 Interpretable machine learning methods often rely on supplying simple results
  that can be understood by many people.
@@ -914,6 +910,10 @@ reference "fig:The-interpretability-gap"
  explaining every aspect.
  Therefore, preserving familiar chunks can serve as a trusted anchor point
  for further attachments.
+ In contrast to machine teaching, where techniques are investigated how
+ the human can facilitate the learning of models, here the machine is supposed
+ to lecture the human.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -1905,8 +1905,8 @@ name "Symbolic-Regression"
 The fitness function is required to compare candidates.
  A symbolic regression is a common offline implementation to calculate how
  well a formula can explain data.
- The regression error must become as small as possible, which is the sum
- of the distance between the outputs and predicted values of a data set.
+ The regression error, which is the sum of the distance between the outputs
+ and predicted values of a data set, must become as small as possible.
  Both the mean average error (MAE) and the mean square error (MSE) are regressio
 n metrics (
 \begin_inset CommandInset ref
@@ -3418,8 +3418,10 @@ status open
 
 \begin_layout Standard
 For this work, a GP suite in the language Python was developed.
- The evaluation process is accelerated with TensorFlow enabled evaluation,
- inspired by Karoo 
+ Particular emphasis was placed on the evaluation of fitness, as this is
+ the bottleneck for performance.
+ Staats et al.
+ 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
@@ -3427,13 +3429,9 @@ literal "true"
 
 \end_inset
 
-, but required a complete restructuring.
- The more detailed implementation is described below.
- Fitness evaluation is the bottleneck of performance.
- Kai Staats has shown with Karoo that a 2-15 times speedup can be achieved
- by converting expressions into TensorFlow graphs, which enables parallel
- evaluation on the GPU.
- To further enable simplification of expressions, the Python library SymPy
+ have shown that a 2-15 times speedup can be achieved by converting expressions
+ into TensorFlow graphs, which enables parallel evaluation on the GPU.
+ To allow further simplification of expressions, the Python library SymPy
  
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -3444,7 +3442,7 @@ literal "true"
 
  was extended, which uses symbolic mathematics and thus sifts out unnecessary
  calculations before evaluation.
- The memory usage and performance could be further increased, largely thanks
+ The memory usage and performance could be further improved, largely thanks
  to the help of lookup-tables for tree evaluation, passing variables locally
  and especially using recursive tree structures.
 \begin_inset Foot
@@ -3466,7 +3464,18 @@ approx 10
 
 \end_inset
 
- in all runs, compared to Karoo.
+ in all runs, compared to the TensorFlow enabled version.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+xxx
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -3533,7 +3542,7 @@ status open
 
 
 \backslash
-emph{Industrial benchmark}
+emph{industrial benchmark}
 \end_layout
 
 \end_inset
@@ -4975,7 +4984,7 @@ status open
 
 
 \backslash
-emph{Mountain car}
+emph{mountain car}
 \end_layout
 
 \end_inset
@@ -5003,7 +5012,7 @@ status open
 
 
 \backslash
-emph{Industrial Benchmark}
+emph{industrial benchmark}
 \end_layout
 
 \end_inset
@@ -6963,7 +6972,7 @@ name "IB-observations-state"
 \end_layout
 
 \begin_layout Standard
-The Industrial Benchmark was introduced by scientists at Siemens to meet
+The industrial benchmark was introduced by scientists at Siemens to meet
  the high requirements of complex, real world industrial processes.
  
 \begin_inset CommandInset citation
@@ -11997,7 +12006,7 @@ Discussion
 
 \begin_layout Standard
 The approach was evaluated with simple expert programs on both the mountain
- car (SARSA-200 agent) and the Industrial Benchmark (PSONN agent) respectively.
+ car (SARSA-200 agent) and the industrial benchmark (PSONN agent) respectively.
  On the MC, the possibilities of fixed tree cores, several other and more
  complex agents, and the effects of a poorly trained black box (SARSA-75
  agent) were additionally tested.

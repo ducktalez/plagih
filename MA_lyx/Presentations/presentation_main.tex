@@ -85,30 +85,81 @@
 \end{frame}
 
 \begin{frame}{Introduction}
+%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
+\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
+\end{frame}
+
+\begin{frame}{Introduction}
 \centering
 \includegraphics[height=0.89\textheight]{../img/inkscape/explainability_gap2_minimal_beamer.pdf}
     %\import{../img/inkscape}{explainability_gap2_minimal_beamer.pdf}
 \end{frame}
 
+
+
+
+
 \begin{frame}{Introduction}
-%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
-\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
+\centering
+
+\begin{figure}[th]
+\begin{centering}
+\begin{tabular}{ccc}
+\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$\div$}[{pos}][{$-1.834$}]][{$2.197$}]]} &  & \plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${\frac{\text{pos}}{-1.834}}$}}][{$2.197$}]]}\tabularnewline
+\end{tabular}
+\par\end{centering}
+\caption{Automatic visualization of a tree with all nodes and as a tight version.}
+\end{figure}
 \end{frame}
 
 
-%\begin{frame}
-%\frametitle{Erklärbarkeit durch Vertrautheit}
-%\begin{columns}
-%\column{0.5\textwidth}
-%\includegraphics[width=1\linewidth]{img/3-teacher_small.png}
-%\column{0.5\textwidth}
-%	\begin{itemize}
-%		\item Understanding the problem
-%		\item Understanding what you have ahead of the other
-%		\item Formulating the difference as language
-%	\end{itemize}
-%\end{columns}
-%\end{frame}
+
+
+\begin{frame}{Introduction}
+\centering
+
+\begin{figure}[th]
+\begin{centering}
+\begin{tabular}{ccc}
+\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][$0$][$2$]]} &  & \plforest{[{$x^y$}[vel][$-0.5$]]}\tabularnewline
+\end{tabular}
+\end{figure}
+\end{frame}
+
+
+
+
+
+\begin{frame}{Introduction xxx}
+
+\begin{figure}[th]
+\centering{}\plforest{[{$\text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]}\caption{The expert might want to only change the condition of the if-statement,
+as he can then better understand the distinction. In his start-up
+program, he would specify the nodes marked in dark blue as fixed so
+that they are not affected by the GP process.}
+
+\end{figure}
+
+\end{frame}
+
+
+
+
+
+
+\begin{frame}
+\frametitle{Erklärbarkeit durch Vertrautheit}
+\begin{columns}
+\column{0.5\textwidth}
+\includegraphics[width=1\linewidth]{img/3-teacher_small.png}
+\column{0.5\textwidth}
+	\begin{itemize}
+		\item Understanding the problem
+		\item Understanding what you have ahead of the other
+		\item Formulating the difference as language
+	\end{itemize}
+\end{columns}
+\end{frame}
 
 
 \begin{frame}{Reinforcement Learning}

@@ -3418,9 +3418,8 @@ status open
 
 \begin_layout Standard
 For this work, a GP suite in the language Python was developed.
- Particular emphasis was placed on the evaluation of fitness, as this is
- the bottleneck for performance.
- Staats et al.
+ Um die Fitness effizient zu berechnen wird anderem TensorFlow, which was
+ inspired by Staats et al.
  
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -3429,9 +3428,11 @@ literal "true"
 
 \end_inset
 
- have shown that a 2-15 times speedup can be achieved by converting expressions
- into TensorFlow graphs, which enables parallel evaluation on the GPU.
- To allow further simplification of expressions, the Python library SymPy
+, die so einen 2-15x speedup erreichen konnten.
+\end_layout
+
+\begin_layout Standard
+To allow further simplification of expressions, the Python library SymPy
  
 \begin_inset CommandInset citation
 LatexCommand cite
@@ -3783,7 +3784,7 @@ status open
 \begin_layout Plain Layout
 Probabilities for selecting the timestep of an observation, considering
  5, 10 or 20 possibilities.
- Instead of a completely equal distribution, younger values are selected
+ Instead of a completely equal distribution, more recent values are selected
  slightly more frequently due to their higher presumed relevance according
  to the distribution described.
  
@@ -4307,7 +4308,7 @@ If{any$(
 \backslash
 { 
 \backslash
-text{nan}, 
+text{NaN}, 
 \backslash
 text{inf}, 
 \backslash
@@ -4482,9 +4483,7 @@ ${
 \backslash
 max(
 \backslash
-max(a,b),c) 
-\backslash
-rsymp 
+max(a,b),c) = 
 \backslash
 max(a,b,c)}$
 \end_layout
@@ -4534,9 +4533,7 @@ ${((a
 \backslash
 land b) 
 \backslash
-land c) 
-\backslash
-rsymp 
+land c) = 
 \backslash
 text{And}(a,b,c)}$
 \end_layout
@@ -4584,9 +4581,7 @@ status open
 
 $
 \backslash
-neg (a<2) 
-\backslash
-rsymp 
+neg (a<2) = 
 \backslash
 text{nan}$
 \end_layout
@@ -4777,9 +4772,7 @@ status open
 
 \begin_layout Plain Layout
 
-$1^{0.5} 
-\backslash
-rsymp i$
+$-1^{0.5} = i$
 \end_layout
 
 \end_inset
@@ -4825,9 +4818,7 @@ status open
 
 $
 \backslash
-frac{1}{0} 
-\backslash
-rsymp 
+frac{1}{0} = 
 \backslash
 tilde{
 \backslash
@@ -4881,13 +4872,7 @@ status open
 
 $
 \backslash
-frac{0}{0} 
-\backslash
-rsymp 
-\backslash
-tilde{
-\backslash
-infty}$
+frac{0}{0} =$ NaN
 \end_layout
 
 \end_inset
@@ -5097,7 +5082,7 @@ IB
 \begin_inset Text
 
 \begin_layout Plain Layout
-Observations
+Observables
 \end_layout
 
 \end_inset
@@ -9683,7 +9668,9 @@ text{pos}+0.09)^{4}-0.008)$
 
 $
 \backslash
-leq vel 
+leq 
+\backslash
+text{vel} 
 \backslash
 leq$
 \backslash
@@ -11549,7 +11536,7 @@ Expert Program Workaround
 \end_layout
 
 \begin_layout Standard
-For the IB, no human-written policy for the is known.
+For the IB, no human-written policy is known.
  Instead, a formula altering the appropriate actions was used as reference
  solution workaround.
  The strategy intended subtracting a certain value from the most current
@@ -12373,24 +12360,6 @@ name "chap:Conclusion"
 
 \end_layout
 
-\begin_layout Standard
-The results of this work are summarized in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "sec:summary"
-
-\end_inset
-
-, future work is presented in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "sec:Future-Work"
-
-\end_inset
-
-.
-\end_layout
-
 \begin_layout Section
 Conclusion 
 \begin_inset CommandInset label
@@ -12412,27 +12381,84 @@ In this thesis, familiarity was introduced as concept for a novel method
  origin is used as complexity metric.
  Additionally, a fixed core can be selected manually to further protect
  familiar structures in programs.
+ This technique allows one to retain the familiarity of a strategy that
+ helps interpret a formula, rather than having to understand an artificial
+ formula from scratch that may be fundamentally different from previously
+ known strategies.
 \end_layout
 
 \begin_layout Standard
-This technique allows one to retain the familiarity of a strategy that helps
- interpret a formula, rather than having to understand an artificial formula
- from scratch that may be fundamentally different from previously known
- strategies.
+xxx
 \end_layout
 
 \begin_layout Standard
 The experiments have shown that familiarity can replace the paradigm of
  simplicity in genetic programming without major drawbacks.
- The main difficulty concerned simple expert programs that could not be
- sufficiently protected.
- This problem could be solved with the help of a fixed core.
- The proposed approach is also limited by black box solutions that deviate
- too much from the expert policy, for example because it handles a lot of
- cases.
- It was also observed that constraints on the evolutionary process were
- easily compensated for and in many cases even led to improved and safer
- online performance.
+ 
+\end_layout
+
+\begin_layout Standard
+yyy
+\end_layout
+
+\begin_layout Standard
+Bei den Experimenten konnten für alle Expertenprogramme vertraute Erweiterungen
+ gefunden werden.
+ Ähnlichkeiten waren leicht in allen Paretokandidaten erkennbar und unterschiede
+n sich von regulären GP Resultaten.
+\end_layout
+
+\begin_layout Standard
+Bei Läufen mit knotenarmen Expertenprogrammen kann es passieren, dass bereits
+ bei wenigen Edits die vertraute Kernstruktur verloren geht, dieses Problem
+ konnte aber durch die manuelle Auswahl einer fixen Kernstruktur gelöst
+ werden.
+\end_layout
+
+\begin_layout Standard
+Negative Auswirkungen durch die menschlichen Vorgaben hatte keine negativen
+ Auswirkungen auf den Regressionsfehler
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+Für alle getesteten Expertenprogramme wurden vertraute Erweiterungen gefunden.
+ Die Bindung an Expertenprogramme
+\end_layout
+
+\begin_layout Standard
+die Einfachheit konnte das Paradigma der einschränkend als auch als leitend
+ interpretiert werden können, hatten keinen signifikanten Einfluss auf den
+ Regressionsfehler bei komplexeren Kandidaten, äußerten sich aber in 
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+xxx
+\end_layout
+
+\begin_layout Standard
+The proposed approach is also limited by black box solutions that deviate
+ too much from the expert policy, for example, because their success is
+ based on a sparse case distinction that cannot be sufficiently approximated
+ by symbolic regression (e.g., the PSONN policy in IB), or the strategy is
+ fundamentally new and incompatible with known solutions.
+\end_layout
+
+\begin_layout Standard
+In some runs where only difficult-to-interpret known candidates were found,
+ explicit constraints on the evolution process (e.g., given fixed tree kernels,
+ exclusion of operators or actions) helped to simplify the candidate search
+ space to the extent that more comprehensible and homogeneous Pareto candidates
+ were created.
+ The effects on the regression error could mostly be compensated almost
+ completely, in many cases even an improved online performance was noticeable.
  The benefit of familiar strategies for interpretability is evident, and
  the knowledge and structural specifications could additionally help solve
  problems that were previously too complex for GP due to their high complexity.
@@ -13198,10 +13224,10 @@ Explorative regression describes the deviation from the previous policy
 status open
 
 \begin_layout Plain Layout
-Example: An expert cooks eggs for 10 minutes and a black box for 5 minutes.
- When considering whether we should cook our eggs for 3 minutes and 7, 7
- minutes would be preferable as an interim solution, because the extent
- of the changes to our already known cooking behavior is less.
+Example: If we are used to cooking eggs for 10 minutes, but an egg cooker
+ only for 5 minutes, and we are asked to weigh between the 3- or 7-minute
+ options, the 7-minute option would be preferable because it deviates less
+ from previous experience.
 \end_layout
 
 \end_inset

@@ -417,10 +417,10 @@ status open
 
 \begin_layout Plain Layout
 Conditionally punishing kernel in discrete space.
- If the solution is closer than 0.5 to the solution, it will not be penalised
+ If the solution is closer than 0.5 to the solution, it will not be penalized
  as correct, MAE otherwise.
  The candidate consisting of just one node cheats itself a low error by
- concentrating on minimising wrong decisions.
+ concentrating on minimizing wrong decisions.
 \end_layout
 
 \end_inset

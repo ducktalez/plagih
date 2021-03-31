@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -12,7 +12,6 @@
 \renewcommand{\textemdash}{---}
 % Added by lyx2lyx
 % Added by lyx2lyx
-\usepackage{microtype}
 \end_preamble
 \use_default_options true
 \begin_modules
@@ -33,6 +32,8 @@ fix-cm
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype true
+\use_dash_ligatures true
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -74,6 +75,7 @@ fix-cm
 \suppress_date false
 \justification false
 \use_refstyle 0
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -83,7 +85,10 @@ fix-cm
 \tocdepth 2
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle fancy
@@ -340,6 +345,7 @@ emph{explainable artificial intelligence} (XAI)
 \begin_inset CommandInset citation
 LatexCommand cite
 key "AIINDEX2019"
+literal "true"
 
 \end_inset
 
@@ -355,6 +361,7 @@ right to explanation
 \begin_inset CommandInset citation
 LatexCommand cite
 key "EUdataregulations2018"
+literal "true"
 
 \end_inset
 
@@ -363,6 +370,7 @@ key "EUdataregulations2018"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -386,6 +394,7 @@ dable terms to humans
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_survey"
+literal "true"
 
 \end_inset
 
@@ -395,6 +404,7 @@ key "XAI_survey"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-perturbation"
+literal "true"
 
 \end_inset
 
@@ -403,6 +413,7 @@ key "XAI-perturbation"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-LIME"
+literal "true"
 
 \end_inset
 
@@ -425,16 +436,28 @@ emph{Layerwise Relevance Propagation}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_LRP_Frauenhofer"
+literal "true"
 
 \end_inset
 
 ).
  While these techniques help extracting features that contribute to a specific
  decision, they leave large parts of the decision process untouched.
- In contrast, evolutionary approaches such as genetic programming (GP) create
- policies that are simple enough to be interpreted globally.
+ In contrast, evolutionary approaches such as genetic programming (GP) can
+ create policies that are simple enough to be interpreted globally, which
+ will be further presented in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:Genetic-Programming"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
  However, the programs are often very mathematical and counterintuitive,
- so they can still be difficult to understand.
+ which makes them difficult to understand.
 \end_layout
 
 \begin_layout Section
@@ -454,6 +477,7 @@ In this work, a novel technique is presented that extends a previously developed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "fehrer_hein_tokic_udluft_2020"
+literal "true"
 
 \end_inset
 
@@ -478,7 +502,7 @@ reference "chap:Applied-methods"
 .
  
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "chap:Familiar-Genetic-Programming"
 
 \end_inset
@@ -523,7 +547,7 @@ reference "chap:Evaluation"
 .
  The results will be discussed in 
 \begin_inset CommandInset ref
-LatexCommand ref
+LatexCommand formatted
 reference "chap:Results"
 
 \end_inset
@@ -692,6 +716,7 @@ Reinforcement Learning: An Introduction
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Sutton-Barto-reinforcement-1998"
+literal "true"
 
 \end_inset
 
@@ -741,6 +766,7 @@ ntly from real system
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -781,6 +807,7 @@ In contrast to performance, interpretability has many manifestations and
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -821,6 +848,7 @@ In this thesis, we deal with RL problems, which are incomplete as they are
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI-unified-approach"
+literal "true"
 
 \end_inset
 
@@ -856,6 +884,7 @@ reference "sec:Genetic-Programming"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "XAI_doshivelez2017rigorous"
+literal "true"
 
 \end_inset
 
@@ -869,10 +898,9 @@ key "XAI_doshivelez2017rigorous"
 Interpretable machine learning methods often rely on supplying simple results
  that can be understood by many people.
  However, if the prior knowledge of an expert can already be assumed, an
- explanation can be far more specific.
- (
+ explanation can be far more specific (see 
 \begin_inset CommandInset ref
-LatexCommand formatted
+LatexCommand ref
 reference "fig:The-interpretability-gap"
 
 \end_inset
@@ -1001,6 +1029,7 @@ g policies since it was first introduced by Koza
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
+literal "true"
 
 \end_inset
 
@@ -1065,6 +1094,7 @@ emph{closure}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Strongly_typed_GP"
+literal "true"
 
 \end_inset
 
@@ -1168,6 +1198,7 @@ emph{ramped half-n-half}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-half-ramped"
+literal "true"
 
 \end_inset
 
@@ -1192,6 +1223,7 @@ The selection process is implemented as a tournament where the fittest of
 \begin_inset CommandInset citation
 LatexCommand cite
 key "gp-tournament-selection"
+literal "true"
 
 \end_inset
 
@@ -2460,6 +2492,7 @@ emph{Eureqa}
 \begin_inset CommandInset citation
 LatexCommand cite
 key "eureqa-review"
+literal "true"
 
 \end_inset
 
@@ -2850,6 +2883,7 @@ Industrial control strategies feature many peculiarities which can be addressed
 \begin_inset CommandInset citation
 LatexCommand cite
 key "siemens-gas-turbine-rl-nn"
+literal "true"
 
 \end_inset
 
@@ -2857,6 +2891,7 @@ key "siemens-gas-turbine-rl-nn"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft,siemens-rl-stochastic-bayesian-nn"
+literal "true"
 
 \end_inset
 
@@ -2871,6 +2906,7 @@ able policies.
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Hein_Udluft_Runkler_interpretable_gp"
+literal "true"
 
 \end_inset
 
@@ -2881,6 +2917,7 @@ key "Hein_Udluft_Runkler_interpretable_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "hein_fuzzy_gp"
+literal "true"
 
 \end_inset
 
@@ -2892,6 +2929,7 @@ key "hein_fuzzy_gp"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -2907,6 +2945,7 @@ Despite their simplicity, the generated formulas are often hardly comprehensible
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Tresp_prior_knowledge"
+literal "true"
 
 \end_inset
 
@@ -2917,6 +2956,7 @@ key "Tresp_prior_knowledge"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "residual-dynamic-learning"
+literal "true"
 
 \end_inset
 
@@ -3266,6 +3306,7 @@ reference "fig:TED_edits"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedOldestPaper"
+literal "true"
 
 \end_inset
 
@@ -3276,6 +3317,7 @@ ations
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -3376,41 +3418,42 @@ status open
 \end_layout
 
 \begin_layout Standard
-For this work, a GP suite in the language Python was developed.
- Particular attention was paid to efficient evaluation of fitness, which
- was enabled with the help of ensorFlow.
- As Staats et al.
+For this work, a genetic programming framework was developed with particular
+ emphasis on runtime.
+ The fitness computation is inspired by Staats et al.
  
 \begin_inset CommandInset citation
 LatexCommand cite
 key "karooGPpaper"
+literal "true"
 
 \end_inset
 
- show, the use of this framework enables parallel evaluation on the GPU.As
- a result, the a 2-15x speedup was achieved.
- 
-\end_layout
-
-\begin_layout Standard
-To allow further simplification of expressions, the Python library SymPy
- 
+, who were able to achieve a 2-15x speedup by converting expressions into
+ TensorFlow graphs for parallel evaluation on the GPU.
+ Furthermore, to avoid unnecessary calculations, the expressions are simplified
+ before evaluation using symbolic mathematics, for which the Python library
+ SymPy 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
- was extended, which uses symbolic mathematics and thus sifts out unnecessary
- calculations before evaluation.
- The memory usage and performance could be further improved, largely thanks
- to the help of lookup-tables for tree evaluation, passing variables locally
- and especially using recursive tree structures.
+ was extended.
+ In addition, the fitness is stored in lookup tables.
+ The individuals are implemented as recursive tree structures, which is
+ a more memory-efficient and also more performant alternative compared to
+ using arrays, since the recursive organization makes a separate reordering
+ of the nodes unnecessary.
 \begin_inset Foot
 status open
 
 \begin_layout Plain Layout
-The runtime reduced to about 50% and memory usage to 
+The runtime could be increased by another 50% by the aforementioned measurement
+ in addition to the TensorFlow-enabled evaluation in all runs and the memory
+ consumption could be reduced to 
 \begin_inset ERT
 status open
 
@@ -3418,25 +3461,12 @@ status open
 
 $
 \backslash
-approx 10
-\backslash
-%$
+approx$
 \end_layout
 
 \end_inset
 
- in all runs, compared to the TensorFlow enabled version.
- 
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-xxx
-\end_layout
-
-\end_inset
-
-
+ 10%.
 \end_layout
 
 \end_inset
@@ -3776,6 +3806,7 @@ The TED is calculated both a robustly and efficiently with APTED
 \begin_inset CommandInset citation
 LatexCommand cite
 key "tedAPTED1,tedAPTED2"
+literal "true"
 
 \end_inset
 
@@ -4117,6 +4148,7 @@ Tree unification restructures a tree accordingly to a unique order by extracting
 \begin_inset CommandInset citation
 LatexCommand cite
 key "10.7717/peerj-cs.103"
+literal "true"
 
 \end_inset
 
@@ -4977,6 +5009,7 @@ reference "sec:Industrial-benchmark"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -5255,6 +5288,7 @@ In the mountain car problem, a car is supposed to drive up a mountain that
 \begin_inset CommandInset citation
 LatexCommand cite
 key "mountaincarOriginal"
+literal "true"
 
 \end_inset
 
@@ -5829,6 +5863,7 @@ status open
 LatexCommand href
 name "https://github.com/openai/gym/wiki/Leaderboard"
 target "https://github.com/openai/gym/wiki/Leaderboard"
+literal "false"
 
 \end_inset
 
@@ -5858,6 +5893,7 @@ $-103.41$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -6917,6 +6953,7 @@ The industrial benchmark was introduced by scientists at Siemens to meet
 \begin_inset CommandInset citation
 LatexCommand cite
 key "industrialBenchmark"
+literal "true"
 
 \end_inset
 
@@ -6998,6 +7035,7 @@ $5353$
 \begin_inset CommandInset citation
 LatexCommand cite
 key "PSONN_fuzzy_RL_Hein_Udluft"
+literal "true"
 
 \end_inset
 
@@ -7010,6 +7048,7 @@ The initial states of the IB in
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -7426,16 +7465,24 @@ name "chap:Results"
 \begin_layout Standard
 In this section, six familiarity-based GP runs are evaluated and compared
  with regular runs in more detail.
- The Pareto candidates found are primarily examined for familiarity and
- interpretability.
- Their performance is compared both in terms of regression error and real
- performance, but also examined for implications for safety.
+ All runs were trained with the parameters described in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sec:GP-Suite-Implementation"
+
+\end_inset
+
+; to minimize the potential unfair influence of evolutions, a population
+ of 1000 individuals trained over 4000 generations was chosen.
  
 \end_layout
 
 \begin_layout Standard
-All runs were performed with both MAE and MSE, MSE runs were comparatively
- often better on the real benchmarks.
+The Pareto candidates found are primarily examined for familiarity and interpret
+ability.
+ Their performance is compared both in terms of regression error and real
+ performance, but also examined for implications for safety.
+ 
 \end_layout
 
 \begin_layout Section
@@ -7443,12 +7490,13 @@ Mountain Car
 \end_layout
 
 \begin_layout Standard
-Three solution strategies are examined in detail, simple one, which relies
- on maximum acceleration and two extensive ones featuring a parabolic formula
- and a humanly adapted, nested if-case distinction for reversal points.
+Three approaches are analyzed in this benchmark.
+ The first is simple and safe, fetching maximum momentum, the second is
+ a more complex parabolic formula, and the third is a nested if-difference
+ for which the reversal points have been manually optimized.
  Furthermore, fixed core structures and obligatory acceleration were tested.
- In runs, where action 1 cannot be selected (obligatory acceleration), the
- regression error cannot drop to 0 
+ The latter means that action 1 cannot be selected in these runs, so that
+ the regression error cannot decrease to 0 
 \begin_inset ERT
 status open
 
@@ -9562,6 +9610,7 @@ reference "fig:xiao-origin-plot"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "xiao2019"
+literal "true"
 
 \end_inset
 
@@ -11858,6 +11907,7 @@ reference "fig:Histograms-mc-ib"
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
@@ -11950,7 +12000,7 @@ The approach was evaluated with simple expert programs on both the mountain
 \end_layout
 
 \begin_layout Subsection
-Findings on familiar GP
+Findings on Familiarity
 \end_layout
 
 \begin_layout Standard
@@ -11989,31 +12039,39 @@ Limitations and Applicability
 \end_layout
 
 \begin_layout Standard
-The limitations mainly concern the complexity of the black box policy and
- protective effect of the edit distance regarding familiar tree structures.
-\end_layout
-
-\begin_layout Standard
-General disadvantages of offline learning have already been described by
- Hein in 
+A general limitation when performing a symbolic regression is the ability
+ to sufficiently approximate the hidden strategy of a black box with a function,
+ which have already been described by Hein in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "daniel_hein_doktorarbeit"
+literal "true"
 
 \end_inset
 
 .
- Familiar improvement are not to be expected when the initial regression
- error is too large (e.g.
- the expert strategy differs fundamentally from the black box) or when the
- GP candidates cannot reduce the regression error sufficiently (e.g.
- because the black box policy is very sparse, maybe too sparse to be approximate
-d with symbolic regression).
+ For example, in the case of the PSONN policy used in the IB, the strategy
+ was too sparse, so the regression error was insufficiently reduced in both
+ the regular and familiar runs.
+ 
 \end_layout
 
 \begin_layout Standard
-The second limitation is related to the edit distance, which in some cases
- turns into a regular complexity metric, especially for small expert programs.
+It is also recommended to consider the regression error of the expert program
+ before starting a run, as it indicates whether closing the gap to the black
+ box is a feasible task.
+ It can thus prevent prevent a superfluous search for extensions between
+ strategies that might not be compatible with each other.
+\end_layout
+
+\begin_layout Standard
+Furthermore, it has been noticed that explicit constraints on the evolution
+ process (e.g., fixed tree nodes, exclusion of operators or actions) helped
+ to simplify the candidate search space to the extent that more comprehensible
+ and homogeneous Pareto candidates were created.
+ The effects on the regression error could mostly be compensated and lead
+ to an improved online performance in some cases.
+ 
 \end_layout
 
 \begin_layout Paragraph
@@ -12037,10 +12095,6 @@ The number of nodes poses some problems as a paradigm for complexity values,
  the exact choice of leaf nodes are the logical prerequisite for its fitness
  and can therefore only be used in the appropriate places.
  
-\end_layout
-
-\begin_layout Subparagraph
-Operators 
 \end_layout
 
 \begin_layout Standard
@@ -12228,17 +12282,6 @@ name "fig:if-operator-composition"
 
 \end_layout
 
-\begin_layout Paragraph
-Leaf nodes 
-\begin_inset CommandInset label
-LatexCommand label
-name "gp-Observations-role"
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Standard
 The number of leaf nodes follows explicitly from the operator tree and can
  be the branching factor, i.e.
@@ -12317,82 +12360,41 @@ name "sec:summary"
 \end_layout
 
 \begin_layout Standard
-In this thesis, familiarity was introduced as concept for a novel method
- to create interpretable RL policies based on prior known expert strategies.
- First, transition samples are collected with a black box agent that is
- to be explained.
- Second, the expert program is used as origin for a genetic programming
- enhancement, in which the tree edit distance between candidates and the
- origin is used as complexity metric.
+In this thesis, a technique to preserve familiar knowledge in reinforcement
+ learning policies is introduced.
+ This is achieved by using genetic programming to search for meaningful
+ extensions to an expert program instead of starting from scratch, for which
+ the complexity criterion of simplicity was replaced with the tree edit
+ distance, which notes the changes to the expert program.
+ For implementation, transition samples were collected from a black box
+ agent and used for symbolic regression.
  Additionally, a fixed core can be selected manually to further protect
  familiar structures in programs.
- This technique allows one to retain the familiarity of a strategy that
- helps interpret a formula, rather than having to understand an artificial
- formula from scratch that may be fundamentally different from previously
- known strategies.
 \end_layout
 
 \begin_layout Standard
-xxx
+In the experiments, many familiar extensions were found for all expert strategie
+s, showing a noticeable difference to regular GP results.
+ Negative effects on the regression error or online performance were not
+ found.
+ Minor difficulties were encountered in runs with simple expert programs
+ where, due to the small number of nodes, a few edits can cause the core
+ structure to decay; a solution to this problem was achieved by manually
+ defining a fixed core structure.
 \end_layout
 
 \begin_layout Standard
-The experiments have shown that familiarity can replace the paradigm of
- simplicity in genetic programming without major drawbacks.
- 
+xxx 
 \end_layout
 
 \begin_layout Standard
-yyy
-\end_layout
-
-\begin_layout Standard
-Bei den Experimenten konnten für alle Expertenprogramme vertraute Erweiterungen
- gefunden werden.
- Diese unterschieden sich wesentlich von den regulären Kandidaten, ohne
- dabei die Sicherheit, den Regressionsfehler oder die Fitness negativ zu
- beeinflussen.
- Bei Läufen mit knotenarmen Expertenprogrammen kann passieren, dass bereits
- mit wenigen Edits die vertraute Kernstruktur aufgelöst wird; dieses Problem
- konnte aber durch die manuelle Auswahl einer fixen Kernstruktur gelöst
- werden.
-\end_layout
-
-\begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-The proposed approach is also limited by black box solutions that deviate
- too much from the expert policy, for example, because their success is
- based on a sparse case distinction that cannot be sufficiently approximated
- by symbolic regression (e.g., the PSONN policy in IB), or the strategy is
- fundamentally different and incompatible with known solutions.
-\end_layout
-
-\begin_layout Standard
-yyy
-\end_layout
-
-\begin_layout Standard
-x
-\end_layout
-
-\begin_layout Standard
-xxx
-\end_layout
-
-\begin_layout Standard
-In some runs where only difficult-to-interpret known candidates were found,
- explicit constraints on the evolution process (e.g., given fixed tree kernels,
- exclusion of operators or actions) helped to simplify the candidate search
- space to the extent that more comprehensible and homogeneous Pareto candidates
- were created.
- The effects on the regression error could mostly be compensated almost
- completely, in many cases even an improved online performance was noticeable.
- The benefit of familiar strategies for interpretability is evident, and
- the knowledge and structural specifications could additionally help solve
- problems that were previously too complex for GP due to their high complexity.
+In summary, it has been shown that TED can be used as a complexity paradigm
+ in GP to generate familiar candidates without major drawbacks.
+ The similarity to familiar strategies allows for better interpretability
+ compared to regular candidates with comparable performance.
+ Furthermore, the optional use of fixed nodes allows the targeted preservation
+ of relevant core structures, which is why even relatively complex strategies
+ can be searched efficiently.
 \end_layout
 
 \begin_layout Section
@@ -12438,15 +12440,71 @@ name "TED-improvements"
 
 \begin_layout Standard
 By using a distance measure such as the edit distance, the question emerges
- whether (and how) changes between nodes can be distinguished as changes
- between terminal nodes and operators can be further distinguished.
+ whether (and how) the nature of a change can be taken into account.
+\end_layout
+
+\begin_layout Paragraph
+Trimming the considered Edits
+\end_layout
+
+\begin_layout Standard
+As already mentioned in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "subsec:Edit-distance-anomalies"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, constants have a comparatively insignificant role for the interpretability
+ or the essence of a formula and also observations follow from the pure
+ operational tree.
+ In this sense, the evaluation of leaf nodes is only a feasible way to include
+ the branching factor of a tree in the distance measure.
+ However, changes to constants in particular fall heavily as full-fledged
+ edits, although their optimization process is actually desired.
+ This can prevent deliberate simplifications and even lead to and in some
+ cases even led to an adjustment of the operators to preserve the constants.
  
 \end_layout
 
 \begin_layout Standard
-The TED offers many extension possibilities which can further address the
- nature of a change, including a weighting of nodes similar to the one used
- in classical GP which was mentioned in 
+Observations have a more important role for interpretability than constants,
+ but here the size of the set of necessary observations is relevant, as
+ it represents the dimensionality of the solution.
+ A simple solution for the constants is to largely exclude them in the TED.
+ For observations, the symmetric distance to the known observation set can
+ also be considered.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Note that this approach is based on the same edit-distance paradigm, but
+ contradicts the 
+\begin_inset Quotes eld
+\end_inset
+
+identity of indiscernibles
+\begin_inset Quotes erd
+\end_inset
+
+-condition of distance measurements.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Customizing Edits
+\end_layout
+
+\begin_layout Standard
+Weighting nodes with different complexities is a straightforward approach
+ in regular GP, which was mentioned in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:EUREKA-GP-complexities"
@@ -12454,23 +12512,20 @@ reference "tab:EUREKA-GP-complexities"
 \end_inset
 
 .
- This requires calculating the weighted mapping.
- A subsequent weighting of the mapping of the regular TED does not make
- sense, since it can lead to ambiguous results that do not correspond to
- the minimum distance.
- The weighted TED opens many questions on how to deal with the effect and
- the complexity of altered nodes in the origin tree.
- Implementations might be based on the following ideas:
+ To apply a similar weighting to an edit distance, the weighted mapping
+ must be computed, since a subsequent weighting of the regular mapping is
+ not necessarily the minimum distance.
+ The following ideas can be considered to deal with the changed nodes:
 \end_layout
 
 \begin_layout Itemize
-Ignoring altered nodes and apply the absolute weighting
+Ignoring altered nodes and adding the absolute weighting
 \end_layout
 
 \begin_layout Itemize
-Dividing all operators into classes, where the cost for changing within
+Dividing the operators into classes, where the cost for changing within
  a class is weakened.
- A potential implementation are the operator families can be seen in 
+ A potential implementation can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:operator-classification"
@@ -12478,8 +12533,6 @@ reference "fig:operator-classification"
 \end_inset
 
 .
- This allows adaptions in constant nodes and also a distinction between
- basic operator types.
 \end_layout
 
 \begin_layout Itemize
@@ -13083,58 +13136,6 @@ name "fig:operator-classification"
 
 \end_layout
 
-\begin_layout Paragraph
-Trimming the considered Edits
-\end_layout
-
-\begin_layout Standard
-As already mentioned in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "gp-Observations-role"
-
-\end_inset
-
-, constants have a comparatively insignificant role for the interpretability
- or the essence of a formula and also observations follow from the pure
- operational tree.
- In this sense, the evaluation of leaf nodes is only a feasible way to include
- the branching factor of a tree in the distance measure.
- However, changes to constants in particular fall heavily as full-fledged
- edits, although their optimization process is actually desired.
- This can prevent deliberate simplifications and even lead to and in some
- cases even led to an adjustment of the operators to preserve the constants.
- 
-\end_layout
-
-\begin_layout Standard
-Observations have a more important role for interpretability than constants,
- but here the size of the set of necessary observations is relevant, as
- it represents the dimensionality of the solution.
- A simple solution for the constants is to largely exclude them in the TED.
- For observations, the symmetric distance to the known observation set can
- also be considered.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Note that this approach is based on the same edit-distance paradigm, but
- contradicts the 
-\begin_inset Quotes eld
-\end_inset
-
-identity of indiscernibles
-\begin_inset Quotes erd
-\end_inset
-
--condition of distance measurements.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsection
 Explorative Regression
 \begin_inset CommandInset label
@@ -13151,43 +13152,29 @@ Explorative regression describes the deviation from the previous policy
  for fitness improvements.
  We argue that, among comparable candidates, less deviation from the known
  is preferred, especially in security-critical domains.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-Example: If we are used to cooking eggs for 10 minutes, but an egg cooker
- only for 5 minutes, and we are asked to weigh between the 3- or 7-minute
- options, the 7-minute option would be preferable because it deviates less
- from previous experience.
-\end_layout
-
-\end_inset
-
- For example, a subdivision into four areas is conceivable, as can be seen
- in 
+ A possible subdivision of different explorations is described in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:relative_kernel_path"
 
 \end_inset
 
-, which can be further customized (e.g.
- 
+, examples of potential customizations of the regression kernels can be
+ seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:exploression-regr1"
 
 \end_inset
 
-, 
+ or 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:exploression-regr2"
 
 \end_inset
 
-).
- 
+.
 \end_layout
 
 \begin_layout Standard

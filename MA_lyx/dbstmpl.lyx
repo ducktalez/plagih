@@ -11986,32 +11986,31 @@ Discussion
 \end_layout
 
 \begin_layout Standard
-The experiments have shown that familiar candidates can be created with
- the proposed approach, as extensions for all expert programs in both evaluated
- benchmarks were found.
- The structures of the origin program could be recognized in familiar candidates
-; which also forms a more homogeneous Pareto front and thus allows better
- comparability among candidates.
- The impact on the regression error and the online performance was not significa
-nt and similar to regular GP runs.
+The experiments have shown that the proposed approach can generate candidates
+ in both evaluated benchmarks by extending previously developed strategies.
+ The structures of the original program were recognizable; moreover, the
+ Pareto fronts were more homogeneous in familiar runs, allowing better comparabi
+lity between candidates.
+ The impact on regression error and online performance was not significant
+ and similar to regular GP runs.
 \end_layout
 
 \begin_layout Standard
-The major effect on the candidates was distinguishable between the different
+The significant impact on candidates was distinguishable between the different
  expert programs.
- Minor difficulties were encountered in runs with simple strategies where,
- due to the small number of nodes, a few edits can cause the core structure
- to decay; a solution to this problem was achieved by manually defining
- a fixed core structure.
- Defining a fixed core in complex strategies did not affect the candidates
- too much, but the best Pareto entries were found much faster, which improved
- the runtime a lot.
- Furthermore, it has been noticed that explicit constraints on the evolution
- process (e.g., fixed tree nodes, exclusion of operators or actions) had no
- significant effects on the regression error and even lead to a better online
- performance in some cases, while the candidate search space was simplified
- to the extent that more comprehensible and homogeneous Pareto candidates
- were created.
+ Minor difficulties were encountered for runs with simple strategies, where
+ a few edits can lead to decay of the kernel structure due to the small
+ number of nodes; a solution to this problem was achieved by manually defining
+ a fixed kernel structure.
+ Defining a fixed core for complex strategies did not have too much impact
+ on the candidates, but the best Pareto entries were found much faster,
+ which significantly improved the runtime.
+ Furthermore, it was found that explicit constraints on the evolution process
+ (e.g., fixed tree nodes, exclusion of operators or actions) did not have
+ a significant impact on the regression error and in some cases even led
+ to better online performance, while the candidate search space was simplified
+ in the sense that more comprehensible and homogeneous Pareto candidates
+ were generated.
 \end_layout
 
 \begin_layout Standard
@@ -12061,8 +12060,6 @@ The TED was used as surrogate measure for familiarity, as it is similar
  a programming tree by representing the computation that is performed, since
  the exact choice of leaf nodes are the logical prerequisite for its fitness
  and can therefore only be used in the appropriate places.
- Operators represent the applied computations of a tree and have the most
- debatable implications for interpretability.
  Not only is the total set of operators used of interest, interpretability
  depends on the structure and type of composition, as can be seen in 
 \begin_inset CommandInset ref
@@ -12246,45 +12243,12 @@ name "fig:if-operator-composition"
 \end_layout
 
 \begin_layout Standard
-The number of leaf nodes follows explicitly from the operator tree and can
- be the branching factor, i.e.
- the number of values to be allocated.
- Compared to observations, constants and numbers are leaf nodes which are
- rather irrelevant for understanding a formula.
- Even though they are essential for a program to function and optimizing
- their exact values is subject to an important part of the genetic evolution,
- besides some remarkable constants 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-(for example $
-\backslash
-pi$)
-\end_layout
-
-\end_inset
-
- or the general factor 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-(x$0.1$, x$10$, x$10,000$)
-\end_layout
-
-\end_inset
-
-, they have no outstanding characteristic.
- 
-\end_layout
-
-\begin_layout Standard
-Observations are the nodes around which operators and constants are to be
- arranged in such a way that they map their values as well as possible to
- an output, which is, after all, the sole task of the GP process.
+Constants are probably the least relevant nodes in a tree for understanding,
+ but optimizing values is considered a full-fledged edit in the TED.
+ Observations are by far the more significant leaf nodes, are the nodes
+ around which operators and constants are to be arranged in such a way that
+ they map their values as well as possible to an output, which is, after
+ all, the sole task of the GP process.
  Since not all available observations have to be used automatically, they
  also represent the dimensionality of the input vector, which plays a crucial
  role for the mathematical space (curse of dimensionality).

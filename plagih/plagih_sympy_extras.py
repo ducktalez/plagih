@@ -55,7 +55,7 @@ from sympy import Function, sympify, symbols
 
 class Ifte(Function):
     """
-    plagih_sympify('Ifte(a, b, c)')
+    my_sympify('Ifte(a, b, c)')
     """
     nargs = 3
     is_Function = True
@@ -69,7 +69,7 @@ class Ifte(Function):
             return
 
     def _sympy_(self, *args):
-        return eval(self, *args)  # a, b, c don't know why c is unexpected. works though.
+        return eval(self, *args)
 
 
 class Mini(Function):

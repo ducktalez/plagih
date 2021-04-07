@@ -1,4 +1,3 @@
-% table = option for xcolor; use alternating row-colors
 \documentclass[aspectratio=169, compress, table]{beamer}
 
 \usepackage{forest}
@@ -84,62 +83,27 @@
 \titlepage
 \end{frame}
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Idea}
+
 \begin{frame}{Introduction}
 %\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76mm
 \includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
 \end{frame}
 
-\begin{frame}{Introduction}
+
+
+\begin{frame}{hehe}
 \centering
-\includegraphics[height=0.89\textheight]{../img/inkscape/explainability_gap2_minimal_beamer.pdf}
-    %\import{../img/inkscape}{explainability_gap2_minimal_beamer.pdf}
+\includegraphics[height=0.85\textheight]{img/genetic_extensions.pdf} 
 \end{frame}
-
-
-
-
-
-\begin{frame}{Introduction}
-\centering
-
-\begin{figure}[th]
-\begin{centering}
-\begin{tabular}{ccc}
-\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$\div$}[{pos}][{$-1.834$}]][{$2.197$}]]} &  & \plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${\frac{\text{pos}}{-1.834}}$}}][{$2.197$}]]}\tabularnewline
-\end{tabular}
-\par\end{centering}
-\caption{Automatic visualization of a tree with all nodes and as a tight version.}
-\end{figure}
-\end{frame}
-
-
 
 
 \begin{frame}{Introduction}
 \centering
-
-\begin{figure}[th]
-\begin{centering}
-\begin{tabular}{ccc}
-\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][$0$][$2$]]} &  & \plforest{[{$x^y$}[vel][$-0.5$]]}\tabularnewline
-\end{tabular}
-\end{figure}
-\end{frame}
-
-
-
-
-
-\begin{frame}{Introduction xxx}
-
-\begin{figure}[th]
-\centering{}\plforest{[{$\text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]}\caption{The expert might want to only change the condition of the if-statement,
-as he can then better understand the distinction. In his start-up
-program, he would specify the nodes marked in dark blue as fixed so
-that they are not affected by the GP process.}
-
-\end{figure}
-
+\includegraphics[height=0.89\textheight]{../img/inkscape/explainability_gap2_minimal_beamer.pdf}
 \end{frame}
 
 
@@ -147,23 +111,14 @@ that they are not affected by the GP process.}
 
 
 
-\begin{frame}
-\frametitle{Erklärbarkeit durch Vertrautheit}
-\begin{columns}
-\column{0.5\textwidth}
-\includegraphics[width=1\linewidth]{img/3-teacher_small.png}
-\column{0.5\textwidth}
-	\begin{itemize}
-		\item Understanding the problem
-		\item Understanding what you have ahead of the other
-		\item Formulating the difference as language
-	\end{itemize}
-\end{columns}
-\end{frame}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Reinforcement Learning}
 
 \begin{frame}{Reinforcement Learning}
-\includegraphics[height=0.8\textheight]{img/agent-env.png} 
+\centering
+\includegraphics[height=0.6\textheight]{img/agent-env.png} 
 \end{frame}
 
 
@@ -185,9 +140,100 @@ that they are not affected by the GP process.}
  \par\end{centering}
 % \caption{The main features of the Mountain car problem. The position of the car is by a factor of 10 larger than the speed. \label{mountaincar-overview}}
 \end{table}
-
 \end{frame}
 
+
+
+
+
+\section{Genetic Programming}
+
+\begin{frame}{Tree Edit distance}
+%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
+\centering
+\includegraphics[height=0.75\textheight]{../img/inkscape/GP-mutations.pdf}
+\end{frame}
+
+\begin{frame}{Fixed Core}
+%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
+\centering
+\includegraphics[width=0.75\linewidth]{../img/inkscape/fix_nodes_mutation.pdf}
+\end{frame}
+
+
+
+
+
+
+\section{Explainable AI}
+
+\begin{frame}{Fixed Core}
+ \begin{figure}[th]
+  \centering{}
+  \plforest{[{$\text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]}  
+  \caption{The expert might want to only change the condition of the if-statement,
+as he can then better understand the distinction. In his start-up
+program, he would specify the nodes marked in dark blue as fixed so
+that they are not affected by the GP process.}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Tight tree nodes}
+\centering
+\begin{figure}[tph]
+\begin{centering}
+\plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]}\hspace{8mm}\plforest{[{$+$}[abs[pos]][{$\cdot$}[{$174.162$}][{vel}]]]} \hspace{8mm}\plforest{[{$x^y$}[vel][{$-5.0$}]]} 
+\par\end{centering}
+\caption{Three formulas with completely different approaches that achieve almost
+identical results.}
+\end{figure}
+\end{frame}
+
+
+
+
+\begin{frame}{Introduction}
+\centering
+\begin{figure}[th]
+\begin{tabular}{ccc}
+\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][$0$][$2$]]} &  & \plforest{[{$x^y$}[vel][$-0.5$]]}\tabularnewline
+\end{tabular}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Erklärbarkeit durch Vertrautheit}
+\begin{columns}
+\column{0.5\textwidth}
+
+\column{0.5\textwidth}
+	\begin{itemize}
+		\item Understanding the problem
+		\item Understanding what you have ahead of the other
+		\item Formulating the difference as language
+	\end{itemize}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{Complex Mountain Car Policy}
+\centering
+\includegraphics[height=0.85\textheight]{img/genetic_extensions_2.pdf} 
+\end{frame}
+
+
+\begin{frame}{Introduction}
+\centering
+\begin{figure}[th]
+\begin{centering}
+\begin{tabular}{ccc}
+\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$\div$}[{pos}][{$-1.834$}]][{$2.197$}]]} &  & \plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${\frac{\text{pos}}{-1.834}}$}}][{$2.197$}]]}\tabularnewline
+\end{tabular}
+\par\end{centering}
+\caption{Automatic visualization of a tree with all nodes and as a tight version.}
+\end{figure}
+\end{frame}
 
 
 \begin{frame}{Reinforcement Learning}
@@ -217,11 +263,9 @@ that they are not affected by the GP process.}
   \column{0.30\textwidth}
    \includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_75.pdf}
    \includegraphics[height=0.4\textheight]{img/mtc/decisions-XiaoPresetAgent.png}
-
   \column{0.30\textwidth}
    \includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_200.pdf}
    \includegraphics[height=0.4\textheight]{img/mtc/decisions-Good_Expert.png}
-
   \column{0.4\textwidth}
    Different policies
    \begin{itemize}
@@ -229,161 +273,153 @@ that they are not affected by the GP process.}
  	  \item Mathematical formula
  	  \item Domain expert (human)
    \end{itemize}
-
  \end{columns}
 \end{frame}
-
 
 
 \begin{frame}{Tree Edit distance}
 %\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
 \centering
 \includegraphics[height=0.75\textheight]{../img/inkscape/ted_operators.pdf}
-
 \end{frame}
 
 
-
-
-
-
-
-\section{Genetic Programming}
-
-
-\begin{frame}{Tree Edit distance}
-%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
-\centering
-\includegraphics[height=0.75\textheight]{../img/inkscape/GP-mutations.pdf}
-
-\end{frame}
-
-\begin{frame}{Fixed Core}
-%\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
-\centering
-\includegraphics[width=0.75\linewidth]{../img/inkscape/fix_nodes_mutation.pdf}
-
-\end{frame}
 
 
 
 
 \section{Mountain Car}
+ 
+\begin{frame}{Mountain Car - Improvements}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \begin{tabular}{cc}
+    \multicolumn{2}{c}{TED=6}\tabularnewline
+    $\ensuremath{\text{MSE=}0.12}$ & $R=-106.4$\tabularnewline
+   \end{tabular}
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-6} 
+  \column{0.7\textwidth}
+   \plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$-0.014 \cdot \text{pos}^2$\\$-0.243$]][$0$,fixnode][$2$,fixnode]]} 
+ \end{columns}
+\end{frame}
 
-\begin{figure}[th]
-\begin{centering}
-\begin{tabular}{>{\centering}p{42mm}>{\centering}p{42mm}>{\centering}p{42mm}}
+
+\begin{frame}{Mountain Car - Improvements}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \begin{tabular}{cc}
+    \multicolumn{2}{c}{11}\tabularnewline
+    $\ensuremath{\text{MSE=}0.09}$ & $R=-100.6$\tabularnewline
+   \end{tabular}
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-11}
+  \column{0.7\textwidth}
+   \plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$\text{if-then-else}$[$<$[vel][$-0.008$]][$0$][$\text{pos} \cdot {{\text{pos}^2}^2}$\\$-0.047$]]][$0$,fixnode][$2$,fixnode]]} 
+ \end{columns}
+\end{frame}
+
+
+\begin{frame}{Mountain Car - Improvements}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \begin{tabular}{cc}
+    \multicolumn{2}{c}{20}\tabularnewline
+    $\text{MSE}=0.05$ & $R=-98.1$\tabularnewline
+   \end{tabular}
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-20}
+  \column{0.7\textwidth}
+   \plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel][$\text{if-then-else}$[$<$,samenode[vel,samenode][$-0.01$\\$ \cdot {\text{pos}^2}^2$]][$1.03$][[$\text{pos} -0.03$\\$-0.73 \cdot {{\text{pos}^2}^2}$]]]][$0$,fixnode][$2$,fixnode]]} 
+ \end{columns}
+\end{frame}
+
+
+\begin{frame}{Mountain Car - Improvements}
+\begin{figure}[tph]
+\noindent \begin{centering}
+\begin{tabular}{c}
 \toprule 
-\multicolumn{3}{c}{complexity}\tabularnewline
+\multicolumn{1}{>{\centering}p{120mm}}{complexity}\tabularnewline
 \midrule 
-\noindent %
 \begin{tabular}{cc}
-\multicolumn{2}{c}{6}\tabularnewline
-$\ensuremath{\text{MSE=}0.12}$ & $R=-106.4$\tabularnewline
-\end{tabular} & \noindent %
-\begin{tabular}{cc}
-\multicolumn{2}{c}{11}\tabularnewline
-$\ensuremath{\text{MSE=}0.09}$ & $R=-100.6$\tabularnewline
-\end{tabular} & \noindent %
-\begin{tabular}{cc}
-\multicolumn{2}{c}{20}\tabularnewline
-$\ensuremath{\text{MSE}=0.05}$ & $\ensuremath{R=-98.1}$\tabularnewline
+\multicolumn{2}{c}{8}\tabularnewline
+$\ensuremath{\text{MSE=}0.07}$ & $R=-98.2$\tabularnewline
 \end{tabular}\tabularnewline
-\includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-6} & \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-11} & \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/space-20}\tabularnewline
-\noindent \begin{raggedright}
-The first big improvement is still a pure formula.
-\par\end{raggedright}
-\noindent \raggedright{}%
-\begin{minipage}[t]{42mm}%
+\includegraphics[height=3cm]{../../benchmarks/slurm_runs3_easy/MTC200_MSE_simonBestFix2/sfehs_eval/space-22}\tabularnewline
+\begin{minipage}[t]{120mm}%
 \noindent \begin{center}
-
-\plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$-0.014 \cdot \text{pos}^2$\\$-0.243$]][$0$,fixnode][$2$,fixnode]]} 
-\par\end{center}%
-\end{minipage} & \begin{raggedright}
-The first candidate with nested if-condition also achieves the most
-significant jump in the real evaluation. Conspicuous is a faulty reversal
-behavior shortly before the destination.
-\par\end{raggedright}
-\noindent \raggedright{}%
-\begin{minipage}[t]{42mm}%
-\noindent \begin{center}
-
-\plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel,samenode][$\text{if-then-else}$[$<$[vel][$-0.008$]][$0$][$\text{pos} \cdot {{\text{pos}^2}^2}$\\$-0.047$]]][$0$,fixnode][$2$,fixnode]]} 
-\par\end{center}%
-\end{minipage} & \begin{raggedright}
-The black box performance is even exceeded with this candidate.
-\par\end{raggedright}
-\noindent \raggedright{}%
-\begin{minipage}[t]{42mm}%
-\noindent \begin{center}
-
-\plforest{[$\text{if-then-else}$,fixnode[$<$,samenode[vel][$\text{if-then-else}$[$<$,samenode[vel,samenode][$-0.01$\\$ \cdot {\text{pos}^2}^2$]][$1.03$][[$\text{pos} -0.03$\\$-0.73 \cdot {{\text{pos}^2}^2}$]]]][$0$,fixnode][$2$,fixnode]]} 
+ \plforest{[$\text{if-then-else}$[$\lor$[$\land$[$\text{pos}<$\\$-0.35$][$0.013$\\$<\text{vel}$]][$\land$[$\text{pos}-$\\$(10.4 \cdot \text{vel})$\\$<-0.82$][$-\text{vel}<$\\$0.015$]]][$2$][$\text{if-then-else}$[$\land$[$\text{vel}<$\\$0.02$][$\land$[$>$[$\text{if-then-else}$[$\text{pos}>-0.38$][pos][$\text{pos}-9.9 \cdot \text{vel}$]][$-0.46$]][$\text{pos}<-0.05$]]][$0$][$\text{if-then-else}$[$\text{vel}<0$][$0$][$2$]]]]} 
 \par\end{center}%
 \end{minipage}\tabularnewline
 \bottomrule
 \end{tabular}
 \par\end{centering}
-\noindent \caption{\label{fig:simpleFix-3candidates} As one of the few runs, an additional
-if-condition is used to control the behavior more precisely, which
-makes it easier to distinguish the candidates.}
+\noindent \caption{\label{fig:mc-ifex-c8} Pareto candidate with 8 edits.}
 \end{figure}
+
+
+\end{frame}
+
+
+
 
 \section{Industrial Benchmark}
 
-%\begin{frame}{''s3m`` start}
-%
-% 
-%\begin{minipage}[t]{0.3\textwidth}
-%Action 0
-%\input{../img/IB/s3m/forest_a0_start.tex}
-%\end{minipage}
-%\begin{minipage}[t]{0.3\textwidth}
-%Action 1
-%
-%\input{../img/IB/s3m/forest_a2_start.tex}
-%
-%\end{minipage}
-%\begin{minipage}[t]{0.3\textwidth}
-%Action 2
-%
-%\input{../img/IB/s3m/forest_a2_start.tex}
-%\end{minipage}
-%
-%\end{frame}
+\begin{frame}{Industrial Benchmark - Results ''s3m``}
+ \centering
+ \includegraphics[height=0.85\textheight]{../img/inkscape/ib_vis/ib_pp_1.pdf}
+\end{frame}
+
+
+\begin{frame}{''s3m`` Industrial Benchmark - Results}
+ \centering
+ \includegraphics[height=0.85\textheight]{../img/inkscape/ib_vis/ib_pp_2.pdf}
+\end{frame}
+
+
+\begin{frame}{Industrial Benchmark - Results ''s3m``}
+ \centering
+ \includegraphics[height=0.85\textheight]{../img/inkscape/ib_vis/ib_pp_3.pdf}
+\end{frame}
+
+
+\begin{frame}{Industrial Benchmark - Results ''s3m``}
+ \centering
+ \begin{figure}[tph]
+  \includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf}\includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf}
+  \caption{\label{fig:ib-plots} The improvements of the start policy improve
+the real performance without bad outliers. As the IB requires merging
+multiple Pareto candidates, it is good advice to discard the first
+combinations.}
+ \end{figure}
+\end{frame}
 
 
 
 
 
-%\begin{frame}{''s3m`` Start Policy}
-%
-%\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-%
-%Action 0 & Action 1 & Action 2 \tabularnewline 
-%\hline 
-%\input{../img/IB/s3m/forest_a0_start.tex} & \input{../img/IB/s3m/forest_a1_start.tex} & \input{../img/IB/s3m/forest_a2_start.tex} \tabularnewline
-%\hline 
-%\end{tabular}
-%
-%\end{frame}
+\section{Discussion}
 
-
-%\begin{minipage}[t]{0.3\textwidth}
-%\end{minipage}
-
+\begin{frame}{Results Mountain Car vs. Industrial benchmark}
+ \centering
+ \begin{figure}[tph]
+ \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MSE_scratch/histograms/acthist_25.pdf}\includegraphics[height=5cm]{../../benchmarks/slurm_runs2/IB_MSE_scratch/IB_MSE_scratch_0/histograms/acthist_29.pdf}
+\caption{\label{fig:Histograms-mc-ib} Histograms presenting the deviation
+from the black box action in the MC (left) and the IB (right), both
+regarding the best available regular GP agent (MSE). MC agents have
+a very high success rate, while the best IB agent have lumps of failure
+on both sides.}
+\end{figure}
+\end{frame}
 
 
 
 
-% sfeh frame summary?
-
-
-\section*{Future work}
+\section{Future work}
 
 \begin{frame}
 \centering
 \includegraphics[width=0.9\linewidth]{../img/inkscape/explorative_regression_hill.pdf}
 \end{frame}
+
 
 
 \end{document}

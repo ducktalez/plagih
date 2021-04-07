@@ -570,6 +570,9 @@ status open
 
 \begin_layout Plain Layout
 
+
+\backslash
+FloatBarrier
 \end_layout
 
 \end_inset
@@ -968,6 +971,9 @@ status open
 
 \begin_layout Plain Layout
 
+
+\backslash
+FloatBarrier
 \end_layout
 
 \end_inset
@@ -1271,6 +1277,206 @@ ref{alg:gp-evolutionary-main}
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features booktabs="true" tabularvalignment="middle">
+<column alignment="left" valignment="top" width="26mm">
+<column alignment="left" valignment="top" width="10cm">
+<row>
+<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Evolution
+\end_layout
+
+\end_inset
+</cell>
+<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reproduction
+\end_layout
+
+\begin_layout Plain Layout
+(10%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+The candidate enters the next generation unchanged.
+\end_layout
+
+\begin_layout Plain Layout
+Good genes replicate and can be improved in further generations without
+ dying out.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mutation
+\end_layout
+
+\begin_layout Plain Layout
+(25%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+A random node in a tree is chosen and replaced with
+\end_layout
+
+\begin_layout Itemize
+(point): A matching substitute node
+\end_layout
+
+\begin_layout Itemize
+(branch): A randomly built branch (of arbitrary size)
+\end_layout
+
+\begin_layout Itemize
+(Gaussian): Random terminal floating-point adjustments
+\end_layout
+
+\begin_layout Plain Layout
+Mutations randomize a subset of genes in a tree as a mixture of reproduction
+ and randomization.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Crossover
+\end_layout
+
+\begin_layout Plain Layout
+(35%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Two parent trees exchange two random branches, creating two child trees
+ (see 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:crossover"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Plain Layout
+Unlike mutation, crossbreeding allows the best components of two parents
+ to cross.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Random trees
+\end_layout
+
+\begin_layout Plain Layout
+(30%)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Trees are randomly generated to replenish the population.
+\end_layout
+
+\begin_layout Plain Layout
+This constant stream of new contestants increases genetic diversity.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+A possible division of evolutionary strategies for the next generation.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:gp-Evolutionary-concepts"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1647,209 +1853,9 @@ end{algorithm}
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="5" columns="2">
-<features booktabs="true" tabularvalignment="middle">
-<column alignment="left" valignment="top" width="26mm">
-<column alignment="left" valignment="top" width="10cm">
-<row>
-<cell multicolumn="1" alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Evolution
-\end_layout
-
-\end_inset
-</cell>
-<cell multicolumn="2" alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Reproduction
-\end_layout
-
-\begin_layout Plain Layout
-(10%)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-The candidate enters the next generation unchanged.
-\end_layout
-
-\begin_layout Plain Layout
-Good genes replicate and can be improved in further generations without
- dying out.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Mutation
-\end_layout
-
-\begin_layout Plain Layout
-(25%)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-A random node in a tree is chosen and replaced with
-\end_layout
-
-\begin_layout Itemize
-(point): A matching substitute node
-\end_layout
-
-\begin_layout Itemize
-(branch): A randomly built branch (of arbitrary size)
-\end_layout
-
-\begin_layout Itemize
-(Gaussian): Random terminal floating-point adjustments
-\end_layout
-
-\begin_layout Plain Layout
-Mutations randomize a subset of genes in a tree as a mixture of reproduction
- and randomization.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Crossover
-\end_layout
-
-\begin_layout Plain Layout
-(35%)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Two parent trees exchange two random branches, creating two child trees
- (see 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:crossover"
-
-\end_inset
-
-).
-\end_layout
-
-\begin_layout Plain Layout
-Unlike mutation, crossbreeding allows the best components of two parents
- to cross.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Random trees
-\end_layout
-
-\begin_layout Plain Layout
-(30%)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Trees are randomly generated to replenish the population.
-\end_layout
-
-\begin_layout Plain Layout
-This constant stream of new contestants increases genetic diversity.
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-A possible division of evolutionary strategies for the next generation.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:gp-Evolutionary-concepts"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 The search space for candidates is limited to prevent a complexity bloat.
  Both the tree depth and the number of tree nodes are capped.
- The nodes can also be customly weighted; for example the default weighting
+ The nodes can also be user-defined weighted; for example, the default weighting
  of the commercial GP Framework 
 \begin_inset ERT
 status open
@@ -2247,6 +2253,22 @@ name "fig:grow-vs-full-method"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+FloatBarrier
 \end_layout
 
 \end_inset
@@ -7023,7 +7045,10 @@ The data for the symbolic regression are generated online, on the benchmark,
  All observable states and the associated actions are saved (
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "data-collection-for-benchmarks"
+reference "tab:The-generated-data"
+plural "false"
+caps "false"
+noprefix "false"
 
 \end_inset
 
@@ -7342,7 +7367,7 @@ $80/20$
  
 \begin_inset CommandInset label
 LatexCommand label
-name "data-collection-for-benchmarks"
+name "tab:The-generated-data"
 
 \end_inset
 
@@ -8825,6 +8850,22 @@ name "fig:mc-simple-candidates"
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+FloatBarrier
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Simple If-Acceleration with a Fixed Core
 \begin_inset CommandInset label
@@ -9514,8 +9555,7 @@ literal "true"
 
 \end_inset
 
-.
- 
+:
 \end_layout
 
 \begin_layout Standard
@@ -9644,12 +9684,17 @@ status open
 \align center
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/space-0.pdf
-	height 5cm
+	height 4cm
 
 \end_inset
 
 
 \end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Note Note
+status open
 
 \begin_layout Plain Layout
 \align center
@@ -9681,6 +9726,11 @@ leq$[vel][${-0.07
 cdot (
 \backslash
 text{pos}+0.38)^{2}+0.07}$]]][$2$,fixnode][$0$,fixnode]]} 
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -10349,7 +10399,8 @@ name "fig:mc-ifex-pareto"
 \end_inset
 
  All Pareto-efficient candidates are trustworthy (compared to the fully
- mutable version on the right).
+ mutable version on the right, which has some outliers in the online performance
+).
 \end_layout
 
 \end_inset
@@ -12829,6 +12880,22 @@ name "fig:operator-classification"
 \end_inset
 
 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+FloatBarrier
 \end_layout
 
 \end_inset

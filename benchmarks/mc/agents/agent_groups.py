@@ -42,7 +42,7 @@ class Good_Expert:
                     yyy = 0
                 else:
                     yyy = 2
-        # todo
+        # deletethis
         if xxx != yyy:
             raise Exception(f'oadsasdasdsad {xxx} {yyy}')
 

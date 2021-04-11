@@ -6,12 +6,21 @@ import sklearn.metrics as skm
 
 
 class GPKernel:
-
+    """
+    The "abstract" Kernel class for the GP process.
+    optional: creating another
+    """
     # def __init__(self, *args):
     #     self.eval_action = None
     #     pass
 
     def fitness_compare(self, fitness1, fitness2):
+        """
+        if fitness2 is None:
+            return True
+        else:
+            return True/False, DEPEND
+        """
         pass
 
     def better_fitness_relation(self, x, y):
@@ -223,6 +232,9 @@ class ClassificationKernel(GPKernel):
         return pred_label
 
     def fitness_compare(self, fitness1, fitness2):
+        """
+        todo: replace with pythonic way (__gt__ function above)
+        """
         if fitness2 is None:
             return True
         else:
@@ -230,9 +242,6 @@ class ClassificationKernel(GPKernel):
 
     def best_fitness_function(self, *args, **kwargs):
         return max(*args, **kwargs)
-
-    def tf_wrap_result(self, *args):
-        pass
 
     def tf_get_pairwise_fitness(self, solution, kernel_result, eval_action):
         """
@@ -259,7 +268,9 @@ class ClassificationKernel(GPKernel):
 
 
 class MatchKernel(GPKernel):
-
+    """
+    The match kernel does
+    """
     def __init__(self, *args):
         super().__init__(*args)
 

@@ -141,32 +141,11 @@ def label_bracket_beautification(label):
         label = f"${op[label]['latex1']}$"
     elif terminal_label_is_observation(label):  # node is a terminal - either observation or variable
         obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
-        obs_family = obs_family.replace('cartPos', 'pos')
-        obs_family = obs_family.replace('cartVel', 'vel')  # sfeh todo
         if obs_time is not None:
             label = f"{prelabel}{obs_family}$_{{{obs_time}}}$"
     else:
         label = f"${label_tex_replace_digits(label)}$"
     return label
-
-
-def label_bracket_extras(label, arity, modifiable):
-    """
-    from an "OG" tree node, add some bracket-tree extras
-    """
-    extras = ''
-    # sfeh that shit is bullshit
-    # # custom node design
-    # if arity == 0:
-    #     extras += ',terminal'
-    #     if terminal_label_is_observation(label):
-    #         extras += ',variable'
-    #     else:
-    #         extras += ',observation'  # especially this does not work
-
-    if not modifiable:
-        extras += ',fixnode'
-    return extras
 
 
 def latex_brackettree(tree, node_id=root_id):
@@ -177,9 +156,8 @@ def latex_brackettree(tree, node_id=root_id):
     """
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
     modifiable = tree_node_is_modifiable(tree, node_id)
-    extras = label_bracket_extras(label, arity, modifiable)
+    extras = '' if modifiable else ',fixnode'
     label_bra = label_bracket_beautification(label)
-    # label_bra = helper_format_brackets(label_bra)
     label_bra = "{" + label_bra + "}" + extras  # works better in latex-
 
     # now, append the recursion

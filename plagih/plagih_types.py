@@ -84,7 +84,7 @@ def choose_term(xtype, choose_obs, choose_distribution, float_decimals):
 def choose_operator(xtype, choose_oparray2, arity=None):
     """
     Randomly choosing an operator for a given xtype.
-    choose_oparray must be given, as they are different between runs.
+    choose_oparray2 must be given, as they are different between runs.
     arity can also be set optionally, e.g. for point mutation
     """
     func_list, probability_list = choose_oparray2[xtype][arity]

@@ -337,11 +337,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # #  todo
-    # lulzrow = {'parsim_sum': 27.0, 'parsims': [11.0, 6.0, 10.0], 'experiment': None, 'experiment_safe': None, 'experiment_r50': None, 'experiment_safe_r50': None,
-    #            'codes': ["((self.get_h('g', 8)*max(math.tanh(SetPoint), 0.091879))-max(0.197961, math.sqrt(self.get_h('v', 7))))", "max(math.tanh(-SetPoint), (self.get_h('g', 4)-self.get_h('g', 9)))",
-    #                      "(math.tanh(math.tanh(self.get_h('h', 4)))-((-self.get_h('f', 4)+self.get_h('f', 9))+math.sin(self.get_h('h', 9))))"], 'regress_sum': 2.504287,
-    #            'regress_vals': [0.915394, 0.80149, 0.787403]}
-    #
-    # lulz = mp_evall(lulzrow)
     main()

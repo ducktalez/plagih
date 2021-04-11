@@ -136,8 +136,7 @@ def eval_agent(agent, safe_eval=False, randomize=0, repeat_avg=1):
     Results: Daniel_29 -5270 (5611)
     """
 
-    discount_factor = 0.97
-    # discount_factor = 1  # todo
+    discount_factor = 0.97  # discount_factor = 1?
     t = 100  # time_horizon
     discount_len = -100
     sum_discounted_p = []

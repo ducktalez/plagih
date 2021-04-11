@@ -41,8 +41,8 @@ def thesis_plot_mc_comparisson():
     """
     Creates one single plot for the master thesis with the mountaincar results
     """
-    names = ['Sarsa 75', 'Sarsa 200', 'Sarsa 1000', 'Sarsa 10000', 'Momentum', 'Momentum (ge)', 'Parabolic']  # todo , 'if-Expert'
-    mc_steps = [103.41, 98.68, 106.78, 109.31, 119.41, 129.62, 102.61]  # todo , 100.3
+    names = ['Sarsa 75', 'Sarsa 200', 'Sarsa 1000', 'Sarsa 10000', 'Momentum', 'Momentum (ge)', 'Parabolic']  # sfeh , 'if-Expert'
+    mc_steps = [103.41, 98.68, 106.78, 109.31, 119.41, 129.62, 102.61]  # sfeh thesis , 100.3
     mc_reward = [-103.41, -98.68, -106.78, -109.31, -119.41, -129.62, -102.61]
 
     with plt.rc_context(rc=pyplot_rc_tex):

@@ -404,9 +404,10 @@ class Ifte(Plabel):
     c_weight = 0.1
     tf = tf.where
     latex1 = '\\text{if-then-else}'
-    latexF = 'if({} then {} else {})'
+    latexF = '\\text{{ if }} ({}) \\text{{ then }} ({}) \\text{{ else }} ({})'  #'if({} then {} else {})'
     sym_str = 'Ifte({}, {}, {})'
     pycode = '({} if {} else {})'
+
 
 
 class Min(Plabel):
@@ -482,3 +483,4 @@ class BoolConstant(Plabel):
         self.latexF = f'{value}'
         self.sym_str = value
         self.pycode = value
+

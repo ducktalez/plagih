@@ -48,6 +48,7 @@ class Good_Expert:
 
         return yyy
 
+
 class SimonsTesting:
 
     def decide(self, observation):

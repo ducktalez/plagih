@@ -672,6 +672,74 @@ def invent_label_list_depth(xtype_root, depth_goal, choose_obs, choose_oparray2,
     return result_label_list, result_arity_list, result_xtype_list
 
 
+def invent_label_list_depth2(xtype_root, depth_goal, choose_obs, choose_oparray2, choose_distributions, float_decimals, min_depth=0, full_or_grow=None):
+    """
+    TODO REPLACE OLD VERSION
+    xtype_root = ...
+    """
+
+    tbdo_xtypes = [xtype_root]
+    result_label_list = []
+    result_arity_list = []
+    result_xtype_list = []
+
+    # Build a list with labels in row, and a list with their arities
+    for depth in range(min_depth, depth_goal):
+        next_xtype_list = []
+
+        if depth < depth_goal - 1:
+
+            functerm_list = ['func']
+            for _ in range(len(tbdo_xtypes) - 1):  # 1 -> at least one function
+                if full_or_grow == 'grow' and depth >= min_depth:
+                    functerm_list.append(random.choice(['func', 'term']))  # sfeh choice always 50:50? terminal-factor?
+                elif full_or_grow == 'full':
+                    functerm_list.append('func')
+                else:
+                    raise
+            np.random.shuffle(functerm_list)  # ['term', 'func', 'term', ...]
+
+            for ii, xtype in enumerate(tbdo_xtypes):
+                if functerm_list[ii] == 'term':
+                    label = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals)
+                    # xtype stays the same 'arity-2' version
+                    arity = 0
+                elif functerm_list[ii] == 'func':
+                    label = choose_operator(xtype[-2:], choose_oparray2, arity=None)
+                    arity = label_get_arity(label)
+                    xtype = op[label]['xtype']
+                else:
+                    raise
+
+                # xtype-'To-do' list for the next depth to give values to these functions
+                if label == 'Ifte':
+                    next_xtype_list.extend(['2b', '2f', '2f'])
+                else:
+                    tmp_xtype = xtype_get_from_label(label)
+                    child_type = tmp_xtype[:2][::-1]  # the input of our function "reverted" is the xtype
+                    for _ in range(0, arity):  # when arity==2, add 2 times
+                        next_xtype_list.append(child_type)
+
+                # Add the label to the result list
+                result_label_list.append(label)
+                result_arity_list.append(arity)
+                result_xtype_list.append(xtype)
+        else:  # now, we are on the lowest dim_y.
+
+            for xtype in tbdo_xtypes:  # Build terminals now.
+                label, arity = choose_term(xtype[-2:], choose_obs, choose_distributions, float_decimals), 0
+
+                # Add the label to the result list
+                result_label_list.append(label)
+                result_arity_list.append(arity)
+                result_xtype_list.append(xtype)
+
+        # Finally, update the list for the next round
+        tbdo_xtypes = next_xtype_list[:]
+
+    return result_label_list, result_arity_list, result_xtype_list
+
+
 def choose_build_size(size_mode, mean_min_max_var, tree=None, node_id=None, force=None):
     """
     Very unified utility function that returns the required tree size from the following parameters

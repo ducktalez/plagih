@@ -435,8 +435,6 @@ class Max(Plabel):
     pycode = 'max({}, {})'
 
 
-
-
 class Observation(Plabel):
 
     arity = 0
@@ -446,16 +444,16 @@ class Observation(Plabel):
         self.xtype = '2f' if obs_type == float else '2b'
         self.type =obs_type
         self.c_weight = c_weight
-        family, temp = observation_get_family_and_time(obs_name, none_return=None)
+        family, temp, prelabel = observation_get_family_and_time(obs_name, none_return=None)
         self.observation_family = family
         self.observation_index = temp
         self.obs_indizes = obs_indizes
         if temp is None:
-            self.latex1 = f'{{\\text{{{family}}}}}'
-            self.latexF = f'{{\\text{{{family}}}}}'
+            self.latex1 = f'{prelabel}{{\\text{{{family}}}}}'
+            self.latexF = f'{prelabel}{{\\text{{{family}}}}}'
         else:
-            self.latex1 = f'{{\\text{{{family}}}_{{{temp}}}}}'
-            self.latexF = f'{{\\text{{{family}}}_{{{temp}}}}}'
+            self.latex1 = f'{prelabel}{{\\text{{{family}}}_{{{temp}}}}}'
+            self.latexF = f'{prelabel}{{\\text{{{family}}}_{{{temp}}}}}'
         self.sym_str = obs_name
         self.pycode = obs_name
 

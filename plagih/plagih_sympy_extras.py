@@ -49,13 +49,13 @@ Useful information:
     is_MatMul = False
 """
 
-from sympy import Function, sympify
+from sympy import Function, sympify, symbols
 # from sympy.core.numbers import ComplexInfinity
 
 
 class Ifte(Function):
     """
-    plagih_sympify('Ifte(a, b, c)')
+    my_sympify('Ifte(a, b, c)')
     """
     nargs = 3
     is_Function = True
@@ -69,7 +69,7 @@ class Ifte(Function):
             return
 
     def _sympy_(self, *args):
-        return eval(self, *args)  # a, b, c don't know why c is unexpected. works though.
+        return eval(self, *args)
 
 
 class Mini(Function):
@@ -183,6 +183,7 @@ class Notb(Function):
 
 class Square(Function):
     """
+
     """
     nargs = 1
     is_Function = True
@@ -233,20 +234,35 @@ class Round(Function):
         return eval(self, a)
 
 
-# attention: exactly same capitals/letters! (gets replaced)
-local_sympy_dict = {'Ifte': Ifte,
-                    'Mini': Mini,
-                    'Maxi': Maxi,
-                    'Andb': Andb,
-                    'Orb': Orb,
-                    'Notb': Notb,
-                    'Square': Square,
-                    'Usub': Usub,
-                    'usub': Usub,  # sfeh delete this
-                    'Round': Round}
+class SignX(Function):
+    """
+    """
+    nargs = 1
+    is_Function = True
+    is_real = True
+
+    @classmethod
+    def eval(cls, a):
+        if a.is_number:  # sympify(a) evaluates first... but i guess it is evaluated already
+            return round(a)  # see
+        else:
+            return
+
+    def _sympy_(self, a):
+        return eval(self, a)
 
 
-def plagih_sympify(function_string):
+def sympy_symbol_defaults(name_list):
+    """
+    workaround.
+    sympy expressions like 'sign(((cartPos * cartVel) ** 151))' take forever.
+    ignoring complex numbers with this trick (use this as locals)
+    """
+    symloc = {str(x): symbols(str(x), real=True, imaginary=False) for x in name_list}
+    return symloc
+
+
+def plagih_sympify(function_string, eval_locals=None):
     """
     Sympy bug #1:
     It is a bug in sympy, read here https://stackoverflow.com/a/58530435/5626139
@@ -257,7 +273,22 @@ def plagih_sympify(function_string):
     throws an exception.
     -> Try-except block for this case
     """
+
+    # attention: exactly same capitals/letters! (gets replaced)
+    local_sympy_dict = {'Ifte': Ifte,
+                        'Mini': Mini,
+                        'Maxi': Maxi,
+                        'Andb': Andb,
+                        'Orb': Orb,
+                        'Notb': Notb,
+                        'Square': Square,
+                        'Usub': Usub,
+                        'usub': Usub,  # sfeh delete this
+                        'Round': Round}
+    local_sympy_dict.update(eval_locals or {})
+
     try:
+        # return sympify(sympify(function_string, locals=local_sympy_dict))
         return sympify(sympify(function_string, locals=local_sympy_dict))
     except Exception as ex:
         # raise
@@ -267,9 +298,30 @@ def plagih_sympify(function_string):
 
 if __name__ == "__main__":
     print('Running sympify example')
-    exprs = ['Square((Mini(-2.176629, Shift_2) - abs(Fatigue_5)))',
+    exprs = ['Square((Mini(-2.176629, Shift_2) - Abs(Fatigue_5)))',
              'Round(-123.333334234) + Round(Shift_2)',
              '1 < Maxi(2, Ifte(1 < a, 1, 1))']
 
     expr = '(((0.326675 * Consumption_2) - Shift_9) + (Ifte((-Shift_9 < Consumption_5), Shift_7, Ifte((Square(Gain_6) < Maxi(Fatigue_2, Ifte((Shift_9 < Shift_4), -Gain_3, Gain_5))), Shift_9, Shift_4))))'
-    print(plagih_sympify(expr))
+    expr = '-Consumption_0*sign(re(asdW**2)) - 0.004073'
+    expr = 'Mini(-1 - 1 + sqrt(1)'
+    expr = 'tanh(1.556)'
+    expr = 'Maxi(2.202197, (Abs(cartVel) - sqrt(cartVel)))'
+    # expr = 'sign(((a * b) ** 10))'  # takes too long
+    # expr = '0.307785*Consumption_2 - 0.779543*Gain_3 + 0.779543*Gain_9 - Shift_9 + 0.779543*Ifte(-Shift_8 < Consumption_5, Shift_7, Shift_4)'
+    obs = {'cartVel': 0.5, 'cartPos': -0.8}
+    # obs = ['cartPos', 'cartVel']
+    # symloc = {x: sympy.symbols(x, real=True, imaginary=False) for x in obs}
+    # sympy_symbol_dict = {'a': sympy.symbols('a', real=True, imaginary=False),
+    #                      'b': sympy.symbols('b', real=True, imaginary=False)}
+    # sympify('sign(((cartPos * cartVel) ** 151))', symloc)
+
+    sympex = plagih_sympify(expr, eval_locals=obs)
+
+    # print(plagih_sympify(expr))
+    print(sympex)
+
+"""
+sfeh
+Lastly, it is recommended that you not use I, E, S, N, C, O, or Q 
+"""

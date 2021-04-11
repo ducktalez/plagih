@@ -1,48 +1,20 @@
-\begin{tikzpicture}[]
-\begin{axis}[	height = 0.25\linewidth,	width = 0.5\linewidth, minor tick= {-10,-9,...,10},  grid=minor,  axis lines=middle, 
-        xmin=-5, xmax=5, xlabel={deviation}, ymin=-0.0,  ylabel={cost}, ytick={0,5},
-%ticks=none,  % remove axis ticks
-xtick={-5,-1,0,1,5},  ymax=10,     
-xtick={-5,-1,0,1,5},  ymax=5.0, 
-linstyle/.style = {semithick, samples=1001, blue}
-]
-%\tikzset{mystyle/.style={draw,circle,label={[fill=yellow]0:#1}}}
+\documentclass{article}
+\usepackage{graphicx}
 
+\usepackage{amsmath}
 
-    %\addplot [domain=-5.0:5.0, linstyle] {abs(x)};
-    %\addplot [domain=-5.0:5.0, linstyle] {min(abs(x), 2)};
+\begin{document}
+\begin{figure}
 
-% rounding the result
-% {min(abs(round(x)), 2)}
-   % \addplot [linstyle] coordinates{(-10, 2)(-1.5, 2 )};      \addplot [linstyle] coordinates{(-1.5, 1)(-0.5, 1)};      \addplot [linstyle] coordinates{(-0.5, 0)(0.5, 0)};  
-   % \addplot [linstyle] coordinates{(0.5, 1)(1.5, 1)};      \addplot [linstyle] coordinates{(1.5, 2)(2.5, 2 )};      \addplot [linstyle] coordinates{(1.5, 2)(10, 2 )};  
+\includegraphics{01_regular}\includegraphics{02_boarders}
+\includegraphics{03_rounding}\includegraphics{04_discrete}
+\includegraphics{05_onlyFalse}\includegraphics{06_fourAreas}
+\includegraphics{07_onlyGoodExploration}\includegraphics{08_noExploration}
+\includegraphics{09_littleExploration}
 
-%todo rounding + small value
+\includegraphics{10_MSE}\includegraphics{11_MSE_boarders}
 
+\caption{lol}
+\end{figure}
 
-    %\addplot [domain=-5.0:5.0, linstyle] {max(abs(round(x)), 0.5)};
-    %\addplot [domain=-5.0:-0.5, linstyle] {-x};
-    %\addplot [domain=-0.5:0.5, linstyle] {0};
-    %\addplot [domain=0.5:5, linstyle] {x};
-
-% 
-%\addplot [linstyle] coordinates{(-5, 5)(-0.5, 0.5 )(-0.5, 0 )(0.5, 0 )(0.5, 0.5 )(5, 5 )};
-
-% goal-agent
-%\addplot[mark=*, mark size=2, color=green] coordinates{(0, 0)};
-% known-agent
-\addplot[mark=*, mark size=2,  color=blue] coordinates{(-2, 0)};
-% todo label below?
-
-%\addplot [domain=-5:-2, linstyle] {abs(2*x)-2*1};
-%\addplot [domain=-2:0, linstyle] {abs(x};
-%\addplot [domain=0:2, linstyle] {abs(x)};
-%\addplot [domain=2:5, linstyle] {abs(3*x)-2*2};
-
-\addplot [linstyle] coordinates{(-2, 10)(-2, 2)(0, 0)(2, 2)(10, 10)};
-
-%\addplot [linstyle] coordinates{(-2, 10)(-2, 2 )(0, 0 )(2, 2 )(2, 10 )};
-%\addplot [linstyle] coordinates{(-2, 10)(-2, 2 )(0, 0 )(2, 2 )(10, 20 )};
-
-\end{axis}
-\end{tikzpicture}
+\end{document}

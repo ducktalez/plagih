@@ -5,9 +5,9 @@ from plagih.plagih_tree import *
 import re
 
 
-def latex_treeviz_full(tikz_forest_list):
+def latex_treeviz_full_document(tex_input, doc_border=',border=5pt'):
     """
-    Latex standalone document of forest trees.
+    Creating Latex standalone document of forest trees.
     Possible \documentclass options:
     [varwidth=\\maxdimen,convert,border=5pt]{standalone}  # -> newpage does not exist
     {article}     # -> tree_sep should be \newpage
@@ -15,22 +15,39 @@ def latex_treeviz_full(tikz_forest_list):
     sfeh: would be nice to show dimension.difference plots, maybe? (currently: no.)
     """
 
-    # TODO color used variables (allow colormap?)
+    if isinstance(tex_input, list):
+        tex_body = ' '.join(tex_input)  # sfeh there was a \n does this work now? color used variables (allow colormap?)
+    else:
+        tex_body = tex_input
 
-    forest_trees = ' '.join(tikz_forest_list)  # sfeh todo there was a \n does this work now?
+    latex_newcommand_forest = '\\newcommand{\\plforest}[1]{{\\begin{forest}   ' \
+                       'for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   ' \
+                       'terminal/.style={rectangle,},   ' \
+                       'fixnode/.style={fill=blue!60,},   ' \
+                       'observation/.style={rectangle,},   ' \
+                              'variable/.style={rectangle,},   ' \
+                              'samenode/.style={fill=blue!40,},   ' \
+                              'newnode/.style={fill=green!60,},   ' \
+                              'changenode/.style={orange=green!60,},   ' \
+                              'nodeinsert/.style={fill=green!50,},   ' \
+                       'nodechanged/.style={fill=orange!50,}, #1 ' \
+                       '\\end{forest}}}' \
 
-    latex_doc_forest = '\\documentclass[varwidth=\\maxdimen,convert,border=5pt]{standalone}' \
-                       '\n\\usepackage{forest}' \
-                       '\n\\usepackage{amsmath}' \
-                       '\n\\begin{document}' \
-                       f'\n{forest_trees}' \
-                       '\n\\end{document}'
+    latex_doc_forest = f'\\documentclass[varwidth=\\maxdimen,convert{doc_border}]{{standalone}}\n' \
+                       '\\usepackage{forest}\n' \
+                       '\\usepackage{array}\n' \
+                       '\\usepackage{longtable}\n' \
+                       '\\usepackage{amsmath}\n' \
+                       f'{latex_newcommand_forest}\n' \
+                       '\\begin{document}\n' \
+                       f'{tex_body}\n' \
+                       '\\end{document}'
     return latex_doc_forest
 
 
 def tree_viz_get_nel(tree):
     """
-    Deprecated.
+    Not in use.
     Returns nodes, edges and labels to visualize a tree with NetworkX or pygraphviz. Similar to deap gp visualisation.
     Deprecated? -> Used for NetworkX- which is not used as pygrapviz could not be installed on windows. Latex is used now.
     E. g. the tree with labels [+, 1, 2]
@@ -123,9 +140,11 @@ def label_bracket_beautification(label):
     if label in op:  #
         label = f"${op[label]['latex1']}$"
     elif terminal_label_is_observation(label):  # node is a terminal - either observation or variable
-        obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
+        obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
+        obs_family = obs_family.replace('cartPos', 'pos')
+        obs_family = obs_family.replace('cartVel', 'vel')  # sfeh todo
         if obs_time is not None:
-            label = f"{obs_family}$_{{{obs_time}}}$"
+            label = f"{prelabel}{obs_family}$_{{{obs_time}}}$"
     else:
         label = f"${label_tex_replace_digits(label)}$"
     return label
@@ -136,13 +155,14 @@ def label_bracket_extras(label, arity, modifiable):
     from an "OG" tree node, add some bracket-tree extras
     """
     extras = ''
-    # custom node design
-    if arity == 0:
-        extras += ',terminal'
-        if terminal_label_is_observation(label):
-            extras += ',variable'
-        else:
-            extras += ',observation'
+    # sfeh that shit is bullshit
+    # # custom node design
+    # if arity == 0:
+    #     extras += ',terminal'
+    #     if terminal_label_is_observation(label):
+    #         extras += ',variable'
+    #     else:
+    #         extras += ',observation'  # especially this does not work
 
     if not modifiable:
         extras += ',fixnode'
@@ -172,47 +192,20 @@ def latex_brackettree(tree, node_id=root_id):
     return bracket_string
 
 
-def latex_tighttree_get_brackets(tree, node_id=root_id):
+def latex_brackettree_tight(tree, node_id=root_id):
     """
     creates a tex file with a tikz figure of a tree.
 
     Labeling edges: , edge label = {node[midway, font =\\scriptsize]{If...}}
     """
-    extras = ''
     label, arity, xtype = tree_node_get_lax_v3(tree, node_id)
 
     child_ids = tree_node_get_childs(tree, node_id)
     for child_id in child_ids:
-        label += (latex_tighttree_get_brackets(tree, child_id))
-    else:
-        bracket_string = f'[{label}]'
+        label += (latex_brackettree_tight(tree, child_id))
+    bracket_string = f'[{label}]'
 
     return bracket_string
-
-
-def latex_tree_get_forest(tree, tight_viz=True):
-    """
-    whole procedure from tree to forest core
-    """
-
-    tree = tree.copy()
-
-    if tight_viz:
-        tree_tight = latex_get_tighttree(tree)
-        bracket_tree = latex_tighttree_get_brackets(tree_tight)
-    else:
-        bracket_tree = latex_brackettree(tree)
-
-    forest_complete = f'\n\\begin{{forest}}' \
-                      f'\n  for tree={{child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20}},' \
-                      f'\n  terminal/.style={{rectangle,}},' \
-                      f'\n  fixnode/.style={{fill=blue!60,}},' \
-                      f'\n  observation/.style={{rectangle,}},' \
-                      f'\n  variable/.style={{rectangle,}},' \
-                      f'\n {bracket_tree}' \
-                      f'\n\\end{{forest}}\n'
-
-    return forest_complete
 
 
 def tex_label_beautify_end(label):
@@ -220,37 +213,46 @@ def tex_label_beautify_end(label):
     if label in op:
         label = op[label]['latex1']
 
-    label = f'{{{label}}}'
+    label = f'{label}'
     return label
 
 
-def tree_get_expr_latextight(tree, node_id=root_id):
+def latex_tight_node(tree, node_id=root_id, klammern=False):
     """
-
+    Fit the tree in one latex expression (aka a single node)
     """
     label = tree_node_get_label(tree, node_id)
 
-    if tree_node_get_arity(tree, node_id) > 0:
-        child_tex_list = [tree_get_expr_latextight(tree, cc) for cc in tree_node_get_childs(tree, node_id)]
-        label = f"{{{op[label]['latexF'].format(*child_tex_list)}}}"
-    else:
-        if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
-            obs_family, obs_time = observation_get_family_and_time(label, none_return=None)
-            if obs_time is not None:
-                label = f"{{\\text{{{obs_family}}}_{{{obs_time}}}}}"  # workaround
-            else:
-                label = f"{{\\text{{{obs_family}}}}}"  # workaround
+    if tree_node_get_arity(tree, node_id) >= 1:
+        childs = tree_node_get_childs(tree, node_id)
+        if len(childs) >= 2 and any([tree_node_get_arity(tree, cc) >= 1 in [] for cc in childs]):
+            next_klammern = True
         else:
-            label = f"{{{label_tex_replace_digits(label)}}}"
-        return label
+            next_klammern = False
 
-    return label
+        child_tex_list = [latex_tight_node(tree, cc, klammern=next_klammern) for cc in childs]
+
+        return_label = f"{op[label]['latexF'].format(*child_tex_list)}"  # sfeh deleted {{}} around the
+        if klammern and label in latex_inline:  # ['+', '-', '*', '**', '==', '!=', '<', '<=', '>', '>=', 'Andb', 'Orb', 'Xor']
+            return_label = f'({return_label})'
+
+    else:
+        # sfehsfeh family colored? tex color?
+        if terminal_label_is_observation(label):  # node is a terminal - either observation or variable
+            obs_family, obs_time, prelabel = observation_get_family_and_time(label, none_return=None)
+            if obs_time is not None:
+                return_label = f"{prelabel}\\text{{{obs_family}}}_{obs_time}"  # workaround
+            else:
+                return_label = f"{prelabel}\\text{{{obs_family}}}"  # workaround
+        else:
+            return_label = f"{label_tex_replace_digits(label)}"
+
+    return return_label
 
 
-def latex_get_tighttree(tree):
+def latex_tree_semitight(tree):
     """
-    reduce expressions of large trees
-
+    reduce expressions of large trees where it makes sense (according to me)
     """
 
     node_dict = dict()  # key: node_id, value: number of nodes to paste into the viz-node
@@ -298,13 +300,10 @@ def latex_get_tighttree(tree):
                 label = tree_node_get_label(tree, node_id)
                 label = label_bracket_beautification(label)
             elif node_dict[node_id] > 1:  # complete expression node
-                # expr_raw = tree_get_expr_raw(tree, node_id)
-                # label = expr_sympify(expr_raw)
-                label = tree_get_expr_latextight(tree, node_id=node_id)
+                label = latex_tight_node(tree, node_id=node_id)
                 # label = helper_format_brackets(label)
-                label = '{$' + label + '$}'
+                label = f'${label}$'
                 arity = 0
-                # label = re.sub('_', '{\\\\textunderscore}', label)   # sfeh workaround
             else:
                 raise
 
@@ -346,3 +345,12 @@ def latex_tight_from_labellist(vizlabel_list, xtype_list, modify_list=None, arit
             core[N_modify][i] = 1
     tree = tree_convert_pcore_to_karoo(core)
     return tree
+
+
+if __name__ == "__main__":
+    """
+    test stuff
+    """
+    testtr = karoo_tree_from_expr('sin(4+vel)')
+    viszviz = latex_tight_node(testtr)
+    print(viszviz)

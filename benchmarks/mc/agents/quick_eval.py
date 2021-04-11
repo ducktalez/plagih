@@ -1,4 +1,6 @@
 """
+sfeh-specific file. not required otherwise.
+
 pos = observation0
 velocity = observation1
 pos, vel = observation
@@ -10,12 +12,13 @@ import matplotlib.patches as patches
 import matplotlib.colors as colors
 import numpy as np
 import gym
+import math
 import pickle
+# import multiprocessing as mp
+from plagih.file_interaction import *
 
-import tikzplotlib
 
-
-def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False):
+def mtc_plot_decisions_space(agent, folder, name, cmap='bwr', dummy=False, n=100, nan_style=None, no_colorbar=False, backup_results1=None):
     """
     plotting the decision space
     """
@@ -30,22 +33,26 @@ def mtc_plot_decisions_space(agent, name='space_test', folder='img/', cmap='bwr'
 
     env.close()
 
-    @np.vectorize
-    def decide(position, velocity):
-        action = agent.decide((position, velocity))
-        return action
+    if backup_results1 is None:
 
-    results = decide(positions, velocities)
-    if dummy:
-        _, _, result_dummy = mtc_heatmap_helper(agent, 256, n, dummy=dummy)
-        results = results * result_dummy
+        @np.vectorize
+        def decide(position, velocity):
+            action = agent.decide((position, velocity))
+            return action
+
+        results = decide(positions, velocities)
+        result_dummy = None
+        if dummy:
+            _, _, result_dummy = mtc_heatmap_helper(agent, 256, n, dummy=dummy)
+            results = results * result_dummy
+        backup_results1 = (results, result_dummy)
+    else:
+        results, result_dummy = backup_results1
 
     ticks = np.linspace(0, 2, 3)
     boundaries = np.linspace(-0.5, 2.5, 4)
-
     mtc_plot(x_linspace, y_linspace, results, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
-
-    return
+    return backup_results1
 
 
 def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
@@ -102,81 +109,71 @@ def mtc_heatmap_helper(agent, num_splits, n, dummy=None):
     return x_linspace, y_linspace, result
 
 
-def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder='img/', splits=128, dummy=False, cmap='Greys', boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
+def mtc_plot_heatmap(agent, n=100, name='heatmap_test', folder=Path.cwd() / 'img/', splits=128, dummy=False, cmap='Greys', boundaries=None, ticks=None, nan_style=None, no_colorbar=False):
+    """
 
+    """
     x_linspace, y_linspace, result = mtc_heatmap_helper(agent, splits, n, dummy=dummy)
     mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, nan_style=nan_style, no_colorbar=no_colorbar)
-
     return
 
 
 def mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=None, ticks=None, vmin=None, vmax=None, nan_style=None, no_colorbar=False):
-    # generating plot
-    fig, ax = plt.subplots()
+    """
+    Mountaincar-specific space-plot
+    plots the whole state space
+    """
     if vmin and vmax:
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
     else:
         norm = None
-    c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm)
-    ax.set_xlabel('position')
-    ax.set_ylabel('velocity')
 
-    if no_colorbar:
-        boundaries = np.array([0, 1])  # don't know why, but makes the bar disappear somehow
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        plt.yticks(MTC_XTICKS[0], MTC_XTICKS[1])
+        plt.xticks(MTC_YTICKS[0], MTC_YTICKS[0])
+        c = ax.pcolormesh(x_linspace, y_linspace, result, cmap=cmap, norm=norm, rasterized=True)
+        ax.set(xlabel='position', ylabel='velocity')
 
-    if dummy:
-        mask_nan = np.ma.masked_where(result == np.nan, result)
-        ax.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1)
+        if no_colorbar:  # sfeh weird solution... placeholder for the space
+            boundaries = np.array([0, 1])  # don't know why, but makes the bar disappear somehow
+
+        if dummy:
+            mask_nan = np.ma.masked_where(result == np.nan, result)
+            ax.pcolor(x_linspace, y_linspace, mask_nan, hatch=None, cmap=cmap, alpha=1, rasterized=True)
+
         fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # needed, plot is stretched otherwise
 
-    else:
-        fig.colorbar(c, ax=ax, boundaries=boundaries, ticks=ticks)  # insert empty colorbar, plot is stretched otherwise
+        # get data you will need to create a "nan_style patch" to your plot
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        xy = (xmin, ymin)
+        width = xmax - xmin
+        height = ymax - ymin
 
-    # get data you will need to create a "nan_style patch" to your plot
-    xmin, xmax = ax.get_xlim()
-    ymin, ymax = ax.get_ylim()
-    xy = (xmin, ymin)
-    width = xmax - xmin
-    height = ymax - ymin
+        p = patches.Rectangle(xy, width, height, fill=True, zorder=0.5, rasterized=True)  # "zorder=-10" -> nan_style
 
-    # create the patch and place it in the back of countourf (zorder!)
+        if nan_style:
+            ax.set(facecolor=nan_style[0], color=nan_style[0])
+            p.set(hatch=nan_style[1], edgecolor=nan_style[2], rasterized=True)
+            fig.rcParams['hatch.linewidth'] = nan_style[3]
+        else:
+            p.set(hatch='//', color='xkcd:dark grey', rasterized=True)
 
-    p = patches.Rectangle(xy, width, height, fill=None, zorder=0.5)  # "zorder=-10" -> nan_style
+        ax.add_patch(p)
 
-    if nan_style:
-        ax.set_facecolor(nan_style[0])
-        p.set_color(nan_style[0])
-        p.fill = True
-        p.set_hatch(nan_style[1])
-        p.set_edgecolor(nan_style[2])
-        plt.rcParams['hatch.linewidth'] = nan_style[3]
-    else:
-        # p.fill = False
-        # p.set_color()  # default 'white' is okay
-        # ax.set_facecolor('xkcd:light grey')
-        p.set_color('xkcd:dark grey')
-        p.fill = True
-        p.set_hatch('//')
-        # p.set_edgecolor('xkcd:dark grey')
-        # plt.rcParams['hatch.linewidth'] = 0.2
-    ax.add_patch(p)
+        path_mcmeshplot = path_make_dir(folder / f'{name}.pdf')
+        fig.savefig(path_mcmeshplot)
+        print(f'saved {path_mcmeshplot}')
+        plt.close('all')
 
-    # saving as png
-    folder = Path(folder)
-    if not Path.is_dir(folder):
-        Path.mkdir(folder)
-    plt.savefig(Path(folder) / f'{name}.png', dpi=300)
-    # plt.savefig(Path(folder) / f'{name}.svg')
-    # try:
-    #     tikzplotlib.save('TEST.tex'.format(name))
-    # except Exception as ex:
-    #     print('tikzplotlib save failed for mtc decision plots, exception: {}'.format(ex))
-    plt.close()
+    return
 
 
 def mtc_play(agent, render=False, n=1):
-    # if mp4:
-    #     env = wrappers.Monitor(env, Path('videos/{}/'.format(time.time() % 100000)))
+    """
+    going through n amounts of MC-runs
+    """
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -202,38 +199,41 @@ def mtc_play(agent, render=False, n=1):
             fail_sum += 1
     reward_average = reward_sum / n
     env.close()
+    print(f'asd {np.average(list_episode_rewards)}')
 
     return reward_average, fail_sum, list_episode_rewards
 
 
-def mtc_plot_episode_performance(agent, name='episode perfoemance', folder=Path('img/'), n=100, color='b'):
-    """
-    plot the performance of all tested episodes (e.g. for showing outliers)
-    """
-    if not Path.is_dir(folder):
-        Path.mkdir(folder)
-    #
-    # mtc_plot_decisions_space(agent, name, folder=folder)
-    _, _, reward_list = mtc_play(agent, n=n)
+# def mtc_plot_episode_performance(agent, name='episode performance', folder=Path('img/'), n=100, color='b'):
+#     """
+#     plot the performance of all tested episodes (e.g. for showing outliers)
+#     delete this?
+#     """
+#     if not Path.is_dir(folder):
+#         Path.mkdir(folder)
+#     #
+#     # mtc_plot_decisions_space(agent, name, folder=folder)
+#     _, _, reward_list = mtc_play(agent, n=n)
+#
+#     x = np.arange(n)
+#     plt.plot(x, reward_list, color=color)
+#
+#     plt.xlabel('episode')
+#     plt.ylabel('reward')
+#     plt.title(name)
+#
+#     plt.ylim(-200, -80)
+#
+#     plt.savefig(folder / f'{name}.pdf')
 
-    x = np.arange(n)
-    plt.plot(x, reward_list, color=color)
 
-    plt.xlabel('episode')
-    plt.ylabel('reward')
-    plt.title(name)
-
-    plt.ylim(-200, -80)
-
-    plt.savefig(folder / f'{name}.png', dpi=300)
-    # plt.savefig(folder / f'{name}.svg')
-
-
-def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_splits=256, name='diff', folder='img/',
-                         abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False):
+def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_splits=256, name='diff', folder=Path.cwd() / 'img/',
+                         abs_diff=True, cmap='bwr', nan_style=None, no_colorbar=False, backup_results2=None):
     """
     Creates the difference-plot
     """
+    if backup_results2:
+        pass
     np.random.seed(0)
     env = gym.make('MountainCar-v0')
     env.seed(0)
@@ -245,13 +245,23 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
 
     positions, velocities = np.meshgrid(x_linspace, y_linspace)
 
-    @np.vectorize
-    def decide_diff(position, velocity):
-        action_a = agent.decide((position, velocity))
-        action_b = diff_agent.decide((position, velocity))
-        return action_a - action_b
+    if backup_results2 is None:
+        @np.vectorize
+        def decide_diff(position, velocity):
+            action_a = agent.decide((position, velocity))
+            action_b = diff_agent.decide((position, velocity))
+            return action_a - action_b
 
-    result = decide_diff(positions, velocities)
+        result = decide_diff(positions, velocities)
+
+        if dummy_result is not None:
+            result = result * dummy_result  # just transfer all 'nan', done here as x*nan=nan, x*1=1
+            dummy = True
+        else:
+            dummy = False
+        backup_results2 = (result, dummy)
+    else:
+        result, dummy = backup_results2 
 
     if abs_diff:
         # result = abs(result)
@@ -264,46 +274,117 @@ def mtc_plot_differences(agent, diff_agent, dummy_result=None, boarders=1, num_s
         vmax = +2 * boarders
         ticks = np.linspace(-(2*boarders), 2*boarders, 1+min(4*boarders, 10))
         boundaries = np.linspace(-(0.5+2*boarders), 0.5+2*boarders, 2+min(4*boarders, 10))
+    mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=dummy, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
 
-    # if boarders > 1:
-    #     boundaries = boundaries * boarders
-    #     ticks = ticks * boarders
-    #     ticks = None  #
-
-    if dummy_result is None:
-        mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=False, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
-    else:
-        result = result * dummy_result  # just transfer all 'nan', done here as x*nan=nan, x*1=1
-        mtc_plot(x_linspace, y_linspace, result, cmap, folder, name, dummy=True, boundaries=boundaries, ticks=ticks, vmin=vmin, vmax=vmax, nan_style=nan_style, no_colorbar=no_colorbar)
-
-    return
+    return backup_results2
 
 
-def eval_agent_list(agent_list, goal_agent, n=40, folder=Path('img/')):
+def eval_agent_list(agent_list, goal_agent, n=100, dir_save=Path('img/')):
     """
     Automatically evalueate gp-agents (difference plot, decision plot, performance)
     """
-    if not Path.is_dir(folder):
-        Path.mkdir(folder)
+    if not Path.is_dir(dir_save):
+        Path.mkdir(dir_save)
 
     agent_performance = []
     _, _, sarsa_dummy = mtc_heatmap_helper(goal_agent, 256, n, dummy=1)
 
     for name, agent in agent_list:
         print('Evaluating agent: {}'.format(name))
-        mtc_plot_decisions_space(agent, name=name, folder=folder, dummy=True)
-        mtc_plot_differences(agent, goal_agent, dummy_result=sarsa_dummy, boarders=1, name='diff-{}'.format(name), folder=folder, abs_diff=False)
+
+        mtc_plot_decisions_space(agent, folder=dir_save, name=name, dummy=True)
+        mtc_plot_differences(agent, goal_agent, dummy_result=sarsa_dummy, boarders=1, folder=dir_save, name=f'diff-{name}', abs_diff=False)
         avg_reward, fails, _ = mtc_play(agent, n=n)
-        agent_performance.append([name, avg_reward, fails])
+        agent_performance.append([name, avg_reward, fails, dir_save / name])
 
     y = [x[1] for x in agent_performance]
     x = list(range(len(agent_performance)))
 
     plt.bar(x, y)
     # names = [x[0] for x in agent_performance]; plt.xticks(x, names)
-    plt.savefig(folder / 'agent_perf.png', dpi=300)
-    # plt.savefig(folder / 'agent_perf.svg')
+    plt.savefig(dir_save / 'agent_perf.pdf')
 
-    summary_text = '\n'.join(['Tree {} has real average reward {} and failed {} times.'.format(x[0], x[1], x[2]) for x in agent_performance])
-    with (folder / 'summary.txt').open('w') as file:
+    summary_text = '\n'.join([f'Tree {x[0]} has real average reward {x[1]} and failed {x[2]} times.' for x in agent_performance])
+    with (dir_save / 'summary.txt').open('w') as file:
         file.write(summary_text)
+
+
+def auto_evaluate_run_end(root_dir, sarsa_agent, n=100):
+    """
+    asd
+    """
+
+    class DummyMcAgent:
+
+        def __init__(self, pycode):
+            self.mcAction = pycode
+
+        def decide(self, input):
+            cartPos, cartVel = input
+            try:
+                mc_actn = eval(self.mcAction)
+            except:
+                raise  # sfeh
+            return int(round(max(0, min(2, mc_actn))))
+
+    try:
+        sarsa_dummy, bur_lut = pickle_load(root_dir / 'backup/mcevalbackup.p')  # sarsa_dummy  (results, result_dummy)   (result, dummy)
+    except Exception:
+        bur_lut = {}
+        _, _, sarsa_dummy = mtc_heatmap_helper(sarsa_agent, 256, n, dummy=1)
+
+    dir_save = path_make_dir(root_dir / 'sfehs_eval')
+
+    gp_backup_data = pickle_load(root_dir / 'backup/backup.p')
+    gen_id, pareto, pop_base, monitor_pd, a_helping_dict = gp_backup_data
+
+    agent_performance = {}
+
+    for (parsim, fitness, cooltree) in pareto:
+        agent_name = f'{parsim:.0f}'
+        print(f'Evaluating MC Agent: {parsim:.0f}')
+        pycode = cooltree.get_pycode()
+        mc_gent = DummyMcAgent(pycode)
+        try:
+            # bur1, bur2, avg_reward, fails = bur_lut.get(parsim, (None, None, None, None))
+            # if avg_reward is None:  # or fails is None:
+            bur1 = bur2 = None
+            avg_reward, fails, _ = mtc_play(mc_gent, n=n)
+
+            # sfehsfeh save  time comment this todotodo todo
+            bur1 = mtc_plot_decisions_space(mc_gent, folder=dir_save, name=agent_name, dummy=True, backup_results1=bur1)
+            bur2 = mtc_plot_differences(mc_gent, sarsa_agent, folder=dir_save, name=f'diff-{agent_name}', dummy_result=sarsa_dummy, boarders=1, abs_diff=False, backup_results2=bur2)  # diff at start for diashow
+            mtc_plot_decisions_space(mc_gent, folder=dir_save, name=f'space-{agent_name}', dummy=False)
+            bur_lut[parsim] = (bur1, bur2, avg_reward, fails)
+            agent_performance[parsim] = [parsim, fitness, avg_reward, fails, None, None]
+        except Exception as ex:
+            print(f'MTC eval failed because of: {ex}')
+            agent_performance[parsim] = [parsim, fitness, np.nan, np.nan, None, None]
+
+    # pickle_dump(root_dir / 'backup/mcevalbackup.p', (sarsa_dummy, bur_lut))
+
+    with plt.rc_context(rc=pyplot_rc_tex):
+        fig, ax = plt.subplots()
+        agentperflist = list(zip(*agent_performance.values()))
+        x = agentperflist[0]
+        y = agentperflist[2]
+        tuples = [[parsim, fitness] for (parsim, fitness, cooltree) in pareto]
+        xx, yy = np.array(tuples).T
+
+        ax.step(xx, yy, linestyle='dotted', marker='.', where='post', label='regression error')
+        ax.set(xlabel='complexity', ylabel='regression error', ylim=(0, 1))
+
+        ax2 = ax.twinx()
+        ax2.set(ylim=(-95, -200), xlim=(0, 35))
+        ax2.step(x, y, linestyle='None', marker='x', label='average reward')
+        ax2.set(ylabel='online reward')
+
+        h1, l1 = ax.get_legend_handles_labels()
+        h2, l2 = ax2.get_legend_handles_labels()
+        ax.legend(h1+h2, l1+l2, loc='upper right')
+
+        fig.savefig(dir_save / f'evaled_overview.pdf')
+
+    yaml_dump(dir_save / 'summary.yaml', agent_performance)
+
+    return agent_performance

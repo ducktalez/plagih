@@ -27,28 +27,9 @@ def label_get_arity(node_label):
 
 def xtype_equi_outcome(a_xtype, b_xtype):
     """
-    Dummy. Returns, whether two xtypes are equal
+    Dummy. Returns, whether two xtypes have the same outcome
     """
-    if a_xtype[-2:] == b_xtype[-2:]:
-        equal = True
-    else:
-        equal = False
-    return equal
-
-
-def xtype_get_converters(xtype):
-    """
-    convert b-to-a dummy
-    """
-    # 'lf left is boolean, give a converter to my type'
-
-    if '2b' in xtype:
-        return 'Ftob', 'Btof'
-    if '2f' in xtype:
-        return 'Btof', 'Ftob'
-    else:
-        print('e', 'Wrong data_csv_path type? Should be 2b or 2f, but is {}'.format(xtype))
-        raise
+    return a_xtype[-2:] == b_xtype[-2:]
 
 
 def random_choose_tempobs(obs_list, max_hist=10):
@@ -114,12 +95,12 @@ def choose_operator(xtype, choose_oparray2, arity=None):
     return ops
 
 
-def xtypes_from_labels(label_list, obs_krazy=None):
-    xtype_list = [xtype_get_from_label(label, obs_krazy) for label in label_list]
+def xtypes_from_labels(label_list, obs_infos=None):
+    xtype_list = [xtype_get_from_label(label, obs_infos) for label in label_list]
     return xtype_list
 
 
-def xtype_get_from_label(label, obs_krazy=None):
+def xtype_get_from_label(label, obs_infos=None):
     """
     returns xtype for a label
     if you are not 100% sure that it is a function.
@@ -132,7 +113,7 @@ def xtype_get_from_label(label, obs_krazy=None):
     else:
         try:
             label = label[1:] if label[0] == '-' else label
-            xtype = obs_krazy[label]
+            xtype = obs_infos[label]['xtype']
         except:
             xtype = '2f'
 

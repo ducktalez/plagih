@@ -1,1 +1,6 @@
 run_examples/
+/kessi_deletable.py
+/benchmarks/slurm_runs/
+/benchmarks/slurm_runs2/
+/start_all_slurm_sbatch_jobs.sh
+/benchmarks/#lol MTC200_MAE_simonBest/

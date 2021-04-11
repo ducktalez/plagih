@@ -43,7 +43,7 @@ def print_warning(message_type, text, print_type=None):
     if message_type == 'w':
         print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # completely yellow
     else:
-        print(f'{BColors.WARNING}Warning ({message_type}):{BColors.RESET} {text}')  # only "Warning" yellow
+        print(f'{BColors.WARNING}Warning ({message_type}): {text}{BColors.RESET}')  # only "Warning" yellow
     return
 
 

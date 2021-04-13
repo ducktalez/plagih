@@ -162,10 +162,7 @@ def main():  # argv sys.argv[1:]
 
     args = parser.parse_args()
 
-    """
-    Update the config
-    """
-    conf = GpConfig(args)
+    conf = GpConfig(args)  # Update the config with the possibly loaded input args
 
     prepared_run = args.prepared_run
     # self.name = args.name or self.root_dir.resolve().name  # sfeh name? probably there are better names

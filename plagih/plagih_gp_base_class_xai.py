@@ -382,17 +382,19 @@ class ExplainableGP(object):
         Special condition to exit the evolve-loop
         1. when >100 generations, no new pareto entries were found
         """
-        if self.monitor_df['gens_since_last_pareto'].iloc[-1] > 100:
-            print('SFEH This condition made your program exit!')
-            return True
-        else:
+        try:
+            if self.monitor_df['gens_since_last_pareto'].iloc[-1] > 100:
+                print('SFEH This condition made your program exit!')
+                return True
+            else:
+                return False
+        except Exception:
             return False
 
     def plagih_gp_run(self, gen_additionally):
         """
         regular plagih run
         """
-
         if gen_additionally:
             printdummy = copy.deepcopy(self.conf.gen_max)
             self.conf.gen_max = max(self.conf.gen_max, self.gen_id + gen_additionally)
@@ -455,10 +457,15 @@ class ExplainableGP(object):
         """
 
         if self.origin_cooltree is not None:
-
+            """
+            Origin exists, the population is the origin only
+            """
             self.pop_append(self.origin_cooltree)  # sfeh why not :P
 
         else:
+            """
+            No origin, starting a new population from scratch
+            """
             total_rate = sum([x['evolve_rate'] for x in self.evolve_random.values()])
 
             for tag, evolve_specs in self.evolve_random.items():
@@ -534,10 +541,7 @@ class ExplainableGP(object):
                     old_xtype = tree_node_get_xtype(new_tree, old_node)
                     build_size = choose_build_size(size_mode, mean_min_max_var, tree=new_tree, node_id=old_node)
 
-                    label_list, arity_list, xtype_list = self.invent_label_list(size_mode, old_xtype, build_size, full_or_grow)
-
-                    c_core = Core_From_Labels(label_list, arity_list, xtype_list)
-                    core_insert = c_core.get_uninstanced_core()
+                    core_insert = self.invent_core(size_mode, old_xtype, build_size, full_or_grow)
                     branch_nodes_ids = tree_node_get_branch(new_tree, old_node, karoo=True)
                     new_tree = tree_insert_subtree(new_tree, core_insert, branch_nodes_ids, karoo=True)
                     new_tree = tree_prune_depth(new_tree, self.conf.tree_depth_max, self.env_vars.choose_obs, self.choose_distributions, self.conf.float_decimals)
@@ -935,8 +939,6 @@ class ExplainableGP(object):
         # hist, bins = np.histogram(histogram_data, bins=bins, weights=pairwise_fitness)
         """
 
-        # def plot_agent_histogram()
-
         action_bins = self.kernel.histogram_bins(self.env_vars.eval_action.minmax)
         expr_sym = cooltree.get_expr_sym()
         used_observations = cooltree.get_observation_list()
@@ -1170,9 +1172,31 @@ class ExplainableGP(object):
 
         return tree
 
-    def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow):
+    # def invent_label_list(self, size_mode, first_xtype, build_size, full_or_grow):
+    #     """
+    #     Creates a random label list.
+    #     "depth": creates a tree with a desired depth
+    #     "nodes": creates a tree with a desired amount of nodes
+    #     """
+    #     if 'depth' in size_mode:
+    #         # sfeh warning: Attention with this one. can get quite large with depth based
+    #         label_list, arity_list, xtype_list = invent_label_list_depth(first_xtype, build_size,
+    #                                                                      self.env_vars.choose_obs, self.choose_oparray2,
+    #                                                                      self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+    #
+    #     elif 'nodes' in size_mode:
+    #
+    #         label_list, arity_list, xtype_list = invent_label_list_nodes(first_xtype, build_size,
+    #                                                                      self.env_vars.choose_obs, self.choose_oparray2,
+    #                                                                      self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
+    #     else:
+    #         raise Exception('Known full_or_grow was not found for building random trees.')
+    #
+    #     return label_list, arity_list, xtype_list
+
+    def invent_core(self, size_mode, first_xtype, build_size, full_or_grow):
         """
-        Creates a random label list.
+        Creates a random core.
         "depth": creates a tree with a desired depth
         "nodes": creates a tree with a desired amount of nodes
         """
@@ -1189,7 +1213,10 @@ class ExplainableGP(object):
                                                                          self.choose_distributions, float_decimals=self.conf.float_decimals, full_or_grow=full_or_grow)
         else:
             raise Exception('Known full_or_grow was not found for building random trees.')
-        return label_list, arity_list, xtype_list
+
+        core = Core_From_Labels(label_list, arity_list, xtype_list).get_uninstanced_core()
+
+        return core
 
     def helper_evolve_params_branch(self, call_params):
         """
@@ -1258,19 +1285,17 @@ class ExplainableGP(object):
                 old_branch = tree_node_get_branch(tree, node_id, karoo=True)
                 build_size = build_split[i]
 
-                label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow)
-
-                c_core = Core_From_Labels(label_list, arity_list, xtype_list)
-                core = c_core.get_uninstanced_core()
+                # label_list, arity_list, xtype_list = self.invent_label_list(size_mode, first_xtype, build_size, full_or_grow)
+                core = self.invent_core(size_mode, first_xtype, build_size, full_or_grow)
                 tree = tree_insert_subtree(tree, core, old_branch, karoo=True)
         else:
             action_xtype = self.env_vars.eval_action.xtype
             build_size = choose_build_size(size_mode, mean_min_max_var, force='branch')
 
-            label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow)
-
-            p_tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list)
-            tree = p_tree.get_uninstanced_tree()
+            # label_list, arity_list, xtype_list = self.invent_label_list(size_mode, action_xtype, build_size, full_or_grow)
+            core = self.invent_core(size_mode, action_xtype, build_size, full_or_grow)
+            tree = tree_convert_pcore_to_karoo(core)
+            # tree = Ptree_karoo(label_list, xtype_list, arity_list=arity_list).get_uninstanced_tree()
 
         return tree
 

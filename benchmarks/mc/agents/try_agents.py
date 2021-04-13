@@ -31,8 +31,7 @@ mountain_agents = [('simple', SimpleAgent()),
                    ('Good Expert', Good_Expert()),
                    ('TestCombined', TestCombined()),
                    ('test_tmp', TestTmp()),
-                   ('test', SimonsCheckpoints()),
-                   ('SimonTesting', SimonsTesting())]
+                   ('test', SimonsCheckpoints())]
 
 
 # eval_agent_list([('lelel_MTC_simple13', MTC_simple13())])

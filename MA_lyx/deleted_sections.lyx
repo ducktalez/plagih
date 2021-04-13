@@ -1406,6 +1406,36 @@ status open
 
 \begin_layout Plain Layout
 \align center
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/extern/lrp_frauenhofer_wolf_0.png
+	lyxscale 50
+	height 25mm
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename img/extern/lrp_frauenhofer_wolf_1.png
+	lyxscale 50
+	height 25mm
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Graphics
 	filename img/extern/RLP_frauenhofer_palmes0.png
 	lyxscale 50

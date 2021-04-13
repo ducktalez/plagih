@@ -6,6 +6,7 @@ cooltree splits the karoo tree into the
 - meta-info (fitness, parsimony, tree-id, ...) and the
 - core (coolcore)
 The core of the tree, which "is" the tree, is stored recursively
+Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 """
 
 
@@ -34,6 +35,7 @@ class CoolCore:
     """
     The core is the structure of a plagih gp-tree.
     It recursively holds the nodes of a tree; every tree has a list of potential children.
+    Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
     """
 
     def __init__(self, label=None, is_fix=False, complete=False, arity=None, xtype=None, childs=None, depth=None,
@@ -41,14 +43,14 @@ class CoolCore:
 
         xtype = xtype if xtype else xtype_get_from_label(label)
         arity = label_get_arity(label) if arity is None else arity
-        type_inputs = float if xtype[-2:] == 'f2' else bool  # sfeh
 
         self.label = label
-
         # directly related to the label
         self.arity = arity
-        self.input_types = [bool, float, float] if label == 'Ifte' else [type_inputs] * arity
-        self.type_output = float if xtype[-2:] == '2f' else bool  # sfeh
+
+        # type_inputs = float if xtype[-2:] == 'f2' else bool  # sfeh
+        # self.input_types = [bool, float, float] if label == 'Ifte' else [type_inputs] * arity
+        # self.type_output = float if xtype[-2:] == '2f' else bool  # sfeh
         self.xtype = xtype  # obsolete?
 
         self.is_fix = is_fix
@@ -61,8 +63,6 @@ class CoolCore:
         self.nodepath = nodepath if nodepath else []  # go to node x (sfeh: this was a deque?)
         self.depth = depth
         self.childs_depth_max = None
-
-        self.label_type = type_inputs
 
     def finalize(self):
         self.finalize_set_depth()
@@ -93,18 +93,16 @@ class CoolCore:
         self.xtype = new_core.xtype
         self.childs = new_core.childs
 
-        type_inputs = float if new_core.xtype[-2:] == 'f2' else bool  # sfeh
         self.arity = label_get_arity(new_core.label) if new_core.arity is None else new_core.arity
-        self.input_types = [bool, float, float] if new_core.label == 'Ifte' else [type_inputs] * self.arity
-        self.type_output = float if self.xtype[-2:] == '2f' else bool
-        self.xtype = new_core.xtype  # obsolete?
-        self.label_type = type_inputs
+        # type_inputs = float if new_core.xtype[-2:] == 'f2' else bool  # sfeh
+        # self.input_types = [bool, float, float] if new_core.label == 'Ifte' else [type_inputs] * self.arity
+        # self.type_output = float if self.xtype[-2:] == '2f' else bool
 
         self.is_fix = new_core.is_fix
 
         self.complete = new_core.complete  # if the node is correct/done/okay
 
-        self.childs = new_core.childs if new_core.childs else []  # maybe must be updateds recursively
+        self.childs = new_core.childs if new_core.childs else []  # maybe must be updated recursively
 
         # changes after insertion
         # self.nodepath = new_core.nodepath if nodepath else []  # go to node x (sfeh: this was a deque?)  # sfeh not possible at the end!
@@ -466,6 +464,19 @@ class CoolTree:
         core = self.core.get_labellist()
         return hash(','.join([str(x) for x in core]))
 
+    def __len__(self):
+        """
+        The amount of nodes
+        """
+        return len(self.core)
+
+    def __str__(self):
+        """
+        Printing the nodes as nested array structure.
+        # only printing the nodes, no meta
+        """
+        return f"{self.core}"
+
     # def set_meta(self, meta):
     #     self.history.append(self.meta)
     #
@@ -490,6 +501,9 @@ class CoolTree:
             return None
 
     def get_layer_nodelist(self):
+        """
+        [+,[*,-]]
+        """
         max_depth = self.core.childs_depth_max
         label_layer_list = []
         for depth in range(0, max_depth + 1):
@@ -497,6 +511,9 @@ class CoolTree:
         return label_layer_list
 
     def get_layer_labellist(self):
+        """
+
+        """
         layerlist = self.get_layer_nodelist()
         labellayerlist = []
         for depth_list in layerlist:
@@ -527,12 +544,6 @@ class CoolTree:
         self.meta.expr_sym = self.get_expr_sym()
         self.meta.parsimony = None  # save origin apted in root?
         self.meta.fitness = None
-
-    def __len__(self):
-        """
-        The amount of nodes
-        """
-        return len(self.core)
 
     def get_apted_notation(self):
         return self.core.get_apted_notation()
@@ -595,13 +606,6 @@ class CoolTree:
                 break
 
             self.core.node_insert_width(node)
-
-    def __str__(self):
-        """
-        Printing the nodes as nested array structure.
-        # only printing the nodes, no meta
-        """
-        return f"{self.core}"
 
     def get_nodes_at_depth(self, lvl_goal, only_mutable=False, get_closest_depth=False):
         """
@@ -813,9 +817,8 @@ def cooltree_from_labellist(label_list, modify_list=None):
 def coolcore_from_expr(expr, obs_infos):
     label_list = ast_convert_from_expr(expr, build=True)
     xtype_list = xtypes_from_labels(label_list, obs_infos)
-    p_tree = Ptree_karoo(label_list, xtype_list)
-    tree = p_tree.get_uninstanced_tree()
-    coolcore = coolcore_from_oldtree(tree)
+    array_tree = Ptree_karoo(label_list, xtype_list).get_uninstanced_tree()
+    coolcore = coolcore_from_oldtree(array_tree)
     return coolcore
 
 

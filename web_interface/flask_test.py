@@ -11,8 +11,8 @@ def index():
 
 @app.route('/rest')
 def rest_example():
-    tdic = {'key1': 'qwer',
-            'key2': 'tzui',
+    tdic = {'ticket_id': 'qwer',
+            'user': 'sfeh1',
             'key3': 'xxx',
             'key4': 'yyy'}
 

@@ -1,5 +1,5 @@
 from flask import Flask
-
+from flask import jsonify
 
 app = Flask(__name__)
 
@@ -10,13 +10,21 @@ def index():
 
 
 @app.route('/rest')
-def rest_example():
-    tdic = {'ticket_id': 'qwer',
+def rest_dummy():
+    tdic = {'ticketid': 'qwer',
             'user': 'sfeh1',
             'key3': 'xxx',
             'key4': 'yyy'}
+    return jsonify(tdic)
 
-    return tdic
+
+@app.route('/restlist')
+def rest_list():
+    tdic = [{'ticketid': 'qwer',
+             'user': 'sfeh1',
+             'key3': 'xxx',
+             'key4': 'yyy'}]
+    return jsonify(tdic)
 
 
 if __name__ == '__main__':

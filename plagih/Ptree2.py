@@ -8,8 +8,7 @@ cooltree splits the karoo tree into the
 The core of the tree, which "is" the tree, is stored recursively
 Example core: [+, 1, [*, [-, 2, 3], 2]] = 1 + ((2-3) * 2)
 """
-
-
+import itertools
 from collections import deque
 from plagih.plagih_tree import *
 from plagih.tree_distances.tree_edit_distance import apted_distance
@@ -60,11 +59,14 @@ class CoolCore:
         self.childs = childs if childs is not None else []  # maybe must be updateds recursively
 
         # changes after insertion
-        self.nodepath = nodepath if nodepath else []  # go to node x (sfeh: this was a deque?)
+        self.nodepath = nodepath if nodepath else []  # go to node x (sfeh: this was a deque?) e.g. [0, 1, 0]
         self.depth = depth
-        self.childs_depth_max = None
+        self.childs_depth_max = None  # sfeh, is this automatically correct? always?
 
     def finalize(self):
+        """
+
+        """
         self.finalize_set_depth()
         self.finalize_set_nodepath([0])
         self.workaround_remove_tilde()
@@ -119,13 +121,57 @@ class CoolCore:
             nodepath_child = nodepath + [ii]
             child.finalize_set_nodepath(nodepath_child)
 
-    def get_labellist(self):
+    def get_labellist_breath(self):
+        """
+        Returns all labels in a core node
+        Breitensuche im Baum
+        """
         label_list = []
         max_depth = self.childs_depth_max
         for depth in range(0, max_depth + 1):
             labels_at_depth = [x.label for x in self.get_nodes_at_depth(depth)]
             label_list.extend(labels_at_depth)
         return label_list
+
+    def get_leafnodes_breath(self):
+        """
+        todo test
+        return the nodes on the lowest level (breath-first).
+        Might be operators if the tree is still in construction
+        ?? return node-positions or node-objects?
+        ===How?===
+        exit condition is "not having child nodes"
+        """
+        if not self.childs:
+            return [self.nodepath]  # returning as list, easiert to flatten later with itertools
+        else:
+            return list(itertools.chain(*[cc.get_leafnodes_breath() for cc in self.childs]))
+
+    def append_labellist_breath(self, nodelist):
+        """
+        appends a list of labels to the lowest tree level
+        """
+        # 1. get the nodes on the lowest level
+        leaf_positions = self.get_leafnodes_breath()
+
+        # if len(nodelist) != len(leaf_positions):algorithm
+        #     raise Exception(f'Leaf nodes do not match insert nodes ({len(nodelist)}, {len(leaf_positions)})')
+
+        # 2. iterate over the nodes; appending nodes as childs
+        for posid, label_i in zip(leaf_positions, nodelist):
+            coolcore_i = CoolCore(label=label_i)
+            self.nodepath_insert_branch(posid, coolcore_i)
+        return  # todo
+
+    def append_random_nodes(self, construction='full'):
+        """
+        """
+
+        if not self.childs:
+            return [self.nodepath]  # returning as list, easiert to flatten later with itertools
+        else:
+            return list(itertools.chain(*[cc.get_leafnodes_breath() for cc in self.childs]))
+        return  # todo
 
     def labellist_modifylist_from_coolcore(self):
         label_list = []
@@ -292,20 +338,51 @@ class CoolCore:
         return
 
     def find_me(self, nodepath):
+        """
+        Returns True if a nodepath exists
+        ===How?===
+        """
         try:
             self.childs[nodepath[0]].find_me(nodepath[1:])
         except:
             return True
 
-    def insert_branch(self, nodepath, coolbranch):
+    def get_node(self, nodepath):
+        """
+        find a node in a tree from its nodepath
+        """
+        if nodepath:
+            self.childs[nodepath[0]].get_node(nodepath[1:])
+        else:
+            return self
+
+    def nodepath_insert_branch(self, nodepath, coolbranch):
         """
         inserting a branch into the place of a node
         """
-
         if len(nodepath) > 1:
             self.childs[nodepath[0]].insert_branch(nodepath[1:], coolbranch)
         else:  # [1] -> set child 1
             self.childs[nodepath[0]] = coolbranch
+
+    def node_from_path(self, path_from_here):
+        """
+        example coordinates: [0, 2, 1] -> node is at depth 2, accessable by going to childs 0 -> 2 -> 1.
+        (root is always 0)
+        """
+        if path_from_here:
+            next_node = path_from_here[0]
+            path_from_here = path_from_here[1:]
+            return self.childs[next_node].get_from_path(path_from_here)
+        else:
+            return self
+
+    def node_add(self, nodepath, child):
+        """
+        adds a child-node to an existing node
+        """
+        node = self.node_from_path(nodepath)
+        node.child_append(child)
 
     def get_pycode(self):
 
@@ -334,7 +411,8 @@ class CoolCore:
 
     def get_apted_notation(self):
         """
-        {+{Ifte{True}{1}{2}}{3}}
+        Calculating the TED requires this (weird) representation
+        e.g. {+{Ifte{True}{1}{2}}{3}}
         """
 
         childargs = [cc.get_apted_notation() for cc in self.childs]
@@ -378,25 +456,6 @@ class CoolCore:
         self.childs_depth_max = max_depth
 
         return max_depth
-
-    def node_from_path(self, path_from_here):
-        """
-        example coordinates: [0, 2, 1] -> node is at depth 2, accessable by going to childs 0 -> 2 -> 1.
-        (root is always 0)
-        """
-        if path_from_here:
-            next_node = path_from_here[0]
-            path_from_here = path_from_here[1:]
-            return self.childs[next_node].get_from_path(path_from_here)
-        else:
-            return self
-
-    def node_add(self, nodepath, child):
-        """
-        adds a child-node to an existing node
-        """
-        node = self.node_from_path(nodepath)
-        node.child_append(child)
 
     def get_observation_list(self):
         my_return = []
@@ -461,7 +520,7 @@ class CoolTree:
         Hashing the label-list as string should be sufficient.
         Is there a chance for same hash values within oioulations? That would be very bad.
         """
-        core = self.core.get_labellist()
+        core = self.core.get_labellist_breath()
         return hash(','.join([str(x) for x in core]))
 
     def __len__(self):
@@ -568,12 +627,15 @@ class CoolTree:
         return expr
 
     def insert_branch(self, node_path, coolbranch):
+        """
+
+        """
         self.core.complete = False
 
         if len(node_path) == 1:  # [1] -> set child 1
             self.core = coolbranch
         else:
-            self.core = self.core.insert_branch(node_path[1:], coolbranch)
+            self.core = self.core.nodepath_insert_branch(node_path[1:], coolbranch)
         self.finalize_structure()
 
     def get_pycode(self):
@@ -859,7 +921,7 @@ def test_sdf():
     tree = cooltree_from_labellist(label_list, modify_list=modify_list)
     cooltree = CoolTree(coolcore_from_oldtree(tree))
     print(cooltree)
-    old_labels = cooltree.core.get_labellist()
+    old_labels = cooltree.core.get_labellist_breath()
     print(old_labels)
     # print([str(x) for x in platree2_from_oldversion(labels, modify_list=allowMods)])
 

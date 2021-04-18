@@ -94,7 +94,7 @@
 
 
 
-\section{Outline} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Outline} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}{Concept}
 \centering
@@ -103,37 +103,77 @@
 
 \begin{frame}{Reinforcement Learning}
 \centering
-\includegraphics[height=0.6\textheight]{img/agent-env.png} 
+The Environment
+ \begin{figure}
+  \includegraphics[height=0.25\textheight]{../img/rl_images/reinforcement_learning_diagram_sfeh_a4}
+  %\caption{The principles of reinforcement learning. An agent interacts with an environment that represents a Markov decision process.}
+ \end{figure}
+The Architecture\\
+ \includegraphics[height=0.3\textheight]{img/Artificial-Neural-Network-Deep-Learning-model.png}
+ \includegraphics[height=0.3\textheight]{img/connected-neurons-2.jpg}
 \end{frame}
 
 
 
 
-\section*{Reinforcement Learning} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Explainable AI} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}{Mountain Car Benchmark}
- \begin{table}[th]
+\begin{frame}{The Mountain Car Problem}
+ \begin{table}
  \begin{centering}
  \begin{tabular}{cccc}
- \multirow{6}{*}{\includegraphics[width=5cm]{../img/inkscape/mountaincar_dummy}} &  & \multicolumn{2}{c}{Observation space}\tabularnewline
+ \multirow{6}{*}{\includegraphics[width=5cm]{../img/inkscape/mountaincar_dummy}} &  & \multicolumn{2}{c}{Observation Space}\tabularnewline
  \cline{3-4} \cline{4-4} 
   &  & position & $[-1.2, 0.6]$\tabularnewline
   &  & velocity & $[-0.07, 0.07]$\tabularnewline
  \cline{3-4} \cline{4-4} 
   &  &  & \tabularnewline
-  &  & \multicolumn{2}{c}{action space}\tabularnewline
+  &  & \multicolumn{2}{c}{Action Space}\tabularnewline
  \cline{3-4} \cline{4-4} 
   &  & push & \{left, none, right\}\tabularnewline
  %workaround latex pdf format idk why &  &  & \tabularnewline
  \end{tabular}
  \par\end{centering}
- \caption{The main features of the Mountain car problem.}
+ %\caption{The main features of the Mountain car problem.}
 \end{table}
 \end{frame}
 
 
+\begin{frame}{A simple Mountain Car Program}
+ %``Accelerating towards the current direction''\\
+ \noindent\includegraphics[height=0.3\textheight]{img/program_into_GPtree.pdf}
+ %\fbox{\begin{minipage}[t]{0.35\columnwidth}
+ % \begin{algorithm}[H]
+ %  \eIf{cartVel $<$ 0}
+ %   {go left\;}
+ %   {go right\;}
+ % \end{algorithm}
+ %\end{minipage}}
+ %\plforest{[{$\text{if-then-else}$}[{$<$}[{vel}][{$0$}]][{$0$}][{$2$}]]}  
+   Potential improvements:\\
+   \begin{itemize}
+ 	\item Reverse early
+ 	\item Are two or three swings necessary?
+ 	\item Always accelerate
+   \end{itemize}
+\end{frame}
+
 
 \section*{Explainable AI} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Interpretability}
+``The ability to explain or to present in understandable terms to humans''\\
+\bigskip
+Manifestations (Doshi-Velez and Kim 17)
+ \begin{itemize}
+  \item Problem formulation
+  \item Evaluation level?
+  \item Task-related\\
+  (e.g. global/local, incompleteness, user expertise, time)
+  \item Method-related\\
+  (e.g. form/number/compositionality of cognitive chunks, monotonicity, uncertainty)
+ \end{itemize}
+\end{frame}
 
 \begin{frame}{Explanation Methods}
  \begin{tabular}{>{\raggedright}p{0.4\textwidth}>{\raggedright}p{0.4\textwidth}}
@@ -158,35 +198,23 @@
  \end{tabular}
 \end{frame}
 
-
 \begin{frame}{Example: Layerwise Relevance Propagation (LRP)}
  \begin{columns}
   \column{0.60\textwidth}
  \begin{figure}
   \includegraphics[width=0.9\textwidth]{img/lrp_example.pdf}
-  \caption{The LRP marks the decisive pixels in image classification tasks.}
+  \caption{LRP marks decisive pixels in image classification tasks.}
  \end{figure}
   \column{0.40\textwidth}
- \begin{itemize}
-  \item Relevance feedback in a NN
-  \item Marks the decisive pixels
-  \item Can provide local interpretability
- \end{itemize}
+   \begin{itemize}
+    \item Already known strategy
+    \item vague implications
+    \item local interpretability
+    \item no trust
+   \end{itemize}
+  \bigskip
+  $\rightarrow$ RL policies require\\global interpretability
  \end{columns}
-\end{frame}
-
-\begin{frame}{Interpretability}
-...the ability to explain or to present in understandable terms to humans.\\
-\bigskip
-Manifestations of ``interpretability'' (Doshi-Velez and Kim 17)
- \begin{itemize}
-  \item How is the problem formulation incomplete?
-  \item Level of evaluation? 
-  \item Task-related factors\\
-  (e.g. global/local, incompleteness, user expertise, time)
-  \item Method-related factors\\
-  (e.g. form/number/compositionality of cognitive chunks, monotonicity, uncertainty)
- \end{itemize}
 \end{frame}
 
 
@@ -198,18 +226,25 @@ Manifestations of ``interpretability'' (Doshi-Velez and Kim 17)
 
 \begin{frame}{Genetic Programming}
  \begin{columns}
-  \column{0.60\textwidth}
-   \begin{figure}
-    \includegraphics[height=0.6\textheight]{../img/inkscape/GP-mutations.pdf}
-	\caption{Branches between two selected trees of a population are recombined (crossover).}
-   \end{figure}
   \column{0.4\textwidth}
-   Evolutionary approach (population based)
+  Evolutionary algorithm\\
    \begin{itemize}
-	\item Selection
-    \item Mutation
+    \item Representation as trees
+    \item Population: 1000
+    \item Generations: 1000
+   \end{itemize}
+   \bigskip
+   Optimization of genes\\
+   \begin{itemize}
+    \item Selection (tournament)
+    \item Mutation (point, branch)
     \item Crossover
    \end{itemize}
+  \column{0.60\textwidth}
+   \begin{figure}
+    \includegraphics[height=0.5\textheight]{../img/inkscape/GP-mutations.pdf}
+	\caption{Crossover recombines branches between two selected trees of the population.}
+   \end{figure}
  \end{columns}
 \end{frame}
 
@@ -228,7 +263,7 @@ Manifestations of ``interpretability'' (Doshi-Velez and Kim 17)
 
 
 
-\section{Familiar Genetic Programming} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Familiar Genetic Programming} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}{Explainability Gap}
 \centering
@@ -240,41 +275,24 @@ Manifestations of ``interpretability'' (Doshi-Velez and Kim 17)
 \includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
 \end{frame}
 
-\begin{frame}{Tree Edit distance}
+\begin{frame}{Tree Edit Distance}
 \centering
 \includegraphics[height=0.75\textheight]{../img/inkscape/ted_operators.pdf}
 \end{frame}
 
 \begin{frame}{Fixed Core}
- %\includegraphics[height=0.89\textheight]{img/concept.png}  % aka 76m
- \centering
  \begin{figure}
   \includegraphics[width=0.6\linewidth]{../img/inkscape/fix_nodes_mutation.pdf}
-  \caption{}
+  \caption{A tree with fixed nodes (blue) which remain untouched by evolution and enable targeted expansion.}
  \end{figure}
 \end{frame}
 
-\begin{frame}{Fixed Core}
- \begin{figure}[th]
-  \plforest{[{$\text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]}  
-  \caption{The expert might want to only change the condition of the if-statement,
-as he can then better understand the distinction. In his start-up
-program, he would specify the nodes marked in dark blue as fixed so
-that they are not affected by the GP process.}
- \end{figure}
-\end{frame}
-
-\begin{frame}{Tight Tree Nodes}
-\centering
-\begin{figure}[th]
-\begin{centering}
-\begin{tabular}{ccc}
-\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$\div$}[{pos}][{$-1.834$}]][{$2.197$}]]} &  & \plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${\frac{\text{pos}}{-1.834}}$}}][{$2.197$}]]}\tabularnewline
-\end{tabular}
-\par\end{centering}
-\caption{Automatic visualization of a tree with all nodes and as a tight version.}
-\end{figure}
-\end{frame}
+%\begin{frame}{Tight Tree Nodes}
+%\begin{figure}[th]
+%\begin{table}{ccc}
+%\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{$\div$}[{pos}][{$-1.834$}]][{$2.197$}]]} &  & %\plforest{[{if-then-else}[{$<$}[{vel}][{$0$}]][{{${\frac{\text{pos}}{-1.834}}$}}][{$2.197$}]]}\end{tabular}\caption{Automatic visualization of a tree with all nodes and as a tight version.}
+%\end{table}
+%\end{frame}
 
 
 
@@ -285,27 +303,8 @@ that they are not affected by the GP process.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Evaluation}
+\section*{Evaluation}
 
-\begin{frame}{A simple Mountain Car Program}
- %``Accelerating towards the current direction''\\
- \includegraphics[height=0.3\textheight]{img/program_into_GPtree.pdf}
- %\fbox{\begin{minipage}[t]{0.35\columnwidth}
- % \begin{algorithm}[H]
- %  \eIf{cartVel $<$ 0}
- %   {go left\;}
- %   {go right\;}
- % \end{algorithm}
- %\end{minipage}}
- %\plforest{[{$\text{if-then-else}$}[{$<$}[{vel}][{$0$}]][{$0$}][{$2$}]]}  
-
-   Potential improvements:
-   \begin{itemize}
- 	\item Reverse early
- 	\item Are two or three swings necessary?
- 	\item Always accelerate
-   \end{itemize}
-\end{frame}
 
 \begin{frame}{Mountain Car ``Expert'' programs visualization}
 \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
@@ -315,7 +314,7 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
 \end{tabular}
 \end{frame}
 
-\begin{frame}{Mountain Car ``Black Box'' policy visualisation}
+\begin{frame}{Mountain Car ``Black Box'' policy visualization}
  SARSA + neural network
  \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
   75 Episodes & 200 Episodes & \tabularnewline
@@ -342,7 +341,27 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
  \end{columns}
 \end{frame}
 
-\begin{frame}{Mountain Car - Simple Agent Improvements}
+\begin{frame}{TED limitations}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \begin{tabular}{cc}
+    \multicolumn{2}{c}{TED=3}\tabularnewline
+    $\text{MSE}=\ensuremath{0.31}$ & R=-117.8\tabularnewline
+   \end{tabular}
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4}
+  \column{0.7\textwidth}
+   \plforest{[{$\text{if-then-else}$},samenode[{$<$},samenode[{vel},samenode][{$0$},samenode]][{$\div $}[{pos}][{$-1.8$}]][{$2$},terminal,observation]]} 
+ \end{columns}
+\end{frame}
+
+\begin{frame}{Fixed Core}
+ \begin{figure}[th]
+  \plforest{[{$\text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]}  
+  \caption{The expert might want to only change the condition of the if-statement, as he can then better understand the distinction. In his start-up program, he would specify the nodes marked in dark blue as fixed so that they are not affected by the GP process.}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Mountain Car - Simple Program}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -355,7 +374,7 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
  \end{columns}
 \end{frame}
 
-\begin{frame}{Mountain Car - Simple Program Improvements}
+\begin{frame}{Mountain Car - Simple Program}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -368,7 +387,7 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
  \end{columns}
 \end{frame}
 
-\begin{frame}{Mountain Car - Simple Program Improvements}
+\begin{frame}{Mountain Car - Simple Program}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -406,10 +425,9 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Industrial Benchmark}
+\section*{Industrial Benchmark}
 
 \begin{frame}{Industrial Benchmark}
- A benchmark for an industrial control system
  \begin{table}[tph]
   \begin{tabular}{lcc}\toprule 
     & MC & IB\tabularnewline\midrule
@@ -420,7 +438,8 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
    Stochasticity & - & state-dependent\tabularnewline
    Observable & fully & partially\tabularnewline\bottomrule
   \end{tabular}
-  \caption{\label{tab:mc-ib-comparisson}A comparison of the benchmarks used.}
+  \caption{Comparison between the Mountaincar and Industrial benchmark.}
+  \label{tab:mc-ib-comparisson}
  \end{table}
 \end{frame}
 
@@ -470,7 +489,7 @@ combinations.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Discussion}
+\section*{Discussion}
 
 \begin{frame}{Discussion: Mountain Car vs. Industrial Benchmark}
  \centering
@@ -488,13 +507,15 @@ on both sides.}
 
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Future work}
+\section*{Future Work}
 
-\begin{frame}
-\centering
-\includegraphics[width=0.9\linewidth]{../img/inkscape/explorative_regression_hill.pdf}
+\begin{frame}{Future work: Explorative Regression?}
+ \centering
+ \begin{figure}
+  \includegraphics[width=0.9\linewidth]{../img/inkscape/explorative_regression_hill.pdf}
+  \caption{The relationship to the phenotype of the expert solution could be considered in another regression.}
+ \end{figure}
 \end{frame}
 
 

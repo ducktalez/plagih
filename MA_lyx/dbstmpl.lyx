@@ -1491,7 +1491,7 @@ status open
 
 
 \backslash
-begin{algorithm}[H]   
+begin{algorithm}[tph]  
 \end_layout
 
 \begin_layout Plain Layout
@@ -3545,7 +3545,7 @@ status open
 
 
 \backslash
-begin{algorithm}[H] 
+begin{algorithm}[tph]
 \end_layout
 
 \begin_layout Plain Layout
@@ -4130,7 +4130,7 @@ status open
 
 
 \backslash
-begin{algorithm}[H] 
+begin{algorithm}[tph] 
 \end_layout
 
 \begin_layout Plain Layout
@@ -5298,7 +5298,7 @@ status open
 \begin_inset Text
 
 \begin_layout Plain Layout
-Observation space
+Observation Space
 \end_layout
 
 \end_inset
@@ -5470,7 +5470,7 @@ $[-0.07, 0.07]$
 \begin_inset Text
 
 \begin_layout Plain Layout
-action space
+Action Space
 \end_layout
 
 \end_inset
@@ -9541,6 +9541,19 @@ Preset Parabolic Bounding
 \begin_layout Standard
 This close-form preset policy was presented by Xiao and is a mathematical
  formula characterized by a parabolic upper and lower bound (
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+Algorithm~
+\backslash
+ref{alg:mc-xiao}
+\end_layout
+
+\end_inset
+
+,
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:xiao-origin-plot"
@@ -9559,6 +9572,10 @@ literal "true"
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -9629,6 +9646,118 @@ end{center}
 
 \end_inset
 
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[tph]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+SetAlgoLined
+\end_layout
+
+\begin_layout Plain Layout
+
+lowerBound $
+\backslash
+assign 
+\backslash
+min(-0.09(
+\backslash
+text{pos}+0.25)^2+0.03,0.3(
+\backslash
+text{pos}+0.09)^4-0.008)$
+\backslash
+;  
+\end_layout
+
+\begin_layout Plain Layout
+
+upperBound $
+\backslash
+assign -0.07(
+\backslash
+text{pos}+0.38)^2+0.07)$
+\backslash
+;  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+uIf{lowerBound  $
+\backslash
+leq 
+\backslash
+text{vel} 
+\backslash
+leq$ upperBound}
+\end_layout
+
+\begin_layout Plain Layout
+
+{left
+\backslash
+;}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Else{right
+\backslash
+;}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{Parabolic mountain car formula}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+label{alg:mc-xiao}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -10247,7 +10376,20 @@ Optimized If-Expert
 
 \begin_layout Standard
 This man-made heuristic implements early reversal points using if-statements
- (
+ (see 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+Algorithm~
+\backslash
+ref{alg:mc-ifex}
+\end_layout
+
+\end_inset
+
+,
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "mc:mc-ifex-plot"
@@ -10259,6 +10401,123 @@ reference "mc:mc-ifex-plot"
  have already been handled, otherwise the velocity is maximized.
  This experiment investigates the potential with manually optimized, complex
  expert heuristics that are non-formulaic.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithm}[tph]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+SetAlgoLined
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+uIf{pos $< -1$ or (pos $<$ 0.1 and vel < $-0.05$)}
+\end_layout
+
+\begin_layout Plain Layout
+
+{right
+\backslash
+;}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+uElseIf{vel $< 0.2$ and (pos $> -0.45$ and pos $< -0.05$)}  
+\end_layout
+
+\begin_layout Plain Layout
+
+{left
+\backslash
+;}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Else{  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Comment{The simple known solution.}  
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+uIf{vel $< 0$}{left
+\backslash
+;}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+Else{right
+\backslash
+;}
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+caption{Nested if-statements to define reversal points.}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+label{alg:mc-ifex}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithm}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard

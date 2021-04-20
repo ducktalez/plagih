@@ -25,8 +25,20 @@
 % align oversets (available in TeXLive 18 - overleaf currently runs w/ texlive 17 - 5.11.19)
 % \usepackage{aligned-overset}
 \usepackage{bbm}
+\usepackage{xcolor, amsmath}
 
-\usepackage[vlined]{algorithm2e}
+\usepackage[ruled,vlined]{algorithm2e}
+\DontPrintSemicolon
+% Define pseudocode formatting
+\renewcommand{\KwSty}[1]{\textnormal{\textcolor{blue!90!black}{\ttfamily\bfseries #1}}\unskip}
+\renewcommand{\ArgSty}[1]{\textnormal{\ttfamily #1}\unskip}
+\SetKwComment{Comment}{\color{green!50!black}// }{}
+\renewcommand{\CommentSty}[1]{\textnormal{\ttfamily\color{green!50!black}#1}\unskip}
+\newcommand{\assign}{\leftarrow}
+\newcommand{\var}{\texttt}
+\newcommand{\FuncCall}[2]{\texttt{\bfseries #1(#2)}}
+\SetKwProg{Function}{function}{}{}
+\renewcommand{\ProgSty}[1]{\texttt{\bfseries #1}}
 
 % Sfehs personal commands (the same as in dbstmpl.sty)
 \newcommand{\plforest}[1]{{\begin{forest}   for tree={child anchor=north, rounded corners,align=center,draw=black!100,fill=blue!20},   terminal/.style={rectangle,},   fixnode/.style={fill=blue!60,},   observation/.style={rectangle,},   variable/.style={rectangle,},  samenode/.style={fill=blue!40,},  newnode/.style={fill=green!60,}, changenode/.style={fill=orange!60,},   nodeinsert/.style={fill=green!50,},   nodechanged/.style={fill=orange!50,}, #1 \end{forest}}}
@@ -96,90 +108,45 @@
 
 \section*{Outline} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}{Concept}
+\begin{frame}{Idea}
 \centering
-\includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
+\includegraphics[height=0.8\textheight]{img/idea.pdf}
 \end{frame}
 
-\begin{frame}{Reinforcement Learning}
+\begin{frame}{Mountain Car Problem}
 \centering
-The Environment
- \begin{figure}
-  \includegraphics[height=0.25\textheight]{../img/rl_images/reinforcement_learning_diagram_sfeh_a4}
+%The Environment
+ %\begin{figure}
+ % \includegraphics[height=0.25\textheight]{../img/rl_images/reinforcement_learning_diagram_sfeh_a4}
   %\caption{The principles of reinforcement learning. An agent interacts with an environment that represents a Markov decision process.}
- \end{figure}
-The Architecture\\
- \includegraphics[height=0.3\textheight]{img/Artificial-Neural-Network-Deep-Learning-model.png}
- \includegraphics[height=0.3\textheight]{img/connected-neurons-2.jpg}
+ %\end{figure}
+  \begin{tabular}{cccc}
+  \multirow{6}{*}{\includegraphics[width=5cm]{../img/inkscape/mountaincar_dummy}} &  & \multicolumn{2}{c}{Observation Space}\tabularnewline
+  \cline{3-4} \cline{4-4} 
+   &  & position & $[-1.2, 0.6]$\tabularnewline
+   &  & velocity & $[-0.07, 0.07]$\tabularnewline
+  \cline{3-4} \cline{4-4} 
+   &  &  & \tabularnewline
+   &  & \multicolumn{2}{c}{Action Space}\tabularnewline
+  \cline{3-4} \cline{4-4} 
+   &  & push & \{left, none, right\}\tabularnewline
+  \end{tabular}
 \end{frame}
 
+%\begin{frame}{Reinforcement Learning}
+%  \includegraphics[height=0.25\textheight]{../img/rl_images/reinforcement_learning_diagram_sfeh_a4}
+%\end{frame}
 
 
-
-\section*{Explainable AI} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{frame}{The Mountain Car Problem}
- \begin{table}
- \begin{centering}
- \begin{tabular}{cccc}
- \multirow{6}{*}{\includegraphics[width=5cm]{../img/inkscape/mountaincar_dummy}} &  & \multicolumn{2}{c}{Observation Space}\tabularnewline
- \cline{3-4} \cline{4-4} 
-  &  & position & $[-1.2, 0.6]$\tabularnewline
-  &  & velocity & $[-0.07, 0.07]$\tabularnewline
- \cline{3-4} \cline{4-4} 
-  &  &  & \tabularnewline
-  &  & \multicolumn{2}{c}{Action Space}\tabularnewline
- \cline{3-4} \cline{4-4} 
-  &  & push & \{left, none, right\}\tabularnewline
- %workaround latex pdf format idk why &  &  & \tabularnewline
- \end{tabular}
- \par\end{centering}
- %\caption{The main features of the Mountain car problem.}
-\end{table}
-\end{frame}
-
-
-\begin{frame}{A simple Mountain Car Program}
- %``Accelerating towards the current direction''\\
- \noindent\includegraphics[height=0.3\textheight]{img/program_into_GPtree.pdf}
- %\fbox{\begin{minipage}[t]{0.35\columnwidth}
- % \begin{algorithm}[H]
- %  \eIf{cartVel $<$ 0}
- %   {go left\;}
- %   {go right\;}
- % \end{algorithm}
- %\end{minipage}}
- %\plforest{[{$\text{if-then-else}$}[{$<$}[{vel}][{$0$}]][{$0$}][{$2$}]]}  
-   Potential improvements:\\
-   \begin{itemize}
- 	\item Reverse early
- 	\item Are two or three swings necessary?
- 	\item Always accelerate
-   \end{itemize}
-\end{frame}
 
 
 \section*{Explainable AI} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}{Interpretability}
-``The ability to explain or to present in understandable terms to humans''\\
-\bigskip
-Manifestations (Doshi-Velez and Kim 17)
- \begin{itemize}
-  \item Problem formulation
-  \item Evaluation level?
-  \item Task-related\\
-  (e.g. global/local, incompleteness, user expertise, time)
-  \item Method-related\\
-  (e.g. form/number/compositionality of cognitive chunks, monotonicity, uncertainty)
- \end{itemize}
-\end{frame}
-
-\begin{frame}{Explanation Methods}
+\begin{frame}<presentation:1>{Explanation Methods}
  \begin{tabular}{>{\raggedright}p{0.4\textwidth}>{\raggedright}p{0.4\textwidth}}
   Perturbation
   \begin{itemize}
-   \item Meaningful Perturbations\\(Fong \& Vedaldi 17)
+   \item Meaningful Perturbations\\ (Fong \& Vedaldi 17)
   \end{itemize}
    & Function-Based
   \begin{itemize}
@@ -192,13 +159,13 @@ Manifestations (Doshi-Velez and Kim 17)
   \end{itemize}
    & Structure Based
   \begin{itemize}
-   \item Deep Taylor Decomposition\\(Montavon et al. 17)
+   \item Deep Taylor Decomposition(Montavon et al. 17)
    \item LRP (Bach et al. 15)
   \end{itemize}\tabularnewline
  \end{tabular}
 \end{frame}
 
-\begin{frame}{Example: Layerwise Relevance Propagation (LRP)}
+\begin{frame}<presentation:1>{Example: Layerwise Relevance Propagation (LRP)}
  \begin{columns}
   \column{0.60\textwidth}
  \begin{figure}
@@ -215,6 +182,18 @@ Manifestations (Doshi-Velez and Kim 17)
   \bigskip
   $\rightarrow$ RL policies require\\global interpretability
  \end{columns}
+\end{frame}
+
+\begin{frame}{Interpretability}
+``The ability to explain or to present in understandable terms to humans''\\
+\bigskip
+Manifestations (Doshi-Velez and Kim 17)
+ \begin{itemize}
+  \item Problem formulation
+  \item Evaluation level
+  \item Task-related (e.g. global/local, incompleteness, user expertise, time)
+  \item Method-related (e.g. form/number/compositionality of cognitive chunks, monotonicity, uncertainty)
+ \end{itemize}
 \end{frame}
 
 
@@ -256,11 +235,6 @@ Manifestations (Doshi-Velez and Kim 17)
  \end{figure}
 \end{frame}
 
-\begin{frame}{Familiar Genetic Programming}
-\centering
-\includegraphics[height=0.85\textheight]{img/genetic_extensions.pdf}
-\end{frame}
-
 
 
 \section*{Familiar Genetic Programming} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -270,6 +244,31 @@ Manifestations (Doshi-Velez and Kim 17)
 \includegraphics[height=0.89\textheight]{../img/inkscape/explainability_gap2_minimal_beamer.pdf}
 \end{frame}
 
+\begin{frame}{A simple Mountain Car Program}
+\begin{columns}
+\column{0.2\textwidth}
+\column{0.8\textwidth}
+``Accelerating towards the moving direction''
+ \begin{figure}
+  \raggedright
+%  \fbox{\begin{minipage}[t]{0.35\columnwidth}
+%   \begin{algorithm}[H]
+%    \eIf{cartVel $<$ 0}
+%     {go left\;}
+%     {go right\;}
+%   \end{algorithm}
+% \end{minipage}}
+   \includegraphics[height=0.3\textheight]{img/program_into_GPtree.pdf}
+ \end{figure}
+ Potential improvements
+ \begin{itemize}
+  \item Reverse early
+  \item Are two or three swings necessary?
+  \item Always accelerate
+ \end{itemize}
+\end{columns}
+\end{frame}
+
 \begin{frame}{Concept}
 \centering
 \includegraphics[height=0.89\textheight]{../img/inkscape/concept.pdf}
@@ -277,14 +276,40 @@ Manifestations (Doshi-Velez and Kim 17)
 
 \begin{frame}{Tree Edit Distance}
 \centering
-\includegraphics[height=0.75\textheight]{../img/inkscape/ted_operators.pdf}
+ \begin{figure}
+  \includegraphics[height=0.70\textheight]{../img/inkscape/ted_operators.pdf}
+  %\caption{The edit distance is the minimum number of edits (insert, change, delete) between trees.}
+ \end{figure}
 \end{frame}
 
 \begin{frame}{Fixed Core}
  \begin{figure}
-  \includegraphics[width=0.6\linewidth]{../img/inkscape/fix_nodes_mutation.pdf}
-  \caption{A tree with fixed nodes (blue) which remain untouched by evolution and enable targeted expansion.}
+  \includegraphics[width=0.6\linewidth]{../img/inkscape/fix_nodes_mutation.pdf}   
+  %\caption{The expert might want to only change the condition of the if-statement, as he can then better understand the distinction. In his start-up program, he would specify the nodes marked in dark blue as fixed so that they are not affected by the GP process.}
  \end{figure}
+\end{frame}
+
+\begin{frame}{Fixed Core}
+ \begin{columns}
+ \column{0.45\textwidth}
+  Implementation
+  \begin{itemize}
+   \item Explicit node protection
+   \item Relative tree depth
+   \item Random tree construction 
+ 	\begin{itemize}
+  	 \item Nodecount-based 
+  	 \item Balanced
+  	 \item Method full/grow
+ 	\end{itemize}
+  \end{itemize}
+ \column{0.45\textwidth}
+ Construction mode ``full'' and ``grow''\\
+ {\centering $\{*, -, /, a, b, 2, 3\}$}
+ \begin{figure}
+ 	\includegraphics[scale=0.7]{../img/inkscape/full_vs_grow_example}
+ \end{figure}
+ \end{columns}
 \end{frame}
 
 %\begin{frame}{Tight Tree Nodes}
@@ -305,43 +330,89 @@ Manifestations (Doshi-Velez and Kim 17)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Evaluation}
 
-
 \begin{frame}{Mountain Car ``Expert'' programs visualization}
-\begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
-Simple & \multicolumn{2}{c}{Complex}\tabularnewline
-``Accelerating towards the current direction'' & ``Parabolic formula'' & ``Nested if-statement''\tabularnewline
-\includegraphics[height=35mm]{img/mtc/decisions-SimpleAgent.pdf} & \includegraphics[height=35mm]{img/mtc/decisions-XiaoPresetAgent.png} & \includegraphics[height=35mm]{img/mtc/decisions-Good_Expert.png} \tabularnewline
+ \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
+  Simple & \multicolumn{2}{c}{Complex}\tabularnewline
+  ``Accelerating towards the current direction'' & ``Parabolic formula'' & ``Nested if- statement''\tabularnewline
+  \includegraphics[height=35mm]{img/mtc/decisions-SimpleAgent.pdf} & \includegraphics[height=35mm]{img/mtc/decisions-XiaoPresetAgent.png} & \includegraphics[height=35mm]{img/mtc/decisions-Good_Expert.png} \tabularnewline
 \end{tabular}
 \end{frame}
 
-\begin{frame}{Mountain Car ``Black Box'' policy visualization}
- SARSA + neural network
- \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
-  75 Episodes & 200 Episodes & \tabularnewline
-  \includegraphics[height=4cm]{img/mtc/decisions-sarsa_agent_75.pdf} & \includegraphics[height=4cm]{img/mtc/decisions-sarsa_agent_200.pdf} & \tabularnewline
-  $\approx 104$ steps & $\approx 98$ steps & \tabularnewline
+\begin{frame}{Mountain Car: SARSA + Neural Network}
+ \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
+  75 Episodes & 200 Episodes \tabularnewline
+  \includegraphics[height=4cm]{img/mtc/decisions-sarsa_agent_75.pdf} & 
+  \includegraphics[height=4cm]{img/mtc/decisions-sarsa_agent_200.pdf}\tabularnewline
+  $\approx 104$ steps & $\approx 98$ steps \tabularnewline
  \end{tabular}
 \end{frame}
 
-\begin{frame}{Mountain Car Policies}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Results}
+
+\begin{frame}{Mountain Car: Regular GP Results}
+ \begin{figure}
+   \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/evaled_overview}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Mountain Car: Regular GP Results}
  \begin{columns}
   \column{0.30\textwidth}
-   \includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_75.pdf}
-   \includegraphics[height=0.4\textheight]{img/mtc/decisions-XiaoPresetAgent.png}
-  \column{0.30\textwidth}
-   \includegraphics[height=0.4\textheight]{img/mtc/decisions-sarsa_agent_200.pdf}
-   \includegraphics[height=0.4\textheight]{img/mtc/decisions-Good_Expert.png}
-  \column{0.4\textwidth}
-   Different policies
-   \begin{itemize}
- 	\item Neural networks
- 	\item Mathematical formula
- 	\item Domain expert (human)
-   \end{itemize}
+   \begin{tabular}{cc}
+\multicolumn{2}{c}{8}\tabularnewline
+$\text{MSE=0.21}$ & $R=-140.5$\tabularnewline
+\end{tabular}
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-8} 
+  \column{0.7\textwidth}
+   \plforest{[$+$[{$x^2$}[{$\cdot $}[{pos}][$1.779$]]][{$\cdot $}[{$174$}][{vel}]]]}
  \end{columns}
 \end{frame}
 
-\begin{frame}{TED limitations}
+\begin{frame}{Mountain Car: Regular GP Results}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \begin{tabular}{cc}
+\multicolumn{2}{c}{10}\tabularnewline
+$\text{MSE=0.16}$ & $R=-110$\tabularnewline
+\end{tabular} 
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-10}
+  \column{0.7\textwidth}
+   \plforest{[$+$[{$\cdot $}[{$-2.3$}][{$\sin $}[{$\div $}[{$1.244$}][pos]]]][{$\cdot $}[{$174$}][vel]]]} 
+ \end{columns}
+\end{frame}
+
+\begin{frame}{Mountain Car: Regular GP Results}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \begin{tabular}{cc}
+\multicolumn{2}{c}{25}\tabularnewline
+$\text{MSE=0.09}$ & $R=-98.8$\tabularnewline
+\end{tabular}
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MSE_scratch/sfehs_eval/space-25}
+  \column{0.7\textwidth}
+  \plforest{[{$+$}[{$+$}[{$\cdot $}[{$-91.066$}][{$x^y$}[{$0.041$}][$+$[{pos}][$(2.752 \cdot$ pos)$^2$]]]][{$\cdot $}[{$5501.84$}][{vel}]]][{$\cdot $}[{$68.491$}][{$x^y$}[{$\min$}[pos][{$-$}[{$-$pos}][{$0.789$}]]][{$4$}]]]]}
+  %\plforest{[{$+$}[{$+$}[{$\cdot $}[{$-91.066$}][{$x^y$}[{$0.041$}][{$x^2$}[{$+$}[{cartPos}][{$x^2$}[{$\cdot $}[{$2.752$}][{cartPos}]]]]]]][{$\cdot $}[{$5501.840$}][{cartVel}]]][{$\cdot $}[{$68.491$}][{$x^y$}[{$\min$}[{cartPos}][{$-$}[{-cartPos}][{$0.789$}]]][{$4$}]]]]}
+   %\plforest{[$-91 \cdot 0.04^{{\text{pos} +2.75 \cdot \text{pos}^{2}}^{2}}$\\${+5501\cdot \text{vel}}+$\\ ${68\cdot \min(\text{pos},-\text{pos}-0.78)^4}$]}
+ \end{columns}
+\end{frame}
+
+
+
+
+
+
+
+
+\begin{frame}{Mountain Car: Simple Expert Program}
+ \begin{figure}
+   \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/evaled_overview}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Mountain Car: Simple Expert Program}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -350,18 +421,49 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
    \end{tabular}
    \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-4}
   \column{0.7\textwidth}
-   \plforest{[{$\text{if-then-else}$},samenode[{$<$},samenode[{vel},samenode][{$0$},samenode]][{$\div $}[{pos}][{$-1.8$}]][{$2$},terminal,observation]]} 
+   \plforest{[{$\text{if-then-else}$},samenode[{$<$},samenode[{vel},samenode][{$0$},samenode]][{$\div $}[{pos}][{$-1.8$}]][{$2$},samenode,terminal,observation]]} 
  \end{columns}
 \end{frame}
 
-\begin{frame}{Fixed Core}
- \begin{figure}[th]
-  \plforest{[{$\text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]}  
-  \caption{The expert might want to only change the condition of the if-statement, as he can then better understand the distinction. In his start-up program, he would specify the nodes marked in dark blue as fixed so that they are not affected by the GP process.}
+\begin{frame}{Mountain Car: Simple Expert Program}
+ \begin{columns}
+  \column{0.30\textwidth}
+   \begin{tabular}{cc}
+\multicolumn{2}{c}{TED=7}\tabularnewline
+$\text{MSE=0.27}$ & R=-133.4\tabularnewline
+\end{tabular}
+   \includegraphics[height=3cm]{../../benchmarks/slurm_runs/MTC200_MSE_simple/sfehs_eval/space-7}
+  \column{0.7\textwidth}
+   \plforest{[{$-$}[{$\cdot $}[{$152$}][{vel}]][{$\cdot $}[{$2.7$}][{pos}]]]}
+ \end{columns}
+\end{frame} 
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\begin{frame}{Mountain Car: Simple Expert Program (fixed)}
+ \begin{figure}
+   \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MAE_simpleFix/sfehs_eval/evaled_overview}
  \end{figure}
 \end{frame}
 
-\begin{frame}{Mountain Car - Simple Program}
+
+\begin{frame}{Mountain Car: Simple Expert Program (fixed)}
+ \centering
+ \includegraphics[height=0.85\textheight]{img/genetic_extensions.pdf}
+\end{frame}
+
+
+\begin{frame}{Mountain Car: Simple Expert Program (fixed)}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -374,7 +476,7 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
  \end{columns}
 \end{frame}
 
-\begin{frame}{Mountain Car - Simple Program}
+\begin{frame}{Mountain Car: Simple Expert Program (fixed)}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -387,7 +489,7 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
  \end{columns}
 \end{frame}
 
-\begin{frame}{Mountain Car - Simple Program}
+\begin{frame}{Mountain Car: Simple Expert Program (fixed)}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -400,7 +502,66 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
  \end{columns}
 \end{frame}
 
-\begin{frame}{Mountain Car - Complex Program}
+
+
+
+
+
+
+
+\begin{frame}{Mountain Car Expert: Parabolic Bounds}
+  \begin{algorithm}[H]
+ 	\SetAlgoLined
+ 	low $\leftarrow \min(-0.09(\text{pos}+0.25)^2+0.03,0.3(\text{pos}+0.09)^4-0.008)$\;  
+ 	upper $\leftarrow -0.07(\text{pos}+0.38)^2+0.07)$\;  
+ 	\uIf{low  $\leq \text{vel} \leq$ upper}
+ 	{left\;}
+ 	\Else{right\;}
+ 	\caption{Parabolic mountain car formula}
+  \end{algorithm}
+\end{frame}
+
+\begin{frame}{Mountain Car: Complex Parabolic Formula}
+ \begin{figure}
+   \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MSE_xiao/sfehs_eval/evaled_overview}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Mountain Car: Complex Parabolic Formula}
+\centering
+\includegraphics[height=0.85\textheight]{img/genetic_extensions_2.pdf} 
+\end{frame}
+
+
+
+
+
+
+
+\begin{frame}{Mountain Car Expert: Nested If-Statements}
+  \begin{algorithm}[H]
+	\SetAlgoLined
+	\uIf{pos $< -1$ or (pos $<$ 0.1 and vel < $-0.05$)}
+	{right\;}  
+	\uElseIf{vel $< 0.2$ and (pos $> -0.45$ and pos $< -0.05$)}  
+	{left\;}  
+	\Else{  
+		\Comment{The simple known solution.}  
+		\uIf{vel $< 0$}
+		{left\;}
+		\Else{right\;}
+	}
+	\caption{Nested if-statements to define reversal points.}
+  \end{algorithm}
+\end{frame}
+
+\begin{frame}{Mountain Car: Nested If-Statements}
+ \begin{figure}
+  \includegraphics[height=5cm]{../../benchmarks/slurm_runs3_easy/MTC200_MSE_simonBestFix2/sfehs_eval/evaled_overview}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Mountain Car: Nested If-Statements}
  \begin{columns}
   \column{0.30\textwidth}
    \begin{tabular}{cc}
@@ -411,14 +572,45 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
   \column{0.7\textwidth}
    \includegraphics[width=0.95\textwidth]{img/MC_ifex_8.pdf}
  \end{columns}
- %\includegraphics[height=3cm]{../../benchmarks/slurm_runs3_easy/MTC200_MSE_simonBestFix2/sfehs_eval/space-22}\\
- %\plforest{[$\text{if-then-else}$,fixnode[$\lor$,fixnode[$\land$,fixnode[$\text{pos}<$\\$-0.35$][$0.013$\\$<\text{vel}$]][$\land$,fixnode[$\text{pos}-$\\$(10.4 \cdot \text{vel})$\\$<-0.82$][$-\text{vel}<$\\$0.015$]]][$2$,fixnode][$\text{if-then-else}$,fixnode[$\land$,fixnode[$\text{vel}<$\\$0.02$][$\land$,fixnode[$>$[$\text{if-then-else}$[$\text{pos}>-0.38$][pos][$\text{pos}-9.9 \cdot \text{vel}$]][$-0.46$]][$\text{pos}<-0.05$]]][$0$,fixnode][$\text{if-then-else}$,fixnode[$\text{vel}<0$,fixnode][$0$,fixnode][$2$,fixnode]]]]}
 \end{frame}
 
-\begin{frame}{Mountain Car - Parabolic Formula}
-\centering
-\includegraphics[height=0.85\textheight]{img/genetic_extensions_2.pdf} 
+
+
+
+
+
+
+\begin{frame}{Mountain Car: SARSA-75}
+ \begin{table}[tph]
+ \begin{tabular}{>{\centering}p{50mm}>{\centering}p{50mm}}\hline 
+ Complete operator set & Excluding $\{x^y,\sin\}$\tabularnewline\hline 
+ \multicolumn{2}{c}{regular GP results}\tabularnewline
+ \includegraphics[height=4cm]{../../benchmarks/slurm_runs2/MTC75_MSE_scratch/sfehs_eval/evaled_overview} & 
+ \includegraphics[height=4cm]{../../benchmarks/slurm_runs3_easy/MTC75_MSE_scratch/sfehs_eval/evaled_overview}\tabularnewline\hline 
+  \end{tabular}
+ \end{table}
 \end{frame}
+\begin{frame}{Mountain Car: SARSA-75}
+ \begin{table}[tph]
+ \begin{tabular}{>{\centering}p{50mm}>{\centering}p{50mm}}\hline 
+ Complete operator set & Excluding $\{x^y,\sin\}$\tabularnewline\hline 
+\multicolumn{2}{c}{maximum velocity}\tabularnewline
+\includegraphics[height=4cm]{../../benchmarks/slurm_runs2/MTC75_MSE_simple/sfehs_eval/evaled_overview} & \includegraphics[height=4cm]{../../benchmarks/slurm_runs3_easy/MTC75_MSE_simple/sfehs_eval/evaled_overview}\tabularnewline
+\hline 
+\end{tabular}
+\end{table}
+\end{frame}
+\begin{frame}{Mountain Car: SARSA-75}
+ \begin{table}[tph]
+ \begin{tabular}{>{\centering}p{50mm}>{\centering}p{50mm}}\hline 
+ Complete operator set & Excluding $\{x^y,\sin\}$\tabularnewline\hline 
+\multicolumn{2}{c}{maximum velocity (fixed core)}\tabularnewline
+\includegraphics[height=4cm]{../../benchmarks/slurm_runs2/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview} & \includegraphics[height=4cm]{../../benchmarks/slurm_runs3_easy/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview}\tabularnewline\hline 
+\end{tabular}
+\end{table}
+\end{frame}
+ 
+
 
 
 
@@ -430,7 +622,7 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
 \begin{frame}{Industrial Benchmark}
  \begin{table}[tph]
   \begin{tabular}{lcc}\toprule 
-    & MC & IB\tabularnewline\midrule
+    & Mountain Car & Industrial Benchmark\tabularnewline\midrule
    Observables & 2 & 6\tabularnewline
    Action dimensions & 1 & 3\tabularnewline
    Reward & discrete & continuous\tabularnewline
@@ -438,7 +630,7 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
    Stochasticity & - & state-dependent\tabularnewline
    Observable & fully & partially\tabularnewline\bottomrule
   \end{tabular}
-  \caption{Comparison between the Mountaincar and Industrial benchmark.}
+  %\caption{Comparison between the Mountaincar and Industrial benchmark.}
   \label{tab:mc-ib-comparisson}
  \end{table}
 \end{frame}
@@ -459,48 +651,37 @@ Simple & \multicolumn{2}{c}{Complex}\tabularnewline
  \end{table}
 \end{frame}
 
-\begin{frame}{Industrial Benchmark - Results}
+\begin{frame}{Mountain Car vs. Industrial Benchmark}
+ \centering
+ \begin{tabular}{cc}
+  Mountain Car & Industrial Benchmark\tabularnewline
+  \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MSE_scratch/histograms/acthist_25.pdf}&
+  \includegraphics[height=5cm]{../../benchmarks/slurm_runs2/IB_MSE_scratch/IB_MSE_scratch_0/histograms/acthist_29.pdf}\tabularnewline
+%\caption{\label{fig:Histograms-mc-ib} Histograms presenting the deviation from the black box action in the MC (left) and the IB (right), both regarding the best available regular GP agent (MSE). MC agents have a very high success rate, while the best IB agent have lumps of failure on both sides.}
+ \end{tabular}
+\end{frame}
+
+\begin{frame}{Industrial Benchmark: Results}
+ \centering
+ \begin{figure}[tph]
+  \includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf}\includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf}
+  %\caption{\label{fig:ib-plots} The improvements of the start policy improve the real performance without bad outliers. As the IB requires merging multiple Pareto candidates, it is good advice to discard the first combinations.}
+ \end{figure}
+\end{frame}
+
+\begin{frame}{Industrial Benchmark: Results}
  \centering
  \includegraphics[height=0.85\textheight]{../img/inkscape/ib_vis/ib_pp_1.pdf}
 \end{frame}
 
-\begin{frame}{''s3m`` Industrial Benchmark - Results}
+\begin{frame}{Industrial Benchmark: Results}
  \centering
  \includegraphics[height=0.85\textheight]{../img/inkscape/ib_vis/ib_pp_2.pdf}
 \end{frame}
 
-\begin{frame}{Industrial Benchmark - Results}
+\begin{frame}{Industrial Benchmark: Results}
  \centering
  \includegraphics[height=0.85\textheight]{../img/inkscape/ib_vis/ib_pp_3.pdf}
-\end{frame}
-
-\begin{frame}{Industrial Benchmark - Results}
- \centering
- \begin{figure}[tph]
-  \includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/pareto_combined.pdf}\includegraphics[height=5cm]{../../benchmarks/slurm_runs/IB_MSE_s3m/regression_all.pdf}
-  \caption{\label{fig:ib-plots} The improvements of the start policy improve
-the real performance without bad outliers. As the IB requires merging
-multiple Pareto candidates, it is good advice to discard the first
-combinations.}
- \end{figure}
-\end{frame}
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Discussion}
-
-\begin{frame}{Discussion: Mountain Car vs. Industrial Benchmark}
- \centering
- \begin{figure}[tph]
- \includegraphics[height=5cm]{../../benchmarks/slurm_runs/MTC200_MSE_scratch/histograms/acthist_25.pdf}\includegraphics[height=5cm]{../../benchmarks/slurm_runs2/IB_MSE_scratch/IB_MSE_scratch_0/histograms/acthist_29.pdf}
-\caption{\label{fig:Histograms-mc-ib} Histograms presenting the deviation
-from the black box action in the MC (left) and the IB (right), both
-regarding the best available regular GP agent (MSE). MC agents have
-a very high success rate, while the best IB agent have lumps of failure
-on both sides.}
-\end{figure}
 \end{frame}
 
 
@@ -514,10 +695,60 @@ on both sides.}
  \centering
  \begin{figure}
   \includegraphics[width=0.9\linewidth]{../img/inkscape/explorative_regression_hill.pdf}
-  \caption{The relationship to the phenotype of the expert solution could be considered in another regression.}
+  %\caption{The relationship to the phenotype of the expert solution could be considered in another regression.}
  \end{figure}
 \end{frame}
 
+
+\begin{frame}{TED improvements?}
+\begin{columns}
+\column{0.6\textwidth}
+\begin{itemize}
+  \item Tree simplification and Unification
+\end{itemize}
+  \includegraphics[scale=0.7]{../img/inkscape/sympy_reduction_example}
+\column{0.4\textwidth}
+\begin{itemize}
+  \item Weighted TED mapping
+\end{itemize}
+\begin{table}
+	\begin{tabular}{cc}
+	 \hline 
+	 Variables & 1\tabularnewline
+	 Terminals & 1\tabularnewline
+	 $+,-,\cdot$ & 1\tabularnewline
+	 $/$ & 2\tabularnewline
+	 $\land,\lor,>,<$ & 4\tabularnewline
+	 $\tanh,\text{abs}$ & 4\tabularnewline
+	 if & 5\tabularnewline\hline 
+	\end{tabular}
+\end{table}
+ \end{columns}
+\end{frame}
+
+
+
+
+
+
+
+
+
+
+\begin{frame}{Conclusion} %Concept
+\begin{columns}
+\column{0.7\textwidth}
+\includegraphics[height=0.80\textheight]{../img/inkscape/concept.pdf}
+\column{0.3\textwidth}
+Summary
+  \begin{itemize}
+   \item Using Familiar knowledge
+   \item Better Interpretability
+   \item New technique to use GP
+   \item No significant performance drawbacks
+  \end{itemize}
+\end{columns}
+\end{frame}
 
 
 \end{document}

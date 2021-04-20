@@ -15,10 +15,11 @@ def help_running_sum(alist):
 
 def binearspass():
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127]
+    binprimes = [bin(x)[2:] for x in primes]
     primes2 = [[0, 1], [2, 3], [5, 7], [11, 13], [17, 19, 23, 29, 31], [37, 41, 43, 47, 53, 59, 61], [67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127]]
-    bins = [[bin(x) for x in xs] for xs in primes2]
-    for x in bins:
-        print(x)
+    bins2 = [[bin(x) for x in xs] for xs in primes2]
+    bins_test = [int(x[:-1], 2) for x in binprimes]
+    print(bins_test)
 
 
 def altering_sum_plus_minus(pmax=1000):
@@ -90,4 +91,4 @@ def plottingspass(nmax=100):
 
 
 if __name__ == '__main__':
-    altering_sum_plus_minus()
+    binearspass()

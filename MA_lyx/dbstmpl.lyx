@@ -1005,9 +1005,10 @@ emph{Genetic programming}
 
 \end_inset
 
- is an evolutionary algorithm that can automatically create computer programs.
- It has become a well-known approach for finding interpretable system controllin
-g policies since it was first introduced by Koza 
+ is an evolutionary optimization method that generates functional programs
+ to solve a given task.
+ It was first introduced by Koza and has since become a popular method for
+ creating interpretable system controlling policies 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Koza_GP_patent_1990"
@@ -1016,29 +1017,136 @@ literal "true"
 \end_inset
 
 .
- Computer programs are encoded as a set of genes, which allow random optimizatio
-n like mutation and crossover (
+ 
+\end_layout
+
+\begin_layout Standard
+Evolutionary algorithm require a representation of candidate solutions as
+ combination of genes as well as a fitness function which rates their performanc
+e in solving the task.
+ GP represents programs as programming trees, which allow random evolutions
+ like mutations or recombination of genes between candidates (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:crossover"
 
 \end_inset
 
-) to create individuals of a population of programs.
- These individuals can reproduce between generations in a selection process,
- for which a fitness function is required that allows a ranking of candidates.
-\end_layout
+).
+ 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+Inspired by biological evolution, a population of candidates is optimized
+ over many generations by using selection, mutation and recombination.
 
-\begin_layout Standard
-The candidates are assumed to depend on the composition of genes in the
- population, the gene pool, allow new genes to emerge, which improves the
- pool of genes over generations.
- Improvements occur stochastically, which makes GP a meta-heuristic optimization
- technique that does not necessarily converge to an optimum.
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
  The composition of a population is crucial and requires a careful balance
  between reproduction of genes through selection, which is important to
  maintain a functioning gene pool, and random mutation, which provides genetic
  diversity.
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+The population breakdown used in this work can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "tab:gp-Evolutionary-concepts"
+
+\end_inset
+
+.
+ 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+The selection process is often implemented as tournament, where the fittest
+ of 3 randomly chosen candidates is chosen 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "gp-tournament-selection"
+literal "true"
+
+\end_inset
+
+.
+ This allows trees to reproduce that may carry novel, but not yet optimized
+ genes.
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ Improvements occur stochastically, which makes GP a meta-heuristic optimization
+ technique that does not necessarily converge to an optimum.
+ The evolutionary algorithm is described in more detail in 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+Algorithm~
+\backslash
+ref{alg:gp-evolutionary-main}
+\end_layout
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -1076,207 +1184,6 @@ name "fig:crossover"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-
-\end_layout
-
-\begin_layout Subsection
-Tree Construction
-\end_layout
-
-\begin_layout Standard
-Individuals are represented as computational trees.
- Trees must be evaluable, which is also known as the concept of 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{closure}
-\end_layout
-
-\end_inset
-
-.
- Type conversion between Boolean and numeric values can be applied automatically
- or with strong typing, which requires explicit type conversion (e.g.
- with comparison operators, if-statements) 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "Strongly_typed_GP"
-literal "true"
-
-\end_inset
-
-, which arguably composes mathematical components in a more natural way.
- Evaluation safety poses a particular problem, as type-correct expressions
- can be mathematically invalid.
- For frequently affected operators, dummy exits can be defined (e.g.
- the 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{division by zero}
-\end_layout
-
-\end_inset
-
- returns one, 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-frac{x}{0}
-\backslash
-rightarrow 1$
-\end_layout
-
-\end_inset
-
-).
- However, to avoid changing the essence of other operators too much, faulty
- trees are discarded and replaced randomly.
- 
-\end_layout
-
-\begin_layout Standard
-Random trees and branches also must be constructed in order to find new
- genes, for which the 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{full} and 
-\backslash
-emph{grow}
-\end_layout
-
-\end_inset
-
- method are available.
- Both methods build trees nodes to a certain depth, but the 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{full}
-\end_layout
-
-\end_inset
-
- method allows terminal nodes only at the lowest level while the grow method
- also allows terminal nodes to be inserted by chance (50%).
- The full method has a much higher branching factor and creates more complex
- formulae than the grow method.
- This affects the tree structure, which also affects the formulae, as can
- be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:grow-vs-full-method"
-
-\end_inset
-
-.
- As neither of both is clearly preferable, a combination of both methods
- is proposed in 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-emph{ramped half-n-half}
-\end_layout
-
-\end_inset
-
- 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "gp-half-ramped"
-literal "true"
-
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
-The selection process is implemented as a tournament where the fittest of
- a random selection of 3 candidates wins 
-\begin_inset CommandInset citation
-LatexCommand cite
-key "gp-tournament-selection"
-literal "true"
-
-\end_inset
-
-.
- This allows trees to survive in a population that have not yet been optimized
- but may carry important genes in the future.
- The most important evolutions can be seen in 
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
-
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "tab:gp-Evolutionary-concepts"
-
-\end_inset
-
-, the evolution is described in more detail in 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-Algorithm~
-\backslash
-ref{alg:gp-evolutionary-main}
-\end_layout
-
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Standard
@@ -1852,11 +1759,13 @@ end{algorithm}
 
 \end_layout
 
+\begin_layout Subsection
+Tree Construction
+\end_layout
+
 \begin_layout Standard
-The search space for candidates is limited to prevent a complexity bloat.
- Both the tree depth and the number of tree nodes are capped.
- The nodes can also be user-defined weighted; for example, the default weighting
- of the commercial GP Framework 
+Despite their genetic representation, genes cannot be randomly mixed.
+ Trees must be evaluable, which is also known as the concept of 
 \begin_inset ERT
 status open
 
@@ -1864,245 +1773,63 @@ status open
 
 
 \backslash
-emph{Eureqa}
+emph{closure}
 \end_layout
-
-\end_inset
-
- can be seen in 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "tab:EUREKA-GP-complexities"
 
 \end_inset
 
 .
+ Type conversion between Boolean and numeric values can be applied automatically
+ or with strong typing, which requires explicit type conversion (e.g.
+ with comparison operators, if-statements) 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Strongly_typed_GP"
+literal "true"
+
+\end_inset
+
+, which arguably composes mathematical components in a more natural way.
+ Evaluation safety poses a particular problem, as type-correct expressions
+ can be mathematically invalid.
+ For frequently affected operators, dummy exits can be defined (e.g.
+ the 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{division by zero}
+\end_layout
+
+\end_inset
+
+ returns one, 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+frac{x}{0}
+\backslash
+rightarrow 1$
+\end_layout
+
+\end_inset
+
+).
+ However, to avoid changing the essence of other operators too much, faulty
+ trees are discarded and replaced randomly.
  
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float table
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\noindent
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="7" columns="2">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Variables
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Terminals
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$+,-,
-\backslash
-cdot$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$/$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-land,
-\backslash
-lor,>,<$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-4
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$
-\backslash
-tanh,
-\backslash
-text{abs}$
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-4
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-if
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-5
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:EUREKA-GP-complexities"
-
-\end_inset
-
-The complexity weighting of nodes that is used at the commercial framework
- 
+Random trees and branches also must be constructed in order to find new
+ genes, for which the 
 \begin_inset ERT
 status open
 
@@ -2110,7 +1837,50 @@ status open
 
 
 \backslash
-emph{Eureqa}
+emph{full} and 
+\backslash
+emph{grow}
+\end_layout
+
+\end_inset
+
+ method are available.
+ Both methods build trees nodes to a certain depth, but the 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{full}
+\end_layout
+
+\end_inset
+
+ method allows terminal nodes only at the lowest level while the grow method
+ also allows terminal nodes to be inserted by chance (50%).
+ The full method has a much higher branching factor and creates more complex
+ formulae than the grow method.
+ This affects the tree structure, which also affects the formulae, as can
+ be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:grow-vs-full-method"
+
+\end_inset
+
+.
+ As neither of both is clearly preferable, a combination of both methods
+ is proposed in 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{ramped half-n-half}
 \end_layout
 
 \end_inset
@@ -2118,79 +1888,28 @@ emph{Eureqa}
  
 \begin_inset CommandInset citation
 LatexCommand cite
-key "eureqa-review"
+key "gp-half-ramped"
 literal "true"
 
 \end_inset
 
 .
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
+ 
 \end_layout
 
 \begin_layout Standard
-The complexity is also used as second objective in a multi-objective optimizatio
-n, where all Pareto-efficient combinations to the first objective of fitness
- are saved.
- The resulting Pareto front of candidates (
+The tree depth and the number of tree nodes are capped to prevent a complexity
+ bloat.
+ Since the performance gain decreases with increasing complexity, the number
+ of nodes can be used to create a Pareto front (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:paretofront-example"
 
 \end_inset
 
-) offer the opportunity to weigh between candidates instead of saving the
- best only.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:paretofront-example"
-
-\end_inset
-
-An example of GP candidates aligned on a Pareto front.
- The regression error becomes smaller as the candidates become more complex
- and increasingly flattens out.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
+), which provides the ability to trade off complexity and fitness between
+ candidates rather than just saving the fittest one.
 \end_layout
 
 \begin_layout Standard
@@ -2244,6 +1963,57 @@ cdot 3$.
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:grow-vs-full-method"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
+	height 5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:paretofront-example"
+
+\end_inset
+
+An example of GP candidates aligned on a Pareto front.
+ The regression error becomes smaller as the candidates become more complex
+ and increasingly flattens out.
+\end_layout
 
 \end_inset
 
@@ -2752,49 +2522,6 @@ text{pos}}{-1.834}}$}}][{$2.197$}]]}
 
 \begin_layout Plain Layout
 Automatic visualization of a tree with all nodes and as a tight version.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{$
-\backslash
-text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]
-}
-\end_layout
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-The expert might want to only change the condition of the if-statement,
- as he can then better understand the distinction.
- In his start-up program, he would specify the nodes marked in dark blue
- as fixed so that they are not affected by the GP process.
 \end_layout
 
 \end_inset
@@ -3959,6 +3686,58 @@ status open
 
 \begin_layout Plain Layout
 xx pseudocode?
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$
+\backslash
+text{if-then-else}$},fixnode[{$<$}[{vel}][{$0$}]][{$0$},fixnode][{$2$},fixnode]]
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The expert might want to only change the condition of the if-statement,
+ as he can then better understand the distinction.
+ In his start-up program, he would specify the nodes marked in dark blue
+ as fixed so that they are not affected by the GP process.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -5648,6 +5427,10 @@ reference "table:MC_agents_rewards"
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 The MC state and action space is small enough to display policies as two-dimensi
 onal diagram, where for each state the action is color-coded (
 \begin_inset CommandInset ref
@@ -5667,7 +5450,7 @@ reference "fig:mountaincar-plot-diff"
  
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -5739,7 +5522,6 @@ name "fig:mc-decision-plots"
  Some states are effectively but never reached, which is why a behavior-dependen
 t version was also created, which, after 100 test runs, colors the states
  not reached gray (right).
- 
 \end_layout
 
 \end_inset
@@ -5752,7 +5534,7 @@ t version was also created, which, after 100 test runs, colors the states
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -5795,6 +5577,11 @@ name "fig:mountaincar-plot-diff"
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 \begin_inset ERT
 status open
@@ -5812,11 +5599,12 @@ FloatBarrier
 \end_layout
 
 \begin_layout Paragraph
-Black Box: SARSA neuropolicy
+Black Box: SARSA
 \end_layout
 
 \begin_layout Standard
-The OpenAI-Gym implementation features a leaderboard
+In order to avoid an involuntary selection process, the top entry of the
+ OpenAI leaderboard was chosen as black box.
 \begin_inset Foot
 status open
 
@@ -5834,13 +5622,9 @@ literal "false"
 
 \end_inset
 
- that contains the fastest learning approach for each problem, from which
- we have selected the top ranked neuropolicy.
- Unfortunately, the leaderboard only includes the fastest learning approaches,
- not the best performing.
- At the time, the top ranked was a SARSA approach with tiling that required
- 75 training episodes to find a sufficient model, with an average reward
- of 
+ The featured approach uses SARSA with tiling and a neural network and achieves
+ the goal of reaching the target in less than 110 steps on average after
+ 75 training episodes with an average reward of 
 \begin_inset ERT
 status open
 
@@ -5860,48 +5644,23 @@ literal "true"
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
-At this state, the agent outperforms the vanilla-expert solution, but it
- is still a very inexperienced, e.g.
- it reverses just before the target for no reason as can be seen in 
+ At this stage, the agent is still very inexperienced, sometimes even failing
+ to climb the hill in time (
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "sarsa75_problem_decision_plots"
 
 \end_inset
 
-.
- In rare cases, this leads to outlier episodes (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:ml-sarsa-outliers"
-
-\end_inset
-
 ).
- Since such problems could not be noticed in real world applications, the
- approach was evaluated, especially in safety-critical areas, more attention
- would be paid to safety.
- For comparison, the results were also evaluated with a more 
-\begin_inset Quotes eld
-\end_inset
-
-experienced
-\begin_inset Quotes erd
-\end_inset
-
- version that trained for 200 episodes, in which the previously mentioned
- uncertainties play a much smaller role (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "sarsa-200-plots"
-
-\end_inset
-
-).
- The performance increases accordingly by almost 5 steps to 
+ Such an error is hardly noticeable in practice and exemplifies the risk
+ of blindly trusting a black box.
+ However, since the agent's training was stopped as early as possible, this
+ agent would never be used in security-relevant areas.
+ Therefore, as a more authentic black box policy, a more experienced version
+ was trained with 200 training episodes.
+ As a result, the problems mentioned above hardly matter anymore, and the
+ reward also drops by almost 5 to 
 \begin_inset ERT
 status open
 
@@ -5914,16 +5673,15 @@ approx-98.7$
 
 \end_inset
 
-.
- Further training did not lead to further improvements; on the contrary,
- the models deteriorated strongly (
+ (
 \begin_inset CommandInset ref
 LatexCommand formatted
-reference "sarsa1000-plots"
+reference "sarsa-200-decision-plots"
 
 \end_inset
 
-), what might be caused to the non-convergence of SARSA approaches.
+).
+ 
 \end_layout
 
 \begin_layout Standard
@@ -5946,7 +5704,7 @@ status open
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename img/MTC/decision_plots/sarsa75_uncertainty_overlay.pdf
-	height 4cm
+	height 4.3cm
 
 \end_inset
 
@@ -5982,65 +5740,17 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-SARSA-75 performance on MC.
- The marked patches in the decision plot (left) show untraceable and unsafe
- behavior in the whole space.
- The trajectories of 50 runs have the shape of a snail (right), with an
- outlier which only just missed the target (top right in the picture) and
- needed another run-up.
+A decision plot showing the SARSA-75 agent's actions throughout the observation
+ space.
+ The patches highlight various strategic problems, such as doing nothing
+ short of the goal, isolated outliers, and unreliable areas.
+ In the right-hand version, states that were not reached in 100 runs are
+ grayed out, highlighting the outlier run that reversed just before the
+ goal.
  
 \begin_inset CommandInset label
 LatexCommand label
 name "sarsa75_problem_decision_plots"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename img/pyplots_custom/sarsa_vs_human.pdf
-	height 5cm
-
-\end_inset
-
- 
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:ml-sarsa-outliers"
-
-\end_inset
-
- SARSA-75 outperforms the maximum velocity solution in 100 episodes, except
- for one outlier.
- The SARSA approach represents a strongly random exploratory approach that
- tries out and optimizes many things but does not represent a strategy that
- works intrinsically.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "img:MTC-heuristic-vs-sarsa-reward"
 
 \end_inset
 
@@ -6113,12 +5823,14 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-SARSA-200 decision plot for the complete state space and for the relevant
- states only.
+Decision plots for the SARSA-75 (left) and the SARSA-200 black box policy,
+ showing an agent's actions throughout the observation space.
+ The patches in the SARSA-75 highlight various strategic problems, such
+ as doing nothing short of the goal, isolated outliers, and unreliable areas.
  
 \begin_inset CommandInset label
 LatexCommand label
-name "sarsa-200-plots"
+name "sarsa-200-decision-plots"
 
 \end_inset
 
@@ -6136,6 +5848,80 @@ name "sarsa-200-plots"
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename img/pyplots_custom/sarsa_vs_human.pdf
+	height 5cm
+
+\end_inset
+
+ 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ml-sarsa-outliers"
+
+\end_inset
+
+ SARSA-75 outperforms the maximum velocity solution in 100 episodes, except
+ for one outlier.
+ The SARSA approach represents a strongly random exploratory approach that
+ tries out and optimizes many things but does not represent a strategy that
+ works intrinsically.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "img:MTC-heuristic-vs-sarsa-reward"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Further training did not lead to further improvements; on the contrary,
+ the models deteriorated strongly (
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "sarsa1000-plots"
+
+\end_inset
+
+), what might be caused to the non-convergence of SARSA approaches.
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset Float figure
 wide false
 sideways false
@@ -6196,6 +5982,11 @@ SARSA-200 after 1,000 and 10,000 episodes.
 \begin_inset CommandInset label
 LatexCommand label
 name "sarsa1000-plots"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -11082,7 +10873,7 @@ regular GP results
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_scratch/sfehs_eval/evaled_overview.pdf
-	height 4cm
+	height 5cm
 
 \end_inset
 
@@ -11134,7 +10925,7 @@ maximum velocity
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simple/sfehs_eval/evaled_overview.pdf
-	height 4cm
+	height 5cm
 
 \end_inset
 
@@ -11186,7 +10977,7 @@ maximum velocity (fixed core)
 \begin_layout Plain Layout
 \begin_inset Graphics
 	filename C:/Users/Rapid/PycharmProjects/plagih/benchmarks/slurm_runs2/MTC75_MSE_simpleFix/sfehs_eval/evaled_overview.pdf
-	height 4cm
+	height 5cm
 
 \end_inset
 
@@ -12525,10 +12316,6 @@ name "fig:if-operator-composition"
 
 \end_layout
 
-\begin_layout Paragraph
-Customizing Edits
-\end_layout
-
 \begin_layout Standard
 By using a distance measure such as the edit distance, the question emerges
  whether (and how) the nature of a change can be taken into account (see
@@ -12541,7 +12328,20 @@ reference "fig:if-operator-composition"
 
 ).
  Weighting nodes with different complexities is a straightforward approach
- in regular GP, which was already mentioned in 
+ in regular GP, an sample weighting of the commercial GP Framework 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{Eureqa}
+\end_layout
+
+\end_inset
+
+ can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "tab:EUREKA-GP-complexities"
@@ -12552,10 +12352,10 @@ reference "tab:EUREKA-GP-complexities"
  To apply a similar weighting to an edit distance, the weighted mapping
  must be computed, since a subsequent weighting of the regular mapping is
  not necessarily the minimum distance.
- A simple answer the question of whether and how edits should be rated is
- to ignore the altered nodes.
- Another idea is to divide operators into classes, with weighted changes.
- A potential implementation can be seen in 
+ A simple answer to the question of whether and how edits should be rated
+ is to ignore the altered nodes.
+ Another idea is to divide operators into classes, with weighted changes,
+ a potential implementation can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:operator-classification"
@@ -12563,6 +12363,262 @@ reference "fig:operator-classification"
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="7" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Variables
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Terminals
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$+,-,
+\backslash
+cdot$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$/$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+land,
+\backslash
+lor,>,<$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$
+\backslash
+tanh,
+\backslash
+text{abs}$
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+if
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:EUREKA-GP-complexities"
+
+\end_inset
+
+The complexity weighting of nodes that is used at the commercial framework
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+emph{Eureqa}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "eureqa-review"
+literal "true"
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard

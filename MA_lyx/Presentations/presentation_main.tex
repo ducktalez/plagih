@@ -86,7 +86,7 @@
 \institute[DBS]{Ludwig-Maximilians-Universität München\\Lehrstuhl für Datenbanksysteme und Data Mining}
 \newcommand{\insertsupervisor}{Prof. Dr. Volker Tresp}
 \newcommand{\insertadvisor}{Dr. Michel Tokic, Dr. Steffen Udluft, Dr. Daniel Hein}
-\date{\today}
+\date{March 14, 2021}   % \today % tehe
 
 % Custom macros
 % IMPORTANT: Use \input to avoid excluding macros definitions when working on a single chapter
@@ -291,7 +291,7 @@ Manifestations (Doshi-Velez and Kim 17)
 
 \begin{frame}{Fixed Core}
  \begin{columns}
- \column{0.45\textwidth}
+ \column{0.40\textwidth}
   Implementation
   \begin{itemize}
    \item Explicit node protection
@@ -330,21 +330,22 @@ Manifestations (Doshi-Velez and Kim 17)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Evaluation}
 
-\begin{frame}{Mountain Car ``Expert'' programs visualization}
- \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
-  Simple & \multicolumn{2}{c}{Complex}\tabularnewline
-  ``Accelerating towards the current direction'' & ``Parabolic formula'' & ``Nested if- statement''\tabularnewline
-  \includegraphics[height=35mm]{img/mtc/decisions-SimpleAgent.pdf} & \includegraphics[height=35mm]{img/mtc/decisions-XiaoPresetAgent.png} & \includegraphics[height=35mm]{img/mtc/decisions-Good_Expert.png} \tabularnewline
-\end{tabular}
-\end{frame}
-
-\begin{frame}{Mountain Car: SARSA + Neural Network}
+\begin{frame}{Mountain Car: Black Box, SARSA + Neural Network}
+\centering
  \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
   75 Episodes & 200 Episodes \tabularnewline
   \includegraphics[height=4cm]{img/mtc/decisions-sarsa_agent_75.pdf} & 
   \includegraphics[height=4cm]{img/mtc/decisions-sarsa_agent_200.pdf}\tabularnewline
   $\approx 104$ steps & $\approx 98$ steps \tabularnewline
  \end{tabular}
+\end{frame}
+
+\begin{frame}{Mountain Car ``Expert'' programs visualization}
+ \begin{tabular}{>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}>{\centering}p{0.3\textwidth}}
+  Simple & \multicolumn{2}{c}{Complex}\tabularnewline
+  ``Accelerating towards the current direction'' & ``Parabolic formula'' & ``Nested if- statement''\tabularnewline
+  \includegraphics[height=35mm]{img/mtc/decisions-SimpleAgent.pdf} & \includegraphics[height=35mm]{img/mtc/decisions-XiaoPresetAgent.png} & \includegraphics[height=35mm]{img/mtc/decisions-Good_Expert.png} \tabularnewline
+\end{tabular}
 \end{frame}
 
 

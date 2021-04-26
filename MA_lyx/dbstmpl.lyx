@@ -1901,15 +1901,9 @@ literal "true"
 The tree depth and the number of tree nodes are capped to prevent a complexity
  bloat.
  Since the performance gain decreases with increasing complexity, the number
- of nodes can be used to create a Pareto front (
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:paretofront-example"
-
-\end_inset
-
-), which provides the ability to trade off complexity and fitness between
- candidates rather than just saving the fittest one.
+ of nodes can be used to create a Pareto front, which provides the ability
+ to trade off complexity and fitness between candidates rather than just
+ saving the fittest one.
 \end_layout
 
 \begin_layout Standard
@@ -1963,57 +1957,6 @@ cdot 3$.
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:grow-vs-full-method"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Note Note
-status open
-
-\begin_layout Plain Layout
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename ../benchmarks/slurm_runs/MTC200_MSE_scratch/paretofront.pdf
-	height 5cm
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:paretofront-example"
-
-\end_inset
-
-An example of GP candidates aligned on a Pareto front.
- The regression error becomes smaller as the candidates become more complex
- and increasingly flattens out.
-\end_layout
 
 \end_inset
 

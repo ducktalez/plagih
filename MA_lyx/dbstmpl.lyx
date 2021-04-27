@@ -166,10 +166,8 @@ g a symbolic regression on transition samples that were collected by black
 \end_layout
 
 \begin_layout Abstract
-The evaluation shows that known structures in the respective trees can be
- preserved without drawbacks, neither in offline nor in online performance.
- The mountain car black box agents are generally very well approximated
- and outperformed in some cases.
+The evaluation shows that the familiarity paradigm has no disadvantages
+ compared to regular GP, but is easier to interpret.
  Problems with very small programs, in which a few edits can have fundamental
  effects, can be solved by using fixed core structures.
  The black box agent of the industrial benchmark could not be sufficiently
@@ -177,10 +175,9 @@ The evaluation shows that known structures in the respective trees can be
 \end_layout
 
 \begin_layout Abstract
-In summary, it was found that further constraints on the search space (e.g.,
- fixed nodes, limited set of operators, action space constraint) do not
- significantly restrict offline performance, but even induce comparatively
- good online performance.
+Further constraints on the search space (e.g., fixed nodes, limited set of
+ operators, action space constraint) do not significantly restrict offline
+ performance, but even induce comparatively good online performance.
  Therefore, the presented approach offers many possibilities, both for genetic
  programming and as a way to find more easily interpretable policies.
 \end_layout
@@ -2001,25 +1998,17 @@ name "Symbolic-Regression"
 \end_layout
 
 \begin_layout Standard
-The fitness function is required to compare candidates.
- A symbolic regression is a common offline implementation to calculate how
- well a formula can fit data.
- The regression error, which is the sum of the distance between the outputs
- and predicted values of a data set, must be reduced as much as possible.ll
- as possible.
- Both the mean average error (MAE) and the mean square error (MSE) are valid
- metrics (see 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:regression-error"
-
-\end_inset
-
-).
- The MAE indicates the average deviation from the target solution and is
- distance-true.
- The MSE, however, severely punishes outliers, lumps of strong deviation
- and volatile solutions, which can lead to a better overall generalization.
+The fitness function determines how well a candidate solves the task.
+ To train on offline data, symbolic regression can be performed.
+ This evaluates the mapping of mathematical expressions around a data set
+ using the regression error.
+ Two regression metrics were used for this work.
+ The mean average error (MAE) is defined as the average deviation from the
+ target solution and is true to distance.
+ The mean squared error (MSE) squares the individual deviations, which is
+ harder to interpret, but penalizes outliers more which can lead to better
+ overall generalization.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -2076,70 +2065,47 @@ end{eqnarray*}
 \end_layout
 
 \begin_layout Standard
-\noindent
-\begin_inset Float figure
-wide false
-sideways false
+To obtain an authentic regression error, it may also be necessary to map
+ the result values to the closest possible value in the action space before
+ calculating.
+ For example, in the case of a bounded action space, a value must be mapped
+ to the interval (
+\begin_inset ERT
 status open
 
 \begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename tikz/regression_cost/01_regular.pdf
-	scale 80
 
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/10_MSE.pdf
-	scale 80
-
-\end_inset
-
-
+$a_{
+\backslash
+text{bounded}}=
+\backslash
+max(
+\backslash
+min(a,A_{max}),A_{min})$
 \end_layout
+
+\end_inset
+
+), and in the case of a discrete space, rounding would be required (
+\begin_inset ERT
+status open
 
 \begin_layout Plain Layout
-\begin_inset Caption Standard
 
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:regression-error"
-
-\end_inset
-
- The MAE (left) compared to the MSE (right), which deviates more the greater
- the distance.
- The MSE is also synonymous to the root mean squared error for one-dimensional
- measurements.
+$a_{discrete}=
+\backslash
+lfloor a
+\backslash
+rceil$
 \end_layout
 
 \end_inset
 
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The action space for RL problems is often discrete or restricted.
- To match these ranges of values, the values should be adjusted accordingly
- before calculating the regression error, as can be seen in 
+).
+ A possible adjustment of the MSE is visualized in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:regression-bounded-discrete"
-
-\end_inset
-
- or 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:regression-bounded"
 
 \end_inset
 
@@ -2156,7 +2122,7 @@ status open
 \begin_layout Plain Layout
 \align center
 \begin_inset Graphics
-	filename tikz/regression_cost/03_rounding.pdf
+	filename tikz/regression_cost/11_MSE_boarders.pdf
 	scale 80
 
 \end_inset
@@ -2175,102 +2141,13 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
+Fitting the MSE for restricted action spaces, with a discrete version on
+ the right.
+ This is often the case with RL problems.
+ 
 \begin_inset CommandInset label
 LatexCommand label
 name "fig:regression-bounded-discrete"
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-Bounded MAE (left) and MSE (right) in discrete, limited action space with
- actions $
-\backslash
-{0, 1, 2
-\backslash
-}$.
- If the room for action is not only limited but also discrete, results are
- rounded: $a_{discrete}=
-\backslash
-lfloor a
-\backslash
-rceil$.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\noindent
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Graphics
-	filename tikz/regression_cost/12_MAE_bounded.pdf
-	scale 80
-
-\end_inset
-
-
-\begin_inset Graphics
-	filename tikz/regression_cost/11_MSE_boarders.pdf
-	scale 80
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:regression-bounded"
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-Regression error in a bounded, floating action space in $[-1,+1]$.
- Values outside this interval are assigned to the next appropriate value.
-\backslash
-
-\backslash
- $a_{
-\backslash
-text{bounded}}=
-\backslash
-max(
-\backslash
-min(a,A_{max}),A_{min})$
-\end_layout
 
 \end_inset
 
@@ -2610,7 +2487,7 @@ FloatBarrier
 \end_layout
 
 \begin_layout Chapter
-Familiar Genetic Programming
+Familiar Genetic Programming 
 \begin_inset CommandInset label
 LatexCommand label
 name "chap:Familiar-Genetic-Programming"
@@ -11934,7 +11811,183 @@ Discussion
 \begin_layout Standard
 In the experiments, extensions were found for all expert strategies, with
  familiar structures clearly preserved.
+\end_layout
+
+\begin_layout Standard
+Compared to regular GP results, familiar candidates achieved a smiliar regressio
+n error; the approach, however, differed in both the genotype (the formula
+ approach) and phenotype (the behaviour), which were more similar to the
+ origin program.
+\end_layout
+
+\begin_layout Standard
+The benefits of familiarity are difficult to quantify.
+ A very simple mathematical formula can be much more difficult to understand
+ than a comprehensive strategy that is intuitive.
  
+\end_layout
+
+\begin_layout Standard
+-Der entscheidendere Unterschied für die Interpretierbarkeit liegt hierbei
+ vor allem im Genotyp.
+ 
+\end_layout
+
+\begin_layout Standard
+-Reguläre GP unterbietet bei gleicher Knotenzahl familiäre Kandidaten meistens,
+ erreicht dies aber meist durch overfitting einer Formel.
+\end_layout
+
+\begin_layout Standard
+-Die Knotenzahl ist für die Interpretierbarkeit dabei weitaus weniger relevant
+ als die Struktur der Lösung.
+ 
+\end_layout
+
+\begin_layout Standard
+- Einfache Kandidaten overfitten das problem oft und sind deswegen weniger
+ gut interpretierbar.
+\end_layout
+
+\begin_layout Standard
+-- In diesem Fall veranschaulicht die if-Bedingung den Widerspruch zwischen
+ Interpretierbarkeit und Knotenzahl am besten.
+ So ist der if-Operator mit 3 Eingaben zwar den größten Branchingfaktor,
+ strukturiert aber den Verständnisprozess weil alle Kindäste separat betrachtet
+ und diese als isolierte chunks leichter interpretiert werden können.
+ 
+\end_layout
+
+\begin_layout Standard
+- Mehr als die Komplexität spielt für die Interpretierbarkeit viel mehr
+ der Lösungsansatz eine Rolle.
+ For example, as can be seen in xxx, 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:if-operator-composition"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Gute If-Anweisungen zu erstellen erfordert eine intelligente Unterscheidung
+ eines komplexen Sachverhaltes in zwei oder mehr Fälle.
+ Eine sinnvolle if-Bedingung erfordert eine sinnvolle Zusammensetzung von
+ drei Eingaben gleichzeitig, was durch Evolution erst einmal schwer zu optimiere
+n ist.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]}
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{8mm}
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[abs[pos]][{$
+\backslash
+cdot$}[{$174.162$}][{vel}]]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{8mm}
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$x^y$}[vel][{$-5.0$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Three formulas with completely different approaches that achieve almost
+ identical results.
+ The If-operator in the first formula provides good interpretability and
+ confidence by dividing the problem into two cases.
+ The second formula calculates the action directly from the velocity and
+ position of the cart, making it harder to understand.
+ The last formula ultimately only requires 3 nodes, but overfits the problem
+ and is hardly comprehensible.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:if-operator-composition"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -12149,120 +12202,9 @@ name "TED-improvements"
 \end_layout
 
 \begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]}
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-hspace{8mm}
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{$+$}[abs[pos]][{$
-\backslash
-cdot$}[{$174.162$}][{vel}]]]} 
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-hspace{8mm}
-\end_layout
-
-\end_inset
-
-
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-plforest{[{$x^y$}[vel][{$-5.0$}]]} 
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Three formulas with completely different approaches that achieve almost
- identical results.
- A very simple mathematical formula can be much harder to understand than
- a comprehensive strategy that is intuitive.
- The if-conditional exemplifies the contradiction between interpretability
- and a count-based measure.
- Although the if-operator has the highest arity with 3 input parameters,
- it provides more structure than other operators, as its child trees are
- separated chunks.
- Due to the high branching factor, this operator should not be further weighted.
- 
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:if-operator-composition"
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 By using a distance measure such as the edit distance, the question emerges
  whether (and how) the nature of a change can be taken into account (see
- 
+ xxx 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:if-operator-composition"
@@ -13173,33 +13115,85 @@ name "subsec:Explorative-Regression"
 \end_layout
 
 \begin_layout Standard
-Explorative regression describes the deviation from the previous policy
- for fitness improvements.
- We argue that, among comparable candidates, less deviation from the known
- is preferred, especially in security-critical domains.
- A possible subdivision of different explorations is described in 
+In a regular regression, only the deviation from the target value can be
+ considered.
+ With trusted GP, it is additionally possible to include the deviation from
+ the previous policy.
+ A smaller deviation from the known is easier to trust, especially in safety-cri
+tical domains.
+ Such an exploratory regression examining phenotypic similarity can be implement
+ed in many ways.
+ For example, a subdivision into 4 intervals is possible, as seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:relative_kernel_path"
 
 \end_inset
 
-, examples of potential customizations of the regression kernels can be
- seen in 
+.
+ A more radical version that prevents deviations in the wrong direction
+ can be seen in 
 \begin_inset CommandInset ref
 LatexCommand formatted
 reference "fig:exploression-regr1"
 
 \end_inset
 
- or 
-\begin_inset CommandInset ref
-LatexCommand formatted
-reference "fig:exploression-regr2"
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Considering the interval between the familiar and AI solution 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$|(y_{
+\backslash
+text{f}})|$
+\end_layout
 
 \end_inset
 
-.
+ and the deviation from the familiar solution 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+$(y_{
+\backslash
+text{f}}-
+\backslash
+hat{y})$
+\end_layout
+
+\end_inset
+
+, the following conceivable formula results, which evaluates the resulting
+ 4 ranges differently and can be considered as independent of the normal
+ regression error.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\sum\max(0,|(y-y_{\text{f}})|-(y_{\text{f}}-\hat{y}))
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+However, combining both paradigms into one regression value is very difficult
+ to train.
+ Therefore, it is advisable to set up another Pareto front where additional
+ trade-offs can be made.
 \end_layout
 
 \begin_layout Standard
@@ -13263,47 +13257,6 @@ status open
 
 \begin_layout Plain Layout
 \align center
-\begin_inset Graphics
-	filename tikz/regression_cost/06-2_fourAreas_og.pdf
-	scale 75
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "fig:exploression-regr1"
-
-\end_inset
-
- Weighting of the deviation as a combination of the normal regression error
- with the phenotypic error.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float figure
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="1" columns="2">
 <features tabularvalignment="middle">
@@ -13315,7 +13268,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename tikz/regression_cost/08_noExploration.pdf
+	filename tikz/regression_cost/06-2_fourAreas_og.pdf
 	scale 75
 
 \end_inset
@@ -13354,21 +13307,16 @@ status open
 \begin_layout Plain Layout
 \begin_inset CommandInset label
 LatexCommand label
-name "fig:exploression-regr2"
+name "fig:exploression-regr1"
 
 \end_inset
 
- Extreme versions of a combined explorative regression kernel.
- As the most secure version, areas could be assigned dummy values that punish
- a change beyond a limit so severely that it is virtually impossible for
- it to occur.
- The solution must be within the improvement interval, obvious deteriorations
- are excluded.
-\end_layout
-
-\end_inset
-
-
+ The explorative regression with the goal action 0 and the familiar action
+ -1.
+ The left function shows the sum of the two regression errors, the right
+ function constrains any further deviation with a high dummy value.
+ The latter makes found candidates very trustworthy, but is very difficult
+ to optimize.
 \end_layout
 
 \end_inset
@@ -13376,57 +13324,9 @@ name "fig:exploression-regr2"
 
 \end_layout
 
-\begin_layout Standard
-Considering the interval between the familiar and AI solution 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$|(y_{
-\backslash
-text{f}})|$
-\end_layout
-
-\end_inset
-
- and the deviation from the familiar solution 
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-$(y_{
-\backslash
-text{f}}-
-\backslash
-hat{y})$
-\end_layout
-
-\end_inset
-
-, the following conceivable formula results, which evaluates the resulting
- 4 ranges differently and can be considered as independent of the normal
- regression error.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-\sum\max(0,|(y-y_{\text{f}})|-(y_{\text{f}}-\hat{y}))
-\]
-
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-In the first attempts to use an extended regression, no candidates were
- found.
- We therefore recommend to not mix regression paradigms and propose to implement
- a separate Pareto front.
 \end_layout
 
 \begin_layout Standard

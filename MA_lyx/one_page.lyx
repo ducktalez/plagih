@@ -93,6 +93,145 @@
 \begin_body
 
 \begin_layout Standard
+In the experiments, extensions were found for all expert strategies, with
+ familiar structures clearly preserved.
+\end_layout
+
+\begin_layout Standard
+Compared to regular GP results, familiar candidates achieved a similar regressio
+n error, but differed significantly in both the genotype (the tree structure)
+ and phenotype (the behaviour), which were more similar to the origin program.
+\end_layout
+
+\begin_layout Standard
+The benefits of familiarity for interpretability are difficult to quantify.
+ A very simple mathematical formula can be much more difficult to understand
+ than a comprehensive strategy that is intuitive, as can be seen in 
+\begin_inset CommandInset ref
+LatexCommand formatted
+reference "fig:if-operator-composition"
+
+\end_inset
+
+.
+ The human approach is to abstract a problem and divide it into several,
+ well-aranged tasks.
+ Regular GP finds simple formulae that are well optimizable with random
+ mutation.
+ The If-condition shows the contradiction between interpretability and number
+ of nodes clearly; with 3 inputs, it has the largest branching factor, but
+ it breaks down the understanding process as every child branch can be considere
+d separately and interpreted more easily as isolated chunk.
+ Familiar GP also looks for the simplest possible extensions, but the default
+ through the core approach tends to lead to the use of the same basic reasoning.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[if-then-else[$<$[vel][$0$]][$0$][$2$]]}
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{8mm}
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$+$}[abs[pos]][{$
+\backslash
+cdot$}[{$174.162$}][{vel}]]]} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+hspace{8mm}
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+plforest{[{$x^y$}[vel][{$-5.0$}]]} 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Three formulas with completely different approaches that achieve almost
+ identical results.
+ The If-operator in the first formula provides good interpretability and
+ confidence by dividing the problem into two cases.
+ The second formula calculates the action directly from the velocity and
+ position of the cart, making it harder to understand.
+ The last formula ultimately only requires 3 nodes, but overfits the problem
+ and is hardly comprehensible.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:if-operator-composition"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
 
 \end_layout
 
